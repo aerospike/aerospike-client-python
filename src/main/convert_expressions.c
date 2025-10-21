@@ -104,8 +104,8 @@
 //     CALL = 127,
 //     LIST_MOD = 139,
 //     VAL = 200
-}
-;
+// }
+// ;
 
 // VIRTUAL OPS
 enum virtual_ops {
@@ -135,8 +135,7 @@ enum utiity_constants {
     {                                                                          \
         {                                                                      \
             as_exp_entry tmp_expr_array[] = {__VA_ARGS__};                     \
-            memcpy(&((as_exp_entries)[i]), &tmp_expr_array,                    \
-                   sizeof(as_exp_entry));                                      \
+            memcpy(entry, &tmp_expr_array, sizeof(as_exp_entry));              \
         }                                                                      \
     }
 
@@ -148,7 +147,7 @@ enum utiity_constants {
 
 #define LIST_MOD_EXP()                                                         \
     {                                                                          \
-        .op = entry.op, .v.list_pol = entry.v.list_pol                         \
+        .op = entry->op, .v.list_pol = entry->v.list_pol                       \
     }
 
 // STRUCT DEFINITIONS
@@ -180,12 +179,10 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
                        int serializer_type, as_exp_entry *new_entry,
                        PyObject *py_obj, as_exp_entry *tmp_expr, as_error *err);
 
-static as_status set_as_exp_entry(AerospikeClient *self,
-                                  as_static_pool *static_pool,
-                                  int serializer_type,
-                                  as_vector *unicodeStrVector,
-                                  as_exp_entry *as_exp_entries, int size,
-                                  PyObject *pydict, as_error *err);
+static as_status set_as_exp_entry_using_py_expr_class_instance(
+    AerospikeClient *self, as_static_pool *static_pool, int serializer_type,
+    as_vector *unicodeStrVector, as_exp_entry *as_exp_entries, PyObject *pydict,
+    as_error *err);
 
 // static bool free_temp_expr(as_exp_entry *entry, as_error *err,
 //                            bool is_ctx_initialized);
@@ -592,1041 +589,1007 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
 * empty arguments used. Each expression child/value has a as_exp_entry struct in intermediate_expr_vector so the missing values will be copied later.
 * These counts need to be updated if the C client macro changes.
 */
-static as_status
-set_as_exp_entry(AerospikeClient *self, as_static_pool *static_pool,
-                 int serializer_type, as_vector *unicodeStrVector,
-                 as_exp_entry *as_exp_entries, int as_exp_count,
-                 PyObject *pydict, as_error *err)
+static as_status set_as_exp_entry_using_py_expr_class_instance(
+    AerospikeClient *self, as_static_pool *static_pool, int serializer_type,
+    as_vector *unicodeStrVector, as_exp_entry *entry, PyObject *py_expr,
+    as_error *err)
 {
 
-    for (int i = 0; i < as_exp_count; ++i) {
-        int64_t lval1 = 0;
-        int64_t lval2 = 0;
-        char *bin_name = NULL;
-        PyObject *py_val_from_dict = NULL;
+    int64_t lval1 = 0;
+    int64_t lval2 = 0;
+    char *bin_name = NULL;
+    PyObject *py_val_from_dict = NULL;
 
-        as_exp_entry entry = as_exp_entries[i];
-
-        PyObject *rt_tmp = PyTuple_GetItem(pydict, 1);
-        long long result_type = 0;
-        if (rt_tmp != Py_None) {
-            result_type = PyLong_AsLongLong(rt_tmp);
-            if (result_type == -1 && PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "Failed to get result_type from expression "
-                    "tuple, rt must be an int.");
-            }
-            SET_AS_EXP_ENTRY(BIN_EXPR());
-        }
-        // TODO: what if rt is None?
-
-        if (as_exp_entries[i].op >= _AS_EXP_CODE_CDT_LIST_CRMOD &&
-            as_exp_entries[i].op <= _AS_EXP_CODE_CDT_MAP_MOD) {
-
-            if (as_exp_entries[i].op == _AS_EXP_CODE_CDT_LIST_CRMOD ||
-                as_exp_entries[i].op == _AS_EXP_CODE_CDT_LIST_MOD) {
-                SET_AS_EXP_ENTRY(LIST_MOD_EXP());
-            }
-            else if (as_exp_entries[i].op >= _AS_EXP_CODE_CDT_MAP_CRMOD &&
-                     as_exp_entries[i].op <= _AS_EXP_CODE_CDT_MAP_MOD) {
-                SET_AS_EXP_ENTRY({.op = as_exp_entries[i].op,
-                                  .v.map_pol = as_exp_entries[i].v.map_pol});
-            }
-
-            continue;
-        }
-
-        switch (as_exp_entries[i].op) {
-        case _AS_EXP_CODE_BIN:
-            if (get_bin(err, pydict, unicodeStrVector, &bin_name) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(BIN_EXPR());
-            break;
-        // case VAL:
-        case _AS_EXP_CODE_AS_VAL:;
-            as_exp_entry tmp_expr;
-            if (get_exp_val_from_pyval(
-                    self, static_pool, serializer_type, &tmp_expr,
-                    PyDict_GetItemString(pydict, AS_PY_VAL_KEY), &entry,
-                    err) != AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(tmp_expr);
-            break;
-        case _AS_EXP_CODE_CMP_EQ:
-            SET_AS_EXP_ENTRY(as_exp_cmp_eq(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_NE:
-            SET_AS_EXP_ENTRY(as_exp_cmp_ne(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_GT:
-            SET_AS_EXP_ENTRY(as_exp_cmp_gt(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_GE:
-            SET_AS_EXP_ENTRY(as_exp_cmp_ge(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_LT:
-            SET_AS_EXP_ENTRY(as_exp_cmp_lt(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_LE:
-            SET_AS_EXP_ENTRY(as_exp_cmp_le(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_REGEX:
-            if (get_int64_t(err, REGEX_OPTIONS_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            py_val_from_dict = PyDict_GetItemString(pydict, AS_PY_VAL_KEY);
-            char *regex_str = NULL;
-            if (PyUnicode_Check(py_val_from_dict)) {
-                const char *utf8_encoding = PyUnicode_AsUTF8(py_val_from_dict);
-                regex_str = strdup(utf8_encoding);
-                as_exp_entries[i].v.str_val = regex_str;
-            }
-            else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "regex_str must be a string.");
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_cmp_regex(lval1, regex_str, NIL));
-            break;
-        case _AS_EXP_CODE_CMP_GEO:
-            SET_AS_EXP_ENTRY(as_exp_cmp_geo(NIL, NIL));
-            break;
-        case _AS_EXP_CODE_AND:
-            SET_AS_EXP_ENTRY(as_exp_and(NIL));
-            break;
-        case OR:
-            SET_AS_EXP_ENTRY(as_exp_or(NIL));
-            break;
-        case NOT:
-            SET_AS_EXP_ENTRY(as_exp_not(NIL));
-            break;
-        // TODO: still need?
-        case END_VA_ARGS:
-            SET_AS_EXP_ENTRY(
-                0,
-                {.op =
-                     _AS_EXP_CODE_END_OF_VA_ARGS}); //NOTE: this case handles the end of arguments to an AND/OR expression.
-            break;
-        case META_DIGEST_MOD:
-            if (get_int64_t(err, AS_PY_VAL_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_digest_modulo(lval1));
-            break;
-        case META_DEVICE_SIZE:
-            SET_AS_EXP_ENTRY(as_exp_device_size());
-            break;
-        case META_LAST_UPDATE_TIME:
-            SET_AS_EXP_ENTRY(as_exp_last_update());
-            break;
-        case META_SINCE_UPDATE_TIME:
-            SET_AS_EXP_ENTRY(as_exp_since_update());
-            break;
-        case META_IS_TOMBSTONE:
-            SET_AS_EXP_ENTRY(as_exp_is_tombstone());
-            break;
-        case META_VOID_TIME:
-            SET_AS_EXP_ENTRY(as_exp_void_time());
-            break;
-        case META_TTL:
-            SET_AS_EXP_ENTRY(as_exp_ttl());
-            break;
-        case META_SET_NAME:
-            SET_AS_EXP_ENTRY(as_exp_set_name());
-            break;
-        case META_KEY_EXISTS:
-            SET_AS_EXP_ENTRY(as_exp_key_exist());
-            break;
-        case META_MEMORY_SIZE:
-            SET_AS_EXP_ENTRY(as_exp_memory_size());
-            break;
-        case META_RECORD_SIZE:
-            SET_AS_EXP_ENTRY(as_exp_record_size());
-            break;
-        case REC_KEY:
-            SET_AS_EXP_ENTRY(KEY_EXPR());
-            break;
-        case BIN_TYPE:
-            if (get_bin(err, pydict, unicodeStrVector, &bin_name) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_bin_type(bin_name));
-            break;
-        case BIN_EXISTS:
-            if (get_bin(err, pydict, unicodeStrVector, &bin_name) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_bin_exists(bin_name));
-            break;
-        case OP_LIST_GET_BY_INDEX:
-            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_index(
-                as_exp_entries[i].v.ctx, lval1, lval2, NIL,
-                NIL)); // - 2 for index, bin
-            break;
-        case OP_LIST_SIZE:
-            SET_AS_EXP_ENTRY(as_exp_list_size(as_exp_entries[i].v.ctx, NIL));
-            break;
-        case OP_LIST_GET_BY_VALUE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(
-                2, as_exp_list_get_by_value(as_exp_entries[i].v.ctx, lval1, NIL,
-                                            NIL)); // - 2 for value, bin
-            break;
-        case OP_LIST_GET_BY_VALUE_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_value_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, bin
-            break;
-        case OP_LIST_GET_BY_VALUE_LIST:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_value_list(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for value, bin
-            break;
-        case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_rel_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for value, rank, bin
-            break;
-        case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_rel_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // - 4 for value, rank, count, bin
-            break;
-        case OP_LIST_GET_BY_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for index, bin
-            break;
-        case OP_LIST_GET_BY_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for index, count, bin
-            break;
-        case OP_LIST_GET_BY_RANK:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_rank(as_exp_entries[i].v.ctx,
-                                                     lval1, lval2, NIL,
-                                                     NIL)); // - 2 for rank, bin
-            break;
-        case OP_LIST_GET_BY_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for rank, bin
-            break;
-        case OP_LIST_GET_BY_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_get_by_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for rank, count, bin
-            break;
-        case OP_LIST_APPEND:
-            SET_AS_EXP_ENTRY(
-                3,
-                as_exp_list_append(
-                    as_exp_entries[i].v.ctx, as_exp_entries[i].v.list_pol, NIL,
-                    NIL)); // -3 for val, _AS_EXP_CODE_CDT_LIST_CRMOD, bin
-            break;
-        case OP_LIST_APPEND_ITEMS:
-            SET_AS_EXP_ENTRY(as_exp_list_append_items(
-                as_exp_entries[i].v.ctx, as_exp_entries[i].v.list_pol, NIL,
-                NIL));
-            break;
-        case OP_LIST_INSERT:
-            SET_AS_EXP_ENTRY(as_exp_list_insert(as_exp_entries[i].v.ctx,
-                                                as_exp_entries[i].v.list_pol,
-                                                NIL, NIL, NIL));
-            break;
-        case OP_LIST_INSERT_ITEMS:
-            SET_AS_EXP_ENTRY(
-                4, as_exp_list_insert_items(as_exp_entries[i].v.ctx,
-                                            as_exp_entries[i].v.list_pol, NIL,
-                                            NIL, NIL));
-            break;
-        case OP_LIST_INCREMENT:
-            SET_AS_EXP_ENTRY(as_exp_list_increment(as_exp_entries[i].v.ctx,
-                                                   as_exp_entries[i].v.list_pol,
-                                                   NIL, NIL, NIL));
-            break;
-        case OP_LIST_SET:
-            SET_AS_EXP_ENTRY(as_exp_list_set(as_exp_entries[i].v.ctx,
-                                             as_exp_entries[i].v.list_pol, NIL,
-                                             NIL, NIL));
-            break;
-        case OP_LIST_CLEAR:
-            SET_AS_EXP_ENTRY(as_exp_list_clear(as_exp_entries[i].v.ctx,
-                                               NIL)); // -1 for bin
-            break;
-        case OP_LIST_SORT:
-            if (get_int64_t(err, LIST_ORDER_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_list_sort(as_exp_entries[i].v.ctx, lval1,
-                                              NIL)); // -1 for bin
-            break;
-        case OP_LIST_REMOVE_BY_VALUE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(
-                as_exp_list_remove_by_value(as_exp_entries[i].v.ctx, lval1, NIL,
-                                            NIL)); // -2 for bin and val
-            break;
-        case OP_LIST_REMOVE_BY_VALUE_LIST:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_value_list(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // -2 for bin and val
-            break;
-        case OP_LIST_REMOVE_BY_VALUE_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_value_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, val
-            break;
-        case OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_rel_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // -3 for value, rank, bin
-            break;
-        case OP_LIST_REMOVE_BY_REL_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_rel_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // -4 for value, rank, count, bin
-            break;
-        case OP_LIST_REMOVE_BY_INDEX:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_list_remove_by_index(as_exp_entries[i].v.ctx, NIL,
-                                               NIL)); // -2 for index, bin
-            break;
-        case OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // -2 for index, bin
-            break;
-        case OP_LIST_REMOVE_BY_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for index, count, bin
-            break;
-        case OP_LIST_REMOVE_BY_RANK:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_list_remove_by_rank(as_exp_entries[i].v.ctx, NIL,
-                                              NIL)); // -2 for rank, bin
-            break;
-        case OP_LIST_REMOVE_BY_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for rank, bin
-            break;
-        case OP_LIST_REMOVE_BY_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_list_remove_by_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for rank, count, bin
-            break;
-        case OP_MAP_PUT:
-            SET_AS_EXP_ENTRY(as_exp_map_put(as_exp_entries[i].v.ctx,
-                                            as_exp_entries[i].v.map_pol, NIL,
-                                            NIL, NIL));
-            break;
-        case OP_MAP_PUT_ITEMS:
-            SET_AS_EXP_ENTRY(
-                3, as_exp_map_put_items(as_exp_entries[i].v.ctx,
-                                        as_exp_entries[i].v.map_pol, NIL, NIL));
-            break;
-        case OP_MAP_INCREMENT:
-            SET_AS_EXP_ENTRY(as_exp_map_increment(as_exp_entries[i].v.ctx,
-                                                  as_exp_entries[i].v.map_pol,
-                                                  NIL, NIL, NIL));
-            break;
-        case OP_MAP_CLEAR:
-            SET_AS_EXP_ENTRY(as_exp_map_clear(as_exp_entries[i].v.ctx,
-                                              NIL)); // - 1 for bin
-            break;
-        case OP_MAP_REMOVE_BY_KEY:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_map_remove_by_key(as_exp_entries[i].v.ctx, NIL,
-                                            NIL)); // - 2 for key, bin
-            break;
-        case OP_MAP_REMOVE_BY_KEY_LIST:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_list(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for key, bin
-            break;
-        case OP_MAP_REMOVE_BY_KEY_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, bin
-            break;
-        case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_rel_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for key, index, bin
-            break;
-        case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_rel_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // - 4 for key, index, count, bin
-            break;
-        case OP_MAP_REMOVE_BY_VALUE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(
-                as_exp_map_remove_by_value(as_exp_entries[i].v.ctx, lval1, NIL,
-                                           NIL)); // - 2 for val, bin
-            break;
-        case OP_MAP_REMOVE_BY_VALUE_LIST:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_list(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for values, bin
-            break;
-        case OP_MAP_REMOVE_BY_VALUE_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, bin
-            break;
-        case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_rel_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for val, rank, bin
-            break;
-        case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_rel_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // - 4 for val, rank, count, bin
-            break;
-        case OP_MAP_REMOVE_BY_INDEX:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_map_remove_by_index(as_exp_entries[i].v.ctx, NIL,
-                                              NIL)); // - 2 for index, bin
-            break;
-        case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for index, bin
-            break;
-        case OP_MAP_REMOVE_BY_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for index, count, bin
-            break;
-        case OP_MAP_REMOVE_BY_RANK:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_map_remove_by_rank(as_exp_entries[i].v.ctx, NIL,
-                                             NIL)); // - 2 for rank, bin
-            break;
-        case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for rank, bin
-            break;
-        case OP_MAP_REMOVE_BY_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            SET_AS_EXP_ENTRY(as_exp_map_remove_by_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for rank, count, bin
-            break;
-        case OP_MAP_SIZE:
-            SET_AS_EXP_ENTRY(as_exp_map_size(as_exp_entries[i].v.ctx,
-                                             NIL)); // - 1 for bin
-            break;
-        case OP_MAP_GET_BY_KEY:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_key(as_exp_entries[i].v.ctx,
-                                                   lval1, lval2, NIL,
-                                                   NIL)); // - 2 for key, bin
-            break;
-        case OP_MAP_GET_BY_KEY_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_key_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, bin
-            break;
-        case OP_MAP_GET_BY_KEY_LIST:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(
-                as_exp_map_get_by_key_list(as_exp_entries[i].v.ctx, lval1, NIL,
-                                           NIL)); // - 2 for keys, bin
-            break;
-        case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_key_rel_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for key, index, bin
-            break;
-        case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_key_rel_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // - 4 for key, index, count, bin
-            break;
-        case OP_MAP_GET_BY_VALUE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(
-                2, as_exp_map_get_by_value(as_exp_entries[i].v.ctx, lval1, NIL,
-                                           NIL)); // - 2 for value, bin
-            break;
-        case OP_MAP_GET_BY_VALUE_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_value_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for begin, end, bin
-            break;
-        case OP_MAP_GET_BY_VALUE_LIST:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_value_list(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for value, bin
-            break;
-        case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_value_rel_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for value, rank, bin
-            break;
-        case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_value_rel_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL, NIL,
-                NIL)); // - 4 for value, rank, count, bin
-            break;
-        case OP_MAP_GET_BY_INDEX:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_index(
-                as_exp_entries[i].v.ctx, lval1, lval2, NIL,
-                NIL)); // - 2 for index, bin
-            break;
-        case OP_MAP_GET_BY_INDEX_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_index_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for index, bin
-            break;
-        case OP_MAP_GET_BY_INDEX_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_index_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for index, count, bin
-            break;
-        case OP_MAP_GET_BY_RANK:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_rank(as_exp_entries[i].v.ctx,
-                                                    lval1, lval2, NIL,
-                                                    NIL)); // - 2 for rank, bin
-            break;
-        case OP_MAP_GET_BY_RANK_RANGE_TO_END:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_rank_range_to_end(
-                as_exp_entries[i].v.ctx, lval1, NIL,
-                NIL)); // - 2 for rank, bin
-            break;
-        case OP_MAP_GET_BY_RANK_RANGE:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_map_get_by_rank_range(
-                as_exp_entries[i].v.ctx, lval1, NIL, NIL,
-                NIL)); // - 3 for rank, count, bin
-            break;
-        case _AS_EXP_BIT_FLAGS:
-            if (get_int64_t(err, AS_PY_VAL_KEY, pydict, &lval1) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_uint((uint64_t)lval1));
-            break;
-        case OP_BIT_RESIZE:
-            SET_AS_EXP_ENTRY(as_exp_bit_resize(
-                NULL, NIL, NO_BIT_FLAGS,
-                NIL)); // - 4 for byte_size, policy, flags, bin
-            break;
-        case OP_BIT_INSERT:
-            SET_AS_EXP_ENTRY(as_exp_bit_insert(NULL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_REMOVE:
-            SET_AS_EXP_ENTRY(as_exp_bit_remove(NULL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_SET:
-            SET_AS_EXP_ENTRY(as_exp_bit_set(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_OR:
-            SET_AS_EXP_ENTRY(as_exp_bit_or(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_XOR:
-            SET_AS_EXP_ENTRY(as_exp_bit_xor(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_AND:
-            SET_AS_EXP_ENTRY(as_exp_bit_and(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_NOT:
-            SET_AS_EXP_ENTRY(as_exp_bit_not(NULL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_LSHIFT:
-            SET_AS_EXP_ENTRY(as_exp_bit_lshift(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_RSHIFT:
-            SET_AS_EXP_ENTRY(as_exp_bit_rshift(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_ADD:
-            SET_AS_EXP_ENTRY(
-                6, as_exp_bit_add(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
-            break;
-        case OP_BIT_SUBTRACT:
-            SET_AS_EXP_ENTRY(
-                6, as_exp_bit_subtract(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
-            break;
-        case OP_BIT_SET_INT:
-            SET_AS_EXP_ENTRY(as_exp_bit_set_int(NULL, NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_GET:
-            SET_AS_EXP_ENTRY(
-                3, as_exp_bit_get(NIL, NIL,
-                                  NIL)); // - 3 for bit_offset, bit_size, bin
-            break;
-        case OP_BIT_COUNT:
-            SET_AS_EXP_ENTRY(
-                3, as_exp_bit_count(NIL, NIL,
-                                    NIL)); // - 3 for bit_offset, bit_size, bin
-            break;
-        case OP_BIT_LSCAN:
-            SET_AS_EXP_ENTRY(as_exp_bit_lscan(NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_RSCAN:
-            SET_AS_EXP_ENTRY(as_exp_bit_rscan(NIL, NIL, NIL, NIL));
-            break;
-        case OP_BIT_GET_INT:
-            SET_AS_EXP_ENTRY(as_exp_bit_get_int(NIL, NIL, 0, NIL));
-            break;
-        case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
-            SET_AS_EXP_ENTRY(
-                4,
-                as_exp_hll_init_mh(
-                    NULL, 0, 0,
-                    NIL)); // - 4 for index_bit_count, mh_bit_count, policy, bin
-            break;
-        case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
-            SET_AS_EXP_ENTRY(
-                5, as_exp_hll_add_mh(
-                       NULL, NIL, 0, 0,
-                       NIL)); // - 5 for list, index_bit_count, -1, policy, bin
-            break;
-        case OP_HLL_GET_COUNT:
-            SET_AS_EXP_ENTRY(as_exp_hll_get_count(NIL)); // - 1 for bin
-            break;
-        case OP_HLL_GET_UNION:
-            SET_AS_EXP_ENTRY(as_exp_hll_get_union(NIL,
-                                                  NIL)); // - 2 for list, bin
-            break;
-        case OP_HLL_GET_UNION_COUNT:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_hll_get_union_count(NIL, NIL)); // - 2 for list, bin
-            break;
-        case OP_HLL_GET_INTERSECT_COUNT:
-            SET_AS_EXP_ENTRY(
-                as_exp_hll_get_intersect_count(NIL, NIL)); // - 2 for list, bin
-            break;
-        case OP_HLL_GET_SIMILARITY:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_hll_get_similarity(NIL, NIL)); // - 2 for list, bin
-            break;
-        case OP_HLL_DESCRIBE:
-            SET_AS_EXP_ENTRY(as_exp_hll_describe(NIL)); // - 1 for bin
-            break;
-        case OP_HLL_MAY_CONTAIN:
-            SET_AS_EXP_ENTRY(as_exp_hll_may_contain(NIL,
-                                                    NIL)); // - 2 for list, bin
-            break;
-        case EXCLUSIVE:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_exclusive(
-                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case ADD:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_add(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case SUB:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_sub(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case MUL:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_mul(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case DIV:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_div(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case POW:
-            SET_AS_EXP_ENTRY(as_exp_pow(NIL,
-                                        NIL)); // - 2 for __base, __exponent
-            break;
-        case LOG:
-            SET_AS_EXP_ENTRY(as_exp_log(NIL,
-                                        NIL)); // - 2 for __base, __base
-            break;
-        case MOD:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_mod(NIL,
-                              NIL)); // - 2 for __numerator, __denominator
-            break;
-        case ABS:
-            SET_AS_EXP_ENTRY(as_exp_abs(NIL)); // - 1 for __value
-            break;
-        case FLOOR:
-            SET_AS_EXP_ENTRY(as_exp_floor(NIL)); // - 1 for __num
-            break;
-        case CEIL:
-            SET_AS_EXP_ENTRY(as_exp_ceil(NIL)); // - 1 for __num
-            break;
-        case TO_INT:
-            SET_AS_EXP_ENTRY(as_exp_to_int(NIL)); // - 1 for __num
-            break;
-        case TO_FLOAT:
-            SET_AS_EXP_ENTRY(as_exp_to_float(NIL)); // - 1 for __num
-            break;
-        case INT_AND:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_int_and(
-                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case INT_OR:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_int_or(
-                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case INT_XOR:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_int_xor(
-                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case INT_NOT:
-            SET_AS_EXP_ENTRY(as_exp_int_not(NIL)); // - 1 for __expr
-            break;
-        case INT_LSHIFT:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_int_lshift(NIL,
-                                     NIL)); // - 2 for __value, __shift
-            break;
-        case INT_RSHIFT:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_int_rshift(NIL,
-                                     NIL)); // - 2 for __value, __shift
-            break;
-        case INT_ARSHIFT:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_int_arshift(NIL, NIL)); // - 2 for __value, __shift
-            break;
-        case INT_COUNT:
-            SET_AS_EXP_ENTRY(as_exp_int_count(NIL)); // - 1 for __expr
-            break;
-        case INT_LSCAN:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_int_lscan(NIL,
-                                    NIL)); // - 2 for __value, __search
-            break;
-        case INT_RSCAN:
-            SET_AS_EXP_ENTRY(
-                2, as_exp_int_rscan(NIL,
-                                    NIL)); // - 2 for __value, __search
-            break;
-        case MIN:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_min(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case MAX:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_max(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case COND:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_cond(
-                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case LET:
-            SET_AS_EXP_ENTRY(
-                2,
-                as_exp_let(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
-            break;
-        case DEF:;
-            py_val_from_dict = PyDict_GetItemString(pydict, AS_PY_VAL_KEY);
-            const char *def_var_name = NULL;
-            if (PyUnicode_Check(py_val_from_dict)) {
-                def_var_name = PyUnicode_AsUTF8(py_val_from_dict);
-            }
-            else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "regex_str must be a string.");
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_def(def_var_name, NIL)); // - 1 for __expr
-            break;
-        case VAR:;
-            py_val_from_dict = PyDict_GetItemString(pydict, AS_PY_VAL_KEY);
-            const char *var_name = NULL;
-            if (PyUnicode_Check(py_val_from_dict)) {
-                var_name = PyUnicode_AsUTF8(py_val_from_dict);
-            }
-            else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "regex_str must be a string.");
-            }
-
-            SET_AS_EXP_ENTRY(as_exp_var(var_name));
-            break;
-        case UNKNOWN:
-            SET_AS_EXP_ENTRY(as_exp_unknown());
-            break;
-        default:
+    PyObject *rt_tmp = PyTuple_GetItem(py_expr, 1);
+    long long result_type = 0;
+    if (rt_tmp != Py_None) {
+        result_type = PyLong_AsLongLong(rt_tmp);
+        if (result_type == -1 && PyErr_Occurred()) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Unrecognised expression op type.");
-            break;
+                                   "Failed to get result_type from expression "
+                                   "tuple, rt must be an int.");
         }
+        SET_AS_EXP_ENTRY(BIN_EXPR());
+    }
+    // TODO: what if rt is None?
+
+    if (entry->op >= _AS_EXP_CODE_CDT_LIST_CRMOD &&
+        entry->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+
+        if (entry->op == _AS_EXP_CODE_CDT_LIST_CRMOD ||
+            entry->op == _AS_EXP_CODE_CDT_LIST_MOD) {
+            SET_AS_EXP_ENTRY(LIST_MOD_EXP());
+        }
+        else if (entry->op >= _AS_EXP_CODE_CDT_MAP_CRMOD &&
+                 entry->op <= _AS_EXP_CODE_CDT_MAP_MOD) {
+            SET_AS_EXP_ENTRY({.op = entry->op, .v.map_pol = entry->v.map_pol});
+        }
+        // move to end of func instead TODO
+        return err->code;
+    }
+
+    switch (entry->op) {
+    case _AS_EXP_CODE_BIN:
+        if (get_bin(err, py_expr, unicodeStrVector, &bin_name) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(BIN_EXPR());
+        break;
+    case VAL:
+    case _AS_EXP_CODE_AS_VAL:;
+        as_exp_entry tmp_expr;
+        if (get_exp_val_from_pyval(self, static_pool, serializer_type,
+                                   &tmp_expr,
+                                   PyDict_GetItemString(py_expr, AS_PY_VAL_KEY),
+                                   &entry, err) != AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(tmp_expr);
+        break;
+    case _AS_EXP_CODE_CMP_EQ:
+        SET_AS_EXP_ENTRY(as_exp_cmp_eq(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_NE:
+        SET_AS_EXP_ENTRY(as_exp_cmp_ne(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_GT:
+        SET_AS_EXP_ENTRY(as_exp_cmp_gt(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_GE:
+        SET_AS_EXP_ENTRY(as_exp_cmp_ge(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_LT:
+        SET_AS_EXP_ENTRY(as_exp_cmp_lt(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_LE:
+        SET_AS_EXP_ENTRY(as_exp_cmp_le(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_REGEX:
+        if (get_int64_t(err, REGEX_OPTIONS_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        py_val_from_dict = PyDict_GetItemString(py_expr, AS_PY_VAL_KEY);
+        char *regex_str = NULL;
+        if (PyUnicode_Check(py_val_from_dict)) {
+            const char *utf8_encoding = PyUnicode_AsUTF8(py_val_from_dict);
+            regex_str = strdup(utf8_encoding);
+            entry->v.str_val = regex_str;
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "regex_str must be a string.");
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_cmp_regex(lval1, regex_str, NIL));
+        break;
+    case _AS_EXP_CODE_CMP_GEO:
+        SET_AS_EXP_ENTRY(as_exp_cmp_geo(NIL, NIL));
+        break;
+    case _AS_EXP_CODE_AND:
+        SET_AS_EXP_ENTRY(as_exp_and(NIL));
+        break;
+    case OR:
+        SET_AS_EXP_ENTRY(as_exp_or(NIL));
+        break;
+    case NOT:
+        SET_AS_EXP_ENTRY(as_exp_not(NIL));
+        break;
+    // TODO: still need?
+    case END_VA_ARGS:
+        SET_AS_EXP_ENTRY(
+            0,
+            {.op =
+                 _AS_EXP_CODE_END_OF_VA_ARGS}); //NOTE: this case handles the end of arguments to an AND/OR expression.
+        break;
+    case META_DIGEST_MOD:
+        if (get_int64_t(err, AS_PY_VAL_KEY, py_expr, &lval1) != AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_digest_modulo(lval1));
+        break;
+    case META_DEVICE_SIZE:
+        SET_AS_EXP_ENTRY(as_exp_device_size());
+        break;
+    case META_LAST_UPDATE_TIME:
+        SET_AS_EXP_ENTRY(as_exp_last_update());
+        break;
+    case META_SINCE_UPDATE_TIME:
+        SET_AS_EXP_ENTRY(as_exp_since_update());
+        break;
+    case META_IS_TOMBSTONE:
+        SET_AS_EXP_ENTRY(as_exp_is_tombstone());
+        break;
+    case META_VOID_TIME:
+        SET_AS_EXP_ENTRY(as_exp_void_time());
+        break;
+    case META_TTL:
+        SET_AS_EXP_ENTRY(as_exp_ttl());
+        break;
+    case META_SET_NAME:
+        SET_AS_EXP_ENTRY(as_exp_set_name());
+        break;
+    case META_KEY_EXISTS:
+        SET_AS_EXP_ENTRY(as_exp_key_exist());
+        break;
+    case META_MEMORY_SIZE:
+        SET_AS_EXP_ENTRY(as_exp_memory_size());
+        break;
+    case META_RECORD_SIZE:
+        SET_AS_EXP_ENTRY(as_exp_record_size());
+        break;
+    case REC_KEY:
+        SET_AS_EXP_ENTRY(KEY_EXPR());
+        break;
+    case BIN_TYPE:
+        if (get_bin(err, py_expr, unicodeStrVector, &bin_name) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_bin_type(bin_name));
+        break;
+    case BIN_EXISTS:
+        if (get_bin(err, py_expr, unicodeStrVector, &bin_name) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_bin_exists(bin_name));
+        break;
+    case OP_LIST_GET_BY_INDEX:
+        if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, py_expr, &lval2) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_list_get_by_index(entry->v.ctx, lval1, lval2,
+                                                  NIL,
+                                                  NIL)); // - 2 for index, bin
+        break;
+    case OP_LIST_SIZE:
+        SET_AS_EXP_ENTRY(as_exp_list_size(entry->v.ctx, NIL));
+        break;
+    case OP_LIST_GET_BY_VALUE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_list_get_by_value(entry->v.ctx, lval1, NIL,
+                                                  NIL)); // - 2 for value, bin
+        break;
+    case OP_LIST_GET_BY_VALUE_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_value_range(entry->v.ctx, lval1, NIL, NIL,
+                                           NIL)); // - 3 for begin, end, bin
+        break;
+    case OP_LIST_GET_BY_VALUE_LIST:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_value_list(entry->v.ctx, lval1, NIL,
+                                          NIL)); // - 2 for value, bin
+        break;
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_list_get_by_rel_rank_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for value, rank, bin
+        break;
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_list_get_by_rel_rank_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // - 4 for value, rank, count, bin
+        break;
+    case OP_LIST_GET_BY_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_index_range_to_end(entry->v.ctx, lval1, NIL,
+                                                  NIL)); // - 2 for index, bin
+        break;
+    case OP_LIST_GET_BY_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_index_range(entry->v.ctx, lval1, NIL, NIL,
+                                           NIL)); // - 3 for index, count, bin
+        break;
+    case OP_LIST_GET_BY_RANK:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, py_expr, &lval2) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_list_get_by_rank(entry->v.ctx, lval1, lval2,
+                                                 NIL,
+                                                 NIL)); // - 2 for rank, bin
+        break;
+    case OP_LIST_GET_BY_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_rank_range_to_end(entry->v.ctx, lval1, NIL,
+                                                 NIL)); // - 2 for rank, bin
+        break;
+    case OP_LIST_GET_BY_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_list_get_by_rank_range(entry->v.ctx, lval1, NIL, NIL,
+                                          NIL)); // - 3 for rank, count, bin
+        break;
+    case OP_LIST_APPEND:
+        SET_AS_EXP_ENTRY(
+            3, as_exp_list_append(
+                   entry->v.ctx, entry->v.list_pol, NIL,
+                   NIL)); // -3 for val, _AS_EXP_CODE_CDT_LIST_CRMOD, bin
+        break;
+    case OP_LIST_APPEND_ITEMS:
+        SET_AS_EXP_ENTRY(as_exp_list_append_items(entry->v.ctx,
+                                                  entry->v.list_pol, NIL, NIL));
+        break;
+    case OP_LIST_INSERT:
+        SET_AS_EXP_ENTRY(
+            as_exp_list_insert(entry->v.ctx, entry->v.list_pol, NIL, NIL, NIL));
+        break;
+    case OP_LIST_INSERT_ITEMS:
+        SET_AS_EXP_ENTRY(4, as_exp_list_insert_items(entry->v.ctx,
+                                                     entry->v.list_pol, NIL,
+                                                     NIL, NIL));
+        break;
+    case OP_LIST_INCREMENT:
+        SET_AS_EXP_ENTRY(as_exp_list_increment(entry->v.ctx, entry->v.list_pol,
+                                               NIL, NIL, NIL));
+        break;
+    case OP_LIST_SET:
+        SET_AS_EXP_ENTRY(
+            as_exp_list_set(entry->v.ctx, entry->v.list_pol, NIL, NIL, NIL));
+        break;
+    case OP_LIST_CLEAR:
+        SET_AS_EXP_ENTRY(as_exp_list_clear(entry->v.ctx,
+                                           NIL)); // -1 for bin
+        break;
+    case OP_LIST_SORT:
+        if (get_int64_t(err, LIST_ORDER_KEY, py_expr, &lval1) != AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_list_sort(entry->v.ctx, lval1,
+                                          NIL)); // -1 for bin
+        break;
+    case OP_LIST_REMOVE_BY_VALUE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_value(entry->v.ctx, lval1, NIL,
+                                        NIL)); // -2 for bin and val
+        break;
+    case OP_LIST_REMOVE_BY_VALUE_LIST:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_value_list(entry->v.ctx, lval1, NIL,
+                                             NIL)); // -2 for bin and val
+        break;
+    case OP_LIST_REMOVE_BY_VALUE_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_value_range(entry->v.ctx, lval1, NIL, NIL,
+                                              NIL)); // - 3 for begin, end, val
+        break;
+    case OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_list_remove_by_rel_rank_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // -3 for value, rank, bin
+        break;
+    case OP_LIST_REMOVE_BY_REL_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_list_remove_by_rel_rank_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // -4 for value, rank, count, bin
+        break;
+    case OP_LIST_REMOVE_BY_INDEX:
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_list_remove_by_index(entry->v.ctx, NIL,
+                                                     NIL)); // -2 for index, bin
+        break;
+    case OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_index_range_to_end(entry->v.ctx, lval1, NIL,
+                                                     NIL)); // -2 for index, bin
+        break;
+    case OP_LIST_REMOVE_BY_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_list_remove_by_index_range(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for index, count, bin
+        break;
+    case OP_LIST_REMOVE_BY_RANK:
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_list_remove_by_rank(entry->v.ctx, NIL,
+                                                    NIL)); // -2 for rank, bin
+        break;
+    case OP_LIST_REMOVE_BY_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_rank_range_to_end(entry->v.ctx, lval1, NIL,
+                                                    NIL)); // - 2 for rank, bin
+        break;
+    case OP_LIST_REMOVE_BY_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_list_remove_by_rank_range(entry->v.ctx, lval1, NIL, NIL,
+                                             NIL)); // - 3 for rank, count, bin
+        break;
+    case OP_MAP_PUT:
+        SET_AS_EXP_ENTRY(
+            as_exp_map_put(entry->v.ctx, entry->v.map_pol, NIL, NIL, NIL));
+        break;
+    case OP_MAP_PUT_ITEMS:
+        SET_AS_EXP_ENTRY(
+            3, as_exp_map_put_items(entry->v.ctx, entry->v.map_pol, NIL, NIL));
+        break;
+    case OP_MAP_INCREMENT:
+        SET_AS_EXP_ENTRY(as_exp_map_increment(entry->v.ctx, entry->v.map_pol,
+                                              NIL, NIL, NIL));
+        break;
+    case OP_MAP_CLEAR:
+        SET_AS_EXP_ENTRY(as_exp_map_clear(entry->v.ctx,
+                                          NIL)); // - 1 for bin
+        break;
+    case OP_MAP_REMOVE_BY_KEY:
+        SET_AS_EXP_ENTRY(2, as_exp_map_remove_by_key(entry->v.ctx, NIL,
+                                                     NIL)); // - 2 for key, bin
+        break;
+    case OP_MAP_REMOVE_BY_KEY_LIST:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_key_list(entry->v.ctx, lval1, NIL,
+                                          NIL)); // - 2 for key, bin
+        break;
+    case OP_MAP_REMOVE_BY_KEY_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_key_range(entry->v.ctx, lval1, NIL, NIL,
+                                           NIL)); // - 3 for begin, end, bin
+        break;
+    case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_rel_index_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for key, index, bin
+        break;
+    case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_map_remove_by_key_rel_index_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // - 4 for key, index, count, bin
+        break;
+    case OP_MAP_REMOVE_BY_VALUE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_map_remove_by_value(entry->v.ctx, lval1, NIL,
+                                                    NIL)); // - 2 for val, bin
+        break;
+    case OP_MAP_REMOVE_BY_VALUE_LIST:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_value_list(entry->v.ctx, lval1, NIL,
+                                            NIL)); // - 2 for values, bin
+        break;
+    case OP_MAP_REMOVE_BY_VALUE_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_value_range(entry->v.ctx, lval1, NIL, NIL,
+                                             NIL)); // - 3 for begin, end, bin
+        break;
+    case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_rel_rank_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for val, rank, bin
+        break;
+    case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(as_exp_map_remove_by_value_rel_rank_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // - 4 for val, rank, count, bin
+        break;
+    case OP_MAP_REMOVE_BY_INDEX:
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_map_remove_by_index(entry->v.ctx, NIL,
+                                                    NIL)); // - 2 for index, bin
+        break;
+    case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_index_range_to_end(entry->v.ctx, lval1, NIL,
+                                                    NIL)); // - 2 for index, bin
+        break;
+    case OP_MAP_REMOVE_BY_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_index_range(entry->v.ctx, lval1, NIL, NIL,
+                                             NIL)); // - 3 for index, count, bin
+        break;
+    case OP_MAP_REMOVE_BY_RANK:
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_map_remove_by_rank(entry->v.ctx, NIL,
+                                                   NIL)); // - 2 for rank, bin
+        break;
+    case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_rank_range_to_end(entry->v.ctx, lval1, NIL,
+                                                   NIL)); // - 2 for rank, bin
+        break;
+    case OP_MAP_REMOVE_BY_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+        SET_AS_EXP_ENTRY(
+            as_exp_map_remove_by_rank_range(entry->v.ctx, lval1, NIL, NIL,
+                                            NIL)); // - 3 for rank, count, bin
+        break;
+    case OP_MAP_SIZE:
+        SET_AS_EXP_ENTRY(as_exp_map_size(entry->v.ctx,
+                                         NIL)); // - 1 for bin
+        break;
+    case OP_MAP_GET_BY_KEY:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, py_expr, &lval2) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_key(entry->v.ctx, lval1, lval2, NIL,
+                                               NIL)); // - 2 for key, bin
+        break;
+    case OP_MAP_GET_BY_KEY_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_key_range(entry->v.ctx, lval1, NIL, NIL,
+                                        NIL)); // - 3 for begin, end, bin
+        break;
+    case OP_MAP_GET_BY_KEY_LIST:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_key_list(entry->v.ctx, lval1, NIL,
+                                                    NIL)); // - 2 for keys, bin
+        break;
+    case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_key_rel_index_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for key, index, bin
+        break;
+    case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_key_rel_index_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // - 4 for key, index, count, bin
+        break;
+    case OP_MAP_GET_BY_VALUE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(2, as_exp_map_get_by_value(entry->v.ctx, lval1, NIL,
+                                                    NIL)); // - 2 for value, bin
+        break;
+    case OP_MAP_GET_BY_VALUE_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_value_range(entry->v.ctx, lval1, NIL, NIL,
+                                          NIL)); // - 3 for begin, end, bin
+        break;
+    case OP_MAP_GET_BY_VALUE_LIST:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_value_list(entry->v.ctx, lval1, NIL,
+                                         NIL)); // - 2 for value, bin
+        break;
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_value_rel_rank_range_to_end(
+            entry->v.ctx, lval1, NIL, NIL,
+            NIL)); // - 3 for value, rank, bin
+        break;
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_value_rel_rank_range(
+            entry->v.ctx, lval1, NIL, NIL, NIL,
+            NIL)); // - 4 for value, rank, count, bin
+        break;
+    case OP_MAP_GET_BY_INDEX:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, py_expr, &lval2) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_index(entry->v.ctx, lval1, lval2,
+                                                 NIL,
+                                                 NIL)); // - 2 for index, bin
+        break;
+    case OP_MAP_GET_BY_INDEX_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_index_range_to_end(entry->v.ctx, lval1, NIL,
+                                                 NIL)); // - 2 for index, bin
+        break;
+    case OP_MAP_GET_BY_INDEX_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_index_range(entry->v.ctx, lval1, NIL, NIL,
+                                          NIL)); // - 3 for index, count, bin
+        break;
+    case OP_MAP_GET_BY_RANK:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, py_expr, &lval2) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_map_get_by_rank(entry->v.ctx, lval1, lval2, NIL,
+                                                NIL)); // - 2 for rank, bin
+        break;
+    case OP_MAP_GET_BY_RANK_RANGE_TO_END:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_rank_range_to_end(entry->v.ctx, lval1, NIL,
+                                                NIL)); // - 2 for rank, bin
+        break;
+    case OP_MAP_GET_BY_RANK_RANGE:
+        if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, py_expr, &lval1) !=
+            AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(
+            as_exp_map_get_by_rank_range(entry->v.ctx, lval1, NIL, NIL,
+                                         NIL)); // - 3 for rank, count, bin
+        break;
+    case _AS_EXP_BIT_FLAGS:
+        if (get_int64_t(err, AS_PY_VAL_KEY, py_expr, &lval1) != AEROSPIKE_OK) {
+            return err->code;
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_uint((uint64_t)lval1));
+        break;
+    case OP_BIT_RESIZE:
+        SET_AS_EXP_ENTRY(
+            as_exp_bit_resize(NULL, NIL, NO_BIT_FLAGS,
+                              NIL)); // - 4 for byte_size, policy, flags, bin
+        break;
+    case OP_BIT_INSERT:
+        SET_AS_EXP_ENTRY(as_exp_bit_insert(NULL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_REMOVE:
+        SET_AS_EXP_ENTRY(as_exp_bit_remove(NULL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_SET:
+        SET_AS_EXP_ENTRY(as_exp_bit_set(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_OR:
+        SET_AS_EXP_ENTRY(as_exp_bit_or(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_XOR:
+        SET_AS_EXP_ENTRY(as_exp_bit_xor(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_AND:
+        SET_AS_EXP_ENTRY(as_exp_bit_and(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_NOT:
+        SET_AS_EXP_ENTRY(as_exp_bit_not(NULL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_LSHIFT:
+        SET_AS_EXP_ENTRY(as_exp_bit_lshift(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_RSHIFT:
+        SET_AS_EXP_ENTRY(as_exp_bit_rshift(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_ADD:
+        SET_AS_EXP_ENTRY(
+            6, as_exp_bit_add(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
+        break;
+    case OP_BIT_SUBTRACT:
+        SET_AS_EXP_ENTRY(
+            6, as_exp_bit_subtract(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
+        break;
+    case OP_BIT_SET_INT:
+        SET_AS_EXP_ENTRY(as_exp_bit_set_int(NULL, NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_GET:
+        SET_AS_EXP_ENTRY(
+            3, as_exp_bit_get(NIL, NIL,
+                              NIL)); // - 3 for bit_offset, bit_size, bin
+        break;
+    case OP_BIT_COUNT:
+        SET_AS_EXP_ENTRY(
+            3, as_exp_bit_count(NIL, NIL,
+                                NIL)); // - 3 for bit_offset, bit_size, bin
+        break;
+    case OP_BIT_LSCAN:
+        SET_AS_EXP_ENTRY(as_exp_bit_lscan(NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_RSCAN:
+        SET_AS_EXP_ENTRY(as_exp_bit_rscan(NIL, NIL, NIL, NIL));
+        break;
+    case OP_BIT_GET_INT:
+        SET_AS_EXP_ENTRY(as_exp_bit_get_int(NIL, NIL, 0, NIL));
+        break;
+    case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
+        SET_AS_EXP_ENTRY(
+            4, as_exp_hll_init_mh(
+                   NULL, 0, 0,
+                   NIL)); // - 4 for index_bit_count, mh_bit_count, policy, bin
+        break;
+    case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
+        SET_AS_EXP_ENTRY(
+            5, as_exp_hll_add_mh(
+                   NULL, NIL, 0, 0,
+                   NIL)); // - 5 for list, index_bit_count, -1, policy, bin
+        break;
+    case OP_HLL_GET_COUNT:
+        SET_AS_EXP_ENTRY(as_exp_hll_get_count(NIL)); // - 1 for bin
+        break;
+    case OP_HLL_GET_UNION:
+        SET_AS_EXP_ENTRY(as_exp_hll_get_union(NIL,
+                                              NIL)); // - 2 for list, bin
+        break;
+    case OP_HLL_GET_UNION_COUNT:
+        SET_AS_EXP_ENTRY(
+            2, as_exp_hll_get_union_count(NIL, NIL)); // - 2 for list, bin
+        break;
+    case OP_HLL_GET_INTERSECT_COUNT:
+        SET_AS_EXP_ENTRY(
+            as_exp_hll_get_intersect_count(NIL, NIL)); // - 2 for list, bin
+        break;
+    case OP_HLL_GET_SIMILARITY:
+        SET_AS_EXP_ENTRY(
+            2, as_exp_hll_get_similarity(NIL, NIL)); // - 2 for list, bin
+        break;
+    case OP_HLL_DESCRIBE:
+        SET_AS_EXP_ENTRY(as_exp_hll_describe(NIL)); // - 1 for bin
+        break;
+    case OP_HLL_MAY_CONTAIN:
+        SET_AS_EXP_ENTRY(as_exp_hll_may_contain(NIL,
+                                                NIL)); // - 2 for list, bin
+        break;
+    case EXCLUSIVE:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_exclusive(
+                NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case ADD:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_add(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case SUB:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_sub(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case MUL:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_mul(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case DIV:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_div(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case POW:
+        SET_AS_EXP_ENTRY(as_exp_pow(NIL,
+                                    NIL)); // - 2 for __base, __exponent
+        break;
+    case LOG:
+        SET_AS_EXP_ENTRY(as_exp_log(NIL,
+                                    NIL)); // - 2 for __base, __base
+        break;
+    case MOD:
+        SET_AS_EXP_ENTRY(2,
+                         as_exp_mod(NIL,
+                                    NIL)); // - 2 for __numerator, __denominator
+        break;
+    case ABS:
+        SET_AS_EXP_ENTRY(as_exp_abs(NIL)); // - 1 for __value
+        break;
+    case FLOOR:
+        SET_AS_EXP_ENTRY(as_exp_floor(NIL)); // - 1 for __num
+        break;
+    case CEIL:
+        SET_AS_EXP_ENTRY(as_exp_ceil(NIL)); // - 1 for __num
+        break;
+    case TO_INT:
+        SET_AS_EXP_ENTRY(as_exp_to_int(NIL)); // - 1 for __num
+        break;
+    case TO_FLOAT:
+        SET_AS_EXP_ENTRY(as_exp_to_float(NIL)); // - 1 for __num
+        break;
+    case INT_AND:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_int_and(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case INT_OR:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_int_or(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case INT_XOR:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_int_xor(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case INT_NOT:
+        SET_AS_EXP_ENTRY(as_exp_int_not(NIL)); // - 1 for __expr
+        break;
+    case INT_LSHIFT:
+        SET_AS_EXP_ENTRY(2, as_exp_int_lshift(NIL,
+                                              NIL)); // - 2 for __value, __shift
+        break;
+    case INT_RSHIFT:
+        SET_AS_EXP_ENTRY(2, as_exp_int_rshift(NIL,
+                                              NIL)); // - 2 for __value, __shift
+        break;
+    case INT_ARSHIFT:
+        SET_AS_EXP_ENTRY(
+            2, as_exp_int_arshift(NIL, NIL)); // - 2 for __value, __shift
+        break;
+    case INT_COUNT:
+        SET_AS_EXP_ENTRY(as_exp_int_count(NIL)); // - 1 for __expr
+        break;
+    case INT_LSCAN:
+        SET_AS_EXP_ENTRY(2, as_exp_int_lscan(NIL,
+                                             NIL)); // - 2 for __value, __search
+        break;
+    case INT_RSCAN:
+        SET_AS_EXP_ENTRY(2, as_exp_int_rscan(NIL,
+                                             NIL)); // - 2 for __value, __search
+        break;
+    case MIN:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_min(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case MAX:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_max(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case COND:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_cond(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case LET:
+        SET_AS_EXP_ENTRY(
+            2,
+            as_exp_let(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+        break;
+    case DEF:;
+        py_val_from_dict = PyDict_GetItemString(py_expr, AS_PY_VAL_KEY);
+        const char *def_var_name = NULL;
+        if (PyUnicode_Check(py_val_from_dict)) {
+            def_var_name = PyUnicode_AsUTF8(py_val_from_dict);
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "regex_str must be a string.");
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_def(def_var_name, NIL)); // - 1 for __expr
+        break;
+    case VAR:;
+        py_val_from_dict = PyDict_GetItemString(py_expr, AS_PY_VAL_KEY);
+        const char *var_name = NULL;
+        if (PyUnicode_Check(py_val_from_dict)) {
+            var_name = PyUnicode_AsUTF8(py_val_from_dict);
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "regex_str must be a string.");
+        }
+
+        SET_AS_EXP_ENTRY(as_exp_var(var_name));
+        break;
+    case UNKNOWN:
+        SET_AS_EXP_ENTRY(as_exp_unknown());
+        break;
+    default:
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unrecognised expression op type.");
+        break;
     }
 
     return err->code;
@@ -1711,9 +1674,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
             goto CLEANUP;
         }
 
-        as_exp_entries[i].op =
-            PyLong_AsLongLong(PyTuple_GetItem(py_expr_tuple, 0));
-        if (as_exp_entries[i].op == -1 && PyErr_Occurred()) {
+        entry->op = PyLong_AsLongLong(PyTuple_GetItem(py_expr_tuple, 0));
+        if (entry->op == -1 && PyErr_Occurred()) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "Failed to get op from expression tuple, op must be an int.");
@@ -1734,16 +1696,15 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         //TODO Could it be moved somewhere else?
         py_ctx_list_p = PyDict_GetItemString(py_fixed_dict, CTX_KEY);
         if (py_ctx_list_p != NULL) {
-            as_exp_entries[i].v.ctx = malloc(sizeof(as_cdt_ctx));
-            if (as_exp_entries[i].v.ctx == NULL) {
+            entry->v.ctx = malloc(sizeof(as_cdt_ctx));
+            if (entry->v.ctx == NULL) {
                 as_error_update(err, AEROSPIKE_ERR,
                                 "Could not malloc mem for entry.ctx.");
                 goto CLEANUP;
             }
 
-            if (get_cdt_ctx(self, err, as_exp_entries[i].v.ctx, py_fixed_dict,
-                            &ctx_in_use, &static_pool,
-                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            if (get_cdt_ctx(self, err, entry->v.ctx, py_fixed_dict, &ctx_in_use,
+                            &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1754,8 +1715,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         if (py_list_policy_p != NULL) {
             if (PyDict_Check(py_list_policy_p) &&
                 PyDict_Size(py_list_policy_p) > 0) {
-                as_exp_entries[i].v.list_pol = malloc(sizeof(as_list_policy));
-                if (as_exp_entries[i].v.list_pol == NULL) {
+                entry->v.list_pol = malloc(sizeof(as_list_policy));
+                if (entry->v.list_pol == NULL) {
                     as_error_update(
                         err, AEROSPIKE_ERR,
                         "Could not malloc mem for entry.list_policy.");
@@ -1763,10 +1724,10 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 }
 
                 bool policy_in_use = false;
-                if (get_list_policy(
-                        err, py_fixed_dict, as_exp_entries[i].v.list_pol,
-                        &policy_in_use, self->validate_keys) != AEROSPIKE_OK) {
-                    as_exp_entries[i].v.list_pol = NULL;
+                if (get_list_policy(err, py_fixed_dict, entry->v.list_pol,
+                                    &policy_in_use,
+                                    self->validate_keys) != AEROSPIKE_OK) {
+                    entry->v.list_pol = NULL;
                     goto CLEANUP;
                 }
             }
@@ -1776,8 +1737,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         if (py_map_policy_p != NULL) {
             if (PyDict_Check(py_map_policy_p) &&
                 PyDict_Size(py_map_policy_p) > 0) {
-                as_exp_entries[i].v.map_pol = malloc(sizeof(as_map_policy));
-                if (as_exp_entries[i].v.map_pol == NULL) {
+                entry->v.map_pol = malloc(sizeof(as_map_policy));
+                if (entry->v.map_pol == NULL) {
                     as_error_update(
                         err, AEROSPIKE_ERR,
                         "Could not malloc mem for entry.v.map_pol.");
@@ -1785,17 +1746,17 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 }
 
                 if (pyobject_to_map_policy(
-                        err, py_map_policy_p, as_exp_entries[i].v.map_pol,
+                        err, py_map_policy_p, entry->v.map_pol,
                         self->validate_keys) != AEROSPIKE_OK) {
-                    as_exp_entries[i].v.map_pol = NULL;
+                    entry->v.map_pol = NULL;
                     goto CLEANUP;
                 }
             }
         }
 
-        if (set_as_exp_entry(self, &static_pool, SERIALIZER_PYTHON,
-                             unicodeStrVector, &as_exp_entries, exp_count,
-                             py_fixed_dict, err) != AEROSPIKE_OK) {
+        if (set_as_exp_entry_using_py_expr_class_instance(
+                self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector,
+                py_fixed_dict, &as_exp_entries, err) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
