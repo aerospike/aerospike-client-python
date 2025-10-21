@@ -644,8 +644,30 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(0, BIN_EXPR());
             break;
         case _AS_EXP_CODE_VAR_BUILTIN:
-            // TODO: Not done
-            APPEND_ARRAY(0, as_exp_var_builtin_float(0));
+            // TODO: replace with new expr from Sam
+            if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            switch (lval1) {
+            case AS_EXP_TYPE_MAP:
+                APPEND_ARRAY(2, as_exp_var_builtin_map(0));
+                break;
+            case AS_EXP_TYPE_LIST:
+                APPEND_ARRAY(2, as_exp_var_builtin_list(0));
+                break;
+            case AS_EXP_TYPE_STR:
+                APPEND_ARRAY(2, as_exp_var_builtin_str(0));
+                break;
+            case AS_EXP_TYPE_INT:
+                APPEND_ARRAY(2, as_exp_var_builtin_int(0));
+                break;
+            case AS_EXP_TYPE_FLOAT:
+                APPEND_ARRAY(2, as_exp_var_builtin_float(0));
+                break;
+            }
+
             break;
         case VAL:
         case _AS_EXP_CODE_AS_VAL:;

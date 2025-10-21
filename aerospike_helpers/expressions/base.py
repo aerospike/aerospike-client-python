@@ -1086,9 +1086,7 @@ class VarBuiltIn(_BaseExpr):
 
         :return: (value stored in variable)
         """
-        self._fixed = {_Keys.VALUE_KEY: var_id}
-        # TODO: needs to be an expr?
-        self._children = (var_id, var_type)
+        self._fixed = {_Keys.VALUE_KEY: var_id, _Keys.VALUE_TYPE_KEY: var_type}
 
 
 class CDTSelect(_BaseExpr):
