@@ -11,18 +11,16 @@ from contextlib import nullcontext
 from .test_base_class import TestBaseClass
 
 
-@pytest.mark.usefixtures("as_connection")
+@pytest.fixture(scope="class", autouse=True)
+def setup_class(as_connection, request):
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+
+
 class TestCDTSelectOperations:
-
-    @pytest.fixture(scope="class", autouse=True)
-    def setup_class(as_connection, request):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
-            request.cls.expected_context_for_pos_tests = nullcontext()
-        else:
-            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-            request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
-
-
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
