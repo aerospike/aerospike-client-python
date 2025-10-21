@@ -153,5 +153,5 @@ def cdt_apply(name: str, ctx: list, expr: TypeExpression, flags: int = aerospike
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
-    op_dict = {"op": aerospike._AS_OPERATOR_CDT_MODIFY, "bin": name, "ctx": ctx, "expr": expr, "flags": flags}
+    op_dict = {"op": aerospike._AS_OPERATOR_CDT_MODIFY, "bin": name, "ctx": ctx, "mod_exp": expr, "flags": flags}
     return op_dict
