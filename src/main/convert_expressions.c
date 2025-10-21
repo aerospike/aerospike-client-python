@@ -648,7 +648,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case _AS_EXP_CODE_VAR_BUILTIN:
             // TODO: replace with new expr from Sam
-            if (get_int64_t(err, "value_type", temp_expr->pydict, &lval1) !=
+            if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
