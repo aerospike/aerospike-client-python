@@ -154,35 +154,34 @@ class _BaseExpr(_AtomExpr):
     _fixed: TypeFixed = None
     _children: TypeChildren = ()
 
-    def _get_op(self) -> TypeCompiledOp:
-        return (self._op, self._rt, self._fixed, len(self._children))
+    # def _get_four_tuple_from_expr(self) -> TypeCompiledOp:
+    #     return (self._op, self._rt, self._fixed, len(self._children))
 
-    def _vop(self, v) -> TypeCompiledOp:
-        return (
-            _ExprOp.VAL,
-            None,
-            {_Keys.VALUE_KEY: v},
-            0,
-        )
+    # def _get_four_tuple_from_raw_val(self, v) -> TypeCompiledOp:
+    #     return (
+    #         _ExprOp.VAL,
+    #         None,
+    #         {_Keys.VALUE_KEY: v},
+    #         0,
+    #     )
 
     def compile(self) -> TypeExpression:
-        expression = [self._get_op()]
-        work = chain(self._children)
+        # expression = [self._get_four_tuple_from_expr()]
+        # work = chain(self._children)
 
-        while True:
-            try:
-                item = next(work)
-            except StopIteration:
-                break
+        # while True:
+        #     try:
+        #         item = next(work)
+        #     except StopIteration:
+        #         break
 
-            if isinstance(item, _BaseExpr):
-                expression.append(item._get_op())
-                work = chain(item._children, work)
-            else:
-                # Should be a str, bin, int, float, etc.
-                expression.append(self._vop(item))
-
-        return expression
+        #     if isinstance(item, _BaseExpr):
+        #         expression.append(item._get_four_tuple_from_expr())
+        #         work = chain(item._children, work)
+        #     else:
+        #         # Should be a str, bin, int, float, etc.
+        #         expression.append(self._get_four_tuple_from_raw_val(item))
+        return self
 
     def _overload_op_unary(self, op_type: int):
         if self._op == op_type:
