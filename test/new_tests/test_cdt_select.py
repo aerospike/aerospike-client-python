@@ -15,12 +15,12 @@ from .test_base_class import TestBaseClass
 class TestCDTSelectOperations:
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_class(cls, as_connection):
+    def setup_class(as_connection, request):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
-            cls.expected_context_for_pos_tests = nullcontext()
+            request.cls.expected_context_for_pos_tests = nullcontext()
         else:
             # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-            cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+            request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
 
 
     MAP_BIN_NAME = "map_bin"
