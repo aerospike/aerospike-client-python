@@ -98,7 +98,7 @@ class TestCDTSelectOperations:
                     ]
                 ),
                 {
-                    MAP_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME]
+                    MAP_BIN_NAME: list(BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME].values())
                 },
                 id="select_all_children_once_in_map"
             ),
