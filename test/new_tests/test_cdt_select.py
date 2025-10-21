@@ -174,7 +174,7 @@ class TestCDTSelectOperations:
             ]
 
     def test_cdt_modify(self):
-        mod_expr = Sub(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.INTEGER), 5).compile()
+        mod_expr = Sub(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.FLOAT), 5.0).compile()
         ops = [
             operations.cdt_apply(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
