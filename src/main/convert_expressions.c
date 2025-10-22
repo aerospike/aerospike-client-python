@@ -465,10 +465,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     as_error_reset(err);
 
     as_val *val = NULL;
-    // TODO: need flag to ignore send_bool_as, or else expression may send boolean as integer
-    // which can be a breaking change.
     as_val_new_from_pyobject(self, err, py_obj, &val, static_pool,
-                             serializer_type);
+                             serializer_type, true);
     if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
