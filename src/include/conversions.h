@@ -184,7 +184,7 @@ as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin);
 
 // Both as_operations and as_record have ttl and gen fields,
-// so we have ttl and gen have separate fields instead of accepting either as_operations or as_record
+// so we have ttl and gen as separate parameters instead of accepting either as_operations or as_record
 as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
                              uint16_t *gen_ref, as_error *err,
                              bool validate_keys);
