@@ -1389,70 +1389,118 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         // this should never happen, but if it did...
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
-    else if (!PyDict_Check(py_bins_dict)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Record should be passed as bin-value pair");
-    }
+    else if (PyDict_Check(py_bins_dict)) {
+        PyObject *py_bin_name = NULL, *py_bin_value = NULL;
+        Py_ssize_t pos = 0;
+        Py_ssize_t size = PyDict_Size(py_bins_dict);
+        const char *name;
 
-    PyObject *py_bin_name = NULL, *py_bin_value = NULL;
-    Py_ssize_t pos = 0;
-    Py_ssize_t size = PyDict_Size(py_bins_dict);
-    const char *name;
+        as_record_init(rec, size);
 
-    as_record_init(rec, size);
+        while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
 
-    while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
+            if (!PyUnicode_Check(py_bin_name)) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "A bin name must be a string or unicode string.");
+            }
 
-        if (!PyUnicode_Check(py_bin_name)) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "A bin name must be a string or unicode string.");
-            goto CLEANUP;
-        }
+            name = PyUnicode_AsUTF8(py_bin_name);
+            if (!name) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "Unable to convert unicode object to C string");
+            }
 
-        name = PyUnicode_AsUTF8(py_bin_name);
-        if (!name) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to convert unicode object to C string");
-            goto CLEANUP;
-        }
+            if (self->strict_types) {
+                if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
+                    return as_error_update(
+                        err, AEROSPIKE_ERR_BIN_NAME,
+                        "A bin name should not exceed 15 characters limit");
+                }
+            }
 
-        if (self->strict_types) {
-            if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                as_error_update(
-                    err, AEROSPIKE_ERR_BIN_NAME,
-                    "A bin name should not exceed 15 characters limit");
-                goto CLEANUP;
+            if (!py_bin_value) {
+                // this should never happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
+            }
+
+            as_val *val = NULL;
+            as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
+                                     serializer_type);
+            if (err->code != AEROSPIKE_OK) {
+                break;
+            }
+            bool success = as_record_set(rec, name, (as_bin_value *)val);
+            if (success == false) {
+                as_val_destroy(val);
+                return as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
+                                       "Unable to set key-value pair");
             }
         }
 
-        if (!py_bin_value) {
-            // this should never happen, but if it did...
-            as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-            goto CLEANUP;
+        if (py_meta && py_meta != Py_None) {
+            if (!PyDict_Check(py_meta)) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "meta must be a dictionary");
+            }
+            else {
+                PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
+                PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
+
+                if (py_ttl) {
+                    if (PyLong_Check(py_ttl)) {
+                        rec->ttl = (uint32_t)PyLong_AsLong(py_ttl);
+                        if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
+                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                                as_error_update(
+                                    err, AEROSPIKE_ERR_PARAM,
+                                    "integer value exceeds sys.maxsize");
+                            }
+                        }
+                    }
+                    else {
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                        "TTL should be an int or long");
+                    }
+                }
+                else {
+                    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+                }
+
+                if (py_gen) {
+                    if (PyLong_Check(py_gen)) {
+                        // TODO: need to check that this value does not exceed an unsigned 16 bit integer
+                        rec->gen = (uint16_t)PyLong_AsLong(py_gen);
+                        if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
+                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                                as_error_update(
+                                    err, AEROSPIKE_ERR_PARAM,
+                                    "integer value exceeds sys.maxsize");
+                            }
+                        }
+                    }
+                    else {
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                        "Generation should be an int or long");
+                    }
+                }
+            }
+        }
+        else {
+            rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
         }
 
-        as_val *val = NULL;
-        as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
-                                 serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-        bool success = as_record_set(rec, name, (as_bin_value *)val);
-        if (success == false) {
-            as_val_destroy(val);
-            as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                            "Unable to set key-value pair");
-            goto CLEANUP;
+            as_record_destroy(rec);
         }
     }
-
-    check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err, self->validate_keys);
-
-CLEANUP:
-
-    if (err->code != AEROSPIKE_OK) {
-        as_record_destroy(rec);
+    else {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Record should be passed as bin-value pair");
     }
+
     return err->code;
 }
 
@@ -2478,85 +2526,62 @@ CLEANUP:
  * Returns: error code.
  *******************************************************************************************************
  */
-as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
-                             uint16_t *gen_ref, as_error *err,
-                             bool validate_keys)
+as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
+                             as_error *err)
 {
     as_error_reset(err);
+    if (py_meta && PyDict_Check(py_meta)) {
+        PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
+        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
+        uint32_t ttl = 0;
+        uint16_t gen = 0;
+        if (py_ttl) {
+            if (PyLong_Check(py_ttl)) {
+                ttl = (uint32_t)PyLong_AsLong(py_ttl);
+            }
+            else {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "Ttl should be an int or long");
+            }
 
-    if (!py_meta) {
-        // TODO: not the same code path as passing None...
-        return err->code;
+            if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value for ttl exceeds sys.maxsize");
+            }
+            ops->ttl = ttl;
+        }
+        else {
+            // Metadata dict was present, but ttl field did not exist
+            ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
+
+        if (py_gen) {
+            if (PyLong_Check(py_gen)) {
+                // TODO: Needs to check value doesn't go past unsigned 16 bit limit
+                gen = (uint16_t)PyLong_AsLong(py_gen);
+            }
+            else {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "Generation should be an int or long");
+            }
+
+            if ((uint16_t)-1 == gen && PyErr_Occurred()) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value for gen exceeds sys.maxsize");
+            }
+            ops->gen = gen;
+        }
     }
-    else if (py_meta == Py_None) {
-        // Metadata dict was not set by user
-        // TODO: gen ref not set
-        *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
-        return err->code;
-    }
-    else if (!PyDict_Check(py_meta)) {
+    else if (py_meta && (py_meta != Py_None)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
     }
-
-    // py_meta is a dictionary
-    if (validate_keys) {
-        // TODO: assuming pyobject is a py_dict
-        // TODO: function signature needs to take in string instead of bool for last param
-        as_status retval = does_py_dict_contain_valid_keys(
-            err, py_meta, py_record_metadata_valid_keys, "record metadata");
-        if (retval == -1) {
-            // This shouldn't happen, but if it did...
-            // TODO: wrong error message
-            return as_error_update(err, AEROSPIKE_ERR,
-                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
-        }
-        else if (retval == 0) {
-            return err->code;
-        }
-    }
-
-    PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-    PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-    uint32_t ttl = 0;
-    uint16_t gen = 0;
-    if (py_ttl) {
-        if (PyLong_Check(py_ttl)) {
-            ttl = (uint32_t)PyLong_AsLong(py_ttl);
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Ttl should be an int or long");
-        }
-
-        if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "integer value for ttl exceeds sys.maxsize");
-        }
-        *ttl_ref = ttl;
-    }
     else {
-        // Metadata dict was present, but ttl field did not exist
-        *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
+        // Metadata dict was not set by user
+        ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
-
-    if (py_gen) {
-        if (PyLong_Check(py_gen)) {
-            // TODO: Needs to check value doesn't go past unsigned 16 bit limit
-            gen = (uint16_t)PyLong_AsLong(py_gen);
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Generation should be an int or long");
-        }
-
-        if ((uint16_t)-1 == gen && PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "integer value for gen exceeds sys.maxsize");
-        }
-        *gen_ref = gen;
-    }
-
     return err->code;
 }
 
