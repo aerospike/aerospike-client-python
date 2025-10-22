@@ -88,7 +88,7 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         return AEROSPIKE_OK;
     }
     return as_val_new_from_pyobject(self, err, py_val, val, static_pool,
-                                    serializer_type);
+                                    serializer_type, false);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,

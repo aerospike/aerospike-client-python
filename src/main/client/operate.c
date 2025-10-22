@@ -95,13 +95,13 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_value, &put_val, static_pool,   \
-                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
+                                 SERIALIZER_PYTHON, false) != AEROSPIKE_OK) {  \
         return err->code;                                                      \
     }
 
 #define CONVERT_KEY_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_key, &put_key, static_pool,     \
-                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
+                                 SERIALIZER_PYTHON, false) != AEROSPIKE_OK) {  \
         return err->code;                                                      \
     }
 
@@ -113,7 +113,7 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
     if (as_val_new_from_pyobject(self, err, py_range, &put_range, static_pool, \
-                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
+                                 SERIALIZER_PYTHON, false) != AEROSPIKE_OK) {  \
         return err->code;                                                      \
     }
 

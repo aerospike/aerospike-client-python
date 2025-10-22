@@ -111,7 +111,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
             PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
             as_val *val = NULL;
             as_val_new_from_pyobject(self->client, &err, py_val, &val,
-                                     &static_pool, SERIALIZER_PYTHON);
+                                     &static_pool, SERIALIZER_PYTHON, false);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
                 as_arraylist_destroy(arglist);

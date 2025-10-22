@@ -464,129 +464,29 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
 {
     as_error_reset(err);
 
-    if (!py_obj) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "py_obj value is null");
+    as_val *val = NULL;
+    as_val_new_from_pyobject(self, err, py_obj, &val, static_pool,
+                             serializer_type, true);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
     }
-    else if (PyBool_Check(py_obj)) {
-        as_exp_entry tmp_entry = as_exp_bool(PyObject_IsTrue(py_obj));
-        *new_entry =
-            tmp_entry; //TODO use as_exp_val((as_val *) bytes); here, might need a cast, not blocker
-    }
-    else if (PyLong_Check(py_obj)) {
-        int64_t l = (int64_t)PyLong_AsLongLong(py_obj);
-        if (l == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
-            }
-        }
 
-        as_exp_entry tmp_entry = as_exp_int(l);
-        *new_entry = tmp_entry;
-    }
-    else if (PyUnicode_Check(py_obj)) {
-        PyObject *py_ustr = PyUnicode_AsUTF8String(py_obj);
-        char *str = PyBytes_AsString(py_ustr);
-        temp_expr->val.val_string_p = strdup(str);
-        temp_expr->val_flag = VAL_STRING_P_ACTIVE;
-        as_exp_entry tmp_entry = as_exp_str(temp_expr->val.val_string_p);
-        *new_entry = tmp_entry;
-        Py_DECREF(py_ustr);
-    }
-    else if (PyBytes_Check(py_obj)) {
-        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-        as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
-        *new_entry = tmp_entry;
-    }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_parameter = PyUnicode_FromString("geo_data");
-        PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
-        Py_DECREF(py_parameter);
-        char *geo_value =
-            (char *)PyUnicode_AsUTF8(AerospikeGeospatial_DoDumps(py_data, err));
-        Py_DECREF(py_data);
-        as_exp_entry tmp_entry = as_exp_geo(geo_value);
-        *new_entry = tmp_entry;
-    }
-    else if (PyByteArray_Check(py_obj)) {
-        as_bytes *bytes;
-        GET_BYTES_POOL(bytes, static_pool, err);
-        if (err->code == AEROSPIKE_OK) {
-            if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                     &bytes, py_obj,
-                                                     err) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            as_exp_entry tmp_entry = as_exp_val(
-                (as_val *)
-                    bytes); //TODO can this be simplified to a buffer and as_exp_bytes?
-            *new_entry = tmp_entry;
-        }
-    }
-    else if (PyList_Check(py_obj)) {
-        as_list *list = NULL;
-        pyobject_to_list(self, err, py_obj, &list, static_pool,
-                         serializer_type);
-        if (err->code == AEROSPIKE_OK) {
-            temp_expr->val.val_list_p = list;
-            temp_expr->val_flag = VAL_LIST_P_ACTIVE;
-            as_exp_entry tmp_entry = as_exp_val(list);
-            *new_entry = tmp_entry;
-        }
-    }
-    else if (PyDict_Check(py_obj)) {
-        as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
-        if (err->code == AEROSPIKE_OK) {
-            temp_expr->val.val_map_p = map;
-            temp_expr->val_flag = VAL_MAP_P_ACTIVE;
-            as_exp_entry tmp_entry = as_exp_val(map);
-            *new_entry = tmp_entry;
-        }
-    }
-    else if (Py_None == py_obj) {
-        as_exp_entry tmp_entry = as_exp_nil();
-        *new_entry = tmp_entry;
-    }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
-        as_exp_entry tmp_entry = as_exp_nil();
-        *new_entry = tmp_entry;
-    }
-    else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
-        as_exp_entry tmp_entry =
-            as_exp_val((as_val *)as_val_reserve(&as_cmp_wildcard));
-        *new_entry = tmp_entry;
-    }
-    else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
-        as_exp_entry tmp_entry =
-            as_exp_val((as_val *)as_val_reserve(&as_cmp_inf));
-        *new_entry = tmp_entry;
-    }
-    else {
-        if (PyFloat_Check(py_obj)) {
-            double d = PyFloat_AsDouble(py_obj);
-            as_exp_entry tmp_entry = as_exp_float(d);
-            *new_entry = tmp_entry;
-        }
-        else {
-            as_bytes *bytes;
-            GET_BYTES_POOL(bytes, static_pool, err);
-            if (err->code == AEROSPIKE_OK) {
-                if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                         &bytes, py_obj,
-                                                         err) != AEROSPIKE_OK) {
-                    return err->code;
-                }
-
-                as_exp_entry tmp_entry = as_exp_val((as_val *)bytes);
-                *new_entry = tmp_entry;
-            }
-        }
-    }
+    as_exp_entry entry = as_exp_val(val);
+    *new_entry = entry;
 
     return err->code;
+
+    // TODO: two ways:
+    // 1. Use as_val
+    // 2. Set raw value directly as a c type
+    // Misc:
+    // TODO:
+    // Here, passing a bytearray relies on serializer_type. bytes does not.
+    // as_val_new_from_pyobject does not rely on that for either bytearrays or bytes.
+    // Behavior only matches here if serializer_type = *_PYTHON
+    // TODO: Here bytearray conversion relies on static_pool, conversions.c does not.
+    // TODO: for Py_None, null, wildcard, infinite: conversions.c uses as_val_reserve(), here does not.
+    // TODO: floats and doubles may be different?
 }
 
 /*

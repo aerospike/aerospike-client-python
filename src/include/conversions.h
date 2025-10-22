@@ -87,7 +87,8 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                    PyObject *py_obj, as_val **val,
                                    as_static_pool *static_pool,
-                                   int serializer_type);
+                                   int serializer_type,
+                                   bool ignore_send_bool_as);
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
