@@ -1440,10 +1440,9 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
             }
         }
 
-        check_and_set_meta(py_meta, )
-
-            if (err->code != AEROSPIKE_OK)
-        {
+        check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err,
+                           self->validate_keys);
+        if (err->code != AEROSPIKE_OK) {
             as_record_destroy(rec);
         }
     }
