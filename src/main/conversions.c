@@ -1440,59 +1440,10 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
             }
         }
 
-        if (py_meta && py_meta != Py_None) {
-            if (!PyDict_Check(py_meta)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "meta must be a dictionary");
-            }
-            else {
-                PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-                PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
+        check_and_set_meta(py_meta, )
 
-                if (py_ttl) {
-                    if (PyLong_Check(py_ttl)) {
-                        rec->ttl = (uint32_t)PyLong_AsLong(py_ttl);
-                        if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
-                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                                as_error_update(
-                                    err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                            }
-                        }
-                    }
-                    else {
-                        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                        "TTL should be an int or long");
-                    }
-                }
-                else {
-                    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
-                }
-
-                if (py_gen) {
-                    if (PyLong_Check(py_gen)) {
-                        // TODO: need to check that this value does not exceed an unsigned 16 bit integer
-                        rec->gen = (uint16_t)PyLong_AsLong(py_gen);
-                        if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
-                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                                as_error_update(
-                                    err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                            }
-                        }
-                    }
-                    else {
-                        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                        "Generation should be an int or long");
-                    }
-                }
-            }
-        }
-        else {
-            rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
-        }
-
-        if (err->code != AEROSPIKE_OK) {
+            if (err->code != AEROSPIKE_OK)
+        {
             as_record_destroy(rec);
         }
     }
@@ -2526,11 +2477,26 @@ CLEANUP:
  * Returns: error code.
  *******************************************************************************************************
  */
-as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
-                             as_error *err)
+as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
+                             uint16_t *gen_ref, as_error *err,
+                             bool validate_keys)
 {
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {
+        if (validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_meta, py_record_metadata_valid_keys, "record metadata");
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                // TODO: wrong error message
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
         PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
         uint32_t ttl = 0;
@@ -2549,11 +2515,11 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for ttl exceeds sys.maxsize");
             }
-            ops->ttl = ttl;
+            *ttl_ref = ttl;
         }
         else {
             // Metadata dict was present, but ttl field did not exist
-            ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+            *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
         }
 
         if (py_gen) {
@@ -2571,7 +2537,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for gen exceeds sys.maxsize");
             }
-            ops->gen = gen;
+            *gen_ref = gen;
         }
     }
     else if (py_meta && (py_meta != Py_None)) {
@@ -2580,7 +2546,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
     }
     else {
         // Metadata dict was not set by user
-        ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     return err->code;
 }
