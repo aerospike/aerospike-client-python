@@ -481,8 +481,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     // 2. Set raw value directly as a c type
     // Misc:
     // TODO:
-    // Here, passing a bytearray relies on serializer_type
-    // as_val_new_from_pyobject does not rely on that.
+    // Here, passing a bytearray relies on serializer_type. bytes does not.
+    // as_val_new_from_pyobject does not rely on that for either bytearrays or bytes.
     // Behavior only matches here if serializer_type = *_PYTHON
     // TODO: Here bytearray conversion relies on static_pool, conversions.c does not.
     // TODO: for Py_None, null, wildcard, infinite: conversions.c uses as_val_reserve(), here does not.
