@@ -2490,6 +2490,7 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
     }
     else if (py_meta == Py_None) {
         // Metadata dict was not set by user
+        // TODO: gen ref not set
         *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
         return err->code;
     }
