@@ -53,8 +53,6 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     char *base64 = NULL;
     PyObject *py_response = NULL;
 
-
-
     as_error err;
     as_error_init(&err);
 
@@ -96,7 +94,8 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool,
+                    DESTROY_BUFFERS) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {

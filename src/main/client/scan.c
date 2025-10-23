@@ -87,12 +87,10 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     // Initialize error
     as_error_init(&err);
 
-
     bool destroy_buffers = false;
 
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
-
 
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");

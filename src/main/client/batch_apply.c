@@ -135,7 +135,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     bool destroy_buffers = false;
-    
+
     Py_ssize_t keys_size = PyList_Size(py_keys);
 
     as_list *arglist = NULL;
@@ -200,7 +200,6 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
 
     const char *mod = PyUnicode_AsUTF8(py_mod);
     const char *func = PyUnicode_AsUTF8(py_func);
-
 
     pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
                      SERIALIZER_NONE, destroy_buffers);

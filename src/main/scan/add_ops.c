@@ -76,8 +76,8 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 
             if (PyDict_Check(py_val)) {
                 if (add_op(self->client, &err, py_val, self->unicodeStrVector,
-                           self->dynamic_pool, destroy_buffers, self->scan.ops, &operation,
-                           &return_type) != AEROSPIKE_OK) {
+                           self->dynamic_pool, destroy_buffers, self->scan.ops,
+                           &operation, &return_type) != AEROSPIKE_OK) {
                     as_error_update(&err, AEROSPIKE_ERR_PARAM,
                                     "Failed to convert ops.");
                     goto CLEANUP;

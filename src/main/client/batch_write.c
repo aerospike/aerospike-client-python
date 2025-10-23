@@ -149,7 +149,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
-
     as_vector garbage_list;
     as_vector *garbage_list_p = NULL;
 
@@ -318,8 +317,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP_ON_ERROR;
                 }
 
-                if (add_op(self, err, py_op, unicodeStrVector, &dynamic_pool, destroy_buffers,
-                           ops, &operation, &return_type) != AEROSPIKE_OK) {
+                if (add_op(self, err, py_op, unicodeStrVector, &dynamic_pool,
+                           destroy_buffers, ops, &operation,
+                           &return_type) != AEROSPIKE_OK) {
                     goto CLEANUP_ON_ERROR;
                 }
             }
@@ -410,7 +410,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
 
             as_list *arglist = NULL;
-            
+
             pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
                              SERIALIZER_NONE, destroy_buffers);
             Py_DECREF(py_args);

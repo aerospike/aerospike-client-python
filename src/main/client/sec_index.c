@@ -229,7 +229,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     as_index_datatype data_type;
     as_index_type index_type;
 
-
     // Python Function Keyword Arguments
     static char *kwlist[] = {
         "ns",   "set", "bin",    "index_type", "index_datatype",
@@ -251,10 +250,9 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-
-
     bool destroy_buffers = false;
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &dynamic_pool, destroy_buffers) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &dynamic_pool,
+                    destroy_buffers) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {

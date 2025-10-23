@@ -58,9 +58,11 @@ static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops);
 
-static as_status add_op_hll_get_intersect_count(
-    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_dynamic_pool *dynamic_pool);
+static as_status add_op_hll_get_intersect_count(AerospikeClient *self,
+                                                as_error *err, char *bin,
+                                                PyObject *op_dict,
+                                                as_operations *ops,
+                                                as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_get_similarity(AerospikeClient *self, as_error *err,
                                            char *bin, PyObject *op_dict,
@@ -72,10 +74,11 @@ static as_status add_op_hll_get_union(AerospikeClient *self, as_error *err,
                                       as_operations *ops,
                                       as_dynamic_pool *dynamic_pool);
 
-static as_status
-add_op_hll_get_union_count(AerospikeClient *self, as_error *err, char *bin,
-                           PyObject *op_dict, as_operations *ops,
-                           as_dynamic_pool *dynamic_pool);
+static as_status add_op_hll_get_union_count(AerospikeClient *self,
+                                            as_error *err, char *bin,
+                                            PyObject *op_dict,
+                                            as_operations *ops,
+                                            as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_refresh_count(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
@@ -300,9 +303,11 @@ cleanup:
     return err->code;
 }
 
-static as_status add_op_hll_get_intersect_count(
-    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_dynamic_pool *dynamic_pool)
+static as_status add_op_hll_get_intersect_count(AerospikeClient *self,
+                                                as_error *err, char *bin,
+                                                PyObject *op_dict,
+                                                as_operations *ops,
+                                                as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 
@@ -377,10 +382,11 @@ cleanup:
     return err->code;
 }
 
-static as_status
-add_op_hll_get_union_count(AerospikeClient *self, as_error *err, char *bin,
-                           PyObject *op_dict, as_operations *ops,
-                           as_dynamic_pool *dynamic_pool)
+static as_status add_op_hll_get_union_count(AerospikeClient *self,
+                                            as_error *err, char *bin,
+                                            PyObject *op_dict,
+                                            as_operations *ops,
+                                            as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 

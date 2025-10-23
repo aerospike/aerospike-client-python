@@ -261,4 +261,3 @@ static inline void DESTROY_DYNAMIC_POOL(as_dynamic_pool *dynamic_pool, bool free
         dynamic_pool_free_table(dynamic_pool, free_buffer);
     }
 }
-

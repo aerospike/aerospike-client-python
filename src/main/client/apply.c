@@ -27,7 +27,6 @@
 #include "exceptions.h"
 #include "policy.h"
 
-
 /**
  *******************************************************************************************************
  * This function applies a registered udf module on a particular record.

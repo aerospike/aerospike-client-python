@@ -30,7 +30,7 @@
 #include <aerospike/as_metrics.h>
 
 enum Aerospike_serializer_values {
-    SERIALIZER_NONE, /* default handler for serializer type */
+    SERIALIZER_NONE,   /* default handler for serializer type */
     SERIALIZER_PYTHON, /* Removed */
     SERIALIZER_JSON,
     SERIALIZER_USER,

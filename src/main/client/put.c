@@ -72,7 +72,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
-
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -129,15 +128,15 @@ CLEANUP:
         as_record_destroy(&rec);
     }
 
-    if(self->is_client_put_serializer || self->user_serializer_call_info.callback){
+    if (self->is_client_put_serializer ||
+        self->user_serializer_call_info.callback) {
         DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
     }
-    else{
+    else {
         DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
     }
 
     self->is_client_put_serializer = false;
-    
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {

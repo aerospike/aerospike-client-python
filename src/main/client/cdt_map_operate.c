@@ -75,18 +75,18 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
     }
 
     case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL: {
-        return add_op_map_get_by_value_rel_rank_range(
-            self, err, bin, op_dict, ops, dynamic_pool);
+        return add_op_map_get_by_value_rel_rank_range(self, err, bin, op_dict,
+                                                      ops, dynamic_pool);
     }
 
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
-        return add_op_map_remove_by_key_rel_index_range(
-            self, err, bin, op_dict, ops, dynamic_pool);
+        return add_op_map_remove_by_key_rel_index_range(self, err, bin, op_dict,
+                                                        ops, dynamic_pool);
     }
 
     case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
-        return add_op_map_get_by_key_rel_index_range(
-            self, err, bin, op_dict, ops, dynamic_pool);
+        return add_op_map_get_by_key_rel_index_range(self, err, bin, op_dict,
+                                                     ops, dynamic_pool);
     }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
@@ -121,12 +121,13 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool,
+                  true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
+                    DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -183,12 +184,13 @@ static as_status add_op_map_get_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool,
+                  true) != AEROSPIKE_OK) {
         return err->code;
     }
- 
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
+                    DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -245,12 +247,13 @@ static as_status add_op_map_remove_by_key_rel_index_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool,
+                  true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
+                    DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -292,7 +295,7 @@ static as_status add_op_map_get_by_key_rel_index_range(
     as_val *key = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
-    
+
     if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -306,12 +309,13 @@ static as_status add_op_map_get_by_key_rel_index_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool,
+                  true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
+                    DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 

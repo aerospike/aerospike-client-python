@@ -180,10 +180,10 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     // If not, DESTROY_DYNAMIC_POOL must be called with free_buffer = true to free the serialized value.
     bool destroy_buffers = true;
     bool serialize_data = false;
-    if(dynamic_pool){
+    if (dynamic_pool) {
         serialize_data = true;
     }
-    
+
     if (serialize_data) {
         Py_XINCREF(*value);
         if (PyTuple_SetItem(py_arglist, 0, *value) != 0) {
@@ -213,18 +213,19 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             Py_ssize_t len;
 
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            uint8_t* heap_b = (uint8_t *)cf_calloc((uint32_t) len, sizeof(uint8_t));
-            memcpy(heap_b, py_val, (uint32_t) len);
+            uint8_t *heap_b =
+                (uint8_t *)cf_calloc((uint32_t)len, sizeof(uint8_t));
+            memcpy(heap_b, py_val, (uint32_t)len);
             *bytes = GET_BYTES_POOL(dynamic_pool, error_p);
             if (error_p->code == AEROSPIKE_OK) {
-                as_bytes_init_wrap(*bytes, heap_b, (int32_t) len, destroy_buffers);
+                as_bytes_init_wrap(*bytes, heap_b, (int32_t)len,
+                                   destroy_buffers);
                 Py_DECREF(py_return);
             }
-            else{
+            else {
                 Py_DECREF(py_return);
                 goto CLEANUP;
             }
-
         }
         else {
             *value = py_return;
@@ -266,12 +267,9 @@ CLEANUP:
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
-                                                      int32_t serializer_policy,
-                                                      as_bytes **bytes,
-                                                      as_dynamic_pool *dynamic_pool,
-                                                      PyObject *value,
-                                                      as_error *error_p)
+extern as_status serialize_based_on_serializer_policy(
+    AerospikeClient *self, int32_t serializer_policy, as_bytes **bytes,
+    as_dynamic_pool *dynamic_pool, PyObject *value, as_error *error_p)
 {
     uint8_t use_client_serializer = true;
     PyObject *initresult = NULL;
