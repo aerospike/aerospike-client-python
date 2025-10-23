@@ -428,11 +428,11 @@ as_status add_op(AerospikeClient *self, as_error *err,
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
             }
-            // Use set instead of this?
-            else if (strcmp(name, "mod_exp") == 0) {
+            // TODO: Use set instead of this?
+            else if (strcmp(name, _CDT_APPLY_MOD_EXP_KEY) == 0) {
                 continue;
             }
-            else if (strcmp(name, "flags") == 0) {
+            else if (strcmp(name, _CDT_SELECT_FLAGS_KEY) == 0) {
                 continue;
             }
             else {

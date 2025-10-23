@@ -207,7 +207,7 @@ class TestCDTSelectOperations:
 
     @pytest.mark.parametrize(
         "flags, expected_bins", [
-            (aerospike.CDT_SELECT_TREE, {})
+            (aerospike.CDT_SELECT_MATCHING_TREE, {})
             # TODO: combine?
             # (aerospike.CDT_SELECT_LEAF_LIST_VALUE,)
             # TODO: bad naming?
