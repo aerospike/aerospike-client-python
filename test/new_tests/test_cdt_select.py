@@ -82,7 +82,7 @@ class TestCDTSelectOperations:
                 operations.cdt_select(
                     name=LIST_BIN_NAME,
                     ctx=[
-                        cdt_ctx.cdt_ctx_all(),
+                        cdt_ctx.cdt_ctx_all_children(),
                     ]
                 ),
                 {
@@ -94,7 +94,7 @@ class TestCDTSelectOperations:
                 operations.cdt_select(
                     name=MAP_BIN_NAME,
                     ctx=[
-                        cdt_ctx.cdt_ctx_all(),
+                        cdt_ctx.cdt_ctx_all_children(),
                     ]
                 ),
                 {
@@ -106,8 +106,8 @@ class TestCDTSelectOperations:
                 operations.cdt_select(
                     name=LIST_BIN_NAME,
                     ctx=[
-                        cdt_ctx.cdt_ctx_all(),
-                        cdt_ctx.cdt_ctx_all()
+                        cdt_ctx.cdt_ctx_all_children(),
+                        cdt_ctx.cdt_ctx_all_children()
                     ]
                 ),
                 {
@@ -132,8 +132,8 @@ class TestCDTSelectOperations:
                 operations.cdt_select(
                     name=MAP_BIN_NAME,
                     ctx=[
-                        cdt_ctx.cdt_ctx_all(),
-                        cdt_ctx.cdt_ctx_exp(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
+                        cdt_ctx.cdt_ctx_all_children(),
+                        cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
                     ],
                     flags=aerospike.CDT_SELECT_NO_FAIL
                 ),
@@ -161,8 +161,8 @@ class TestCDTSelectOperations:
             operations.cdt_select(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_exp(expression=expr)
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=expr)
                 ]
             )
         ]
@@ -179,16 +179,16 @@ class TestCDTSelectOperations:
             operations.cdt_apply(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_all()
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
                 ],
                 expr=mod_expr
             ),
             operations.cdt_select(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_all()
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
                 ]
             ),
         ]
@@ -213,8 +213,8 @@ class TestCDTSelectOperations:
             operations.cdt_select(
                 name=self.LIST_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_all()
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
                 ],
                 # TODO: not done
                 flags=flags
@@ -243,8 +243,8 @@ class TestCDTSelectOperations:
                 operations.cdt_select(
                     name=MAP_BIN_NAME,
                     ctx=[
-                        cdt_ctx.cdt_ctx_all(),
-                        cdt_ctx.cdt_ctx_exp(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
+                        cdt_ctx.cdt_ctx_all_children(),
+                        cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
                     ]
                 ),
                 pytest.raises(e.AerospikeError),
