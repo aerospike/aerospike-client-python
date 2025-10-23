@@ -1117,7 +1117,7 @@ class SelectByPath(_BaseExpr):
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
-            aerospike._CDT_SELECT_FLAGS_KEY: flags,
+            aerospike._CDT_FLAGS_KEY: flags,
             _Keys.BIN_KEY: bin
         }
 
@@ -1143,7 +1143,7 @@ class ModifyByPath(_BaseExpr):
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
-            aerospike._CDT_APPLY_FLAGS_KEY: flags,
+            aerospike._CDT_FLAGS_KEY: flags,
             _Keys.BIN_KEY: bin,
             aerospike._CDT_APPLY_MOD_EXP_KEY: mod_exp
         }

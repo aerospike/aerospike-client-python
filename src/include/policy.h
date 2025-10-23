@@ -187,8 +187,8 @@ enum {
     _AS_EXP_LOOPVAR_STR
 };
 
-#define _CDT_SELECT_FLAGS_KEY "cdt_select_flags"
-#define _CDT_APPLY_FLAGS_KEY "cdt_apply_flags"
+// Can be either for select or apply
+#define _CDT_FLAGS_KEY "cdt_flags"
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_ALL_CHILDREN_WITH_FILTER_EXPR_KEY "filter_expr"
 

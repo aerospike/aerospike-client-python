@@ -384,6 +384,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                ops, operation, SERIALIZER_PYTHON);
     }
 
+    // TODO: Use set instead of this?
     while (PyDict_Next(py_operation_dict, &pos, &key_op, &value)) {
         if (!PyUnicode_Check(key_op)) {
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -428,11 +429,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
             }
-            // TODO: Use set instead of this?
             else if (strcmp(name, _CDT_APPLY_MOD_EXP_KEY) == 0) {
                 continue;
             }
-            else if (strcmp(name, _CDT_SELECT_FLAGS_KEY) == 0) {
+            else if (strcmp(name, _CDT_FLAGS_KEY) == 0) {
                 continue;
             }
             else {

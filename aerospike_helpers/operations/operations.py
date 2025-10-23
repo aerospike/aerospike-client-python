@@ -142,7 +142,7 @@ def select_by_path(name: str, ctx: list, flags: int):
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
-    op_dict = {"op": aerospike._AS_OPERATOR_CDT_READ, "bin": name, "ctx": ctx, aerospike._CDT_SELECT_FLAGS_KEY: flags}
+    op_dict = {"op": aerospike._AS_OPERATOR_CDT_READ, "bin": name, "ctx": ctx, aerospike._CDT_FLAGS_KEY: flags}
     return op_dict
 
 
@@ -157,6 +157,6 @@ def modify_by_path(name: str, ctx: list, expr: TypeExpression, flags: int):
         "op": aerospike._AS_OPERATOR_CDT_MODIFY,
         "bin": name,
         "ctx": ctx, aerospike._CDT_APPLY_MOD_EXP_KEY: expr,
-        aerospike._CDT_SELECT_FLAGS_KEY: flags
+        aerospike._CDT_FLAGS_KEY: flags
     }
     return op_dict

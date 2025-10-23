@@ -1661,9 +1661,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            // TODO: rm apply key
-            if (get_int64_t(err, _CDT_SELECT_FLAGS_KEY, temp_expr->pydict,
-                            &lval2) != AEROSPIKE_OK) {
+            if (get_int64_t(err, _CDT_FLAGS_KEY, temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
                 return err->code;
             }
 
