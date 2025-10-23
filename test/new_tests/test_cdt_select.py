@@ -158,7 +158,7 @@ class TestCDTSelectOperations:
     def test_cdt_select_with_filter(self):
         expr = GE(
             LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
-            20
+            20.0
         ).compile()
         ops = [
             operations.select_by_path(
