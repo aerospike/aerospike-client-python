@@ -566,8 +566,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
         // TODO: set module constant for flags str
         PyObject *py_flags = NULL;
         // TODO: already a retval var previously?
-        int retval = PyDict_GetItemStringRef(py_operation_dict,
-                                             _CDT_SELECT_FLAGS_KEY, &py_flags);
+        int retval = PyDict_GetItemStringRef(py_operation_dict, _CDT_FLAGS_KEY,
+                                             &py_flags);
         if (retval == 0) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "CDT operation is missing a flags argument");
