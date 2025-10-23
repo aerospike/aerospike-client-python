@@ -3,7 +3,9 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList
+from aerospike_helpers.expressions.map import MapGetByKey
+from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
@@ -25,6 +27,8 @@ class TestCDTSelectOperations:
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
+    NESTED_LIST_BIN_NAME = "list_of_lists"
+
     BINS_FOR_CDT_SELECT_TEST = {
         MAP_BIN_NAME: {
             "a": 1,
@@ -50,6 +54,11 @@ class TestCDTSelectOperations:
                 },
                 "d": 4
             }
+        ],
+        NESTED_LIST_BIN_NAME: [
+            [1, 2, 3],
+            [4, 5],
+            [6]
         ],
         MAP_OF_NESTED_MAPS_BIN_NAME: {
             "Day1": {
@@ -177,6 +186,64 @@ class TestCDTSelectOperations:
 
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
                 self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+            ]
+
+    @pytest.mark.parametrize(
+        "filter_expr, expected_bin_value",
+        [
+            pytest.param(
+                GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2),
+                # Should filter out 1
+                [2]
+            ),
+            # At the first level below root, filter out all maps where "bb" does not have
+            # an int value greater than 10
+            pytest.param(
+                GE(
+                    expr0=MapGetByKey(
+                        ctx=None,
+                        return_type=aerospike.MAP_RETURN_VALUE,
+                        value_type=ResultType.INTEGER,
+                        key="bb",
+                        bin=LoopVarMap(aerospike.EXP_LOOPVAR_VALUE)
+                    ),
+                    expr1=10
+                ),
+                [BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME]["ab"]]
+            )
+        ]
+    )
+    def test_exp_loopvar_int_and_map(self, filter_expr, expected_bin_value):
+        ops = [
+            operations.select_by_path(
+                name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=filter_expr.compile())
+                ],
+                flags=aerospike.CDT_SELECT_VALUES | aerospike.CDT_SELECT_NO_FAIL
+            )
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_BIN_NAME] == expected_bin_value
+
+    LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.CDT_SELECT_VALUES)), 2)
+
+    def test_exp_loopvar_list(self):
+        ops = [
+            operations.select_by_path(
+                name=self.NESTED_LIST_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_SIZE_GE_TWO_EXPR.compile())
+                ],
+                flags=aerospike.CDT_SELECT_VALUES
+            )
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.NESTED_LIST_BIN_NAME] == [
+                [1, 2, 3],
+                [4, 5]
             ]
 
     @pytest.mark.parametrize("flags", [
