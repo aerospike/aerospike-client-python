@@ -2852,7 +2852,6 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 as_cdt_ctx_add_all_children(cdt_ctx);
             }
             else {
-                // TODO: replace with aerospike._CDT_CTX_EXP_EXPR_KEY
                 PyObject *py_expr = NULL;
                 int retval = PyDict_GetItemStringRef(py_extra_args, AS_EXPR_KEY,
                                                      &py_expr);
