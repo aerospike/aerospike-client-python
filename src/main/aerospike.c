@@ -34,6 +34,7 @@
 #include "cdt_types.h"
 #include "transaction.h"
 #include "config_provider.h"
+#include "convert_expressions.h"
 
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
@@ -102,6 +103,26 @@ struct module_constant_name_to_value {
     } value;
 };
 
+#define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
+    macro_name_without_prefix)                                                 \
+    {                                                                          \
+        #macro_name_without_prefix,                                            \
+            .value.integer = AS_##macro_name_without_prefix                    \
+    }
+
+#define STRINGIFY(X) #X
+
+#define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
+    {                                                                          \
+        STRINGIFY(_##macro_name_without_prefix),                               \
+            .value.integer = AS_##macro_name_without_prefix                    \
+    }
+
+#define EXPOSE_MACRO(macro_name)                                               \
+    {                                                                          \
+        #macro_name, .value.integer = macro_name                               \
+    }
+
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
 // TODO: regression tests for all these constants
@@ -113,8 +134,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
-    {"_AS_OPERATOR_CDT_READ", .value.integer = AS_OPERATOR_CDT_READ},
-    {"_AS_OPERATOR_CDT_MODIFY", .value.integer = AS_OPERATOR_CDT_MODIFY},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(OPERATOR_CDT_READ),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(OPERATOR_CDT_MODIFY),
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
@@ -435,15 +456,6 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
     {"_CDT_CTX_EXP", .value.integer = AS_CDT_CTX_EXP},
 
-    /*
-        When doing a cdt select/apply operation, and applying an expression on each
-        iterated object, this lets us choose a specific value over each iterated
-        object.
-    */
-    {"EXP_BUILTIN_KEY", .value.integer = AS_EXP_BUILTIN_KEY},
-    {"EXP_BUILTIN_VALUE", .value.integer = AS_EXP_BUILTIN_VALUE},
-    {"EXP_BUILTIN_INDEX", .value.integer = AS_EXP_BUILTIN_INDEX},
-
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
     {"OP_HLL_DESCRIBE", .value.integer = OP_HLL_DESCRIBE},
@@ -536,13 +548,27 @@ static struct module_constant_name_to_value module_constants[] = {
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
 
-    {"CDT_SELECT_TREE", .value.integer = AS_CDT_SELECT_TREE},
-    {"CDT_SELECT_LEAF_LIST_VALUE",
-     .value.integer = AS_CDT_SELECT_LEAF_LIST_VALUE},
-    {"CDT_SELECT_LEAF_MAP_VALUE",
-     .value.integer = AS_CDT_SELECT_LEAF_MAP_VALUE},
-    {"CDT_SELECT_LEAF_MAP_KEY", .value.integer = AS_CDT_SELECT_LEAF_MAP_KEY},
-    {"CDT_SELECT_NO_FAIL", .value.integer = AS_CDT_SELECT_NO_FAIL},
+    /*
+        When doing a cdt select/apply operation, and applying an expression on each
+        iterated object, this lets us choose a specific value over each iterated
+        object.
+    */
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_INDEX),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MATCHING_TREE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_VALUES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        CDT_SELECT_MAP_KEY_VALUES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MAP_KEYS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_NO_FAIL),
+
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_FLOAT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_INT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
 
     // TODO: move all internal constants used by aerospike_helpers to this loc
     {"_CDT_CTX_EXP_EXPR_KEY", .is_str_value = true, .value.string = "expr"}};

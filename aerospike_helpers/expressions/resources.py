@@ -83,8 +83,6 @@ class _ExprOp:  # TODO replace this with an enum
     BIN_TYPE = 82
     BIN_EXISTS = 83
 
-    _AS_EXP_CODE_VAR_BUILTIN = 122
-
     COND = 123
     VAR = 124
     LET = 125

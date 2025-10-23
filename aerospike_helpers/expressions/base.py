@@ -33,6 +33,7 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
+from abc import ABC
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1072,21 +1073,28 @@ class Var(_BaseExpr):
         self._fixed = {_Keys.VALUE_KEY: var_name}
 
 
-# TODO: forbid unsupported types
-class VarBuiltIn(_BaseExpr):
-    """
-    Retrieve expression value from a built-in variable.
-    """
-    _op = _ExprOp._AS_EXP_CODE_VAR_BUILTIN
+class _LoopVar(_BaseExpr, ABC):
+    def __init__(self, var_id: int):
+        self._fixed = {_Keys.VALUE_KEY: var_id}
 
-    # TODO: document to be certain constants?
-    def __init__(self, var_id: int, var_type: ResultType):
-        """Args:
-            `var_id` (int): Variable id.
+class LoopVarMap(_LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_MAP
 
-        :return: (value stored in variable)
-        """
-        self._fixed = {_Keys.VALUE_KEY: var_id, _Keys.VALUE_TYPE_KEY: var_type}
+
+class LoopVarList(_LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_LIST
+
+
+class LoopVarStr(_LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_STR
+
+
+class LoopVarFloat(_LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_FLOAT
+
+
+class LoopVarInt(_LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_INT
 
 
 class CDTSelect(_BaseExpr):

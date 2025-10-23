@@ -33,6 +33,7 @@
 #include "geo.h"
 #include "cdt_types.h"
 #include "key_ordered_dict.h"
+#include "convert_expressions.h"
 
 // EXPR OPS
 enum expr_ops {
@@ -104,7 +105,7 @@ enum expr_ops {
     AS_EXP_CODE_CALL_APPLY = 129,
 
     LIST_MOD = 139,
-    VAL = 200
+    VAL = 200,
 };
 
 // VIRTUAL OPS
@@ -209,13 +210,17 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 
     static const int EXPR_SIZES[] = {
         // TODO: can also be cdt_apply()
-        [AS_EXP_CODE_CALL_SELECT] = EXP_SZ(as_exp_cdt_select(NULL, 0, 0, NIL)),
+        [AS_EXP_CODE_CALL_SELECT] =
+            EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [AS_EXP_CODE_CALL_APPLY] =
-            EXP_SZ(as_exp_cdt_apply(NULL, 0, NULL, 0, NIL)),
+            EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
-        // TODO: have generic var_builtin?
-        [_AS_EXP_CODE_VAR_BUILTIN] = EXP_SZ(as_exp_var_builtin_str(0)),
+        [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
+        [_AS_EXP_LOOPVAR_INT] = EXP_SZ(as_exp_loopvar_int(0)),
+        [_AS_EXP_LOOPVAR_LIST] = EXP_SZ(as_exp_loopvar_list(0)),
+        [_AS_EXP_LOOPVAR_MAP] = EXP_SZ(as_exp_loopvar_map(0)),
+        [_AS_EXP_LOOPVAR_STR] = EXP_SZ(as_exp_loopvar_str(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(
@@ -646,31 +651,30 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(0, BIN_EXPR());
             break;
-        case _AS_EXP_CODE_VAR_BUILTIN:
-            // TODO: replace with new expr from Sam
+        case _AS_EXP_LOOPVAR_FLOAT:
+        case _AS_EXP_LOOPVAR_INT:
+        case _AS_EXP_LOOPVAR_LIST:
+        case _AS_EXP_LOOPVAR_MAP:
+        case _AS_EXP_LOOPVAR_STR:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
-            if (get_int64_t(err, "value_type", temp_expr->pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
 
-            switch (lval2) {
-            case AS_EXP_TYPE_MAP:
+            switch (temp_expr->op) {
+            case _AS_EXP_LOOPVAR_MAP:
                 APPEND_ARRAY(0, as_exp_var_builtin_map(lval1));
                 break;
-            case AS_EXP_TYPE_LIST:
+            case _AS_EXP_LOOPVAR_LIST:
                 APPEND_ARRAY(0, as_exp_var_builtin_list(lval1));
                 break;
-            case AS_EXP_TYPE_STR:
+            case _AS_EXP_LOOPVAR_STR:
                 APPEND_ARRAY(0, as_exp_var_builtin_str(lval1));
                 break;
-            case AS_EXP_TYPE_INT:
+            case _AS_EXP_LOOPVAR_INT:
                 APPEND_ARRAY(0, as_exp_var_builtin_int(lval1));
                 break;
-            case AS_EXP_TYPE_FLOAT:
+            case _AS_EXP_LOOPVAR_FLOAT:
                 APPEND_ARRAY(0, as_exp_var_builtin_float(lval1));
                 break;
             }
@@ -1676,12 +1680,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                              false) != AEROSPIKE_OK) {
                     return err->code;
                 }
-                APPEND_ARRAY(0, as_exp_cdt_apply(temp_expr->ctx, lval1, mod_exp,
-                                                 lval2, BIN_EXPR()));
+                APPEND_ARRAY(0,
+                             as_exp_modify_by_path(temp_expr->ctx, lval1,
+                                                   mod_exp, lval2, BIN_EXPR()));
             }
             else {
-                APPEND_ARRAY(0, as_exp_cdt_select(temp_expr->ctx, lval1, lval2,
-                                                  BIN_EXPR()));
+                APPEND_ARRAY(0, as_exp_select_by_path(temp_expr->ctx, lval1,
+                                                      lval2, BIN_EXPR()));
             }
             break;
         default:

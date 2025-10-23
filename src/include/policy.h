@@ -172,6 +172,14 @@ enum aerospike_hll_operations {
 
 enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
 
+enum {
+    _AS_EXP_LOOPVAR_FLOAT = 3000,
+    _AS_EXP_LOOPVAR_INT,
+    _AS_EXP_LOOPVAR_LIST,
+    _AS_EXP_LOOPVAR_MAP,
+    _AS_EXP_LOOPVAR_STR
+};
+
 enum aerospike_regex_constants {
     REGEX_NONE = 0,
     REGEX_EXTENDED,
