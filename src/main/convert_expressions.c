@@ -33,7 +33,6 @@
 #include "geo.h"
 #include "cdt_types.h"
 #include "key_ordered_dict.h"
-#include "convert_expressions.h"
 
 // EXPR OPS
 enum expr_ops {
