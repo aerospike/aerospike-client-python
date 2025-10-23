@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, VarBuiltIn, Eq, LoopVarStr, LoopVarFloat
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
