@@ -258,7 +258,8 @@ CLEANUP:
  * based on serializer_policy.
  *
  * @param serializer_policy         The serializer_policy to be used to handle
- *                                  the serialization.
+ *                                  the serialization. The serializer_policy will be ignored if 
+ *                                  user_serilizer_call_info has been set (unless is_client_put_serializer is set).
  * @param bytes                     The as_bytes to be set.
  * @param value                     The value to be serialized.
  * @param error_p                   The as_error to be populated by the function
