@@ -179,7 +179,11 @@ class TestCDTSelectOperations:
                 self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
             ]
 
-    def test_cdt_modify(self):
+    @pytest.mark.parametrize("flags", [
+        aerospike.CDT_MODIFY_NO_FAIL,
+        aerospike.CDT_MODIFY_DEFAULT,
+    ])
+    def test_cdt_modify(self, flags):
         mod_expr = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
         ops = [
             operations.modify_by_path(
@@ -189,8 +193,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children()
                 ],
                 expr=mod_expr,
-                # TODO: should have flag for FAIL
-                flags=aerospike.CDT_SELECT_NO_FAIL
+                flags=flags
             ),
             operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -252,7 +255,6 @@ class TestCDTSelectOperations:
 
     # TODO: set default for BUILTIN
 
-    # TODO: negative case where cdt_select gets a var type not expected
     @pytest.mark.parametrize(
         "op, context",
         [
