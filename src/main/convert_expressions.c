@@ -1656,28 +1656,33 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 AEROSPIKE_OK) {
                 return err->code;
             }
-            if (get_int64_t(err, "flags", temp_expr->pydict, &lval2) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
+
             if (get_bin(err, temp_expr->pydict, unicodeStrVector, &bin_name) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
-            PyObject *py_mod_exp =
-                PyDict_GetItemString(temp_expr->pydict, "mod_exp");
-            if (!py_mod_exp) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "mod_exp is required for cdt_apply() expression.");
+
+            // TODO: rm apply key
+            if (get_int64_t(err, _CDT_SELECT_FLAGS_KEY, temp_expr->pydict,
+                            &lval2) != AEROSPIKE_OK) {
+                return err->code;
             }
 
             if (temp_expr->op == _AS_EXP_CODE_CALL_APPLY) {
+                PyObject *py_mod_exp = PyDict_GetItemString(
+                    temp_expr->pydict, _CDT_APPLY_MOD_EXP_KEY);
+                if (!py_mod_exp) {
+                    return as_error_update(
+                        err, AEROSPIKE_ERR_PARAM,
+                        "mod_exp is required for cdt_apply() expression.");
+                }
+
                 as_exp *mod_exp = NULL;
                 if (as_exp_new_from_pyobject(self, py_mod_exp, &mod_exp, err,
                                              false) != AEROSPIKE_OK) {
                     return err->code;
                 }
+
                 APPEND_ARRAY(0,
                              as_exp_modify_by_path(temp_expr->ctx, lval1,
                                                    mod_exp, lval2, BIN_EXPR()));

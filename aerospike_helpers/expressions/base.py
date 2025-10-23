@@ -1145,7 +1145,7 @@ class CDTApply(_BaseExpr):
             _Keys.CTX_KEY: ctx,
             aerospike._CDT_APPLY_FLAGS_KEY: flags,
             _Keys.BIN_KEY: bin,
-            aerospike.CDT_SELECT_MOD_EXP_KEY: mod_exp
+            aerospike._CDT_APPLY_MOD_EXP_KEY: mod_exp
         }
 
         # TODO
