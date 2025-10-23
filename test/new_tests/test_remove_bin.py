@@ -268,11 +268,8 @@ class TestRemovebin(object):
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
-        try:
-            self.as_connection.remove_bin(key, ["age"], policy=policy)
-
-        except (e.ClusterError, e.RecordNotFound):
-            pass
+        with pytest.raises(e.ParamError):
+            self.as_connection.remove_bin(key, ["age"], meta=2, policy=policy)
 
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
@@ -427,3 +424,10 @@ class TestRemovebin(object):
         meta = {"gen": 2**65, "ttl": 2}
         with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, ["age"], meta=meta)
+
+    def test_remove_bin_with_bin_name_too_long(self, put_data):
+        key = ("test", "demo", 1)
+        record = {"Name": "Herry", "age": 60}
+        put_data(self.as_connection, key, record)
+        with pytest.raises(e.BinNameError):
+            self.as_connection.remove_bin(key, ["a" * 16])
