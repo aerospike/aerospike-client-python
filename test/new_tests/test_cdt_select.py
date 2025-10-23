@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, VarBuiltIn, Eq
+from aerospike_helpers.expressions.base import GE, VarBuiltIn, Eq, LoopVarStr, LoopVarFloat
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
@@ -72,7 +72,7 @@ class TestCDTSelectOperations:
         yield
         self.as_connection.remove(self.key)
 
-    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.STRING), "a").compile()
+    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(LoopVarStr(aerospike.EXP_BUILTIN_VALUE), "a").compile()
 
     @pytest.mark.parametrize(
         # TODO: ids
@@ -154,7 +154,7 @@ class TestCDTSelectOperations:
 
     def test_cdt_select_with_filter(self):
         expr = GE(
-            VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.FLOAT),
+            LoopVarFloat(aerospike.EXP_BUILTIN_VALUE),
             20
         ).compile()
         ops = [
@@ -174,7 +174,7 @@ class TestCDTSelectOperations:
             ]
 
     def test_cdt_modify(self):
-        mod_expr = Sub(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.FLOAT), 5.0).compile()
+        mod_expr = Sub(LoopVarFloat(aerospike.EXP_BUILTIN_VALUE), 5.0).compile()
         ops = [
             operations.cdt_apply(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
