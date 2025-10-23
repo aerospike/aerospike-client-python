@@ -208,12 +208,9 @@ class TestCDTSelectOperations:
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == expected_results
 
 
-    @pytest.mark.parametrize(
-        "flags", [
-            (aerospike.CDT_SELECT_MATCHING_TREE)
-        ]
-    )
-    def test_cdt_select_flag_matching_tree(self, flags):
+    # Test cdt select flags
+
+    def test_cdt_select_flag_matching_tree(self):
         ops = [
             operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -221,8 +218,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
-                # TODO: not done
-                flags=flags
+                flags=aerospike.CDT_SELECT_MATCHING_TREE
             )
         ]
 
@@ -237,6 +233,22 @@ class TestCDTSelectOperations:
             expected_bin_value["Day3"].clear()
 
             assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
+
+    def test_cdt_select_flag_map_keys(self):
+        ops = [
+            operations.select_by_path(
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
+                ],
+                flags=aerospike.CDT_SELECT_MAP_KEYS
+            )
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: ["book", "ferry", "food", "game", "plants", "stickers"]}
 
     # TODO: set default for BUILTIN
 
