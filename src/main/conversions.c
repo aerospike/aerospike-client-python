@@ -1400,50 +1400,54 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
 
             if (!PyUnicode_Check(py_bin_name)) {
-                return as_error_update(
+                as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
+                goto CLEANUP;
             }
 
             name = PyUnicode_AsUTF8(py_bin_name);
             if (!name) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to convert unicode object to C string");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to convert unicode object to C string");
+                goto CLEANUP;
             }
 
             if (self->strict_types) {
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                    return as_error_update(
+                    as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 15 characters limit");
+                    goto CLEANUP;
                 }
             }
 
             if (!py_bin_value) {
                 // this should never happen, but if it did...
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "record is null");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+                goto CLEANUP;
             }
 
             as_val *val = NULL;
             as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
                                      serializer_type);
             if (err->code != AEROSPIKE_OK) {
-                break;
+                goto CLEANUP;
             }
+
             bool success = as_record_set(rec, name, (as_bin_value *)val);
             if (success == false) {
                 as_val_destroy(val);
-                return as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                                       "Unable to set key-value pair");
+                as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
+                                "Unable to set key-value pair");
+                goto CLEANUP;
             }
         }
 
         check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err,
                            self->validate_keys);
         if (err->code != AEROSPIKE_OK) {
-            as_record_destroy(rec);
+            goto CLEANUP;
         }
     }
     else {
@@ -1451,6 +1455,10 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
                         "Record should be passed as bin-value pair");
     }
 
+CLEANUP:
+    if (err->code != AEROSPIKE_OK) {
+        as_record_destroy(rec);
+    }
     return err->code;
 }
 
