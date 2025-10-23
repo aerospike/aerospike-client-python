@@ -290,7 +290,7 @@ class TestCDTIndex(object):
         for _ in range(100):
             set_name = set_name + "a"
         policy = {}
-        with pytest.raises(e.InvalidRequest)
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.index_cdt_create(
                 "test",
                 set_name,
@@ -342,7 +342,7 @@ class TestCDTIndex(object):
             policy,
         )
         assert retobj > 0
-        with pytest.raises(e.InvalidRequest)
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -422,8 +422,6 @@ class TestCDTIndex(object):
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-        else:
-            assert True is False
 
     def test_pos_createcdtindex_with_policy(self):
         """
