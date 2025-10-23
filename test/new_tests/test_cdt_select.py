@@ -72,7 +72,7 @@ class TestCDTSelectOperations:
         yield
         self.as_connection.remove(self.key)
 
-    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(LoopVarStr(aerospike.EXP_BUILTIN_VALUE), "a").compile()
+    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_VALUE), "a").compile()
 
     @pytest.mark.parametrize(
         # TODO: ids
@@ -154,7 +154,7 @@ class TestCDTSelectOperations:
 
     def test_cdt_select_with_filter(self):
         expr = GE(
-            LoopVarFloat(aerospike.EXP_BUILTIN_VALUE),
+            LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
             20
         ).compile()
         ops = [
@@ -174,7 +174,7 @@ class TestCDTSelectOperations:
             ]
 
     def test_cdt_modify(self):
-        mod_expr = Sub(LoopVarFloat(aerospike.EXP_BUILTIN_VALUE), 5.0).compile()
+        mod_expr = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
         ops = [
             operations.cdt_apply(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
