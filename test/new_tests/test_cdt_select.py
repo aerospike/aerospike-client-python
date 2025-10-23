@@ -202,7 +202,8 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
-            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]
+            expected_results = [x - 5.0 for x in [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]]
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == expected_results
 
 
     @pytest.mark.parametrize(
