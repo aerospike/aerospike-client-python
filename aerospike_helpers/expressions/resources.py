@@ -167,7 +167,6 @@ class _BaseExpr(_AtomExpr):
 
     def compile(self) -> TypeExpression:
         expression = [self._get_op()]
-        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

@@ -46,7 +46,7 @@
 //Dictionary field extraction functions
 
 static as_status get_bit_policy(as_error *err, PyObject *op_dict,
-                                as_bit_policy *policy);
+                                as_bit_policy *policy, bool validate_keys);
 
 static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
                                       as_bit_resize_flags *resize_flags);
@@ -183,7 +183,8 @@ static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
     as_bit_resize_flags flags = AS_BIT_RESIZE_DEFAULT;
     uint32_t new_size = 0;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -214,7 +215,8 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -256,7 +258,8 @@ static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
     int64_t byte_offset = 0;
     uint32_t byte_size = 0;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -314,7 +317,8 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
     bool sign = false;
     as_bit_overflow_action action;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -360,7 +364,8 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -458,7 +463,8 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -526,7 +532,8 @@ static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
     uint32_t bit_size = 0;
     uint32_t shift = 0;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -561,7 +568,8 @@ static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -593,7 +601,8 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -666,7 +675,8 @@ static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
     uint32_t bit_size = 0;
     uint32_t shift = 0;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -705,7 +715,8 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
     bool sign = 0;
     as_bit_overflow_action action;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -751,7 +762,8 @@ static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
 
-    if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
+    if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -804,12 +816,13 @@ static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
 }
 
 static as_status get_bit_policy(as_error *err, PyObject *op_dict,
-                                as_bit_policy *policy)
+                                as_bit_policy *policy, bool validate_keys)
 {
     PyObject *py_bit_policy = PyDict_GetItemString(op_dict, POLICY_KEY);
 
     // This handles a null policy
-    if (pyobject_to_bit_policy(err, py_bit_policy, policy) != AEROSPIKE_OK) {
+    if (pyobject_to_bit_policy(err, py_bit_policy, policy, validate_keys) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 

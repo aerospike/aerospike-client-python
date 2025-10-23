@@ -28,6 +28,10 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  docker-run-extra-flags:
+    required: false
+    description: Used to disable server features
+    default: ''
 
 runs:
   using: "composite"
@@ -81,7 +85,8 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
+  # Confirmed via logs that input string will not be quoted in bash
+  - run: docker run -d ${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
     shell: bash
 
   - name: 'macOS: install timeout command'
@@ -125,6 +130,9 @@ runs:
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-build-context/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-build-context/client.cer
+
     working-directory: test
     shell: bash
 

@@ -486,8 +486,8 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     }
 
     if (py_map_policy) {
-        if (pyobject_to_map_policy(err, py_map_policy, &map_policy) !=
-            AEROSPIKE_OK) {
+        if (pyobject_to_map_policy(err, py_map_policy, &map_policy,
+                                   self->validate_keys) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

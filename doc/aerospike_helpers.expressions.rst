@@ -14,7 +14,7 @@ Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 .. note::
-  See `Aerospike Expressions <https://aerospike.com/docs/server/guide/expressions/>`_.
+  See `Expressions <https://aerospike.com/docs/develop/expressions>`_.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.

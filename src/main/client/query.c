@@ -255,8 +255,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
  * @param function_p            The name of the function to be applied
  *                              to the record.
  * @param py_args               An array of arguments for the UDF.
- * @py_policy                   The optional policy.
- * @py_options                  The optional scan options to set.
+ * @param py_policy                   The optional policy that takes in both info and write policy options.
+ * @param py_options                  The optional scan options to set.
  */
 static PyObject *AerospikeClient_QueryApply_Invoke(
     AerospikeClient *self, char *namespace_p, PyObject *py_set,
@@ -266,8 +266,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_list *arglist = NULL;
     as_policy_write write_policy;
     as_policy_write *write_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
     as_error err;
     as_query query;
     uint64_t query_id = 0;
@@ -334,7 +332,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_write(
             self, &err, py_policy, &write_policy, &write_policy_p,
-            &self->as->config.policies.write, &exp_list, &exp_list_p);
+            &self->as->config.policies.write, &exp_list, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -441,14 +439,19 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
+            as_policy_info info_policy;
+            as_policy_info *info_policy_p = NULL;
+
             if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
+                pyobject_to_policy_info(
+                    &err, py_policy, &info_policy, &info_policy_p,
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_WRITE);
                 if (err.code != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
             }
+
             Py_BEGIN_ALLOW_THREADS
             aerospike_query_wait(self->as, &err, info_policy_p, &query,
                                  query_id, 0);
@@ -587,7 +590,8 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
 
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

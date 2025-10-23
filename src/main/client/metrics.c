@@ -16,10 +16,15 @@
 
 #include <aerospike/as_metrics.h>
 #include <aerospike/as_log_macros.h>
+#include <aerospike/as_metrics.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "metrics.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "policy.h"
+
+// Extended metrics
 
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds)
@@ -121,4 +126,30 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
+}
+
+// Regular metrics
+
+PyObject *AerospikeClient_GetStats(AerospikeClient *self)
+{
+    as_cluster_stats stats;
+
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_stats(self->as, &stats);
+    Py_END_ALLOW_THREADS
+
+    as_error err;
+    as_error_init(&err);
+    PyObject *py_cluster_stats =
+        create_py_cluster_stats_from_as_cluster_stats(&err, &stats);
+
+    aerospike_stats_destroy(&stats);
+
+    if (py_cluster_stats == NULL && err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    // A Python native exception can also be raised in this case.
+    return py_cluster_stats;
 }
