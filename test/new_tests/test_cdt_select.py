@@ -79,7 +79,7 @@ class TestCDTSelectOperations:
         "op,expected_bins",
         [
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
@@ -91,7 +91,7 @@ class TestCDTSelectOperations:
                 id="select_all_children_once_in_list"
             ),
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
@@ -103,7 +103,7 @@ class TestCDTSelectOperations:
                 id="select_all_children_once_in_map"
             ),
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
@@ -129,7 +129,7 @@ class TestCDTSelectOperations:
                 id="select_all_children_twice_in_list"
             ),
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
@@ -158,7 +158,7 @@ class TestCDTSelectOperations:
             20
         ).compile()
         ops = [
-            operations.cdt_select(
+            operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
@@ -176,7 +176,7 @@ class TestCDTSelectOperations:
     def test_cdt_modify(self):
         mod_expr = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
         ops = [
-            operations.cdt_apply(
+            operations.modify_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
@@ -184,7 +184,7 @@ class TestCDTSelectOperations:
                 ],
                 expr=mod_expr
             ),
-            operations.cdt_select(
+            operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
@@ -210,7 +210,7 @@ class TestCDTSelectOperations:
     )
     def test_cdt_select_flags(self, flags, expected_bins):
         ops = [
-            operations.cdt_select(
+            operations.select_by_path(
                 name=self.LIST_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
@@ -231,7 +231,7 @@ class TestCDTSelectOperations:
         "op, context",
         [
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=MAP_BIN_NAME,
                     ctx=[],
                 ),
@@ -240,7 +240,7 @@ class TestCDTSelectOperations:
                 id="empty_ctx"
             ),
             pytest.param(
-                operations.cdt_select(
+                operations.select_by_path(
                     name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),

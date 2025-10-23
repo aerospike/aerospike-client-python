@@ -135,7 +135,7 @@ def touch(ttl: Optional[int] = None):
     return op_dict
 
 
-def cdt_select(name: str, ctx: list, flags: int):
+def select_by_path(name: str, ctx: list, flags: int):
     """
     Create CDT select operation.
 
@@ -146,7 +146,7 @@ def cdt_select(name: str, ctx: list, flags: int):
     return op_dict
 
 
-def cdt_apply(name: str, ctx: list, expr: TypeExpression, flags: int):
+def modify_by_path(name: str, ctx: list, expr: TypeExpression, flags: int):
     """
     Create CDT apply operation.
 
