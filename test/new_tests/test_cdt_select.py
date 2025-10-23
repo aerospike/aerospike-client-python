@@ -9,6 +9,7 @@ from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 from contextlib import nullcontext
 from .test_base_class import TestBaseClass
+import copy
 
 
 @pytest.fixture(scope="class", autouse=True)
@@ -155,17 +156,18 @@ class TestCDTSelectOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins == expected_bins
 
+    FILTER_EXPR = GE(
+        LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
+        20.0
+    ).compile()
+
     def test_cdt_select_with_filter(self):
-        expr = GE(
-            LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
-            20.0
-        ).compile()
         ops = [
             operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
-                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=expr)
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
                 flags=aerospike.CDT_SELECT_VALUES
             )
@@ -207,30 +209,34 @@ class TestCDTSelectOperations:
 
 
     @pytest.mark.parametrize(
-        "flags, expected_bins", [
-            (aerospike.CDT_SELECT_MATCHING_TREE, {})
-            # TODO: combine?
-            # (aerospike.CDT_SELECT_LEAF_LIST_VALUE,)
-            # TODO: bad naming?
-            # (aerospike.CDT_SELECT_LEAF_MAP_VALUE,)
-            # (aerospike.CDT_SELECT_LEAF_MAP_KEY,)
+        "flags", [
+            (aerospike.CDT_SELECT_MATCHING_TREE)
         ]
     )
-    def test_cdt_select_flags(self, flags, expected_bins):
+    def test_cdt_select_flag_matching_tree(self, flags):
         ops = [
             operations.select_by_path(
-                name=self.LIST_BIN_NAME,
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
-                    cdt_ctx.cdt_ctx_all_children()
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
                 # TODO: not done
                 flags=flags
             )
         ]
+
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins == expected_bins
+
+            expected_bin_value = copy.deepcopy(self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME])
+
+            # Remove all nodes that are filtered out (dict key-value pairs)
+            expected_bin_value["Day1"].clear()
+            del expected_bin_value["Day2"]["game"]
+            expected_bin_value["Day3"].clear()
+
+            assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
 
     # TODO: set default for BUILTIN
 
