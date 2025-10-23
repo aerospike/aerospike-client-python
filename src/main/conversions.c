@@ -2853,8 +2853,9 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             }
             else {
                 PyObject *py_expr = NULL;
-                int retval = PyDict_GetItemStringRef(py_extra_args, AS_EXPR_KEY,
-                                                     &py_expr);
+                int retval = PyDict_GetItemStringRef(
+                    py_extra_args, _CDT_CTX_ALL_CHILDREN_WITH_FILTER_EXPR_KEY,
+                    &py_expr);
                 if (retval != 1) {
                     status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                              "Invalid cdt_ctx_exp");
