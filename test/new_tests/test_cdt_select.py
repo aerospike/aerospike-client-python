@@ -364,7 +364,7 @@ class TestCDTSelectOperations:
         ctx=[
             cdt_ctx.cdt_ctx_all_children(),
             cdt_ctx.cdt_ctx_all_children()
-        ],
+        ]
 
         modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.LIST, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
         select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
