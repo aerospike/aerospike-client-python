@@ -562,7 +562,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
     bool operation_succeeded = true;
     switch (operation) {
     case AS_OPERATOR_CDT_READ:
-    case AS_OPERATOR_CDT_MODIFY:
+    case AS_OPERATOR_CDT_MODIFY: {
         // TODO: set module constant for flags str
         PyObject *py_flags = NULL;
         // TODO: already a retval var previously?
@@ -614,6 +614,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
 
         break;
+    }
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
