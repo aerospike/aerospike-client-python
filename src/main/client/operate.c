@@ -587,7 +587,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
         if (operation == AS_OPERATOR_CDT_READ) {
             operation_succeeded =
-                as_operations_cdt_select(ops, bin, ctx_ref, flags);
+                as_operations_select_by_path(ops, bin, ctx_ref, flags);
         }
         else if (operation == AS_OPERATOR_CDT_MODIFY) {
             PyObject *py_expr = NULL;
@@ -610,7 +610,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
             }
 
             operation_succeeded =
-                as_operations_cdt_apply(ops, bin, ctx_ref, mod_exp, flags);
+                as_operations_modify_by_path(ops, bin, ctx_ref, mod_exp, flags);
         }
 
         break;
