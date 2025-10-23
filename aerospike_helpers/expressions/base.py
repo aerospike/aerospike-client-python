@@ -1098,7 +1098,7 @@ class LoopVarInt(_LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_INT
 
 
-class CDTSelect(_BaseExpr):
+class SelectByPath(_BaseExpr):
     """
     """
     _op = aerospike._AS_EXP_CODE_CALL_SELECT
@@ -1106,7 +1106,7 @@ class CDTSelect(_BaseExpr):
     # TODO: document to be certain constants?
     # TODO: result_type not needed?
     # TODO: why return type needed?
-    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, flags: int, bin: str):
+    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: str):
         """Args:
             `ctx`: TODO
 
@@ -1126,7 +1126,7 @@ class CDTSelect(_BaseExpr):
         #     self._fixed[_Keys.CTX_KEY] = ctx
 
 
-class CDTApply(_BaseExpr):
+class ModifyByPath(_BaseExpr):
     """
     asdf
     """

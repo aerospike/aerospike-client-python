@@ -3,10 +3,11 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
+from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 from contextlib import nullcontext
@@ -246,12 +247,16 @@ class TestCDTSelectOperations:
                 [4, 5]
             ]
 
+
+    MOD_EXPR = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
+    # Expected results
+    SECOND_LEVEL_INTEGERS_MINUS_FIVE = [x - 5.0 for x in [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]]
+
     @pytest.mark.parametrize("flags", [
         aerospike.CDT_MODIFY_NO_FAIL,
         aerospike.CDT_MODIFY_DEFAULT,
     ])
     def test_cdt_modify(self, flags):
-        mod_expr = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
         ops = [
             operations.modify_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -259,7 +264,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                expr=mod_expr,
+                expr=self.MOD_EXPR,
                 flags=flags
             ),
             operations.select_by_path(
@@ -274,8 +279,7 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
-            expected_results = [x - 5.0 for x in [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]]
-            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == expected_results
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
 
 
     # Test cdt select flags
@@ -355,3 +359,22 @@ class TestCDTSelectOperations:
         ]
         with context:
             self.as_connection.operate(self.key, ops)
+
+    def test_exp_select_by_path(self):
+        ctx=[
+            cdt_ctx.cdt_ctx_all_children(),
+            cdt_ctx.cdt_ctx_all_children()
+        ],
+
+        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.LIST, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
+        select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
+        ops = [
+            expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
+            expr_ops.expression_read(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=select_expr)
+
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
+
+    # TODO: aerospike.EXP_LOOPVAR_* tests
