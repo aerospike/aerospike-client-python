@@ -660,19 +660,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             switch (temp_expr->op) {
             case _AS_EXP_LOOPVAR_MAP:
-                APPEND_ARRAY(0, as_exp_var_builtin_map(lval1));
+                APPEND_ARRAY(0, as_exp_loopvar_map(lval1));
                 break;
             case _AS_EXP_LOOPVAR_LIST:
-                APPEND_ARRAY(0, as_exp_var_builtin_list(lval1));
+                APPEND_ARRAY(0, as_exp_loopvar_list(lval1));
                 break;
             case _AS_EXP_LOOPVAR_STR:
-                APPEND_ARRAY(0, as_exp_var_builtin_str(lval1));
+                APPEND_ARRAY(0, as_exp_loopvar_str(lval1));
                 break;
             case _AS_EXP_LOOPVAR_INT:
-                APPEND_ARRAY(0, as_exp_var_builtin_int(lval1));
+                APPEND_ARRAY(0, as_exp_loopvar_int(lval1));
                 break;
             case _AS_EXP_LOOPVAR_FLOAT:
-                APPEND_ARRAY(0, as_exp_var_builtin_float(lval1));
+                APPEND_ARRAY(0, as_exp_loopvar_float(lval1));
                 break;
             }
 
