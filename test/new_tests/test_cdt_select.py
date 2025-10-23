@@ -83,7 +83,8 @@ class TestCDTSelectOperations:
                     name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
-                    ]
+                    ],
+                    flags=aerospike.CDT_SELECT_VALUES
                 ),
                 {
                     LIST_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[LIST_BIN_NAME]
@@ -95,7 +96,8 @@ class TestCDTSelectOperations:
                     name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
-                    ]
+                    ],
+                    flags=aerospike.CDT_SELECT_VALUES
                 ),
                 {
                     MAP_BIN_NAME: list(BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME].values())
@@ -108,7 +110,8 @@ class TestCDTSelectOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children()
-                    ]
+                    ],
+                    flags=aerospike.CDT_SELECT_VALUES
                 ),
                 {
                     LIST_BIN_NAME: [
@@ -135,7 +138,7 @@ class TestCDTSelectOperations:
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
                     ],
-                    flags=aerospike.CDT_SELECT_NO_FAIL
+                    flags=aerospike.CDT_SELECT_VALUES | aerospike.CDT_SELECT_NO_FAIL
                 ),
                 {
                     MAP_BIN_NAME: []
@@ -163,7 +166,8 @@ class TestCDTSelectOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=expr)
-                ]
+                ],
+                flags=aerospike.CDT_SELECT_VALUES
             )
         ]
         with self.expected_context_for_pos_tests:
@@ -182,14 +186,17 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                expr=mod_expr
+                expr=mod_expr,
+                # TODO: should have flag for FAIL
+                flags=aerospike.CDT_SELECT_NO_FAIL
             ),
             operations.select_by_path(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
-                ]
+                ],
+                flags=aerospike.CDT_SELECT_VALUES
             ),
         ]
         with self.expected_context_for_pos_tests:
@@ -234,6 +241,7 @@ class TestCDTSelectOperations:
                 operations.select_by_path(
                     name=MAP_BIN_NAME,
                     ctx=[],
+                    flags=aerospike.CDT_SELECT_VALUES
                 ),
                 # TODO: vague
                 pytest.raises(e.AerospikeError),
@@ -245,7 +253,8 @@ class TestCDTSelectOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
-                    ]
+                    ],
+                    flags=aerospike.CDT_SELECT_VALUES
                 ),
                 pytest.raises(e.AerospikeError),
                 id="iterate_on_unexpected_type"
