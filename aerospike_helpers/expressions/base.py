@@ -1077,6 +1077,7 @@ class _LoopVar(_BaseExpr, ABC):
     def __init__(self, var_id: int):
         self._fixed = {_Keys.VALUE_KEY: var_id}
 
+
 class LoopVarMap(_LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_MAP
 
@@ -1100,7 +1101,7 @@ class LoopVarInt(_LoopVar):
 class CDTSelect(_BaseExpr):
     """
     """
-    _op = _ExprOp._AS_EXP_CODE_CALL_SELECT
+    _op = aerospike._AS_EXP_CODE_CALL_SELECT
 
     # TODO: document to be certain constants?
     # TODO: result_type not needed?
@@ -1116,7 +1117,7 @@ class CDTSelect(_BaseExpr):
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
-            _Keys.CDT_SELECT_FLAGS_KEY: flags,
+            aerospike._CDT_SELECT_FLAGS_KEY: flags,
             _Keys.BIN_KEY: bin
         }
 
@@ -1129,7 +1130,7 @@ class CDTApply(_BaseExpr):
     """
     asdf
     """
-    _op = _ExprOp._AS_EXP_CODE_CALL_APPLY
+    _op = aerospike._AS_EXP_CODE_CALL_APPLY
 
     # TODO: document to be certain constants?
     # TODO: why return type needed? this returns the whole bin after being modified?
@@ -1142,9 +1143,9 @@ class CDTApply(_BaseExpr):
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
-            _Keys.CDT_SELECT_FLAGS_KEY: flags,
+            aerospike._CDT_APPLY_FLAGS_KEY: flags,
             _Keys.BIN_KEY: bin,
-            _Keys.CDT_SELECT_MOD_EXP_KEY: mod_exp
+            aerospike.CDT_SELECT_MOD_EXP_KEY: mod_exp
         }
 
         # TODO

@@ -17,8 +17,6 @@ class _Keys:
     MAP_POLICY_KEY = "map_policy"
     LIST_ORDER_KEY = "list_order"
     REGEX_OPTIONS_KEY = "regex_options"
-    CDT_SELECT_FLAGS_KEY = "flags"
-    CDT_SELECT_MOD_EXP_KEY = "mod_exp"
 
 
 class _ExprOp:  # TODO replace this with an enum
@@ -88,9 +86,7 @@ class _ExprOp:  # TODO replace this with an enum
     LET = 125
     DEF = 126
 
-    _AS_EXP_CODE_CALL_SELECT = 127
     _AS_EXP_CODE_AS_VAL = 128
-    _AS_EXP_CODE_CALL_APPLY = 129
 
     # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
@@ -117,7 +113,7 @@ class ReturnType:
     MAP_RETURN_INVERTED = 0x10000
 
 
-# These enum constants must match the values for C client's as_exp_type
+# TODO: These enum constants must match the values for C client's as_exp_type
 class ResultType:
     """
     Flags used to indicate expression value_type.

@@ -170,7 +170,14 @@ enum aerospike_hll_operations {
     OP_HLL_MAY_CONTAIN
 };
 
+enum {
+    _AS_EXP_CODE_CALL_SELECT = 127,
+    _AS_EXP_CODE_CALL_APPLY = 129,
+};
+
 enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
+
+// Module constants to be used by aerospike_helpers
 
 enum {
     _AS_EXP_LOOPVAR_FLOAT = 3000,
@@ -179,6 +186,10 @@ enum {
     _AS_EXP_LOOPVAR_MAP,
     _AS_EXP_LOOPVAR_STR
 };
+
+#define _CDT_SELECT_FLAGS_KEY "cdt_select_flags"
+#define _CDT_APPLY_FLAGS_KEY "cdt_apply_flags"
+#define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,

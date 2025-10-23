@@ -101,8 +101,6 @@ enum expr_ops {
     VAR = 124,
     LET = 125,
     DEF = 126,
-    AS_EXP_CODE_CALL_SELECT = 127,
-    AS_EXP_CODE_CALL_APPLY = 129,
 
     LIST_MOD = 139,
     VAL = 200,
@@ -210,9 +208,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 
     static const int EXPR_SIZES[] = {
         // TODO: can also be cdt_apply()
-        [AS_EXP_CODE_CALL_SELECT] =
+        [_AS_EXP_CODE_CALL_SELECT] =
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
-        [AS_EXP_CODE_CALL_APPLY] =
+        [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
@@ -1652,8 +1650,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case UNKNOWN:
             APPEND_ARRAY(0, as_exp_unknown());
             break;
-        case AS_EXP_CODE_CALL_SELECT:
-        case AS_EXP_CODE_CALL_APPLY:
+        case _AS_EXP_CODE_CALL_SELECT:
+        case _AS_EXP_CODE_CALL_APPLY:
             if (get_int64_t(err, "return_type", temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -1674,7 +1672,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     "mod_exp is required for cdt_apply() expression.");
             }
 
-            if (temp_expr->op == AS_EXP_CODE_CALL_APPLY) {
+            if (temp_expr->op == _AS_EXP_CODE_CALL_APPLY) {
                 as_exp *mod_exp = NULL;
                 if (as_exp_new_from_pyobject(self, py_mod_exp, &mod_exp, err,
                                              false) != AEROSPIKE_OK) {

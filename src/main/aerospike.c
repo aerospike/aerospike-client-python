@@ -123,6 +123,11 @@ struct module_constant_name_to_value {
         #macro_name, .value.integer = macro_name                               \
     }
 
+#define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
+    {                                                                          \
+        #macro_name, .is_str_value = true, .value.string = macro_name          \
+    }
+
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
 // TODO: regression tests for all these constants
@@ -564,14 +569,24 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MAP_KEYS),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_NO_FAIL),
 
+    // For aerospike_helpers to use. Not to be exposed in public API
+    // TODO: move all internal constants used by aerospike_helpers to this loc
+
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_FLOAT),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_INT),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
 
-    // TODO: move all internal constants used by aerospike_helpers to this loc
-    {"_CDT_CTX_EXP_EXPR_KEY", .is_str_value = true, .value.string = "expr"}};
+    // C client uses the same expression code for these two expressions
+    // so we define unique ones in the Python client code
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_SELECT_FLAGS_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_FLAGS_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
+};
 
 struct submodule_name_to_creation_method {
     const char *name;
