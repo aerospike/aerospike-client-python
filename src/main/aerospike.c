@@ -114,7 +114,7 @@ struct module_constant_name_to_value {
 #define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
     {                                                                          \
         STRINGIFY(_##macro_name_without_prefix),                               \
-            .value.integer = AS_##macro_name_without_prefix                    \
+            .value.integer = macro_name_without_prefix                         \
     }
 
 #define EXPOSE_MACRO(macro_name)                                               \
@@ -138,8 +138,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
-    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(OPERATOR_CDT_READ),
-    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(OPERATOR_CDT_MODIFY),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_READ),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_MODIFY),
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
