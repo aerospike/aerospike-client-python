@@ -148,11 +148,6 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
 
 void error_to_pyobject(const as_error *err, PyObject **obj);
 
-as_status pyobject_to_astype_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_value, as_val **val,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
-
 as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
                                    PyObject *py_as_privilege,
                                    int privilege_size);
