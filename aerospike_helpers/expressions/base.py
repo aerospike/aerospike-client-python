@@ -1074,7 +1074,16 @@ class Var(_BaseExpr):
 
 
 class _LoopVar(_BaseExpr, ABC):
+    """
+    Retrieve expression value from a path expression loop variable.
+    """
     def __init__(self, var_id: int):
+        """
+        Args:
+            var_id: See :ref:`exp_loopvar_metadata` for possible values.
+
+        :return: (value stored in variable)
+        """
         self._fixed = {_Keys.VALUE_KEY: var_id}
 
 
@@ -1100,20 +1109,21 @@ class LoopVarInt(_LoopVar):
 
 class SelectByPath(_BaseExpr):
     """
+    Constructs a select by path operation.  This is used to retrieve a number of
+    records or fields of records, including those of structured types.
     """
     _op = aerospike._AS_EXP_CODE_CALL_SELECT
 
-    # TODO: document to be certain constants?
-    # TODO: result_type not needed?
-    # TODO: why return type needed?
     def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: _BaseExpr):
-        """Args:
-            `ctx`:
-
-        :return: TODO
         """
-        '''
-        '''
+        Args:
+            ctx: list of CDT contexts. This cannot be None or an empty list.
+            return_type: Return type specifier.
+            flags: See :ref:`cdt_select_flags` for possible values.
+            bin: Bin expression to which this expression applies.
+
+        :return: (expression)
+        """
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
@@ -1124,17 +1134,23 @@ class SelectByPath(_BaseExpr):
 
 class ModifyByPath(_BaseExpr):
     """
-    asdf
+    Constructs a CDT apply operation.
+
+    The results of the evaluation of the modifying expression will replace the
+    selected map, and the changes are written back to storage.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 
-    # TODO: document to be certain constants?
-    # TODO: why return type needed? this returns the whole bin after being modified?
     def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
-        """Args:
-            `ctx`: TODO
+        """
+        Args:
+            ctx: list of CDT contexts. This cannot be None or an empty list.
+            return_type: Return type specifier.
+            mod_exp: Compiled expression to apply.
+            flags: See :ref:`cdt_modify_flags` for possible values.
+            bin: Bin expression to which this expression applies.
 
-        :return: TODO
+        :return: (expression)
         """
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: return_type,

@@ -1798,33 +1798,55 @@ Transaction State
 CDT Select Flags
 ----------------
 
-.. data:: CDT_SELECT_TREE
+.. data:: CDT_SELECT_MATCHING_TREE
 
-    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-.. |CDT_SELECT_VALUE_DOCSTRING| replace:: Return the list of the values of the nodes finally selected by the context
+.. data:: CDT_SELECT_VALUES
 
-.. data:: CDT_SELECT_LEAF_LIST_VALUE
+    Return the list of the values of the nodes finally selected by the context.
 
-    |CDT_SELECT_VALUE_DOCSTRING|
+.. data:: CDT_SELECT_MAP_KEY_VALUES
 
-.. data:: CDT_SELECT_LEAF_MAP_VALUE
+    Return a list of key-value pairs.
 
-    |CDT_SELECT_VALUE_DOCSTRING|
+.. data:: CDT_SELECT_MAP_KEYS
 
-.. data:: CDT_SELECT_LEAF_MAP_KEY
-
-    For final selected nodes which are elements of maps, return the appropiate map key
+    For final selected nodes which are elements of maps, return the appropiate map key.
 
 .. data:: CDT_SELECT_NO_FAIL
 
-    If the expression in the context hits an invalid type (eg selects as an integer when the value is a string), do not fail the operation, just ignore those elements.
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements.
 
-Expression Variable Built-in Types
-----------------------------------
+.. _cdt_modify_flags:
 
-.. data:: EXP_BUILTIN_KEY
+CDT Modify Flags
+----------------
 
-.. data:: EXP_BUILTIN_VALUE
+.. data:: CDT_MODIFY_DEFAULT
 
-.. data:: EXP_BUILTIN_INDEX
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
+
+.. data:: CDT_MODIFY_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements.
+
+.. _exp_loopvar_metadata:
+
+Expression Loop Variable Metadata
+---------------------------------
+
+.. data:: EXP_LOOPVAR_KEY
+
+    The key associated with this value if part of a key-value pair of a map.
+
+.. data:: EXP_LOOPVAR_VALUE
+
+    List item, or value from a map key-value pair.
+
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.
