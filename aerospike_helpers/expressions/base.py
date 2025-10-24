@@ -1073,7 +1073,7 @@ class Var(_BaseExpr):
         self._fixed = {_Keys.VALUE_KEY: var_name}
 
 
-class _LoopVar(_BaseExpr, ABC):
+class LoopVar(_BaseExpr, ABC):
     """
     Retrieve expression value from a path expression loop variable.
     """
@@ -1087,23 +1087,23 @@ class _LoopVar(_BaseExpr, ABC):
         self._fixed = {_Keys.VALUE_KEY: var_id}
 
 
-class LoopVarMap(_LoopVar):
+class LoopVarMap(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_MAP
 
 
-class LoopVarList(_LoopVar):
+class LoopVarList(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_LIST
 
 
-class LoopVarStr(_LoopVar):
+class LoopVarStr(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_STR
 
 
-class LoopVarFloat(_LoopVar):
+class LoopVarFloat(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_FLOAT
 
 
-class LoopVarInt(_LoopVar):
+class LoopVarInt(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_INT
 
 
