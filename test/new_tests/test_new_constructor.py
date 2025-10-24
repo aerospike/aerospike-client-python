@@ -395,7 +395,7 @@ class TestConfigTTL:
         # Setup
         self.client.put(KEY, {"bin": "a"})
 
-        # Call without setting the ttl in the transaction's apply policy
+        # Call without setting the ttl in the command's apply policy
         # Args: bin name, str
         self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
         self.check_ttl()
