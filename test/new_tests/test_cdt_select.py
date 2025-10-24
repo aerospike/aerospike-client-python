@@ -367,7 +367,7 @@ class TestCDTSelectOperations:
         ]
 
         bin_expr=MapBin(bin=self.MAP_OF_NESTED_MAPS_BIN_NAME)
-        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.LIST, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
+        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
         select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
         ops = [
             expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
