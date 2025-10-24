@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -366,8 +366,9 @@ class TestCDTSelectOperations:
             cdt_ctx.cdt_ctx_all_children()
         ]
 
-        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.LIST, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
-        select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=self.MAP_OF_NESTED_MAPS_BIN_NAME).compile()
+        bin_expr=MapBin(bin=self.MAP_OF_NESTED_MAPS_BIN_NAME)
+        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.LIST, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
+        select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
         ops = [
             expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
             expr_ops.expression_read(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=select_expr)

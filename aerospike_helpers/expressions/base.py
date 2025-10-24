@@ -1106,7 +1106,7 @@ class SelectByPath(_BaseExpr):
     # TODO: document to be certain constants?
     # TODO: result_type not needed?
     # TODO: why return type needed?
-    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: str):
+    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: _BaseExpr):
         """Args:
             `ctx`: TODO
 
@@ -1118,8 +1118,8 @@ class SelectByPath(_BaseExpr):
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
             aerospike._CDT_FLAGS_KEY: flags,
-            _Keys.BIN_KEY: bin
         }
+        self._children = (bin,)
 
         # TODO
         # if ctx is not None:
@@ -1134,7 +1134,7 @@ class ModifyByPath(_BaseExpr):
 
     # TODO: document to be certain constants?
     # TODO: why return type needed? this returns the whole bin after being modified?
-    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, mod_exp, flags: int, bin: str):
+    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
         """Args:
             `ctx`: TODO
 
@@ -1144,9 +1144,9 @@ class ModifyByPath(_BaseExpr):
             _Keys.RETURN_TYPE_KEY: return_type,
             _Keys.CTX_KEY: ctx,
             aerospike._CDT_FLAGS_KEY: flags,
-            _Keys.BIN_KEY: bin,
             aerospike._CDT_APPLY_MOD_EXP_KEY: mod_exp
         }
+        self._children = (bin,)
 
         # TODO
         # if ctx is not None:

@@ -1656,11 +1656,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            if (get_bin(err, temp_expr->pydict, unicodeStrVector, &bin_name) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-
             if (get_int64_t(err, _CDT_FLAGS_KEY, temp_expr->pydict, &lval2) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -1681,13 +1676,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     return err->code;
                 }
 
-                APPEND_ARRAY(0,
-                             as_exp_modify_by_path(temp_expr->ctx, lval1,
-                                                   mod_exp, lval2, BIN_EXPR()));
+                APPEND_ARRAY(1, as_exp_modify_by_path(temp_expr->ctx, lval1,
+                                                      mod_exp, lval2, NIL));
             }
             else {
-                APPEND_ARRAY(0, as_exp_select_by_path(temp_expr->ctx, lval1,
-                                                      lval2, BIN_EXPR()));
+                APPEND_ARRAY(1, as_exp_select_by_path(temp_expr->ctx, lval1,
+                                                      lval2, NIL));
             }
             break;
         default:
