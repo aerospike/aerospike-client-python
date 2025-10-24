@@ -30,7 +30,7 @@ class TestCDTSelectOperations:
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     NESTED_LIST_BIN_NAME = "list_of_lists"
 
-    BINS_FOR_CDT_SELECT_TEST = {
+    RECORD_BINS = {
         MAP_BIN_NAME: {
             "a": 1,
             "ab": {
@@ -79,7 +79,7 @@ class TestCDTSelectOperations:
     @pytest.fixture(autouse=True)
     def insert_record(self):
         self.key = ("test", "demo", 1)
-        self.as_connection.put(self.key, bins=self.BINS_FOR_CDT_SELECT_TEST)
+        self.as_connection.put(self.key, bins=self.RECORD_BINS)
         yield
         self.as_connection.remove(self.key)
 
@@ -97,7 +97,7 @@ class TestCDTSelectOperations:
                     flags=aerospike.CDT_SELECT_VALUES
                 ),
                 {
-                    LIST_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[LIST_BIN_NAME]
+                    LIST_BIN_NAME: RECORD_BINS[LIST_BIN_NAME]
                 },
                 id="select_all_children_once_in_list"
             ),
@@ -110,7 +110,7 @@ class TestCDTSelectOperations:
                     flags=aerospike.CDT_SELECT_VALUES
                 ),
                 {
-                    MAP_BIN_NAME: list(BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME].values())
+                    MAP_BIN_NAME: list(RECORD_BINS[MAP_BIN_NAME].values())
                 },
                 id="select_all_children_once_in_map"
             ),
@@ -185,7 +185,7 @@ class TestCDTSelectOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
-                self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+                self.RECORD_BINS[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
             ]
 
     @pytest.mark.parametrize(
@@ -209,7 +209,7 @@ class TestCDTSelectOperations:
                     ),
                     expr1=10
                 ),
-                [BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME]["ab"]]
+                [RECORD_BINS[MAP_BIN_NAME]["ab"]]
             )
         ]
     )
@@ -298,7 +298,7 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
-            expected_bin_value = copy.deepcopy(self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME])
+            expected_bin_value = copy.deepcopy(self.RECORD_BINS[self.MAP_OF_NESTED_MAPS_BIN_NAME])
 
             # Remove all nodes that are filtered out (dict key-value pairs)
             expected_bin_value["Day1"].clear()
@@ -403,7 +403,7 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
-            expected_bin_value = copy.deepcopy(self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME])
+            expected_bin_value = copy.deepcopy(self.RECORD_BINS[self.MAP_OF_NESTED_MAPS_BIN_NAME])
 
             # Remove all nodes that are filtered out by dict key
             del expected_bin_value["Day1"]["ferry"]
@@ -428,4 +428,4 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             # Return the same list, but with all list elements except at index 0 removed
-            assert bins == {self.LIST_BIN_NAME: [self.BINS_FOR_CDT_SELECT_TEST[self.LIST_BIN_NAME][0]]}
+            assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
