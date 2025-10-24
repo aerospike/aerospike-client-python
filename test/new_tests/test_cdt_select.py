@@ -326,49 +326,49 @@ class TestCDTSelectOperations:
 
     # TODO: set default for BUILTIN
 
-    @pytest.mark.parametrize(
-        "op, context",
-        [
-            pytest.param(
-                operations.select_by_path(
-                    name=MAP_BIN_NAME,
-                    ctx=[],
-                    flags=aerospike.CDT_SELECT_VALUES
-                ),
-                # TODO: vague
-                pytest.raises(e.AerospikeError),
-                id="empty_ctx_with_select_op"
-            ),
-            pytest.param(
-                operations.modify_by_path(
-                    name=MAP_BIN_NAME,
-                    ctx=[],
-                    expr=MOD_EXPR,
-                    flags=aerospike.CDT_MODIFY_DEFAULT
-                ),
-                # TODO: vague
-                pytest.raises(e.AerospikeError),
-                id="empty_ctx_with_modify_op"
-            ),
-            pytest.param(
-                operations.select_by_path(
-                    name=MAP_BIN_NAME,
-                    ctx=[
-                        cdt_ctx.cdt_ctx_all_children(),
-                        cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
-                    ],
-                    flags=aerospike.CDT_SELECT_VALUES
-                ),
-                pytest.raises(e.AerospikeError),
-                id="iterate_on_unexpected_type"
-            )
-        ]
-    )
-    def test_negative_cases(self, op, context):
+    def test_neg_iterate_on_unexpected_type(self):
+        op = operations.select_by_path(
+            name=self.MAP_BIN_NAME,
+            ctx=[
+                cdt_ctx.cdt_ctx_all_children(),
+                cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
+            ],
+            flags=aerospike.CDT_SELECT_VALUES
+        )
         ops = [
             op
         ]
-        with context:
+        with pytest.raises(e.AerospikeError):
+            self.as_connection.operate(self.key, ops)
+
+    @pytest.mark.parametrize("ctx_list, expected_context", [
+        (None, pytest.raises(e.ParamError)),
+        ([], pytest.raises(e.InvalidRequest))
+    ])
+    @pytest.mark.parametrize(
+        "op_method, op_kwargs", [
+            pytest.param(
+                operations.select_by_path,
+                {
+                    "name": MAP_BIN_NAME,
+                    "flags": aerospike.CDT_SELECT_VALUES
+                }
+            ),
+            pytest.param(
+                operations.modify_by_path,
+                {
+                    "name": MAP_BIN_NAME,
+                    "expr": MOD_EXPR,
+                    "flags": aerospike.CDT_MODIFY_DEFAULT
+                }
+            ),
+        ]
+    )
+    def test_neg_invalid_ctx(self, ctx_list, expected_context, op_method, op_kwargs):
+        ops = [
+            op_method(ctx=ctx_list, **op_kwargs)
+        ]
+        with expected_context:
             self.as_connection.operate(self.key, ops)
 
     def test_exp_select_by_path(self):
