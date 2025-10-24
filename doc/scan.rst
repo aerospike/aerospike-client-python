@@ -19,8 +19,7 @@ The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_ba
 bins returned can be filtered using :meth:`select`.
 
 .. seealso::
-    `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
-    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
+    `Manage queries <https://aerospike.com/docs/database/manage/cluster/queries/>`_.
 
 Fields
 ======
@@ -59,7 +58,7 @@ Methods
     .. method:: apply(module, function[, arguments])
 
         Apply a record UDF to each record found by the scan \
-        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_.
+        `User-defined functions (UDFs) <https://aerospike.com/docs/database/learn/architecture/udf/>`_.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.

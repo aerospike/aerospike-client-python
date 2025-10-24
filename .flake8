@@ -4,5 +4,5 @@ max-line-length = 120
 extend-ignore = E203
 filename =
     ./aerospike_helpers/**/*.py,
-    ./test/**/*.py
-    ./setup.py
+    ./test/new_tests/**/*.py
+    ./test/standalone/**/*.py

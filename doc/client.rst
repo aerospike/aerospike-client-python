@@ -20,8 +20,8 @@ a cluster-tending thread.
 
 .. seealso::
     `Client Architecture
-    <https://aerospike.com/docs/server/architecture/clients.html>`_ and
-    `Data Distribution <https://aerospike.com/docs/server/architecture/data-distribution.html>`_.
+    <https://aerospike.com/docs/database/learn/architecture/clients/>`_ and
+    `Distribution layer <https://aerospike.com/docs/database/learn/architecture/#distribution-layer>`_.
 
 Boilerplate Code For Examples
 -----------------------------
@@ -71,7 +71,7 @@ Connection
             Python client 5.0.0 and up will fail to connect to Aerospike server 4.8.x or older.
             If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-        .. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security>`_.
+        .. seealso:: `Configure access control <https://aerospike.com/docs/database/manage/security/rbac/>`_.
 
     .. method:: is_connected()
 
@@ -621,7 +621,7 @@ User Defined Functions
                  :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
+        .. seealso:: `Record UDFs <https://aerospike.com/docs/database/learn/architecture/udf/#record-udfs>`_ \
           and `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
@@ -637,7 +637,7 @@ User Defined Functions
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the scan.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_scan_policies`.
+        :param dict policy: optional dictionary that takes in both :ref:`aerospike_scan_policies` and :ref:`aerospike_info_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
         :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
@@ -655,7 +655,7 @@ User Defined Functions
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_write_policies`.
+        :param dict policy: optional dictionary that takes in both :ref:`aerospike_write_policies` and :ref:`aerospike_info_policies`.
         :rtype: :class:`int`
         :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -723,7 +723,7 @@ Info Operations
 
         Send an info *command* to a single node specified by *host name*.
 
-        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param str host: a node name. Example: 'BCER199932C'
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
@@ -737,7 +737,7 @@ Info Operations
 
         If any of the individual requests fail, this will raise an exception.
 
-        :param str command: see `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
+        :param str command: see `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -754,7 +754,7 @@ Info Operations
 
         Send an info *command* to a single random node.
 
-        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -773,7 +773,7 @@ Info Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `xdr-set-filter Info Command Reference <https://aerospike.com/docs/server/reference/info#xdr-set-filter>`_.
+        .. seealso:: `xdr-set-filter Info Command Reference <https://aerospike.com/docs/database/reference/info#xdr-set-filter>`_.
 
         .. versionchanged:: 5.0.0
 
@@ -804,7 +804,7 @@ Info Operations
         Remove all records in the namespace / set whose last updated time is older than the given time.
 
         This method is many orders of magnitude faster than deleting records one at a time.
-        See `Truncate command reference <https://aerospike.com/docs/server/reference/info#truncate>`_.
+        See `Truncate command reference <https://aerospike.com/docs/database/reference/info#truncate>`_.
 
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
@@ -1034,7 +1034,7 @@ user\'s roles. Users are assigned roles, which are collections of \
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
 
-.. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security>`_.
+.. seealso:: `Configure access control <https://aerospike.com/docs/database/manage/security/rbac/>`_.
 
 .. class:: Client
     :noindex:
@@ -1409,7 +1409,7 @@ Key Tuple
         client.remove(keyTuple)
         client.close()
 
-    .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/server/architecture/data-model#records>`_.
+    .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#keys-and-digests>`_.
 
 .. _aerospike_record_tuple:
 
@@ -1475,7 +1475,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
+    .. seealso:: `Data Model: Records <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
 .. _metadata_dict:
 
@@ -1542,7 +1542,14 @@ Base Policies
             | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will
             | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
-            | Default for :ref:`aerospike_query_policies`: ``0``
+            | If ``total_timeout`` is zero, there will be no total time limit on the client side.
+            | However, the server converts zero timeouts to the server configuration field
+            | ``transaction-max-ms`` (default ``1000ms``) for all commands except queries. For short
+            | queries (``expected_duration`` == :data:`aerospike.QUERY_DURATION_SHORT`), the server
+            | converts zero timeouts to a hard-coded ``1000ms``. For long queries, there is no
+            | timeout conversion on the server.
+            |
+            | Default for :ref:`aerospike_query_policies` and :ref:`aerospike_scan_policies`: ``0``
             | Default for the other policies: ``1000``
         * **timeout_delay** (:class:`int`)
             Number of milliseconds to wait after a socket read times out before closing the socket for
@@ -1563,6 +1570,23 @@ Base Policies
             The value must be an unsigned 32-bit integer.
 
             Default: ``3000``
+        * **connect_timeout** (:class:`int`)
+            Socket connect timeout in milliseconds. If ``connect_timeout`` greater than zero, it will
+            be applied to creating a connection plus optional user authentication. Otherwise,
+            ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
+
+            If base policy's ``connect_timeout`` (not the config-level ``connect_timeout``), socket and total timeouts
+            are zero, the actual socket connect timeout is hardcoded to ``2000ms``.
+
+            ``connect_timeout`` is useful when new connection creation is expensive (i.e TLS connections)
+            and it's acceptable to allow extra time to create a new connection compared to using an
+            existing connection from the pool.
+
+            This only applies to regular commands, not info commands.
+
+            This value is limited to a 32-bit unsigned integer.
+
+            Default: ``0``
         * **compress** (:class:`bool`)
             | Compress client requests and server responses.
             |

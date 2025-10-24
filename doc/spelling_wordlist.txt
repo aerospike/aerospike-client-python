@@ -90,3 +90,4 @@ bcrypt
 namespaces
 yaml
 suberror
+hardcoded

@@ -236,7 +236,13 @@ jobs:
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
 
-  test-sanitizer:
+  test-full-suite:
+    strategy:
+      matrix:
+        type:
+          - sanitizer
+          - dont_validate_keys
+      fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -249,7 +255,11 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+    - if: ${{ matrix.type == 'sanitizer' }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+
+    - if: ${{ matrix.type == 'dont_validate_keys' }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
     - uses: actions/download-artifact@v4
       with:
@@ -263,7 +273,8 @@ jobs:
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
-    - run: |
+    - if: ${{ matrix.type == 'sanitizer' }}
+      run: |
         echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
@@ -273,6 +284,10 @@ jobs:
         server-tag: ${{ env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - if: ${{ matrix.type == 'dont_validate_keys' }}
+      run: crudini --existing=param --set config.conf input-validation validate_keys false
+      working-directory: test
 
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
