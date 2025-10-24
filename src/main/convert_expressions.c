@@ -1921,7 +1921,14 @@ CLEANUP:
     }
 
     as_vector_destroy(&intermediate_expr_queue);
+
     if (c_expr_entries != NULL) {
+        for (int i = 0; i < size_to_alloc / sizeof(c_expr_entries); i++) {
+            if (c_expr_entries[i].op == _AS_EXP_CODE_MERGE) {
+                as_exp_destroy(c_expr_entries[i].v.expr);
+            }
+        }
+
         free(c_expr_entries);
     }
 
