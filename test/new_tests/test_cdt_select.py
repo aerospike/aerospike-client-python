@@ -337,7 +337,18 @@ class TestCDTSelectOperations:
                 ),
                 # TODO: vague
                 pytest.raises(e.AerospikeError),
-                id="empty_ctx"
+                id="empty_ctx_with_select_op"
+            ),
+            pytest.param(
+                operations.modify_by_path(
+                    name=MAP_BIN_NAME,
+                    ctx=[],
+                    expr=MOD_EXPR,
+                    flags=aerospike.CDT_MODIFY_DEFAULT
+                ),
+                # TODO: vague
+                pytest.raises(e.AerospikeError),
+                id="empty_ctx_with_modify_op"
             ),
             pytest.param(
                 operations.select_by_path(
@@ -353,7 +364,7 @@ class TestCDTSelectOperations:
             )
         ]
     )
-    def test_cdt_select_negative_cases(self, op, context):
+    def test_negative_cases(self, op, context):
         ops = [
             op
         ]
