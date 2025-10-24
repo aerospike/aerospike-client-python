@@ -250,6 +250,7 @@ class TestCDTSelectOperations:
     # Expected results
     SECOND_LEVEL_INTEGERS_MINUS_FIVE = [x - 5.0 for x in [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]]
 
+    # This operate command will pass with either flag set, but we are just checking the API by using it
     @pytest.mark.parametrize("flags", [
         aerospike.CDT_MODIFY_NO_FAIL,
         aerospike.CDT_MODIFY_DEFAULT,
