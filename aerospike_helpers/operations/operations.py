@@ -24,7 +24,6 @@ import warnings
 import aerospike
 from typing import Optional
 
-from aerospike_helpers.expressions.resources import TypeExpression
 from aerospike_helpers.cdt_ctx import _cdt_ctx
 
 
@@ -152,7 +151,7 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
     return op_dict
 
 
-def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr: TypeExpression, flags: int):
+def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     """
     Create CDT modification operation.
 
