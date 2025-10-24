@@ -403,7 +403,6 @@ class TestCDTSelectOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
             expected_bin_value = copy.deepcopy(self.RECORD_BINS[self.MAP_OF_NESTED_MAPS_BIN_NAME])
-
             # Remove all nodes that are filtered out by dict key
             del expected_bin_value["Day1"]["ferry"]
             expected_bin_value["Day2"].clear()
