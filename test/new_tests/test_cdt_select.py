@@ -246,7 +246,7 @@ class TestCDTSelectOperations:
             ]
 
 
-    MOD_EXPR = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
+    SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
     # Expected results
     SECOND_LEVEL_INTEGERS_MINUS_FIVE = [x - 5.0 for x in [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]]
 
@@ -263,7 +263,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                expr=self.MOD_EXPR,
+                expr=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR,
                 flags=flags
             ),
             operations.select_by_path(
@@ -354,7 +354,7 @@ class TestCDTSelectOperations:
                 operations.modify_by_path,
                 {
                     "bin_name": MAP_BIN_NAME,
-                    "expr": MOD_EXPR,
+                    "expr": SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR,
                     "flags": aerospike.CDT_MODIFY_DEFAULT
                 }
             ),
@@ -374,7 +374,7 @@ class TestCDTSelectOperations:
         ]
 
         bin_expr=MapBin(bin=self.MAP_OF_NESTED_MAPS_BIN_NAME)
-        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.MOD_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
+        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
         select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
         ops = [
             expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
