@@ -311,7 +311,6 @@ TXN_STATE_ABORTED: Literal[3]
 
 CDT_SELECT_MATCHING_TREE: Literal[0]
 CDT_SELECT_VALUES: Literal[1]
-# TODO: not implemented correctly?
 CDT_SELECT_MAP_KEY_VALUES: Literal[1]
 CDT_SELECT_MAP_KEYS: Literal[2]
 CDT_SELECT_NO_FAIL: Literal[16]
