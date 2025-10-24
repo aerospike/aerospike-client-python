@@ -142,7 +142,7 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
 
     Args:
         bin_name: Bin name
-        ctx (list[aerospike_helpers.cdt_ctx._cdt_ctx]): List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+        ctx (list[_cdt_ctx]): List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
         flags: See :ref:`cdt_select_flags` for the set of valid flags for this function.
 
     Returns:
