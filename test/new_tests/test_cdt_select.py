@@ -378,4 +378,46 @@ class TestCDTSelectOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
 
-    # TODO: aerospike.EXP_LOOPVAR_* tests
+    MAP_KEY_FILTER_EXPR = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_KEY), "book").compile()
+
+    def test_loopvar_id_map_key(self):
+        ops = [
+            operations.select_by_path(
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.MAP_KEY_FILTER_EXPR)
+                ],
+                flags=aerospike.CDT_SELECT_MATCHING_TREE
+            )
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+
+            expected_bin_value = copy.deepcopy(self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME])
+
+            # Remove all nodes that are filtered out by dict key
+            del expected_bin_value["Day1"]["ferry"]
+            expected_bin_value["Day2"].clear()
+            expected_bin_value["Day3"].clear()
+
+            assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
+
+    LIST_INDEX_FILTER_EXPR = Eq(LoopVarInt(aerospike.EXP_LOOPVAR_INDEX), 0).compile()
+
+    def test_loopvar_id_list_index(self):
+        ops = [
+            operations.select_by_path(
+                name=self.LIST_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_INDEX_FILTER_EXPR)
+                ],
+                flags=aerospike.CDT_SELECT_MATCHING_TREE
+            )
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            # Return the same list, but with all list elements except at index 0 removed
+            assert bins == {self.LIST_BIN_NAME: [self.BINS_FOR_CDT_SELECT_TEST[self.LIST_BIN_NAME][0]]}
