@@ -374,7 +374,7 @@ class TestConfigTTL:
         (aerospike.Client.remove_bin, {"key": KEY, "list": ["a"]}),
     ])
     def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
-        api_method(self.client, **kwargs)
+        api_method(self.client, **kwargs, meta=meta)
         self.check_ttl()
 
     @pytest.mark.parametrize("policy_name", ["operate"])
