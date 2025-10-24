@@ -1812,7 +1812,7 @@ CDT Select Flags
 
 .. data:: CDT_SELECT_MAP_KEYS
 
-    For final selected nodes which are elements of maps, return the appropiate map key.
+    For final selected nodes which are elements of maps, return the appropriate map key.
 
 .. data:: CDT_SELECT_NO_FAIL
 
