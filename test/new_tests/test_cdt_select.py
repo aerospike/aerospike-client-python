@@ -196,8 +196,7 @@ class TestCDTSelectOperations:
                 # Should filter out 1
                 [2]
             ),
-            # At the first level below root, filter out all maps where "bb" does not have
-            # an int value greater than 10
+            # At the first level below root, only return maps that have a key "bb" with value >= 10
             pytest.param(
                 GE(
                     expr0=MapGetByKey(
