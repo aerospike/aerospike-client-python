@@ -91,7 +91,7 @@ class TestCDTSelectOperations:
         [
             pytest.param(
                 operations.select_by_path(
-                    name=LIST_BIN_NAME,
+                    bin_name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
@@ -104,7 +104,7 @@ class TestCDTSelectOperations:
             ),
             pytest.param(
                 operations.select_by_path(
-                    name=MAP_BIN_NAME,
+                    bin_name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
@@ -117,7 +117,7 @@ class TestCDTSelectOperations:
             ),
             pytest.param(
                 operations.select_by_path(
-                    name=LIST_BIN_NAME,
+                    bin_name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children()
@@ -144,7 +144,7 @@ class TestCDTSelectOperations:
             ),
             pytest.param(
                 operations.select_by_path(
-                    name=MAP_BIN_NAME,
+                    bin_name=MAP_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
@@ -174,7 +174,7 @@ class TestCDTSelectOperations:
     def test_cdt_select_with_filter(self):
         ops = [
             operations.select_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
@@ -217,7 +217,7 @@ class TestCDTSelectOperations:
     def test_exp_loopvar_int_and_map(self, filter_expr, expected_bin_value):
         ops = [
             operations.select_by_path(
-                name=self.MAP_BIN_NAME,
+                bin_name=self.MAP_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=filter_expr.compile())
                 ],
@@ -233,7 +233,7 @@ class TestCDTSelectOperations:
     def test_exp_loopvar_list(self):
         ops = [
             operations.select_by_path(
-                name=self.NESTED_LIST_BIN_NAME,
+                bin_name=self.NESTED_LIST_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_SIZE_GE_TWO_EXPR.compile())
                 ],
@@ -259,7 +259,7 @@ class TestCDTSelectOperations:
     def test_cdt_modify(self, flags):
         ops = [
             operations.modify_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
@@ -268,7 +268,7 @@ class TestCDTSelectOperations:
                 flags=flags
             ),
             operations.select_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
@@ -287,7 +287,7 @@ class TestCDTSelectOperations:
     def test_cdt_select_flag_matching_tree(self):
         ops = [
             operations.select_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
@@ -311,7 +311,7 @@ class TestCDTSelectOperations:
     def test_cdt_select_flag_map_keys(self):
         ops = [
             operations.select_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
@@ -328,7 +328,7 @@ class TestCDTSelectOperations:
 
     def test_neg_iterate_on_unexpected_type(self):
         op = operations.select_by_path(
-            name=self.MAP_BIN_NAME,
+            bin_name=self.MAP_BIN_NAME,
             ctx=[
                 cdt_ctx.cdt_ctx_all_children(),
                 cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
@@ -394,7 +394,7 @@ class TestCDTSelectOperations:
     def test_loopvar_id_map_key(self):
         ops = [
             operations.select_by_path(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.MAP_KEY_FILTER_EXPR)
@@ -420,7 +420,7 @@ class TestCDTSelectOperations:
     def test_loopvar_id_list_index(self):
         ops = [
             operations.select_by_path(
-                name=self.LIST_BIN_NAME,
+                bin_name=self.LIST_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_INDEX_FILTER_EXPR)
                 ],
