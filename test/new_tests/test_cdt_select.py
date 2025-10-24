@@ -347,14 +347,14 @@ class TestCDTSelectOperations:
             pytest.param(
                 operations.select_by_path,
                 {
-                    "name": MAP_BIN_NAME,
+                    "bin_name": MAP_BIN_NAME,
                     "flags": aerospike.CDT_SELECT_VALUES
                 }
             ),
             pytest.param(
                 operations.modify_by_path,
                 {
-                    "name": MAP_BIN_NAME,
+                    "bin_name": MAP_BIN_NAME,
                     "expr": MOD_EXPR,
                     "flags": aerospike.CDT_MODIFY_DEFAULT
                 }
