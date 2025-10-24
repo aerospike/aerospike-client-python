@@ -86,7 +86,6 @@ class TestCDTSelectOperations:
     EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_VALUE), "a").compile()
 
     @pytest.mark.parametrize(
-        # TODO: ids
         "op,expected_bins",
         [
             pytest.param(
@@ -323,8 +322,6 @@ class TestCDTSelectOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: ["book", "ferry", "food", "game", "plants", "stickers"]}
-
-    # TODO: set default for BUILTIN
 
     def test_neg_iterate_on_unexpected_type(self):
         op = operations.select_by_path(

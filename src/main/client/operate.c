@@ -563,9 +563,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
     switch (operation) {
     case AS_OPERATOR_CDT_READ:
     case AS_OPERATOR_CDT_MODIFY: {
-        // TODO: set module constant for flags str
         PyObject *py_flags = NULL;
-        // TODO: already a retval var previously?
         int retval = PyDict_GetItemStringRef(py_operation_dict, _CDT_FLAGS_KEY,
                                              &py_flags);
         if (retval == 0) {
