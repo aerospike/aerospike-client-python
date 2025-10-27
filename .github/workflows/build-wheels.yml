@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -56,11 +56,16 @@ on:
         type: boolean
         required: false
         default: false
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate?'
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: true
         default: 'latest'
@@ -80,7 +85,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         type: string
         required: true
@@ -100,11 +105,14 @@ on:
         type: boolean
         required: false
         default: false
-      use-server-rc:
+      registry-name:
+        type: string
         required: false
-        type: boolean
-        default: false
-        description: 'Test against server release candidate?'
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: false
         type: string
@@ -120,6 +128,10 @@ on:
         required: true
       DOCKER_HUB_BOT_PW:
         required: true
+      QE_DOCKER_REGISTRY_USERNAME:
+        required: true
+      QE_DOCKER_REGISTRY_PASSWORD:
+        required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
 
@@ -129,6 +141,8 @@ env:
   # Github mac m1 and windows runners don't support Docker / nested virtualization
   # so we need to use self-hosted runners to test wheels for these platforms
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
@@ -201,10 +215,11 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
@@ -233,10 +248,10 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '91d097e7dbb5fa4a21c725fdac218ef72cc168685d931e559854883ce4747dee') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '8957f7f57f85c32bc2b513f1f29299041e721cd4ba763374c2da89d8837d49e9') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '051650a1f07e173b026f6564ce53554db9b9aafa22d9cade3a93df59303bd4a5') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ebd269b4ecc3e186eeb0d734d765dfe9c606017a1cd5a122e08018b86b126217') }} >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
@@ -273,12 +288,14 @@ jobs:
         echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
       shell: bash
 
-    - if: ${{ inputs.platform-tag == 'macosx_x86_64' && matrix.python-tag == 'cp313' }}
+    - if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
+      # Just do it for all Python versions (even those that don't require more room) for futureproofing
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.21.3
+      uses: pypa/cibuildwheel@v3.1.3
+      id: cibuildwheel
       env:
         # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
         CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/usr/local/lib64
@@ -301,7 +318,7 @@ jobs:
           auditwheel repair -w {dest_dir} {wheel} &&
           auditwheel show {dest_dir}/* &&
           rm -rf $WHEEL_DIR
-        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         # We also want to verify the same thing on macos
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} &&
@@ -329,6 +346,7 @@ jobs:
       with:
         path: ./wheelhouse/*.whl
         name: ${{ env.BUILD_IDENTIFIER }}.build
+        if-no-files-found: error
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -372,10 +390,11 @@ jobs:
 
       - uses: ./.github/actions/run-ee-server
         with:
-          use-server-rc: ${{ inputs.use-server-rc }}
+          registry-name: ${{ inputs.registry-name }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-password: ${{ env.REGISTRY_PASSWORD }}
+          image-name: ${{ inputs.image-name }}
           server-tag: ${{ inputs.server-tag }}
-          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
@@ -395,6 +414,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          allow-prereleases: true
 
       - name: Install wheel
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
@@ -404,7 +424,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
+      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 

@@ -467,7 +467,10 @@ class SetName(_BaseExpr):
 
 
 class DeviceSize(_BaseExpr):
-    """Create an expression that returns record size on disk. If server storage-engine is
+    """
+    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
+
+    Create an expression that returns record size on disk. If server storage-engine is
     memory, then zero is returned. This expression usually evaluates quickly
     because record meta data is cached in memory.
 
@@ -490,7 +493,10 @@ class DeviceSize(_BaseExpr):
 
 
 class MemorySize(_BaseExpr):
-    """Returns the records memory size in bytes as an integer when either the namespace
+    """
+    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
+
+    Returns the records memory size in bytes as an integer when either the namespace
     is configured data-in-memory true or storage-engine memory, otherwise returns 0.
 
     Requires server version between 5.3 inclusive and 7.0 exclusive.

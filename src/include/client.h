@@ -362,6 +362,9 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
 
+PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds);
+
 /**
  * Create secondary cdt index
  *

@@ -19,11 +19,16 @@ on:
         required: false
       # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
       # If use_jfrog_builds is true, only the defaults will be used
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: false
-        default: false
-        description: 'Test against server release candidate?'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -34,6 +39,10 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
+
+env:
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
   linux-distro-tests:
@@ -49,6 +58,19 @@ jobs:
           ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
           ["ubuntu:24.04", 2, "linux/amd64", "3.12"],
           ["ubuntu:24.04", 2, "linux/arm64", "3.12"],
+          # Bullseye is Debian 11
+          ["python:3.9-bullseye", 2, "linux/amd64", "3.9"],
+          ["python:3.9-bullseye", 2, "linux/arm64", "3.9"],
+          ["python:3.10-bullseye", 2, "linux/amd64", "3.10"],
+          ["python:3.10-bullseye", 2, "linux/arm64", "3.10"],
+          ["python:3.11-bullseye", 2, "linux/amd64", "3.11"],
+          ["python:3.11-bullseye", 2, "linux/arm64", "3.11"],
+          ["python:3.12-bullseye", 2, "linux/amd64", "3.12"],
+          ["python:3.12-bullseye", 2, "linux/arm64", "3.12"],
+          ["python:3.13-bullseye", 2, "linux/amd64", "3.13"],
+          ["python:3.13-bullseye", 2, "linux/arm64", "3.13"],
+          ["python:3.14-rc-bullseye", 2, "linux/amd64", "3.14"],
+          ["python:3.14-rc-bullseye", 2, "linux/arm64", "3.14"],
           # Bookworm is Debian 12
           ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
           ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
@@ -60,6 +82,9 @@ jobs:
           ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
           ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
           ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
+          ["python:3.14-rc-bookworm", 2, "linux/amd64", "3.14"],
+          ["python:3.14-rc-bookworm", 2, "linux/arm64", "3.14"],
+          # QE currently covers Debian 13 on all client-supported Python versions
           ["redhat/ubi8", 2, "linux/amd64", "3.11"],
           ["redhat/ubi8", 2, "linux/arm64", "3.11"],
           ["redhat/ubi9", 2, "linux/amd64", "3.9"],
@@ -105,10 +130,11 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
@@ -206,10 +232,11 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel
