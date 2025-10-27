@@ -1,0 +1,12 @@
+services:
+  aerospike:
+    ports:
+      - "3000:3000"
+    image: "aerospike/aerospike-server-enterprise"
+
+  setup-strong-consistency:
+    # TODO: needs to be compatible with above server image
+    image: "aerospike/aerospike-tools"
+    depends_on: ["aerospike"]
+    command: |
+      asadm -h aerospike --enable --execute "manage revive ns test; manage recluster"
