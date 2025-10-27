@@ -190,7 +190,7 @@ enum {
 // Can be either for select or apply
 #define _CDT_FLAGS_KEY "cdt_flags"
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
-#define _CDT_CTX_ALL_CHILDREN_WITH_FILTER_EXPR_KEY "filter_expr"
+#define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,

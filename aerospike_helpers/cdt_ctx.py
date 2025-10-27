@@ -325,4 +325,4 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike._CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_ALL_CHILDREN_WITH_FILTER_EXPR_KEY: expression})
+    return _cdt_ctx(id=aerospike._CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
