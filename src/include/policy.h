@@ -170,11 +170,6 @@ enum aerospike_hll_operations {
     OP_HLL_MAY_CONTAIN
 };
 
-enum {
-    _AS_EXP_CODE_CALL_SELECT = 127,
-    _AS_EXP_CODE_CALL_APPLY = 129,
-};
-
 enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
 
 // Module constants to be used by aerospike_helpers
@@ -184,7 +179,9 @@ enum {
     _AS_EXP_LOOPVAR_INT,
     _AS_EXP_LOOPVAR_LIST,
     _AS_EXP_LOOPVAR_MAP,
-    _AS_EXP_LOOPVAR_STR
+    _AS_EXP_LOOPVAR_STR,
+    _AS_EXP_CODE_CALL_SELECT,
+    _AS_EXP_CODE_CALL_APPLY,
 };
 
 // Can be either for select or apply
