@@ -577,6 +577,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
 
         uint32_t flags = convert_pyobject_to_uint32_t(py_flags);
+        Py_DECREF(py_flags);
         if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "CDT operation's flags argument is invalid");
