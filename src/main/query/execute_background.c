@@ -65,8 +65,7 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
     if (py_policy) {
         as_policy_write_copy_and_set_from_pyobject(
             self->client, &err, py_policy, &write_policy,
-            &self->client->as->config.policies.write,
-            self->client->validate_keys);
+            &self->client->as->config.policies.write);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
