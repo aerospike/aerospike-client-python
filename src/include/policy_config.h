@@ -19,6 +19,7 @@
 #include <aerospike/as_config.h>
 
 #include "macros.h"
+#include "types.h"
 
 as_status set_optional_uint32_property(uint32_t *target_ptr,
                                        PyObject *policy_dict, const char *name);
