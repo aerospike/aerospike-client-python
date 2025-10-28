@@ -153,10 +153,10 @@ runs:
     working-directory: test
     shell: bash
 
-  # - name: Set IP address to Docker container for the server
-  #   if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
-  #   run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
-  #   shell: bash
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
+    shell: bash
 
   - name: Invalid input
     if: ${{ env.SERVER_IP == '' }}

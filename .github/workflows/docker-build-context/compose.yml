@@ -10,7 +10,7 @@ services:
     # TODO: reuse same tools container from above?
     image: "aerospike/aerospike-tools"
     depends_on: ["aerospike"]
-    entrypoint: ["sh", "-c", "/workdir/setup-server.sh"]
+    entrypoint: ["sh", "-c", "/workdir/setup-server.bash"]
     # We need to load the setup script
     volumes:
     - ${PWD}:/workdir
