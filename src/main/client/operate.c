@@ -604,6 +604,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
             as_status status =
                 as_exp_new_from_pyobject(self, py_expr, &mod_exp, err, false);
+            Py_DECREF(py_expr);
             if (status != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
