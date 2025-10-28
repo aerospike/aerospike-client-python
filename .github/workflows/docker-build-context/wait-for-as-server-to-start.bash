@@ -13,7 +13,7 @@ while true; do
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
     echo "Checking if we can reach the server via the service port..."
-    if asinfo -v status | tee >(cat) | grep -qE "^ok"; then
+    if asinfo $SECURITY_FLAGS -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
         echo "Can reach server now."
         break
@@ -29,7 +29,7 @@ while true; do
     # The Dockerfile uses a roster from a previously running Aerospike server in a Docker container
     # When we reuse this roster, the server assumes all of its partitions are dead because it's running on a new
     # storage device. That is why we ignore-migrations here
-    if asinfo -v "cluster-stable:ignore-migrations=true" 2>&1 | (! grep -qE "^ERROR"); then
+    if asinfo $SECURITY_FLAGS -v "cluster-stable:ignore-migrations=true" 2>&1 | (! grep -qE "^ERROR"); then
         echo "Server is in a stable state."
         break
     fi

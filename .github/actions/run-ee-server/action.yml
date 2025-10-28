@@ -49,7 +49,7 @@ runs:
   - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
+  - run: echo CUSTOM_IMAGE=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
     shell: bash
 
   # QE images are not multi-platform and only support a single platform.
@@ -63,7 +63,7 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+  - run: echo PORT="4333" >> $GITHUB_ENV
     shell: bash
 
   - name: Build Aerospike server Docker image for testing
@@ -75,8 +75,8 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
-        TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_FULL_NAME }}
+        TLS_PORT=${{ env.PORT }}
+      tags: ${{ env.CUSTOM_IMAGE }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
@@ -85,8 +85,10 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
+  # ${{ inputs.docker-run-extra-flags }}
   # Confirmed via logs that input string will not be quoted in bash
-  - run: docker run -d ${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
+  - run: docker compose up -d
+    working-directory: .github/workflows/docker-build-context
     shell: bash
 
   - name: 'macOS: install timeout command'

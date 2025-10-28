@@ -1,0 +1,16 @@
+services:
+  aerospike:
+    ports:
+      - $PORT:$PORT
+    image: "$CUSTOM_IMAGE"
+
+  setup-server:
+    # TODO: shouldn't be using a shell?
+    # TODO: needs to be compatible with above server image
+    # TODO: reuse same tools container from above?
+    image: "aerospike/aerospike-tools"
+    depends_on: ["aerospike"]
+    entrypoint: ["sh", "-c", "/workdir/setup-server.sh"]
+    # We need to load the setup script
+    volumes:
+    - ${PWD}:/workdir
