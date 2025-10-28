@@ -40,6 +40,7 @@ OPS_LIST_WITH_INVALID_HLL_POLICY = [
 
 EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED = pytest.raises(e.ParamError)
 
+@pytest.mark.usefixtures("as_connection")
 class TestValidateKeys:
     # Test all policy code paths for invalid policy keys
     # This codepath is only for command (e.g transaction)-level policies. Config level policies
