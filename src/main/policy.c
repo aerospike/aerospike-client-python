@@ -363,7 +363,6 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     if (self->validate_keys) {
-        PyObject *py_policy_valid_keys = NULL;
         as_status retval = does_py_dict_contain_valid_keys(
             err, py_policy, py_apply_policy_valid_keys, true);
         if (retval == -1) {
@@ -488,28 +487,30 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_policy_apply_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_apply *dst, as_policy_apply *src, bool validate_keys)
+as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_apply *dst,
+                                                     as_policy_apply *src)
 {
     as_policy_apply_copy(src, dst);
     return as_policy_apply_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
-as_status as_policy_read_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_read *dst, as_policy_read *src, bool validate_keys)
+as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                    as_error *err,
+                                                    PyObject *py_policy,
+                                                    as_policy_read *dst,
+                                                    as_policy_read *src)
 {
     as_policy_read_copy(src, dst);
-    return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true,
-                                            validate_keys);
+    return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
 as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            PyObject *py_policy,
                                            as_policy_read *policy,
-                                           bool is_policy_txn_level,
-                                           bool validate_keys)
+                                           bool is_policy_txn_level)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
