@@ -99,7 +99,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         as_policy_write_copy_and_set_from_pyobject(
             self, &err, py_policy, &write_policy,
-            &self->as->config.policies.write);
+            &self->as->config.policies.write, self->validate_keys);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }

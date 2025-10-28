@@ -327,17 +327,20 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            PyObject *py_policy,
                                            as_policy_read *policy,
-                                           bool is_policy_txn_level);
+                                           bool is_policy_txn_level,
+                                           bool validate_keys);
 
 as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,
                                             as_policy_write *policy,
-                                            bool is_policy_txn_level);
+                                            bool is_policy_txn_level,
+                                            bool validate_keys);
 
 as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,
                                             as_policy_apply *policy,
-                                            bool is_policy_txn_level);
+                                            bool is_policy_txn_level,
+                                            bool validate_keys);
 
 // These methods are used for setting transaction level policies
 // 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
@@ -345,23 +348,17 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
 // *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_write instances.
 // Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
 
-as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                     as_error *err,
-                                                     PyObject *py_policy,
-                                                     as_policy_write *dst,
-                                                     as_policy_write *src);
+as_status as_policy_write_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *dst, as_policy_write *src, bool validate_keys);
 
-as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                    as_error *err,
-                                                    PyObject *py_policy,
-                                                    as_policy_read *dst,
-                                                    as_policy_read *src);
+as_status as_policy_read_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_read *dst, as_policy_read *src, bool validate_keys);
 
-as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                     as_error *err,
-                                                     PyObject *py_policy,
-                                                     as_policy_apply *dst,
-                                                     as_policy_apply *src);
+as_status as_policy_apply_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_apply *dst, as_policy_apply *src, bool validate_keys);
 
 // TODO: make consistent
 // metrics_policy must be declared already

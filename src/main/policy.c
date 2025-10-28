@@ -475,30 +475,28 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                     as_error *err,
-                                                     PyObject *py_policy,
-                                                     as_policy_apply *dst,
-                                                     as_policy_apply *src)
+as_status as_policy_apply_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_apply *dst, as_policy_apply *src, bool validate_keys)
 {
     as_policy_apply_copy(src, dst);
     return as_policy_apply_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
-as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                    as_error *err,
-                                                    PyObject *py_policy,
-                                                    as_policy_read *dst,
-                                                    as_policy_read *src)
+as_status as_policy_read_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_read *dst, as_policy_read *src, bool validate_keys)
 {
     as_policy_read_copy(src, dst);
-    return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true);
+    return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true,
+                                            validate_keys);
 }
 
 as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            PyObject *py_policy,
                                            as_policy_read *policy,
-                                           bool is_policy_txn_level)
+                                           bool is_policy_txn_level,
+                                           bool validate_keys)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
