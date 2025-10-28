@@ -33,7 +33,6 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
-from abc import ABC
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1073,7 +1072,13 @@ class Var(_BaseExpr):
         self._fixed = {_Keys.VALUE_KEY: var_name}
 
 
-class LoopVar(_BaseExpr, ABC):
+# Although this class is meant to be abstract, we don't inherit from ABC because it might impact performance
+# when other expressions pass in LoopVar* expressions as arguments.
+# A lot of expressions take in an object of TypeBinName, and isinstance() is called on that object
+# Calling isinstance() on an object whose class inherits from ABC may cause performance to slow down
+# https://stackoverflow.com/questions/34846631/computational-cost-of-abc
+# TODO: we should performance test this to double check
+class LoopVar(_BaseExpr):
     """
     Retrieve expression value from a path expression loop variable.
     """
