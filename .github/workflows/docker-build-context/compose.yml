@@ -9,6 +9,7 @@ services:
     volumes:
     - ${PWD}:/workdir
 
+  # TODO: does not wait for above service to finish...
   convert-yml-to-aerospike-conf:
     depends_on: ["toggle-server-features"]
     # TODO: needs to be compatible with above server image
@@ -18,7 +19,6 @@ services:
     volumes:
     - ${PWD}:/workdir
 
-  # TODO: logs not printing to stdout...
   aerospike:
     depends_on: ["convert-yml-to-aerospike-conf"]
     ports:
