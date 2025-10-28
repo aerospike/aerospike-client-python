@@ -362,6 +362,19 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
+    if (self->validate_keys) {
+        PyObject *py_policy_valid_keys = NULL;
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_apply_policy_valid_keys, true);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
+
     // Set policy fields
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_this_txn_policy);
@@ -499,6 +512,19 @@ as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            bool validate_keys)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
+
+    if (self->validate_keys) {
+        PyObject *py_policy_valid_keys = NULL;
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_read_policy_valid_keys, true);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Set policy fields
     as_status retval = as_policy_base_set_from_pyobject(
@@ -645,6 +671,19 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             bool is_policy_txn_level)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
+
+    if (self->validate_keys) {
+        PyObject *py_policy_valid_keys = NULL;
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_write_policy_valid_keys, true);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_policy_txn_level);
