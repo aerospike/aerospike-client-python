@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "policy_config.h"
+#include "types.h"
 
 #include "policy.h"
 
@@ -183,6 +184,14 @@ as_status set_remove_policy(as_policy_remove *remove_policy,
         return AEROSPIKE_ERR_PARAM;
     }
 
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_remove_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
+    }
+
     status = set_base_policy(&remove_policy->base, py_policy);
     if (status != AEROSPIKE_OK) {
         return status;
@@ -219,7 +228,8 @@ as_status set_remove_policy(as_policy_remove *remove_policy,
     return AEROSPIKE_OK;
 }
 
-as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
+as_status set_query_policy(as_error *err, as_policy_query *query_policy,
+                           PyObject *py_policy, int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -230,6 +240,14 @@ as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_query_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_base_policy(&query_policy->base, py_policy);
@@ -261,7 +279,8 @@ as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
     return AEROSPIKE_OK;
 }
 
-as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
+as_status set_scan_policy(as_error *err, as_policy_scan *scan_policy,
+                          PyObject *py_policy, int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -271,6 +290,14 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
     }
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_scan_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_base_policy(&scan_policy->base, py_policy);
@@ -297,8 +324,8 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
     return AEROSPIKE_OK;
 }
 
-as_status set_operate_policy(as_policy_operate *operate_policy,
-                             PyObject *py_policy)
+as_status set_operate_policy(as_error *err, as_policy_operate *operate_policy,
+                             PyObject *py_policy, int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -309,6 +336,14 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_operate_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_base_policy(&operate_policy->base, py_policy);
@@ -379,7 +414,8 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
     return AEROSPIKE_OK;
 }
 
-as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
+as_status set_batch_policy(as_error *err, as_policy_batch *batch_policy,
+                           PyObject *py_policy, int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -389,6 +425,14 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_base_policy(&batch_policy->base, py_policy);
@@ -439,7 +483,8 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
     return AEROSPIKE_OK;
 }
 
-as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
+as_status set_info_policy(as_error *err, as_policy_info *info_policy,
+                          PyObject *py_policy, int validate_keys)
 {
     as_status status = AEROSPIKE_OK;
     if (!py_policy) {
@@ -448,6 +493,14 @@ as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_info_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_optional_uint32_property((uint32_t *)&info_policy->timeout,
@@ -465,7 +518,8 @@ as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
     return AEROSPIKE_OK;
 }
 
-as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy)
+as_status set_admin_policy(as_error *err, as_policy_admin *admin_policy,
+                           PyObject *py_policy, int validate_keys)
 {
     as_status status = AEROSPIKE_OK;
     if (!py_policy) {
@@ -474,6 +528,14 @@ as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy)
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_admin_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_optional_uint32_property(&admin_policy->timeout, py_policy,
@@ -489,8 +551,9 @@ as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy)
 // Don't set expressions field since it depends on the client's
 // serialization policy
 
-as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
-                                 PyObject *py_policy)
+as_status set_batch_apply_policy(as_error *err,
+                                 as_policy_batch_apply *batch_apply_policy,
+                                 PyObject *py_policy, int validate_keys)
 {
     as_status status = AEROSPIKE_OK;
     if (!py_policy) {
@@ -499,6 +562,14 @@ as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_apply_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_optional_commit_level(&batch_apply_policy->commit_level,
@@ -527,8 +598,9 @@ as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
     return AEROSPIKE_OK;
 }
 
-as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
-                                 PyObject *py_policy)
+as_status set_batch_write_policy(as_error *err,
+                                 as_policy_batch_write *batch_write_policy,
+                                 PyObject *py_policy, int validate_keys)
 {
     as_status status = AEROSPIKE_OK;
     if (!py_policy) {
@@ -537,6 +609,14 @@ as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_write_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_optional_commit_level(&batch_write_policy->commit_level,
@@ -576,8 +656,9 @@ as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
     return AEROSPIKE_OK;
 }
 
-as_status set_batch_remove_policy(as_policy_batch_remove *batch_remove_policy,
-                                  PyObject *py_policy)
+as_status set_batch_remove_policy(as_error *err,
+                                  as_policy_batch_remove *batch_remove_policy,
+                                  PyObject *py_policy, int validate_keys)
 {
     as_status status = AEROSPIKE_OK;
     if (!py_policy) {
@@ -586,6 +667,14 @@ as_status set_batch_remove_policy(as_policy_batch_remove *batch_remove_policy,
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_remove_policy_valid_keys, true);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
+        }
     }
 
     status = set_optional_commit_level(&batch_remove_policy->commit_level,

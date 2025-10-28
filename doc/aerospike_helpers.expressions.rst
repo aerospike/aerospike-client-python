@@ -167,6 +167,7 @@ aerospike\_helpers\.expressions\.base module
 .. automodule:: aerospike_helpers.expressions.base
     :members:
     :special-members:
+    :show-inheritance:
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------
