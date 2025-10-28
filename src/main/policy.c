@@ -514,7 +514,6 @@ as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     if (self->validate_keys) {
-        PyObject *py_policy_valid_keys = NULL;
         as_status retval = does_py_dict_contain_valid_keys(
             err, py_policy, py_read_policy_valid_keys, true);
         if (retval == -1) {
@@ -673,7 +672,6 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
 
     if (self->validate_keys) {
-        PyObject *py_policy_valid_keys = NULL;
         as_status retval = does_py_dict_contain_valid_keys(
             err, py_policy, py_write_policy_valid_keys, true);
         if (retval == -1) {
