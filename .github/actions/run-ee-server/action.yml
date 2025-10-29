@@ -159,6 +159,6 @@ runs:
     shell: bash
 
   - name: Set EE server's IP address
-    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
+    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.PORT }}|${{ env.CLUSTER_NAME }}"
     working-directory: test
     shell: bash
