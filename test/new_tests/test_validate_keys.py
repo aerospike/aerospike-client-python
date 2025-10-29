@@ -43,12 +43,12 @@ EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED = pytest.raises(e.ParamError)
 class TestValidateKeys:
     @pytest.fixture(autouse=True, scope="class")
     def setup(self, as_connection):
-        self.client.put(KEY, {"a": "a", "b": "b"})
+        as_connection.put(KEY, {"a": "a", "b": "b"})
 
         yield
 
         try:
-            self.client.remove(KEY)
+            as_connection.remove(KEY)
         except e.RecordNotFound:
             pass
 
