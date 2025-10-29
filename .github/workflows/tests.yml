@@ -559,6 +559,6 @@ jobs:
         # Client version from user agent
         expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
         test "$client_version" = "$expected_client_version"
-      shell: bash
+      shell: bash -x
       env:
         CONTAINER_NAME: ${{ matrix.test-case == 'user_agent_with_ee' && steps.run-ee-server.outputs.container-name || 'aerospike' }}
