@@ -579,6 +579,8 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BLOB),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BOOL),
 
     // C client uses the same expression code for these two expressions
     // so we define unique ones in the Python client code

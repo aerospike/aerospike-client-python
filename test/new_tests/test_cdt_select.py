@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -36,7 +36,9 @@ class TestCDTSelectOperations:
             "ab": {
             "bb": 12
             },
-            "b": 2
+            "b": 2,
+            "c": True,
+            "d": bytearray(b'123')
         },
         LIST_BIN_NAME: [
             {
@@ -209,7 +211,15 @@ class TestCDTSelectOperations:
                     expr1=10
                 ),
                 [RECORD_BINS[MAP_BIN_NAME]["ab"]]
-            )
+            ),
+            pytest.param(
+                Eq(LoopVarBool(aerospike.EXP_LOOPVAR_VALUE), False),
+                [False]
+            ),
+            pytest.param(
+                Eq(LoopVarBlob(aerospike.EXP_LOOPVAR_VALUE), b'123'),
+                [bytearray(b'123')]
+            ),
         ]
     )
     def test_exp_loopvar_int_and_map(self, filter_expr, expected_bin_value):

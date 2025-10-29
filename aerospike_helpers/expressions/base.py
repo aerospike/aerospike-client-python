@@ -1112,6 +1112,14 @@ class LoopVarInt(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_INT
 
 
+class LoopVarBlob(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_BLOB
+
+
+class LoopVarBool(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_BOOL
+
+
 class SelectByPath(_BaseExpr):
     """
     Constructs a select by path operation.  This is used to retrieve a number of
