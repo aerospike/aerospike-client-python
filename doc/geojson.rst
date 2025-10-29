@@ -30,7 +30,7 @@ deserialized into a :class:`~aerospike.GeoJSON` instance.
 
 .. seealso::
     `Geospatial Index and Query
-    <https://aerospike.com/docs/server/guide/data-types/geospatial>`_.
+    <https://aerospike.com/docs/develop/data-types/geospatial/>`_.
 
 .. _example:
 
