@@ -33,7 +33,8 @@ def remove_sindex(client):
 
 
 class TestQueryPartition(TestBaseClass):
-    def setup_class(cls, connection_with_config_funcs):
+    @pytest.fixture(autouse=True, autouse="class")
+    def setup(cls, connection_with_config_funcs):
         if cls.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
             pytest.xfail()
