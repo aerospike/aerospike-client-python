@@ -72,7 +72,7 @@ class TestValidateKeys:
             # Batch policy
             (aerospike.Client.batch_read, {"keys": [KEY], "policy": INVALID_POLICY}, nullcontext()),
             # Batch write policy
-            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch": INVALID_POLICY}, nullcontext()),
+            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch_write": INVALID_POLICY}, nullcontext()),
             # Batch read policy
             (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}, nullcontext()),
             # Batch apply policy
