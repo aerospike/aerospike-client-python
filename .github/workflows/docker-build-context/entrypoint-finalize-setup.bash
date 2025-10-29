@@ -21,18 +21,6 @@ fi
 # We have to remove the .jinja part
 asd --fgdaemon --config-file ${AEROSPIKE_CONF_PATH%.*} &
 
-# We don't need to timeout here.
-# If the wait script runs forever, users running the container manually will know that
-# the container is "unhealthy" by checking the status
-# And our Github Actions code will wait for the container to be healthy or timeout after 30 seconds.
-bash /wait-for-as-server-to-start.bash
-
-if [[ -z "$NO_SC" ]]; then
-    # Finish setting up strong consistency
-    asadm --enable --execute "manage revive ns test"
-    asadm --enable --execute "manage recluster"
-fi
-
 # Allows HEALTHCHECK to report this container as healthy, now
 touch $HEALTHCHECK_FILE_PATH
 

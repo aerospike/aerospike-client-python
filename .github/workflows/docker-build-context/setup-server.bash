@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z "$NO_SECURITY" ]]; then
-    export SECURITY_FLAGS="-U admin -P admin -h aerospike"
+    export SECURITY_FLAGS="-U superuser -P superuser -h aerospike"
 fi
 
 # We don't need to timeout here.
@@ -15,3 +15,5 @@ if [[ -z "$NO_SC" ]]; then
     asadm $SECURITY_FLAGS --enable --execute "manage revive ns test"
     asadm $SECURITY_FLAGS --enable --execute "manage recluster"
 fi
+
+touch /healthy

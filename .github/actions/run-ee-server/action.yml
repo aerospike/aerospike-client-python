@@ -28,7 +28,7 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
-  docker-run-extra-flags:
+  env-vars:
     required: false
     description: Used to disable server features
     default: ''
@@ -82,29 +82,17 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
-    shell: bash
-
-  # ${{ inputs.docker-run-extra-flags }}
   # Confirmed via logs that input string will not be quoted in bash
-  # TODO: wait for service to be ready
-  - run: docker compose up -d
+  - run: ${{ inputs.env-vars }} docker compose up --wait
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
-  - name: 'macOS: install timeout command'
-    if: ${{ runner.os == 'macOS' }}
-    run: brew install coreutils
+  - run: export SERVER_CONTAINER_NAME=$(docker compose ps --format '{{.Name}}' aerospike) >> $GITHUB_ENV
     shell: bash
 
-  # - name: Wait for container to be healthy
-  #   run: |
-  #     timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
-  #   shell: bash
-
   # For debugging
-  # - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
-  #   shell: bash
+  - run: docker compose logs
+    shell: bash
 
   # Configure tests
 
@@ -163,9 +151,9 @@ runs:
     run: exit 1
     shell: bash
 
-  # - name: Get cluster name
-  #   run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
-  #   shell: bash
+  - name: Get cluster name
+    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    shell: bash
 
   - name: Set EE server's IP address
     run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"

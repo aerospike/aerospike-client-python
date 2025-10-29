@@ -3,14 +3,23 @@ services:
     ports:
       - $PORT:$PORT
     image: "$CUSTOM_IMAGE"
+    environment:
+      - NO_TLS
+      - NO_SECURITY
+      - NO_SC
 
   setup-server:
     # TODO: shouldn't be using a shell?
     # TODO: needs to be compatible with above server image
-    # TODO: reuse same tools container from above?
     image: "aerospike/aerospike-tools"
-    depends_on: ["aerospike"]
+    depends_on:
+      aerospike:
+        condition: service_healthy
     entrypoint: ["sh", "-c", "/workdir/setup-server.bash"]
     # We need to load the setup script
     volumes:
     - ${PWD}:/workdir
+    healthcheck:
+      test: ["CMD", "test", "-f", "/healthy"]
+      interval: 1s
+      retries: 3
