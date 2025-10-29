@@ -104,7 +104,7 @@ class TestValidateKeys:
 
     def test_invalid_metadata_dictionary_key(self):
         if self.config["validate_keys"]:
-            EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid metadata dictionary key'
+            EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid record metadata dictionary key'
             context = EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED
         else:
             context = nullcontext()
