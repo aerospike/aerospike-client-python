@@ -17,6 +17,7 @@ services:
         condition: service_healthy
     entrypoint: ["sh", "-c", "/workdir/setup-server.bash"]
     # We need to load the setup script
+    restart: no
     volumes:
     - ${PWD}:/workdir
     # healthcheck:
