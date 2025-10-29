@@ -16,4 +16,4 @@ if [[ -z "$NO_SC" ]]; then
     asadm $SECURITY_FLAGS --enable --execute "manage recluster"
 fi
 
-touch /healthy
+# touch /healthy

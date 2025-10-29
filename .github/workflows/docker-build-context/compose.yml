@@ -19,7 +19,14 @@ services:
     # We need to load the setup script
     volumes:
     - ${PWD}:/workdir
-    healthcheck:
-      test: ["CMD", "test", "-f", "/healthy"]
-      interval: 1s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "test", "-f", "/healthy"]
+    #   interval: 1s
+    #   retries: 3
+
+  dummy:
+    image: alpine:latest
+    depends_on:
+      setup-server:
+        condition: service_completed_successfully
+    command: tail -f /dev/null
