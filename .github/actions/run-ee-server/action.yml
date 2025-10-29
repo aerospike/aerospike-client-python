@@ -32,6 +32,10 @@ inputs:
     required: false
     description: Used to disable server features
     default: ''
+outputs:
+  container-name:
+    description: 'Server container name'
+    value: ${{ steps.get-container-name.outputs.container-name }}
 
 runs:
   using: "composite"
@@ -87,7 +91,8 @@ runs:
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
-  - run: echo SERVER_CONTAINER_NAME=$(docker compose ps --format '{{.Name}}' aerospike) >> $GITHUB_ENV
+  - id: get-container-name
+    run: echo container-name=$(docker compose ps --format '{{.Name}}' aerospike) >> $GITHUB_OUTPUT
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
@@ -146,7 +151,7 @@ runs:
 
   - name: Set IP address to Docker container for the server
     if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
-    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ steps.get-container-name.outputs.container-name }}) >> $GITHUB_ENV
     shell: bash
 
   - name: Invalid input
@@ -155,7 +160,7 @@ runs:
     shell: bash
 
   - name: Get cluster name
-    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    run: echo CLUSTER_NAME=$(docker exec ${{ steps.get-container-name.outputs.container-name }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
     shell: bash
 
   - name: Set EE server's IP address
