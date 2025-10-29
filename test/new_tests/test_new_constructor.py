@@ -337,7 +337,7 @@ class TestConfigTTL:
             "ttl": self.NEW_TTL
         }
         self.client = aerospike.client(config)
-        self.client.put(KEY, {"a": "a", "b": "b"})
+        self.client.put(KEY, {"a": "a"})
 
         if "apply" in policy_name:
             self.client.udf_put("test_record_udf.lua")

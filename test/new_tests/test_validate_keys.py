@@ -37,11 +37,21 @@ OPS_LIST_WITH_INVALID_HLL_POLICY = [
     hll_operations.hll_add("bin_name", values=[1, 2, 3], policy={"a": "key"})
 ]
 
-
 EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED = pytest.raises(e.ParamError)
 
-@pytest.mark.usefixtures("as_connection")
+
 class TestValidateKeys:
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(self, as_connection):
+        self.client.put(KEY, {"a": "a", "b": "b"})
+
+        yield
+
+        try:
+            self.client.remove(KEY)
+        except e.RecordNotFound:
+            pass
+
     # Test all policy code paths for invalid policy keys
     # This codepath is only for command (e.g transaction)-level policies. Config level policies
     # have a separate codepath.
