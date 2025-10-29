@@ -2,6 +2,7 @@ services:
   aerospike:
     ports:
       - $PORT:$PORT
+      - 3000:3000
     image: "$CUSTOM_IMAGE"
     environment:
       - NO_TLS
