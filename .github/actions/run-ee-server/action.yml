@@ -93,6 +93,7 @@ runs:
   # For debugging
   - if: ${{ always() }}
     run: docker compose logs
+    working-directory: .github/workflows/docker-build-context
     shell: bash
 
   # Configure tests
