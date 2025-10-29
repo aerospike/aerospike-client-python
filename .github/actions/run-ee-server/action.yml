@@ -88,6 +88,7 @@ runs:
     shell: bash
 
   - run: export SERVER_CONTAINER_NAME=$(docker compose ps --format '{{.Name}}' aerospike) >> $GITHUB_ENV
+    working-directory: .github/workflows/docker-build-context
     shell: bash
 
   # For debugging
