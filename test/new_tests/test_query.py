@@ -62,8 +62,9 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 class TestQuery(TestBaseClass):
     # TODO: This fixture should be split up to speed up this test class
-    def setup_class(cls):
-        client = TestBaseClass.get_new_connection()
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(cls, as_connection):
+        client = as_connection
 
         try:
             client.index_integer_create("test", "demo", "test_age", "age_index")
@@ -205,10 +206,7 @@ class TestQuery(TestBaseClass):
         rec = {"test_age_none": 1}
         client.put(key, rec)
 
-        client.close()
-
-    def teardown_class(cls):
-        client = TestBaseClass.get_new_connection()
+        yield
 
         policy = {}
         try:
