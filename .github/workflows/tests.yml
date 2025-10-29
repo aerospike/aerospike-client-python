@@ -533,14 +533,14 @@ jobs:
     - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
-        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        server_version=$(docker run --network host aerospike/aerospike-tools asinfo -v "build")
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
         if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
           exit 0
         fi
 
-        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        info_cmd_response=$(docker run --network host aerospike/aerospike-tools asinfo -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         # Response format: user-agent=<base64 encoded string>:...
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
