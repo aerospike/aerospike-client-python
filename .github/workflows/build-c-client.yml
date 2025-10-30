@@ -1,7 +1,5 @@
 on:
-  pull_request:
-    paths:
-    - 'aerospike-client-c'
+  workflow_call:
 
 jobs:
   # TODO: define a var for the same OS used in the other build job
@@ -21,6 +19,11 @@ jobs:
     - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
       working-directory: aerospike-client-c
 
+    - uses: actions/download-artifact@v4
+      id: download-c-client
+      with:
+        name: c-client-${{ env.C_CLIENT_REVISION }}
+
     - run: make build
       working-directory: aerospike-client-c
 
@@ -31,7 +34,3 @@ jobs:
         # TODO: not the precise folder
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
         if-no-files-found: error
-
-  build-python-client:
-    needs: build-c-client
-    uses: ./github/workflows/build-python-client.yml
