@@ -358,6 +358,8 @@ class TestConfigTTL:
         except e.RecordNotFound:
             pass
 
+        self.client.close()
+
     def check_ttl(self):
         _, meta = self.client.exists(KEY)
         clock_skew_tolerance_secs = 50
