@@ -1,6 +1,7 @@
 services:
   aerospike:
     ports:
+      # The server can get both TLS and non-TLS traffic
       - $TLS_PORT:$TLS_PORT
       - 3000:3000
     image: "$CUSTOM_IMAGE"
