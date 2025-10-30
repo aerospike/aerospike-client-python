@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_role_doesnt_exist, poll_until_role_exists
 
 
 class TestGrantPrivileges(object):
@@ -25,14 +26,14 @@ class TestGrantPrivileges(object):
 
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(1)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         self.delete_users = []
-        time.sleep(1)
+        poll_until_role_exists("usr-sys-admin-test", self.client)
 
     def teardown_method(self, method):
         """
@@ -40,8 +41,9 @@ class TestGrantPrivileges(object):
         """
 
         try:
+            # TODO: is this necessary if we already drop the role at the beginning of each test?
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(1)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass
         self.client.close()

@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from contextlib import nullcontext
 import aerospike
+from conftest import poll_until_user_doesnt_exist
 
 
 @pytest.mark.usefixtures("connection_config")
@@ -36,7 +37,7 @@ class TestCreateUser(object):
                 self.client.admin_drop_user(user)
             except Exception:
                 pass
-        time.sleep(2)
+        poll_until_user_doesnt_exist(username=user, client=self.client)
         self.client.close()
 
     def test_create_user_without_any_parameters(self):

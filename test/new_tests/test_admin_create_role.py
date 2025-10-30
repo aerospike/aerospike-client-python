@@ -4,6 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist
 
 import aerospike
 
@@ -25,7 +26,7 @@ class TestCreateRole(object):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_user("testcreaterole")
-            time.sleep(2)
+            poll_until_user_doesnt_exist(username="testcreaterole", client=self.client)
         except Exception:
             pass  # do nothing, EAFP
 
@@ -59,7 +60,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -115,7 +116,7 @@ class TestCreateRole(object):
             self.client.admin_get_role(role_name)
             # role exists, clear it out.
             self.client.admin_drop_role(role_name)
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -148,7 +149,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 

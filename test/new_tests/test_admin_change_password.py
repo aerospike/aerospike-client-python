@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from conftest import poll_until_user_doesnt_exist
 
 import aerospike
 
@@ -21,7 +22,7 @@ class TestChangePassword(object):
 
         try:
             self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"])
-            time.sleep(2)
+            poll_until_user_doesnt_exist(username="testchangepassworduser", client=self.client)
         except aerospike.exception.UserExistsError:
             pass  # we are good, no such role exists
         self.delete_users = []

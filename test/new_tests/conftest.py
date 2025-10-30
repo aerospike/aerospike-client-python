@@ -9,6 +9,7 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -241,3 +242,33 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def poll_until_role_exists(role_name: str, client: aerospike.Client):
+    while True:
+        try:
+            client.admin_query_role(role=role_name)
+            return
+        except e.InvalidRole:
+            time.sleep(0.1)
+
+def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
+    try:
+        while client.admin_query_role(role=role_name):
+            time.sleep(0.1)
+    except e.InvalidRole:
+        return
+
+def poll_until_user_exists(username: str, client: aerospike.Client):
+    while True:
+        try:
+            client.admin_query_user_info(user=username)
+            return
+        except e.InvalidUser:
+            time.sleep(0.1)
+
+def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
+    try:
+        while client.admin_query_user_info(user=username):
+            time.sleep(0.1)
+    except e.InvalidUser:
+        return

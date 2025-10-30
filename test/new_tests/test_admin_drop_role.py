@@ -5,6 +5,7 @@ import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
+from conftest import poll_until_user_doesnt_exist
 import aerospike
 
 
@@ -32,7 +33,7 @@ class TestDropRole(object):
         for user in self.delete_users:
             try:
                 self.client.admin_drop_user(user)
-                time.sleep(2)
+                poll_until_user_doesnt_exist(username=user, client=self.client)
             except Exception:
                 pass
 
