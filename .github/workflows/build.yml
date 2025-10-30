@@ -1,0 +1,14 @@
+on:
+  pull_request:
+    paths:
+    - aerospike-client-c
+    - src/**
+  workflow_dispatch:
+
+jobs:
+  build-c-client:
+    uses: ./.github/workflows/build-c-client.yml
+
+  build-python-client:
+    needs: build-c-client
+    uses: ./.github/workflows/build-python-client.yml
