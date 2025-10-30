@@ -6,10 +6,6 @@ jobs:
   build-c-client:
     runs-on: ubuntu-22.04
     steps:
-    - run: sudo apt update
-    - name: Install C client build dependencies
-      run: sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
-
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -24,6 +20,12 @@ jobs:
       with:
         name: c-client-${{ env.C_CLIENT_REVISION }}
       continue-on-error: true
+
+    - name: Install C client build dependencies
+      if: ${{ steps.download-c-client.outcome == 'failure' }}
+      run: |
+        sudo apt update &&
+        sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
 
     - run: make build
       if: ${{ steps.download-c-client.outcome == 'failure' }}
