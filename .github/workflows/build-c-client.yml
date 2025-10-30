@@ -23,12 +23,15 @@ jobs:
       id: download-c-client
       with:
         name: c-client-${{ env.C_CLIENT_REVISION }}
+      continue-on-error: true
 
     - run: make build
+      if: ${{ steps.download-c-client.outcome == 'failure' }}
       working-directory: aerospike-client-c
 
     - name: Send C client static library to job that builds Python client
       uses: actions/upload-artifact@v4
+      if: ${{ steps.download-c-client.outcome == 'failure' }}
       with:
         name: c-client-${{ env.C_CLIENT_REVISION }}
         # TODO: not the precise folder
