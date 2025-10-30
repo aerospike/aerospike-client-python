@@ -1,0 +1,37 @@
+on:
+  pull_request:
+    paths:
+    - 'aerospike-client-c'
+
+jobs:
+  # TODO: define a var for the same OS used in the other build job
+  build-c-client:
+    runs-on: ubuntu-22.04
+    steps:
+    - run: sudo apt update
+    - name: Install C client build dependencies
+      run: sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        sparse-checkout: |
+          aerospike-client-c
+
+    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
+      working-directory: aerospike-client-c
+
+    - run: make build
+      working-directory: aerospike-client-c
+
+    - name: Send C client static library to job that builds Python client
+      uses: actions/upload-artifact@v4
+      with:
+        name: c-client-${{ env.C_CLIENT_REVISION }}
+        # TODO: not the precise folder
+        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        if-no-files-found: error
+
+  build-python-client:
+    needs: build-c-client
+    uses: ./github/workflows/build-python-client.yml
