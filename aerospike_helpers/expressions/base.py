@@ -1120,6 +1120,19 @@ class LoopVarBool(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_BOOL
 
 
+class ResultRemove(_BaseExpr):
+    """
+    Indicates entry deletion for modify_by_path.
+    """
+    _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
+
+    def __init__(self):
+        """
+        :return: (result_remove)
+        """
+        pass
+
+
 class SelectByPath(_BaseExpr):
     """
     Constructs a select by path operation.  This is used to retrieve a number of
