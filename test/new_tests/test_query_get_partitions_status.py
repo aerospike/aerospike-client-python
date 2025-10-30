@@ -5,38 +5,38 @@ from .test_base_class import TestBaseClass
 
 
 class TestQueryGetPartitionsStatus(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        if self.server_version < [6, 0]:
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(request, as_connection):
+        if request.cls.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
             pytest.xfail()
 
-        self.test_ns = "test"
-        self.test_set = "demo"
+        request.cls.test_ns = "test"
+        request.cls.test_set = "demo"
 
-        self.partition_1000_count = 0
-        self.partition_1001_count = 0
-        self.partition_1002_count = 0
-        self.partition_1003_count = 0
+        request.cls.partition_1000_count = 0
+        request.cls.partition_1001_count = 0
+        request.cls.partition_1002_count = 0
+        request.cls.partition_1003_count = 0
 
-        as_connection.truncate(self.test_ns, None, 0)
+        as_connection.truncate(request.cls.test_ns, None, 0)
 
         for i in range(1, 100000):
             put = 0
-            key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            key = (request.cls.test_ns, request.cls.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
 
             if rec_partition == 1000:
-                self.partition_1000_count += 1
+                request.cls.partition_1000_count += 1
                 put = 1
             if rec_partition == 1001:
-                self.partition_1001_count += 1
+                request.cls.partition_1001_count += 1
                 put = 1
             if rec_partition == 1002:
-                self.partition_1002_count += 1
+                request.cls.partition_1002_count += 1
                 put = 1
             if rec_partition == 1003:
-                self.partition_1003_count += 1
+                request.cls.partition_1003_count += 1
                 put = 1
             if put:
                 rec = {
@@ -51,19 +51,19 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
 
                 if rec_partition == 1000:
-                    self.partition_1000_count += 1
+                    request.cls.partition_1000_count += 1
                     put = 1
                 if rec_partition == 1001:
-                    self.partition_1001_count += 1
+                    request.cls.partition_1001_count += 1
                     put = 1
                 if rec_partition == 1002:
-                    self.partition_1002_count += 1
+                    request.cls.partition_1002_count += 1
                     put = 1
                 if rec_partition == 1003:
-                    self.partition_1003_count += 1
+                    request.cls.partition_1003_count += 1
                     put = 1
                 if put:
                     as_connection.remove(key)
