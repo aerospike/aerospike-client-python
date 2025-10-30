@@ -534,8 +534,9 @@ jobs:
     - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
-        if "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true":
+        if [[ "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true" ]]; then
           CREDENTIALS="-U superuser -P superuser"
+        fi
 
         server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
         major_num=$(echo $server_version | cut -d '.' -f 1)
