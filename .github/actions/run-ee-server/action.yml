@@ -67,7 +67,7 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo PORT="4333" >> $GITHUB_ENV
+  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
   - name: Build Aerospike server Docker image for testing
@@ -79,7 +79,7 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
-        TLS_PORT=${{ env.PORT }}
+        TLS_PORT=${{ env.TLS_PORT }}
       tags: ${{ env.CUSTOM_IMAGE }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
@@ -164,6 +164,6 @@ runs:
     shell: bash
 
   - name: Set EE server's IP address
-    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.PORT }}|${{ env.CLUSTER_NAME }}"
+    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
     working-directory: test
     shell: bash
