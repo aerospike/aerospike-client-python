@@ -32,6 +32,7 @@ from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.cdt_ctx import _cdt_ctx
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -467,7 +468,10 @@ class SetName(_BaseExpr):
 
 
 class DeviceSize(_BaseExpr):
-    """Create an expression that returns record size on disk. If server storage-engine is
+    """
+    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
+
+    Create an expression that returns record size on disk. If server storage-engine is
     memory, then zero is returned. This expression usually evaluates quickly
     because record meta data is cached in memory.
 
@@ -490,7 +494,10 @@ class DeviceSize(_BaseExpr):
 
 
 class MemorySize(_BaseExpr):
-    """Returns the records memory size in bytes as an integer when either the namespace
+    """
+    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
+
+    Returns the records memory size in bytes as an integer when either the namespace
     is configured data-in-memory true or storage-engine memory, otherwise returns 0.
 
     Requires server version between 5.3 inclusive and 7.0 exclusive.
@@ -1063,3 +1070,97 @@ class Var(_BaseExpr):
                         exp.LT(exp.Var("x"), 10))).compile()
         """
         self._fixed = {_Keys.VALUE_KEY: var_name}
+
+
+# Although this class is meant to be abstract, we don't inherit from ABC because it might impact performance
+# when other expressions pass in LoopVar* expressions as arguments.
+# A lot of expressions take in an object of TypeBinName, and isinstance() is called on that object
+# Calling isinstance() on an object whose class inherits from ABC may cause performance to slow down
+# https://stackoverflow.com/questions/34846631/computational-cost-of-abc
+# TODO: we should performance test this to double check
+class LoopVar(_BaseExpr):
+    """
+    Retrieve expression value from a path expression loop variable.
+    """
+    def __init__(self, var_id: int):
+        """
+        Args:
+            var_id: See :ref:`exp_loopvar_metadata` for possible values.
+
+        :return: (value stored in variable)
+        """
+        self._fixed = {_Keys.VALUE_KEY: var_id}
+
+
+class LoopVarMap(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_MAP
+
+
+class LoopVarList(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_LIST
+
+
+class LoopVarStr(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_STR
+
+
+class LoopVarFloat(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_FLOAT
+
+
+class LoopVarInt(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_INT
+
+
+class SelectByPath(_BaseExpr):
+    """
+    Constructs a select by path operation.  This is used to retrieve a number of
+    records or fields of records, including those of structured types.
+    """
+    _op = aerospike._AS_EXP_CODE_CALL_SELECT
+
+    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: _BaseExpr):
+        """
+        Args:
+            ctx: list of CDT contexts. This cannot be None or an empty list.
+            return_type: Return type specifier.
+            flags: See :ref:`cdt_select_flags` for possible values.
+            bin: Bin expression to which this expression applies.
+
+        :return: (expression)
+        """
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.CTX_KEY: ctx,
+            aerospike._CDT_FLAGS_KEY: flags,
+        }
+        self._children = (bin,)
+
+
+class ModifyByPath(_BaseExpr):
+    """
+    Constructs a CDT apply operation.
+
+    The results of the evaluation of the modifying expression will replace the
+    selected map, and the changes are written back to storage.
+    """
+    _op = aerospike._AS_EXP_CODE_CALL_APPLY
+
+    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
+        """
+        Args:
+            ctx: list of CDT contexts. This cannot be None or an empty list.
+            return_type: Return type specifier.
+            mod_exp: Compiled expression to apply.
+            flags: See :ref:`cdt_modify_flags` for possible values.
+            bin: Bin expression to which this expression applies.
+
+        :return: (expression)
+        """
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.CTX_KEY: ctx,
+            aerospike._CDT_FLAGS_KEY: flags,
+            aerospike._CDT_APPLY_MOD_EXP_KEY: mod_exp
+        }
+        self._children = (bin,)

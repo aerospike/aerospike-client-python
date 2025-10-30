@@ -187,13 +187,14 @@ class TestBatchWrite(TestBaseClass):
                             [op.write("new", 10), op.read("new")],
                             meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
                             policy={
-                                "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
                         )
                     ]
                 ),
-                {},
+                {
+                    "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE
+                },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),
@@ -395,6 +396,21 @@ class TestBatchWrite(TestBaseClass):
                             ],
                         ),
                         "bad_batch_record",
+                    ]
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
+                # We're testing a specific helper function that checks if an object's base class
+                # is an aerospike_helpers class. BatchRecord is the expected base class,
+                # but the object's actual base class is "object"
+                # The object needs to be in the same submodule as the expected class
+                # (batch.records submodule in aerospike_helpers)
+                "bad-batch-record-but-is-aerospike-helpers-class-instance",
+                br.BatchRecords(
+                    [
+                        br.BatchRecords(),
                     ]
                 ),
                 {},

@@ -66,9 +66,11 @@ ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_INSTALL_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
 ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
+ARG CA_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$CA_CERT_FILE_NAME
 
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
+COPY --from=generate-server-cert-for-tls $CA_CERT_FILE_NAME $CA_CERT_INSTALL_PATH
 
 # User can set their own TLS port if they want
 ARG TLS_PORT=4333
@@ -94,9 +96,13 @@ FROM enable-tls AS finish-setup
 RUN apt update
 # Verified that installing these should not interfere with the server
 # There are a few packages being upgraded with this command, but it should be ok
-RUN apt install -y python3 python3-pip
-RUN python3 -m pip install --break-system-packages jinja2
+RUN apt install -y python3 python3-pip python3-venv
 WORKDIR /
+# We use a venv to handle newer Python versions (3.12+)
+# Those versions require a flag to "break system packages" when installing pip packages directly to the system
+RUN python3 -m venv .venv
+ENV PATH="/.venv/bin:$PATH"
+RUN python3 -m pip install jinja2
 COPY toggle-features-in-conf-files.py .
 
 ENV HEALTHCHECK_FILE_PATH=/finalized

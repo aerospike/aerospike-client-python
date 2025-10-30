@@ -77,7 +77,6 @@ extra_compile_args = [
 if not WINDOWS:
     # Windows does not have this flag
     extra_compile_args.append("-Wno-strict-prototypes")
-    extra_compile_args.append('-Wno-implicit-function-declaration')
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
@@ -99,13 +98,17 @@ if SANITIZER:
     extra_link_args.extend(sanitizer_ldflags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
-libraries = [
-    'ssl',
-    'crypto',
-    'pthread',
-    'm',
-    'z'
+if not WINDOWS:
+    libraries = [
+        'm',
+        'z',
+        'yaml',
+        'ssl',
+        'crypto',
+        'pthread'
 ]
+else:
+    libraries = []
 
 ##########################
 # GITHUB ACTIONS SETTINGS
@@ -163,7 +166,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    libraries.clear()
+    libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
     include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:

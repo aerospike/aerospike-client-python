@@ -357,7 +357,7 @@ class TestExpressions(TestBaseClass):
         keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
         with expected_context:
             brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
-            if expected_context == nullcontext():
+            if type(expected_context) == nullcontext:
                 assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(

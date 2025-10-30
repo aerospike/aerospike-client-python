@@ -6,9 +6,14 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
+import time
+import glob
+import re
+import os
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -110,9 +115,17 @@ def test_neg_setting_rack_ids(rack_ids):
         aerospike.client(config)
 
 
-def test_setting_use_services_alternate():
+@pytest.mark.parametrize(
+    "setting",
+    [
+        "use_services_alternate",
+        "force_single_node",
+        "fail_if_not_connected"
+     ]
+)
+def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config["use_services_alternate"] = True
+    config[setting] = True
     client = aerospike.client(config)
     assert client is not None
 
@@ -207,6 +220,55 @@ def test_setting_batch_policies():
     aerospike.client(config)
 
 
+def test_setting_metrics_policy():
+    config = copy.deepcopy(gconfig)
+    BUCKET_COUNT = 3
+    METRICS_LOG_FILES = "./metrics-*.log"
+
+    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
+    client = aerospike.client(config)
+    try:
+        client.enable_metrics()
+        time.sleep(2)
+        client.disable_metrics()
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Second line has data
+                f.readline()
+                data = f.readline()
+            regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
+            buckets = regex.group(0)
+            # <bucket>,<bucket>,...
+            bucket_count = len(buckets.split(','))
+            assert bucket_count == BUCKET_COUNT
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+    finally:
+        client.close()
+
+
+@pytest.mark.parametrize(
+    "policy, expected_exc_class",
+    [
+        # Common error is to leave a comma at the end
+        # MetricsPolicy(),
+        (tuple([MetricsPolicy()]), e.ParamError),
+        (MetricsPolicy(report_size_limit=2**64), e.ClientError)
+    ]
+)
+def test_setting_invalid_metrics_policy(policy, expected_exc_class):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["metrics"] = policy
+    with pytest.raises(expected_exc_class) as excinfo:
+        aerospike.client(config)
+    if expected_exc_class == e.ParamError:
+        assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
+            "a tuple was received instead"
+
+
 def test_query_invalid_expected_duration():
     config = copy.deepcopy(gconfig)
     config["policies"]["query"]["expected_duration"] = "1"
@@ -214,6 +276,54 @@ def test_query_invalid_expected_duration():
         aerospike.client(config)
     assert excinfo.value.msg == "Invalid Policy setting value"
 
+# We want to make sure that these options are allowed when config["validate_keys"] is True
+# Some of these options may not be documented, but they are allowed in the code and customers may be using them
+def test_config_level_misc_options():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["socket_timeout"] = 1
+    config["policies"]["total_timeout"] = 1
+    config["policies"]["max_retries"] = 1
+    config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
+    config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
+    config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
+    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
+    config["policies"]["max_threads"] = 16
+    config["policies"]["thread_pool_size"] = 16
+    config["thread_pool_size"] = 16
+    config["max_threads"] = 16
+    config["max_conns_per_node"] = 16
+    config["connect_timeout"] = 16
+    config["use_shared_connection"] = False
+    config["compression_threshold"] = 50
+    config["cluster_name"] = "test"
+    config["max_socket_idle"] = 20
+    config["fail_if_not_connected"] = True
+    if "shm" not in config:
+        config["shm"] = {}
+    config["shm"] = {}
+    config["shm"]["max_namespaces"] = 8
+    config["shm"]["max_nodes"] = 3
+    config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["crl_check"] = True
+    config["tls"]["crl_check_all"] = True
+    config["tls"]["log_session_info"] = True
+    config["tls"]["for_login_only"] = True
+    config["tls"]["cafile"] = "./dummy"
+    config["tls"]["capath"] = "./dummy"
+    config["tls"]["protocols"] = "blaah"
+    config["tls"]["cipher_suite"] = "aes_256"
+    config["tls"]["cert_blacklist"] = "aes_256"
+    config["tls"]["keyfile"] = "aes_256"
+    config["tls"]["certfile"] = "aes_256"
+    config["tls"]["keyfile_pw"] = "aes_256"
+    config["validate_keys"] = True
+
+    # We don't care if the client connects or not
+    # We just make sure that the above options are allowed as dict keys
+    try:
+        aerospike.client(config)
+    except:
+        pass
 
 class TestConfigTTL:
     NEW_TTL = 9000

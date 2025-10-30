@@ -1,3 +1,4 @@
+asinfo
 Lua
 lua
 namespace
@@ -87,3 +88,7 @@ msg
 func
 bcrypt
 namespaces
+yaml
+suberror
+hardcoded
+recurse

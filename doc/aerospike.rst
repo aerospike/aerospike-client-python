@@ -343,6 +343,61 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any policy dictionaries.
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
+            Invalid policy example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
+                client.get(key, policy=policy)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
@@ -362,6 +417,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
             (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
+        * **config_provider** (:class:`aerospike.ConfigProvider`)
+            (Optional) Dynamic configuration provider.
+
+            An alternate way to enable dynamic config is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            to the path of the config file before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
@@ -446,6 +506,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **txn_roll** (:class:`dict`)
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
+            * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -502,7 +564,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/server/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
@@ -538,7 +600,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://aerospike.com/developer/client/shm>`_
+                    `Shared Memory <https://aerospike.com/docs/develop/client/c/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -547,7 +609,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -660,19 +722,40 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``100``
         * **max_error_rate** (:class:`int`)
-            Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate`` is zero, there is no error limit.
+            Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns
+            :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate``
+            is zero, there is no error limit.
 
-            The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
+            The counted error types are any error that causes the connection to close (socket errors and client timeouts),
+            server device overload and server timeouts.
 
-            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
+            .. admonition:: Circuit Breaker Feature
+
+                The circuit breaker functionality uses the ``max_error_rate`` and ``error_rate_window``
+                configuration options to progressively slow down connection attempts in order to let
+                the server catch up with client requests. When the ``max_error_rate`` is reached,
+                the client waits for the duration of the ``error_rate_window`` before trying again. The
+                client also decreases the allowable errors by half until network stability
+                is achieved. (i.e the client no longer exceeds the max error rate per window). Then the client doubles the
+                allowed max error rate for each successive window until it is restored to the value set by the user,
+                or the default value if not set.
+
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded`
+            stops being returned.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
-            The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is reset to zero and backoff state is removed on all nodes.
+            The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is
+            defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
+            reset to zero and backoff state is removed on all nodes.
+
+            If the user sets both ``max_error_rate`` and ``error_rate_window`` such that the ratio of ``max_error_rate``
+            to ``error_rate_window`` is less than 1 or greater than 100, both
+            options will be reset to their respective default values.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
-            Polling interval in milliseconds for tending the cluster
+            Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
@@ -683,6 +766,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str`)
             Only server nodes matching this name will be used when determining the cluster name.
+        * **app_id** (:class:`str`)
+            Application identifier.
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
@@ -715,13 +800,21 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========
@@ -882,6 +975,18 @@ Specifies which partition replica to read from.
 
     If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
 
+.. data:: POLICY_REPLICA_RANDOM
+
+    Distribute reads and writes across all nodes in cluster in round-robin fashion.
+
+    This option is useful on reads when the replication factor equals the number
+    of nodes in the cluster and the overhead of requesting proles is not desired.
+
+    This option could temporarily be useful on writes when the client can't connect
+    to a node, but that node is reachable via a proxy from a different node.
+
+    This option can also be used to test server proxies.
+
 .. _TTL_CONSTANTS:
 
 TTL Constants
@@ -940,6 +1045,11 @@ Specifies the type of authentication to be used when communicating with the serv
 
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
+
+.. data:: AUTH_PKI
+
+    Authentication and authorization based on a certificate.  No user name or
+    password needs to be configured.  Requires TLS and a client certificate.
 
 .. _aerospike_job_constants:
 
@@ -1089,7 +1199,7 @@ Flags used by list order.
     Ordered list.
 
 .. note::
-    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1447,14 +1557,10 @@ Bin Types
     (int): 24
 
 
-.. _aerospike_misc_constants:
+.. _aerospike_index_datatypes:
 
-Miscellaneous
--------------
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+Index data types
+----------------
 
 .. data:: INDEX_STRING
 
@@ -1470,9 +1576,14 @@ Miscellaneous
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type.
+    An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
+
+.. _aerospike_index_types:
+
+Index types
+-----------
 
 .. data:: INDEX_TYPE_DEFAULT
 
@@ -1489,6 +1600,15 @@ Miscellaneous
 .. data:: INDEX_TYPE_MAPVALUES
 
     Index the values of a bin whose contents is an aerospike map.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 
@@ -1672,3 +1792,61 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. _cdt_select_flags:
+
+CDT Select Flags
+----------------
+
+.. data:: CDT_SELECT_MATCHING_TREE
+
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+
+.. data:: CDT_SELECT_VALUES
+
+    Return the list of the values of the nodes finally selected by the context.
+
+.. data:: CDT_SELECT_MAP_KEY_VALUES
+
+    Return a list of key-value pairs.
+
+.. data:: CDT_SELECT_MAP_KEYS
+
+    For final selected nodes which are elements of maps, return the appropriate map key.
+
+.. data:: CDT_SELECT_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements.
+
+.. _cdt_modify_flags:
+
+CDT Modify Flags
+----------------
+
+.. data:: CDT_MODIFY_DEFAULT
+
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
+
+.. data:: CDT_MODIFY_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements.
+
+.. _exp_loopvar_metadata:
+
+Expression Loop Variable Metadata
+---------------------------------
+
+.. data:: EXP_LOOPVAR_KEY
+
+    The key associated with this value if part of a key-value pair of a map.
+
+.. data:: EXP_LOOPVAR_VALUE
+
+    List item, or value from a map key-value pair.
+
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.

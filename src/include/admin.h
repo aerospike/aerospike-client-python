@@ -27,6 +27,9 @@
 /*******************************************************************************
  * ADMIN OPERATIONS
  ******************************************************************************/
+PyObject *AerospikeClient_Admin_Create_PKI_User(AerospikeClient *self,
+                                                PyObject *args, PyObject *kwds);
+
 /**
  * Create a new user in the database.
  *

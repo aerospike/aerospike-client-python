@@ -26,6 +26,8 @@
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/as_txn.h>
+#include <aerospike/as_config.h>
+
 #include "pool.h"
 
 #define AEROSPIKE_MODULE_NAME "aerospike"
@@ -76,6 +78,7 @@ typedef struct {
     bool has_connected;
     bool use_shared_connection;
     uint8_t send_bool_as;
+    bool validate_keys;
 } AerospikeClient;
 
 typedef struct {
@@ -108,3 +111,56 @@ typedef struct {
 } AerospikeTransaction;
 
 extern PyTypeObject AerospikeTransaction_Type;
+
+typedef struct {
+    PyObject_HEAD char *path;
+    uint32_t interval;
+} AerospikeConfigProvider;
+
+extern PyTypeObject AerospikeConfigProvider_Type;
+
+// These are defined in aerospike.c
+extern PyObject *py_client_config_valid_keys;
+extern PyObject *py_client_config_shm_valid_keys;
+extern PyObject *py_client_config_lua_valid_keys;
+extern PyObject *py_client_config_policies_valid_keys;
+extern PyObject *py_client_config_tls_valid_keys;
+extern PyObject *py_apply_policy_valid_keys;
+extern PyObject *py_admin_policy_valid_keys;
+extern PyObject *py_info_policy_valid_keys;
+extern PyObject *py_query_policy_valid_keys;
+extern PyObject *py_read_policy_valid_keys;
+extern PyObject *py_remove_policy_valid_keys;
+extern PyObject *py_scan_policy_valid_keys;
+extern PyObject *py_write_policy_valid_keys;
+extern PyObject *py_operate_policy_valid_keys;
+extern PyObject *py_batch_policy_valid_keys;
+extern PyObject *py_batch_write_policy_valid_keys;
+extern PyObject *py_batch_read_policy_valid_keys;
+extern PyObject *py_batch_apply_policy_valid_keys;
+extern PyObject *py_batch_remove_policy_valid_keys;
+extern PyObject *py_bit_policy_valid_keys;
+extern PyObject *py_map_policy_valid_keys;
+extern PyObject *py_list_policy_valid_keys;
+extern PyObject *py_hll_policy_valid_keys;
+// query.apply() takes in one policy parameter that accepts both write and info policy options
+extern PyObject *py_info_and_write_policy_valid_keys;
+// scan.apply() takes in one policy parameter that accepts both write and info policy options
+extern PyObject *py_info_and_scan_policy_valid_keys;
+
+#define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
+#define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"
+#define INVALID_DICTIONARY_KEY_ERROR                                           \
+    "\"%S\" " INVALID_DICTIONARY_KEY_ERROR_PART1                               \
+    " %s " INVALID_DICTIONARY_KEY_ERROR_PART2
+
+// py_set_of_valid_keys contains the valid keys
+// Return -1 if we failed to validate dictionary
+// Return 0 and set err if dictionary has invalid keys
+// Return 1 if dictionary's keys are all valid
+//
+// is_py_dict_a_policy is for error reporting only;
+// If is_py_dict_a_policy is false, we are validating a client config dictionary
+extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
+                                           PyObject *py_set_of_valid_keys,
+                                           bool is_py_dict_a_policy);
