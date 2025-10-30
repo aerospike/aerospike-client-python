@@ -178,11 +178,17 @@ include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
 
 ]
+
+C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
+
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
-    extra_objects = extra_objects + [
-        AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
-    ]
+    if C_CLIENT_SHARED_PATH:
+        extra_objects.append(C_CLIENT_SHARED_PATH)
+    else:
+        extra_objects = extra_objects + [
+            AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
+        ]
 else:
     include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
@@ -250,7 +256,6 @@ class CClientBuild(build):
             print(cmd, library_dirs, libraries)
             call(cmd, cwd=CCLIENT_PATH)
 
-        C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
         if not C_CLIENT_SHARED_PATH:
             self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
