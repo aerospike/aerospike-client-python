@@ -58,6 +58,7 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
 include_dirs = [
     'src/include',
+    f'{AEROSPIKE_C_HOME}/src/include',
     'aerospike-client-c/modules/common/src/include'
 ]
 include_dirs.extend([x for x in os.getenv('CPATH', '').split(':') if len(x) > 0])
@@ -189,10 +190,10 @@ else:
 library_dirs = []
 
 if not WINDOWS:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
+    # include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
 else:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
+    # include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.\
                         {c_client_dependencies_version}/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
