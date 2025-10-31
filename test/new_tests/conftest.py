@@ -243,32 +243,43 @@ def invalid_key(request):
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
 
+HARD_LIMIT_SECS = 3
+POLL_INTERVAL_SECS = 0.1
+
 def poll_until_role_exists(role_name: str, client: aerospike.Client):
-    while True:
+    start = time.time()
+    while time.time() - start < HARD_LIMIT_SECS:
         try:
             client.admin_query_role(role=role_name)
-            return
         except e.InvalidRole:
-            time.sleep(0.1)
+            time.sleep(POLL_INTERVAL_SECS)
+            continue
+        return
 
 def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
+    start = time.time()
     try:
-        while client.admin_query_role(role=role_name):
-            time.sleep(0.1)
+        while time.time() - start < HARD_LIMIT_SECS:
+            client.admin_query_role(role=role_name)
+            time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidRole:
         return
 
 def poll_until_user_exists(username: str, client: aerospike.Client):
-    while True:
+    start = time.time()
+    while time.time() - start < HARD_LIMIT_SECS:
         try:
             client.admin_query_user_info(user=username)
-            return
         except e.InvalidUser:
-            time.sleep(0.1)
+            time.sleep(POLL_INTERVAL_SECS)
+            continue
+        return
 
 def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
+    start = time.time()
     try:
-        while client.admin_query_user_info(user=username):
-            time.sleep(0.1)
+        while time.time() - start < HARD_LIMIT_SECS:
+            client.admin_query_user_info(user=username)
+            time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidUser:
         return
