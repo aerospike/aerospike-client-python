@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from conftest import poll_until_role_doesnt_exist, poll_until_role_exists
+from .conftest import poll_until_role_doesnt_exist, poll_until_role_exists
 
 
 class TestSetQuotas(TestBaseClass):
