@@ -13,10 +13,9 @@ from .conftest import poll_until_user_doesnt_exist
 class TestCreateUser(object):
     user = "user7"
 
-    # pytestmark = pytest.mark.skipif(
-    #     not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    # )
-
+    @pytest.mark.skipif(
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    )
     def setup_method(self, method):
         """
         Setup method
