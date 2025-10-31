@@ -254,6 +254,7 @@ def poll_until_role_exists(role_name: str, client: aerospike.Client):
         except e.InvalidRole:
             time.sleep(POLL_INTERVAL_SECS)
             continue
+        print("Role now exists. Return early")
         return
 
 def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
@@ -263,6 +264,7 @@ def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
             client.admin_query_role(role=role_name)
             time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidRole:
+        print("Role no longer exists. Return early")
         return
 
 def poll_until_user_exists(username: str, client: aerospike.Client):
@@ -273,6 +275,7 @@ def poll_until_user_exists(username: str, client: aerospike.Client):
         except e.InvalidUser:
             time.sleep(POLL_INTERVAL_SECS)
             continue
+        print("User now exists. Return early")
         return
 
 def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
@@ -282,4 +285,5 @@ def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
             client.admin_query_user_info(user=username)
             time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidUser:
+        print("User no longer exists. Return early")
         return
