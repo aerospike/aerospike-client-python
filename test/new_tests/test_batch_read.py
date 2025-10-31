@@ -9,8 +9,8 @@ from . import as_errors
 
 
 class TestBatchRead(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, connection_with_config_funcs):
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(self, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
 
         if self.server_version < [6, 0]:
