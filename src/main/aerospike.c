@@ -778,6 +778,8 @@ DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
 
+DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", "ttl", NULL)
+
 // Use a struct to create pairs of pyobjects and list of strings defined above
 // When we initialize the module, we create sets for the valid keys that the client can use later
 
@@ -817,7 +819,9 @@ static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(list_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(hll_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(info_and_write_policy_valid_keys),
-    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys)};
+    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(record_metadata_valid_keys),
+};
 
 // Return NULL if an exception is raised
 // Returns strong reference to new Python dictionary
