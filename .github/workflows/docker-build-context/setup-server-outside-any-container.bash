@@ -47,6 +47,8 @@ fi
 
 CALL_FROM_TOOLS_CONTAINER="docker run --rm -v ./:/workdir --network host aerospike/aerospike-tools"
 
+cat $AEROSPIKE_YAML_PATH
+
 $CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_PATH -o /workdir/aerospike.conf
 cat aerospike.conf
 
