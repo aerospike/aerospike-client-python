@@ -2,4 +2,4 @@
 	path = aerospike-client-c
 	# url = git@github.com:aerospike/aerospike-client-c.git
 	url = https://github.com/aerospike/aerospike-client-c.git
-	branch = client-3841-provide-loopvar-blob-and-bool
+	branch = client-3753-path-expressions-integration
