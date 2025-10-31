@@ -28,9 +28,7 @@ import glob
 ################################################################################
 # ENVIRONMENT VARIABLES
 ################################################################################
-machine = platform.machine()
-os.putenv('ARCHFLAGS', '-arch ' + machine)
-os.environ['ARCHFLAGS'] = '-arch ' + machine
+
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASE_PATH, 'aerospike-client-c')
 AEROSPIKE_C_TARGET = None
@@ -52,6 +50,12 @@ UNOPTIMIZED = os.getenv('UNOPTIMIZED')
 # Include debug information on macOS (not included by default)
 INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
+
+machine = platform.machine()
+if DARWIN:
+    os.putenv('ARCHFLAGS', '-arch ' + machine)
+    os.environ['ARCHFLAGS'] = '-arch ' + machine
+
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
@@ -62,6 +66,7 @@ include_dirs = [
     'aerospike-client-c/modules/common/src/include'
 ]
 
+# TODO: use CMake to generate compiler-independent flags?
 if WINDOWS:
     extra_compile_args = []
 else:
