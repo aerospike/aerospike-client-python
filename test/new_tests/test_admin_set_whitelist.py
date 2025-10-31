@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_role_doesnt_exist, poll_until_role_exists
 
 
 class TestSetWhitelist(TestBaseClass):
@@ -26,13 +27,13 @@ class TestSetWhitelist(TestBaseClass):
         whitelist = ["127.0.0.1"]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, whitelist=whitelist)
+        poll_until_role_exists("usr-sys-admin-test", self.client)
 
         self.delete_users = []
-        time.sleep(1)
 
     def teardown_method(self, method):
         """

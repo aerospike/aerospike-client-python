@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_role_doesnt_exist, poll_until_role_exists
 
 
 class TestSetQuotas(TestBaseClass):
@@ -20,16 +21,16 @@ class TestSetQuotas(TestBaseClass):
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
 
         try:
             self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
+            poll_until_role_exists("usr-sys-admin-test", self.client)
         except e.QuotasNotEnabled:
             pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
-        time.sleep(1)
 
     def teardown_method(self, method):
         """

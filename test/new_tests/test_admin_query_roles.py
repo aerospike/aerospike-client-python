@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_role_doesnt_exist, poll_until_role_exists
 
 
 class TestQueryRoles(TestBaseClass):
@@ -22,18 +23,18 @@ class TestQueryRoles(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_role("usr-sys-admin")
+            poll_until_role_doesnt_exist("usr-sys-admin")
         except Exception:
             pass
-        time.sleep(2)
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
+            poll_until_role_doesnt_exist("usr-sys-admin")
         except Exception:
             pass
-        time.sleep(2)
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+        poll_until_role_exists("usr-sys-admin-test")
         self.delete_users = []
-        time.sleep(2)
 
     def teardown_method(self, method):
         """

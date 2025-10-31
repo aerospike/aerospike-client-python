@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_user_doesnt_exist
 
 
 class TestQueryUsersInfo(TestBaseClass):
@@ -24,7 +25,7 @@ class TestQueryUsersInfo(TestBaseClass):
 
         try:
             self.client.admin_drop_user("example-test")
-            time.sleep(2)
+            poll_until_user_doesnt_exist("example-test", self.client)
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -33,7 +34,7 @@ class TestQueryUsersInfo(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            time.sleep(2)
+            poll_until_user_doesnt_exist(user, self.client)
         except e.UserExistsError:
             pass
         self.delete_users = []

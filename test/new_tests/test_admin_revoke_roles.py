@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_user_doesnt_exist, poll_until_user_exists
 
 
 class TestRevokeRoles(TestBaseClass):
@@ -23,7 +24,7 @@ class TestRevokeRoles(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            poll_until_user_doesnt_exist("example-test", self.client)
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -32,7 +33,7 @@ class TestRevokeRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            poll_until_user_exists(user, self.client)
         except e.UserExistsError:
             pass
 
@@ -45,7 +46,7 @@ class TestRevokeRoles(TestBaseClass):
 
         try:
             self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            poll_until_user_doesnt_exist("example-test", self.client)
         except e.InvalidUser:
             pass
         self.client.close()

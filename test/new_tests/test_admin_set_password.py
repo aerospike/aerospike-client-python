@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from conftest import poll_until_user_doesnt_exist, poll_until_user_exists
 
 
 class TestSetPassword(TestBaseClass):
@@ -23,12 +24,13 @@ class TestSetPassword(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_user("testsetpassworduser")
-            time.sleep(2)
+            poll_until_user_doesnt_exist("testsetpassworduser", self.client)
         except e.InvalidUser:
             pass
 
         try:
             self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
+            poll_until_user_exists("testsetpassworduser", self.client)
         except e.UserExistsError:
             pass
 
@@ -42,7 +44,7 @@ class TestSetPassword(TestBaseClass):
 
         try:
             self.client.admin_drop_user("testsetpassworduser")
-            time.sleep(2)
+            poll_until_user_doesnt_exist("testsetpassworduser", self.client)
         except e.InvalidUser:
             pass
         self.client.close()
