@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist
+from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, poll_until_role_exists
 
 import aerospike
 
@@ -67,7 +67,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        time.sleep(1)
+        poll_until_role_exists("usr-sys-admin-test", self.client)
         roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
             "privileges": [{"code": 10, "ns": "test", "set": "demo"}],

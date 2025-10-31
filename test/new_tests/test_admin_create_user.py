@@ -13,14 +13,13 @@ from .conftest import poll_until_user_doesnt_exist
 class TestCreateUser(object):
     user = "user7"
 
-    @pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
     def setup_method(self, method):
         """
         Setup method
         """
         config = TestBaseClass.get_connection_config()
+        if not TestBaseClass.auth_in_use():
+            pytest.skip("No user specified, may be not secured cluster.")
 
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
