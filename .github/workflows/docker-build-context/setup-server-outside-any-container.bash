@@ -2,10 +2,11 @@
 
 # Makes sure that if the "docker exec" command fails, it is not ignored
 set -o pipefail
+set -e
 
 # We use bash because we need the not (!) operator
 
-CALL_FROM_TOOLS_CONTAINER="docker exec aerospike/aerospike-tools"
+CALL_FROM_TOOLS_CONTAINER="docker run --rm --network host aerospike/aerospike-tools"
 
 while true; do
     # Intermediate step is to send docker exec command's output to stdout in case it fails
