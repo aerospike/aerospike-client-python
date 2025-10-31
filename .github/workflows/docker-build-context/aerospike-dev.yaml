@@ -18,8 +18,8 @@ namespaces:
       filesize: 4294967296
       read-page-cache: true
       type: device
-    strong-consistency: false
-    strong-consistency-allow-expunge: false
+    strong-consistency: "true"
+    strong-consistency-allow-expunge: "true"
 network:
   fabric:
     addresses:
@@ -39,6 +39,16 @@ network:
     # tls-authenticate-client: any
     # tls-name: docker
     # tls-port: 4333
+
+    tls-authenticate-client: any
+    tls-name: docker
+    tls-port: "4333"
+    tls: []
+  tls:
+    - ca-file: /etc/ssl/certs/ca.cer
+      cert-file: /etc/ssl/certs/server.cer
+      key-file: /etc/ssl/private/server.pem
+      name: docker
 #   tls:
 #     - ca-file: /etc/ssl/certs/ca.cer
 #       cert-file: /etc/ssl/certs/server.cer
@@ -53,6 +63,6 @@ service:
   feature-key-file: /etc/aerospike/features.conf
 # node-id: a1
 security:
-  enable-quotas: true
+  enable-quotas: "false"
   log:
-    report-violation: true
+    report-violation: "true"
