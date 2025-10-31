@@ -10,7 +10,7 @@ set -x
 AEROSPIKE_YAML_PATH=/workdir/aerospike-dev.yaml
 
 CALL_FROM_YQ_CONTAINER() {
-    docker run --rm -v ./:/workdir mikefarah/yq "$1" -i $AEROSPIKE_YAML_PATH
+    docker run --rm -v ./:/workdir mikefarah/yq '$1' -i $AEROSPIKE_YAML_PATH
 }
 
 if [[ "$MUTUAL_TLS" == "1" ]]; then
@@ -28,7 +28,7 @@ else
     CALL_FROM_YQ_CONTAINER "del(.network.service.tls-name)"
     CALL_FROM_YQ_CONTAINER "del(.network.service.tls-port)"
     CALL_FROM_YQ_CONTAINER "del(.network.tls)"
-# fi
+fi
 
 if [[ "$SECURITY" == "1" ]]; then
     CALL_FROM_YQ_CONTAINER ".security.enable-quotas = false"
@@ -50,13 +50,23 @@ CALL_FROM_TOOLS_CONTAINER="docker run --rm -v ./:/workdir --network host aerospi
 $CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_PATH -o /workdir/aerospike.conf
 cat aerospike.conf
 
-docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 -v ./:/custom-dir/ aerospike/aerospike-server-enterprise --config-file /custom-dir/aerospike.conf
+# Generate server private key and CSR
+openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
+# Generate server cert
+openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
+
+docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
+    -v ./ca.cer:/etc/ssl/certs/ca.cer \
+    -v ./server.cer:/etc/ssl/certs/server.cer \
+    -v ./server.pem:/etc/ssl/certs/server.pem \
+    -v ./aerospike.conf:/custom-dir/aerospike.conf \
+    aerospike/aerospike-server-enterprise --config-file /custom-dir/aerospike.conf
 
 if [[ "$SECURITY" == "1" ]]; then
     export SECURITY_FLAGS="-U admin -P admin"
 fi
 
-# docker logs -f aerospike
+docker logs -f aerospike
 
 # TODO: make sure server container is alive or waiting is pointless
 while true; do
