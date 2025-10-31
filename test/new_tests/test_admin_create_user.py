@@ -13,9 +13,9 @@ from .conftest import poll_until_user_doesnt_exist
 class TestCreateUser(object):
     user = "user7"
 
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
+    # pytestmark = pytest.mark.skipif(
+    #     not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    # )
 
     def setup_method(self, method):
         """
@@ -35,9 +35,9 @@ class TestCreateUser(object):
         for user in self.delete_users:
             try:
                 self.client.admin_drop_user(user)
+                poll_until_user_doesnt_exist(username=user, client=self.client)
             except Exception:
                 pass
-        poll_until_user_doesnt_exist(username=user, client=self.client)
         self.client.close()
 
     def test_create_user_without_any_parameters(self):
