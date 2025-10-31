@@ -43,12 +43,11 @@ class TestBatchRead(TestBaseClass):
             self.keys.append(key)
             self.keys_to_expected_bins[key] = rec
 
-        def teardown():
-            for i in range(self.batch_size):
-                key = ("test", "demo", i)
-                as_connection.remove(key)
+        yield
 
-        request.addfinalizer(teardown)
+        for i in range(self.batch_size):
+            key = ("test", "demo", i)
+            as_connection.remove(key)
 
     @pytest.mark.parametrize("bins", [
         None,
