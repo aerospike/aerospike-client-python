@@ -61,7 +61,6 @@ include_dirs = [
     f'{AEROSPIKE_C_HOME}/src/include',
     'aerospike-client-c/modules/common/src/include'
 ]
-include_dirs.extend([x for x in os.getenv('CPATH', '').split(':') if len(x) > 0])
 
 if WINDOWS:
     extra_compile_args = []
