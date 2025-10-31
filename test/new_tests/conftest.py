@@ -256,6 +256,7 @@ def poll_until_role_exists(role_name: str, client: aerospike.Client):
             continue
         print("Role now exists. Return early")
         return
+    print("poll_until_role_exists timeout")
 
 def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
     start = time.time()
@@ -266,6 +267,7 @@ def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
     except e.InvalidRole:
         print("Role no longer exists. Return early")
         return
+    print("poll_until_role_doesnt_exist timeout")
 
 def poll_until_user_exists(username: str, client: aerospike.Client):
     start = time.time()
@@ -277,6 +279,7 @@ def poll_until_user_exists(username: str, client: aerospike.Client):
             continue
         print("User now exists. Return early")
         return
+    print("poll_until_user_exists timeout")
 
 def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
     start = time.time()
@@ -287,3 +290,4 @@ def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
     except e.InvalidUser:
         print("User no longer exists. Return early")
         return
+    print("poll_until_user_doesnt_exist timeout")
