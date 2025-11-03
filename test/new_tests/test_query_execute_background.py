@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from conftest import wait_for_job_completion
+from .conftest import wait_for_job_completion
 
 TEST_NS = "test"
 TEST_SET = "background_q_e"
