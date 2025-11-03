@@ -29,7 +29,7 @@ class TestQueryRoles(TestBaseClass):
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)

@@ -60,7 +60,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -116,7 +116,7 @@ class TestCreateRole(object):
             self.client.admin_get_role(role_name)
             # role exists, clear it out.
             self.client.admin_drop_role(role_name)
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            poll_until_role_doesnt_exist(role_name, self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -149,7 +149,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
