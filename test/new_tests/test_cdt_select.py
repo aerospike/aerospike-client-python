@@ -215,8 +215,8 @@ class TestCDTSelectOperations:
                 id="LoopVarMap"
             ),
             pytest.param(
-                Eq(LoopVarBool(aerospike.EXP_LOOPVAR_VALUE), False),
-                [False],
+                Eq(LoopVarBool(aerospike.EXP_LOOPVAR_VALUE), True),
+                [True],
                 id="LoopVarBool"
             ),
             pytest.param(
