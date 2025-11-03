@@ -403,9 +403,10 @@ class TestBitwiseOperations(object):
         "bit_offset, bit_size, value, expected_context, expected_result",
         [
             pytest.param(1, 8, 127, nullcontext(), bytes([0x3F, 0xC2, 0x03, 0x04, 0x05]), id="happy_path"),
-            pytest.param(6, 1, 1, pytest.raises(e.ServerError), None, id="bit_offset_too_large"),
+            # The bin is 40 bits long
+            pytest.param(41, 1, 1, pytest.raises(e.ServerError), None, id="bit_offset_too_large"),
             pytest.param(0, 65, 1, pytest.raises(e.ServerError), None, id="bit_size_too_large"),
-            pytest.param(0, 1, 2**64, pytest.raises(e.ServerError), None, id="value_larger_than_signed_64bit_integer"),
+            pytest.param(0, 1, 2**64, pytest.raises(e.ParamError), None, id="value_larger_than_signed_64bit_integer"),
             # Bit mask is all 1's
             pytest.param(0, 64, -1, nullcontext(), bytes([0xFF, 0xFF, 0xFF, 0xFF]), id="set_negative_value")
         ]
