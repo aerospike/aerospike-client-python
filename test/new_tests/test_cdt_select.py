@@ -451,7 +451,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children()
                 ],
                 expr=ResultRemove().compile(),
-                flags=aerospike.CDT_SELECT_VALUES
+                flags=aerospike.CDT_MODIFY_DEFAULT
             )
         ]
 
