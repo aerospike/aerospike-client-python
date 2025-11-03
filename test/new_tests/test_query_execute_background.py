@@ -6,6 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
+from conftest import wait_for_job_completion
 
 TEST_NS = "test"
 TEST_SET = "background_q_e"
@@ -17,17 +18,6 @@ try:
 except NameError:
     long = int
 
-
-# TODO: move to conftest
-def wait_for_job_completion(as_connection, job_id):
-    """
-    Blocks until the job has completed
-    """
-    while True:
-        response = as_connection.job_info(job_id, aerospike.JOB_QUERY)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
 
 
 def add_indexes_to_client(client):

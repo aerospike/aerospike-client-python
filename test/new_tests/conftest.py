@@ -291,3 +291,16 @@ def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
         print("User no longer exists. Return early")
         return
     print("poll_until_user_doesnt_exist timeout")
+
+QUERY_JOB_HARD_LIMIT_SECS = 5
+
+def wait_for_job_completion(as_connection, job_id):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < QUERY_JOB_HARD_LIMIT_SECS:
+        response = as_connection.job_info(job_id, aerospike.JOB_QUERY)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            break
+        time.sleep(0.1)
