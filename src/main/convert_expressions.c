@@ -678,6 +678,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             case _AS_EXP_LOOPVAR_FLOAT:
                 APPEND_ARRAY(0, as_exp_loopvar_float(lval1));
                 break;
+            case _AS_EXP_LOOPVAR_BLOB:
+                APPEND_ARRAY(0, as_exp_loopvar_blob(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_BOOL:
+                APPEND_ARRAY(0, as_exp_loopvar_bool(lval1));
+                break;
             }
 
             break;
