@@ -196,7 +196,8 @@ class TestCDTSelectOperations:
             pytest.param(
                 GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2),
                 # Should filter out 1
-                [2]
+                [2],
+                id="LoopVarInt"
             ),
             # At the first level below root, only return maps that have a key "bb" with value >= 10
             pytest.param(
@@ -210,15 +211,18 @@ class TestCDTSelectOperations:
                     ),
                     expr1=10
                 ),
-                [RECORD_BINS[MAP_BIN_NAME]["ab"]]
+                [RECORD_BINS[MAP_BIN_NAME]["ab"]],
+                id="LoopVarMap"
             ),
             pytest.param(
                 Eq(LoopVarBool(aerospike.EXP_LOOPVAR_VALUE), False),
-                [False]
+                [False],
+                id="LoopVarBool"
             ),
             pytest.param(
                 Eq(LoopVarBlob(aerospike.EXP_LOOPVAR_VALUE), b'123'),
-                [bytearray(b'123')]
+                [bytearray(b'123')],
+                id="LoopVarBlob"
             ),
         ]
     )
