@@ -218,6 +218,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [_AS_EXP_LOOPVAR_LIST] = EXP_SZ(as_exp_loopvar_list(0)),
         [_AS_EXP_LOOPVAR_MAP] = EXP_SZ(as_exp_loopvar_map(0)),
         [_AS_EXP_LOOPVAR_STR] = EXP_SZ(as_exp_loopvar_str(0)),
+        [_AS_EXP_LOOPVAR_BOOL] = EXP_SZ(as_exp_loopvar_bool(0)),
+        [_AS_EXP_LOOPVAR_BLOB] = EXP_SZ(as_exp_loopvar_blob(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(

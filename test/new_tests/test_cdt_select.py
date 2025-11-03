@@ -222,7 +222,7 @@ class TestCDTSelectOperations:
             ),
         ]
     )
-    def test_exp_loopvar_int_and_map(self, filter_expr, expected_bin_value):
+    def test_exp_loopvar_types(self, filter_expr, expected_bin_value):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
@@ -324,7 +324,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                flags=aerospike.CDT_SELECT_MAP_KEYS
+                flags=aerospike.CDT_SELECT_MAP_KEY
             )
         ]
 
