@@ -245,6 +245,7 @@ def invalid_key(request):
 # aerospike.set_log_handler(None)
 
 HARD_LIMIT_SECS = 3
+# Server team states that this time interval is a safe amount
 POLL_INTERVAL_SECS = 0.1
 
 def poll_until_role_exists(role_name: str, client: aerospike.Client):

@@ -156,7 +156,6 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
-        time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
             "privileges": [{"code": 13, "ns": "test", "set": "demo"}],
@@ -172,7 +171,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        time.sleep(1)
+        poll_until_user_exists("testcreaterole", self.client)
         user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
@@ -187,15 +186,14 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            # Give some time for the role removal to take place
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        time.sleep(1)
+        poll_until_role_exists("usr-sys-admin-test", self.client)
         roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
@@ -215,8 +213,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            # Give some time for the role removal to take place
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -232,7 +229,7 @@ class TestCreateRole(object):
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
 
-        time.sleep(1)
+        poll_until_role_exists("usr-sys-admin-test", self.client)
         roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
@@ -265,7 +262,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -293,7 +290,7 @@ class TestCreateRole(object):
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -304,12 +301,11 @@ class TestCreateRole(object):
             self.client.admin_create_role(
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
             )
-
+            poll_until_role_exists("usr-sys-admin-test", self.client)
         except e.RoleExistsError as exception:
             assert exception.code == 71
             assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
-        time.sleep(1)
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
         assert status == 0
@@ -321,7 +317,7 @@ class TestCreateRole(object):
         role_name = "!#Q#AEQ@#$%&^*((^&*~~~````"
         try:
             self.client.admin_drop_role(role_name)  # clear out if it exists
-            time.sleep(2)
+            poll_until_role_doesnt_exist(role_name, self.client)
         except Exception:
             pass  # EAFP
         status = self.client.admin_create_role(
@@ -329,7 +325,7 @@ class TestCreateRole(object):
         )
 
         assert status == 0
-        time.sleep(1)
+        poll_until_role_exists(role_name, self.client)
         roles = self.client.admin_get_role(role_name)
 
         assert roles == {
@@ -344,14 +340,13 @@ class TestCreateRole(object):
         status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
 
         assert status == 0
-        time.sleep(1)
+        poll_until_user_exists("testcreaterole", self.client)
         users = self.client.admin_query_user_info("testcreaterole")
 
         assert users["roles"] == [role_name]
 
         self.client.admin_drop_role(role_name)
-
-        time.sleep(1)
+        poll_until_role_doesnt_exist(role_name, self.client)
 
         users = self.client.admin_query_user_info("testcreaterole")
 

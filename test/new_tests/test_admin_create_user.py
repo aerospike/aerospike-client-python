@@ -54,7 +54,7 @@ class TestCreateUser(object):
 
         try:
             self.client.admin_drop_user(user, policy)
-            time.sleep(2)
+            poll_until_user_doesnt_exist(user, self.client)
         except Exception:
             pass
 
