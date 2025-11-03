@@ -235,7 +235,7 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     }
 
 
-def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, policy=None):
+def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, policy: dict = None):
     """Creates a bit_set_int_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
 
     Set the value on a bitmap starting at bit_offset for bit_size in a record on the Aerospike Server.
