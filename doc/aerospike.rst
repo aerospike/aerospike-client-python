@@ -1805,13 +1805,11 @@ Path Expression Flags
 
     Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
+.. data:: CDT_SELECT_VALUES
 .. data:: CDT_SELECT_LIST_VALUE
-
-    Return the list of the values of the nodes finally selected by the context.
-
 .. data:: CDT_SELECT_MAP_VALUE
 
-    Return the list of map values of the nodes finally selected by the context.
+    Return the list of the values of the nodes finally selected by the context.
 
 .. data:: CDT_SELECT_MAP_KEYS
 
