@@ -10,6 +10,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+import logging
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -254,9 +255,9 @@ def poll_until_role_exists(role_name: str, client: aerospike.Client):
         except e.InvalidRole:
             time.sleep(POLL_INTERVAL_SECS)
             continue
-        print("Role now exists. Return early")
+        logging.debug("Role now exists. Return early")
         return
-    print("poll_until_role_exists timeout")
+    logging.debug("poll_until_role_exists timeout")
 
 def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
     start = time.time()
@@ -265,9 +266,9 @@ def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
             client.admin_query_role(role=role_name)
             time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidRole:
-        print("Role no longer exists. Return early")
+        logging.debug("Role no longer exists. Return early")
         return
-    print("poll_until_role_doesnt_exist timeout")
+    logging.debug("poll_until_role_doesnt_exist timeout")
 
 def poll_until_user_exists(username: str, client: aerospike.Client):
     start = time.time()
@@ -277,9 +278,9 @@ def poll_until_user_exists(username: str, client: aerospike.Client):
         except e.InvalidUser:
             time.sleep(POLL_INTERVAL_SECS)
             continue
-        print("User now exists. Return early")
+        logging.debug("User now exists. Return early")
         return
-    print("poll_until_user_exists timeout")
+    logging.debug("poll_until_user_exists timeout")
 
 def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
     start = time.time()
@@ -288,9 +289,9 @@ def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
             client.admin_query_user_info(user=username)
             time.sleep(POLL_INTERVAL_SECS)
     except e.InvalidUser:
-        print("User no longer exists. Return early")
+        logging.debug("User no longer exists. Return early")
         return
-    print("poll_until_user_doesnt_exist timeout")
+    logging.debug("poll_until_user_doesnt_exist timeout")
 
 def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
     """
