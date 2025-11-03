@@ -111,8 +111,8 @@ static inline bool isExprOp(int op);
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
-    if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use, dynamic_pool,        \
-                    destroy_buffers) != AEROSPIKE_OK) {                        \
+    if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
+                    dynamic_pool, destroy_buffers) != AEROSPIKE_OK) {          \
         return err->code;                                                      \
     }
 
@@ -314,10 +314,10 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_operation_dict,
-                 as_vector *unicodeStrVector, as_dynamic_pool *dynamic_pool,
-                 bool destroy_buffers, as_operations *ops, long *op,
-                 long *ret_type)
+as_status add_op(AerospikeClient *self, as_error *err,
+                 PyObject *py_operation_dict, as_vector *unicodeStrVector,
+                 as_dynamic_pool *dynamic_pool, bool destroy_buffers,
+                 as_operations *ops, long *op, long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -361,28 +361,29 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_operation_di
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
     if (isListOp(operation)) {
         return add_new_list_op(
-            self, err, py_operation_dict, unicodeStrVector, dynamic_pool, ops, operation,
+            self, err, py_operation_dict, unicodeStrVector, dynamic_pool, ops,
+            operation,
             ret_type); //This hardcoding matches current behavior
     }
 
     if (isNewMapOp(operation)) {
-        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector, dynamic_pool,
-                              ops, operation, ret_type);
+        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector,
+                              dynamic_pool, ops, operation, ret_type);
     }
 
     if (isBitOp(operation)) {
-        return add_new_bit_op(self, err, py_operation_dict, unicodeStrVector, ops,
-                              operation, ret_type);
-    }
-
-    if (isHllOp(operation)) {
-        return add_new_hll_op(self, err, py_operation_dict, unicodeStrVector, dynamic_pool,
+        return add_new_bit_op(self, err, py_operation_dict, unicodeStrVector,
                               ops, operation, ret_type);
     }
 
+    if (isHllOp(operation)) {
+        return add_new_hll_op(self, err, py_operation_dict, unicodeStrVector,
+                              dynamic_pool, ops, operation, ret_type);
+    }
+
     if (isExprOp(operation)) {
-        return add_new_expr_op(self, err, py_operation_dict, unicodeStrVector, ops,
-                               operation);
+        return add_new_expr_op(self, err, py_operation_dict, unicodeStrVector,
+                               ops, operation);
     }
 
     // TODO: Use set instead of this?

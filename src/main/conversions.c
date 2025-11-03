@@ -2902,8 +2902,9 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             }
         }
         else {
-            if (as_val_new_from_pyobject(self, err, py_value, &val, dynamic_pool,
-                                         SERIALIZER_NONE, destroy_buffers) != AEROSPIKE_OK) {
+            if (as_val_new_from_pyobject(self, err, py_value, &val,
+                                         dynamic_pool, SERIALIZER_NONE,
+                                         destroy_buffers) != AEROSPIKE_OK) {
                 as_cdt_ctx_destroy(cdt_ctx);
                 status = as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
