@@ -1798,29 +1798,34 @@ Transaction State
 
 .. _cdt_select_flags:
 
-CDT Select Flags
-----------------
+Path Expression Flags
+---------------------
 
 .. data:: CDT_SELECT_MATCHING_TREE
 
     Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-.. data:: CDT_SELECT_VALUES
+.. data:: CDT_SELECT_LIST_VALUE
 
     Return the list of the values of the nodes finally selected by the context.
 
-.. data:: CDT_SELECT_MAP_KEY_VALUES
+.. data:: CDT_SELECT_MAP_VALUE
 
-    Return a list of key-value pairs.
+    Return the list of map values of the nodes finally selected by the context.
 
 .. data:: CDT_SELECT_MAP_KEYS
 
-    For final selected nodes which are elements of maps, return the appropriate map key.
+    Return the list of map keys of the nodes finally selected by the context.
+
+.. data:: CDT_SELECT_MAP_KEY_VALUES
+
+    Returns the list of map (key, value) pairs of the nodes finally selected
+    by the context.
 
 .. data:: CDT_SELECT_NO_FAIL
 
     If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
-    do not fail the operation; just ignore those elements.
+    do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
 .. _cdt_modify_flags:
 
