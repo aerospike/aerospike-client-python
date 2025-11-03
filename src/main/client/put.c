@@ -62,10 +62,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     bool key_initialised = false;
     bool record_initialised = false;
 
-    // Initialize record
-    as_record_init(&rec, 0);
-    record_initialised = true;
-
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
@@ -98,10 +94,12 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
         goto CLEANUP;
     }
 
+    record_initialised = true;
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, &err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p);
+                             &exp_list, &exp_list_p, false);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -120,11 +118,9 @@ CLEANUP:
     }
 
     if (key_initialised == true) {
-        // Destroy the key if it is initialised.
         as_key_destroy(&key);
     }
     if (record_initialised == true) {
-        // Destroy the record if it is initialised.
         as_record_destroy(&rec);
     }
 
