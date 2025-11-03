@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, poll_until_role_exists
+from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, poll_until_role_exists, poll_until_user_exists
 
 import aerospike
 
@@ -83,7 +83,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        time.sleep(1)
+        poll_until_user_exists("testcreaterole", self.client)
         user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
@@ -121,7 +121,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(role_name, privs)
-        time.sleep(1)
+        poll_until_role_exists(role_name, self.client)
         roles = self.client.admin_get_role(role_name)
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
 
@@ -132,7 +132,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        time.sleep(1)
+        poll_until_user_exists("testcreaterole", self.client)
         user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == [role_name]

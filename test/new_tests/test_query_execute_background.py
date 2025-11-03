@@ -18,6 +18,7 @@ except NameError:
     long = int
 
 
+# TODO: move to conftest
 def wait_for_job_completion(as_connection, job_id):
     """
     Blocks until the job has completed
@@ -119,11 +120,11 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
 
-        time.sleep(5)
-        # wait_for_job_completion(self.as_connection, job_id)
+        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
@@ -149,10 +150,10 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         # query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy)
+        job_id = query.execute_background(policy)
         # Give time for the query to finish
-        time.sleep(5)
-        # wait_for_job_completion(self.as_connection, job_id)
+        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -179,9 +180,10 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy)
+        job_id = query.execute_background(policy)
         # Give time for the query to finish
-        time.sleep(5)
+        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -212,9 +214,9 @@ class TestQueryApply(object):
         policy = {"expressions": expr.compile()}
 
         query.add_ops(ops)
-        query.execute_background(policy=policy)
+        job_id = query.execute_background(policy=policy)
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -236,9 +238,10 @@ class TestQueryApply(object):
         ops = [operations.write(test_bin, "new_val")]
 
         query.add_ops(ops)
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
-        time.sleep(5)
+        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
@@ -257,9 +260,10 @@ class TestQueryApply(object):
 
         query.add_ops(ops)
         query.where(number_predicate)
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
-        time.sleep(5)
+        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id)
 
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record.get(test_bin) is None
@@ -289,9 +293,9 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background()
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id)
         # Give time for the query to finish
-        time.sleep(5)
         keys = [(TEST_NS, TEST_SET, i) for i in range(500) if i != 5]
         validate_records(self.as_connection, keys, lambda rec: test_bin not in rec)
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
@@ -317,9 +321,10 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy=policy)
+        job_id = query.execute_background(policy=policy)
+        wait_for_job_completion(self.as_connection, job_id)
         # Give time for the query to finish
-        time.sleep(5)
+        # time.sleep(5)
 
         # Records with number > 10 should not have had the UDF applied
         validate_records(self.as_connection, keys[10:], lambda rec: test_bin not in rec)
