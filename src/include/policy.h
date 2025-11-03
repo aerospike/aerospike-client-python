@@ -172,6 +172,23 @@ enum aerospike_hll_operations {
 
 enum aerospike_expression_operations { OP_EXPR_READ = 2200, OP_EXPR_WRITE };
 
+// Module constants to be used by aerospike_helpers
+
+enum {
+    _AS_EXP_LOOPVAR_FLOAT = 3000,
+    _AS_EXP_LOOPVAR_INT,
+    _AS_EXP_LOOPVAR_LIST,
+    _AS_EXP_LOOPVAR_MAP,
+    _AS_EXP_LOOPVAR_STR,
+    _AS_EXP_CODE_CALL_SELECT,
+    _AS_EXP_CODE_CALL_APPLY,
+};
+
+// Can be either for select or apply
+#define _CDT_FLAGS_KEY "cdt_flags"
+#define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
+#define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
+
 enum aerospike_regex_constants {
     REGEX_NONE = 0,
     REGEX_EXTENDED,
@@ -315,3 +332,5 @@ typedef struct {
 } PyListenerData;
 
 void free_py_listener_data(PyListenerData *py_listener_data);
+
+#define POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "policy"

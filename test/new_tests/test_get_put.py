@@ -75,7 +75,7 @@ class TestGetPut:
 
         policy = {"key": aerospike.POLICY_KEY_DIGEST}
 
-        put_data(self.as_connection, key, rec, policy)
+        put_data(self.as_connection, key, rec, _policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 
@@ -135,7 +135,7 @@ class TestGetPut:
 
         policy = {"key": aerospike.POLICY_KEY_SEND}
 
-        put_data(self.as_connection, key, rec, policy)
+        put_data(self.as_connection, key, rec, _policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 

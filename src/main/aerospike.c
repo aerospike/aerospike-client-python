@@ -102,6 +102,31 @@ struct module_constant_name_to_value {
     } value;
 };
 
+#define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
+    macro_name_without_prefix)                                                 \
+    {                                                                          \
+        #macro_name_without_prefix,                                            \
+            .value.integer = AS_##macro_name_without_prefix                    \
+    }
+
+#define STRINGIFY(X) #X
+
+#define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
+    {                                                                          \
+        STRINGIFY(_##macro_name_without_prefix),                               \
+            .value.integer = macro_name_without_prefix                         \
+    }
+
+#define EXPOSE_MACRO(macro_name)                                               \
+    {                                                                          \
+        #macro_name, .value.integer = macro_name                               \
+    }
+
+#define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
+    {                                                                          \
+        #macro_name, .is_str_value = true, .value.string = macro_name          \
+    }
+
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
 // TODO: regression tests for all these constants
@@ -113,6 +138,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_READ),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_MODIFY),
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
@@ -431,6 +458,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
@@ -522,7 +550,46 @@ static struct module_constant_name_to_value module_constants[] = {
     {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
-    {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
+    {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
+
+    /*
+        When doing a cdt select/apply operation, and applying an expression on each
+        iterated object, this lets us choose a specific value over each iterated
+        object.
+    */
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_INDEX),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MATCHING_TREE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_VALUES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        CDT_SELECT_MAP_KEY_VALUES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MAP_KEYS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_NO_FAIL),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_NO_FAIL),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_DEFAULT),
+
+    // For aerospike_helpers to use. Not to be exposed in public API
+    // TODO: move all internal constants used by aerospike_helpers to this loc
+
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_FLOAT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_INT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
+
+    // C client uses the same expression code for these two expressions
+    // so we define unique ones in the Python client code
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_CTX_FILTER_EXPR_KEY),
+};
 
 struct submodule_name_to_creation_method {
     const char *name;
@@ -711,6 +778,8 @@ DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
 
+DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", "ttl", NULL)
+
 // Use a struct to create pairs of pyobjects and list of strings defined above
 // When we initialize the module, we create sets for the valid keys that the client can use later
 
@@ -750,7 +819,9 @@ static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(list_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(hll_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(info_and_write_policy_valid_keys),
-    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys)};
+    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(record_metadata_valid_keys),
+};
 
 // Return NULL if an exception is raised
 // Returns strong reference to new Python dictionary
