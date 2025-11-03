@@ -21,6 +21,7 @@ class TestBitwiseOperations(object):
         self.zero_one_blob = bytearray([0] * 5 + [1] * 5)
         self.count_blob = bytearray([1] * 1 + [86] * 2 + [255] * 1 + [3] * 1)
         self.five_255_blob = bytearray([255] * 5)
+        # This is to match the C client test case
         self.random_blob = bytearray([0x01, 0x42, 0x03, 0x04, 0x05])
 
         self.test_key = "test", "demo", "bitwise_op"
