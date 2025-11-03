@@ -244,7 +244,7 @@ def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, polic
         bin_name (str): The name of the bin containing the blob value.
         bit_offset (int): The offset where the bits will be set.
         bit_size (int): How many bits of value to write. (maximum of 64 bits)
-        value (int): The 64-bit integer value to be set. This integer is applied as big endian.
+        value (int): The signed 64-bit integer value to be set. This integer is applied as big endian.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:

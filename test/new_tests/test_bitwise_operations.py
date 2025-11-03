@@ -5,6 +5,7 @@ from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
+from contextlib import nullcontext
 
 random.seed(0)
 
@@ -398,32 +399,43 @@ class TestBitwiseOperations(object):
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
 
-    # TODO: negative tests
-    def test_bit_set_int(self):
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, value, expected_context, expected_result",
+        [
+            pytest.param(1, 8, 127, nullcontext(), bytes([0x3F, 0xC2, 0x03, 0x04, 0x05]), id="happy_path"),
+            pytest.param(6, 1, 1, pytest.raises(e.ServerError), None, id="bit_offset_too_large"),
+            pytest.param(0, 65, 1, pytest.raises(e.ServerError), None, id="bit_size_too_large"),
+            pytest.param(0, 1, 2**64, pytest.raises(e.ServerError), None, id="value_larger_than_signed_64bit_integer"),
+            # Bit mask is all 1's
+            pytest.param(0, 64, -1, nullcontext(), bytes([0xFF, 0xFF, 0xFF, 0xFF]), id="set_negative_value")
+        ]
+    )
+    def test_bit_set_int(self, bit_offset, bit_size, value, expected_context, expected_result):
         """
         Perform a bit_set_int op.
         """
         ops = [
             bitwise_operations.bit_set_int(
                 bin_name=self.random_blob_bin,
-                bit_offset=1,
-                bit_size=8,
+                bit_offset=bit_offset,
+                bit_size=bit_size,
                 # 127 = 0111 1111
-                value=127,
+                value=value,
                 policy=None
             )
         ]
+        # Happy path explanation:
         # 0000 0001 0100 0010 0000 0011 0000 0100 0000 0101
         #  ^ offset 1
         # Setting 127 (8 bits):
         #  011 1111 1
         # Result:
         # 0011 1111 1100 0010 0000 0011 0000 0100 0000 0101
-        self.as_connection.operate(self.test_key, ops)
+        with expected_context:
+            self.as_connection.operate(self.test_key, ops)
 
-        _, _, bins = self.as_connection.get(self.test_key)
-        expected_result = bytes([0x3F, 0xC2, 0x03, 0x04, 0x05])
-        assert bins[self.random_blob_bin] == expected_result
+            _, _, bins = self.as_connection.get(self.test_key)
+            assert bins[self.random_blob_bin] == expected_result
 
     def test_bit_count_seven(self):
         """
