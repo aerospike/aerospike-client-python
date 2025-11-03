@@ -408,7 +408,7 @@ class TestBitwiseOperations(object):
             pytest.param(0, 65, 1, pytest.raises(e.ServerError), None, id="bit_size_too_large"),
             pytest.param(0, 1, 2**64, pytest.raises(e.ParamError), None, id="value_larger_than_signed_64bit_integer"),
             # Bit mask is all 1's
-            pytest.param(0, 64, -1, nullcontext(), bytes([0xFF, 0xFF, 0xFF, 0xFF]), id="set_negative_value")
+            pytest.param(0, 40, -1, nullcontext(), bytes([0xFF, 0xFF, 0xFF, 0xFF, 0xFF]), id="set_negative_value")
         ]
     )
     def test_bit_set_int(self, bit_offset, bit_size, value, expected_context, expected_result):
