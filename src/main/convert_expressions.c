@@ -655,6 +655,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_LOOPVAR_LIST:
         case _AS_EXP_LOOPVAR_MAP:
         case _AS_EXP_LOOPVAR_STR:
+        case _AS_EXP_LOOPVAR_BOOL:
+        case _AS_EXP_LOOPVAR_BLOB:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
