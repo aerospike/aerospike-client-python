@@ -119,7 +119,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(role_name, privs)
-                roles = self.client.admin_get_role(role_name)
+        roles = self.client.admin_get_role(role_name)
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
 
         try:
@@ -129,7 +129,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-                user = self.client.admin_query_user_info("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == [role_name]
 
@@ -167,7 +167,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-                user = self.client.admin_query_user_info("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
@@ -294,7 +294,7 @@ class TestCreateRole(object):
             self.client.admin_create_role(
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
             )
-                    except e.RoleExistsError as exception:
+        except e.RoleExistsError as exception:
             assert exception.code == 71
             assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
@@ -317,7 +317,7 @@ class TestCreateRole(object):
         )
 
         assert status == 0
-                roles = self.client.admin_get_role(role_name)
+        roles = self.client.admin_get_role(role_name)
 
         assert roles == {
             "privileges": [
@@ -331,7 +331,7 @@ class TestCreateRole(object):
         status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
 
         assert status == 0
-                users = self.client.admin_query_user_info("testcreaterole")
+        users = self.client.admin_query_user_info("testcreaterole")
 
         assert users["roles"] == [role_name]
 

@@ -27,7 +27,7 @@ class TestSetQuotas(TestBaseClass):
 
         try:
             self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
-                    except e.QuotasNotEnabled:
+        except e.QuotasNotEnabled:
             pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
 
