@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_user_doesnt_exist
+from .conftest import poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestQueryUsersInfo(TestBaseClass):
@@ -37,7 +37,6 @@ class TestQueryUsersInfo(TestBaseClass):
 
         try:
             admin_create_user_and_poll(self.client, user, password, roles)
-            poll_until_user_doesnt_exist(user, self.client)
         except e.UserExistsError:
             pass
         self.delete_users = []
