@@ -84,7 +84,7 @@ class TestAppend(object):
         assert key == (
             "test",
             "demo",
-            1,
+            None,
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 

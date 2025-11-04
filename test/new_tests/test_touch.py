@@ -74,7 +74,7 @@ class TestTouch(object):
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"age": 1, "name": "name1"}
-        assert key == ("test", "demo", 1, self.test_demo_1_digest)
+        assert key == ("test", "demo", None, self.test_demo_1_digest)
 
     def test_touch_with_policy_key_digest(self):
         """
