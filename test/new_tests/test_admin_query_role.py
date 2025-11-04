@@ -6,10 +6,11 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist, poll_until_role_exists
+from .conftest import poll_until_role_doesnt_exist
 
 
-class TestQueryRole(TestBaseClass):
+@pytest.mark.usefixtures("monkeypatch_client_admin_commands")
+class TestQueryRole():
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -33,7 +34,6 @@ class TestQueryRole(TestBaseClass):
         except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
-        poll_until_role_exists("usr-sys-admin-test", self.client)
         self.delete_users = []
 
     def teardown_method(self, method):

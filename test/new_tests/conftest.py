@@ -4,13 +4,14 @@ import os
 import sys
 
 import pytest
-
+import functools
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
 import logging
+
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -304,3 +305,25 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+
+def admin_query_role(client: aerospike.Client, role: str, *args, **kwargs):
+    client.admin_query_role(role, *args, **kwargs)
+
+    start = time.time()
+    while time.time() - start < HARD_LIMIT_SECS:
+        try:
+            client.admin_query_role(role=role)
+        except e.InvalidRole:
+            time.sleep(POLL_INTERVAL_SECS)
+            continue
+        logging.debug("Role now exists. Return early")
+        return
+    logging.debug("poll_until_role_exists timeout")
+
+
+@pytest.fixture(scope="class")
+def monkeypatch_client_admin_commands(request, connection_config, monkeypatch):
+    request.cls.client = aerospike.client(connection_config)
+    client = request.cls.client
+
+    monkeypatch.setitem(client, "admin_query_role", admin_query_role)

@@ -9,7 +9,7 @@ import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")
-class TestChangePassword(object):
+class TestChangePassword:
     def setup_method(self, method):
         """
         Setup method
