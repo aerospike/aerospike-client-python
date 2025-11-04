@@ -52,9 +52,9 @@ $CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_PATH -o /workdir/
 cat aerospike.conf
 
 # Generate server private key and CSR
-openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
+# openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
 # Generate server cert
-openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
+# openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
 
 docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
