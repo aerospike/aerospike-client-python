@@ -17,6 +17,7 @@
 
 #include "policy_config.h"
 #include "types.h"
+#include "policy.h"
 
 #include "policy.h"
 
@@ -192,7 +193,8 @@ as_status set_remove_policy(as_error *err, as_policy_remove *remove_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_remove_policy_valid_keys, true);
+            err, py_policy, py_remove_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -250,7 +252,8 @@ as_status set_query_policy(as_error *err, as_policy_query *query_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_query_policy_valid_keys, true);
+            err, py_policy, py_query_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -300,7 +303,8 @@ as_status set_scan_policy(as_error *err, as_policy_scan *scan_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_scan_policy_valid_keys, true);
+            err, py_policy, py_scan_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -346,7 +350,8 @@ as_status set_operate_policy(as_error *err, as_policy_operate *operate_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_operate_policy_valid_keys, true);
+            err, py_policy, py_operate_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -435,7 +440,8 @@ as_status set_batch_policy(as_error *err, as_policy_batch *batch_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_batch_policy_valid_keys, true);
+            err, py_policy, py_batch_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -503,7 +509,8 @@ as_status set_info_policy(as_error *err, as_policy_info *info_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_info_policy_valid_keys, true);
+            err, py_policy, py_info_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -538,7 +545,8 @@ as_status set_admin_policy(as_error *err, as_policy_admin *admin_policy,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_admin_policy_valid_keys, true);
+            err, py_policy, py_admin_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -572,7 +580,8 @@ as_status set_batch_apply_policy(as_error *err,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_batch_apply_policy_valid_keys, true);
+            err, py_policy, py_batch_apply_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -619,7 +628,8 @@ as_status set_batch_write_policy(as_error *err,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_batch_write_policy_valid_keys, true);
+            err, py_policy, py_batch_write_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
@@ -677,7 +687,8 @@ as_status set_batch_remove_policy(as_error *err,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_batch_remove_policy_valid_keys, true);
+            err, py_policy, py_batch_remove_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;
         }
