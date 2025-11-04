@@ -308,19 +308,13 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
 
 def admin_query_role(client: aerospike.Client, role: str, *args, **kwargs):
     client.admin_query_role(role, *args, **kwargs)
+    poll_until_role_exists(role, client)
 
-    start = time.time()
-    while time.time() - start < HARD_LIMIT_SECS:
-        try:
-            client.admin_query_role(role=role)
-        except e.InvalidRole:
-            time.sleep(POLL_INTERVAL_SECS)
-            continue
-        logging.debug("Role now exists. Return early")
-        return
-    logging.debug("poll_until_role_exists timeout")
-
+def admin_query_user(client: aerospike.Client, user: str, *args, **kwargs):
+    client.admin_query_user_info(user, *args, **kwargs)
+    poll_until_user_exists(user, client)
 
 @pytest.fixture()
 def monkeypatch_client_admin_commands(connection_config, monkeypatch):
     monkeypatch.setitem(aerospike.Client, "admin_query_role", admin_query_role)
+    monkeypatch.setitem(aerospike.Client, "admin_query_user", admin_query_user)

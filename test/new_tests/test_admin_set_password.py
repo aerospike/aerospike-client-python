@@ -30,8 +30,7 @@ class TestSetPassword(TestBaseClass):
 
         try:
             self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
-            poll_until_user_exists("testsetpassworduser", self.client)
-        except e.UserExistsError:
+                    except e.UserExistsError:
             pass
 
         time.sleep(2)

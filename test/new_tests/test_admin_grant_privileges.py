@@ -33,8 +33,7 @@ class TestGrantPrivileges(object):
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         self.delete_users = []
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-
+        
     def teardown_method(self, method):
         """
         Teardown method

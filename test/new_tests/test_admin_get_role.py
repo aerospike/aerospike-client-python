@@ -35,8 +35,7 @@ class TestGetRole(TestBaseClass):
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
 
         self.delete_users = []
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-
+        
     def teardown_method(self, method):
         """
         Teardown method

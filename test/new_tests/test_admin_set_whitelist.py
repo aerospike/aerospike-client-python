@@ -31,8 +31,7 @@ class TestSetWhitelist(TestBaseClass):
         except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, whitelist=whitelist)
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-
+        
         self.delete_users = []
 
     def teardown_method(self, method):

@@ -34,8 +34,7 @@ class TestGrantRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            poll_until_user_exists(user, self.client)
-        except e.UserExistsError:
+                    except e.UserExistsError:
             pass
         self.delete_users = []
 

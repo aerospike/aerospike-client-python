@@ -31,8 +31,7 @@ class TestRevokePrivilege(TestBaseClass):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-        self.delete_users = []
+                self.delete_users = []
 
     def teardown_method(self, method):
         """

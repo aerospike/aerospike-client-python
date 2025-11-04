@@ -67,8 +67,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
+                roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
             "privileges": [{"code": 10, "ns": "test", "set": "demo"}],
             "whitelist": [],
@@ -83,8 +82,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        poll_until_user_exists("testcreaterole", self.client)
-        user = self.client.admin_query_user_info("testcreaterole")
+                user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
@@ -121,8 +119,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(role_name, privs)
-        poll_until_role_exists(role_name, self.client)
-        roles = self.client.admin_get_role(role_name)
+                roles = self.client.admin_get_role(role_name)
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
 
         try:
@@ -132,8 +129,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        poll_until_user_exists("testcreaterole", self.client)
-        user = self.client.admin_query_user_info("testcreaterole")
+                user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == [role_name]
 
@@ -171,8 +167,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        poll_until_user_exists("testcreaterole", self.client)
-        user = self.client.admin_query_user_info("testcreaterole")
+                user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
@@ -193,8 +188,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
+                roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
             "privileges": [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
@@ -229,8 +223,7 @@ class TestCreateRole(object):
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
 
-        poll_until_role_exists("usr-sys-admin-test", self.client)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
+                roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
             "privileges": [
@@ -301,8 +294,7 @@ class TestCreateRole(object):
             self.client.admin_create_role(
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
             )
-            poll_until_role_exists("usr-sys-admin-test", self.client)
-        except e.RoleExistsError as exception:
+                    except e.RoleExistsError as exception:
             assert exception.code == 71
             assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
@@ -325,8 +317,7 @@ class TestCreateRole(object):
         )
 
         assert status == 0
-        poll_until_role_exists(role_name, self.client)
-        roles = self.client.admin_get_role(role_name)
+                roles = self.client.admin_get_role(role_name)
 
         assert roles == {
             "privileges": [
@@ -340,8 +331,7 @@ class TestCreateRole(object):
         status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
 
         assert status == 0
-        poll_until_user_exists("testcreaterole", self.client)
-        users = self.client.admin_query_user_info("testcreaterole")
+                users = self.client.admin_query_user_info("testcreaterole")
 
         assert users["roles"] == [role_name]
 
