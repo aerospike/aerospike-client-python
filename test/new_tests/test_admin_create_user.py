@@ -43,7 +43,7 @@ class TestCreateUser(object):
     def test_create_user_without_any_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
-            admin_create_user_and_poll(self.client, )
+            admin_create_user_and_poll(self.client)
 
         assert "argument 'user' (pos 1)" in str(typeError.value)
 
