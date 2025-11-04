@@ -61,7 +61,7 @@ class TestDropRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test",
             [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
             {"timeout": 180000},
@@ -88,7 +88,7 @@ class TestDropRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test",
             [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
         )
@@ -115,7 +115,7 @@ class TestDropRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test",
             [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
@@ -158,7 +158,7 @@ class TestDropRole(object):
         """
         Drop role with incorrect policy
         """
-        status = self.client.admin_create_role(
+        status = admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}]
         )
 

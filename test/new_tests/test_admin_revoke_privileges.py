@@ -28,7 +28,7 @@ class TestRevokePrivilege(TestBaseClass):
             poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except e.InvalidRole:
             pass
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         self.delete_users = []

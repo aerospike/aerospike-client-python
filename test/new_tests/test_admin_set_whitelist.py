@@ -36,7 +36,7 @@ class TestSetWhitelist(TestBaseClass):
             poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", usr_sys_admin_privs, whitelist=whitelist
         )
 

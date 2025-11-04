@@ -64,7 +64,7 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -149,7 +149,7 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -185,7 +185,7 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -212,7 +212,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         try:
-            self.client.admin_create_role(
+            admin_create_role_and_poll(self.client,
                 "usr-sys-admin-test",
                 [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
                 whitelist=["127.0.0.1", "10.1.2.0/24"],
@@ -287,11 +287,11 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         try:
-            self.client.admin_create_role(
+            admin_create_role_and_poll(self.client,
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
             )
         except e.RoleExistsError as exception:
@@ -312,7 +312,7 @@ class TestCreateRole(object):
             poll_until_role_doesnt_exist(role_name, self.client)
         except Exception:
             pass  # EAFP
-        status = self.client.admin_create_role(
+        status = admin_create_role_and_poll(self.client,
             role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
         )
 
@@ -351,7 +351,7 @@ class TestCreateRole(object):
         role_name = "role$" * 1000
 
         try:
-            self.client.admin_create_role(
+            admin_create_role_and_poll(self.client,
                 role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
             )
 
