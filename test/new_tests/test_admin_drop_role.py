@@ -5,7 +5,7 @@ import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-from .conftest import poll_until_user_doesnt_exist
+from .conftest import poll_until_user_doesnt_exist, admin_create_role_and_poll
 import aerospike
 
 
