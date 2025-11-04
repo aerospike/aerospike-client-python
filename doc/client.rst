@@ -90,10 +90,6 @@ Connection
 
         You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
-.. |deprecate_meta_docstring| replace::
-        .. versionchanged:: 18.1.0
-        Deprecated the ``meta`` parameter. Use the write policy to set ``ttl`` and ``gen`` instead.
-
 Record Commands
 ---------------
 
@@ -104,7 +100,7 @@ Record Commands
 
         Create a new record, or remove / add bins to a record.
 
-        |deprecate_meta_docstring|
+        .. include:: ./deprecate_meta.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
@@ -258,7 +254,7 @@ Record Commands
         Remove a list of bins from a record with a given *key*. Equivalent to \
         setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
 
-        |deprecate_meta_docstring|
+        .. include:: ./deprecate_meta.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
