@@ -13,7 +13,8 @@ import aerospike
 class TestDropRole(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -21,7 +22,9 @@ class TestDropRole(object):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         self.delete_users = []
 
@@ -59,7 +62,9 @@ class TestDropRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+            {"timeout": 180000},
         )
         time.sleep(1)
 
@@ -84,7 +89,8 @@ class TestDropRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
         )
         time.sleep(1)
 
@@ -110,11 +116,15 @@ class TestDropRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
         time.sleep(1)
         privs = self.client.admin_query_role("usr-sys-admin-test")
-        assert privs == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert privs == [
+            {"code": 0, "ns": "", "set": ""},
+            {"code": 1, "ns": "", "set": ""},
+        ]
 
         self.client.admin_drop_role("usr-sys-admin-test")
         time.sleep(1)
@@ -148,7 +158,9 @@ class TestDropRole(object):
         """
         Drop role with incorrect policy
         """
-        status = self.client.admin_create_role("usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}])
+        status = self.client.admin_create_role(
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}]
+        )
 
         assert status == 0
         time.sleep(3)

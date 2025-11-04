@@ -12,7 +12,8 @@ from .conftest import poll_until_user_doesnt_exist
 class TestQueryUsersInfo(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may not be secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may not be secured cluster.",
     )
 
     def setup_method(self, method):
@@ -21,7 +22,9 @@ class TestQueryUsersInfo(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUsersInfo.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         try:
             self.client.admin_drop_user("example-test")
@@ -79,7 +82,11 @@ class TestQueryUsersInfo(TestBaseClass):
 
         user_details = self.client.admin_query_users_info(policy)
 
-        assert user_details.get("example-test").get("roles") == ["read", "read-write", "sys-admin"]
+        assert user_details.get("example-test").get("roles") == [
+            "read",
+            "read-write",
+            "sys-admin",
+        ]
 
     def test_query_users_info_with_no_roles(self):
 
@@ -101,7 +108,9 @@ class TestQueryUsersInfo(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_users_info(None, "")
 
-        assert "admin_query_users_info() takes at most 1 argument (2 given)" in str(typeError.value)
+        assert "admin_query_users_info() takes at most 1 argument (2 given)" in str(
+            typeError.value
+        )
 
     def test_query_users_info_with_policy_as_string(self):
         """

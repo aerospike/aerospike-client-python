@@ -67,7 +67,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-                roles = self.client.admin_get_role("usr-sys-admin-test")
+        roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
             "privileges": [{"code": 10, "ns": "test", "set": "demo"}],
             "whitelist": [],
@@ -82,7 +82,7 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-                user = self.client.admin_query_user_info("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
@@ -188,7 +188,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-                roles = self.client.admin_get_role("usr-sys-admin-test")
+        roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
             "privileges": [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
@@ -223,7 +223,7 @@ class TestCreateRole(object):
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
 
-                roles = self.client.admin_get_role("usr-sys-admin-test")
+            roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
             "privileges": [

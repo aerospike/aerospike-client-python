@@ -33,7 +33,7 @@ class TestRevokeRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-                    except e.UserExistsError:
+            except e.UserExistsError:
             pass
 
         self.delete_users = []

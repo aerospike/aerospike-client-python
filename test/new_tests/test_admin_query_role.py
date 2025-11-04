@@ -10,7 +10,7 @@ from .conftest import poll_until_role_doesnt_exist
 
 
 @pytest.mark.usefixtures("connection_config")
-class TestQueryRole():
+class TestQueryRole:
 
     # pytestmark = pytest.mark.skipif(
     #     not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -20,13 +20,18 @@ class TestQueryRole():
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_role("usr-sys-admin")
             poll_until_role_doesnt_exist("usr-sys-admin", self.client)
         except Exception:
             pass
-        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+        usr_sys_admin_privs = [
+            {"code": aerospike.PRIV_USER_ADMIN},
+            {"code": aerospike.PRIV_SYS_ADMIN},
+        ]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
             poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
@@ -57,14 +62,20 @@ class TestQueryRole():
         Query role positive
         """
         roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert roles == [
+            {"code": 0, "ns": "", "set": ""},
+            {"code": 1, "ns": "", "set": ""},
+        ]
 
     def test_admin_query_role_positive_with_policy(self):
         """
         Query role positive policy
         """
         roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 180000})
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert roles == [
+            {"code": 0, "ns": "", "set": ""},
+            {"code": 1, "ns": "", "set": ""},
+        ]
 
     def test_admin_query_role_incorrect_role_name(self):
         """

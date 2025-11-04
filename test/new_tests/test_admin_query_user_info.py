@@ -33,7 +33,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         try:
             self.client.admin_create_user(self.user, password, roles)
-                    except e.UserExistsError:
+        except e.UserExistsError:
             pass
         self.delete_users = []
 

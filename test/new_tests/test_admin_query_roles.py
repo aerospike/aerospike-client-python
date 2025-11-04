@@ -33,7 +33,7 @@ class TestQueryRoles(TestBaseClass):
         except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
-                self.delete_users = []
+        self.delete_users = []
 
     def teardown_method(self, method):
         """

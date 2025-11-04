@@ -30,7 +30,7 @@ class TestSetPassword(TestBaseClass):
 
         try:
             self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
-                    except e.UserExistsError:
+        except e.UserExistsError:
             pass
 
         time.sleep(2)

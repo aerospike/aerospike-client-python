@@ -15,14 +15,23 @@ class TestChangePassword:
         Setup method
         """
         if TestBaseClass.auth_in_use() is False:
-            pytest.skip("No user specified, may not be a secured cluster", allow_module_level=True)
+            pytest.skip(
+                "No user specified, may not be a secured cluster",
+                allow_module_level=True,
+            )
 
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         try:
-            self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"])
-            poll_until_user_doesnt_exist(username="testchangepassworduser", client=self.client)
+            self.client.admin_create_user(
+                "testchangepassworduser", "aerospike", ["read"]
+            )
+            poll_until_user_doesnt_exist(
+                username="testchangepassworduser", client=self.client
+            )
         except aerospike.exception.UserExistsError:
             pass  # we are good, no such role exists
         self.delete_users = []
@@ -62,8 +71,12 @@ class TestChangePassword:
         config = self.connection_config
 
         # Assert that connecting to the server with the old password fails
-        with pytest.raises((aerospike.exception.InvalidPassword, aerospike.exception.InvalidCredential)):
-            self.clientreaduserwrong = aerospike.client(config).connect(user, "aerospike")
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword, aerospike.exception.InvalidCredential)
+        ):
+            self.clientreaduserwrong = aerospike.client(config).connect(
+                user, "aerospike"
+            )
 
         self.clientreaduserright = aerospike.client(config).connect(user, "newpassword")
 
@@ -102,8 +115,12 @@ class TestChangePassword:
         time.sleep(2)
         config = self.connection_config
 
-        with pytest.raises((aerospike.exception.InvalidPassword, aerospike.exception.InvalidCredential)):
-            self.clientreaduserwrong = aerospike.client(config).connect(user, "aerospike")
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword, aerospike.exception.InvalidCredential)
+        ):
+            self.clientreaduserwrong = aerospike.client(config).connect(
+                user, "aerospike"
+            )
 
         self.clientreaduserright = aerospike.client(config).connect(user, "newpassword")
 

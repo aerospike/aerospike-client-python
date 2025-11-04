@@ -8,11 +8,13 @@ from aerospike import exception as e
 import aerospike
 from .conftest import poll_until_user_doesnt_exist
 
+
 @pytest.mark.usefixtures("connection_config")
 class TestDropUser(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -21,7 +23,9 @@ class TestDropUser(object):
         """
         config = TestBaseClass.get_connection_config()
         TestDropUser.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_user("foo-test")
             poll_until_user_doesnt_exist(username="foo-test", client=self.client)
@@ -191,9 +195,13 @@ class TestDropUser(object):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_user("foo-test", None, "")
 
-        assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(
+            typeError.value
+        )
 
-    @pytest.mark.xfail(reason="It is no longer possible to create a user with" "a name too long")
+    @pytest.mark.xfail(
+        reason="It is no longer possible to create a user with" "a name too long"
+    )
     def test_drop_user_with_too_long_username(self):
 
         user = "user$" * 1000
