@@ -32,7 +32,7 @@ class TestQueryUserInfo(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(self.user, password, roles)
+            admin_create_user_and_poll(self.user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []

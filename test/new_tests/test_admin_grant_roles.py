@@ -33,7 +33,7 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -141,7 +141,7 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass

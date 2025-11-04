@@ -43,7 +43,7 @@ class TestCreateUser(object):
     def test_create_user_without_any_parameters(self):
 
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_create_user()
+            admin_create_user_and_poll()
 
         assert "argument 'user' (pos 1)" in str(typeError.value)
 
@@ -60,7 +60,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = admin_create_user_and_poll(user, password, roles, policy)
 
         time.sleep(2)
 
@@ -84,7 +84,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles)
+        status = admin_create_user_and_poll(user, password, roles)
 
         time.sleep(2)
 
@@ -110,7 +110,7 @@ class TestCreateUser(object):
             pass
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            admin_create_user_and_poll(user, password, roles, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -129,7 +129,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = admin_create_user_and_poll(user, password, roles, policy)
 
         time.sleep(2)
 
@@ -148,7 +148,7 @@ class TestCreateUser(object):
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -161,7 +161,7 @@ class TestCreateUser(object):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -179,7 +179,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles)
+        status = admin_create_user_and_poll(user, password, roles)
 
         assert status == 0
 
@@ -192,7 +192,7 @@ class TestCreateUser(object):
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -210,7 +210,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles)
+        status = admin_create_user_and_poll(user, password, roles)
 
         assert status == 0
         time.sleep(2)
@@ -228,7 +228,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles)
+        status = admin_create_user_and_poll(user, password, roles)
 
         assert status == 0
 
@@ -247,7 +247,7 @@ class TestCreateUser(object):
             pass
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -269,7 +269,7 @@ class TestCreateUser(object):
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
     def test_create_user_with_empty_roles_list(self):
 
@@ -284,7 +284,7 @@ class TestCreateUser(object):
             pass
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -302,7 +302,7 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles)
+        status = admin_create_user_and_poll(user, password, roles)
         time.sleep(2)
 
         assert status == 0
@@ -337,7 +337,7 @@ class TestCreateUser(object):
             pass
 
         with pytest.raises(e.ParamError):
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
     @pytest.mark.parametrize("list_item", [{}, (), 5, []])
     def test_create_user_with_invalid_roles_types(self, list_item):
@@ -351,7 +351,7 @@ class TestCreateUser(object):
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            admin_create_user_and_poll(user, password, roles)
 
     def test_create_user_with_very_long_role_name(self):
 
@@ -364,7 +364,7 @@ class TestCreateUser(object):
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(self.user, password, roles)
+            admin_create_user_and_poll(self.user, password, roles)
 
     # Need as_connection to get server version
     def test_create_pki_user(self, as_connection):

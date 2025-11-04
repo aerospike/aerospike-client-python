@@ -306,15 +306,11 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
             break
         time.sleep(0.1)
 
-def admin_query_role(client: aerospike.Client, role: str, *args, **kwargs):
-    client.admin_query_role(role, *args, **kwargs)
+# Monkeypatching the client class or instance isn't possible since it's immutable
+def admin_create_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    client.admin_create_role(role, *args, **kwargs)
     poll_until_role_exists(role, client)
 
-def admin_query_user(client: aerospike.Client, user: str, *args, **kwargs):
-    client.admin_query_user_info(user, *args, **kwargs)
+def admin_create_user_and_poll(client: aerospike.Client, user: str, *args, **kwargs):
+    client.admin_create_user(user, *args, **kwargs)
     poll_until_user_exists(user, client)
-
-@pytest.fixture(autouse=True)
-def monkeypatch_client_admin_commands(connection_config, monkeypatch):
-    monkeypatch.setitem(aerospike.Client, "admin_query_role", admin_query_role)
-    monkeypatch.setitem(aerospike.Client, "admin_query_user", admin_query_user)
