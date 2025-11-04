@@ -44,12 +44,12 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 as_status set_subpolicies(AerospikeClient *self, as_error *err,
                           as_config *config, PyObject *py_policies_dict)
 {
+    as_error_reset(err);
 
     as_status set_policy_status = AEROSPIKE_OK;
     PyObject *read_policy = PyDict_GetItemString(py_policies_dict, "read");
     set_policy_status = as_policy_read_set_from_pyobject(
         self, err, read_policy, &config->policies.read, false);
-    as_error_reset(err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -57,7 +57,6 @@ as_status set_subpolicies(AerospikeClient *self, as_error *err,
     PyObject *write_policy = PyDict_GetItemString(py_policies_dict, "write");
     set_policy_status = as_policy_write_set_from_pyobject(
         self, err, write_policy, &config->policies.write, false);
-    as_error_reset(err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -65,7 +64,6 @@ as_status set_subpolicies(AerospikeClient *self, as_error *err,
     PyObject *py_apply_policy = PyDict_GetItemString(py_policies_dict, "apply");
     set_policy_status = as_policy_apply_set_from_pyobject(
         self, err, py_apply_policy, &config->policies.apply, false);
-    as_error_reset(err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
