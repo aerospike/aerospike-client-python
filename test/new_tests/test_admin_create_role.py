@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll, admin_create_user_and_poll
+from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 import aerospike
 
@@ -118,7 +118,7 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(role_name, privs)
+        admin_create_role_and_poll(self.client, role_name, privs)
         roles = self.client.admin_get_role(role_name)
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
 
@@ -242,7 +242,7 @@ class TestCreateRole(object):
         role name not string
         """
         try:
-            self.client.admin_create_role(1, [{"code": aerospike.PRIV_USER_ADMIN}])
+            admin_create_role_and_poll(self.client, 1, [{"code": aerospike.PRIV_USER_ADMIN}])
         except e.ParamError as exception:
             assert exception.code == -2
             assert "Role name should be a string" in exception.msg
@@ -260,7 +260,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         try:
-            self.client.admin_create_role("usr-sys-admin-test", [{"code": 64}])
+            admin_create_role_and_poll(self.client, "usr-sys-admin-test", [{"code": 64}])
         except e.InvalidPrivilege as exception:
             assert exception.code == 72
 
@@ -269,7 +269,7 @@ class TestCreateRole(object):
         privilege type incorrect
         """
         try:
-            self.client.admin_create_role("usr-sys-admin-test", None)
+            admin_create_role_and_poll(self.client, "usr-sys-admin-test", None)
 
         except e.ParamError as exception:
             assert exception.code == -2

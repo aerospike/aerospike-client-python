@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist
+from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 @pytest.mark.usefixtures("connection_config")
@@ -37,7 +37,7 @@ class TestQueryRole:
             poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
-        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+        admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
         self.delete_users = []
 
     def teardown_method(self, method):

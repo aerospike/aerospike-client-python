@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist, admin_create_user_and_poll
+from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 class TestSetQuotas(TestBaseClass):
@@ -26,7 +26,7 @@ class TestSetQuotas(TestBaseClass):
             pass
 
         try:
-            self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
+            admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
         except e.QuotasNotEnabled:
             pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 

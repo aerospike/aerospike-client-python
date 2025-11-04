@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, admin_create_user_and_poll
+from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 import aerospike
 
@@ -38,7 +38,7 @@ class TestGetRole(TestBaseClass):
             poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
         except Exception:
             pass
-        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+        admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
 
         self.delete_users = []
 
