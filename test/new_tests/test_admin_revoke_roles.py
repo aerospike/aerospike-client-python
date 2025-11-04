@@ -32,7 +32,7 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            admin_create_user_and_poll(user, password, roles)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
 
@@ -165,7 +165,7 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = admin_create_user_and_poll(user, password, roles)
+        status = admin_create_user_and_poll(self.client, user, password, roles)
         time.sleep(2)
 
         assert status == 0
@@ -188,7 +188,7 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = admin_create_user_and_poll(user, password, roles)
+        status = admin_create_user_and_poll(self.client, user, password, roles)
         time.sleep(2)
 
         assert status == 0

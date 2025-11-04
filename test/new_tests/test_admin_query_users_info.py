@@ -36,7 +36,7 @@ class TestQueryUsersInfo(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            admin_create_user_and_poll(user, password, roles)
+            admin_create_user_and_poll(self.client, user, password, roles)
             poll_until_user_doesnt_exist(user, self.client)
         except e.UserExistsError:
             pass

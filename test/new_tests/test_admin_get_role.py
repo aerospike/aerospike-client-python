@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, admin_create_user_and_poll
+from .conftest import poll_until_role_doesnt_exist, admin_create_user_and_poll(self.client, 
 
 import aerospike
 

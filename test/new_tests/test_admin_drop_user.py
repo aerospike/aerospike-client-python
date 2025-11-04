@@ -56,7 +56,7 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(user, password, roles, policy)
+        status = admin_create_user_and_poll(self.client, user, password, roles, policy)
 
         time.sleep(2)
 
@@ -95,7 +95,7 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(user, password, roles)
+        status = admin_create_user_and_poll(self.client, user, password, roles)
 
         time.sleep(1)
 
@@ -123,7 +123,7 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(user, password, roles)
+        status = admin_create_user_and_poll(self.client, user, password, roles)
 
         time.sleep(1)
 
@@ -170,7 +170,7 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(user, password, roles)
+        status = admin_create_user_and_poll(self.client, user, password, roles)
 
         time.sleep(1)
 
@@ -209,7 +209,7 @@ class TestDropUser(object):
         roles = ["sys-admin"]
 
         try:
-            admin_create_user_and_poll(user, password, roles)
+            admin_create_user_and_poll(self.client, user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -229,7 +229,7 @@ class TestDropUser(object):
         roles = ["read-write"]
 
         try:
-            status = admin_create_user_and_poll(user, password, roles)
+            status = admin_create_user_and_poll(self.client, user, password, roles)
             assert status == 0
             time.sleep(1)
         except Exception:

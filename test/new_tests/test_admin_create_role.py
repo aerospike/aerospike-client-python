@@ -76,7 +76,7 @@ class TestCreateRole(object):
         }
 
         try:
-            status = admin_create_user_and_poll("testcreaterole", "createrole", ["usr-sys-admin-test"])
+            status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", ["usr-sys-admin-test"])
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -123,7 +123,7 @@ class TestCreateRole(object):
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
 
         try:
-            status = admin_create_user_and_poll("testcreaterole", "createrole", [role_name])
+            status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", [role_name])
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -161,7 +161,7 @@ class TestCreateRole(object):
         }
 
         try:
-            status = admin_create_user_and_poll("testcreaterole", "createrole", ["usr-sys-admin-test"])
+            status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", ["usr-sys-admin-test"])
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -328,7 +328,7 @@ class TestCreateRole(object):
             "write_quota": 0,
         }
 
-        status = admin_create_user_and_poll("testcreaterole", "createrole", [role_name])
+        status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", [role_name])
 
         assert status == 0
         users = self.client.admin_query_user_info("testcreaterole")

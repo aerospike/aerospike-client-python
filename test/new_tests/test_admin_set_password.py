@@ -29,7 +29,7 @@ class TestSetPassword(TestBaseClass):
             pass
 
         try:
-            admin_create_user_and_poll("testsetpassworduser", "aerospike", ["read"])
+            admin_create_user_and_poll(self.client, "testsetpassworduser", "aerospike", ["read"])
         except e.UserExistsError:
             pass
 
