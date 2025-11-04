@@ -9,13 +9,12 @@ import aerospike
 from .conftest import poll_until_role_doesnt_exist
 
 
-@pytest.mark.usefixtures("monkeypatch_client_admin_commands")
 class TestQueryRole():
 
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
-
+    # pytestmark = pytest.mark.skipif(
+    #     not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    # )
+    @pytest.mark.usefixtures("monkeypatch_client_admin_commands")
     def setup_method(self, method):
         """
         Setup method

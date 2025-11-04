@@ -321,9 +321,6 @@ def admin_query_role(client: aerospike.Client, role: str, *args, **kwargs):
     logging.debug("poll_until_role_exists timeout")
 
 
-@pytest.fixture(scope="class")
-def monkeypatch_client_admin_commands(request, connection_config, monkeypatch):
-    request.cls.client = aerospike.client(connection_config)
-    client = request.cls.client
-
-    monkeypatch.setitem(client, "admin_query_role", admin_query_role)
+@pytest.fixture()
+def monkeypatch_client_admin_commands(connection_config, monkeypatch):
+    monkeypatch.setitem(aerospike.Client, "admin_query_role", admin_query_role)
