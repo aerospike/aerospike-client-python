@@ -62,7 +62,7 @@ class TestValidateKeys:
         [
             (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST, "policy": INVALID_POLICY}, nullcontext()),
             # User doesn't exist
-            (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}, pytest.raises((e.InvalidUser, e.SecurityNotSupported))),
+            (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}, pytest.raises((e.InvalidUser, e.SecurityNotSupported, e.SecurityNotEnabled))),
             (aerospike.Client.info_all, {"command": "status", "policy": INVALID_POLICY}, nullcontext()),
             # UDF doesn't exist on server
             (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "args": [], "policy": INVALID_POLICY}, pytest.raises(e.UDFError)),
