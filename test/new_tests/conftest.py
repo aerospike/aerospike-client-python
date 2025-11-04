@@ -314,7 +314,7 @@ def admin_query_user(client: aerospike.Client, user: str, *args, **kwargs):
     client.admin_query_user_info(user, *args, **kwargs)
     poll_until_user_exists(user, client)
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def monkeypatch_client_admin_commands(connection_config, monkeypatch):
     monkeypatch.setitem(aerospike.Client, "admin_query_role", admin_query_role)
     monkeypatch.setitem(aerospike.Client, "admin_query_user", admin_query_user)
