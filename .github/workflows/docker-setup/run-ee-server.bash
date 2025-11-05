@@ -17,52 +17,52 @@ STRONG_CONSISTENCY=${STRONG_CONSISTENCY:-"0"}
 
 # End inputs
 
-AEROSPIKE_YAML_FILE_NAME=aerospike-dev.yaml
-BIND_MOUNT_DEST_FOLDER=/workdir
-AEROSPIKE_YAML_CONTAINER_PATH=${BIND_MOUNT_DEST_FOLDER}/${AEROSPIKE_YAML_FILE_NAME}
+aerospike_yaml_file_name=aerospike-dev.yaml
+bind_mount_dest_folder=/workdir
+aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_name}
 
-CALL_FROM_YQ_CONTAINER() {
-    docker run --rm -v ./$AEROSPIKE_YAML_FILE_NAME:$AEROSPIKE_YAML_CONTAINER_PATH mikefarah/yq "$1" -i $AEROSPIKE_YAML_CONTAINER_PATH
+call_from_yq_container() {
+    docker run --rm -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 
 if [[ "$MUTUAL_TLS" == "1" ]]; then
-    CALL_FROM_YQ_CONTAINER ".network.service.tls-authenticate-client = \"any\""
-    CALL_FROM_YQ_CONTAINER ".network.service.tls-name = \"docker\""
-    CALL_FROM_YQ_CONTAINER ".network.service.tls-port = \"4333\""
-    CALL_FROM_YQ_CONTAINER ".network.tls[0].ca-file = \"/etc/ssl/certs/ca.cer\""
-    CALL_FROM_YQ_CONTAINER ".network.tls[0].cert-file = \"/etc/ssl/certs/server.cer\""
-    CALL_FROM_YQ_CONTAINER ".network.tls[0].key-file = \"/etc/ssl/private/server.pem\""
-    CALL_FROM_YQ_CONTAINER ".network.tls[0].name = \"docker\""
+    call_from_yq_container ".network.service.tls-authenticate-client = \"any\""
+    call_from_yq_container ".network.service.tls-name = \"docker\""
+    call_from_yq_container ".network.service.tls-port = \"4333\""
+    call_from_yq_container ".network.tls[0].ca-file = \"/etc/ssl/certs/ca.cer\""
+    call_from_yq_container ".network.tls[0].cert-file = \"/etc/ssl/certs/server.cer\""
+    call_from_yq_container ".network.tls[0].key-file = \"/etc/ssl/private/server.pem\""
+    call_from_yq_container ".network.tls[0].name = \"docker\""
 else
     # TODO: Make sure these are idempotent
-    CALL_FROM_YQ_CONTAINER "del(.network.service.tls-authenticate-client)"
-    CALL_FROM_YQ_CONTAINER "del(.network.service.tls-name)"
-    CALL_FROM_YQ_CONTAINER "del(.network.service.tls-port)"
-    CALL_FROM_YQ_CONTAINER "del(.network.tls)"
+    call_from_yq_container "del(.network.service.tls-authenticate-client)"
+    call_from_yq_container "del(.network.service.tls-name)"
+    call_from_yq_container "del(.network.service.tls-port)"
+    call_from_yq_container "del(.network.tls)"
 fi
 
 if [[ "$SECURITY" == "1" ]]; then
-    CALL_FROM_YQ_CONTAINER ".security.enable-quotas = \"true\""
-    CALL_FROM_YQ_CONTAINER ".security.log.report-violation = \"true\""
+    call_from_yq_container ".security.enable-quotas = \"true\""
+    call_from_yq_container ".security.log.report-violation = \"true\""
 else
-    CALL_FROM_YQ_CONTAINER "del(.security)"
+    call_from_yq_container "del(.security)"
 fi
 
 if [[ "$STRONG_CONSISTENCY" == "1" ]]; then
-    CALL_FROM_YQ_CONTAINER ".namespaces[0].strong-consistency = \"true\""
-    CALL_FROM_YQ_CONTAINER ".namespaces[0].strong-consistency-allow-expunge = \"true\""
+    call_from_yq_container ".namespaces[0].strong-consistency = \"true\""
+    call_from_yq_container ".namespaces[0].strong-consistency-allow-expunge = \"true\""
 else
-    CALL_FROM_YQ_CONTAINER ".namespaces[0].strong-consistency = \"false\""
-    CALL_FROM_YQ_CONTAINER ".namespaces[0].strong-consistency-allow-expunge = \"false\""
+    call_from_yq_container ".namespaces[0].strong-consistency = \"false\""
+    call_from_yq_container ".namespaces[0].strong-consistency-allow-expunge = \"false\""
 fi
 
 # We want to save our aerospike.conf in this directory.
-CALL_FROM_TOOLS_CONTAINER="docker run --rm -v ./:$BIND_MOUNT_DEST_FOLDER --network host aerospike/aerospike-tools"
+call_from_tools_container="docker run --rm -v ./:$bind_mount_dest_folder --network host aerospike/aerospike-tools"
 
-AEROSPIKE_CONF_NAME=aerospike.conf
-$CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_CONTAINER_PATH -o ${BIND_MOUNT_DEST_FOLDER}/$AEROSPIKE_CONF_NAME
-cat $AEROSPIKE_CONF_NAME
+aerospike_conf_name=aerospike.conf
+$call_from_tools_container asconfig convert -f $aerospike_yaml_container_path -o ${bind_mount_dest_folder}/$aerospike_conf_name
+cat $aerospike_conf_name
 
 # Generate server private key and CSR
 # openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
@@ -73,8 +73,8 @@ docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
     -v ./server.cer:/etc/ssl/certs/server.cer \
     -v ./server.pem:/etc/ssl/private/server.pem \
-    -v ./$AEROSPIKE_CONF_NAME:$BIND_MOUNT_DEST_FOLDER/$AEROSPIKE_CONF_NAME \
-    $BASE_IMAGE --config-file $BIND_MOUNT_DEST_FOLDER/$AEROSPIKE_CONF_NAME
+    -v ./$aerospike_conf_name:$bind_mount_dest_folder/$aerospike_conf_name \
+    $BASE_IMAGE --config-file $bind_mount_dest_folder/$aerospike_conf_name
 
 if [[ "$SECURITY" == "1" ]]; then
     export SECURITY_FLAGS="-U admin -P admin"
@@ -86,17 +86,17 @@ fi
 ./wait-for-as-server-to-start.bash
 
 # Set up security
-SUPERUSER_NAME_AND_PASSWORD=superuser
+superuser_name_and_password=superuser
 if [[ "$SECURITY" == "1" ]]; then
-    $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage acl create user $SUPERUSER_NAME_AND_PASSWORD password $SUPERUSER_NAME_AND_PASSWORD roles read-write-udf, sys-admin, user-admin, data-admin"
+    $call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage acl create user $superuser_name_and_password password $superuser_name_and_password roles read-write-udf, sys-admin, user-admin, data-admin"
 fi
 
 # Strong consistency
 # Set up roster
 if [[ "$STRONG_CONSISTENCY" == "1" ]]; then
     if [[ "$SECURITY" == "1" ]]; then
-        export SECURITY_FLAGS="-U $SUPERUSER_NAME_AND_PASSWORD -P $SUPERUSER_NAME_AND_PASSWORD"
+        SECURITY_FLAGS="-U $superuser_name_and_password -P $superuser_name_and_password"
     fi
-    $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage roster stage observed ns test"
-    $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage recluster"
+    $call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage roster stage observed ns test"
+    $call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage recluster"
 fi
