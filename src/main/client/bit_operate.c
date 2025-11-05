@@ -209,7 +209,8 @@ static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
 }
 
 static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops, long operation_code)
+                                PyObject *op_dict, as_operations *ops,
+                                long operation_code)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
