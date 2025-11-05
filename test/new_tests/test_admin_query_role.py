@@ -12,13 +12,13 @@ from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, ad
 @pytest.mark.usefixtures("connection_config")
 class TestQueryRole:
 
-    # pytestmark = pytest.mark.skipif(
-    #     not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    # )
     def setup_method(self, method):
         """
         Setup method
         """
+        if not TestBaseClass.auth_in_use():
+            pytest.skip(reason="No user specified, may be not secured cluster.")
+
         config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(
             config["user"], config["password"]
