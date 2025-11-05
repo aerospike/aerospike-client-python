@@ -11,7 +11,7 @@ AEROSPIKE_YAML_PATH=/workdir/aerospike-dev.yaml
 
 CALL_FROM_YQ_CONTAINER() {
     docker run --rm -v ./:/workdir mikefarah/yq "$1" -i $AEROSPIKE_YAML_PATH
-    cat aerospike-dev.yaml
+    # cat aerospike-dev.yaml
 }
 
 if [[ "$MUTUAL_TLS" == "1" ]]; then
