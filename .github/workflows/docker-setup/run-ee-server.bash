@@ -7,12 +7,14 @@ set -x
 
 # We use bash because we need the not (!) operator
 
-AEROSPIKE_YAML_PATH=/workdir/aerospike-dev.yaml
+AEROSPIKE_YAML_FILE_NAME=aerospike-dev.yaml
+BIND_MOUNT_DEST_FOLDER=/workdir
+AEROSPIKE_YAML_CONTAINER_PATH=${BIND_MOUNT_DEST_FOLDER}/${AEROSPIKE_YAML_FILE_NAME}
 
 CALL_FROM_YQ_CONTAINER() {
-    docker run --rm -v ./:/workdir mikefarah/yq "$1" -i $AEROSPIKE_YAML_PATH
-    # cat aerospike-dev.yaml
+    docker run --rm -v ./$AEROSPIKE_YAML_FILE_NAME:$AEROSPIKE_YAML_CONTAINER_PATH mikefarah/yq "$1" -i $AEROSPIKE_YAML_CONTAINER_PATH
 }
+
 
 if [[ "$MUTUAL_TLS" == "1" ]]; then
     CALL_FROM_YQ_CONTAINER ".network.service.tls-authenticate-client = \"any\""
@@ -45,22 +47,26 @@ else
     CALL_FROM_YQ_CONTAINER ".namespaces[0].strong-consistency-allow-expunge = \"false\""
 fi
 
-CALL_FROM_TOOLS_CONTAINER="docker run --rm -v ./:/workdir --network host aerospike/aerospike-tools"
+# We want to save our aerospike.conf in this directory.
+CALL_FROM_TOOLS_CONTAINER="docker run --rm -v ./:$BIND_MOUNT_DEST_FOLDER --network host aerospike/aerospike-tools"
 
-$CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_PATH -o /workdir/aerospike.conf
-cat aerospike.conf
+AEROSPIKE_CONF_NAME=aerospike.conf
+$CALL_FROM_TOOLS_CONTAINER asconfig convert -f $AEROSPIKE_YAML_CONTAINER_PATH -o ${BIND_MOUNT_DEST_FOLDER}/$AEROSPIKE_CONF_NAME
+cat $AEROSPIKE_CONF_NAME
 
 # Generate server private key and CSR
 # openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
 # Generate server cert
 # openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
 
+BASE_IMAGE=${BASE_IMAGE-:"aerospike/aerospike-server-enterprise"}
+
 docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
     -v ./server.cer:/etc/ssl/certs/server.cer \
     -v ./server.pem:/etc/ssl/private/server.pem \
-    -v ./aerospike.conf:/custom-dir/aerospike.conf \
-    aerospike/aerospike-server-enterprise --config-file /custom-dir/aerospike.conf
+    -v ./$AEROSPIKE_CONF_NAME:$BIND_MOUNT_DEST_FOLDER/$AEROSPIKE_CONF_NAME \
+    $BASE_IMAGE --config-file $BIND_MOUNT_DEST_FOLDER/$AEROSPIKE_CONF_NAME
 
 if [[ "$SECURITY" == "1" ]]; then
     export SECURITY_FLAGS="-U admin -P admin"
