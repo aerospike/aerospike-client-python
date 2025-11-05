@@ -29,9 +29,6 @@ class TestChangePassword:
             self.client.admin_create_user(
                 "testchangepassworduser", "aerospike", ["read"]
             )
-            poll_until_user_doesnt_exist(
-                username="testchangepassworduser", client=self.client
-            )
         except aerospike.exception.UserExistsError:
             pass  # we are good, no such role exists
         self.delete_users = []
