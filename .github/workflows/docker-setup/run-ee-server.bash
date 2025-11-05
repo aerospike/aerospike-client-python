@@ -22,7 +22,7 @@ bind_mount_dest_folder=/workdir
 aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_name}
 
 call_from_yq_container() {
-    docker run --rm -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    docker run --rm -v $(pwd)/$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 
