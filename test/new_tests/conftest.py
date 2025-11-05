@@ -307,12 +307,23 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         time.sleep(0.1)
 
 # Monkeypatching the client class or instance isn't possible since it's immutable
+
 def admin_create_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
     retval = client.admin_create_role(role, *args, **kwargs)
     poll_until_role_exists(role, client)
     return retval
 
-def admin_create_user_and_poll(client: aerospike.Client, user: str, *args, **kwargs):
-    retval = client.admin_create_user(user, *args, **kwargs)
-    poll_until_user_exists(user, client)
+def admin_create_user_and_poll(client: aerospike.Client, username: str, *args, **kwargs):
+    retval = client.admin_create_user(username, *args, **kwargs)
+    poll_until_user_exists(username, client)
+    return retval
+
+def admin_drop_user_and_poll(client: aerospike.Client, username: str, *args, **kwargs):
+    retval = client.admin_drop_user(username, *args, **kwargs)
+    poll_until_user_doesnt_exist(username, client)
+    return retval
+
+def admin_drop_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    retval = client.admin_drop_role(role, *args, **kwargs)
+    poll_until_role_doesnt_exist(role, client)
     return retval

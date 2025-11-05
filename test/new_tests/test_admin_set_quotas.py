@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 class TestSetQuotas(TestBaseClass):
@@ -20,8 +20,7 @@ class TestSetQuotas(TestBaseClass):
 
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
 
@@ -36,7 +35,7 @@ class TestSetQuotas(TestBaseClass):
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
 

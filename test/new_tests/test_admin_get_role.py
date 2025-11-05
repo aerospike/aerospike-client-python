@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 import aerospike
 
@@ -25,8 +25,7 @@ class TestGetRole(TestBaseClass):
             config["user"], config["password"]
         )
         try:
-            self.client.admin_drop_role("usr-sys-admin")
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            admin_drop_role_and_poll("usr-sys-admin")
         except Exception:
             pass
         usr_sys_admin_privs = [
@@ -34,8 +33,7 @@ class TestGetRole(TestBaseClass):
             {"code": aerospike.PRIV_SYS_ADMIN},
         ]
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
         admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
@@ -47,7 +45,7 @@ class TestGetRole(TestBaseClass):
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
         self.client.close()

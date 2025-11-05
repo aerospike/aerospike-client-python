@@ -3,7 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
-from .conftest import poll_until_user_doesnt_exist
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist
 
 import aerospike
 
@@ -42,7 +42,7 @@ class TestChangePassword:
         """
 
         try:
-            self.client.admin_drop_user("testchangepassworduser")
+            admin_drop_user_and_poll(self.client, "testchangepassworduser")
         except Exception:
             pass
 
@@ -66,8 +66,6 @@ class TestChangePassword:
         status = self.clientreaduser.admin_change_password(user, password)
 
         assert status == 0
-
-        time.sleep(2)
         config = self.connection_config
 
         # Assert that connecting to the server with the old password fails

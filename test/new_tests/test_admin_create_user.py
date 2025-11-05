@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from contextlib import nullcontext
 import aerospike
-from .conftest import poll_until_user_doesnt_exist, admin_create_user_and_poll
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 @pytest.mark.usefixtures("connection_config")
@@ -34,8 +34,7 @@ class TestCreateUser(object):
 
         for user in self.delete_users:
             try:
-                self.client.admin_drop_user(user)
-                poll_until_user_doesnt_exist(username=user, client=self.client)
+                admin_drop_user_and_poll(self.client, user)
             except Exception:
                 pass
         self.client.close()
@@ -55,14 +54,11 @@ class TestCreateUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
-            poll_until_user_doesnt_exist(user, self.client)
+            admin_drop_user_and_poll(self.client, user, policy)
         except Exception:
             pass
 
         status = admin_create_user_and_poll(self.client, user, password, roles, policy)
-
-        time.sleep(2)
 
         assert status == 0
 
@@ -79,14 +75,11 @@ class TestCreateUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
         status = admin_create_user_and_poll(self.client, user, password, roles)
-
-        time.sleep(2)
 
         assert status == 0
 
@@ -104,8 +97,7 @@ class TestCreateUser(object):
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user, policy)
         except Exception:
             pass
 
@@ -124,15 +116,11 @@ class TestCreateUser(object):
         roles = ["read-write", "sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user, policy)
         except Exception:
             pass
 
         status = admin_create_user_and_poll(self.client, user, password, roles, policy)
-
-        time.sleep(2)
-
         assert status == 0
 
         user = self.client.admin_query_user_info(user)
@@ -174,8 +162,7 @@ class TestCreateUser(object):
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -205,15 +192,13 @@ class TestCreateUser(object):
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
         status = admin_create_user_and_poll(self.client, user, password, roles)
 
         assert status == 0
-        time.sleep(2)
         self.delete_users.append(user)
 
     def test_create_user_with_special_characters_in_password(self):
@@ -223,8 +208,7 @@ class TestCreateUser(object):
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -241,8 +225,7 @@ class TestCreateUser(object):
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -263,8 +246,7 @@ class TestCreateUser(object):
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -278,8 +260,7 @@ class TestCreateUser(object):
         roles = []
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -297,13 +278,11 @@ class TestCreateUser(object):
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
         status = admin_create_user_and_poll(self.client, user, password, roles)
-        time.sleep(2)
 
         assert status == 0
 
@@ -332,7 +311,7 @@ class TestCreateUser(object):
         user = "user7"
         password = "user7"
         try:
-            self.client.admin_drop_user(user)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -346,7 +325,7 @@ class TestCreateUser(object):
         password = "user7"
         roles = ["read-write", list_item]
         try:
-            self.client.admin_drop_user(user)
+            admin_drop_user_and_poll(self.client, user)
         except Exception:
             pass
 
@@ -358,8 +337,7 @@ class TestCreateUser(object):
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
-            self.client.admin_drop_user(self.user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, self.user)
         except Exception:
             pass
 
@@ -369,8 +347,7 @@ class TestCreateUser(object):
     # Need as_connection to get server version
     def test_create_pki_user(self, as_connection):
         try:
-            self.client.admin_drop_user(self.user)
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, self.user)
         except Exception:
             pass
 

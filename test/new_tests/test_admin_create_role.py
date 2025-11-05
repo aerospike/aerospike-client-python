@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .conftest import poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll, admin_create_role_and_poll
 
 import aerospike
 
@@ -25,8 +25,7 @@ class TestCreateRole(object):
         config = self.config
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_user("testcreaterole")
-            poll_until_user_doesnt_exist(username="testcreaterole", client=self.client)
+            admin_drop_user_and_poll(self.client, "testcreaterole")
         except Exception:
             pass  # do nothing, EAFP
 
@@ -39,7 +38,7 @@ class TestCreateRole(object):
 
         for user in self.delete_users:
             try:
-                self.client.admin_drop_user(user)
+                admin_drop_user_and_poll(self.client, user)
             except Exception:
                 pass
 
@@ -59,8 +58,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -86,7 +84,7 @@ class TestCreateRole(object):
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
-        self.client.admin_drop_user("testcreaterole")
+        admin_drop_user_and_poll(self.client, "testcreaterole")
 
     @pytest.mark.parametrize(
         "priv_name, privs",
@@ -113,8 +111,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role(role_name)
             # role exists, clear it out.
-            self.client.admin_drop_role(role_name)
-            poll_until_role_doesnt_exist(role_name, self.client)
+            admin_drop_role_and_poll(role_name)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -133,9 +130,9 @@ class TestCreateRole(object):
 
         assert user["roles"] == [role_name]
 
-        self.client.admin_drop_user("testcreaterole")
+        admin_drop_user_and_poll(self.client, "testcreaterole")
 
-        self.client.admin_drop_role(role_name)
+        admin_drop_role_and_poll(role_name)
 
     def test_create_role_positive_with_policy_write(self):
         """
@@ -144,8 +141,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -171,7 +167,7 @@ class TestCreateRole(object):
 
         assert user["roles"] == ["usr-sys-admin-test"]
 
-        self.client.admin_drop_user("testcreaterole")
+        admin_drop_user_and_poll(self.client, "testcreaterole")
 
     def test_create_role_positive(self):
         """
@@ -180,8 +176,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -197,7 +192,7 @@ class TestCreateRole(object):
             "write_quota": 0,
         }
 
-        self.client.admin_drop_role("usr-sys-admin-test")
+        admin_drop_role_and_poll("usr-sys-admin-test")
 
     def test_create_role_whitelist_quota_positive(self):
         """
@@ -206,8 +201,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -234,7 +228,7 @@ class TestCreateRole(object):
             "write_quota": 30,
         }
 
-        self.client.admin_drop_role("usr-sys-admin-test")
+        admin_drop_role_and_poll("usr-sys-admin-test")
 
     def test_create_role_incorrect_role_type(self):
         """
@@ -253,8 +247,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -281,8 +274,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_get_role("usr-sys-admin-test")
             # role exists, clear it out.
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -297,7 +289,7 @@ class TestCreateRole(object):
             assert exception.code == 71
             assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
-        status = self.client.admin_drop_role("usr-sys-admin-test")
+        status = admin_drop_role_and_poll("usr-sys-admin-test")
 
         assert status == 0
 
@@ -307,8 +299,7 @@ class TestCreateRole(object):
         """
         role_name = "!#Q#AEQ@#$%&^*((^&*~~~````"
         try:
-            self.client.admin_drop_role(role_name)  # clear out if it exists
-            poll_until_role_doesnt_exist(role_name, self.client)
+            admin_drop_role_and_poll(role_name)  # clear out if it exists
         except Exception:
             pass  # EAFP
         status = admin_create_role_and_poll(self.client,
@@ -334,14 +325,13 @@ class TestCreateRole(object):
 
         assert users["roles"] == [role_name]
 
-        self.client.admin_drop_role(role_name)
-        poll_until_role_doesnt_exist(role_name, self.client)
+        admin_drop_role_and_poll(role_name)
 
         users = self.client.admin_query_user_info("testcreaterole")
 
         assert users["roles"] == []
 
-        self.client.admin_drop_user("testcreaterole")
+        admin_drop_user_and_poll(self.client, "testcreaterole")
 
     def test_create_role_positive_with_too_long_role_name(self):
         """

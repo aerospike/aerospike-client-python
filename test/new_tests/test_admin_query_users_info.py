@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_user_doesnt_exist, admin_create_user_and_poll
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestQueryUsersInfo(TestBaseClass):
@@ -27,8 +27,7 @@ class TestQueryUsersInfo(TestBaseClass):
         )
 
         try:
-            self.client.admin_drop_user("example-test")
-            poll_until_user_doesnt_exist("example-test", self.client)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -47,14 +46,13 @@ class TestQueryUsersInfo(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
+            admin_drop_user_and_poll(self.client, "example-test")
         except Exception:
             pass
         self.client.close()
 
     def test_query_users_info_with_proper_parameters(self):
 
-        time.sleep(2)
         user_details = self.client.admin_query_users_info()
 
         # Usage test; doesn't actually test if the server records user data

@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 @pytest.mark.usefixtures("connection_config")
@@ -24,8 +24,7 @@ class TestQueryRole:
             config["user"], config["password"]
         )
         try:
-            self.client.admin_drop_role("usr-sys-admin")
-            poll_until_role_doesnt_exist("usr-sys-admin", self.client)
+            admin_drop_role_and_poll("usr-sys-admin")
         except Exception:
             pass
         usr_sys_admin_privs = [
@@ -33,8 +32,7 @@ class TestQueryRole:
             {"code": aerospike.PRIV_SYS_ADMIN},
         ]
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
         admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
@@ -45,7 +43,7 @@ class TestQueryRole:
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except Exception:
             pass
         self.client.close()

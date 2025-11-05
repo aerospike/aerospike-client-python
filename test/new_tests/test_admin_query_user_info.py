@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_user_doesnt_exist, admin_create_user_and_poll
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestQueryUserInfo(TestBaseClass):
@@ -24,8 +24,7 @@ class TestQueryUserInfo(TestBaseClass):
         self.user = "example-test"
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_user(self.user)
-            poll_until_user_doesnt_exist(self.user, self.client)
+            admin_drop_user_and_poll(self.client, self.user)
         except e.InvalidUser:
             pass
         password = "foo2"
@@ -43,8 +42,7 @@ class TestQueryUserInfo(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user(self.user)
-            poll_until_user_doesnt_exist(self.user, self.client)
+            admin_drop_user_and_poll(self.client, self.user)
         except e.InvalidUser:
             pass
 
@@ -57,7 +55,6 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_parameters(self):
 
-        time.sleep(2)
         user_details = self.client.admin_query_user_info(self.user)
         assert user_details.get("roles") == [
             "read",

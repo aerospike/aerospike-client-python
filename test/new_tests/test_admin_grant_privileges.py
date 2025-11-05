@@ -6,7 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import poll_until_role_doesnt_exist, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 class TestGrantPrivileges(object):
@@ -28,8 +28,7 @@ class TestGrantPrivileges(object):
         )
 
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass
         admin_create_role_and_poll(self.client,
@@ -45,8 +44,7 @@ class TestGrantPrivileges(object):
 
         try:
             # TODO: is this necessary if we already drop the role at the beginning of each test?
-            self.client.admin_drop_role("usr-sys-admin-test")
-            poll_until_role_doesnt_exist("usr-sys-admin-test", self.client)
+            admin_drop_role_and_poll("usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()
