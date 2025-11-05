@@ -50,6 +50,6 @@ service:
   cluster-name: docker
   feature-key-file: /etc/aerospike/features.conf
 security:
-  enable-quotas: "false"
+  enable-quotas: "true"
   log:
     report-violation: "true"

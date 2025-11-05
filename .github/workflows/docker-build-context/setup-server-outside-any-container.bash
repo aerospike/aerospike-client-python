@@ -32,7 +32,7 @@ else
 fi
 
 if [[ "$SECURITY" == "1" ]]; then
-    CALL_FROM_YQ_CONTAINER ".security.enable-quotas = \"false\""
+    CALL_FROM_YQ_CONTAINER ".security.enable-quotas = \"true\""
     CALL_FROM_YQ_CONTAINER ".security.log.report-violation = \"true\""
 else
     CALL_FROM_YQ_CONTAINER "del(.security)"
