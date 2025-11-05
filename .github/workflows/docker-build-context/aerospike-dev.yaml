@@ -37,10 +37,6 @@ network:
     addresses:
       - any
     port: 3000
-    # tls-authenticate-client: any
-    # tls-name: docker
-    # tls-port: 4333
-
     tls-authenticate-client: any
     tls-name: docker
     tls-port: "4333"
@@ -50,15 +46,6 @@ network:
       cert-file: /etc/ssl/certs/server.cer
       key-file: /etc/ssl/private/server.pem
       name: docker
-#   tls:
-#     - ca-file: /etc/ssl/certs/ca.cer
-#       cert-file: /etc/ssl/certs/server.cer
-#       key-file: /etc/ssl/private/server.pem
-#       name: docker
-# security:
-#   enable-quotas: false
-#   log:
-#     report-violation: false
 service:
   cluster-name: docker
   feature-key-file: /etc/aerospike/features.conf
