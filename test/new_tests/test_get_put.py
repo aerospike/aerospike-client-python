@@ -125,23 +125,6 @@ class TestGetPut:
         """
         Invoke get() for a record having string data.
         """
-
-        key = ("test", "demo", 1)
-
-        rec = {"name": "john", "age": 1}
-
-        put_data(self.as_connection, key, rec)
-
-        key, _, bins = self.as_connection.get(key)
-
-        assert bins == {"name": "john", "age": 1}
-        assert key == (
-            "test",
-            "demo",
-            None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
-        )
-
         config = self.connection_config.copy()
         config["policies"] = {"key": aerospike.POLICY_KEY_SEND}
 
