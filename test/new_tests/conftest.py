@@ -4,7 +4,6 @@ import os
 import sys
 
 import pytest
-import functools
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
