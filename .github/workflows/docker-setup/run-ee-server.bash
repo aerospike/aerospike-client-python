@@ -78,15 +78,16 @@ fi
 ./wait-for-as-server-to-start.bash
 
 # Set up security
+SUPERUSER_NAME_AND_PASSWORD=superuser
 if [[ "$SECURITY" == "1" ]]; then
-    $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage acl create user superuser password superuser roles read-write-udf, sys-admin, user-admin, data-admin"
+    $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage acl create user $SUPERUSER_NAME_AND_PASSWORD password $SUPERUSER_NAME_AND_PASSWORD roles read-write-udf, sys-admin, user-admin, data-admin"
 fi
 
 # Strong consistency
 # Set up roster
 if [[ "$STRONG_CONSISTENCY" == "1" ]]; then
     if [[ "$SECURITY" == "1" ]]; then
-        export SECURITY_FLAGS="-U superuser -P superuser"
+        export SECURITY_FLAGS="-U $SUPERUSER_NAME_AND_PASSWORD -P $SUPERUSER_NAME_AND_PASSWORD"
     fi
     $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage roster stage observed ns test"
     $CALL_FROM_TOOLS_CONTAINER asadm $SECURITY_FLAGS --enable --execute "manage recluster"
