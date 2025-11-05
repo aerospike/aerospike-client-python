@@ -7,6 +7,16 @@ set -x
 
 # We use bash because we need the not (!) operator
 
+# Input defaults
+
+BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
+# Server features
+MUTUAL_TLS=${MUTUAL_TLS:-"0"}
+SECURITY=${SECURITY:-"0"}
+STRONG_CONSISTENCY=${STRONG_CONSISTENCY:-"0"}
+
+# End inputs
+
 AEROSPIKE_YAML_FILE_NAME=aerospike-dev.yaml
 BIND_MOUNT_DEST_FOLDER=/workdir
 AEROSPIKE_YAML_CONTAINER_PATH=${BIND_MOUNT_DEST_FOLDER}/${AEROSPIKE_YAML_FILE_NAME}
@@ -58,8 +68,6 @@ cat $AEROSPIKE_CONF_NAME
 # openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
 # Generate server cert
 # openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
-
-BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
 
 docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
