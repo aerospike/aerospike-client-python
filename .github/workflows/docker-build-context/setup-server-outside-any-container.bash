@@ -18,7 +18,6 @@ if [[ "$MUTUAL_TLS" == "1" ]]; then
     CALL_FROM_YQ_CONTAINER ".network.service.tls-authenticate-client = \"any\""
     CALL_FROM_YQ_CONTAINER ".network.service.tls-name = \"docker\""
     CALL_FROM_YQ_CONTAINER ".network.service.tls-port = \"4333\""
-    CALL_FROM_YQ_CONTAINER ".network.service.tls = []"
     CALL_FROM_YQ_CONTAINER ".network.tls[0].ca-file = \"/etc/ssl/certs/ca.cer\""
     CALL_FROM_YQ_CONTAINER ".network.tls[0].cert-file = \"/etc/ssl/certs/server.cer\""
     CALL_FROM_YQ_CONTAINER ".network.tls[0].key-file = \"/etc/ssl/private/server.pem\""
