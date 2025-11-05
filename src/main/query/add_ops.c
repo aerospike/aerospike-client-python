@@ -50,12 +50,12 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    bool destroy_buffers = true;
-
     if (self->dynamic_pool == NULL) {
         self->dynamic_pool =
             (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
         BYTE_POOL_INIT_NULL(self->dynamic_pool);
+        // Buffers must be heap allocated in order to persist after the current function returns
+        self->dynamic_pool->allocate_buffers = true;
     }
 
     if (!self || !self->client->as) {
@@ -82,8 +82,7 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
             PyObject *py_val = PyList_GetItem(py_ops, (Py_ssize_t)i);
             if (PyDict_Check(py_val)) {
                 if (add_op(self->client, &err, py_val, self->unicodeStrVector,
-                           self->dynamic_pool, destroy_buffers, self->query.ops,
-                           &operation,
+                           self->dynamic_pool, self->query.ops, &operation,
                            &return_type) !=
                     AEROSPIKE_OK) { //something wrong with ops bin name and value
                     as_error_update(&err, AEROSPIKE_ERR_PARAM,

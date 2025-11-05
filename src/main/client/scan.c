@@ -87,8 +87,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     // Initialize error
     as_error_init(&err);
 
-    bool destroy_buffers = false;
-
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
@@ -172,7 +170,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     }
     if (py_args && (Py_None != py_args)) {
         pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
-                         SERIALIZER_NONE, destroy_buffers);
+                         SERIALIZER_NONE);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -237,7 +235,7 @@ CLEANUP:
         as_scan_destroy(&scan);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

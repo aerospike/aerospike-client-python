@@ -176,12 +176,11 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     PyObject *py_return = NULL;
     PyObject *py_value = NULL;
     PyObject *py_arglist = PyTuple_New(1);
-    // The buffer must be destroyed by the object (expression, operation, cdt).
-    // If not, DESTROY_DYNAMIC_POOL must be called with free_buffer = true to free the serialized value.
-    bool destroy_buffers = true;
+
     bool serialize_data = false;
     if (dynamic_pool) {
         serialize_data = true;
+        dynamic_pool->free_buffers = true;
     }
 
     if (serialize_data) {
@@ -219,10 +218,11 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             *bytes = GET_BYTES_POOL(dynamic_pool, error_p);
             if (error_p->code == AEROSPIKE_OK) {
                 as_bytes_init_wrap(*bytes, heap_b, (int32_t)len,
-                                   destroy_buffers);
+                                   dynamic_pool->allocate_buffers);
                 Py_DECREF(py_return);
             }
             else {
+                cf_free(heap_b);
                 Py_DECREF(py_return);
                 goto CLEANUP;
             }

@@ -272,8 +272,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     bool is_query_init = false;
     int rc = 0;
 
-    bool destroy_buffers = false;
-
     PyObject *py_ustr1 = NULL;
     PyObject *py_ustr2 = NULL;
     PyObject *py_ustr3 = NULL;
@@ -361,7 +359,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     }
 
     pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
-                     SERIALIZER_NONE, destroy_buffers);
+                     SERIALIZER_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -485,7 +483,7 @@ CLEANUP:
     if (is_query_init) {
         as_query_destroy(&query);
     }
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

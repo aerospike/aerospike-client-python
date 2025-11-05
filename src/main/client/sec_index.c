@@ -250,9 +250,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    bool destroy_buffers = false;
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &dynamic_pool,
-                    destroy_buffers) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &dynamic_pool) !=
+        AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {
@@ -264,13 +263,13 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         &ctx, NULL);
 
     as_cdt_ctx_destroy(&ctx);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     return py_obj;
 
 CLEANUP:
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (py_obj == NULL) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);

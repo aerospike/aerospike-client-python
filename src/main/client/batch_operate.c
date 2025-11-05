@@ -141,8 +141,6 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
-    bool destroy_buffers = false;
-
     as_vector *tmp_keys_p = NULL;
 
     as_operations ops;
@@ -172,9 +170,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
             goto CLEANUP;
         }
 
-        if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool,
-                   destroy_buffers, &ops, &operation,
-                   &return_type) != AEROSPIKE_OK) {
+        if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, &ops,
+                   &operation, &return_type) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -315,7 +312,7 @@ CLEANUP:
     as_vector_destroy(unicodeStrVector);
     as_operations_destroy(&ops);
     as_batch_destroy(&batch);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (tmp_keys_p) {
         as_vector_destroy(tmp_keys_p);

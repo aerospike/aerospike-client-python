@@ -57,6 +57,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         self->dynamic_pool =
             (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
         BYTE_POOL_INIT_NULL(self->dynamic_pool);
+        // Buffers must be heap allocated in order to persist after the current function returns
+        self->dynamic_pool->allocate_buffers = true;
     }
 
     if (!self || !self->client->as) {
@@ -76,7 +78,6 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     char *module = NULL;
     char *function = NULL;
     as_arraylist *arglist = NULL;
-    bool destroy_buffers = true;
 
     if (PyUnicode_Check(py_module)) {
         py_umodule = PyUnicode_AsUTF8String(py_module);
@@ -117,8 +118,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
                 as_val_new_from_pyobject(self->client, &err, py_val, &val,
-                                         self->dynamic_pool, SERIALIZER_NONE,
-                                         destroy_buffers);
+                                         self->dynamic_pool, SERIALIZER_NONE);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);

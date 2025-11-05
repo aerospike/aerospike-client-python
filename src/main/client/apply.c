@@ -70,8 +70,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     // Initialisation flags
     bool key_initialised = false;
 
-    bool destroy_buffers = false;
-
     // Initialize error
     as_error_init(&err);
 
@@ -106,7 +104,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python list to as_list
     pyobject_to_list(self, &err, py_arglist, &arglist, &dynamic_pool,
-                     SERIALIZER_NONE, destroy_buffers);
+                     SERIALIZER_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -170,7 +168,7 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, py_key, Py_None, py_module, py_function,

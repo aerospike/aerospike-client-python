@@ -43,8 +43,6 @@
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_nil.h>
 
-#define DESTROY_BUFFERS false // Don't destroy buffers when destroying the pool
-
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
@@ -98,28 +96,26 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_value, &put_val, dynamic_pool,  \
-                                 SERIALIZER_NONE,                              \
-                                 destroy_buffers) != AEROSPIKE_OK) {           \
+                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
         return err->code;                                                      \
     }
 
 #define CONVERT_KEY_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_key, &put_key, dynamic_pool,    \
-                                 SERIALIZER_NONE,                              \
-                                 destroy_buffers) != AEROSPIKE_OK) {           \
+                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
         return err->code;                                                      \
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
     if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
-                    dynamic_pool, destroy_buffers) != AEROSPIKE_OK) {          \
+                    dynamic_pool) != AEROSPIKE_OK) {                           \
         return err->code;                                                      \
     }
 
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
     if (as_val_new_from_pyobject(self, err, py_range, &put_range,              \
-                                 dynamic_pool, SERIALIZER_NONE,                \
-                                 destroy_buffers) != AEROSPIKE_OK) {           \
+                                 dynamic_pool,                                 \
+                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
         return err->code;                                                      \
     }
 
@@ -316,8 +312,8 @@ bool opRequiresKey(int op)
 
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
-                 as_dynamic_pool *dynamic_pool, bool destroy_buffers,
-                 as_operations *ops, long *op, long *ret_type)
+                 as_dynamic_pool *dynamic_pool, as_operations *ops, long *op,
+                 long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -1011,9 +1007,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
         PyObject *py_val = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_val)) {
-            if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool,
-                       DESTROY_BUFFERS, &ops, &operation,
-                       &return_type) != AEROSPIKE_OK) {
+            if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, &ops,
+                       &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1057,7 +1052,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
@@ -1188,7 +1183,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
 
         if (PyDict_Check(py_current_op)) {
             if (add_op(self, err, py_current_op, unicodeStrVector,
-                       &dynamic_pool, DESTROY_BUFFERS, &ops, &operation,
+                       &dynamic_pool, &ops, &operation,
                        &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
@@ -1271,7 +1266,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

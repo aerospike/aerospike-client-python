@@ -34,8 +34,6 @@
 #include "cdt_types.h"
 #include "key_ordered_dict.h"
 
-#define DESTROY_BUFFERS false // Don't destroy buffers when destroying the pool
-
 // EXPR OPS
 enum expr_ops {
     UNKNOWN = 0,
@@ -557,7 +555,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
         pyobject_to_list(self, err, py_obj, &list, dynamic_pool,
-                         SERIALIZER_NONE, DESTROY_BUFFERS);
+                         SERIALIZER_NONE);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_list_p = list;
             temp_expr->val_flag = VAL_LIST_P_ACTIVE;
@@ -567,8 +565,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, SERIALIZER_NONE,
-                        DESTROY_BUFFERS);
+        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, SERIALIZER_NONE);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
@@ -1844,8 +1841,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
             }
 
             if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
-                            &ctx_in_use, &dynamic_pool,
-                            DESTROY_BUFFERS) != AEROSPIKE_OK) {
+                            &ctx_in_use, &dynamic_pool) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1962,7 +1958,7 @@ CLEANUP:
     }
 
     as_vector_destroy(unicodeStrVector);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
 FINISH_WITHOUT_CLEANUP:
     return err->code;
