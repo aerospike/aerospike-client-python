@@ -17,5 +17,6 @@ runs:
   - name: Wait for EE server to start
     # Composite actions doesn't support step-level timeout-minutes, so we use timeout command.
     # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
-    run: timeout 30s bash /$WAIT_SCRIPT_FILE_NAME
+    run: timeout 30s bash $WAIT_SCRIPT_FILE_NAME
     shell: bash
+    working-directory: .github/workflows/docker-setup
