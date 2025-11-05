@@ -53,52 +53,23 @@ runs:
   - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo CUSTOM_IMAGE=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
-    shell: bash
-
-  # QE images are not multi-platform and only support a single platform.
-  - name: Allow building images from different platforms other than the native one
-    uses: docker/setup-qemu-action@v3
-
-  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
-  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
-    uses: docker/setup-buildx-action@v3
-
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
-  - name: Build Aerospike server Docker image for testing
-    # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
-    # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
-    uses: docker/build-push-action@v6
-    with:
-      # Don't want to use default Git context or else it will clone the whole Python client repo again
-      context: .github/workflows/docker-build-context
-      build-args: |
-        SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
-        TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.CUSTOM_IMAGE }}
-      # setup-buildx-action configures Docker to use the docker-container build driver
-      # This driver doesn't publish an image locally by default
-      # so we have to manually enable it
-      load: true
-
-  # Confirmed via logs that input string will not be quoted in bash
-  - run: ${{ inputs.env-vars }} docker compose up --wait
-    working-directory: .github/workflows/docker-build-context
+  # Input env vars will override the env vars we defined in this step
+  - run: ${{ inputs.env-vars }} ./run-ee-server.bash
+    working-directory: .github/workflows/docker-setup
     shell: bash
+    env:
+      STRONG_CONSISTENCY: 1
+      SECURITY: 1
+      MUTUAL_TLS: 1
 
   - id: get-container-name
-    run: echo container-name=$(docker compose ps --format '{{.Name}}' aerospike) >> $GITHUB_OUTPUT
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-
-  # For debugging
-  - if: ${{ always() }}
-    run: docker compose logs
+    run: echo container-name=aerospike >> $GITHUB_OUTPUT
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
@@ -128,9 +99,9 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
-      crudini --set config.conf tls keyfile ../.github/workflows/docker-build-context/client.pem
-      crudini --set config.conf tls certfile ../.github/workflows/docker-build-context/client.cer
+      crudini --set config.conf tls cafile ../.github/workflows/docker-setup/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-setup/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-setup/client.cer
 
     working-directory: test
     shell: bash
