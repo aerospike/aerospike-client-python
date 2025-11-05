@@ -28,7 +28,7 @@ class TestGrantPrivileges(object):
         )
 
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         admin_create_role_and_poll(self.client,
@@ -44,7 +44,7 @@ class TestGrantPrivileges(object):
 
         try:
             # TODO: is this necessary if we already drop the role at the beginning of each test?
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()

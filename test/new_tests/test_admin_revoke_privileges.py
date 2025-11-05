@@ -24,7 +24,7 @@ class TestRevokePrivilege(TestBaseClass):
         config = self.config
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         admin_create_role_and_poll(self.client,
@@ -37,7 +37,7 @@ class TestRevokePrivilege(TestBaseClass):
         Teardown method
         """
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()

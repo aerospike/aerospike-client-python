@@ -55,7 +55,7 @@ class TestDropRole(object):
         try:
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -65,7 +65,7 @@ class TestDropRole(object):
             {"timeout": 180000},
         )
 
-        status = admin_drop_role_and_poll("usr-sys-admin-test", {"timeout": 180000})
+        status = admin_drop_role_and_poll(self.client, "usr-sys-admin-test", {"timeout": 180000})
 
         assert status == 0
 
@@ -79,7 +79,7 @@ class TestDropRole(object):
         try:
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -88,7 +88,7 @@ class TestDropRole(object):
             [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
         )
 
-        status = admin_drop_role_and_poll("usr-sys-admin-test")
+        status = admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
         assert status == 0
 
@@ -102,7 +102,7 @@ class TestDropRole(object):
         try:
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
         except e.InvalidRole:
             pass  # we are good, no such role exists
@@ -117,7 +117,7 @@ class TestDropRole(object):
             {"code": 1, "ns": "", "set": ""},
         ]
 
-        admin_drop_role_and_poll("usr-sys-admin-test")
+        admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
         with pytest.raises(e.InvalidRole):
             self.client.admin_query_role("usr-sys-admin-test")
@@ -127,7 +127,7 @@ class TestDropRole(object):
         Drop non-existent role
         """
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -138,7 +138,7 @@ class TestDropRole(object):
         Drop role with role name None
         """
         try:
-            admin_drop_role_and_poll(None)
+            self.client.admin_drop_role(None)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -154,12 +154,12 @@ class TestDropRole(object):
 
         assert status == 0
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test", {"timeout": 0.2})
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test", {"timeout": 0.2})
 
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass

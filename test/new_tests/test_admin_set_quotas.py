@@ -20,7 +20,7 @@ class TestSetQuotas(TestBaseClass):
 
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
 
@@ -35,7 +35,7 @@ class TestSetQuotas(TestBaseClass):
         Teardown method
         """
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
 

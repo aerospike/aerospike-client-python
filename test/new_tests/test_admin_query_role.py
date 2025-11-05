@@ -24,7 +24,7 @@ class TestQueryRole:
             config["user"], config["password"]
         )
         try:
-            admin_drop_role_and_poll("usr-sys-admin")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin")
         except Exception:
             pass
         usr_sys_admin_privs = [
@@ -32,7 +32,7 @@ class TestQueryRole:
             {"code": aerospike.PRIV_SYS_ADMIN},
         ]
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
         admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
@@ -43,7 +43,7 @@ class TestQueryRole:
         Teardown method
         """
         try:
-            admin_drop_role_and_poll("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
         self.client.close()
