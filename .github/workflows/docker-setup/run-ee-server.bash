@@ -59,7 +59,7 @@ cat $AEROSPIKE_CONF_NAME
 # Generate server cert
 # openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
 
-BASE_IMAGE=${BASE_IMAGE-:"aerospike/aerospike-server-enterprise"}
+BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
 
 docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
