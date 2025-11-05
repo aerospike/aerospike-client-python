@@ -13,6 +13,7 @@ namespaces:
     name: test
     nsup-period: 120
     replication-factor: 1
+    # TODO: consider moving to memory storage to reduce time taken to run tests
     storage-engine:
       files:
         - /opt/aerospike/data/test.dat
