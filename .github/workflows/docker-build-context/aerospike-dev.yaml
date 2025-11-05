@@ -62,7 +62,6 @@ network:
 service:
   cluster-name: docker
   feature-key-file: /etc/aerospike/features.conf
-# node-id: a1
 security:
   enable-quotas: "false"
   log:
