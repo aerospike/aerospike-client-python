@@ -12,15 +12,10 @@ runs:
   - run: echo WAIT_SCRIPT_FILE_NAME=wait-for-as-server-to-start.bash >> $GITHUB_ENV
     shell: bash
 
-  - name: Copy wait script in server Docker container
-    run: docker cp $WAIT_SCRIPT_FILE_NAME ${{ inputs.container-name }}:/
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-
   # There is no healthcheck by default in the server CE Docker image.
   # We can just reuse our wait script. because the CE server should be ready after it finishes.
   - name: Wait for EE server to start
     # Composite actions doesn't support step-level timeout-minutes, so we use timeout command.
     # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
-    run: docker exec ${{ inputs.container-name }} timeout 30s bash /$WAIT_SCRIPT_FILE_NAME
+    run: timeout 30s bash /$WAIT_SCRIPT_FILE_NAME
     shell: bash
