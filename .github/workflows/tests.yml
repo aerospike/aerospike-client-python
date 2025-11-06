@@ -384,10 +384,6 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - name: Setup tmate session
-      if: ${{ !cancelled() }}
-      uses: mxschmitt/action-tmate@v3
-
     - name: Run tests
       # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
       # There's no way to tell unless we see the logs
