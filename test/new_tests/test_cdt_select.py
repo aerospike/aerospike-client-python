@@ -460,12 +460,10 @@ class TestCDTSelectOperations:
 
             _, _, bins = self.as_connection.get(self.key)
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == {
-                self.MAP_OF_NESTED_MAPS_BIN_NAME: {
-                    "Day1": {
-                    },
-                    "Day2": {
-                    },
-                    "Day3": {
-                    }
+                "Day1": {
+                },
+                "Day2": {
+                },
+                "Day3": {
                 }
             }
