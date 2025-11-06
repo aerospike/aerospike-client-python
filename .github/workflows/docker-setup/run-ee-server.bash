@@ -22,7 +22,9 @@ bind_mount_dest_folder=/workdir
 aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_name}
 
 call_from_yq_container() {
-    docker run --rm -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    # We set the container's user to our own because aerospike.yaml only has write permissions for the owning user
+    # The container's default user is different from the host
+    docker run --rm --user $(id -u):$(id -g) -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 
