@@ -206,7 +206,8 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
 // if false, the Python object should only be a compiled Python expression object from aerospike_helpers
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
-                                   bool allow_base64_encoded_exprs);
+                                   bool allow_base64_encoded_exprs,
+                                   as_dynamic_pool *dynamic_pool);
 
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,

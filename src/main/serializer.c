@@ -180,7 +180,6 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     bool serialize_data = false;
     if (dynamic_pool) {
         serialize_data = true;
-        dynamic_pool->free_buffers = true;
     }
 
     if (serialize_data) {
@@ -217,8 +216,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             memcpy(heap_b, py_val, (uint32_t)len);
             *bytes = GET_BYTES_POOL(dynamic_pool, error_p);
             if (error_p->code == AEROSPIKE_OK) {
-                as_bytes_init_wrap(*bytes, heap_b, (int32_t)len,
-                                   dynamic_pool->allocate_buffers);
+                as_bytes_init_wrap(*bytes, heap_b, (int32_t)len, true);
                 Py_DECREF(py_return);
             }
             else {

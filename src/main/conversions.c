@@ -1293,8 +1293,6 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                 memcpy(heap_b, b, b_len);
                 as_bytes_init_wrap(bytes, heap_b, b_len,
                                    dynamic_pool->allocate_buffers);
-                // Reserve the value for DESTROY_DYNAMIC_POOL to destroy
-                as_val_reserve(bytes);
             }
             else {
                 as_bytes_init_wrap(bytes, b, b_len,
@@ -1333,17 +1331,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                 memcpy(heap_b, str, str_len);
                 as_bytes_init_wrap(bytes, heap_b, str_len,
                                    dynamic_pool->allocate_buffers);
-                // Reserve the value for DESTROY_DYNAMIC_POOL to destroy
-                as_val_reserve(bytes);
             }
             else {
                 as_bytes_init_wrap(bytes, str, str_len,
                                    dynamic_pool->allocate_buffers);
-            }
-
-            if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
-                                                 false)) {
-                bytes->type = AS_BYTES_HLL;
             }
             *val = (as_val *)bytes;
         }
@@ -2432,9 +2423,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
             as_bytes *bytes;
             serialize_based_on_serializer_policy(self, SERIALIZER_NONE, &bytes,
                                                  dynamic_pool, py_value, err);
-            as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
-                               bytes->size, true);
-            binop_bin->valuep = &binop_bin->value;
+            binop_bin->valuep = (as_bin_value *)bytes;
         }
         else {
             uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
@@ -2453,9 +2442,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
             as_bytes *bytes;
             serialize_based_on_serializer_policy(self, SERIALIZER_NONE, &bytes,
                                                  dynamic_pool, py_value, err);
-            as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
-                               bytes->size, true);
-            binop_bin->valuep = &binop_bin->value;
+            binop_bin->valuep = (as_bin_value *)bytes;
         }
         else {
             uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
@@ -2476,10 +2463,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         as_bytes *bytes;
         serialize_based_on_serializer_policy(self, SERIALIZER_NONE, &bytes,
                                              dynamic_pool, py_value, err);
-        as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
-                           bytes->size, true);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-        binop_bin->valuep = &binop_bin->value;
+        binop_bin->valuep = (as_bin_value *)bytes;
     }
     else {
         // Since serialization is unsafe, we cannot use do anything with this value.
@@ -2890,7 +2875,8 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 }
 
                 as_exp *expr = NULL;
-                as_exp_new_from_pyobject(self, py_expr, &expr, err, false);
+                as_exp_new_from_pyobject(self, py_expr, &expr, err, false,
+                                         dynamic_pool);
                 Py_DECREF(py_expr);
                 if (err->code != AEROSPIKE_OK) {
                     goto CLEANUP1;

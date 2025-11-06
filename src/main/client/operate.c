@@ -379,7 +379,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
     if (isExprOp(operation)) {
         return add_new_expr_op(self, err, py_operation_dict, unicodeStrVector,
-                               ops, operation);
+                               ops, operation, dynamic_pool);
     }
 
     // TODO: Use set instead of this?
@@ -600,8 +600,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 goto CLEANUP;
             }
 
-            as_status status =
-                as_exp_new_from_pyobject(self, py_expr, &mod_exp, err, false);
+            as_status status = as_exp_new_from_pyobject(
+                self, py_expr, &mod_exp, err, false, dynamic_pool);
             Py_DECREF(py_expr);
             if (status != AEROSPIKE_OK) {
                 goto CLEANUP;
@@ -992,8 +992,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate, &exp_list, &exp_list_p,
+                &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1165,8 +1165,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate, &exp_list, &exp_list_p,
+                &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

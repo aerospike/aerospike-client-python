@@ -1696,7 +1696,8 @@ static as_status add_expr_macros(AerospikeClient *self,
 
                 as_exp *mod_exp = NULL;
                 if (as_exp_new_from_pyobject(self, py_mod_exp, &mod_exp, err,
-                                             false) != AEROSPIKE_OK) {
+                                             false,
+                                             dynamic_pool) != AEROSPIKE_OK) {
                     return err->code;
                 }
 
@@ -1730,7 +1731,8 @@ static as_status add_expr_macros(AerospikeClient *self,
 
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
-                                   bool allow_base64_encoded_exprs)
+                                   bool allow_base64_encoded_exprs,
+                                   as_dynamic_pool *dynamic_pool)
 {
     int bottom = 0;
 
@@ -1762,9 +1764,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
         goto FINISH_WITHOUT_CLEANUP;
     }
-
-    as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     int processed_exp_count = 0;
     int size_to_alloc = 0;
@@ -1841,7 +1840,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
             }
 
             if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
-                            &ctx_in_use, &dynamic_pool) != AEROSPIKE_OK) {
+                            &ctx_in_use, dynamic_pool) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1920,7 +1919,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         goto CLEANUP;
     }
 
-    if (add_expr_macros(self, &dynamic_pool, unicodeStrVector,
+    if (add_expr_macros(self, dynamic_pool, unicodeStrVector,
                         &intermediate_expr_queue, &c_expr_entries, &bottom,
                         (int *)&size, err) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -1958,7 +1957,6 @@ CLEANUP:
     }
 
     as_vector_destroy(unicodeStrVector);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
 FINISH_WITHOUT_CLEANUP:
     return err->code;

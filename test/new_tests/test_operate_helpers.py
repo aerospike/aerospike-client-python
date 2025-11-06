@@ -482,6 +482,16 @@ class TestOperate(object):
                 [operations.increment("name", "aerospike"), operations.read("name")],
                 {"name": "aerospike"},
             ),
+            (
+                ("test", "demo", "append_bytes"),  # incr with bytes
+                [operations.increment("name", b'bytes'), operations.read("name")],
+                {"name": b'bytes'   },
+            ),
+            (
+                ("test", "demo", "append_bytes"),  # demo with bytes
+                [operations.increment("name", bytearray("bytes", "utf-8")), operations.read("name")],
+                {"name": bytearray("bytes", "utf-8")   },
+            ),
         ],
     )
     def test_pos_operate_new_record(self, key, llist, expected):
@@ -512,10 +522,6 @@ class TestOperate(object):
                 ("test", "demo", 1),  # Existing string
                 [operations.increment("name", "aerospike"), operations.read("name")],
             ),
-            (
-                ("test", "demo", "existing_key"),  # Existing Bytearray
-                [operations.increment("bytearray", bytearray("abc", "utf-8")), operations.read("bytearray")],
-            ),
         ],
     )
     def test_pos_operate_prepend_with_existing_record(self, key, llist):
@@ -527,6 +533,154 @@ class TestOperate(object):
             TestOperate.client_no_typechecks.operate(key, llist)
 
         TestOperate.client_no_typechecks.remove(key)
+
+    class Invalid_Type:
+        pass
+
+    @pytest.mark.parametrize(
+        "key, llist",
+        [
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.increment("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.prepend("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.append("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+            ),
+        ],
+    )
+    def test_pos_operate_prepend_invalid_type(self, key, llist):
+        """
+        Invoke operate() with prepend command on a existing record
+        """
+
+        with pytest.raises(e.ClientError):
+            TestOperate.client_no_typechecks.operate(key, llist)
+
+        TestOperate.client_no_typechecks.remove(key)
+
+
+
+    @pytest.mark.parametrize(
+        "key, llist, expected",
+        [
+            (
+                ("test", "demo", "existing_key"),  # New serialized type
+                [operations.increment("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                {"invalid_type": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.increment("bytes_fail", b'123'), operations.read("bytes_fail")],
+                {"bytes_fail": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.increment("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+                {"bytearray_fail": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # New serialized type
+                [operations.append("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                {"invalid_type": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.append("bytes_fail", b'123'), operations.read("bytes_fail")],
+                {"bytes_fail": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.append("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+                {"bytearray_fail": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # New serialized type
+                [operations.prepend("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                {"invalid_type": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.prepend("bytes_fail", b'123'), operations.read("bytes_fail")],
+                {"bytes_fail": ("instance serialized", "instance deserialized")},
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.prepend("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+                {"bytearray_fail": ("instance serialized", "instance deserialized")},
+            ),
+        ],
+    )
+    def test_pos_operate_prepend_with_serializer(self, key, llist, expected):
+        """
+        Invoke operate() with prepend command on a existing record
+        """
+        def instance_serializer(obj):
+            return "instance serialized"
+
+        def instance_deserializer(obj):
+            return (obj, "instance deserialized")
+
+        client = TestBaseClass.get_new_connection({"strict_types": False, "serialization": (instance_serializer, instance_deserializer)})
+
+        _, _, bins = client.operate(key, llist)
+        assert expected == bins
+        client.remove(key)
+
+    @pytest.mark.parametrize(
+        "key, llist",
+        [
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.increment("bytes_fail", b'123'), operations.read("bytes_fail")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.increment("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.append("bytes_fail", b'123'), operations.read("bytes_fail")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.append("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+            ),
+
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.prepend("bytes_fail", b'123'), operations.read("bytes_fail")],
+            ),
+            (
+                ("test", "demo", "existing_key"),  # Existing Bytearray
+                [operations.prepend("bytearray_fail", bytearray("xyz", "utf-8")), operations.read("bytearray_fail")],
+            ),
+
+
+        ],
+    )
+    def test_pos_operate_prepend_with_serializer_fail(self, key, llist):
+        """
+        Invoke operate() with prepend command on a existing record
+        """
+        def instance_serializer():
+            return
+
+        def instance_deserializer(obj):
+            return (obj, "instance deserialized")
+
+
+        client = TestBaseClass.get_new_connection({"strict_types": False, "serialization": (instance_serializer, instance_deserializer)})
+
+        with pytest.raises(e.ClientError):
+            client.operate(key, llist)
+
+        client.remove(key)
 
     def test_pos_operate_incr_with_geospatial_new_record(self):
         """

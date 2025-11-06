@@ -211,7 +211,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
                 &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+                &batch_exp_list_p, &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -220,7 +220,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         if (pyobject_to_batch_write_policy(
                 self, err, py_policy_batch_write, &policy_batch_write,
                 &policy_batch_write_p, &batch_write_exp_list,
-                &batch_write_exp_list_p) != AEROSPIKE_OK) {
+                &batch_write_exp_list_p, &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

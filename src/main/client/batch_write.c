@@ -50,8 +50,8 @@
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, expr,                                       \
-                                      &expr_p) != AEROSPIKE_OK) {                            \
+                                      &__policy, expr, &expr_p,                              \
+                                      &dynamic_pool) != AEROSPIKE_OK) {                      \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
@@ -168,10 +168,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
 
     if (py_policy != NULL) {
-        if (pyobject_to_policy_batch(self, err, py_policy, &batch_policy,
-                                     &batch_policy_p,
-                                     &self->as->config.policies.batch,
-                                     &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(
+                self, err, py_policy, &batch_policy, &batch_policy_p,
+                &self->as->config.policies.batch, &exp_list, &exp_list_p,
+                &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
     }

@@ -31,27 +31,32 @@
 static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
                                   PyObject *op_dict,
                                   as_vector *unicodeStrVector,
-                                  as_operations *ops);
+                                  as_operations *ops,
+                                  as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
                                    PyObject *op_dict,
                                    as_vector *unicodeStrVector,
-                                   as_operations *ops);
+                                   as_operations *ops,
+                                   as_dynamic_pool *dynamic_pool);
 
 /* End forwards*/
 as_status add_new_expr_op(AerospikeClient *self, as_error *err,
                           PyObject *op_dict, as_vector *unicodeStrVector,
-                          as_operations *ops, long operation_code)
+                          as_operations *ops, long operation_code,
+                          as_dynamic_pool *dynamic_pool)
 
 {
     switch (operation_code) {
 
     case OP_EXPR_READ: {
-        return add_op_expr_read(self, err, op_dict, unicodeStrVector, ops);
+        return add_op_expr_read(self, err, op_dict, unicodeStrVector, ops,
+                                dynamic_pool);
     }
 
     case OP_EXPR_WRITE: {
-        return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops);
+        return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops,
+                                 dynamic_pool);
     }
 
     default:
@@ -66,7 +71,8 @@ as_status add_new_expr_op(AerospikeClient *self, as_error *err,
 static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
                                    PyObject *op_dict,
                                    as_vector *unicodeStrVector,
-                                   as_operations *ops)
+                                   as_operations *ops,
+                                   as_dynamic_pool *dynamic_pool)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;
@@ -84,8 +90,8 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
 
     py_exp_list = PyDict_GetItemString(op_dict, AS_EXPR_KEY);
 
-    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false) !=
-        AEROSPIKE_OK) {
+    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false,
+                                 dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -104,7 +110,8 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
 static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
                                   PyObject *op_dict,
                                   as_vector *unicodeStrVector,
-                                  as_operations *ops)
+                                  as_operations *ops,
+                                  as_dynamic_pool *dynamic_pool)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;
@@ -122,8 +129,8 @@ static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
 
     py_exp_list = PyDict_GetItemString(op_dict, AS_EXPR_KEY);
 
-    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false) !=
-        AEROSPIKE_OK) {
+    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false,
+                                 dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
