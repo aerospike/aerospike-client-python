@@ -70,7 +70,6 @@ runs:
 
   - id: get-container-name
     run: echo container-name=aerospike >> $GITHUB_OUTPUT
-    working-directory: .github/workflows/docker-build-context
     shell: bash
 
   # Configure tests
