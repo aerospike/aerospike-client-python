@@ -373,7 +373,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             as_policy_batch_apply *a_policy = NULL;
             GET_BATCH_POLICY_FROM_PYOBJECT(
                 a_policy, as_policy_batch_apply,
-                as_policy_batch_apply_set_from_pyobject, "Apply")
+                as_policy_batch_apply_copy_and_set_from_pyobject, "Apply")
 
             PyObject *py_mod = PyObject_GetAttrString(py_batch_record,
                                                       FIELD_NAME_BATCH_MODULE);
