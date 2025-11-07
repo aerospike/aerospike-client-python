@@ -341,7 +341,7 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
 // These methods are used for setting transaction level policies
 // 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
 // 2. Sets an as_policy_* *dst* from a Python object *py_policy*. to override the defaults from *src*
-// *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_write instances.
+// *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_* instances.
 // Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
 
 as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
