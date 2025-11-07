@@ -272,12 +272,12 @@ CLEANUP:
         as_list_destroy(arglist);
     }
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
+    if (policy_batch_p) {
+        as_exp_destroy(policy_batch_p->base.filter_exp);
     }
 
-    if (batch_apply_exp_list_p) {
-        as_exp_destroy(batch_apply_exp_list_p);
+    if (policy_batch_apply_p) {
+        as_exp_destroy(policy_batch_apply_p->filter_exp);
     }
 
     as_batch_destroy(&batch);

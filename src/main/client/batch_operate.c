@@ -301,12 +301,12 @@ CLEANUP:
         free(as_vector_get_ptr(unicodeStrVector, i));
     }
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
+    if (policy_batch_p) {
+        as_exp_destroy(policy_batch_p->base.filter_exp);
     }
 
-    if (batch_write_exp_list_p) {
-        as_exp_destroy(batch_write_exp_list_p);
+    if (policy_batch_write_p) {
+        as_exp_destroy(policy_batch_write_p->filter_exp);
     }
 
     as_vector_destroy(unicodeStrVector);

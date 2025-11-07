@@ -135,8 +135,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     as_policy_batch batch_policy;
     as_policy_batch *batch_policy_p = NULL;
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
 
     PyObject *py_batch_type = NULL;
     PyObject *py_key = NULL;

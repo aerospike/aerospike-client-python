@@ -287,8 +287,8 @@ CLEANUP3:
 
     as_batch_destroy(&batch);
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
+    if (policy_batch_p) {
+        as_exp_destroy(policy_batch_p->base.filter_exp);
     }
 
 CLEANUP2:
