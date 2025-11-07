@@ -260,7 +260,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
 as_status as_policy_batch_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,
-                                            as_policy_batch *policy, );
+                                            as_policy_batch *policy);
 
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy, bool validate_keys);
