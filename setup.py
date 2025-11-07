@@ -107,9 +107,6 @@ if not WINDOWS:
     #
     # When repairing the wheel, we will copy these libraries into the wheel
     # and change the Python client shared library's RPATH to point to these bundled libraries.
-    #
-    # The repair step only copies the libraries that the Python client are linked against
-    # TODO: only change rpath of c client, not python client?
     c_client_libraries = [
         'm',
         'z',
@@ -198,9 +195,6 @@ else:
                         {c_client_dependencies_version}/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
-
-os.putenv('CPATH', ':'.join(include_dirs))
-os.environ['CPATH'] = ':'.join(include_dirs)
 
 ################################################################################
 # SETUP
