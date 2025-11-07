@@ -100,7 +100,8 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
             AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        if (!read_policy_p ||
+        if ((!read_policy_p &&
+             self->as->config.policies.read.key == AS_POLICY_KEY_DIGEST) ||
             (read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
             // This is a special case.
             // C-client returns NULL key, so to the user
