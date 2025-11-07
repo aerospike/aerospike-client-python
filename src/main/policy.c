@@ -44,6 +44,10 @@
 // Don't make an inline function because
 // we want to return early if the policy is NULL or Py_None.
 // If we make this an inline function, we have to check again outside the inline function
+//
+// For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
+// But for config-level policies, we do not check whether py_policy is NULL or None.
+// Either way, we want as_policy_*_set_from_pyobject to be a no-op.
 #define RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()                               \
     if (py_policy == NULL || py_policy == Py_None) {                           \
         return AEROSPIKE_OK;                                                   \
@@ -52,18 +56,6 @@
         return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
                                "policy must be a dict");                       \
     }
-
-// For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
-// But for config-level policies, we do not check whether py_policy is NULL or None.
-// Either way, we want as_policy_*_set_from_pyobject to be a no-op.
-static inline as_status is_pyobject_valid_policy_type(as_error *err,
-                                                      PyObject *py_object)
-{
-    if (py_object == NULL || py_object == Py_None || PyDict_Check(py_object)) {
-        return AEROSPIKE_OK;
-    }
-    return as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-}
 
 // TODO: Python exceptions should be propagated up instead of being cleared
 // but the policy helper functions don't handle this case and they only populate
