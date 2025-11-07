@@ -205,6 +205,8 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
+                assert type(node.conns.recovered) == int
+                assert type(node.conns.aborted) == int
                 # Check NodeMetrics
                 assert type(node.metrics) == list
                 ns_metrics = node.metrics
