@@ -79,6 +79,7 @@
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
                 long field_val = PyLong_AsLong(py_field);                      \
+                Py_DECREF(py_field);                                           \
                 if (field_val == -1 && PyErr_Occurred()) {                     \
                     PyErr_Clear();                                             \
                     return as_error_update(                                    \
@@ -88,6 +89,7 @@
                 policy->__field = (__type)field_val;                           \
             }                                                                  \
             else {                                                             \
+                Py_DECREF(py_field);                                           \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
                                        "%s is invalid", #__field);             \
             }                                                                  \
@@ -107,8 +109,10 @@
         }                                                                      \
         else if (py_exp_list) {                                                \
             as_exp *exp_list = NULL;                                           \
-            if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list, err,    \
-                                         false) == AEROSPIKE_OK) {             \
+            retval = as_exp_new_from_pyobject(self, py_exp_list, &exp_list,    \
+                                              err, false);                     \
+            Py_DECREF(py_exp_list);                                            \
+            if (retval == AEROSPIKE_OK) {                                      \
                 policy->filter_exp = exp_list;                                 \
             }                                                                  \
             else {                                                             \
