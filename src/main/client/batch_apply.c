@@ -122,13 +122,6 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     as_batch batch;
     as_batch_init(&batch, 0);
 
-    // For expressions conversion.
-    as_exp batch_exp_list;
-    as_exp *batch_exp_list_p = NULL;
-
-    as_exp batch_apply_exp_list;
-    as_exp *batch_apply_exp_list_p = NULL;
-
     PyObject *br_instance = NULL;
 
     as_static_pool static_pool;
@@ -179,21 +172,20 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (as_policy_batch_set_from_pyobject(self, err, py_policy_batch,
+                                              &policy_batch) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
+        policy_batch_p = &policy_batch;
     }
 
     if (py_policy_batch_apply) {
-        if (pyobject_to_batch_apply_policy(
-                self, err, py_policy_batch_apply, &policy_batch_apply,
-                &policy_batch_apply_p, &batch_apply_exp_list,
-                &batch_apply_exp_list_p) != AEROSPIKE_OK) {
+        if (as_policy_batch_apply_set_from_pyobject(
+                self, err, py_policy_batch_apply, &policy_batch_apply) !=
+            AEROSPIKE_OK) {
             goto CLEANUP;
         }
+        policy_batch_apply_p = &policy_batch_apply;
     }
 
     const char *mod = PyUnicode_AsUTF8(py_mod);
@@ -272,12 +264,12 @@ CLEANUP:
         as_list_destroy(arglist);
     }
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
+    if (policy_batch_p) {
+        as_exp_destroy(policy_batch_p->base.filter_exp);
     }
 
-    if (batch_apply_exp_list_p) {
-        as_exp_destroy(batch_apply_exp_list_p);
+    if (policy_batch_apply_p) {
+        as_exp_destroy(policy_batch_apply_p->filter_exp);
     }
 
     as_batch_destroy(&batch);

@@ -768,22 +768,28 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+as_status as_policy_batch_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_batch *dst,
+                                                     as_policy_batch *src)
+{
+    as_policy_batch_copy(src, dst);
+    return as_policy_batch_set_from_pyobject(self, err, py_policy, dst, true);
+}
+
 /**
  * Converts a PyObject into an as_policy_batch object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_batch *policy,
-                                   as_policy_batch **policy_p,
-                                   as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_batch_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_batch *policy,
+                                            bool is_policy_txn_level)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE_OR_NULL()
-
-    //Initialize policy with global defaults
-    as_policy_batch_copy(config_batch_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
         if (self->validate_keys) {
@@ -801,7 +807,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
         // Set policy fields
         as_status retval = as_policy_base_set_from_pyobject(
-            self, err, py_policy, &policy->base, true);
+            self, err, py_policy, &policy->base, is_policy_txn_level);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -820,9 +826,6 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(allow_inline_ssd, bool);
         POLICY_SET_FIELD(respond_all_keys, bool);
     }
-
-    // Update the policy
-    POLICY_UPDATE();
 
     return err->code;
 }
@@ -906,11 +909,10 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
-as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
-                                         PyObject *py_policy,
-                                         as_policy_batch_apply *policy,
-                                         as_policy_batch_apply **policy_p,
-                                         as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_batch_apply_set_from_pyobject(AerospikeClient *self,
+                                                  as_error *err,
+                                                  PyObject *py_policy,
+                                                  as_policy_batch_apply *policy)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE_OR_NULL()
     as_policy_batch_apply_init(policy);
