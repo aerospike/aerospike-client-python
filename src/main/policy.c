@@ -17,6 +17,8 @@
 #include <Python.h>
 #include <stdbool.h>
 
+#include "pythoncapi_compat.h"
+
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_policy.h>
@@ -73,7 +75,7 @@
                                    "Unable to create Python unicode object");  \
         }                                                                      \
         PyObject *py_field =                                                   \
-            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+            PyDict_GetItemStringWithError(py_policy, py_field_name);           \
         if (py_field == NULL && PyErr_Occurred()) {                            \
             PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
@@ -103,23 +105,16 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
-        if (py_field_name == NULL) {                                           \
-            PyErr_Clear();                                                     \
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
-                                   "Unable to create Python unicode object");  \
-        }                                                                      \
-        PyObject *py_exp_list =                                                \
-            PyDict_GetItemWithError(py_policy, py_field_name);                 \
-        if (py_exp_list == NULL && PyErr_Occurred()) {                         \
+        int retval =                                                           \
+            PyDict_GetItemStringRef(py_policy, "expressions", py_exp_list);    \
+        if (retval == -1) {                                                    \
             PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
                                    "Unable to fetch expressions field "        \
                                    "from policy dictionary");                  \
         }                                                                      \
-        Py_DECREF(py_field_name);                                              \
-        if (py_exp_list) {                                                     \
+        else if (py_exp_list) {                                                \
             as_exp *exp_list = NULL;                                           \
             if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list, err,    \
                                          false) == AEROSPIKE_OK) {             \
