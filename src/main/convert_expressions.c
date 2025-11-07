@@ -101,9 +101,8 @@ enum expr_ops {
     LET = 125,
     DEF = 126,
 
-    CALL = 127,
     LIST_MOD = 139,
-    VAL = 200
+    VAL = 200,
 };
 
 // VIRTUAL OPS
@@ -207,8 +206,17 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 {
 
     static const int EXPR_SIZES[] = {
+        [_AS_EXP_CODE_CALL_SELECT] =
+            EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
+        [_AS_EXP_CODE_CALL_APPLY] =
+            EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
+        [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
+        [_AS_EXP_LOOPVAR_INT] = EXP_SZ(as_exp_loopvar_int(0)),
+        [_AS_EXP_LOOPVAR_LIST] = EXP_SZ(as_exp_loopvar_list(0)),
+        [_AS_EXP_LOOPVAR_MAP] = EXP_SZ(as_exp_loopvar_map(0)),
+        [_AS_EXP_LOOPVAR_STR] = EXP_SZ(as_exp_loopvar_str(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(
@@ -452,6 +460,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
     return AEROSPIKE_OK;
 }
 
+// TODO: reuse helper from conversions.c
 /*
 * get_exp_val_from_pyval
 * Converts a python value into an expression value.
@@ -637,6 +646,35 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(0, BIN_EXPR());
+            break;
+        case _AS_EXP_LOOPVAR_FLOAT:
+        case _AS_EXP_LOOPVAR_INT:
+        case _AS_EXP_LOOPVAR_LIST:
+        case _AS_EXP_LOOPVAR_MAP:
+        case _AS_EXP_LOOPVAR_STR:
+            if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            switch (temp_expr->op) {
+            case _AS_EXP_LOOPVAR_MAP:
+                APPEND_ARRAY(0, as_exp_loopvar_map(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_LIST:
+                APPEND_ARRAY(0, as_exp_loopvar_list(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_STR:
+                APPEND_ARRAY(0, as_exp_loopvar_str(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_INT:
+                APPEND_ARRAY(0, as_exp_loopvar_int(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_FLOAT:
+                APPEND_ARRAY(0, as_exp_loopvar_float(lval1));
+                break;
+            }
+
             break;
         case VAL:
         case _AS_EXP_CODE_AS_VAL:;
@@ -1610,6 +1648,41 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case UNKNOWN:
             APPEND_ARRAY(0, as_exp_unknown());
             break;
+        case _AS_EXP_CODE_CALL_SELECT:
+        case _AS_EXP_CODE_CALL_APPLY:
+            if (get_int64_t(err, "return_type", temp_expr->pydict, &lval1) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_int64_t(err, _CDT_FLAGS_KEY, temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (temp_expr->op == _AS_EXP_CODE_CALL_APPLY) {
+                PyObject *py_mod_exp = PyDict_GetItemString(
+                    temp_expr->pydict, _CDT_APPLY_MOD_EXP_KEY);
+                if (!py_mod_exp) {
+                    return as_error_update(
+                        err, AEROSPIKE_ERR_PARAM,
+                        "mod_exp is required for cdt_apply() expression.");
+                }
+
+                as_exp *mod_exp = NULL;
+                if (as_exp_new_from_pyobject(self, py_mod_exp, &mod_exp, err,
+                                             false) != AEROSPIKE_OK) {
+                    return err->code;
+                }
+
+                APPEND_ARRAY(1, as_exp_modify_by_path(temp_expr->ctx, lval1,
+                                                      mod_exp, lval2, NIL));
+            }
+            else {
+                APPEND_ARRAY(1, as_exp_select_by_path(temp_expr->ctx, lval1,
+                                                      lval2, NIL));
+            }
+            break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Unrecognised expression op type.");
@@ -1765,8 +1838,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
                 bool policy_in_use = false;
                 if (get_list_policy(err, temp_expr.pydict,
-                                    temp_expr.list_policy,
-                                    &policy_in_use) != AEROSPIKE_OK) {
+                                    temp_expr.list_policy, &policy_in_use,
+                                    self->validate_keys) != AEROSPIKE_OK) {
                     temp_expr.list_policy = NULL;
                     goto CLEANUP;
                 }
@@ -1786,9 +1859,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                     goto CLEANUP;
                 }
 
-                if (pyobject_to_map_policy(err, py_map_policy_p,
-                                           temp_expr.map_policy) !=
-                    AEROSPIKE_OK) {
+                if (pyobject_to_map_policy(
+                        err, py_map_policy_p, temp_expr.map_policy,
+                        self->validate_keys) != AEROSPIKE_OK) {
                     temp_expr.map_policy = NULL;
                     goto CLEANUP;
                 }
@@ -1848,7 +1921,14 @@ CLEANUP:
     }
 
     as_vector_destroy(&intermediate_expr_queue);
+
     if (c_expr_entries != NULL) {
+        for (int i = 0; i < bottom; i++) {
+            if (c_expr_entries[i].op == _AS_EXP_CODE_MERGE) {
+                as_exp_destroy(c_expr_entries[i].v.expr);
+            }
+        }
+
         free(c_expr_entries);
     }
 
