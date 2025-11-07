@@ -49,9 +49,8 @@
             if (py___policy != NULL) {                                                       \
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
-                if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, expr,                                       \
-                                      &expr_p) != AEROSPIKE_OK) {                            \
+                if (__conversion_func(self, err, py___policy, __policy) !=                   \
+                    AEROSPIKE_OK) {                                                          \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \

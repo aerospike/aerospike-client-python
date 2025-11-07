@@ -493,6 +493,15 @@ as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
     return as_policy_apply_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
+as_status as_policy_batch_apply_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_batch_apply *dst, as_policy_batch_apply *src)
+{
+    as_policy_batch_apply_copy(src, dst);
+    return as_policy_batch_apply_set_from_pyobject(self, err, py_policy, dst,
+                                                   true);
+}
+
 as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
                                                     as_error *err,
                                                     PyObject *py_policy,
@@ -912,7 +921,8 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
 as_status as_policy_batch_apply_set_from_pyobject(AerospikeClient *self,
                                                   as_error *err,
                                                   PyObject *py_policy,
-                                                  as_policy_batch_apply *policy)
+                                                  as_policy_batch_apply *policy,
+                                                  bool is_policy_txn_level)
 {
     RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE_OR_NULL()
     as_policy_batch_apply_init(policy);
