@@ -95,13 +95,6 @@ as_status set_subpolicies(AerospikeClient *self, as_error *err,
         return set_policy_status;
     }
 
-    PyObject *batch_policy = PyDict_GetItemString(py_policies_dict, "batch");
-    set_policy_status = set_batch_policy(err, &config->policies.batch,
-                                         batch_policy, self->validate_keys);
-    if (set_policy_status != AEROSPIKE_OK) {
-        return set_policy_status;
-    }
-
     PyObject *info_policy = PyDict_GetItemString(py_policies_dict, "info");
     set_policy_status = set_info_policy(err, &config->policies.info,
                                         info_policy, self->validate_keys);
@@ -143,17 +136,8 @@ as_status set_subpolicies(AerospikeClient *self, as_error *err,
         return set_policy_status;
     }
 
-    PyObject *batch_parent_write_policy =
-        PyDict_GetItemString(py_policies_dict, "batch_parent_write");
-    set_policy_status =
-        set_batch_policy(err, &config->policies.batch_parent_write,
-                         batch_parent_write_policy, self->validate_keys);
-    if (set_policy_status != AEROSPIKE_OK) {
-        return set_policy_status;
-    }
-
-    // TODO: combine with other batch policies
-    const char *batch_policy_names[] = {"txn_verify", "txn_roll"};
+    const char *batch_policy_names[] = {"batch", "batch_parent_write",
+                                        "txn_verify", "txn_roll"};
     as_policy_batch *batch_policies[] = {&config->policies.txn_verify,
                                          &config->policies.txn_roll};
     for (unsigned long i = 0;
