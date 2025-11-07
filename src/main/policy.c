@@ -110,7 +110,6 @@
             PyDict_GetItemStringRef(py_policy, "expressions", &py_exp_list);   \
         if (retval == -1) {                                                    \
             PyErr_Clear();                                                     \
-            Py_DECREF(py_field_name);                                          \
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
                                    "Unable to fetch expressions field "        \
                                    "from policy dictionary");                  \
