@@ -41,11 +41,9 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-// TODO: replace and remove
 // Don't make an inline function because
 // we want to return early if the policy is NULL or Py_None.
 // If we make this an inline function, we have to check again outside the inline function
-// TODO: wrap around do while?
 #define RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()                               \
     if (py_policy == NULL || py_policy == Py_None) {                           \
         return AEROSPIKE_OK;                                                   \
