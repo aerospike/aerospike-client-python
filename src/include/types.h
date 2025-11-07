@@ -147,6 +147,7 @@ extern PyObject *py_hll_policy_valid_keys;
 extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
+extern PyObject *py_record_metadata_valid_keys;
 
 #define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
 #define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"
@@ -159,8 +160,7 @@ extern PyObject *py_info_and_scan_policy_valid_keys;
 // Return 0 and set err if dictionary has invalid keys
 // Return 1 if dictionary's keys are all valid
 //
-// is_py_dict_a_policy is for error reporting only;
-// If is_py_dict_a_policy is false, we are validating a client config dictionary
+// adjective is for error reporting only
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                            PyObject *py_set_of_valid_keys,
-                                           bool is_py_dict_a_policy);
+                                           const char *adjective);

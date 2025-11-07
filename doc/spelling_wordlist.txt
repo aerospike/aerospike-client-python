@@ -91,3 +91,4 @@ namespaces
 yaml
 suberror
 hardcoded
+recurse
