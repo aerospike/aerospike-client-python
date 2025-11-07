@@ -138,8 +138,12 @@ as_status set_subpolicies(AerospikeClient *self, as_error *err,
 
     const char *batch_policy_names[] = {"batch", "batch_parent_write",
                                         "txn_verify", "txn_roll"};
-    as_policy_batch *batch_policies[] = {&config->policies.txn_verify,
-                                         &config->policies.txn_roll};
+    as_policy_batch *batch_policies[] = {
+        &config->policies.batch,
+        &config->policies.batch_parent_write,
+        &config->policies.txn_verify,
+        &config->policies.txn_roll,
+    };
     for (unsigned long i = 0;
          i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
         PyObject *py_batch_policy =
