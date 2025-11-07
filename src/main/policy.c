@@ -68,23 +68,14 @@
 // exception that was thrown
 #define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
-        if (py_field_name == NULL) {                                           \
+        PyObject *py_field = NULL;                                             \
+        int retval = PyDict_GetItemStringRef(py_policy, #__field, &py_field);  \
+        if (retval == -1) {                                                    \
             PyErr_Clear();                                                     \
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
-                                   "Unable to create Python unicode object");  \
-        }                                                                      \
-        PyObject *py_field =                                                   \
-            PyDict_GetItemStringWithError(py_policy, py_field_name);           \
-        if (py_field == NULL && PyErr_Occurred()) {                            \
-            PyErr_Clear();                                                     \
-            Py_DECREF(py_field_name);                                          \
             return as_error_update(                                            \
                 err, AEROSPIKE_ERR_CLIENT,                                     \
                 "Unable to fetch field from policy dictionary");               \
         }                                                                      \
-        Py_DECREF(py_field_name);                                              \
-                                                                               \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
                 long field_val = PyLong_AsLong(py_field);                      \
@@ -262,7 +253,6 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
             }
         }
 
-        // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
     // Update the policy
