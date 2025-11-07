@@ -40,6 +40,11 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
 as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
                               const char *name);
 
+// Although set_subpolicies is called by AerospikeClient's init method
+// it should be safe to use because set_subpolicies only reads from self->validate_keys in this case
+// We know that self->validate_keys is initialized by the time we call this.
+// TODO: refactor set_subpolicies to not depend on AerospikeClient
+//
 // This only sets the err object if an invalid dictionary key is passed
 // On error, return an error code
 as_status set_subpolicies(AerospikeClient *self, as_error *err,
