@@ -105,8 +105,9 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
+        PyObject *py_exp_list = NULL;                                          \
         int retval =                                                           \
-            PyDict_GetItemStringRef(py_policy, "expressions", py_exp_list);    \
+            PyDict_GetItemStringRef(py_policy, "expressions", &py_exp_list);   \
         if (retval == -1) {                                                    \
             PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
