@@ -470,6 +470,20 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_query_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, true);
         if (retval != AEROSPIKE_OK) {
