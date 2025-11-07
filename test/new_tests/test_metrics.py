@@ -194,6 +194,7 @@ class TestMetrics:
             assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
+            assert cluster.app_id is None or type(cluster.app_id) == str
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node

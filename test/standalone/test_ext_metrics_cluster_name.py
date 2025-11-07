@@ -18,7 +18,8 @@ try:
         "hosts": [
             ("127.0.0.1", 3000)
         ],
-        "cluster_name": "docker"
+        "cluster_name": "docker",
+        "app_id": "PythonClientTest"
     }
     print("Connecting to server...")
     as_client = aerospike.client(config)
@@ -35,12 +36,14 @@ try:
             global snapshot_triggered
             snapshot_triggered = True
             assert cluster.cluster_name == "docker"
+            assert cluster.app_id == "PythonClientTest"
 
         def disable(cluster: Cluster):
             print(f"Disable listener run. Cluster name: {cluster.cluster_name}")
             global disable_triggered
             disable_triggered = True
             assert cluster.cluster_name == "docker"
+            assert cluster.app_id == "PythonClientTest"
 
         def node_close(_: Node):
             pass
