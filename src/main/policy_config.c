@@ -44,8 +44,6 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 as_status set_subpolicies(AerospikeClient *self, as_error *err,
                           as_config *config, PyObject *py_policies_dict)
 {
-    as_error_reset(err);
-
     as_status set_policy_status = AEROSPIKE_OK;
     PyObject *py_read_policy = PyDict_GetItemString(py_policies_dict, "read");
     set_policy_status = as_policy_read_set_from_pyobject(
