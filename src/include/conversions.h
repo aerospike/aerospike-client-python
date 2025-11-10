@@ -162,9 +162,6 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_binop *binop,
                                    char *bin, as_static_pool *static_pool);
 
-as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
-                                   PyObject *py_bin, char **bin);
-
 // Both as_operations and as_record have ttl and gen fields,
 // so we have ttl and gen as separate parameters instead of accepting either as_operations or as_record
 as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,

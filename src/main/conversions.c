@@ -2291,41 +2291,6 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
-// TODO: dead code
-as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
-                                   PyObject *py_bin, char **bin)
-{
-    as_error_reset(err);
-
-    if (py_bin) {
-        if (PyUnicode_Check(py_bin)) {
-            *bin = (char *)PyUnicode_AsUTF8(py_bin);
-        }
-        else if (PyByteArray_Check(py_bin)) {
-            *bin = PyByteArray_AsString(py_bin);
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Bin name should be of type string");
-            goto CLEANUP;
-        }
-
-        if (self->strict_types) {
-            if (strlen(*bin) > AS_BIN_NAME_MAX_LEN) {
-                as_error_update(
-                    err, AEROSPIKE_ERR_BIN_NAME,
-                    "A bin name should not exceed 15 characters limit");
-            }
-        }
-    }
-
-CLEANUP:
-    if (err->code != AEROSPIKE_OK) {
-        raise_exception(err);
-    }
-    return err->code;
-}
-
 /**
  *******************************************************************************************************
  * This function checks for metadata and if present set it into the
