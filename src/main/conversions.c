@@ -2398,60 +2398,6 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
-                                         as_batch_read_records *records,
-                                         PyObject **py_recs)
-{
-    *py_recs = PyList_New(0);
-
-    if (!(*py_recs)) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate return list of records");
-    }
-    as_vector *list = &records->list;
-    for (uint32_t i = 0; i < list->size; i++) {
-
-        as_batch_read_record *batch = as_vector_get(list, i);
-        PyObject *py_rec = NULL;
-        PyObject *py_key = NULL;
-
-        /* There should be a record, so convert it to a tuple */
-        if (batch->result == AEROSPIKE_OK) {
-            record_to_pyobject(self, err, &batch->record, &batch->key, &py_rec);
-            if (!py_rec || err->code != AEROSPIKE_OK) {
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-            /* No record, convert to (key, None, None) */
-        }
-        else {
-            key_to_pyobject(err, &batch->key, &py_key);
-            if (!py_key || err->code != AEROSPIKE_OK) {
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-            py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
-            Py_DECREF(py_key);
-            if (!py_rec) {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to create a record tuple");
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-        }
-
-        if (PyList_Append(*py_recs, py_rec) != 0) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to add record tuple to return list");
-            Py_XDECREF(py_rec);
-            Py_CLEAR(*py_recs);
-            return err->code;
-        }
-        Py_DECREF(py_rec);
-    }
-    return AEROSPIKE_OK;
-}
-
 /*
 This fetches a string from a Python String like. If it is a unicode in Python27, we need to convert it
 to a bytes like object first, and keep track of the intermediate object for later deletion.
