@@ -2358,8 +2358,19 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_binop *binop,
                                    char *bin, as_static_pool *static_pool)
 {
-
     as_bin *binop_bin = &binop->bin;
+    as_status status = as_val_new_from_pyobject(self, err, py_value,
+                                                static_pool, SERIALIZER_PYTHON);
+    if (status != AEROSPIKE_OK) {
+        return;
+    }
+
+    strcpy(binop_bin->name, bin);
+    // doesn't support boolean
+    // this allocates memory on the stack
+    // TODO...
+    return;
+
     if (PyLong_Check(py_value)) {
         int val = PyLong_AsLong(py_value);
         as_integer_init((as_integer *)&binop_bin->value, val);
@@ -2427,7 +2438,6 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)bytes;
     }
-    strcpy(binop_bin->name, bin);
 }
 
 // TODO: dead code
