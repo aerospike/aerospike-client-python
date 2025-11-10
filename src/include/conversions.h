@@ -168,12 +168,6 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
                              uint16_t *gen_ref, as_error *err,
                              bool validate_keys);
 
-as_status as_batch_read_results_to_pyobject(as_error *err,
-                                            AerospikeClient *client,
-                                            const as_batch_read *results,
-                                            uint32_t size,
-                                            PyObject **py_records);
-
 as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
                                          as_batch_read_records *records,
                                          PyObject **py_recs);

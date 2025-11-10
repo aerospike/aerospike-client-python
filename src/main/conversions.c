@@ -2398,66 +2398,6 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_batch_read_results_to_pyobject(as_error *err,
-                                            AerospikeClient *client,
-                                            const as_batch_read *results,
-                                            uint32_t size,
-                                            PyObject **py_records)
-{
-    *py_records = NULL;
-    PyObject *temp_py_recs = PyList_New(0);
-
-    if (!temp_py_recs) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate memory for batch results");
-    }
-
-    // Loop over results array
-    for (uint32_t i = 0; i < size; i++) {
-        PyObject *py_rec = NULL;
-        PyObject *py_key = NULL;
-        if (results[i].result == AEROSPIKE_OK) {
-            /* There was a record for the item, but we failed to convert it, probably a deserialize issue, error out */
-            record_to_pyobject(client, err, &results[i].record, results[i].key,
-                               &py_rec);
-            if (!py_rec || err->code != AEROSPIKE_OK) {
-                Py_XDECREF(temp_py_recs);
-                return err->code;
-            }
-            /* The record wasn't found, build a (key, None, None) tuple */
-        }
-        else {
-            key_to_pyobject(err, results[i].key, &py_key);
-            if (!py_key || err->code != AEROSPIKE_OK) {
-                Py_XDECREF(temp_py_recs);
-                return err->code;
-            }
-            py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
-            Py_DECREF(py_key);
-        }
-
-        if (!py_rec) {
-            /* This means that build value, failed, so we are in trouble*/
-            Py_XDECREF(temp_py_recs);
-            return as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Failed to allocate memory for record entry");
-        }
-
-        if (PyList_Append(temp_py_recs, py_rec) != 0) {
-            Py_DECREF(py_rec);
-            Py_DECREF(temp_py_recs);
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Failed to add record to results");
-        }
-        Py_DECREF(py_rec);
-    }
-
-    // Release Python State
-    *py_records = temp_py_recs;
-    return AEROSPIKE_OK;
-}
-
 as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
                                          as_batch_read_records *records,
                                          PyObject **py_recs)
