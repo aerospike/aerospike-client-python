@@ -80,10 +80,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     PyObject *py_ustr2 = NULL;
     PyObject *py_ustr3 = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
@@ -132,7 +128,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p, true);
+                                true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -211,9 +207,8 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
+    if (scan_policy_p) {
+        as_exp_destroy(scan_policy_p->base.filter_exp);
     }
 
     if (py_ustr1) {

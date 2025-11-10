@@ -922,10 +922,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate operate_policy;
     as_policy_operate *operate_policy_p = NULL;
 
-    // For expressions conversion.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_operations ops;
@@ -935,8 +931,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -984,8 +979,8 @@ CLEANUP:
         free(as_vector_get_ptr(unicodeStrVector, i));
     }
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (operate_policy_p) {
+        as_exp_destroy(operate_policy_p->base.filter_exp);
     }
 
     as_vector_destroy(unicodeStrVector);
@@ -1097,10 +1092,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     Py_ssize_t ops_list_size = PyList_Size(py_list);
     as_operations_inita(&ops, ops_list_size);
 
-    // For expressions conversion.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     /* These are the values which will be returned in a 3 element list */
     PyObject *py_return_key = NULL;
     PyObject *py_return_meta = NULL;
@@ -1111,8 +1102,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1198,8 +1188,8 @@ CLEANUP:
 
     as_vector_destroy(unicodeStrVector);
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (operate_policy_p) {
+        as_exp_destroy(operate_policy_p->base.filter_exp);
     }
 
     if (rec && operation_succeeded) {
