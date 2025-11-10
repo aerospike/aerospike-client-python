@@ -2360,6 +2360,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 {
     as_bin *binop_bin = &binop->bin;
     as_status status = as_val_new_from_pyobject(self, err, py_value,
+                                                (as_val **)(&binop_bin->valuep),
                                                 static_pool, SERIALIZER_PYTHON);
     if (status != AEROSPIKE_OK) {
         return;
