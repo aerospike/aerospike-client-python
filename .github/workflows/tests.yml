@@ -48,7 +48,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: '3.10'
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
