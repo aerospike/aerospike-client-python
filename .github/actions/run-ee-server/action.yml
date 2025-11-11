@@ -31,7 +31,7 @@ inputs:
   env-vars:
     required: false
     description: Used to disable server features
-    default: ''
+    default: 'STRONG_CONSISTENCY=1 SECURITY=1 MUTUAL_TLS=1'
 outputs:
   container-name:
     description: 'Server container name'
@@ -63,10 +63,6 @@ runs:
   - run: ${{ inputs.env-vars }} ./run-ee-server.bash
     working-directory: .github/workflows/docker-setup
     shell: bash
-    env:
-      STRONG_CONSISTENCY: 1
-      SECURITY: 1
-      MUTUAL_TLS: 1
 
   - id: get-container-name
     run: echo container-name=aerospike >> $GITHUB_OUTPUT

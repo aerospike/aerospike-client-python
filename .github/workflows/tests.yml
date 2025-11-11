@@ -489,7 +489,7 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         # The user agent can also send the client's username if app-id is not set by the client
-        env-vars: 'NO_SC=1 NO_TLS=1'
+        env-vars: 'SECURITY=1'
 
     - name: Install test dependencies
       if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
