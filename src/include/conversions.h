@@ -129,8 +129,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
                                PyObject **obj);
 
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
-                           const as_record *rec, PyObject **obj,
-                           bool cnvt_list_to_map);
+                           const as_record *rec, PyObject **obj);
 
 void error_to_pyobject(const as_error *err, PyObject **obj);
 

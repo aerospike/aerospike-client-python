@@ -1605,8 +1605,7 @@ typedef struct {
 } conversion_data;
 
 as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
-                             const as_val *val, PyObject **py_val,
-                             bool cnvt_list_to_map)
+                             const as_val *val, PyObject **py_val)
 {
     as_error_reset(err);
     switch (as_val_type(val)) {
@@ -1730,7 +1729,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_val)
 {
-    return do_val_to_pyobject(self, err, val, py_val, false);
+    return do_val_to_pyobject(self, err, val, py_val);
 }
 
 static bool list_to_pyobject_each(as_val *val, void *udata)
@@ -1871,7 +1870,7 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
 
 as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
                                 const as_record *rec, const as_key *key,
-                                PyObject **obj, bool cnvt_list_to_map)
+                                PyObject **obj)
 {
     as_error_reset(err);
     *obj = NULL;
@@ -1895,8 +1894,7 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
-        AEROSPIKE_OK) {
+    if (bins_to_pyobject(self, err, rec, &py_rec_bins) != AEROSPIKE_OK) {
         Py_CLEAR(py_rec_key);
         Py_CLEAR(py_rec_meta);
         return err->code;
@@ -1930,7 +1928,7 @@ as_status record_to_pyobject(AerospikeClient *self, as_error *err,
                              const as_record *rec, const as_key *key,
                              PyObject **obj)
 {
-    return do_record_to_pyobject(self, err, rec, key, obj, false);
+    return do_record_to_pyobject(self, err, rec, key, obj);
 }
 
 as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
@@ -2036,7 +2034,7 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
 }
 
 static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
-                                     void *udata, bool cnvt_list_to_map)
+                                     void *udata)
 {
     if (!name || !val) {
         return false;
@@ -2064,12 +2062,11 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
 static bool bins_to_pyobject_each(const char *name, const as_val *val,
                                   void *udata)
 {
-    return do_bins_to_pyobject_each(name, val, udata, false);
+    return do_bins_to_pyobject_each(name, val, udata);
 }
 
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
-                           const as_record *rec, PyObject **py_bins,
-                           bool cnvt_list_to_map)
+                           const as_record *rec, PyObject **py_bins)
 {
     as_error_reset(err);
 
