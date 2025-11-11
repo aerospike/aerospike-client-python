@@ -110,10 +110,6 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
 
-as_status val_to_pyobject_cnvt_list_to_map(AerospikeClient *self, as_error *err,
-                                           const as_val *val,
-                                           PyObject **py_map);
-
 as_status map_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_map *map, PyObject **py_map);
 
