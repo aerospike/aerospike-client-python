@@ -1604,8 +1604,8 @@ typedef struct {
     void *udata;
 } conversion_data;
 
-as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
-                             const as_val *val, PyObject **py_val)
+as_status val_to_pyobject(AerospikeClient *self, as_error *err,
+                          const as_val *val, PyObject **py_val)
 {
     as_error_reset(err);
     switch (as_val_type(val)) {
@@ -1724,12 +1724,6 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
     }
 
     return err->code;
-}
-
-as_status val_to_pyobject(AerospikeClient *self, as_error *err,
-                          const as_val *val, PyObject **py_val)
-{
-    return do_val_to_pyobject(self, err, val, py_val);
 }
 
 static bool list_to_pyobject_each(as_val *val, void *udata)
@@ -1868,9 +1862,9 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
-                                const as_record *rec, const as_key *key,
-                                PyObject **obj)
+as_status record_to_pyobject(AerospikeClient *self, as_error *err,
+                             const as_record *rec, const as_key *key,
+                             PyObject **obj)
 {
     as_error_reset(err);
     *obj = NULL;
@@ -1922,13 +1916,6 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 
     *obj = py_rec;
     return err->code;
-}
-
-as_status record_to_pyobject(AerospikeClient *self, as_error *err,
-                             const as_record *rec, const as_key *key,
-                             PyObject **obj)
-{
-    return do_record_to_pyobject(self, err, rec, key, obj);
 }
 
 as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
@@ -2033,8 +2020,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     return err->code;
 }
 
-static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
-                                     void *udata)
+static bool bins_to_pyobject_each(const char *name, const as_val *val,
+                                  void *udata)
 {
     if (!name || !val) {
         return false;
@@ -2057,12 +2044,6 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
 
     convd->count++;
     return true;
-}
-
-static bool bins_to_pyobject_each(const char *name, const as_val *val,
-                                  void *udata)
-{
-    return do_bins_to_pyobject_each(name, val, udata);
 }
 
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
