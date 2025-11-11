@@ -89,7 +89,7 @@ jobs:
     - name: Build client
       run: python3 -m build
       env:
-        CFLAGS: '-Werror'
+        CFLAGS: '-Werror -Wall'
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
