@@ -85,7 +85,7 @@ fi
 # docker logs -f aerospike
 
 # TODO: make sure server container is alive or waiting is pointless
-./wait-for-as-server-to-start.bash
+timeout 30s bash ./wait-for-as-server-to-start.bash
 
 # Set up security
 superuser_name_and_password=superuser
