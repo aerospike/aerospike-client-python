@@ -107,6 +107,7 @@ def as_connection(request) -> aerospike.Client:
                     request.cls.skip_old_server = False
                 TestBaseClass.major_ver = int(versionlist[0])
                 TestBaseClass.minor_ver = int(versionlist[1])
+                TestBaseClass.patch_ver = int(versionlist[2])
 
     request.cls.as_connection = as_client
 
