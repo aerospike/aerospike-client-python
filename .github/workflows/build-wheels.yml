@@ -276,7 +276,7 @@ jobs:
       # the openssl library version is newer than the wheel's macOS version tag
       # Linking the static libraries produces a warning for that same reason but it doesn't throw an error.
       # - Use single dash for backwards compatibility with older sw_vers
-      run: echo MACOSX_DEPLOYMENT_TARGET=14.0 >> $GITHUB_ENV
+      run: echo MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0 >> $GITHUB_ENV
 
     - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
       name: Ensure that linker can find brew packages
