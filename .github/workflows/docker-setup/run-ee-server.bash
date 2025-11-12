@@ -25,7 +25,7 @@ call_from_yq_container() {
     docker run --rm --user $(id -u):$(id -g) -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
-
+# del() operations are idempotent
 if [[ "$MUTUAL_TLS" == "1" ]]; then
     call_from_yq_container ".network.service.tls-authenticate-client = \"any\""
     call_from_yq_container ".network.service.tls-name = \"docker\""
@@ -35,7 +35,6 @@ if [[ "$MUTUAL_TLS" == "1" ]]; then
     call_from_yq_container ".network.tls[0].key-file = \"/etc/ssl/private/server.pem\""
     call_from_yq_container ".network.tls[0].name = \"docker\""
 else
-    # TODO: Make sure these are idempotent
     call_from_yq_container "del(.network.service.tls-authenticate-client)"
     call_from_yq_container "del(.network.service.tls-name)"
     call_from_yq_container "del(.network.service.tls-port)"
