@@ -1266,7 +1266,7 @@ Metrics
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
 Scan and Query Constructors
----------------------------
+===========================
 
 .. class:: Client
     :noindex:
