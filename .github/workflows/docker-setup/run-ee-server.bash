@@ -68,7 +68,10 @@ cat $aerospike_conf_name
 # Generate server cert
 # openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
 
-docker run -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
+# Some Docker container may have a low max fd limit
+# Just set max fd limit to make sure the server doesn't fail.
+# Somehow the container can have a lower soft/hard fd limit than the Docker daemon / host
+docker run --ulimit nofile=15000 -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v ./ca.cer:/etc/ssl/certs/ca.cer \
     -v ./server.cer:/etc/ssl/certs/server.cer \
     -v ./server.pem:/etc/ssl/private/server.pem \
