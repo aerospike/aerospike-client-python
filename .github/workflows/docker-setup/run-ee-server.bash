@@ -21,7 +21,7 @@ aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_na
 
 call_from_yq_container() {
     # We set the container's user to our own because aerospike.yaml only has write permissions for the owning user
-    # The container's default user is different from the host
+    # The container's default user is different from the owner
     docker run --rm --user $(id -u):$(id -g) -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
