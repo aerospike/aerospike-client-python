@@ -28,6 +28,8 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
+  # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
   env-vars:
     required: false
     description: Used to disable server features
