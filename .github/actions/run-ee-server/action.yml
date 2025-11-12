@@ -134,7 +134,7 @@ runs:
   - name: Get cluster name
     # Here we just assume that security is enabled. Whenever the dev tests are run with run-ee-server.yml, security is enabled anyways.
     # TODO: but this needs to be fixed eventually for other clients that disable security for their tests.
-    run: echo CLUSTER_NAME=$(docker exec --rm --network host aerospike/aerospike-tools asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    run: echo CLUSTER_NAME=$(docker run --rm --network host aerospike/aerospike-tools asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
     shell: bash
 
   - name: Set EE server's IP address
