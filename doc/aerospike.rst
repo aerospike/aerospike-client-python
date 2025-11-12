@@ -343,6 +343,64 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any:
+
+                - :ref:`aerospike_policies`
+                - :ref:`metadata_dict`
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
+            Invalid policy example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
+                client.get(key, policy=policy)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
@@ -554,7 +612,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -1144,7 +1202,7 @@ Flags used by list order.
     Ordered list.
 
 .. note::
-    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1523,7 +1581,7 @@ Index data types
 
     An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
 .. _aerospike_index_types:
 
@@ -1737,3 +1795,61 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. _cdt_select_flags:
+
+CDT Select Flags
+----------------
+
+.. data:: CDT_SELECT_MATCHING_TREE
+
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+
+.. data:: CDT_SELECT_VALUES
+
+    Return the list of the values of the nodes finally selected by the context.
+
+.. data:: CDT_SELECT_MAP_KEY_VALUES
+
+    Return a list of key-value pairs.
+
+.. data:: CDT_SELECT_MAP_KEYS
+
+    For final selected nodes which are elements of maps, return the appropriate map key.
+
+.. data:: CDT_SELECT_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements.
+
+.. _cdt_modify_flags:
+
+CDT Modify Flags
+----------------
+
+.. data:: CDT_MODIFY_DEFAULT
+
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
+
+.. data:: CDT_MODIFY_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements.
+
+.. _exp_loopvar_metadata:
+
+Expression Loop Variable Metadata
+---------------------------------
+
+.. data:: EXP_LOOPVAR_KEY
+
+    The key associated with this value if part of a key-value pair of a map.
+
+.. data:: EXP_LOOPVAR_VALUE
+
+    List item, or value from a map key-value pair.
+
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.
