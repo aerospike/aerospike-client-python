@@ -5,8 +5,6 @@ set -o pipefail
 set -e
 set -x
 
-# We use bash because we need the not (!) operator
-
 # Input defaults
 
 BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
