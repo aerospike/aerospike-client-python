@@ -61,6 +61,11 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
+  - name: 'macOS: install timeout command'
+    if: ${{ runner.os == 'macOS' }}
+    run: brew install coreutils
+    shell: bash
+
   - run: ${{ inputs.env-vars }} timeout 30s bash ./run-ee-server.bash
     working-directory: .github/workflows/docker-setup
     shell: bash
