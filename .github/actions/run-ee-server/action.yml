@@ -61,7 +61,6 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
-  # Input env vars will override the env vars we defined in this step
   - run: ${{ inputs.env-vars }} ./run-ee-server.bash
     working-directory: .github/workflows/docker-setup
     shell: bash
