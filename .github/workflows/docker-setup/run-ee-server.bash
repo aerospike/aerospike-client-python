@@ -19,6 +19,9 @@ aerospike_yaml_file_name=aerospike-dev.yaml
 bind_mount_dest_folder=/workdir
 aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_name}
 
+# Fixes issue where for bind mounts, paths aren't converted to windows-style paths and stay as unix paths
+export MSYS_NO_PATHCONV=1
+
 call_from_yq_container() {
     # We set the container's user to our own because aerospike.yaml only has write permissions for the owning user
     # The container's default user is different from the owner
