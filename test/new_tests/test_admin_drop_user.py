@@ -54,22 +54,13 @@ class TestDropUser(object):
         user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
-
-        status = admin_create_user_and_poll(self.client, user, password, roles, policy)
-
-
-        assert status == 0
-        user_info = self.client.admin_query_user_info(user, policy)
-
-        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
+        admin_create_user_and_poll(self.client, user, password, roles, policy)
 
         status = admin_drop_user_and_poll(self.client, user, policy)
-
         assert status == 0
 
         try:
             self.client.admin_query_user_info(user)
-
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
@@ -94,19 +85,13 @@ class TestDropUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         status = admin_create_user_and_poll(self.client, user, password, roles)
-
-
         assert status == 0
-        user_info = self.client.admin_query_user_info(user)
 
-        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = admin_drop_user_and_poll(self.client, user)
         assert status == 0
 
-
         try:
             self.client.admin_query_user_info(user)
-
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
@@ -121,18 +106,11 @@ class TestDropUser(object):
 
         status = admin_create_user_and_poll(self.client, user, password, roles)
 
-
-        assert status == 0
-        user_info = self.client.admin_query_user_info(user)
-
-        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = admin_drop_user_and_poll(self.client, user)
         assert status == 0
 
-
         try:
             self.client.admin_query_user_info(user)
-
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"

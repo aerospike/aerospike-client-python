@@ -276,7 +276,7 @@ def poll_until_user_exists(username: str, client: aerospike.Client, roles: list[
     while time.time() - start < HARD_LIMIT_SECS:
         try:
             user_dict = client.admin_query_user_info(user=username)
-            if set(user_dict["roles"]) != set(roles):
+            if user_dict["roles"] != roles:
                 continue
         except e.InvalidUser:
             time.sleep(POLL_INTERVAL_SECS)
