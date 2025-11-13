@@ -108,6 +108,11 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
                         "No connection to aerospike cluster");
         goto CLEANUP;
     }
+    if (self->scan.ops) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "No operations can be used with scan.results");
+        goto CLEANUP;
+    }
 
     // Convert python policy object to as_policy_scan
     pyobject_to_policy_scan(
