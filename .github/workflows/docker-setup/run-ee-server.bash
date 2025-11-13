@@ -15,18 +15,23 @@ STRONG_CONSISTENCY=${STRONG_CONSISTENCY:-"0"}
 
 # End inputs
 
-aerospike_yaml_file_name=aerospike-dev.yaml
-bind_mount_dest_folder=/workdir
-aerospike_yaml_container_path=${bind_mount_dest_folder}/${aerospike_yaml_file_name}
+VOLUME_NAME=aerospike-conf-vol
+docker volume create $VOLUME_NAME
 
-# Fixes issue where for bind mounts, paths aren't converted to windows-style paths and stay as unix paths
-export MSYS_NO_PATHCONV=1
+volume_dest_folder=/workdir
+aerospike_yaml_file_name=aerospike-dev.yaml
+ca_cert_file_name="ca.cer"
+server_cert_file_name="server.cer"
+
+volume_container_name=$(uuidgen)
+docker run --name $volume_container_name --rm -v $VOLUME_NAME:$volume_dest_folder -d alpine tail -f /dev/null
+docker cp ./ $volume_container_name:$volume_dest_folder/
+docker stop $volume_container_name
+
+aerospike_yaml_container_path=${volume_dest_folder}/${aerospike_yaml_file_name}
 
 call_from_yq_container() {
-    # We set the container's user to our own because aerospike.yaml only has write permissions for the owning user
-    # The container's default user is different from the owner
-    # pwd (absolute path) is required on Windows
-    docker run --rm --user $(id -u):$(id -g) -v $(pwd)/$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    docker run --rm --user $(id -u):$(id -g) -v $VOLUME_NAME:$volume_dest_folder mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 # del() operations are idempotent
@@ -34,9 +39,9 @@ if [[ "$MUTUAL_TLS" == "1" ]]; then
     call_from_yq_container ".network.service.tls-authenticate-client = \"any\""
     call_from_yq_container ".network.service.tls-name = \"docker\""
     call_from_yq_container ".network.service.tls-port = \"4333\""
-    call_from_yq_container ".network.tls[0].ca-file = \"/etc/ssl/certs/ca.cer\""
-    call_from_yq_container ".network.tls[0].cert-file = \"/etc/ssl/certs/server.cer\""
-    call_from_yq_container ".network.tls[0].key-file = \"/etc/ssl/private/server.pem\""
+    call_from_yq_container ".network.tls[0].ca-file = \"$volume_dest_folder/$ca_cert_file_name\""
+    call_from_yq_container ".network.tls[0].cert-file = \"$volume_dest_folder/$server_cert_file_name\""
+    call_from_yq_container ".network.tls[0].key-file = \"$volume_dest_folder/server.pem\""
     call_from_yq_container ".network.tls[0].name = \"docker\""
 else
     call_from_yq_container "del(.network.service.tls-authenticate-client)"
@@ -61,11 +66,10 @@ else
 fi
 
 # We want to save our aerospike.conf in this directory.
-call_from_tools_container="docker run --rm -v $(pwd)/:$bind_mount_dest_folder --network host aerospike/aerospike-tools"
+call_from_tools_container="docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools"
 
 aerospike_conf_name=aerospike.conf
-$call_from_tools_container asconfig convert -f $aerospike_yaml_container_path -o ${bind_mount_dest_folder}/$aerospike_conf_name
-cat $aerospike_conf_name
+$call_from_tools_container asconfig convert -f $aerospike_yaml_container_path -o ${volume_dest_folder}/$aerospike_conf_name
 
 # Generate server private key and CSR
 # openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
@@ -76,11 +80,8 @@ cat $aerospike_conf_name
 # Just set max fd limit to make sure the server doesn't fail.
 # Somehow the container can have a lower soft/hard fd limit than the Docker daemon / host
 docker run --ulimit nofile=15000 -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
-    -v $(pwd)/ca.cer:/etc/ssl/certs/ca.cer \
-    -v $(pwd)/server.cer:/etc/ssl/certs/server.cer \
-    -v $(pwd)/server.pem:/etc/ssl/private/server.pem \
-    -v $(pwd)/$aerospike_conf_name:$bind_mount_dest_folder/$aerospike_conf_name \
-    $BASE_IMAGE --config-file $bind_mount_dest_folder/$aerospike_conf_name
+    -v $VOLUME_NAME:$volume_dest_folder \
+    $BASE_IMAGE --config-file $volume_dest_folder/$aerospike_conf_name
 
 if [[ "$SECURITY" == "1" ]]; then
     export SECURITY_FLAGS="-U admin -P admin"
