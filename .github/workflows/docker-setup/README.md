@@ -14,14 +14,13 @@ MUTUAL_TLS=1
 
 ## Note
 
-The CA certificate in this folder is a fake certificate used both by the client and server for connecting via TLS.
-
-The private key was generated along with this CA certificate, and was only used to sign the server certificate used in testing.
+The CA certificate in this folder is a fake certificate used both by the client and server for connecting via TLS. The
+private key was generated along with this CA certificate, and was only used to sign the server certificate used in testing.
 
 The server certificate and private key is also provided here, so the setup script doesn't have to regenerate it every
 time it gets run.
 
-The client certificate is also embedded here so the dev tests can reuse them when mutual authentication is enabled.
+The client certificate and private key is also embedded here so the dev tests can reuse them when mutual authentication is enabled.
 
 ## Example of how to run
 
