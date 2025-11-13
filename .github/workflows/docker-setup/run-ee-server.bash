@@ -25,7 +25,8 @@ export MSYS_NO_PATHCONV=1
 call_from_yq_container() {
     # We set the container's user to our own because aerospike.yaml only has write permissions for the owning user
     # The container's default user is different from the owner
-    docker run --rm --user $(id -u):$(id -g) -v ./$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    # pwd (absolute path) is required on Windows
+    docker run --rm --user $(id -u):$(id -g) -v $(pwd)/$aerospike_yaml_file_name:$aerospike_yaml_container_path mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 # del() operations are idempotent
@@ -60,7 +61,7 @@ else
 fi
 
 # We want to save our aerospike.conf in this directory.
-call_from_tools_container="docker run --rm -v ./:$bind_mount_dest_folder --network host aerospike/aerospike-tools"
+call_from_tools_container="docker run --rm -v $(pwd)/:$bind_mount_dest_folder --network host aerospike/aerospike-tools"
 
 aerospike_conf_name=aerospike.conf
 $call_from_tools_container asconfig convert -f $aerospike_yaml_container_path -o ${bind_mount_dest_folder}/$aerospike_conf_name
@@ -75,10 +76,10 @@ cat $aerospike_conf_name
 # Just set max fd limit to make sure the server doesn't fail.
 # Somehow the container can have a lower soft/hard fd limit than the Docker daemon / host
 docker run --ulimit nofile=15000 -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
-    -v ./ca.cer:/etc/ssl/certs/ca.cer \
-    -v ./server.cer:/etc/ssl/certs/server.cer \
-    -v ./server.pem:/etc/ssl/private/server.pem \
-    -v ./$aerospike_conf_name:$bind_mount_dest_folder/$aerospike_conf_name \
+    -v $(pwd)/ca.cer:/etc/ssl/certs/ca.cer \
+    -v $(pwd)/server.cer:/etc/ssl/certs/server.cer \
+    -v $(pwd)/server.pem:/etc/ssl/private/server.pem \
+    -v $(pwd)/$aerospike_conf_name:$bind_mount_dest_folder/$aerospike_conf_name \
     $BASE_IMAGE --config-file $bind_mount_dest_folder/$aerospike_conf_name
 
 if [[ "$SECURITY" == "1" ]]; then
