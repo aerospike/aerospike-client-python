@@ -265,6 +265,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
+    Py_XDECREF(py_ctx_dict);
     if (!ctx_in_use) {
         goto CLEANUP;
     }
@@ -278,18 +279,9 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     return py_obj;
 
 CLEANUP:
+
     if (py_obj == NULL) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", py_name);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        if (new_dict_in_use) {
-            Py_XDECREF(py_ctx_dict);
-        }
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
     return py_obj;
