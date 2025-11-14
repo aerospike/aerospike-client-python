@@ -30,3 +30,10 @@ STRONG_CONSISTENCY=1 ./run-ee-server.bash
 ```
 
 The script will return once the server is ready for testing.
+
+## How to teardown
+
+Run this script:
+```sh
+./teardown-ee-server.bash
+```
