@@ -23,10 +23,10 @@ aerospike_yaml_file_name=aerospike-dev.yaml
 ca_cert_file_name="ca.cer"
 server_cert_file_name="server.cer"
 
-volume_container_name=conf_volume
-docker run --name $volume_container_name --rm -v $VOLUME_NAME:$volume_dest_folder -d alpine tail -f /dev/null
-docker cp ./ $volume_container_name:$volume_dest_folder/
-docker stop $volume_container_name
+container_name_for_populating_volume=conf_volume
+docker run --name $container_name_for_populating_volume --rm -v $VOLUME_NAME:$volume_dest_folder -d alpine tail -f /dev/null
+docker cp ./ $container_name_for_populating_volume:/
+docker stop $container_name_for_populating_volume
 
 aerospike_yaml_container_path=${volume_dest_folder}/${aerospike_yaml_file_name}
 
