@@ -440,7 +440,8 @@ class BitAdd(_BaseExpr):
             bit_offset (int): Bit index of where to start operation.
             bit_size (int): Number of bits to be operated on.
             value (int): Integer value or expression for value to add.
-            action (aerospike.constant): Action taken if an overflow/underflow occurs. Action must be one of the following:
+            action (aerospike.constant): Action taken if an overflow/underflow occurs.
+                Action must be one of the following:
 
                 - :data:`aerospike.BIT_OVERFLOW_FAIL`
                 - :data:`aerospike.BIT_OVERFLOW_SATURATE`
@@ -497,7 +498,8 @@ class BitSubtract(_BaseExpr):
             bit_offset (int): Bit index of where to start operation.
             bit_size (int): Number of bits to be operated on.
             value (int): Integer value or expression for value to add.
-            action (aerospike.constant): Action taken if an overflow/underflow occurs. Action must be one of the following:
+            action (aerospike.constant): Action taken if an overflow/underflow occurs.
+                Action must be one of the following:
 
                 - :data:`aerospike.BIT_OVERFLOW_FAIL`
                 - :data:`aerospike.BIT_OVERFLOW_SATURATE`
