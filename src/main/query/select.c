@@ -50,7 +50,14 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    as_query_select_init(&self->query, nbins);
+    // Query object should still be safe to use if this fails
+    bool success = as_query_select_init(&self->query, nbins);
+    if (!success) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.select() cannot be called more than once on the "
+                        "same instance.");
+        goto CLEANUP;
+    }
 
     for (int i = 0; i < nbins; i++) {
         PyObject *py_bin = PyTuple_GetItem(args, i);

@@ -671,8 +671,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """

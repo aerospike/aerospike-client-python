@@ -87,6 +87,7 @@ class _ExprOp:  # TODO replace this with an enum
     DEF = 126
 
     _AS_EXP_CODE_AS_VAL = 128
+
     # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
@@ -112,11 +113,13 @@ class ReturnType:
     MAP_RETURN_INVERTED = 0x10000
 
 
+# These enum constants must match the values for C client's as_exp_type.
+# These are passed as arguments to ModifyByPath and SelectByPath expressions
 class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
@@ -167,7 +170,6 @@ class _BaseExpr(_AtomExpr):
 
     def compile(self) -> TypeExpression:
         expression = [self._get_op()]
-        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

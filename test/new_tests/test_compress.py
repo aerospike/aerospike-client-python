@@ -57,22 +57,19 @@ class TestCompress:
 
         policy = {"compress": True}
 
-        self.as_connection.put(key, rec, policy)
+        self.as_connection.put(key, rec, policy=policy)
         _, _, bins = self.as_connection.get(key, policy)
 
         assert bins["val"] == expected
 
     def test_batch_with_compress_policy(self):
-        """
-        Invoke get_many() with compression policy.
-        """
         policy = {"compress": True}
-        records = self.as_connection.get_many(self.keys, policy)
+        records = self.as_connection.batch_read(self.keys, policy=policy)
 
-        assert isinstance(records, list)
-        assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "float_value"])
-        assert records[5][2] == {"float_value": 4.3}
+        assert isinstance(records.batch_records, list)
+        assert len(records.batch_records) == 6
+        assert Counter([br.key[2] for br in records.batch_records]) == Counter([0, 1, 2, 3, 4, "float_value"])
+        assert records.batch_records[5].record[2] == {"float_value": 4.3}
 
     def test_operate_with_compress_policy(self):
         """
@@ -109,7 +106,7 @@ class TestCompress:
 
         policy = {"key": aerospike.POLICY_KEY_SEND, "compress": True}
 
-        self.as_connection.put(key, rec, policy)
+        self.as_connection.put(key, rec, policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 

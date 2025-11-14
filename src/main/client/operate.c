@@ -35,6 +35,7 @@
 #include "cdt_map_operations.h"
 #include "bit_operations.h"
 #include "hll_operations.h"
+#include "pythoncapi_compat.h"
 #include "expression_operations.h"
 
 #include <aerospike/as_double.h>
@@ -76,17 +77,7 @@ static inline bool isExprOp(int op);
 
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
-        PyObject *py_err = NULL;                                               \
-        error_to_pyobject(&err, &py_err);                                      \
-        PyObject *exception_type = raise_exception_old(&err);                  \
-        if (PyObject_HasAttrString(exception_type, "key")) {                   \
-            PyObject_SetAttrString(exception_type, "key", py_key);             \
-        }                                                                      \
-        if (PyObject_HasAttrString(exception_type, "bin")) {                   \
-            PyObject_SetAttrString(exception_type, "bin", py_bin);             \
-        }                                                                      \
-        PyErr_SetObject(exception_type, py_err);                               \
-        Py_DECREF(py_err);                                                     \
+        raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None); \
         return NULL;                                                           \
     }
 
@@ -104,26 +95,26 @@ static inline bool isExprOp(int op);
     }
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
-    if (pyobject_to_val(self, err, py_value, &put_val, static_pool,            \
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {                  \
+    if (as_val_new_from_pyobject(self, err, py_value, &put_val, static_pool,   \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
 #define CONVERT_KEY_TO_AS_VAL()                                                \
-    if (pyobject_to_val(self, err, py_key, &put_key, static_pool,              \
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {                  \
+    if (as_val_new_from_pyobject(self, err, py_key, &put_key, static_pool,     \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
-    if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use, static_pool,         \
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {                      \
+    if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
+                    static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
-    if (pyobject_to_val(self, err, py_range, &put_range, static_pool,          \
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {                  \
+    if (as_val_new_from_pyobject(self, err, py_range, &put_range, static_pool, \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
@@ -228,7 +219,7 @@ static inline bool isListOp(int op)
         op == OP_LIST_REMOVE_BY_VALUE_LIST ||
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL);
+        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE);
 }
 
 static inline bool isNewMapOp(int op)
@@ -273,6 +264,7 @@ bool opRequiresIndex(int op)
             op == OP_MAP_REMOVE_BY_INDEX_RANGE || op == OP_LIST_INCREMENT);
 }
 
+// TODO: Can be optimized with bitwise operations?
 bool opRequiresValue(int op)
 {
     return (op != AS_OPERATOR_READ && op != AS_OPERATOR_TOUCH &&
@@ -284,7 +276,8 @@ bool opRequiresValue(int op)
             op != OP_MAP_REMOVE_BY_RANK && op != OP_MAP_GET_BY_KEY &&
             op != OP_MAP_GET_BY_INDEX && op != OP_MAP_GET_BY_KEY_RANGE &&
             op != OP_MAP_GET_BY_RANK && op != AS_OPERATOR_DELETE &&
-            op != OP_MAP_CREATE);
+            op != OP_MAP_CREATE && op != OP_LIST_CREATE &&
+            op != AS_OPERATOR_CDT_READ && op != AS_OPERATOR_CDT_MODIFY);
 }
 
 bool opRequiresRange(int op)
@@ -316,9 +309,10 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
-                 as_vector *unicodeStrVector, as_static_pool *static_pool,
-                 as_operations *ops, long *op, long *ret_type)
+as_status add_op(AerospikeClient *self, as_error *err,
+                 PyObject *py_operation_dict, as_vector *unicodeStrVector,
+                 as_static_pool *static_pool, as_operations *ops, long *op,
+                 long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -337,6 +331,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     PyObject *py_ustr = NULL;
     PyObject *py_ustr1 = NULL;
     PyObject *py_bin = NULL;
+    as_exp *mod_exp = NULL;
 
     as_map_policy map_policy;
     as_map_policy_init(&map_policy);
@@ -354,39 +349,43 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     Py_ssize_t pos = 0;
 
-    if (get_operation(err, py_val, &operation) != AEROSPIKE_OK) {
+    if (get_operation(err, py_operation_dict, &operation) != AEROSPIKE_OK) {
         return err->code;
     }
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
     if (isListOp(operation)) {
         return add_new_list_op(
-            self, err, py_val, unicodeStrVector, static_pool, ops, operation,
-            ret_type,
+            self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
+            operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
     }
 
     if (isNewMapOp(operation)) {
-        return add_new_map_op(self, err, py_val, unicodeStrVector, static_pool,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector,
+                              static_pool, ops, operation, ret_type,
+                              SERIALIZER_PYTHON);
     }
 
     if (isBitOp(operation)) {
-        return add_new_bit_op(self, err, py_val, unicodeStrVector, static_pool,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+        return add_new_bit_op(self, err, py_operation_dict, unicodeStrVector,
+                              static_pool, ops, operation, ret_type,
+                              SERIALIZER_PYTHON);
     }
 
     if (isHllOp(operation)) {
-        return add_new_hll_op(self, err, py_val, unicodeStrVector, static_pool,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+        return add_new_hll_op(self, err, py_operation_dict, unicodeStrVector,
+                              static_pool, ops, operation, ret_type,
+                              SERIALIZER_PYTHON);
     }
 
     if (isExprOp(operation)) {
-        return add_new_expr_op(self, err, py_val, unicodeStrVector, ops,
-                               operation, SERIALIZER_PYTHON);
+        return add_new_expr_op(self, err, py_operation_dict, unicodeStrVector,
+                               ops, operation, SERIALIZER_PYTHON);
     }
 
-    while (PyDict_Next(py_val, &pos, &key_op, &value)) {
+    // TODO: Use set instead of this?
+    while (PyDict_Next(py_operation_dict, &pos, &key_op, &value)) {
         if (!PyUnicode_Check(key_op)) {
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "An operation key must be a string.");
@@ -429,6 +428,12 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             }
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
+            }
+            else if (strcmp(name, _CDT_APPLY_MOD_EXP_KEY) == 0) {
+                continue;
+            }
+            else if (strcmp(name, _CDT_FLAGS_KEY) == 0) {
+                continue;
             }
             else {
                 as_error_update(
@@ -484,41 +489,45 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
     }
     else if (opRequiresValue(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Value should be given");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
+        goto CLEANUP;
     }
 
     if (!py_key && opRequiresKey(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation requires key parameter");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation requires key parameter");
+        goto CLEANUP;
     }
 
     if (py_map_policy) {
-        if (pyobject_to_map_policy(err, py_map_policy, &map_policy) !=
-            AEROSPIKE_OK) {
+        if (pyobject_to_map_policy(err, py_map_policy, &map_policy,
+                                   self->validate_keys) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
     else if (opRequiresMapPolicy(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation requires map_policy parameter");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation requires map_policy parameter");
+        goto CLEANUP;
     }
 
     if (!py_range && opRequiresRange(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Range should be given");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Range should be given");
+        goto CLEANUP;
     }
 
     if (py_return_type) {
         if (!PyLong_Check(py_return_type)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Return type should be an integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Return type should be an integer");
+            goto CLEANUP;
         }
         return_type = PyLong_AsLong(py_return_type);
     }
 
     /* Add the inverted flag to the return type if it's present */
-    if (invertIfSpecified(err, py_val, &return_type) != AEROSPIKE_OK) {
+    if (invertIfSpecified(err, py_operation_dict, &return_type) !=
+        AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -530,23 +539,82 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     if (py_index) {
         if (self->strict_types && !opRequiresIndex(operation)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation does not need an index value");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Operation does not need an index value");
+            goto CLEANUP;
         }
         if (PyLong_Check(py_index)) {
             index = PyLong_AsLong(py_index);
         }
         else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Index should be an integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Index should be an integer");
+            goto CLEANUP;
         }
     }
     else if (opRequiresIndex(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation needs an index value");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation needs an index value");
+        goto CLEANUP;
     }
 
+    // For backwards compatibility, we set this to true
+    bool operation_succeeded = true;
     switch (operation) {
+    case AS_OPERATOR_CDT_READ:
+    case AS_OPERATOR_CDT_MODIFY: {
+        PyObject *py_flags = NULL;
+        int retval = PyDict_GetItemStringRef(py_operation_dict, _CDT_FLAGS_KEY,
+                                             &py_flags);
+        if (retval == 0) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "CDT operation is missing a flags argument");
+            goto CLEANUP;
+        }
+        else if (retval == -1) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Internal error");
+            goto CLEANUP;
+        }
+
+        uint32_t flags = convert_pyobject_to_uint32_t(py_flags);
+        Py_DECREF(py_flags);
+        if (PyErr_Occurred()) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "CDT operation's flags argument is invalid");
+            goto CLEANUP;
+        }
+
+        if (operation == AS_OPERATOR_CDT_READ) {
+            operation_succeeded =
+                as_operations_select_by_path(ops, bin, ctx_ref, flags);
+        }
+        else if (operation == AS_OPERATOR_CDT_MODIFY) {
+            PyObject *py_expr = NULL;
+            int retval = PyDict_GetItemStringRef(
+                py_operation_dict, _CDT_APPLY_MOD_EXP_KEY, &py_expr);
+            if (retval == 0) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "CDT operation is missing a flags argument");
+                goto CLEANUP;
+            }
+            else if (retval == -1) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "Internal error");
+                goto CLEANUP;
+            }
+
+            as_status status =
+                as_exp_new_from_pyobject(self, py_expr, &mod_exp, err, false);
+            Py_DECREF(py_expr);
+            if (status != AEROSPIKE_OK) {
+                goto CLEANUP;
+            }
+
+            operation_succeeded =
+                as_operations_modify_by_path(ops, bin, ctx_ref, mod_exp, flags);
+        }
+
+        break;
+    }
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
@@ -618,8 +686,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             offset = PyLong_AsLong(py_value);
             if (offset == -1 && PyErr_Occurred() && self->strict_types) {
                 if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                           "integer value exceeds sys.maxsize");
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "integer value exceeds sys.maxsize");
+                    goto CLEANUP;
                 }
             }
             as_operations_add_incr(ops, bin, offset);
@@ -809,7 +878,15 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
     }
 
+    if (operation_succeeded == false) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to add an operation");
+    }
+
 CLEANUP:
+    if (mod_exp) {
+        as_exp_destroy(mod_exp);
+    }
     if (ctx_in_use) {
         as_cdt_ctx_destroy(&ctx);
     }
@@ -868,7 +945,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     memset(&static_pool, 0, sizeof(static_pool));
     CHECK_CONNECTED(err);
 
-    if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+    if (check_and_set_meta(py_meta, &ops.ttl, &ops.gen, err,
+                           self->validate_keys) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -1039,7 +1117,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         }
     }
 
-    if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+    if (check_and_set_meta(py_meta, &ops.ttl, &ops.gen, err,
+                           self->validate_keys) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -1203,14 +1282,7 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return py_result;

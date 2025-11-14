@@ -327,8 +327,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 "test1", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
             )
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_neg_listindex_with_incorrect_set(self):
         """

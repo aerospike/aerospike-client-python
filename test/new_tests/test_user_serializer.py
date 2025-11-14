@@ -49,15 +49,7 @@ class TestUserSerializer(object):
         Setup class
         """
         cls.client = TestBaseClass.get_new_connection()
-
-        TestUserSerializer.skip_old_server = True
-        versioninfo = TestUserSerializer.client.info_all("version")
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[value.find("build") + 6 : value.find("\n")].split(".")
-                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
-                        TestUserSerializer.skip_old_server = False
+        TestUserSerializer.skip_old_server = False
 
     def teardown_class(cls):
         TestUserSerializer.client.close()

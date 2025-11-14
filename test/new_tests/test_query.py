@@ -11,6 +11,9 @@ from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
 
+from aerospike_helpers.expressions.arithmetic import Add
+from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -58,6 +61,7 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
 class TestQuery(TestBaseClass):
+    # TODO: This fixture should be split up to speed up this test class
     def setup_class(cls):
         client = TestBaseClass.get_new_connection()
 
@@ -256,7 +260,11 @@ class TestQuery(TestBaseClass):
         """
         for i in range(5):
             key = ("test", "demo", i)
+            # 5x5 box, then 10x10 box, ... until 25x25 box
+            box_coordinates = [[0, 0], [5 * (i + 1), 0], [5 * (i + 1), 5 * (i + 1)], [0, 5 * (i + 1)], [0, 0]]
             rec = {
+                "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
+                "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
                 "numeric_list": [i, i + 1, i + 2],
@@ -403,6 +411,12 @@ class TestQuery(TestBaseClass):
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "predicate is invalid."
+
+    def test_query_where_called_multiple_times(self):
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals("test_age", 165))
+        with pytest.raises(e.ClientError):
+            query.where(p.equals("test_age", 150))
 
     def test_query_with_policy(self):
         """
@@ -916,6 +930,12 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_query_select_multiple_times(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.select("a")
+        with pytest.raises(e.ClientError):
+            query.select("a")
+
     def test_query_with_argument_to_where_is_empty_string(self):
 
         query = self.as_connection.query("test", "demo")
@@ -1051,6 +1071,21 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
+    def test_query_with_list_cdt_ctx_and_invalid_bin(self):
+        """
+        Make sure that ctx is being cleaned up properly
+        """
+        query = self.as_connection.query("test", "demo")
+        # Invalid bin
+        with pytest.raises(e.ParamError):
+            query.where(p.range(5, aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+
+    def test_query_with_invalid_predicate_type(self):
+        query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            # 2 is outside valid values for predicate types
+            query.where((2, aerospike.INDEX_BLOB, "bin", bytearray(b'123')))
+
     def test_query_with_map_cdt_ctx(self):
         """
         Invoke query() with cdt_ctx and correct arguments
@@ -1138,3 +1173,163 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 1
+
+    def test_query_with_none_bin_and_where(self):
+        query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where(p.equals(None, 1))
+
+    @pytest.mark.parametrize(
+        "duration",
+        [
+            aerospike.QUERY_DURATION_LONG,
+            aerospike.QUERY_DURATION_SHORT,
+            aerospike.QUERY_DURATION_LONG_RELAX_AP
+        ]
+    )
+    def test_query_expected_duration(self, duration: int):
+        if duration == aerospike.QUERY_DURATION_LONG_RELAX_AP and TestBaseClass.strong_consistency_enabled:
+            pytest.skip("Using aerospike.QUERY_DURATION_LONG_RELAX_AP will fail if server is in SC mode")
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": duration
+        }
+        query.results(policy=policy)
+
+    def test_query_invalid_expected_duration(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": "t"
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results(policy=policy)
+        assert excinfo.value.msg == "expected_duration is invalid"
+
+    def test_query_with_invalid_expr(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where_with_expr(4, p.equals("test_age", 165))
+
+    INT_BIN_EXPR = Add(IntBin("test_age"), IntBin("no"))
+    GEO_POLYGON_BIN_EXPR = GeoBin("geo_polygon")
+    GEO_POINT_BIN_EXPR = GeoBin("geo_point")
+
+    INDEX_EXPR_NAME = "index_expr"
+
+    # Should contain each records' geo_point bin geographically
+    # Note: we have to convert meters so that it covers the latitude and longitude (they are in different units)
+    CIRCLE_RADIUS_METERS = 629000
+    GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], CIRCLE_RADIUS_METERS]})
+
+    LIST_EXPR = ListBin("numeric_list")
+    BLOB_EXPR = BlobBin("blob")
+
+    @pytest.fixture
+    def index_expr_cleanup(self):
+        yield
+        self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
+
+    @pytest.mark.parametrize(
+        "expr, index_type, index_datatype, predicate, expected_rec_count",
+        [
+            # Test every predicate to make sure it accepts a bin name of None
+
+            # Only the first record
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
+            # The first two records
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
+            (
+                GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_contains_geojson_point(
+                    None,
+                    # Only the 25x25 box should contain this point
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]}).dumps()
+                ),
+                1
+            ),
+            # Same test as above, but with a different predicate
+            (
+                GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_geojson_region(None, GEOJSON_CIRCLE.dumps()),
+                # The circle should cover all 5 points
+                5
+            ),
+            # Same test as above but with a different pred
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_radius(None, 0, 0, CIRCLE_RADIUS_METERS),
+                5
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_NUMERIC,
+                p.contains(None, aerospike.INDEX_TYPE_LIST, 0),
+                # Only the first record
+                1
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_NUMERIC,
+                p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
+                # Only the first two records
+                2
+            ),
+            # Test blobs with where_with_*() calls for code coverage
+            (
+                BLOB_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_BLOB,
+                p.equals(None, (0).to_bytes(length=1, byteorder='big')),
+                # Only the first record
+                1
+            )
+        ]
+    )
+    @pytest.mark.parametrize("use_index_name", [False, True])
+    def test_query_with_expr_or_index_name(
+        self,
+        expr,
+        index_type,
+        index_datatype,
+        predicate,
+        expected_rec_count,
+        index_expr_cleanup,
+        use_index_name
+    ):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Querying with expressions isn't supported yet")
+
+        expr = expr.compile()
+        self.as_connection.index_expr_create(ns="test", set="demo", index_type=index_type,
+                                             index_datatype=index_datatype,
+                                             expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
+
+        # Verify where_*() methods return a Query object as well
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name:
+            query = query.where_with_index_name(self.INDEX_EXPR_NAME, predicate)
+        else:
+            query = query.where_with_expr(expr, predicate)
+
+        recs = query.results()
+        assert len(recs) == expected_rec_count
+
+        # We should also be able to query using the base64 encoded string for an expression
+        query2: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name is False:
+            expr_base64_encoded = self.as_connection.get_expression_base64(expr)
+            query2 = query2.where_with_expr(expr_base64_encoded, predicate)
+            recs = query2.results()
+            assert len(recs) == expected_rec_count

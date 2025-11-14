@@ -43,6 +43,8 @@ from aerospike_helpers.expressions import (
 )
 
 import aerospike
+from . import as_errors
+from contextlib import nullcontext
 
 # Constants
 _NUM_RECORDS = 9
@@ -87,10 +89,11 @@ def add_ctx_op(ctx_type, value):
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -333,13 +336,14 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx, begin, end, return_type, check, expected",
+        "ctx, begin, end, return_type, check, expected_context",
         [
-            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
-            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest),
+            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], pytest.raises(e.ParamError)),
+            # Invalid request error is expected, but the Python client returns it via BatchRecords.result
+            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], nullcontext()),
         ],
     )
-    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected_context):
         """
         Invoke ListGetByValue() with expected failures.
         """
@@ -350,10 +354,11 @@ class TestExpressions(TestBaseClass):
             Eq(ListGetByValueRange(ctx, return_type, begin, end, "list_bin"), check[2]),
         )
 
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        with expected_context:
+            brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
+            if type(expected_context) == nullcontext:
+                assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
@@ -402,11 +407,11 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx_types, ctx_indexes, value, return_type, check, expected",
+        "ctx_types, ctx_indexes, value, return_type, check",
         # Compared values are not the same type
-        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a", e.InvalidRequest)],
+        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a")],
     )
-    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check):
         """
         Invoke ListGetByValueList() with expected failures.
         """
@@ -419,10 +424,9 @@ class TestExpressions(TestBaseClass):
             ctx = None
 
         expr = Eq(ListGetByValueList(ctx, return_type, value, "list_bin"), check)
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
+        assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, rank, return_type, check, expected",

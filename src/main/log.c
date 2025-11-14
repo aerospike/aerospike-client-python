@@ -28,6 +28,10 @@
 static AerospikeLogData user_callback = {
     .callback = NULL, .level = LOG_LEVEL_ERROR, .logToConsole = true};
 
+#ifdef _WIN32
+    #define __sync_fetch_and_add InterlockedExchangeAdd64
+#endif
+
 /*
  * Declare's log level constants.
  */

@@ -1,75 +1,170 @@
-name: 'Run EE Server'
-description: 'Run EE server'
+name: 'Run EE Server in a Docker container'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+# NOTE: do not share this server container with others
+# since it's using the default admin / admin credentials
 inputs:
-  use-server-rc:
-    required: true
-    default: false
-  server-tag:
-    required: true
-    default: 'latest'
+  # All inputs in composite actions are strings
+  registry-name:
+    description: Registry name
+    required: false
+    default: docker.io
+  registry-username:
+    description: Required for using release candidates
+    required: false
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
-  docker-hub-username:
+  registry-password:
+    description: Required for using release candidates
     required: false
-    type: string
-  docker-hub-password:
+  image-name:
     required: false
-    type: string
+    description: aerospike/aerospike-server-enterprise
+    default: 'aerospike/aerospike-server-enterprise'
+  server-tag:
+    required: true
+    description: Specify Docker tag
+    default: 'latest'
+  where-is-client-connecting-from:
+    required: false
+    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
+    default: 'docker-host'
+  docker-run-extra-flags:
+    required: false
+    description: Used to disable server features
+    default: ''
 
 runs:
   using: "composite"
   steps:
-  - name: Install crudini to manipulate config.conf
-    run: python3 -m pip install crudini==0.9.4
+  # Start up server
+
+  - name: Log into registry to get non-public server RCs
+    # We can still pull public images while logged in, so just do this all the time to make things simple
+    uses: docker/login-action@v3
+    with:
+      registry: ${{ inputs.registry-name }}
+      username: ${{ inputs.registry-username }}
+      password: ${{ inputs.registry-password }}
+
+  - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - name: Add enterprise edition config to config.conf
+  - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
+    shell: bash
+
+  # QE images are not multi-platform and only support a single platform.
+  - name: Allow building images from different platforms other than the native one
+    uses: docker/setup-qemu-action@v3
+
+  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
+  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+    uses: docker/setup-buildx-action@v3
+
+  - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
+    shell: bash
+
+  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+    shell: bash
+
+  - name: Build Aerospike server Docker image for testing
+    # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
+    # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
+    uses: docker/build-push-action@v6
+    with:
+      # Don't want to use default Git context or else it will clone the whole Python client repo again
+      context: .github/workflows/docker-build-context
+      build-args: |
+        SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
+        TLS_PORT=${{ env.TLS_PORT }}
+      tags: ${{ env.NEW_IMAGE_FULL_NAME }}
+      # setup-buildx-action configures Docker to use the docker-container build driver
+      # This driver doesn't publish an image locally by default
+      # so we have to manually enable it
+      load: true
+
+  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+    shell: bash
+
+  # Confirmed via logs that input string will not be quoted in bash
+  - run: docker run -d ${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
+    shell: bash
+
+  - name: 'macOS: install timeout command'
+    if: ${{ runner.os == 'macOS' }}
+    run: brew install coreutils
+    shell: bash
+
+  - name: Wait for container to be healthy
     run: |
-      python3 -m crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      python3 -m crudini --set config.conf enterprise-edition user superuser
-      python3 -m crudini --set config.conf enterprise-edition password superuser
+      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
+    shell: bash
+
+  # For debugging
+  - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
+    shell: bash
+
+  # Configure tests
+
+  - name: Install crudini to manipulate config.conf
+    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
     working-directory: test
     shell: bash
 
-  - name: Create config folder to store configs in
-    run: mkdir configs
+  - name: Disable community edition connection
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
     shell: bash
 
-  - name: Use release server
-    if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
-  - name: Use release candidate server
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Log into Docker Hub to get server RC
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
-    shell: bash
-
-  - name: Get default aerospike.conf from Docker server EE container
+  - name: Set credentials in config file
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --set config.conf tls enable true
+      # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-build-context/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-build-context/client.cer
+
+    working-directory: test
     shell: bash
 
-  - name: Enable security features using aerospike.conf
-    # Security stanza
-    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
-    working-directory: ./configs
+  - name: Set IP address to localhost
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    working-directory: test
     shell: bash
 
-  - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+  - name: Set IP address to remote machine running the Docker daemon
+    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
+    run: |
+      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
+      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
+  - name: Get cluster name
+    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Set EE server's IP address
+    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
+    working-directory: test
     shell: bash
