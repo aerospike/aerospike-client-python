@@ -35,7 +35,8 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     as_status status = AEROSPIKE_OK;
 
     pyobject_to_policy_info(err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
 
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect Policy");
@@ -45,8 +46,6 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     status =
         aerospike_truncate(self->as, err, info_policy_p, namespace, set, nanos);
     if (status != AEROSPIKE_OK) {
-        // The truncate operation failed. Update the err->code and return
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Truncate operation failed");
         return NULL;
     }
 
@@ -80,6 +79,16 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
                                     &py_ns, &py_set, &py_nanos,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
     }
 
     // Start conversion of the namespace parameter

@@ -387,3 +387,10 @@ class TestAggregate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
+
+    # We can't use the inspect library to check the keyword args of a method defined using the C-API
+    # It doesn't work, so just check that passing in an invalid arg fails
+    def test_signature_invalid_arg(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(TypeError):
+            query.apply("stream_example", "count", policy=None)

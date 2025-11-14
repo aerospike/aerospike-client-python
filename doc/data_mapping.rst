@@ -10,7 +10,7 @@ Default Behavior
 ----------------
 
 By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
-`types <https://aerospike.com/docs/server/guide/data-types/overview>`_. \
+`types <https://aerospike.com/docs/develop/client/python/data-types/>`_. \
 When an unsupported type is encountered by the module:
 
 1. When sending data to the server, it does not serialize the type and will throw an error.
@@ -62,20 +62,22 @@ The following table shows which Python types map directly to Aerospike server ty
   :class:`aerospike_helpers.HyperLogLog`   `HyperLogLog`_
  ======================================== =========================
 
+For server 7.1 and higher, map keys can only be of type string, bytes, and integer.
+
 .. note::
 
     :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
     However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
 
-It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
+It is possible to nest these data types. For example a list may contain a dictionary, or a dictionary may contain a list
 as a value.
 
-.. _integer: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#integer
-.. _string: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#string
-.. _double: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#double
-.. _map: https://aerospike.com/docs/server/guide/data-types/cdt-map
-.. _key ordered map: https://aerospike.com/docs/server/guide/data-types/cdt-map
-.. _list: https://aerospike.com/docs/server/guide/data-types/cdt-list
-.. _blob: https://aerospike.com/docs/server/guide/data-types/blob
-.. _GeoJSON: https://aerospike.com/docs/server/guide/data-types/geospatial
-.. _HyperLogLog: https://aerospike.com/docs/server/guide/data-types/hll
+.. _integer: https://aerospike.com/docs/develop/data-types/scalar/#integer
+.. _string: https://aerospike.com/docs/develop/data-types/scalar/#string
+.. _double: https://aerospike.com/docs/develop/data-types/scalar/#double
+.. _map: https://aerospike.com/docs/develop/data-types/collections/map/
+.. _key ordered map: https://aerospike.com/docs/develop/data-types/collections/ordering/#map
+.. _list: https://aerospike.com/docs/develop/data-types/collections/list/
+.. _blob: https://aerospike.com/docs/develop/data-types/blob
+.. _GeoJSON: https://aerospike.com/docs/develop/data-types/geospatial/
+.. _HyperLogLog: https://aerospike.com/docs/develop/data-types/hll

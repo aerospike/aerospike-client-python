@@ -255,8 +255,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
  * @param function_p            The name of the function to be applied
  *                              to the record.
  * @param py_args               An array of arguments for the UDF.
- * @py_policy                   The optional policy.
- * @py_options                  The optional scan options to set.
+ * @param py_policy                   The optional policy that takes in both info and write policy options.
+ * @param py_options                  The optional scan options to set.
  */
 static PyObject *AerospikeClient_QueryApply_Invoke(
     AerospikeClient *self, char *namespace_p, PyObject *py_set,
@@ -266,8 +266,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_list *arglist = NULL;
     as_policy_write write_policy;
     as_policy_write *write_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
     as_error err;
     as_query query;
     uint64_t query_id = 0;
@@ -331,7 +329,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_write(
             self, &err, py_policy, &write_policy, &write_policy_p,
-            &self->as->config.policies.write, &exp_list, &exp_list_p);
+            &self->as->config.policies.write, &exp_list, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -376,23 +374,40 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         }
 
         PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
-        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
-
-        if (!py_op || !py_op_data) {
+        if (!py_op) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to get predicate elements");
             goto CLEANUP;
         }
-        if (!PyLong_Check(py_op_data)) {
+
+        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
+        if (!py_op_data) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to get predicate elements");
+            goto CLEANUP;
+        }
+        else if (!PyLong_Check(py_op_data)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Predicate");
             goto CLEANUP;
         }
 
-        as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
+        long op = PyLong_AsLong(py_op);
+        if (op == -1 && PyErr_Occurred()) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "unknown predicate type");
+            goto CLEANUP;
+        }
+
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
+        if (op == -1 && PyErr_Occurred()) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "unknown index data type");
+            goto CLEANUP;
+        }
+
         rc = query_where_add(
-            &query_ptr, op, op_data,
+            &query_ptr, (as_predicate_type)op, op_data,
             size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
             size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
             size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
@@ -421,14 +436,19 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
+            as_policy_info info_policy;
+            as_policy_info *info_policy_p = NULL;
+
             if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
+                pyobject_to_policy_info(
+                    &err, py_policy, &info_policy, &info_policy_p,
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_WRITE);
                 if (err.code != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
             }
+
             Py_BEGIN_ALLOW_THREADS
             aerospike_query_wait(self->as, &err, info_policy_p, &query,
                                  query_id, 0);
@@ -469,7 +489,7 @@ CLEANUP:
         return NULL;
     }
 
-    return PyLong_FromLong(query_id);
+    return PyLong_FromUnsignedLongLong(query_id);
 }
 
 /**
@@ -566,7 +586,8 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
 
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

@@ -27,7 +27,7 @@
 #include "query.h"
 #include "policy.h"
 
-bool Illegal_UDF_Args_Check(PyObject *py_args);
+extern bool Illegal_UDF_Args_Check(PyObject *py_args);
 
 AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                                      PyObject *kwds)
@@ -37,16 +37,14 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     PyObject *py_module = NULL;
     PyObject *py_function = NULL;
     PyObject *py_args = NULL;
-    PyObject *py_policy = NULL;
 
     PyObject *py_umodule = NULL;
     PyObject *py_ufunction = NULL;
     // Python function keyword arguments
-    static char *kwlist[] = {"module", "function", "arguments", "policy", NULL};
+    static char *kwlist[] = {"module", "function", "arguments", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
-                                     &py_module, &py_function, &py_args,
-                                     &py_policy)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:apply", kwlist,
+                                     &py_module, &py_function, &py_args)) {
         return NULL;
     }
 
@@ -120,8 +118,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             for (int i = 0; i < size; i++) {
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
-                pyobject_to_val(self->client, &err, py_val, &val, &static_pool,
-                                SERIALIZER_PYTHON);
+                as_val_new_from_pyobject(self->client, &err, py_val, &val,
+                                         &static_pool, SERIALIZER_PYTHON);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);
@@ -155,58 +153,11 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", py_function);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, py_module, py_function,
+                             Py_None);
         return NULL;
     }
 
     Py_INCREF(self);
     return self;
-}
-
-bool Illegal_UDF_Args_Check(PyObject *py_args)
-{
-    Py_ssize_t size = PyList_Size(py_args);
-    PyObject *py_args_copy =
-        PyList_GetSlice(py_args, (Py_ssize_t)0, (Py_ssize_t)size);
-    for (int i = 0; i < size; i++) {
-        PyObject *py_val = PyList_GetItem(py_args_copy, (Py_ssize_t)i);
-        if (PyList_Check(py_val)) {
-            Py_ssize_t nested_size = PyList_Size(py_val);
-            for (int j = 0; j < nested_size; j++, size++) {
-                PyList_Append(py_args_copy,
-                              PyList_GetItem(py_val, (Py_ssize_t)j));
-            }
-        }
-        else if (PyDict_Check(py_val)) {
-            PyObject *dict_values = PyDict_Values(py_val);
-            Py_ssize_t nested_size = PyList_Size(dict_values);
-            for (int j = 0; j < nested_size; j++, size++) {
-                PyList_Append(py_args_copy,
-                              PyList_GetItem(dict_values, (Py_ssize_t)j));
-            }
-            Py_DECREF(dict_values);
-        }
-        else if (!(PyLong_Check(py_val) || PyFloat_Check(py_val) ||
-                   PyBool_Check(py_val) || PyUnicode_Check(py_val) ||
-                   !strcmp(py_val->ob_type->tp_name, "aerospike.Geospatial") ||
-                   PyByteArray_Check(py_val) || (Py_None == py_val) ||
-                   (!strcmp(py_val->ob_type->tp_name, "aerospike.null")) ||
-                   AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME) ||
-                   AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME) ||
-                   PyBytes_Check(py_val))) {
-            return true;
-        }
-    }
-    Py_DECREF(py_args_copy);
-    return false;
 }

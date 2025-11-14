@@ -219,9 +219,10 @@ static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 static PyTypeObject AerospikeGeospatial_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Geospatial", // tp_name
-    sizeof(AerospikeGeospatial),                           // tp_basicsize
-    0,                                                     // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Geospatial"), // tp_name
+    sizeof(AerospikeGeospatial),                 // tp_basicsize
+    0,                                           // tp_itemsize
     (destructor)AerospikeGeospatial_Type_Dealloc,
     // tp_dealloc
     0,                             // tp_print

@@ -17,7 +17,7 @@
 Helper functions to create bit operation dictionary arguments for:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
     .. note:: Bitwise operations require server version >= 4.6.0
 
@@ -135,7 +135,7 @@ Example::
 
     client.close()
 
-.. seealso:: `Bits (Data Types) <https://docs.aerospike.com/server/guide/data-types/blob#bitwise-operations>`_.
+.. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
 
@@ -231,6 +231,32 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
         VALUE_BYTE_SIZE_KEY: value_byte_size,
+        VALUE_KEY: value,
+    }
+
+
+def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, policy: dict = None):
+    """Creates a bit_set_int_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+
+    Set the value on a bitmap starting at bit_offset for bit_size in a record on the Aerospike Server.
+
+    Args:
+        bin_name (str): The name of the bin containing the blob value.
+        bit_offset (int): The offset where the bits will be set.
+        bit_size (int): How many bits of value to write. (maximum of 64 bits)
+        value (int): The signed 64-bit integer value to be set. This integer is applied as big endian.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    return {
+        OP_KEY: aerospike.OP_BIT_SET_INT,
+        BIN_KEY: bin_name,
+        POLICY_KEY: policy,
+        BIT_OFFSET_KEY: bit_offset,
+        BIT_SIZE_KEY: bit_size,
         VALUE_KEY: value,
     }
 

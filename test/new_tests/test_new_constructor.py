@@ -6,8 +6,14 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
+from contextlib import nullcontext
+import time
+import glob
+import re
+import os
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -109,9 +115,17 @@ def test_neg_setting_rack_ids(rack_ids):
         aerospike.client(config)
 
 
-def test_setting_use_services_alternate():
+@pytest.mark.parametrize(
+    "setting",
+    [
+        "use_services_alternate",
+        "force_single_node",
+        "fail_if_not_connected"
+     ]
+)
+def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config["use_services_alternate"] = True
+    config[setting] = True
     client = aerospike.client(config)
     assert client is not None
 
@@ -200,11 +214,118 @@ def test_setting_batch_remove_gen_neg_value():
 
 def test_setting_batch_policies():
     config = copy.deepcopy(gconfig)
-    policies = ["batch_remove", "batch_apply", "batch_write", "batch_parent_write"]
+    policies = ["batch_remove", "batch_apply", "batch_write", "batch_parent_write", "txn_verify", "txn_roll"]
     for policy in policies:
         config["policies"][policy] = {}
     aerospike.client(config)
 
+
+def test_setting_metrics_policy():
+    config = copy.deepcopy(gconfig)
+    BUCKET_COUNT = 3
+    METRICS_LOG_FILES = "./metrics-*.log"
+
+    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
+    client = aerospike.client(config)
+    try:
+        client.enable_metrics()
+        time.sleep(2)
+        client.disable_metrics()
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Second line has data
+                f.readline()
+                data = f.readline()
+            regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
+            buckets = regex.group(0)
+            # <bucket>,<bucket>,...
+            bucket_count = len(buckets.split(','))
+            assert bucket_count == BUCKET_COUNT
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+    finally:
+        client.close()
+
+
+@pytest.mark.parametrize(
+    "policy, expected_exc_class",
+    [
+        # Common error is to leave a comma at the end
+        # MetricsPolicy(),
+        (tuple([MetricsPolicy()]), e.ParamError),
+        (MetricsPolicy(report_size_limit=2**64), e.ClientError)
+    ]
+)
+def test_setting_invalid_metrics_policy(policy, expected_exc_class):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["metrics"] = policy
+    with pytest.raises(expected_exc_class) as excinfo:
+        aerospike.client(config)
+    if expected_exc_class == e.ParamError:
+        assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
+            "a tuple was received instead"
+
+
+def test_query_invalid_expected_duration():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["query"]["expected_duration"] = "1"
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
+
+# We want to make sure that these options are allowed when config["validate_keys"] is True
+# Some of these options may not be documented, but they are allowed in the code and customers may be using them
+def test_config_level_misc_options():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["socket_timeout"] = 1
+    config["policies"]["total_timeout"] = 1
+    config["policies"]["max_retries"] = 1
+    config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
+    config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
+    config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
+    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
+    config["policies"]["max_threads"] = 16
+    config["policies"]["thread_pool_size"] = 16
+    config["thread_pool_size"] = 16
+    config["max_threads"] = 16
+    config["max_conns_per_node"] = 16
+    config["connect_timeout"] = 16
+    config["use_shared_connection"] = False
+    config["compression_threshold"] = 50
+    config["cluster_name"] = "test"
+    config["max_socket_idle"] = 20
+    config["fail_if_not_connected"] = True
+    if "shm" not in config:
+        config["shm"] = {}
+    config["shm"] = {}
+    config["shm"]["max_namespaces"] = 8
+    config["shm"]["max_nodes"] = 3
+    config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["crl_check"] = True
+    config["tls"]["crl_check_all"] = True
+    config["tls"]["log_session_info"] = True
+    config["tls"]["for_login_only"] = True
+    config["tls"]["cafile"] = "./dummy"
+    config["tls"]["capath"] = "./dummy"
+    config["tls"]["protocols"] = "blaah"
+    config["tls"]["cipher_suite"] = "aes_256"
+    config["tls"]["cert_blacklist"] = "aes_256"
+    config["tls"]["keyfile"] = "aes_256"
+    config["tls"]["certfile"] = "aes_256"
+    config["tls"]["keyfile_pw"] = "aes_256"
+    config["validate_keys"] = True
+
+    # We don't care if the client connects or not
+    # We just make sure that the above options are allowed as dict keys
+    try:
+        aerospike.client(config)
+    except:
+        pass
+
+KEY = ("test", "demo", 0)
 
 class TestConfigTTL:
     NEW_TTL = 9000
@@ -216,7 +337,7 @@ class TestConfigTTL:
             "ttl": self.NEW_TTL
         }
         self.client = aerospike.client(config)
-        self.key = ("test", "demo", 0)
+        self.client.put(KEY, {"a": "a", "b": "b"})
 
         if "apply" in policy_name:
             self.client.udf_put("test_record_udf.lua")
@@ -233,12 +354,14 @@ class TestConfigTTL:
                 pass
 
         try:
-            self.client.remove(self.key)
+            self.client.remove(KEY)
         except e.RecordNotFound:
             pass
 
+        self.client.close()
+
     def check_ttl(self):
-        _, meta = self.client.exists(self.key)
+        _, meta = self.client.exists(KEY)
         clock_skew_tolerance_secs = 50
         assert meta["ttl"] in range(self.NEW_TTL - clock_skew_tolerance_secs, self.NEW_TTL + clock_skew_tolerance_secs)
 
@@ -248,16 +371,17 @@ class TestConfigTTL:
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
         ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
     )
-    def test_setting_write_ttl(self, config_ttl_setup, meta):
-        self.client.put(self.key, bins={"a": 1}, meta=meta)
+    @pytest.mark.parametrize("api_method, kwargs", [
+        (aerospike.Client.put, {"key": KEY, "bins": {"a": 1}}),
+        (aerospike.Client.remove_bin, {"key": KEY, "list": ["a"]}),
+    ])
+    def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
+        api_method(self.client, **kwargs, meta=meta)
         self.check_ttl()
 
     @pytest.mark.parametrize("policy_name", ["operate"])
     @pytest.mark.parametrize(
         "meta",
-        # The reason we also test a metadata dict without ttl for operate()
-        # is the codepath that handles the metadata dict for operate() is different
-        # from that for put()
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
         ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
     )
@@ -265,17 +389,17 @@ class TestConfigTTL:
         ops = [
             operations.write("a", 1)
         ]
-        self.client.operate(self.key, ops, meta=meta)
+        self.client.operate(KEY, ops, meta=meta)
         self.check_ttl()
 
     @pytest.mark.parametrize("policy_name", ["apply"])
     def test_setting_apply_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
-        # Call without setting the ttl in the transaction's apply policy
+        # Call without setting the ttl in the command's apply policy
         # Args: bin name, str
-        self.client.apply(self.key, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
+        self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
         self.check_ttl()
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
@@ -289,7 +413,7 @@ class TestConfigTTL:
             operations.write("bin", 1)
         ]
         batch_records = BatchRecords([
-            Write(self.key, ops=ops, meta=meta)
+            Write(KEY, ops=ops, meta=meta)
         ])
         brs = self.client.batch_write(batch_records)
         # assert brs.result == 0
@@ -307,7 +431,7 @@ class TestConfigTTL:
         ops = [
             operations.write("bin", 1)
         ]
-        keys = [self.key]
+        keys = [KEY]
         brs = self.client.batch_operate(keys, ops, ttl=ttl)
         # assert brs.result == 0
         for br in brs.batch_records:
@@ -318,11 +442,11 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["batch_apply"])
     def test_setting_batch_apply_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
         # Call without setting the ttl in batch_apply()'s batch apply policy
         keys = [
-            self.key
+            KEY
         ]
         self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
         self.check_ttl()
@@ -330,7 +454,7 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["scan"])
     def test_setting_scan_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
         # Tell scan to use client config's scan policy ttl
         scan = self.client.scan("test", "demo")
@@ -348,7 +472,7 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"}, meta={"ttl": 90})
+        self.client.put(KEY, {"bin": "a"}, meta={"ttl": 90})
 
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")
@@ -362,3 +486,38 @@ class TestConfigTTL:
         wait_for_job_completion(self.client, job_id)
 
         self.check_ttl()
+
+    @pytest.mark.parametrize(
+        "policy_name",
+        [
+            "read",
+            "operate",
+            "batch",
+        ]
+    )
+    def test_invalid_read_touch_ttl_percent(self, policy_name: str):
+        config = copy.deepcopy(gconfig)
+        config["policies"][policy_name]["read_touch_ttl_percent"] = "fail"
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == "Invalid Policy setting value"
+
+    @pytest.mark.parametrize(
+        "config, context",
+        [
+            (
+                gconfig,
+                nullcontext()
+            ),
+            (
+                {
+                    "hosts": [("invalid-host", 4000)]
+                },
+                # Tests that fail to connect should expect any of these exceptions
+                pytest.raises((e.ConnectionError, e.TimeoutError, e.ClientError))
+            )
+        ]
+    )
+    def test_client_class_constructor(self, config: dict, context):
+        with context:
+            aerospike.Client(config)
