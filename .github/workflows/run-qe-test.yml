@@ -10,9 +10,6 @@ on:
         type: string
         required: true
         description: Python client version
-      test-definition:
-        required: true
-        description: Test definition
       feature:
         required: true
         description: "Client feature to test"
@@ -254,8 +251,8 @@ jobs:
     - name: Allows us to get the exact test run id that was created by test-enqueue.
       run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
 
-    - run: yq -i '.definitions.std.[0] = "${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
-      working-directory: aerospike-client-python/test/
+    # - run: yq -i '.definitions.std.[0] = "${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
+    #   working-directory: aerospike-client-python/test/
 
     - name: Enqueue test run and fail fast if unable to enqueue
       run: |
