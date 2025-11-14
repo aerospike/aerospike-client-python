@@ -298,7 +298,7 @@ def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=Non
             - :data:`aerospike.BIT_OVERFLOW_SATURATE`
             - :data:`aerospike.BIT_OVERFLOW_WRAP`
 
-            See `Bitwise Overflow <aerospike.html#bitwise-overflow>`_ for more information.
+            See :ref:`Bitwise Overflow <aerospike_bitwise_overflow>` for more information.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -599,8 +599,8 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
             - :data:`aerospike.BIT_OVERFLOW_SATURATE`
             - :data:`aerospike.BIT_OVERFLOW_WRAP`
 
-            See `Bitwise Overflow <aerospike.html#bitwise-overflow>`_ for more information.
-            policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
+            See :ref:`Bitwise Overflow <aerospike_bitwise_overflow>` for more information.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
