@@ -265,7 +265,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    if(new_dict_in_use){
+    if (new_dict_in_use) {
         Py_DECREF(py_ctx_dict);
     }
     if (!ctx_in_use) {
