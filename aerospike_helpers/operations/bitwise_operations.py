@@ -292,7 +292,6 @@ def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=Non
         value (int): The value to be added.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs.
-            
             Action must be one of the following.
 
             - :data:`aerospike.BIT_OVERFLOW_FAIL`
@@ -601,7 +600,7 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
             - :data:`aerospike.BIT_OVERFLOW_WRAP`
 
             See `Bitwise Overflow <aerospike.html#bitwise-overflow>`_ for more information.
-        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
+            policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
