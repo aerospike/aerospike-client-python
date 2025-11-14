@@ -83,9 +83,9 @@ class TestCreateRole(object):
 
         assert status == 0
         time.sleep(1)
-        roles = self.client.admin_query_user("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
-        assert roles == ["usr-sys-admin-test"]
+        assert user["roles"] == ["usr-sys-admin-test"]
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -132,9 +132,9 @@ class TestCreateRole(object):
 
         assert status == 0
         time.sleep(1)
-        roles = self.client.admin_query_user("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
-        assert roles == [role_name]
+        assert user["roles"] == [role_name]
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -172,9 +172,9 @@ class TestCreateRole(object):
 
         assert status == 0
         time.sleep(1)
-        roles = self.client.admin_query_user("testcreaterole")
+        user = self.client.admin_query_user_info("testcreaterole")
 
-        assert roles == ["usr-sys-admin-test"]
+        assert user["roles"] == ["usr-sys-admin-test"]
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -344,17 +344,17 @@ class TestCreateRole(object):
 
         assert status == 0
         time.sleep(1)
-        roles = self.client.admin_query_user("testcreaterole")
+        users = self.client.admin_query_user_info("testcreaterole")
 
-        assert roles == [role_name]
+        assert users["roles"] == [role_name]
 
         self.client.admin_drop_role(role_name)
 
         time.sleep(1)
 
-        roles = self.client.admin_query_user("testcreaterole")
+        users = self.client.admin_query_user_info("testcreaterole")
 
-        assert roles == []
+        assert users["roles"] == []
 
         self.client.admin_drop_user("testcreaterole")
 

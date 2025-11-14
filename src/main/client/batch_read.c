@@ -215,6 +215,11 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     const char **filter_bins = NULL;
 
     // Parse list of bins
+    if (py_bins == Py_None) {
+        // Treat as the same
+        py_bins = NULL;
+    }
+
     if (py_bins != NULL) {
         if (!PyList_Check(py_bins)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -295,6 +300,7 @@ CLEANUP2:
 CLEANUP1:
 
     if (err.code != AEROSPIKE_OK) {
+        Py_XDECREF(br_instance);
         raise_exception(&err);
         return NULL;
     }

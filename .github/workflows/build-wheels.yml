@@ -1,581 +1,437 @@
-name: Build wheels
-run-name: Build wheels (use-server-rc=${{ inputs.use-server-rc }}, should-bump-version=${{ inputs.should-bump-version }}, bump-rc-or-release=${{ inputs.bump-rc-or-release }}, server-tag=${{ inputs.server-tag }})
+name: 'Build wheels'
+run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
-# Builds wheels and optionally sends artifacts to Jfrog Artifactory
+# Build wheels on all (or select) Python versions supported by the Python client for a specific platform
+
 on:
   workflow_dispatch:
     inputs:
-      use-server-rc:
-        type: boolean
+      # These are the usual cases for building wheels:
+      #
+      # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
+      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
+      # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
+      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
+      # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
+      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
+      #
+      # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
+      # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
+      #
+      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
+      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
+      # We want each platform to be tested independently of each other,
+      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
+      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
+      python-tags:
+        type: string
+        description: Valid JSON list of Python tags to build the client for
+        required: false
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+      platform-tag:
+        description: Platform to build the client for.
+        type: choice
         required: true
+        options:
+        - manylinux_x86_64
+        - manylinux_aarch64
+        - macosx_x86_64
+        - macosx_arm64
+        - win_amd64
+        # Makes debugging via gh cli easier.
+        default: manylinux_x86_64
+      unoptimized:
+        description: 'macOS or Linux: Apply -O0 flag?'
+        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
+        type: boolean
+        required: false
         default: false
-        description: 'Test against server release candidate?'
-      # Override the default server version to test against
-      # This is helpful if you need to create a backport from an older client major version
-      # And that older client major version does not accomodate for breaking changes in the latest server version
+      include-debug-info-for-macos:
+        description: 'macOS: Build wheels for debugging?'
+        type: boolean
+        required: false
+        default: false
+      run_tests:
+        description: 'Run Aerospike server and run tests using built wheels?'
+        type: boolean
+        required: false
+        default: false
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
-      should-bump-version:
+      test-file:
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
+
+  workflow_call:
+    inputs:
+      # See workflow call hack in update-version.yml
+      is_workflow_call:
         type: boolean
-        required: true
         default: true
-        description: 'Bump version and upload to JFrog?'
-      bump-rc-or-release:
-        type: choice
-        options:
-          - rc
-          - release
-        default: 'rc'
+        required: false
+      python-tags:
+        type: string
+        required: false
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+      platform-tag:
+        type: string
         required: true
-        description: 'If bumping version, what type of bump?'
+      # Only used in workflow_call event
+      sha-to-build-and-test:
+        type: string
+        required: true
+      unoptimized:
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
+      run_tests:
+        type: boolean
+        required: false
+        default: false
+      registry-name:
+        type: string
+        required: false
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        required: false
+        type: string
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+      QE_DOCKER_REGISTRY_USERNAME:
+        required: true
+      QE_DOCKER_REGISTRY_PASSWORD:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
+
+env:
+  COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+  # Note that environment variables in Github are all strings
+  # Github mac m1 and windows runners don't support Docker / nested virtualization
+  # so we need to use self-hosted runners to test wheels for these platforms
+  RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
-  update-version:
-    if: ${{ inputs.should-bump-version }}
-    runs-on: ubuntu-latest
-    permissions:
-      # Give the default GITHUB_TOKEN write permission to commit and push the
-      # added or changed files to the repository.
-      contents: write
+  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
+  # This uses up more billing minutes (rounded up to 1 minute for each job run),
+  # but this should be ok based on the minutes usage data for the aerospike organization
+  get-runner-os:
+    outputs:
+      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - id: get-runner-os
+      # Single source of truth for which runner OS to use for each platform tag
+      # We use the larger runner for mac x86 because there is noise when using the regular runners
+      # I suspect it's from building the server Docker image
+      run: |
+        declare -A hashmap
+        hashmap[manylinux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
+        hashmap[macosx_x86_64]="macos-13-large"
+        hashmap[macosx_arm64]="macos-13-xlarge"
+        hashmap[win_amd64]="windows-2022"
+        echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
+      # Bash >= 4 supports hashmaps
+      shell: bash
+
+  cibuildwheel:
+    needs: get-runner-os
+    strategy:
+      matrix:
+        python-tag: ${{ fromJSON(inputs.python-tags) }}
+      fail-fast: false
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
+      MACOS_OPENSSL_VERSION: 3
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
+    steps:
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - run: pip install python-semantic-release==7.34.6
+    - name: 'Windows: Add msbuild to PATH'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: 'Windows: Install C client deps'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
+
+    - name: 'macOS x86: Setup Docker using colima for testing'
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
+
+    - name: 'Run Aerospike server in Docker container and configure tests accordingly'
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
+        server-tag: ${{ inputs.server-tag }}
+        where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
+
+    - name: If not running tests against server, only run basic import test
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
+      # Use double quotes otherwise Windows will throw this error in cibuildwheel
+      # 'import
+      #       ^
+      # SyntaxError: EOL while scanning string literal
+      run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Otherwise, enable integration tests
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Set unoptimize flag
+      if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
+      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+
+    - name: Set include dsym flag
+      if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
+      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
+
+    # OpenSSL locked version for this git revision: 3.0.15
+    # We lock the digest for security reasons.
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '8957f7f57f85c32bc2b513f1f29299041e721cd4ba763374c2da89d8837d49e9') }} >> $GITHUB_ENV
+
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ebd269b4ecc3e186eeb0d734d765dfe9c606017a1cd5a122e08018b86b126217') }} >> $GITHUB_ENV
+
+    - uses: docker/login-action@v3
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # It is not documented in Github that openssl 3 / libyaml is installed in their macos images
+    # so we install it here to be safe
+    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+      name: Ensure openssl and libyaml are installed on Github macOS runners.
+      run: brew install openssl@${{ env.MACOS_OPENSSL_VERSION }} libyaml
+
+    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+      name: Set minimum macos version required to install wheel
+      # - By default, cibuildwheel will try to build the wheel to be compatible with macOS 11.0 / 10.13
+      # We are trying to make the wheel compatible with the lowest supported macOS version for the Python client
+      # Here, we are telling cibuildwheel to target the latter.
+      # - We use delocate to repair the wheel because it throws an error if
+      # the openssl library version is newer than the wheel's macOS version tag
+      # Linking the static libraries produces a warning for that same reason but it doesn't throw an error.
+      # - Use single dash for backwards compatibility with older sw_vers
+      run: echo MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0 >> $GITHUB_ENV
+
+    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      name: Ensure that linker can find brew packages
+      # On mac m1, packages installed via brew are not in the linker's default library path
+      run: |
+        libraries=('libyaml' 'openssl')
+        for library in "${libraries[@]}"; do
+          LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix $library)/lib"
+        done
+        echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
+      shell: bash
+
+    - if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
+      # Just do it for all Python versions (even those that don't require more room) for futureproofing
+      run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v3.1.3
+      id: cibuildwheel
+      env:
+        # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
+        CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/usr/local/lib64
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
+        CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
+        CIBW_BUILD_FRONTEND: build
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install libyaml-devel -y
+        # delvewheel is not enabled by default but we do need to repair the wheel
+        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
+        # We want to check that our wheel links to the new openssl 3 install, not the system default
+        # This assumes that ldd prints out the "soname" for the libraries
+        # We can also manually verify the repair worked by checking the repaired wheel's compatibility tag
+        CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+          auditwheel show {wheel} &&
+          WHEEL_DIR=wheel-contents &&
+          unzip {wheel} -d $WHEEL_DIR &&
+          ldd $WHEEL_DIR/*.so | awk '{print $1}' | grep libssl.so.3 &&
+          ldd $WHEEL_DIR/*.so | awk '{print $1}' | grep libcrypto.so.3 &&
+          auditwheel repair -w {dest_dir} {wheel} &&
+          auditwheel show {dest_dir}/* &&
+          rm -rf $WHEEL_DIR
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+        # We also want to verify the same thing on macos
+        CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+          delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} &&
+          delocate-listdeps {dest_dir}/*.whl | grep libcrypto.3.dylib &&
+          delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
+        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
+        CIBW_DEBUG_KEEP_CONTAINER: 1
+
+    # - name: Setup tmate session
+    #   if: ${{ !cancelled() }}
+    #   uses: mxschmitt/action-tmate@v3
+
+    # For debugging
     - run: |
-        latest_tag=$(cat VERSION)
-        echo "Bumping off of latest tag $latest_tag"
-        # If creating release wheels, bump rc version to release version
-        if [[ ${{ inputs.bump-rc-or-release }} == "rc" ]]; then
-          new_tag=$(pysemver bump prerelease $latest_tag)
-        else
-          new_tag=$(pysemver nextver $latest_tag patch)
-        fi
-        echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
-        echo "The new tag for this build is $new_tag"
-
-    - name: Update version
-      run: |
-        sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
-        echo -e "${{ env.NEW_TAG }}" > VERSION
-
-    - name: Commit new version
-      uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: Bump version to ${{ env.NEW_TAG }}
-
-  build-sdist:
-    name: Build and install sdist
-    runs-on: ubuntu-latest
-    # Need to replace default success() condition because skipped job is not "successful"
-    # always() will cause this job to become uncancellable, so we check if current job hasn't been cancelled yet
-    # Run if update version workflow was skipped or succeeds
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
-    needs: update-version
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        # Use branch instead of hash that triggered workflow
-        ref: ${{ github.ref_name }}
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-        architecture: 'x64'
-
-    - run: sudo apt update
-    - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install -r requirements.txt
-
-    - name: Build source distribution
-      run: python3 -m build --sdist
-
-    - name: Upload sdist to GitHub
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./dist/*.tar.gz
-        # Artifact name, not the file name
-        name: sdist
-
-  source-installs:
-    strategy:
-      matrix:
-        distros: [
-          # Image name, build-<name> and container name 
-          # ["alpine", "alpine"],
-          ["redhat/ubi9", "rpm-based"],
-          ["amazonlinux:2023", "rpm-based"]
-        ]
-      fail-fast: false
-    runs-on: ubuntu-latest
-    steps:
-
-    - if: ${{ inputs.use-server-rc }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Run distro container
-      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
-
-    - name: Copy repo to container
-      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
-
-    - name: Build and test
-      run: docker exec -w /aerospike-client-python ${{ matrix.distros[1] }} ./.github/workflows/build-${{ matrix.distros[1] }}.sh
-
-  manylinux_arm64:
-    runs-on: ubuntu-latest
-    needs: update-version
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # Python versions to build wheels on
-        python: [
-          "cp38",
-          "cp39",
-          "cp310",
-          "cp311"
-        ]
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        ref: ${{ github.ref_name }}
-
-    - name: Set up QEMU for cross compiling arm64
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: all
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Set config.conf to use Docker IP address of Aerospike server
-      # config.conf should be copied into the cibuildwheel Docker container
-      run: |
-        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini==0.9.4
-        sed -i "s/127.0.0.1:3000//" config.conf
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
-      working-directory: test
-
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
-          yum install python-setuptools -y
-        CIBW_ARCHS: "aarch64"
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          pip install -r requirements.txt &&
-          python -m pytest new_tests/
+        # Checks that server started up properly
+        docker logs aerospike
+        # Prints the actual logs from asd
+        docker exec aerospike cat /var/log/aerospike/aerospike.log
+      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      shell: bash
 
     - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
       with:
         path: ./wheelhouse/*.whl
-        # Artifact name, not the file name
-        name: manylinux-aarch64-${{ matrix.python }}
+        name: ${{ env.BUILD_IDENTIFIER }}.build
+        if-no-files-found: error
 
-  manylinux_x86_64:
-    runs-on: ubuntu-latest
-    needs: update-version
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+  test-self-hosted:
+    needs: cibuildwheel
+    # There's a top-level env variable for this but we can't use it here, unfortunately
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
       matrix:
-        # Python versions to build wheels on
-        python: [
-          ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"]
-        ]
-
+        python-tag: ${{ fromJSON(inputs.python-tags) }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        ref: ${{ github.ref_name }}
+      - name: Create status check message
+        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+        shell: bash
 
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to start
-      run: sleep 5
-
-    - name: Set config.conf to use Docker IP address of Aerospike server
-      # config.conf should be copied into the cibuildwheel Docker container
-      run: |
-        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini==0.9.4
-        sed -i "s/127.0.0.1:3000//" config.conf
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
-      working-directory: test
-
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
-          yum install python-setuptools -y
-        CIBW_ARCHS: "x86_64"
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          pip install -r requirements.txt &&
-          python -m pytest new_tests/
-
-    - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./wheelhouse/*.whl
-        # Artifact name, not the file name
-        name: manylinux-x86_64-${{ matrix.python[0] }}
-
-  manylinux_x86_64_no_test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: cp39-manylinux_x86_64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
-          yum install python-setuptools -y
-        CIBW_ARCHS: "x86_64"
-
-    - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./wheelhouse/*.whl
-        # Artifact name, not the file name
-        name: manylinux-x86_64-cp39-distros
-
-  # Test RPM-based Linux OS's
-  manylinux_x86_64_rpm_based:
-      needs: manylinux_x86_64_no_test
-      strategy:
-        matrix:
-          image: [
-            "redhat/ubi8",
-            "amazonlinux:2023"
-          ]
-        fail-fast: false
-      runs-on: ubuntu-latest
-      services:
-        aerospike:
-          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
-          credentials:
-            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
-      container:
-        image: ${{ matrix.image }}
-      steps:
-      - run: dnf -y update
-      - run: dnf -y install git
-      - uses: actions/checkout@v3
+      - name: Show job status for commit
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
-          submodules: recursive
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
         with:
-          name: manylinux-x86_64-cp39-distros
+          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
-      - run: dnf -y install python3.9
-      # Amazon Linux 2023 doesn't come with pip
-      - run: python3.9 -m ensurepip
-      - run: python3.9 -m pip install *.whl
+      # Need to be able to save Docker Hub credentials to keychain
+      # Unable to do this via the ansible script for self hosted mac m1 runners
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-      - name: Install test dependencies
-        run: python3.9 -m pip install -r requirements.txt
-        working-directory: test
-
-      - run: sed -i "s/127.0.0.1/$AEROSPIKE_HOST/" config.conf
-        working-directory: test
-        env:
-          AEROSPIKE_HOST: aerospike
-
-      - name: Run tests
-        run: python3.9 -m pytest new_tests/
-        working-directory: test
-
-  manylinux_x86_64_debian:
-      needs: manylinux_x86_64_no_test
-      runs-on: ubuntu-latest
-      services:
-        aerospike:
-          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
-          credentials:
-            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
-      strategy:
-        matrix:
-          debian-name: [
-            "bookworm"
-          ]
-      container:
-        image: python:3.9-${{ matrix.debian-name }}
-      steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/download-artifact@v3
+      - uses: ./.github/actions/run-ee-server
         with:
-          name: manylinux-x86_64-cp39-distros
+          registry-name: ${{ inputs.registry-name }}
+          registry-username: ${{ env.REGISTRY_USERNAME }}
+          registry-password: ${{ env.REGISTRY_PASSWORD }}
+          image-name: ${{ inputs.image-name }}
+          server-tag: ${{ inputs.server-tag }}
+          where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
-      - run: python3 -m pip install *.whl
-
-      - name: Install test dependencies
-        run: python3 -m pip install -r requirements.txt
-        working-directory: test
-
-      - run: sed -i "s/127.0.0.1/$AEROSPIKE_HOST/" config.conf
-        working-directory: test
-        env:
-          AEROSPIKE_HOST: aerospike
-
-      - name: Run tests
-        run: python3 -m pytest new_tests/
-        working-directory: test
-
-  manylinux_x86_64_ubuntu2204:
-      needs: manylinux_x86_64_no_test
-      runs-on: ubuntu-22.04
-      services:
-        aerospike:
-          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
-          credentials:
-            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
-          ports:
-            - 3000:3000
-            - 3001:3001
-            - 3002:3002
-      steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/download-artifact@v3
+      - name: Download wheel
+        uses: actions/download-artifact@v4
         with:
-          name: manylinux-x86_64-cp39-distros
+          name: ${{ env.BUILD_IDENTIFIER }}.build
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v3
+      - name: Convert Python tag to Python version
+        # Don't use sed because we want this command to work on both mac and windows
+        # The command used in GNU sed is different than in macOS sed
+        run: |
+          PYTHON_TAG=${{ matrix.python-tag }}
+          PYTHON_VERSION="${PYTHON_TAG/cp/}"
+          echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
+        shell: bash
+
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: ${{ env.PYTHON_VERSION }}
+          allow-prereleases: true
 
-      - run: python3 -m pip install *.whl
+      - name: Install wheel
+        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+        shell: bash
 
-      - name: Install test dependencies
-        run: python3 -m pip install -r requirements.txt
+      - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
+        shell: bash
 
-      - name: Run tests
-        run: python3 -m pytest new_tests/
+      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
+        shell: bash
 
-  macOS-x86:
-    needs: update-version
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [
-          ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"]
-        ]
-        os: [macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        ref: ${{ github.ref_name }}
-
-    - name: Install Docker Engine
-      run: brew install colima
-
-    - name: Install Docker client
-      run: brew install docker
-
-    - name: Start Docker Engine
-      run: colima start
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        CIBW_ARCHS: "x86_64"
-        CIBW_BEFORE_TEST: >
-          pip install -r test/requirements.txt
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          python -m pytest new_tests/
-
-    - name: Save macOS wheel
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
-        path: wheelhouse/*.whl
-
-  macOS-m1:
-    runs-on: [self-hosted, macOS, ARM64]
-    needs: update-version
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [
-            "3.8",
-            "3.9",
-            "3.10",
-            "3.11"
-        ]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        ref: ${{ github.ref_name }}
-
-    # Update dependencies if needed
-    - name: Add brew to path
-      run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
-    - run: brew install python@${{ matrix.python-version }}
-    - run: brew install openssl@1.1
-
-    - run: |
-        openssl_path=$(brew --prefix openssl@1.1)
-        echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
-        echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
-        echo STATIC_SSL=1 >> $GITHUB_ENV
-
-    - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
-
-    # Self-hosted runner only
-    # Need to be able to save Docker Hub credentials to keychain
-    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-      if: ${{ inputs.use-server-rc }}
-
-    - if: ${{ inputs.use-server-rc }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Use server rc
-      if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Use server release
-      if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Run server
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
-
-    - run: python${{ matrix.python-version }} -m build
-    - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
-    - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
-
-    - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
-      working-directory: test
-
-    - run: python${{ matrix.python-version }} -m pytest new_tests/
-      working-directory: test
-
-    - name: Save macOS wheel
-      uses: actions/upload-artifact@v3
-      with:
-        name: macos-amd64-${{ matrix.python-version }}-wheel
-        path: wheelhouse/*.whl
-
-    - name: Stop server
-      if: ${{ always() }}
-      run: |
-        docker container stop aerospike
-        docker container prune -f
-
-  upload-artifacts-to-jfrog:
-    if: ${{ inputs.should-bump-version }}
-    needs: [
-      # Cat 1 tests
-      source-installs,
-      # Wheel installs (cat 2 tests)
-      manylinux_x86_64_rpm_based,
-      manylinux_x86_64_ubuntu2204,
-      manylinux_x86_64_debian,
-      # CentOS 7 Linux cat 2 tests (for all wheels)
-      manylinux_x86_64,
-      manylinux_arm64,
-      macOS-x86,
-      macOS-m1,
-    ]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/download-artifact@v3
-
-    - name: Reorganize artifacts
-      run: |
-        mkdir artifacts
-        find . -type f -exec mv {} artifacts \;
-
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: ${{ secrets.JFROG_URL }}
-        user: ${{ secrets.JFROG_USERNAME }}
-        password: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        packages-dir: artifacts/
-        verbose: true
+      - name: Show job status for commit
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          status: ${{ job.status }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
