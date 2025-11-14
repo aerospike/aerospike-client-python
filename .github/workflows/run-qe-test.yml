@@ -99,8 +99,7 @@ jobs:
       with:
         # Entire repo must be cloned because the test definition includes this repo
         path: aerospike-tests-python
-        # Test definition includes the feature branch name
-        ref: ${{ github.head_ref }}
+        ref: CLIENT-3541-add-client-centered-performance-regression-tests
         fetch-depth: 0
 
     - name: Environment variable overrides
