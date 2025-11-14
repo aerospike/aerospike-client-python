@@ -32,99 +32,6 @@ static AerospikeLogData user_callback = {
     #define __sync_fetch_and_add InterlockedExchangeAdd64
 #endif
 
-/*
- * Declare's log level constants.
- */
-as_status declare_log_constants(PyObject *aerospike)
-{
-
-    // Status to be returned.
-    as_status status = AEROSPIKE_OK;
-
-    // Check if aerospike object is present or no.
-    if (!aerospike) {
-        status = AEROSPIKE_ERR;
-        goto exit;
-    }
-
-    // Add incidividual constants to aerospike module.
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
-exit:
-    return status;
-}
-
-volatile int log_counter = 0;
-
-static bool log_cb(as_log_level level, const char *func, const char *file,
-                   uint32_t line, const char *fmt, ...)
-{
-
-    char msg[1024];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(msg, 1024, fmt, ap);
-    va_end(ap);
-
-    // Extract pyhton user callback
-    PyObject *py_callback = user_callback.callback;
-    // User callback's argument list
-    PyObject *py_arglist = NULL;
-
-    // Lock python state
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    // Create a tuple of argument list
-    py_arglist = PyTuple_New(5);
-
-    // Initialise argument variables
-    PyObject *log_level = PyLong_FromLong((long)level);
-    PyObject *func_name = PyUnicode_FromString(func);
-    PyObject *file_name = PyUnicode_FromString(file);
-    PyObject *line_no = PyLong_FromLong((long)line);
-    PyObject *message = PyUnicode_FromString(msg);
-
-    // Set argument list
-    PyTuple_SetItem(py_arglist, 0, log_level);
-    PyTuple_SetItem(py_arglist, 1, func_name);
-    PyTuple_SetItem(py_arglist, 2, file_name);
-    PyTuple_SetItem(py_arglist, 3, line_no);
-    PyTuple_SetItem(py_arglist, 4, message);
-
-    // Invoke user callback, passing in argument's list
-    PyObject_Call(py_callback, py_arglist, NULL);
-
-    Py_DECREF(py_arglist);
-
-    // Release python state
-    PyGILState_Release(gstate);
-
-    return true;
-}
-
-bool console_log_cb(as_log_level level, const char *func, const char *file,
-                    uint32_t line, const char *fmt, ...)
-{
-
-    char msg[1024];
-    va_list ap;
-
-    int counter = __sync_fetch_and_add(&log_counter, 1);
-
-    va_start(ap, fmt);
-    vsnprintf(msg, 1024, fmt, ap);
-    va_end(ap);
-
-    printf("%d:%d %s\n", getpid(), counter, msg);
-
-    return true;
-}
-
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
@@ -186,6 +93,99 @@ CLEANUP:
     }
 
     return PyLong_FromLong(status);
+}
+
+/*
+ * Declare's log level constants.
+ */
+as_status declare_log_constants(PyObject *aerospike)
+{
+
+    // Status to be returned.
+    as_status status = AEROSPIKE_OK;
+
+    // Check if aerospike object is present or no.
+    if (!aerospike) {
+        status = AEROSPIKE_ERR;
+        goto exit;
+    }
+
+    // Add incidividual constants to aerospike module.
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
+    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
+exit:
+    return status;
+}
+
+volatile int log_counter = 0;
+
+bool console_log_cb(as_log_level level, const char *func, const char *file,
+                    uint32_t line, const char *fmt, ...)
+{
+
+    char msg[1024];
+    va_list ap;
+
+    int counter = __sync_fetch_and_add(&log_counter, 1);
+
+    va_start(ap, fmt);
+    vsnprintf(msg, 1024, fmt, ap);
+    va_end(ap);
+
+    printf("%d:%d %s\n", getpid(), counter, msg);
+
+    return true;
+}
+
+static bool log_cb(as_log_level level, const char *func, const char *file,
+                   uint32_t line, const char *fmt, ...)
+{
+
+    char msg[1024];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(msg, 1024, fmt, ap);
+    va_end(ap);
+
+    // Extract pyhton user callback
+    PyObject *py_callback = user_callback.callback;
+    // User callback's argument list
+    PyObject *py_arglist = NULL;
+
+    // Lock python state
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    // Create a tuple of argument list
+    py_arglist = PyTuple_New(5);
+
+    // Initialise argument variables
+    PyObject *log_level = PyLong_FromLong((long)level);
+    PyObject *func_name = PyUnicode_FromString(func);
+    PyObject *file_name = PyUnicode_FromString(file);
+    PyObject *line_no = PyLong_FromLong((long)line);
+    PyObject *message = PyUnicode_FromString(msg);
+
+    // Set argument list
+    PyTuple_SetItem(py_arglist, 0, log_level);
+    PyTuple_SetItem(py_arglist, 1, func_name);
+    PyTuple_SetItem(py_arglist, 2, file_name);
+    PyTuple_SetItem(py_arglist, 3, line_no);
+    PyTuple_SetItem(py_arglist, 4, message);
+
+    // Invoke user callback, passing in argument's list
+    PyObject_Call(py_callback, py_arglist, NULL);
+
+    Py_DECREF(py_arglist);
+
+    // Release python state
+    PyGILState_Release(gstate);
+
+    return true;
 }
 
 PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
