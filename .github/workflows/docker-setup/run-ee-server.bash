@@ -19,12 +19,11 @@ STRONG_CONSISTENCY=${STRONG_CONSISTENCY:-"0"}
 VOLUME_NAME=aerospike-conf-vol
 docker volume create $VOLUME_NAME
 
-volume_dest_folder=/workdir
-aerospike_yaml_file_name=aerospike-dev.yaml
-ca_cert_file_name="ca.cer"
-server_cert_file_name="server.cer"
+aerospike_yaml_file_name="aerospike-dev.yaml"
 
-container_name_for_populating_volume=container_for_populating_volume
+volume_dest_folder="/workdir"
+container_name_for_populating_volume="container_for_populating_volume"
+
 docker run --name $container_name_for_populating_volume --rm -v $VOLUME_NAME:$volume_dest_folder -d alpine tail -f /dev/null
 docker cp ./ $container_name_for_populating_volume:$volume_dest_folder
 docker stop $container_name_for_populating_volume
@@ -42,8 +41,8 @@ if [[ "$MUTUAL_TLS" == "1" ]]; then
     call_from_yq_container ".network.service.tls-authenticate-client = \"any\""
     call_from_yq_container ".network.service.tls-name = \"docker\""
     call_from_yq_container ".network.service.tls-port = \"4333\""
-    call_from_yq_container ".network.tls[0].ca-file = \"$volume_dest_folder/$ca_cert_file_name\""
-    call_from_yq_container ".network.tls[0].cert-file = \"$volume_dest_folder/$server_cert_file_name\""
+    call_from_yq_container ".network.tls[0].ca-file = \"$volume_dest_folder/ca.cer\""
+    call_from_yq_container ".network.tls[0].cert-file = \"$volume_dest_folder/server.cer\""
     call_from_yq_container ".network.tls[0].key-file = \"$volume_dest_folder/server.pem\""
     call_from_yq_container ".network.tls[0].name = \"docker\""
 else
