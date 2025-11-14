@@ -13,6 +13,20 @@ on:
       test-definition:
         required: true
         description: Test definition
+      feature:
+        required: true
+        description: "Client feature to test"
+      num_records:
+        type: number
+        default: 1000000
+        description: Number of records to use in workload
+      insert_mode:
+        required: true
+        type: choice
+        description: Insert mode means don't check for outliers.
+        options:
+          - insert
+          - outlier
   workflow_call:
     inputs:
       # workflow_call hack
@@ -39,6 +53,73 @@ concurrency:
   group: ${{ github.workflow }}
 
 jobs:
+  register-test-definition-with-custom-env-var-parameters:
+    runs-on: ubuntu-24.04
+    env:
+      REGISTER_FILE_PATH_IN_REPO: perf_regression/register-client-tests.yaml
+    steps:
+    # TODO: composite action for this would be helpful
+    # TODO: need special testctl not in jfrog yet
+    - name: Get test-register
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-register
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-register to PATH
+      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf rt download --fail-no-op qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: qe-tools/bin
+
+    - name: Add AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        cd ~/.aws
+        sections=("default" "qe")
+        for section in ${sections[@]};
+        do
+          cat <<-EOF >> credentials
+          [$section]
+          aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+          region = us-west-1
+        	EOF
+        done
+      shell: bash
+
+    - uses: actions/checkout@v4
+      with:
+        # Entire repo must be cloned because the test definition includes this repo
+        path: aerospike-tests-python
+        # Test definition includes the feature branch name
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+
+    - name: Environment variable overrides
+      run: |
+        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\""
+        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\""
+        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\""
+      working-directory: aerospike-tests-python
+
+    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
+      working-directory: aerospike-tests-python
+
+  # run-changed-tests:
+  #   needs: register-test-definition
+  #   uses: aerospike/aerospike-client-python/.github/workflows/run-qe-test.yml@cicd-performance-regression-tests-using-asmikas-qe-env
+
   add-python-client-to-qe-test-image-for-performance-regression-tests:
     env:
       WHEEL_ARCH: x86_64
@@ -101,7 +182,10 @@ jobs:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
       TESTCTL_BINARY_NAME: testctl
     runs-on: ubuntu-24.04
-    needs: add-python-client-to-qe-test-image-for-performance-regression-tests
+    needs: [
+      add-python-client-to-qe-test-image-for-performance-regression-tests,
+      register-client-test-with-custom-env-var-parameters
+    ]
     steps:
     # - name: Setup Rclone
     #   uses: AnimMouse/setup-rclone@0d99fa3878a334d3e307c1a8372ad55550fdaea7
