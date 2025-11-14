@@ -34,7 +34,11 @@ docker stop $container_name_for_populating_volume
 aerospike_yaml_container_path=${volume_dest_folder}/${aerospike_yaml_file_name}
 
 call_from_yq_container() {
-    docker run --rm --user $(id -u):$(id -g) -v $VOLUME_NAME:$volume_dest_folder mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    # alpine container's process is run as root user
+    # So the files copied into the named volume will also be owned by root
+    # Since these files only have write permission for the owner (root),
+    # We also need to run yq container as root in order to write to the yaml file in this volume.
+    docker run --rm --user root -v $VOLUME_NAME:$volume_dest_folder mikefarah/yq "$1" -i $aerospike_yaml_container_path
 }
 
 # del() operations are idempotent
