@@ -632,6 +632,8 @@ class TestOperate(object):
         assert expected == bins
         client.remove(key)
 
+        client.close()
+
     @pytest.mark.parametrize(
         "key, llist",
         [
@@ -681,6 +683,8 @@ class TestOperate(object):
             client.operate(key, llist)
 
         client.remove(key)
+
+        client.close()
 
     def test_pos_operate_incr_with_geospatial_new_record(self):
         """
