@@ -29,14 +29,12 @@ docker run --name $container_name_for_populating_volume --rm -v $VOLUME_NAME:$vo
 docker cp ./ $container_name_for_populating_volume:$volume_dest_folder
 docker stop $container_name_for_populating_volume
 
-aerospike_yaml_container_path=${volume_dest_folder}/${aerospike_yaml_file_name}
-
 call_from_yq_container() {
     # alpine container's process is run as root user
     # So the files copied into the named volume will also be owned by root
     # Since these files only have write permission for the owner (root),
     # We also need to run yq container as root in order to write to the yaml file in this volume.
-    docker run --rm --user root -v $VOLUME_NAME:$volume_dest_folder mikefarah/yq "$1" -i $aerospike_yaml_container_path
+    docker run --rm --user root -v $VOLUME_NAME:$volume_dest_folder mikefarah/yq "$1" -i ${volume_dest_folder}/${aerospike_yaml_file_name}
 }
 
 # del() operations are idempotent
@@ -74,7 +72,7 @@ fi
 call_from_tools_container="docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools"
 
 aerospike_conf_name=aerospike.conf
-$call_from_tools_container asconfig convert -f $aerospike_yaml_container_path -o ${volume_dest_folder}/$aerospike_conf_name
+$call_from_tools_container asconfig convert -f ${volume_dest_folder}/${aerospike_yaml_file_name} -o ${volume_dest_folder}/$aerospike_conf_name
 
 # Generate server private key and CSR
 # openssl req -newkey rsa:4096 -keyout server.pem -nodes -new -out server.csr -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=docker"
