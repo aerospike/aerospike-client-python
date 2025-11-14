@@ -1,0 +1,278 @@
+perf_regression/client_centered_kvs_query:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: QUERY
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+
+perf_regression/client_centered_kvs_scan:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: SCAN
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_batch_write:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: BATCH_WRITE
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_batch_read:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: BATCH_READ
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_delete:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: DELETE
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_update:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: UPDATE
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_insert:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: INSERT
+    artifacts:
+    - /test_dump
+    LOAD: false
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_read:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: READ
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_operate:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: OPERATE
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_raise_exception:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: RAISE_EXCEPTION
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_expressions:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: EXPRESSIONS
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+perf_regression/client_centered_kvs_command_level_policy:
+  command: pytest -x --capture=no -s perf_regression/test_client_centered_kvs.py
+  image: docker.qe.aerospike.com/test/python:3.11-mavenAnsible-client
+  environment:
+    CLIENT_LANGUAGE_TO_TEST: python
+    WORKLOAD_FILE_NAME: all_commands.py
+    PACKAGE_FILE: /data/downloads/{{.PackageFile}}
+    # TODO: replace with jfrog wheel
+    PYTHON_CLIENT_OVERRIDE_REF: dev
+    # TODO: no-op?
+    # TODO: don't upgrade server?
+    # No-op?
+    # UPGRADE: false
+    FEATURE: COMMAND_LEVEL_POLICY
+    artifacts:
+    - /test_dump
+    LOAD: true
+    # TODO: would be nice if we can set this at runtime
+    # TODO: make an enum instead of string
+    MODE: insert
+    NUM_RECORDS: 1000000
+
+tests:
+    - perf_regression/client_centered_kvs_read
+    - perf_regression/client_centered_kvs_insert
+    - perf_regression/client_centered_kvs_update
+    - perf_regression/client_centered_kvs_delete
+    - perf_regression/client_centered_kvs_batch_read
+    - perf_regression/client_centered_kvs_batch_write
+    - perf_regression/client_centered_kvs_scan
+    - perf_regression/client_centered_kvs_query
+    - perf_regression/client_centered_kvs_operate
+    - perf_regression/client_centered_kvs_raise_exception
+    - perf_regression/client_centered_kvs_expressions
+    - perf_regression/client_centered_kvs_command_level_policy
