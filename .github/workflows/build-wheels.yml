@@ -335,8 +335,6 @@ jobs:
     - run: |
         # Checks that server started up properly
         docker logs aerospike
-        # Prints the actual logs from asd
-        docker exec aerospike cat /var/log/aerospike/aerospike.log
       if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       shell: bash
 
