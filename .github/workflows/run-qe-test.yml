@@ -105,9 +105,9 @@ jobs:
 
     - name: Environment variable overrides
       run: |
-        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\""
-        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\""
-        yq eval -i ${{ env.REGISTER_FILE_PATH_IN_REPO }} ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\""
+        yq eval ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
     - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
