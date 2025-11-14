@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Makes sure that if the "docker exec" command fails, it is not ignored
-set -o pipefail
 set -e
 set -x
 
