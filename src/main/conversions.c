@@ -1055,7 +1055,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
     // App Id is optional (declared in client config)
     if (cluster->app_id) {
         PyObject *py_app_id = PyUnicode_FromString(cluster->app_id);
-        PyObject_SetAttrString(py_app_id, "app_id", py_app_id);
+        PyObject_SetAttrString(py_cluster, "app_id", py_app_id);
         Py_DECREF(py_app_id);
     }
     else {
