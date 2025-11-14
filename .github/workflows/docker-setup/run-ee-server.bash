@@ -5,6 +5,9 @@ set -o pipefail
 set -e
 set -x
 
+# Prevent Windows shell from mangling paths
+export MSYS_NO_PATHCONV=1
+
 # Input defaults
 
 BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
