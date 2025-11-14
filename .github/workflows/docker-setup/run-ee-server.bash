@@ -96,7 +96,9 @@ fi
 # Set up security
 superuser_name_and_password=superuser
 if [[ "$SECURITY" == "1" ]]; then
-    $call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage acl create user $superuser_name_and_password password $superuser_name_and_password roles read-write-udf, sys-admin, user-admin, data-admin"
+    $call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage acl \
+        create user $superuser_name_and_password password $superuser_name_and_password \
+        roles read-write-udf, sys-admin, user-admin, data-admin"
 fi
 
 # Strong consistency
