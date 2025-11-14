@@ -18,6 +18,7 @@
 
 #include <Python.h>
 #include <aerospike/as_status.h>
+#include "log.h"
 
 /*
  * Structure to hold user's log_callback object
