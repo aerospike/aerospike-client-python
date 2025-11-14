@@ -19,14 +19,14 @@ STRONG_CONSISTENCY=${STRONG_CONSISTENCY:-"0"}
 VOLUME_NAME=aerospike-conf-vol
 docker volume create $VOLUME_NAME
 
-aerospike_yaml_file_name="aerospike-dev.yaml"
-
 volume_dest_folder="/workdir"
 container_name_for_populating_volume="container_for_populating_volume"
 
 docker run --name $container_name_for_populating_volume --rm -v $VOLUME_NAME:$volume_dest_folder -d alpine tail -f /dev/null
 docker cp ./ $container_name_for_populating_volume:$volume_dest_folder
 docker stop $container_name_for_populating_volume
+
+aerospike_yaml_file_name="aerospike-dev.yaml"
 
 call_from_yq_container() {
     # alpine container's process is run as root user
