@@ -98,6 +98,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         # Entire repo must be cloned because the test definition includes this repo
+        repository: citrusleaf/aerospike-tests-python
         path: aerospike-tests-python
         ref: CLIENT-3541-add-client-centered-performance-regression-tests
         fetch-depth: 0
