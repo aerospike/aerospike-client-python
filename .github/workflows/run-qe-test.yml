@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [
       add-python-client-to-qe-test-image-for-performance-regression-tests,
-      register-client-test-with-custom-env-var-parameters
+      register-test-definition-with-custom-env-var-parameters
     ]
     steps:
     # - name: Setup Rclone
