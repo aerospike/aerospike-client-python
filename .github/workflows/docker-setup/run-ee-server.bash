@@ -78,9 +78,8 @@ $call_from_tools_container asconfig convert -f ${volume_dest_folder}/${aerospike
 # Generate server cert
 # openssl x509 -req -in server.csr -CA ca.cer -CAkey ca.pem -out server.cer
 
-# Some Docker container may have a low max fd limit
-# Just set max fd limit to make sure the server doesn't fail.
-# Somehow the container can have a lower soft/hard fd limit than the Docker daemon / host
+# Some Docker containers may have a lower max fd limit than the server default
+# I'm not sure how to get the max fd limit of a container without a shell
 docker run --ulimit nofile=15000 -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
     -v $VOLUME_NAME:$volume_dest_folder \
     $BASE_IMAGE --config-file $volume_dest_folder/$aerospike_conf_name
