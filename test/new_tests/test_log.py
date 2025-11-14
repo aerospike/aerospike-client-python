@@ -95,6 +95,20 @@ class TestLog(object):
         assert response == 0
         client.close()
 
+    def test_enable_log_handler_incorrect_with_LOG_LEVEL value(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(None)
+        aerospike.set_log_handler(None)
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
     @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
     def test_set_log_level_with_invalid_type(self, level):
         """
