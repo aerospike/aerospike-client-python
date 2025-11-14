@@ -114,10 +114,6 @@ jobs:
     - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
-  # run-changed-tests:
-  #   needs: register-test-definition
-  #   uses: aerospike/aerospike-client-python/.github/workflows/run-qe-test.yml@cicd-performance-regression-tests-using-asmikas-qe-env
-
   add-python-client-to-qe-test-image-for-performance-regression-tests:
     env:
       WHEEL_ARCH: x86_64
