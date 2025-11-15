@@ -115,6 +115,8 @@ jobs:
     - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
+  # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
+  # https://github.com/citrusleaf/qe-docker/commit/d72f2d3fda70e199e24f4f670811d6e33e7f92be
   add-python-client-to-qe-test-image-for-performance-regression-tests:
     env:
       WHEEL_ARCH: x86_64
