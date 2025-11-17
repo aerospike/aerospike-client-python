@@ -975,10 +975,10 @@ Index Operations
             ctx_map_rank = []
             ctx_map_rank.append(add_ctx_op(map_rank, -1))
             index_cdt_create("test", "demo", "martha", aerospike.INDEX_TYPE_MAPKEYS, aerospike.INDEX_STRING, "demo_fav_movies_titles_idx", ctx_map_rank
-            "test_string_list_cdt_index",
-            ctx_map_rank,
-            policy,
-        )
+                "test_string_list_cdt_index",
+                ctx_map_rank,
+                policy,
+            )
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
