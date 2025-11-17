@@ -1145,7 +1145,7 @@ class SelectByPath(_BaseExpr):
         Args:
             ctx: list of CDT contexts. This cannot be None or an empty list.
             return_type: Return type specifier.
-            flags: See :ref:`cdt_select_flags` for possible values.
+            flags: See :ref:`exp_path_select_flags` for possible values.
             bin: Bin expression to which this expression applies.
 
         :return: (expression)
@@ -1173,7 +1173,7 @@ class ModifyByPath(_BaseExpr):
             ctx: list of CDT contexts. This cannot be None or an empty list.
             return_type: Return type specifier.
             mod_exp: Compiled expression to apply.
-            flags: See :ref:`cdt_modify_flags` for possible values.
+            flags: See :ref:`exp_path_modify_flags` for possible values.
             bin: Bin expression to which this expression applies.
 
         :return: (expression)

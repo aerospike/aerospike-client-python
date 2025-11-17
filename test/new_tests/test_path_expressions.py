@@ -24,7 +24,7 @@ def setup_class(as_connection, request):
         request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
 
 
-class TestCDTSelectOperations:
+class TestPathExprOperations:
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
@@ -96,7 +96,7 @@ class TestCDTSelectOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
-                    flags=aerospike.CDT_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUES
                 ),
                 {
                     LIST_BIN_NAME: RECORD_BINS[LIST_BIN_NAME]
@@ -109,7 +109,7 @@ class TestCDTSelectOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
-                    flags=aerospike.CDT_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUES
                 ),
                 {
                     MAP_BIN_NAME: list(RECORD_BINS[MAP_BIN_NAME].values())
@@ -123,7 +123,7 @@ class TestCDTSelectOperations:
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children()
                     ],
-                    flags=aerospike.CDT_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUES
                 ),
                 {
                     LIST_BIN_NAME: [
@@ -150,16 +150,16 @@ class TestCDTSelectOperations:
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
                     ],
-                    flags=aerospike.CDT_SELECT_VALUES | aerospike.CDT_SELECT_NO_FAIL
+                    flags=aerospike.EXP_PATH_SELECT_VALUES | aerospike.EXP_PATH_SELECT_NO_FAIL
                 ),
                 {
                     MAP_BIN_NAME: []
                 },
-                id="cdt_select_no_fail"
+                id="exp_path_no_fail"
             )
         ]
     )
-    def test_cdt_select_basic_functionality(self, op, expected_bins):
+    def test_exp_path_basic_functionality(self, op, expected_bins):
         ops = [
             op
         ]
@@ -172,7 +172,7 @@ class TestCDTSelectOperations:
         20.0
     ).compile()
 
-    def test_cdt_select_with_filter(self):
+    def test_exp_path_with_filter(self):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -180,7 +180,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
-                flags=aerospike.CDT_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUES
             )
         ]
         with self.expected_context_for_pos_tests:
@@ -233,14 +233,14 @@ class TestCDTSelectOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=filter_expr.compile())
                 ],
-                flags=aerospike.CDT_SELECT_VALUES | aerospike.CDT_SELECT_NO_FAIL
+                flags=aerospike.EXP_PATH_SELECT_VALUES | aerospike.EXP_PATH_SELECT_NO_FAIL
             )
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.MAP_BIN_NAME] == expected_bin_value
 
-    LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.CDT_SELECT_VALUES)), 2)
+    LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUES)), 2)
 
     def test_exp_loopvar_list(self):
         ops = [
@@ -249,7 +249,7 @@ class TestCDTSelectOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_SIZE_GE_TWO_EXPR.compile())
                 ],
-                flags=aerospike.CDT_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUES
             )
         ]
         with self.expected_context_for_pos_tests:
@@ -266,8 +266,8 @@ class TestCDTSelectOperations:
 
     # This operate command will pass with either flag set, but we are just checking the API by using it
     @pytest.mark.parametrize("flags", [
-        aerospike.CDT_MODIFY_NO_FAIL,
-        aerospike.CDT_MODIFY_DEFAULT,
+        aerospike.EXP_PATH_MODIFY_NO_FAIL,
+        aerospike.EXP_PATH_MODIFY_DEFAULT,
     ])
     def test_cdt_modify(self, flags):
         ops = [
@@ -286,7 +286,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                flags=aerospike.CDT_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUES
             ),
         ]
         with self.expected_context_for_pos_tests:
@@ -295,9 +295,9 @@ class TestCDTSelectOperations:
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
 
 
-    # Test cdt select flags
+    # Test path expression flags
 
-    def test_cdt_select_flag_matching_tree(self):
+    def test_exp_path_flag_matching_tree(self):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -305,7 +305,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
-                flags=aerospike.CDT_SELECT_MATCHING_TREE
+                flags=aerospike.EXP_PATH_SELECT_MATCHING_TREE
             )
         ]
 
@@ -320,7 +320,7 @@ class TestCDTSelectOperations:
 
             assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
 
-    def test_cdt_select_flag_map_keys(self):
+    def test_exp_path_flag_map_keys(self):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -328,7 +328,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                flags=aerospike.CDT_SELECT_MAP_KEY
+                flags=aerospike.EXP_PATH_SELECT_MAP_KEY
             )
         ]
 
@@ -343,7 +343,7 @@ class TestCDTSelectOperations:
                 cdt_ctx.cdt_ctx_all_children(),
                 cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
             ],
-            flags=aerospike.CDT_SELECT_VALUES
+            flags=aerospike.EXP_PATH_SELECT_VALUES
         )
         ops = [
             op
@@ -361,7 +361,7 @@ class TestCDTSelectOperations:
                 operations.select_by_path,
                 {
                     "bin_name": MAP_BIN_NAME,
-                    "flags": aerospike.CDT_SELECT_VALUES
+                    "flags": aerospike.EXP_PATH_SELECT_VALUES
                 }
             ),
             pytest.param(
@@ -369,7 +369,7 @@ class TestCDTSelectOperations:
                 {
                     "bin_name": MAP_BIN_NAME,
                     "expr": SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR,
-                    "flags": aerospike.CDT_MODIFY_DEFAULT
+                    "flags": aerospike.EXP_PATH_MODIFY_DEFAULT
                 }
             ),
         ]
@@ -388,7 +388,7 @@ class TestCDTSelectOperations:
         ]
 
         bin_expr=MapBin(bin=self.MAP_OF_NESTED_MAPS_BIN_NAME)
-        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR, flags=aerospike.CDT_MODIFY_DEFAULT, bin=bin_expr).compile()
+        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR, flags=aerospike.EXP_PATH_MODIFY_DEFAULT, bin=bin_expr).compile()
         select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
         ops = [
             expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
@@ -409,7 +409,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.MAP_KEY_FILTER_EXPR)
                 ],
-                flags=aerospike.CDT_SELECT_MATCHING_TREE
+                flags=aerospike.EXP_PATH_SELECT_MATCHING_TREE
             )
         ]
 
@@ -433,7 +433,7 @@ class TestCDTSelectOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_INDEX_FILTER_EXPR)
                 ],
-                flags=aerospike.CDT_SELECT_MATCHING_TREE
+                flags=aerospike.EXP_PATH_SELECT_MATCHING_TREE
             )
         ]
 
@@ -451,7 +451,7 @@ class TestCDTSelectOperations:
                     cdt_ctx.cdt_ctx_all_children()
                 ],
                 expr=ResultRemove().compile(),
-                flags=aerospike.CDT_MODIFY_DEFAULT
+                flags=aerospike.EXP_PATH_MODIFY_DEFAULT
             )
         ]
 
