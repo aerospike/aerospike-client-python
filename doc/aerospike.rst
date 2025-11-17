@@ -1805,7 +1805,7 @@ Path Expression Flags
 
     Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-.. data:: EXP_PATH_SELECT_VALUES
+.. data:: EXP_PATH_SELECT_VALUE
 
     Return the list of the values of the nodes finally selected by the context.
 
@@ -1814,13 +1814,13 @@ Path Expression Flags
 .. data:: EXP_PATH_SELECT_LIST_VALUE
 
     Return the list of the values of the nodes finally selected by the context.
-    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUES`` to make it clear in your
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
     source code that you're expecting a list.
 
 .. data:: EXP_PATH_SELECT_MAP_VALUE
 
     Return the list of map values of the nodes finally selected by the context.
-    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUES` to make it clear in your
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
     source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUES`.
 
 .. data:: EXP_PATH_SELECT_MAP_KEYS

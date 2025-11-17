@@ -96,7 +96,7 @@ class TestPathExprOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
-                    flags=aerospike.EXP_PATH_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUE
                 ),
                 {
                     LIST_BIN_NAME: RECORD_BINS[LIST_BIN_NAME]
@@ -109,7 +109,7 @@ class TestPathExprOperations:
                     ctx=[
                         cdt_ctx.cdt_ctx_all_children(),
                     ],
-                    flags=aerospike.EXP_PATH_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUE
                 ),
                 {
                     MAP_BIN_NAME: list(RECORD_BINS[MAP_BIN_NAME].values())
@@ -123,7 +123,7 @@ class TestPathExprOperations:
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children()
                     ],
-                    flags=aerospike.EXP_PATH_SELECT_VALUES
+                    flags=aerospike.EXP_PATH_SELECT_VALUE
                 ),
                 {
                     LIST_BIN_NAME: [
@@ -150,7 +150,7 @@ class TestPathExprOperations:
                         cdt_ctx.cdt_ctx_all_children(),
                         cdt_ctx.cdt_ctx_all_children_with_filter(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
                     ],
-                    flags=aerospike.EXP_PATH_SELECT_VALUES | aerospike.EXP_PATH_SELECT_NO_FAIL
+                    flags=aerospike.EXP_PATH_SELECT_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
                 ),
                 {
                     MAP_BIN_NAME: []
@@ -180,7 +180,7 @@ class TestPathExprOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
                 ],
-                flags=aerospike.EXP_PATH_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUE
             )
         ]
         with self.expected_context_for_pos_tests:
@@ -197,6 +197,8 @@ class TestPathExprOperations:
                 GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2),
                 # Should filter out 1
                 [2],
+                # Without an id, it's harder to run this test case individually
+                # LoopVarInt isn't printed to stdout
                 id="LoopVarInt"
             ),
             # At the first level below root, only return maps that have a key "bb" with value >= 10
@@ -233,14 +235,14 @@ class TestPathExprOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=filter_expr.compile())
                 ],
-                flags=aerospike.EXP_PATH_SELECT_VALUES | aerospike.EXP_PATH_SELECT_NO_FAIL
+                flags=aerospike.EXP_PATH_SELECT_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
             )
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.MAP_BIN_NAME] == expected_bin_value
 
-    LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUES)), 2)
+    LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUE)), 2)
 
     def test_exp_loopvar_list(self):
         ops = [
@@ -249,7 +251,7 @@ class TestPathExprOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.LIST_SIZE_GE_TWO_EXPR.compile())
                 ],
-                flags=aerospike.EXP_PATH_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUE
             )
         ]
         with self.expected_context_for_pos_tests:
@@ -286,7 +288,7 @@ class TestPathExprOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                flags=aerospike.EXP_PATH_SELECT_VALUES
+                flags=aerospike.EXP_PATH_SELECT_VALUE
             ),
         ]
         with self.expected_context_for_pos_tests:
@@ -343,7 +345,7 @@ class TestPathExprOperations:
                 cdt_ctx.cdt_ctx_all_children(),
                 cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
             ],
-            flags=aerospike.EXP_PATH_SELECT_VALUES
+            flags=aerospike.EXP_PATH_SELECT_VALUE
         )
         ops = [
             op
@@ -361,7 +363,7 @@ class TestPathExprOperations:
                 operations.select_by_path,
                 {
                     "bin_name": MAP_BIN_NAME,
-                    "flags": aerospike.EXP_PATH_SELECT_VALUES
+                    "flags": aerospike.EXP_PATH_SELECT_VALUE
                 }
             ),
             pytest.param(
