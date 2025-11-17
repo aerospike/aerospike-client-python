@@ -100,7 +100,7 @@ class TestLog(object):
         Test log handler with correct parameters
         """
         with pytest.raises(e.ClientError):
-            response = aerospike.set_log_level(None)
+            response = aerospike.set_log_level("should_fail")
 
     @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
     def test_set_log_level_with_invalid_type(self, level):
