@@ -99,8 +99,11 @@ class TestLog(object):
         """
         Test log handler with correct parameters
         """
-        with pytest.raises(e.ClientError):
-            response = aerospike.set_log_level("should_fail")
+        with pytest.raises(e.ParamError) as param_error:
+            response = aerospike.set_log_level(68786586756785785745)
+
+        assert param_error.value.code == -2
+        assert param_error.value.msg == 'integer value exceeds sys.maxsize'
 
     @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
     def test_set_log_level_with_invalid_type(self, level):
