@@ -322,7 +322,33 @@ class TestPathExprOperations:
 
             assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
 
-    def test_exp_path_flag_map_keys(self):
+    @pytest.mark.parametrize(
+        "flags, expected_bin_value", [
+            pytest.param(
+                aerospike.EXP_PATH_SELECT_MAP_KEY,
+                ["book", "ferry", "food", "game", "plants", "stickers"]
+            ),
+            # TODO: need to document this better
+            pytest.param(
+                aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE,
+                [
+                    "book",
+                    14.990000,
+                    "ferry",
+                    5.000000,
+                    "food",
+                    34.000000,
+                    "game",
+                    12.990000,
+                    "plants",
+                    19.990000,
+                    "stickers",
+                    2.000000
+                ]
+            )
+        ]
+    )
+    def test_exp_path_flag_map(self, flags, expected_bin_value):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -330,13 +356,13 @@ class TestPathExprOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                flags=aerospike.EXP_PATH_SELECT_MAP_KEY
+                flags=flags
             )
         ]
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: ["book", "ferry", "food", "game", "plants", "stickers"]}
+            assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
 
     def test_neg_iterate_on_unexpected_type(self):
         op = operations.select_by_path(
