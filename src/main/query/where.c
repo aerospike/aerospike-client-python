@@ -79,12 +79,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            Py_XDECREF(py_ctx_dict);
+            if (new_dict_in_use) {
+                Py_DECREF(py_ctx_dict);
+            }
             cf_free(pctx);
             pctx = NULL;
             return err.code;
         }
-        if(new_dict_in_use){
+        if (new_dict_in_use) {
             Py_DECREF(py_ctx_dict);
         }
     }
