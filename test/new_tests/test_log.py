@@ -121,6 +121,7 @@ class TestLog(object):
         Test log level with log level as a bool,
         this works because bool is a subclass of int
         """
+
         with pytest.raises(e.ParamError) as param_error:
             aerospike.set_log_level(False)
 
