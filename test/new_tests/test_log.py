@@ -24,7 +24,36 @@ class TestLog(object):
 
         assert response == 0
 
-    def test_enable_log_handler_correct(self):
+    def test_enable_log_handler_correct_no_callback(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler()
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_callback(self):
+        """
+        Test log handler with correct parameters
+        """
+        def log_callback(level, func, path, line, msg):
+            print("[{}] {}".format(func, msg))
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler(log_callback)
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_none(self):
         """
         Test log handler with correct parameters
         """
@@ -37,6 +66,44 @@ class TestLog(object):
 
         assert response == 0
         client.close()
+
+    def test_enable_log_handler_correct_with_LOG_LEVEL_OFF(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+        aerospike.set_log_handler()
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_LOG_LEVEL_DEBUG(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler(None)
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_incorrect_with_LOG_LEVEL_value(self):
+        """
+        Test log handler with correct parameters
+        """
+        with pytest.raises(e.ParamError) as param_error:
+            response = aerospike.set_log_level(68786586756785785745)
+
+        assert param_error.value.code == -2
+        assert param_error.value.msg == 'integer value exceeds sys.maxsize'
 
     @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
     def test_set_log_level_with_invalid_type(self, level):
@@ -54,6 +121,7 @@ class TestLog(object):
         Test log level with log level as a bool,
         this works because bool is a subclass of int
         """
+
         with pytest.raises(e.ParamError) as param_error:
             aerospike.set_log_level(False)
 

@@ -18,13 +18,16 @@
 
 #include <Python.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_log.h>
 
 /*
  * Structure to hold user's log_callback object
  */
-typedef struct Aerospike_log_callback {
+typedef struct Aerospike_log_data {
     PyObject *callback;
-} AerospikeLogCallback;
+    long level;
+    bool logToConsole;
+} AerospikeLogData;
 
 /**
  * Set log level for C-SDK
