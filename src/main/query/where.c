@@ -84,7 +84,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             pctx = NULL;
             return err.code;
         }
-        Py_XDECREF(py_ctx_dict);
+        if(new_dict_in_use){
+            Py_DECREF(py_ctx_dict);
+        }
     }
 
     as_exp *exp_list = NULL;
