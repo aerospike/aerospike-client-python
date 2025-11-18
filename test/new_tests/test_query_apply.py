@@ -539,6 +539,7 @@ class TestQueryApply(object):
         ops = [
             operations.increment("testBinName", 1)
         ]
+
         query = self.as_connection.query("test", "demo")
         query.apply(
             "query_apply_parameters",
