@@ -1076,6 +1076,7 @@ class TestQuery(TestBaseClass):
         Make sure that ctx is being cleaned up properly
         """
         query = self.as_connection.query("test", "demo")
+
         # Invalid bin
         with pytest.raises(e.ParamError):
             query.where(p.range(5, aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
@@ -1144,10 +1145,6 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with cdt_ctx containing incorrect arguments
         """
-        from .test_base_class import TestBaseClass
-
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-            pytest.skip("It only applies to >= 6.1 enterprise edition")
 
         query = self.as_connection.query("test", "demo")
 
