@@ -1145,7 +1145,6 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with cdt_ctx containing incorrect arguments
         """
-
         query = self.as_connection.query("test", "demo")
 
         with pytest.raises(e.ParamError) as param_error:
