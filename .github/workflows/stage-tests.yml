@@ -191,7 +191,8 @@ jobs:
         runner-os: [
           # These larger runners run on intel
           macos-14-large,
-          macos-15-large
+          macos-15-large,
+          macos-26
         ]
         python-version: [
           "3.9",
