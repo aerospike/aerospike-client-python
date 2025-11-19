@@ -1,6 +1,6 @@
 import re
 
-input_file = "val.log"
+input_file = "sample.txt"
 output_file = "unique_suppressions.txt"
 
 unique_blocks = set()
@@ -27,15 +27,24 @@ with open(input_file) as f:
             inside_block = False
             total_blocks += 1
 
-            block_str = "\n".join(current_block)
+            block_str = "\n".join(l.rstrip() for l in current_block)
             unique_blocks.add(block_str)
         elif inside_block:
             current_block.append(line)
 
-# Write unique blocks
+# Write unique blocks with tabs for inner lines only
 with open(output_file, "w") as f:
-    for block in unique_blocks:
-        f.write(block + "\n\n")
+    for block in sorted(unique_blocks):
+        lines = block.split("\n")
+        # Keep first line `{` as is, indent all lines in between, last line `}` as is
+        if len(lines) > 2:
+            indented_block = "\n".join(
+                [lines[0]] + ["\t" + line for line in lines[1:-1]] + [lines[-1]]
+            )
+        else:
+            # Blocks with only {} or {} plus one line
+            indented_block = "\n".join(lines)
+        f.write(indented_block + "\n\n")
 
 print(f"Original number of suppressions: {total_blocks}")
 print(f"Number of unique suppressions: {len(unique_blocks)}")

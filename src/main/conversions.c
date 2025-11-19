@@ -406,6 +406,8 @@ as_status as_partitions_status_to_pyobject(
             Py_XDECREF(py_id);
             goto END;
         }
+        // Must be decref'd because PyDict_SetItem does not steal a reference
+        Py_DECREF(new_py_tuple);
         Py_DECREF(py_id);
     }
 
@@ -1308,6 +1310,9 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_parameter);
 
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
+        if (err->code != AEROSPIKE_OK){
+            return err->code;
+        }
         const char *geo_value = PyUnicode_AsUTF8(geospatial_dump);
         char *geo_value_cpy = strdup(geo_value);
 

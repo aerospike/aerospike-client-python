@@ -30,6 +30,11 @@ PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 {
     PyObject *initresult = NULL;
 
+    if (!geo_data) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "geo_data is invalid");
+        return NULL;
+    }
+
     PyObject *sysmodules = PyImport_GetModuleDict();
     PyObject *json_module = NULL;
     if (PyMapping_HasKeyString(sysmodules, "json")) {
@@ -50,6 +55,10 @@ PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
                                                 geo_data, NULL);
         Py_DECREF(json_module);
         Py_DECREF(py_funcname);
+    }
+    if (!initresult) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "result of dump is invalid");
+        return NULL;
     }
 
     return initresult;
