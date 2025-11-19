@@ -1,0 +1,191 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyLong_New
+   fun:PyLong_FromUnsignedLong
+   fun:PyLong_FromUnsignedLong
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeQuery_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:PyByteArray_FromStringAndSize
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeQuery_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_PyCode_InitOpcache
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:object_vacall
+   fun:PyObject_CallMethodObjArgs
+   fun:AerospikeGeospatial_DoDumps
+   fun:as_val_new_from_pyobject
+   fun:pyobject_to_list
+   fun:as_val_new_from_pyobject
+   fun:as_record_init_from_pyobject
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   fun:PyTuple_New
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeQuery_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyObject_New
+   fun:PyByteArray_FromStringAndSize
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeQuery_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:CRYPTO_zalloc
+   fun:SSL_new
+   fun:as_tls_wrap
+   fun:as_socket_wrap
+   fun:as_socket_create
+   fun:as_node_try_family_connections
+   fun:as_node_create_socket
+   fun:as_node_create_connection
+   fun:as_node_get_connection
+   fun:as_info_command_node
+   fun:aerospike_info_foreach
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   fun:PyTuple_New
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeScan_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   fun:PyTuple_New
+   fun:as_partition_status_to_pyobject
+   fun:as_partitions_status_to_pyobject
+   fun:AerospikeQuery_Get_Partitions_status
+   fun:method_vectorcall_NOARGS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+}
