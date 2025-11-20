@@ -2237,8 +2237,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
         Py_XDECREF(geo_data);
         if (!geo_data_py_str) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Unable to call dumps function");
+            return;
         }
         const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
 
