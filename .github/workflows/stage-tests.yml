@@ -193,7 +193,6 @@ jobs:
       matrix:
         runner-os: [
           # These larger runners run on intel
-          macos-14-large,
           macos-15-large
         ]
         python-version: [
