@@ -71,11 +71,11 @@ class TestIndex(object):
         Invoke createindex() with non existent namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_integer_create("fake_namespace", "demo", "age", "age_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_create_integer_index_with_incorrect_set(self):
         """
@@ -261,11 +261,11 @@ class TestIndex(object):
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_string_create("fake_namespace", "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_create_string_index_with_incorrect_set(self):
         """
@@ -493,5 +493,17 @@ class TestIndex(object):
                 set="demo",
                 index_type=aerospike.INDEX_TYPE_DEFAULT,
                 index_datatype=aerospike.INDEX_BLOB,
+                expressions=GeoBin("geo_point").compile()
+            )
+
+    def test_index_expr_create_invalid_expr(self):
+        with pytest.raises(e.ParamError):
+            self.as_connection.index_expr_create(
+                ns="test",
+                set="demo",
+                index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_BLOB,
+                # Common mistake: uncompiled expression
+                name="test",
                 expressions=GeoBin("geo_point")
             )
