@@ -1308,10 +1308,14 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_parameter);
 
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
+        Py_XDECREF(py_data);
+        if (!geospatial_dump) {
+            return as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to call dumps function");
+        }
         const char *geo_value = PyUnicode_AsUTF8(geospatial_dump);
         char *geo_value_cpy = strdup(geo_value);
 
-        Py_DECREF(py_data);
         Py_DECREF(geospatial_dump);
 
         *val = (as_val *)as_geojson_new(geo_value_cpy, true);
@@ -2231,6 +2235,11 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *geo_data = PyObject_GetAttrString(py_value, "geo_data");
         PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
+        Py_XDECREF(geo_data);
+        if (!geo_data_py_str) {
+            return as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to call dumps function");
+        }
         const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
 
         // Make a copy of the encoding since the utf8 encoding points to a buffer in the PyUnicode object
@@ -2243,7 +2252,6 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 
         // Cleanup
         Py_XDECREF(geo_data_py_str);
-        Py_XDECREF(geo_data);
     }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
