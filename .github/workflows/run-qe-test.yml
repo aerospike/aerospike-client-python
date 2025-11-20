@@ -242,11 +242,11 @@ jobs:
         done
       shell: bash
 
-    # - run: testctl --version
+    - run: testctl --version
 
     # test-enqueue hides testctl's output, so this can be helpful for debugging
-    # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
-    #   working-directory: aerospike-client-python/test/
+    - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
+      working-directory: aerospike-client-python/test/
 
     - name: Allows us to get the exact test run id that was created by test-enqueue.
       run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
@@ -255,6 +255,7 @@ jobs:
     #   working-directory: aerospike-client-python/test/
 
     - name: Enqueue test run and fail fast if unable to enqueue
+      if: ${{ false }}
       run: |
         test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | tee test-enqueue-output.log
         enqueue_count=$(grep "COUNT:" test-enqueue-output.log | sed 's/COUNT\://' | xargs)
