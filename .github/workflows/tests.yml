@@ -303,12 +303,15 @@ jobs:
         py-version: [
           "3.9",
           "3.10",
-          "3.10d",
           "3.11",
           "3.12",
           "3.13",
           "3.14"
         ]
+        debug: [false]
+        include:
+          - py-version: "3.10"
+            debug: true
       fail-fast: false
 
     steps:
@@ -316,14 +319,14 @@ jobs:
       with:
         submodules: recursive
 
-    - if: ${{ matrix.py-version != '3.10d' }}
+    - if: ${{ matrix.debug == false }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
 
-    - if: ${{ matrix.py-version == '3.10d' }}
+    - if: ${{ matrix.debug }}
       run: |
         sudo apt update
         sudo apt install -y python3.10-dbg
