@@ -1,4 +1,4 @@
-run-name: "Run QE test (python-client-version=${{ inputs.python-client-version-in-jfrog-to-test }} test-definition=${{ inputs.test-definition }})"
+run-name: "Run QE test (python-client-version=${{ inputs.python-client-version-in-jfrog-to-test }}, feature=${{ inputs.feature }}, num_records=${{ inputs.num_records }}, insert_mode=${{ inputs.insert_mode }})"
 
 permissions:
   contents: read
