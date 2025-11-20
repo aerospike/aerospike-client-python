@@ -256,7 +256,7 @@ jobs:
 
     - name: Enqueue test run and fail fast if unable to enqueue
       run: |
-        enqueue_count=$(test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | grep "COUNT:" | sed 's/COUNT\://' | xargs)
+        enqueue_count=$(test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | tee /dev/tty | grep "COUNT:" | sed 's/COUNT\://' | xargs)
         if [[ "$enqueue_count" != "1" ]]; then
           echo "We expected 1 test run to be enqueued, but $enqueue_count was actually enqueued."
           exit 1
