@@ -32,10 +32,6 @@ inputs:
     required: false
     description: Used to disable server features
     default: 'STRONG_CONSISTENCY=1 SECURITY=1 MUTUAL_TLS=1'
-outputs:
-  container-name:
-    description: 'Server container name'
-    value: ${{ steps.get-container-name.outputs.container-name }}
 
 runs:
   using: "composite"
@@ -64,13 +60,17 @@ runs:
     run: brew install coreutils
     shell: bash
 
-  - run: ${{ inputs.env-vars }} bash ./run-ee-server.bash
-    working-directory: .github/workflows/docker-setup
-    shell: bash
-
+  # Github composite actions don't support env variables for the whole composite action,
+  # so this is a workaround
   - id: get-container-name
     run: echo container-name=aerospike >> $GITHUB_OUTPUT
     shell: bash
+
+  - run: ${{ inputs.env-vars }} bash ./run-ee-server.bash
+    working-directory: .github/workflows/docker-setup
+    shell: bash
+    env:
+      CONTAINER_NAME: ${{ steps.get-container-name.outputs.container-name }}
 
   # Configure tests
 

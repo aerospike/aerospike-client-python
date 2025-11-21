@@ -9,6 +9,7 @@ export MSYS_NO_PATHCONV=1
 # Input defaults
 
 BASE_IMAGE=${BASE_IMAGE:-"aerospike/aerospike-server-enterprise"}
+CONTAINER_NAME=${CONTAINER_NAME:-"aerospike"}
 # Server features
 MUTUAL_TLS=${MUTUAL_TLS:-"0"}
 SECURITY=${SECURITY:-"0"}
@@ -80,7 +81,7 @@ $call_from_tools_container asconfig convert -f ${volume_dest_folder}/${aerospike
 
 # Some Docker containers may have a lower max fd limit than the server default
 # I'm not sure how to get the max fd limit of a container without a shell
-docker run --ulimit nofile=15000 -d --rm --name aerospike -p 4333:4333 -p 3000:3000 \
+docker run --ulimit nofile=15000 -d --rm --name $CONTAINER_NAME -p 4333:4333 -p 3000:3000 \
     -v $VOLUME_NAME:$volume_dest_folder \
     $BASE_IMAGE --config-file $volume_dest_folder/$aerospike_conf_name
 
