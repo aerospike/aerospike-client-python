@@ -257,10 +257,10 @@ jobs:
     - name: Tailscale VPN
       uses: tailscale/github-action@v4
       with:
-        oauth-client-id: ${{ vars.TAILSCALE_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        oauth-client-id: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_SECRET }}
         tags: tag:python-client-ci
-        args: "--exit-node=${{ secrets.TAILSCALE_EXIT_NODE }}"
+        args: "--exit-node=${{ vars.TAILSCALE_EXIT_NODE }}"
         version: 1.70.0
 
     - name: Enqueue test run and fail fast if unable to enqueue
