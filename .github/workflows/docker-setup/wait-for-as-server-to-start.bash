@@ -17,7 +17,7 @@ while true; do
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
     echo "Checking if we can reach the server via the service port..."
-    if call_from_tools_container asinfo $SECURITY_FLAGS -v status | tee >(cat) | grep -qE "^ok"; then
+    if [[ call_from_tools_container asinfo $SECURITY_FLAGS -v status | tee >(cat) | grep -qE "^ok" ]]; then
         # Server is ready when asinfo returns ok
         echo "Can reach server now."
         break
