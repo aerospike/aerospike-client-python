@@ -29,6 +29,8 @@ docker stop $container_name_for_populating_volume
 
 aerospike_yaml_file_name="aerospike-dev.yaml"
 
+# This is a function instead of a variable that we call before our arguments
+# because yq takes in the expression before accepting flags
 call_from_yq_container() {
     # alpine container's process is run as root user
     # So the files copied into the named volume will also be owned by root
