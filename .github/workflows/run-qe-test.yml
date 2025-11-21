@@ -245,7 +245,7 @@ jobs:
     - run: testctl --version
 
     # test-enqueue hides testctl's output, so this can be helpful for debugging
-    - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
+    # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
       working-directory: aerospike-client-python/test/
 
     - name: Allows us to get the exact test run id that was created by test-enqueue.
@@ -254,8 +254,17 @@ jobs:
     # - run: yq -i '.definitions.std.[0] = "${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
     #   working-directory: aerospike-client-python/test/
 
+    - name: Tailscale VPN
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ vars.TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        tags: tag:python-client-ci
+        args: "--exit-node=${{ secrets.TAILSCALE_EXIT_NODE }}"
+        version: 1.70.0
+
     - name: Enqueue test run and fail fast if unable to enqueue
-      if: ${{ false }}
+      # if: ${{ false }}
       run: |
         test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | tee test-enqueue-output.log
         enqueue_count=$(grep "COUNT:" test-enqueue-output.log | sed 's/COUNT\://' | xargs)
