@@ -6,7 +6,7 @@ set -o pipefail
 # We use bash because we need the not (!) operator
 
 call_from_tools_container() {
-    docker run --rm --network host aerospike/aerospike-tools $1
+    docker run --rm --network host aerospike/aerospike-tools $@
 }
 
 while true; do

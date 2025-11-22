@@ -72,7 +72,7 @@ fi
 
 # We want to save our aerospike.conf in this directory.
 call_from_tools_container() {
-    docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools $1
+    docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools $@
 }
 
 aerospike_conf_name=aerospike.conf
