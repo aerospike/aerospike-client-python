@@ -101,9 +101,9 @@ fi
 # Set up security
 superuser_name_and_password=superuser
 if [[ "$SECURITY" == "1" ]]; then
-    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "\"manage acl \
+    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage acl \
         create user $superuser_name_and_password password $superuser_name_and_password \
-        roles read-write-udf, sys-admin, user-admin, data-admin\""
+        roles read-write-udf, sys-admin, user-admin, data-admin"
 fi
 
 # Strong consistency
@@ -113,6 +113,6 @@ if [[ "$STRONG_CONSISTENCY" == "1" ]]; then
         # Admin user doesn't have enough permissions to set up the roster and recluster
         SECURITY_FLAGS="-U $superuser_name_and_password -P $superuser_name_and_password"
     fi
-    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "\"manage roster stage observed ns test\""
-    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "\"manage recluster\""
+    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage roster stage observed ns test"
+    call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage recluster"
 fi
