@@ -513,9 +513,14 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        char *geo_value =
-            (char *)PyUnicode_AsUTF8(AerospikeGeospatial_DoDumps(py_data, err));
-        Py_DECREF(py_data);
+        PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
+        Py_XDECREF(py_data);
+        if (!geospatial_dump) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to call dumps function");
+        }
+        char *geo_value = (char *)PyUnicode_AsUTF8(geospatial_dump);
+
         as_exp_entry tmp_entry = as_exp_geo(geo_value);
         *new_entry = tmp_entry;
     }
