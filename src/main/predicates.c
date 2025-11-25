@@ -225,6 +225,7 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
         py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
 
         if (!py_shape) {
+            PyErr_Clear();
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Unable to call dumps function");
             goto CLEANUP;
@@ -322,6 +323,7 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
         py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
 
         if (!py_shape) {
+            PyErr_Clear();
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Unable to call dumps function");
             goto CLEANUP;

@@ -166,13 +166,27 @@ jobs:
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 " >> $GITHUB_ENV
-      if: ${{ !inputs.massif }}
+    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
+      if: ${{ !inputs.massif }} && ${{ github.event.inputs.test-file }}
 
-    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no " >> $GITHUB_ENV
+      if: ${{ !inputs.massif }} && ${{ !github.event.inputs.test-file }}
+
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }} 2>&1 | tee valgrind.log
       working-directory: test
 
+    - run: |
+        python3 extract_suppressions.py valgrind.log new_suppressions.supp
+        cat new_suppressions.supp
+      working-directory: test
     # TODO: upload report as artifact
+
+    - name: Upload suppression file
+      uses: actions/upload-artifact@v4
+      with:
+        name: valgrind-suppressions
+        path: test/new_suppressions.supp
+
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
       if: ${{ !cancelled() && inputs.massif }}
       working-directory: test

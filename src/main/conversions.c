@@ -1312,6 +1312,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
         Py_XDECREF(py_data);
         if (!geospatial_dump) {
+            PyErr_Clear();
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Unable to call dumps function");
         }
@@ -2239,6 +2240,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
         Py_XDECREF(geo_data);
         if (!geo_data_py_str) {
+            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to call dumps function");
             return;

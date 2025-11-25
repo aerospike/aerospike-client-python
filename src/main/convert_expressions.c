@@ -516,6 +516,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
         Py_XDECREF(py_data);
         if (!geospatial_dump) {
+            PyErr_Clear();
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Unable to call dumps function");
         }
