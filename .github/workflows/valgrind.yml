@@ -176,7 +176,7 @@ jobs:
       working-directory: test
 
     - run: |
-        python3 extract_suppressions.py valgrind.log new_suppressions.supp
+        python3 valgrind-suppression/extract_suppressions.py valgrind.log new_suppressions.supp
         cat new_suppressions.supp
       working-directory: test
     # TODO: upload report as artifact
