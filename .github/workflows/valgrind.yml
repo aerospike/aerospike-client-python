@@ -166,7 +166,7 @@ jobs:
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
+    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --suppressions=./valgrind-suppression/file-suppressions/${{ github.event.inputs.test-file }}.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
       if: ${{ !inputs.massif }} && ${{ github.event.inputs.test-file }}
 
     - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no " >> $GITHUB_ENV
