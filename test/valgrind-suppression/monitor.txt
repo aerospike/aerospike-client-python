@@ -1,0 +1,6 @@
+monitor.txt
+
+2025-11-21T21:33:33.4711859Z ==8329==    by 0x97E1978: metadata_to_pyobject (conversions.c:2152)
+2025-11-21T21:33:33.4712762Z ==8329==    by 0x97E1ACD: record_to_pyobject (conversions.c:1886)
+2025-11-21T21:33:33.4713554Z ==8329==    by 0x97CE78B: AerospikeClient_Get_Invoke (get.c:101)
+2025-11-21T21:33:33.4714294Z ==8329==    by 0x97CE868: AerospikeClient_Get (get.c:173)

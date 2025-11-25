@@ -5,10 +5,22 @@ import sys
 
 import pytest
 
+import ctypes
+
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+
+# access PyErr_Clear from the C API
+PyErr_Clear = ctypes.pythonapi.PyErr_Clear
+PyErr_Clear.restype = None
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session, exitstatus):
+    # Clear any lingering Python exceptions
+    PyErr_Clear()
+
 
 # Comment this out because nowhere in the repository is using it
 '''
