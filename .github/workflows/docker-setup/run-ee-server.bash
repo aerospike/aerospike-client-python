@@ -72,7 +72,8 @@ fi
 
 # We want to save our aerospike.conf in this directory.
 call_from_tools_container() {
-    docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools $@
+    # Have to pass $@ within double quotes to prevent individual arguments from being word splitted (i.e the "manage acl" command should not be splitted)
+    docker run --rm -v $VOLUME_NAME:$volume_dest_folder --network host aerospike/aerospike-tools "$@"
 }
 
 aerospike_conf_name=aerospike.conf
