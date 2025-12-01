@@ -2174,6 +2174,8 @@ Info Policies
 
         * **timeout** (:class:`int`)
             | Read timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_admin_policies:
@@ -2190,6 +2192,8 @@ Admin Policies
 
         * **timeout** (:class:`int`)
             | Admin operation timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_list_policies:
