@@ -86,9 +86,9 @@ call_from_tools_container asconfig convert -f ${volume_dest_folder}/${aerospike_
 
 # Some Docker containers may have a lower max fd limit than the server default
 # I'm not sure how to get the max fd limit of a container without a shell
-docker run --ulimit nofile=15000 -d --rm --name $CONTAINER_NAME -p 4333:4333 -p 3000:3000 \
+docker run --ulimit nofile=15000 -d --rm --name "$CONTAINER_NAME" -p 4333:4333 -p 3000:3000 \
     -v $VOLUME_NAME:$volume_dest_folder \
-    $BASE_IMAGE --config-file $volume_dest_folder/$aerospike_conf_name
+    "$BASE_IMAGE" --config-file $volume_dest_folder/$aerospike_conf_name
 
 if [[ "$SECURITY" == "1" ]]; then
     export SECURITY_FLAGS="-U admin -P admin"
@@ -102,6 +102,7 @@ fi
 # Set up security
 superuser_name_and_password=superuser
 if [[ "$SECURITY" == "1" ]]; then
+    # shellcheck disable=SC2086
     call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage acl \
         create user $superuser_name_and_password password $superuser_name_and_password \
         roles read-write-udf, sys-admin, user-admin, data-admin"
@@ -114,6 +115,9 @@ if [[ "$STRONG_CONSISTENCY" == "1" ]]; then
         # Admin user doesn't have enough permissions to set up the roster and recluster
         SECURITY_FLAGS="-U $superuser_name_and_password -P $superuser_name_and_password"
     fi
+
+    # shellcheck disable=SC2086
     call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage roster stage observed ns test"
+    # shellcheck disable=SC2086
     call_from_tools_container asadm $SECURITY_FLAGS --enable --execute "manage recluster"
 fi
