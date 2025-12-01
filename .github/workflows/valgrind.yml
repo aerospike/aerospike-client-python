@@ -182,13 +182,27 @@ jobs:
         python3 valgrind-suppression/extract_suppressions.py valgrind.log new_suppressions.supp
         cat new_suppressions.supp
       working-directory: test
-    # TODO: upload report as artifact
+      if: ${{ !inputs.massif }}
 
     - name: Upload suppression file
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.inputs.test-file }}.supp
         path: test/new_suppressions.supp
+      if: ${{ !inputs.massif }}
+
+    - run: |
+        python3 valgrind-suppression/filter_suppressions.py new_suppressions.supp filtered_suppressions.supp
+        cat filtered_suppressions.supp
+      working-directory: test
+      if: ${{ !inputs.massif }}
+
+    - name: Upload filter suppressions file
+      uses: actions/upload-artifact@v4
+      with:
+        name: filtered_${{ github.event.inputs.test-file }}.supp
+        path: test/filtered_suppressions.supp
+      if: ${{ !inputs.massif }}
 
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
       if: ${{ !cancelled() && inputs.massif }}
