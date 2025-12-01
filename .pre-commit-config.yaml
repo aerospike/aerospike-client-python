@@ -37,4 +37,6 @@ repos:
     rev: v0.11.0
     hooks:
     -   id: shellcheck
+        # Running on all files causes this issue:
+        # scripts/manylinux2014build.sh: scripts/manylinux2014build.sh: openBinaryFile: does not exist (No such file or directory)
         files: ".github/workflows/docker-setup/"
