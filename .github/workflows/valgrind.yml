@@ -172,15 +172,15 @@ jobs:
     - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
       if: ${{ !inputs.massif && github.event.inputs.test-file != '' }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no " >> $GITHUB_ENV
+    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --suppressions=./valgrind-suppression/file-suppressions/{{ github.event.inputs.test-file }}.supp --num-callers=350 --error-limit=no " >> $GITHUB_ENV
       if: ${{ !inputs.massif && github.event.inputs.test-file == '' }}
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }} 2>&1 | tee valgrind.log
       working-directory: test
 
     - run: |
-        python3 valgrind-suppression/extract_suppressions.py valgrind.log new_suppressions.supp
-        cat new_suppressions.supp
+        python3 valgrind-suppression/extract_suppressions.py valgrind.log {{ github.event.inputs.test-file }}.supp
+        cat {{ github.event.inputs.test-file }}.supp
       working-directory: test
       if: ${{ !inputs.massif }}
 
@@ -188,12 +188,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.inputs.test-file }}.supp
-        path: test/new_suppressions.supp
+        path: test/{{ github.event.inputs.test-file }}.supp
       if: ${{ !inputs.massif }}
 
     - run: |
-        python3 valgrind-suppression/filter_suppressions.py new_suppressions.supp filtered_suppressions.supp
-        cat filtered_suppressions.supp
+        python3 valgrind-suppression/filter_suppressions.py new_suppressions.supp filtered_{{ github.event.inputs.test-file }}.supp
+        cat filtered_{{ github.event.inputs.test-file }}.supp
       working-directory: test
       if: ${{ !inputs.massif }}
 
@@ -201,7 +201,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: filtered_${{ github.event.inputs.test-file }}.supp
-        path: test/filtered_suppressions.supp
+        path: test/filtered_{{ github.event.inputs.test-file }}.supp
       if: ${{ !inputs.massif }}
 
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}

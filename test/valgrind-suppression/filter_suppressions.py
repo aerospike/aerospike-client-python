@@ -43,10 +43,9 @@ with open(input_path) as f:
             # 2) If *all* matches are in the skip list → skip block
             # 3) If any match is NOT in skip list → keep block
             if matches:
-                print(matches)
                 unskiped_matches = [m for m in matches if m not in skip_functions]
-                print(unskiped_matches)  
                 if unskiped_matches:
+                    print(unskiped_matches)
                     with open(output_path, "a") as out:
                         out.write("".join(block) + "\n")
                     suppressions_written += 1
