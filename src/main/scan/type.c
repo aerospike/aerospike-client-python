@@ -127,7 +127,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
     if (self->client == NULL) {
-        // TODO: experimenting with 2
+        // Use stack count of 2 so we know which Python function called this
         PyErr_WarnEx(PyExc_DeprecationWarning,
                      "aerospike.Scan is deprecated. Please use "
                      "aerospike.Client.scan() instead",
