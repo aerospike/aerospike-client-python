@@ -39,8 +39,15 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    if (!self || !self->client->as) {
+    if (!self || (self->client && !self->client->as)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    else if (!self->client) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "This query object was created with aerospike.Query() "
+                        "and is invalid. Use aerospike.Client.query() instead "
+                        "to create the query object.");
         goto CLEANUP;
     }
 
