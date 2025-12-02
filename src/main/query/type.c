@@ -172,6 +172,14 @@ static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
                                     PyObject *kwds)
 {
+    if (self->client == NULL) {
+        // TODO: experimenting with 2
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "aerospike.Query is deprecated. Please use "
+                     "aerospike.Client.query() instead",
+                     2);
+    }
+
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
 
