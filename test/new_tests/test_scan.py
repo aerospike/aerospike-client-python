@@ -467,3 +467,8 @@ class TestScan(TestBaseClass):
 
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
+
+    def test_creating_scan_using_constructor_in_aerospike_module(self):
+        scan = aerospike.Scan("test", "demo")
+        with pytest.raises(e.ClientError):
+            scan.select("bin1")

@@ -1004,6 +1004,11 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_creating_query_using_constructor_in_aerospike_module(self):
+        query = aerospike.Query("test", "demo")
+        with pytest.raises(e.ClientError):
+            query.select("bin1")
+
     def test_query_with_correct_parameters_without_connection(self):
         """
         Invoke query() with correct arguments without connection
