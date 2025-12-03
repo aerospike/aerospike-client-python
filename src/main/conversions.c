@@ -359,71 +359,61 @@ END:
 // creates a python dict of tuples from an as_partitions_status
 // EX: {id:(id, init, done, digest, bval) for id in range (1000, 1004,1)}
 // returns and empty dict if parts_status == NULL
-as_status
-as_partitions_status_to_pyobject(as_error *err,
-                                 const as_partitions_status *parts_status,
-                                 PyObject **py_dict_ref)
+as_status as_partitions_status_to_pyobject(
+    as_error *err, const as_partitions_status *parts_status, PyObject **py_dict)
 {
     as_error_reset(err);
 
-    PyObject *py_partitions_status_dict = PyDict_New();
-    if (py_partitions_status_dict == NULL) {
+    PyObject *new_dict = PyDict_New();
+    if (new_dict == NULL) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create new_dict");
-        goto CLEANUP;
+        goto END;
     }
 
     if (parts_status == NULL) {
         // If parts_status is NULL return an empty dict because
         // the query/scan is not tracking its partitions.
-        *py_dict_ref = py_partitions_status_dict;
-        goto CLEANUP;
+        *py_dict = new_dict;
+        goto END;
     }
 
     PyObject *py_done = PyBool_FromLong(parts_status->done);
-    PyDict_SetItemString(py_partitions_status_dict, PARTITIONS_STATUS_KEY_DONE,
-                         py_done);
+    PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
     Py_DECREF(py_done);
 
     PyObject *py_retry = PyBool_FromLong(parts_status->retry);
-    PyDict_SetItemString(py_partitions_status_dict, PARTITIONS_STATUS_KEY_RETRY,
-                         py_retry);
+    PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_RETRY, py_retry);
     Py_DECREF(py_retry);
 
     for (int i = 0; i < parts_status->part_count; ++i) {
 
         const as_partition_status *part = &parts_status->parts[i];
 
-        PyObject *py_partition_status_tuple = NULL;
-        if (as_partition_status_to_pyobject(
-                err, part, &py_partition_status_tuple) != AEROSPIKE_OK) {
-            goto CLEANUP;
+        PyObject *new_py_tuple = NULL;
+        if (as_partition_status_to_pyobject(err, part, &new_py_tuple) !=
+            AEROSPIKE_OK) {
+            Py_DECREF(new_dict);
+            goto END;
         }
 
         PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part->part_id);
-        if (!py_id) {
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to convert partition id to a Python integer");
-            Py_DECREF(py_partition_status_tuple);
-            goto CLEANUP;
-        }
 
-        int retval = PyDict_SetItem(py_partitions_status_dict, py_id,
-                                    py_partition_status_tuple);
-        Py_DECREF(py_partition_status_tuple);
-        if (retval == -1) {
+        if (PyDict_SetItem(new_dict, py_id, new_py_tuple) != 0) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "failed set item in new_dict");
-            goto CLEANUP;
+            Py_DECREF(new_dict);
+            Py_DECREF(new_py_tuple);
+            Py_XDECREF(py_id);
+            goto END;
         }
+        // Must be decref'd because PyDict_SetItem does not steal a reference
+        Py_DECREF(new_py_tuple);
+        Py_DECREF(py_id);
     }
 
-    *py_dict_ref = py_partitions_status_dict;
+    *py_dict = new_dict;
 
-CLEANUP:
-    if (err->code) {
-        Py_DECREF(py_partitions_status_dict);
-    }
+END:
     return err->code;
 }
 
