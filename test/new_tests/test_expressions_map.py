@@ -608,7 +608,7 @@ class TestExpressions(TestBaseClass):
                 [1, 2]
             ),
             pytest.param(
-                MapGetByValueRange(ctx=None, begin=3, end=None, bin="ilist_bin"),
+                MapGetByValueRange(ctx=None, value_begin=3, value_end=None, bin="ilist_bin"),
                 [3, 4]
             )
         ]
