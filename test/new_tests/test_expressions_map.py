@@ -175,6 +175,7 @@ class TestExpressions(TestBaseClass):
                 "balance": i * 10,
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
+                "ilist_bin": [1, 2, 3, 4],
                 "list_bin": [
                     None,
                     i,
@@ -598,6 +599,26 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "expr, expected_results",
+        [
+            pytest.param(
+                MapRemoveByKeyRange(ctx=None, begin=3, end=None, bin="ilist_bin"),
+                [1, 2]
+            ),
+            pytest.param(
+                MapGetByValueRange(ctx=None, begin=3, end=None, bin="ilist_bin"),
+                [3, 4]
+            )
+        ]
+    )
+    def test_set_end_param_to_none(self, expr, expected_results):
+        ops = [
+            expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, ops=ops)
+        assert bins["ilist_bin"] == expected_results
 
     @pytest.mark.parametrize(
         "bin_name, expr, expected",
