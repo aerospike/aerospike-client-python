@@ -175,7 +175,6 @@ class TestExpressions(TestBaseClass):
                 "balance": i * 10,
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
-                "ilist_bin": [1, 2, 3, 4],
                 "list_bin": [
                     None,
                     i,
@@ -604,20 +603,24 @@ class TestExpressions(TestBaseClass):
         "expr, expected_results",
         [
             pytest.param(
-                MapRemoveByKeyRange(ctx=None, begin=3, end=None, bin="ilist_bin"),
-                [1, 2]
+                MapRemoveByKeyRange(ctx=None, begin=3, end=None, bin="imap_bin"),
+                {
+                    1: 1,
+                    2: 2
+                    # Key 3 removed
+                }
             ),
             pytest.param(
-                MapGetByValueRange(ctx=None, value_begin=3, value_end=None, bin="ilist_bin"),
-                [3, 4]
+                MapGetByValueRange(ctx=None, return_type=aerospike.MAP_RETURN_VALUE, value_begin=6, value_end=None, bin="imap_bin"),
+                [6]
             )
         ]
     )
-    def test_set_end_param_to_none(self, expr, expected_results):
+    def test_setting_end_param_to_none(self, expr, expected_results):
         ops = [
             expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
         ]
-        _, _, bins = self.as_connection.operate(self.first_key, ops=ops)
+        _, _, bins = self.as_connection.operate(self.first_key, list=ops)
         assert bins["ilist_bin"] == expected_results
 
     @pytest.mark.parametrize(
