@@ -610,7 +610,7 @@ class TestExpressions(TestBaseClass):
                 "slist_bin",
                 None,
                 {},
-                ["h", ["e", "g"], "c", ["x", "y"], "b", "b", ["d", "f"], "b", None, "f", "d"],
+                ["h", ["e", "g"], "c", ["x", "y"], "b", "b", ["d", "f"], "b", aerospike.null(), "f", "d"],
                 [
                     ["b", "c", "d", "e", "f", "g", "h"],
                     [
