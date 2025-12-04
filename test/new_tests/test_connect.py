@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+import warnings
 
 
 @contextmanager
@@ -216,11 +217,15 @@ class TestConnect(object):
         ],
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg):
-        with pytest.raises(err) as err_info:
-            self.client = aerospike.client(config).connect()
+        with warnings.catch_warnings(record=True) as warning_list:
+            with pytest.raises(err) as err_info:
+                self.client = aerospike.client(config).connect()
 
         if type(err_code) == tuple:
             assert err_info.value.code in err_code
         else:
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+        assert len(warning_list) == 1
+        assert warning_list[0].category == FutureWarning
