@@ -406,6 +406,8 @@ as_status as_partitions_status_to_pyobject(
             Py_XDECREF(py_id);
             goto END;
         }
+        // Must be decref'd because PyDict_SetItem does not steal a reference
+        Py_DECREF(new_py_tuple);
         Py_DECREF(py_id);
     }
 
