@@ -270,35 +270,3 @@ linkcheck_ignore = [
 ]
 
 linkcheck_timeout = 120
-
-def skip_member(app, what, name, obj, skip, opts):
-    names_of_objs_to_skip = {
-        "aerospike_helpers.cdt_ctx.cdt_ctx_all_children",
-        "aerospike_helpers.cdt_ctx.cdt_ctx_all_children_with_filter",
-        "aerospike_helpers.expressions.base.LoopVar"
-        "aerospike_helpers.expressions.base.LoopVarMap"
-        "aerospike_helpers.expressions.base.LoopVarList"
-        "aerospike_helpers.expressions.base.LoopVarStr"
-        "aerospike_helpers.expressions.base.LoopVarFloat"
-        "aerospike_helpers.expressions.base.LoopVarInt",
-        "aerospike_helpers.expressions.base.SelectByPath",
-        "aerospike_helpers.expressions.base.ModifyByPath",
-        "aerospike_helpers.operations.operations.select_by_path",
-        "aerospike_helpers.operations.operations.modify_by_path",
-        "aerospike.CDT_SELECT_MATCHING_TREE",
-        "aerospike.CDT_SELECT_VALUES",
-        "aerospike.CDT_SELECT_MAP_KEY_VALUES",
-        "aerospike.CDT_SELECT_MAP_KEYS",
-        "aerospike.CDT_SELECT_NO_FAIL",
-        "aerospike.CDT_MODIFY_DEFAULT",
-        "aerospike.CDT_MODIFY_NO_FAIL",
-        "aerospike.EXP_LOOPVAR_KEY",
-        "aerospike.EXP_LOOPVAR_VALUE",
-        "aerospike.EXP_LOOPVAR_INDEX"
-    }
-    if name in names_of_objs_to_skip:
-        return True
-    return None
-
-def main(app):
-    app.connect('autodoc-skip-member', skip_member)
