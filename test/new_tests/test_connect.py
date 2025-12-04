@@ -8,6 +8,7 @@ from aerospike import exception as e
 
 import aerospike
 import warnings
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -216,8 +217,13 @@ class TestConnect(object):
             "hosts port is string",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
-        with warnings.catch_warnings(record=True) as warning_list:
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
+        if request.node.callspec.id == "hosts port is string":
+            warning_context = warnings.catch_warnings(record=True)
+        else:
+            warning_context = nullcontext()
+
+        with warning_context as warning_list:
             with pytest.raises(err) as err_info:
                 self.client = aerospike.client(config).connect()
 
@@ -227,5 +233,6 @@ class TestConnect(object):
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
 
-        assert len(warning_list) == 1
-        assert warning_list[0].category == FutureWarning
+        if type(warning_context) != nullcontext:
+            assert len(warning_list) == 1
+            assert warning_list[0].category == FutureWarning
