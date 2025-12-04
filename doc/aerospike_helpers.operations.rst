@@ -8,6 +8,7 @@ aerospike\_helpers\.operations\.operations module
 
 .. automodule:: aerospike_helpers.operations.operations
     :members:
+    :exclude-members: select_by_path, modify_by_path
     :undoc-members:
     :show-inheritance:
 

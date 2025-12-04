@@ -490,7 +490,8 @@ jobs:
       with:
         container-name: aerospike
 
-    - uses: ./.github/actions/run-ee-server
+    - id: run-ee-server
+      uses: ./.github/actions/run-ee-server
       if: ${{ matrix.test-case == 'user_agent_with_ee' }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
@@ -498,7 +499,7 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         # The user agent can also send the client's username if app-id is not set by the client
-        docker-run-extra-flags: '-e NO_SC=1 -e NO_TLS=1'
+        env-vars: 'SECURITY=1'
 
     - name: Install test dependencies
       if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
@@ -518,6 +519,7 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
       name: Run client in background
       run: |
+        set -x
         cat <<-EOF >> run-client-in-bg.py
         import aerospike
         import time
@@ -542,14 +544,18 @@ jobs:
     - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
-        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        if [[ "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true" ]]; then
+          CREDENTIALS="-U superuser -P superuser"
+        fi
+
+        server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
         if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
           exit 0
         fi
 
-        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        info_cmd_response=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         # Response format: user-agent=<base64 encoded string>:...
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
@@ -569,5 +575,3 @@ jobs:
         expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
         test "$client_version" = "$expected_client_version"
       shell: bash
-      env:
-        CONTAINER_NAME: aerospike
