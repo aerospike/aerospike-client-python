@@ -926,6 +926,13 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
+    if (py_meta) {
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "meta parameter is deprecated and will be removed in the "
+                     "next client major release.",
+                     2);
+    }
+
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_operations ops;
@@ -1262,6 +1269,13 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
                                     &py_key, &py_list, &py_meta,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_meta) {
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "meta parameter is deprecated and will be removed in the "
+                     "next client major release.",
+                     2);
     }
 
     CHECK_CONNECTED(&err);
