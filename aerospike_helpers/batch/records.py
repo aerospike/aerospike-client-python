@@ -60,6 +60,8 @@ class BatchRecord:
 class Write(BatchRecord):
     """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
+        .. include:: ./deprecate_meta.rst
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
