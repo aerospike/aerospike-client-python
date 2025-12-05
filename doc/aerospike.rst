@@ -767,10 +767,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`str`)
+        * **cluster_name** (:class:`Optional[str]`)
             Only server nodes matching this name will be used when determining the cluster name.
-        * **app_id** (:class:`str`)
+
+            Default: :py:obj:`None`
+        * **app_id** (:class:`Optional[str]`)
             Application identifier.
+
+            Default: :py:obj:`None`
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
