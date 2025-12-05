@@ -72,9 +72,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     PyObject *py_results = NULL;
     PyObject *py_nodename = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     as_policy_scan scan_policy;
     as_policy_scan *scan_policy_p = NULL;
 
@@ -110,9 +107,10 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     }
 
     // Convert python policy object to as_policy_scan
-    pyobject_to_policy_scan(
-        self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list, &exp_list_p, false);
+    pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy,
+                            &scan_policy_p,
+                            &self->client->as->config.policies.scan, &exp_list,
+                            &exp_list_p, false, NULL);
     if (err.code != AEROSPIKE_OK) {
         as_error_update(&err, err.code, NULL);
         goto CLEANUP;

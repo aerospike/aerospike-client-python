@@ -51,6 +51,10 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
 
     PyObject *py_response = NULL;
 
+    // Initialize the dynamic byte pool
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
+
     as_error err;
     as_error_init(&err);
 
@@ -69,7 +73,7 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
     }
 
     if (as_exp_new_from_pyobject(self, py_expression_filter, &exp_list_p, &err,
-                                 false) != AEROSPIKE_OK) {
+                                 false, &dynamic_pool) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -91,6 +95,8 @@ CLEANUP:
         raise_exception(&err);
         return NULL;
     }
+
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     return py_response;
 }

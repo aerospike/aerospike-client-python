@@ -180,11 +180,18 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
 
     as_error err;
     as_error_init(&err);
-    if (as_exp_new_from_pyobject(self, py_expr, &expr, &err, false) !=
-        AEROSPIKE_OK) {
+
+    // Initialize the dynamic byte pool
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
+
+    if (as_exp_new_from_pyobject(self, py_expr, &expr, &err, false,
+                                 &dynamic_pool) != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
     }
+
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
                                                 NULL, py_name, index_type,
@@ -210,6 +217,9 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     // Initialize error
     as_error err;
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     // Python Function Arguments
     PyObject *py_policy = NULL;
@@ -247,11 +257,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &static_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &dynamic_pool) !=
+        AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {
@@ -263,10 +270,14 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         &ctx, NULL);
 
     as_cdt_ctx_destroy(&ctx);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     return py_obj;
 
 CLEANUP:
+
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+
     if (py_obj == NULL) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;

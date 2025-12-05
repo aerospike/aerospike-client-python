@@ -48,13 +48,18 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         return NULL;
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     // Aerospike error object
     as_error err;
     // Initialize error object
     as_error_init(&err);
+
+    if (self->dynamic_pool == NULL) {
+        self->dynamic_pool =
+            (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
+        BYTE_POOL_INIT_NULL(self->dynamic_pool);
+        // Buffers must be heap allocated in order to persist after the current function returns
+        self->dynamic_pool->allocate_buffers = true;
+    }
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object");
@@ -113,7 +118,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
                 as_val_new_from_pyobject(self->client, &err, py_val, &val,
-                                         &static_pool, SERIALIZER_PYTHON);
+                                         self->dynamic_pool, SERIALIZER_NONE);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);
@@ -136,8 +141,6 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     as_query_apply(&self->query, module, function, (as_list *)arglist);
     Py_END_ALLOW_THREADS
 CLEANUP:
-    POOL_DESTROY(&static_pool);
-
     if (py_ufunction) {
         Py_DECREF(py_ufunction);
     }

@@ -51,12 +51,11 @@ as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
 
 as_status get_asval(AerospikeClient *self, as_error *err, char *key,
                     PyObject *op_dict, as_val **val,
-                    as_static_pool *static_pool, int serializer_type,
-                    bool required);
+                    as_dynamic_pool *dynamic_pool, bool required);
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
                        const char *list_key, PyObject *op_dict, as_list **list,
-                       as_static_pool *static_pool, int serializer_type);
+                       as_dynamic_pool *dynamic_pool);
 
 as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
                       int64_t *i64_valptr);

@@ -62,6 +62,10 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
+    // Initialize the dynamic byte pool
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
+
     static char *kwlist[] = {"data_center", "namespace", "expression_filter",
                              "policy", NULL};
     if (PyArg_ParseTupleAndKeywords(
@@ -96,7 +100,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     }
     else {
         if (as_exp_new_from_pyobject(self, py_expression_filter, &exp_list_p,
-                                     &err, false) != AEROSPIKE_OK) {
+                                     &err, false,
+                                     &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
 
@@ -172,6 +177,8 @@ CLEANUP:
         raise_exception(&err);
         return NULL;
     }
+
+    DESTROY_DYNAMIC_POOL(&dynamic_pool);
 
     return py_response;
 }
