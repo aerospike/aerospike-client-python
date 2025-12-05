@@ -768,7 +768,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`Optional[str]`)
-            Only server nodes matching this name will be used when determining the cluster name.
+            Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
+            in the service section in each server configuration. This ensures that the specified
+            seed nodes belong to the expected cluster on startup. If not, the client will refuse
+            to add the node to the client's view of the cluster.
 
             Default: :py:obj:`None`
         * **app_id** (:class:`Optional[str]`)
