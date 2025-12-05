@@ -176,7 +176,7 @@ as_status get_int_from_py_dict(as_error *err, const char *key,
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type)
 {
-    int64_t int64_return_type;
+    int64_t int64_return_type = AS_LIST_RETURN_VALUE;
     int py_bool_val = -1;
 
     if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, op_dict, &int64_return_type) !=
