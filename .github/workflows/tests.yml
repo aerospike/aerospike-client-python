@@ -308,6 +308,10 @@ jobs:
           "3.13",
           "3.14"
         ]
+        debug: [false]
+        include:
+          - py-version: "3.10"
+            debug: true
       fail-fast: false
 
     steps:
@@ -315,11 +319,17 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v5
+    - if: ${{ matrix.debug == false }}
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
+
+    - if: ${{ matrix.debug }}
+      run: |
+        sudo apt update
+        sudo apt install -y python3.10-dbg
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
@@ -328,10 +338,10 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: pip install *.whl
+      run: python${{ matrix.py-version}} -m pip install *.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: python${{ matrix.py-version}} -m pip install -r test/requirements.txt
 
     - uses: docker/login-action@v3
       with:
@@ -351,7 +361,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python${{ matrix.py-version}} -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-ee:
