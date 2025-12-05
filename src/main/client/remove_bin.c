@@ -57,10 +57,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     int count = 0;
     PyObject *py_ustr = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Get the bin list size;
     Py_ssize_t size = PyList_Size(py_binList);
     // Initialize record
@@ -74,12 +70,16 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialized = true;
 
     // Convert python policy object to as_policy_write
-    pyobject_to_policy_write(self, err, py_policy, &write_policy,
-                             &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p, false);
-    if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
-        goto CLEANUP;
+    if (py_policy != NULL) {
+        as_policy_write_copy_and_set_from_pyobject(
+            self, err, py_policy, &write_policy,
+            &self->as->config.policies.write);
+
+        if (err->code != AEROSPIKE_OK) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
+            goto CLEANUP;
+        }
+        write_policy_p = &write_policy;
     }
 
     // Invoke operation
@@ -117,8 +117,8 @@ CLEANUP:
 
     as_record_destroy(&rec);
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (write_policy_p) {
+        as_exp_destroy(write_policy_p->base.filter_exp);
     }
 
     if (key_initialized) {
@@ -166,6 +166,10 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
                                     &py_key, &py_binList, &py_meta,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     if (!self || !self->as) {

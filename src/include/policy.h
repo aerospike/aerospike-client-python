@@ -29,6 +29,8 @@
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
 
+#include "types.h"
+
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
     SERIALIZER_PYTHON,
@@ -213,8 +215,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_apply *policy,
                                    as_policy_apply **policy_p,
-                                   as_policy_apply *config_apply_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
+                                   as_policy_apply *config_apply_policy);
 
 typedef enum {
     SECOND_AS_POLICY_WRITE,
@@ -232,48 +233,32 @@ pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_query *policy,
                                    as_policy_query **policy_p,
-                                   as_policy_query *config_query_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
-
-as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_read *policy,
-                                  as_policy_read **policy_p,
-                                  as_policy_read *config_read_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p);
+                                   as_policy_query *config_query_policy);
 
 as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     PyObject *py_policy,
                                     as_policy_remove *policy,
                                     as_policy_remove **policy_p,
-                                    as_policy_remove *config_remove_policy,
-                                    as_exp *exp_list, as_exp **exp_list_p);
+                                    as_policy_remove *config_remove_policy);
 
 // py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
-as_status pyobject_to_policy_scan(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_scan *policy, as_policy_scan **policy_p,
-    as_policy_scan *config_scan_policy, as_exp *exp_list, as_exp **exp_list_p,
-    bool py_policy_also_supports_info_policy_fields);
-
-// py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
-as_status pyobject_to_policy_write(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_write *policy, as_policy_write **policy_p,
-    as_policy_write *config_write_policy, as_exp *exp_list, as_exp **exp_list_p,
-    bool py_policy_also_supports_info_policy_fields);
+as_status
+pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
+                        PyObject *py_policy, as_policy_scan *policy,
+                        as_policy_scan **policy_p,
+                        as_policy_scan *config_scan_policy,
+                        bool py_policy_also_supports_info_policy_fields);
 
 as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      PyObject *py_policy,
                                      as_policy_operate *policy,
                                      as_policy_operate **policy_p,
-                                     as_policy_operate *config_operate_policy,
-                                     as_exp *exp_list, as_exp **exp_list_p);
+                                     as_policy_operate *config_operate_policy);
 
 as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_batch *policy,
                                    as_policy_batch **policy_p,
-                                   as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
+                                   as_policy_batch *config_batch_policy);
 
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy, bool validate_keys);
@@ -295,28 +280,82 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
-                                         as_policy_batch_write **policy_p,
-                                         as_exp *exp_list, as_exp **exp_list_p);
+                                         as_policy_batch_write **policy_p);
 
 as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
-                                        as_policy_batch_read **policy_p,
-                                        as_exp *exp_list, as_exp **exp_list_p);
+                                        as_policy_batch_read **policy_p);
 
 as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
-                                         as_policy_batch_apply **policy_p,
-                                         as_exp *exp_list, as_exp **exp_list_p);
+                                         as_policy_batch_apply **policy_p);
 
 as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
-                                          as_policy_batch_remove **policy_p,
-                                          as_exp *exp_list,
-                                          as_exp **exp_list_p);
+                                          as_policy_batch_remove **policy_p);
 
+// These methods are used for setting config-level policies and are re-used for the helper methods
+// that set transaction-level policies.
+//
+// Overrides an as_policy_* *policy* fields using entries from a Python object *py_policy*.
+//
+// *policy* must point to a valid as_policy_* instance.
+//
+// If py_policy is NULL, do nothing. Else if it is not a Python dictionary, an error will be raised.
+// (We check if it's a dictionary here because *py_policy*'s type is not validated when parsing API arguments)
+//
+// We only need the AerospikeClient *self* for parsing Python client expressions and to tell whether to validate keys.
+//
+// *is_this_txn_policy* is required because there are fields that should only be set in *policy* for txn-level
+// policies.
+//
+// Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
+
+as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
+                                           PyObject *py_policy,
+                                           as_policy_read *policy,
+                                           bool is_policy_txn_level);
+
+as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_write *policy,
+                                            bool is_policy_txn_level);
+
+as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_apply *policy,
+                                            bool is_policy_txn_level);
+
+// These methods are used for setting transaction level policies
+// 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
+// 2. Sets an as_policy_* *dst* from a Python object *py_policy*. to override the defaults from *src*
+// *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_* instances.
+// We only need the AerospikeClient *self* for parsing Python client expressions and to tell whether to validate keys.
+//
+// Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
+
+as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_write *dst,
+                                                     as_policy_write *src);
+
+as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                    as_error *err,
+                                                    PyObject *py_policy,
+                                                    as_policy_read *dst,
+                                                    as_policy_read *src);
+
+as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_apply *dst,
+                                                     as_policy_apply *src);
+
+// TODO: make consistent
 // metrics_policy must be declared already
 // py_metrics_policy must be non-NULL
 // Returns non-zero integer value on error.

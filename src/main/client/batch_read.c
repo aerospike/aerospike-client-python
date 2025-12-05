@@ -152,15 +152,10 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     as_policy_batch policy_batch;
     as_policy_batch *policy_batch_p = NULL;
 
-    // For expressions conversion.
-    as_exp batch_exp_list;
-    as_exp *batch_exp_list_p = NULL;
-
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, &err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+                &self->as->config.policies.batch) != AEROSPIKE_OK) {
             goto CLEANUP3;
         }
     }
@@ -287,8 +282,8 @@ CLEANUP3:
 
     as_batch_destroy(&batch);
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
+    if (policy_batch_p) {
+        as_exp_destroy(policy_batch_p->base.filter_exp);
     }
 
 CLEANUP2:

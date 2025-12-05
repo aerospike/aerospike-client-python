@@ -1039,8 +1039,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		 * Set the individual policy groups new in 3.0
 		 * */
 
-        if (set_subpolicies(&constructor_err, &config, py_policies,
-                            validate_keys) != AEROSPIKE_OK) {
+        if (set_subpolicies(self, &constructor_err, &config, py_policies) !=
+            AEROSPIKE_OK) {
             if (constructor_err.code != AEROSPIKE_OK) {
                 // This would only be set if an invalid key was passed to a policy.
                 // Don't override the error caused by validating the dictionary keys

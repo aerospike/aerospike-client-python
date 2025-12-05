@@ -50,10 +50,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_remove *remove_policy_p = NULL;
     as_key key;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Initialisation flags
     bool key_initialised = false;
 
@@ -81,9 +77,9 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python policy object to as_policy_exists
     if (py_policy) {
-        pyobject_to_policy_remove(
-            self, &err, py_policy, &remove_policy, &remove_policy_p,
-            &self->as->config.policies.remove, &exp_list, &exp_list_p);
+        pyobject_to_policy_remove(self, &err, py_policy, &remove_policy,
+                                  &remove_policy_p,
+                                  &self->as->config.policies.remove);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -123,8 +119,8 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (remove_policy_p) {
+        as_exp_destroy(remove_policy_p->base.filter_exp);
     }
 
     if (key_initialised == true) {

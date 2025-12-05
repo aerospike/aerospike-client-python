@@ -52,10 +52,6 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     as_key key;
     as_record *rec = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Initialisation flags
     bool key_initialised = false;
 
@@ -81,12 +77,14 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     // key is initialised successfully
     key_initialised = true;
 
-    // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+    if (py_policy) {
+        as_policy_read_copy_and_set_from_pyobject(
+            self, &err, py_policy, &read_policy,
+            &self->as->config.policies.read);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        read_policy_p = &read_policy;
     }
 
     // Invoke operation
@@ -122,8 +120,8 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (read_policy_p) {
+        as_exp_destroy(read_policy_p->base.filter_exp);
     }
 
     if (key_initialised == true) {
@@ -169,6 +167,10 @@ PyObject *AerospikeClient_Exists(AerospikeClient *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist, &py_key,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     // Invoke Operation

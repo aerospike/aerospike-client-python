@@ -44,14 +44,11 @@
         PyObject *py___policy =                                                              \
             PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                \
         if (py___policy != Py_None) {                                                        \
-            as_exp *expr = NULL;                                                             \
-            as_exp *expr_p = expr;                                                           \
             if (py___policy != NULL) {                                                       \
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, expr,                                       \
-                                      &expr_p) != AEROSPIKE_OK) {                            \
+                                      &__policy) != AEROSPIKE_OK) {                          \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
@@ -66,7 +63,7 @@
                     Py_DECREF(py___policy);                                                  \
                     goto CLEANUP_ON_ERROR;                                                   \
                 }                                                                            \
-                garb->expressions_to_free = expr_p;                                          \
+                garb->expressions_to_free = __policy->filter_exp;                            \
             }                                                                                \
             else {                                                                           \
                 as_error_update(err, AEROSPIKE_ERR_PARAM,                                    \
@@ -135,8 +132,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     as_policy_batch batch_policy;
     as_policy_batch *batch_policy_p = NULL;
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
 
     PyObject *py_batch_type = NULL;
     PyObject *py_key = NULL;
@@ -168,10 +163,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
 
     if (py_policy != NULL) {
-        if (pyobject_to_policy_batch(self, err, py_policy, &batch_policy,
-                                     &batch_policy_p,
-                                     &self->as->config.policies.batch,
-                                     &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(
+                self, err, py_policy, &batch_policy, &batch_policy_p,
+                &self->as->config.policies.batch) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
     }
@@ -556,8 +550,8 @@ CLEANUP4:
 
     as_vector_destroy(unicodeStrVector);
 
-    if (exp_list_p != NULL) {
-        as_exp_destroy(exp_list_p);
+    if (batch_policy_p != NULL) {
+        as_exp_destroy(batch_policy_p->base.filter_exp);
     }
 
     if (err->code != AEROSPIKE_OK) {

@@ -17,6 +17,7 @@
 
 #include "policy_config.h"
 #include "types.h"
+
 #include "policy.h"
 
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
@@ -40,96 +41,97 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 /*
  * py_policies must exist, and be a dictionary
  */
-as_status set_subpolicies(as_error *err, as_config *config,
-                          PyObject *py_policies, int validate_keys)
+as_status set_subpolicies(AerospikeClient *self, as_error *err,
+                          as_config *config, PyObject *py_policies_dict)
 {
-
     as_status set_policy_status = AEROSPIKE_OK;
-
-    PyObject *read_policy = PyDict_GetItemString(py_policies, "read");
-    set_policy_status = set_read_policy(err, &config->policies.read,
-                                        read_policy, validate_keys);
+    PyObject *py_read_policy = PyDict_GetItemString(py_policies_dict, "read");
+    set_policy_status = as_policy_read_set_from_pyobject(
+        self, err, py_read_policy, &config->policies.read, false);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *write_policy = PyDict_GetItemString(py_policies, "write");
-    set_policy_status = set_write_policy(err, &config->policies.write,
-                                         write_policy, validate_keys);
+    PyObject *py_write_policy = PyDict_GetItemString(py_policies_dict, "write");
+    set_policy_status = as_policy_write_set_from_pyobject(
+        self, err, py_write_policy, &config->policies.write, false);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *apply_policy = PyDict_GetItemString(py_policies, "apply");
-    set_policy_status = set_apply_policy(err, &config->policies.apply,
-                                         apply_policy, validate_keys);
+    PyObject *py_apply_policy = PyDict_GetItemString(py_policies_dict, "apply");
+    set_policy_status = as_policy_apply_set_from_pyobject(
+        self, err, py_apply_policy, &config->policies.apply, false);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *remove_policy = PyDict_GetItemString(py_policies, "remove");
+    PyObject *remove_policy = PyDict_GetItemString(py_policies_dict, "remove");
     set_policy_status = set_remove_policy(err, &config->policies.remove,
-                                          remove_policy, validate_keys);
+                                          remove_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *query_policy = PyDict_GetItemString(py_policies, "query");
+    PyObject *query_policy = PyDict_GetItemString(py_policies_dict, "query");
     set_policy_status = set_query_policy(err, &config->policies.query,
-                                         query_policy, validate_keys);
+                                         query_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *scan_policy = PyDict_GetItemString(py_policies, "scan");
+    PyObject *scan_policy = PyDict_GetItemString(py_policies_dict, "scan");
     set_policy_status = set_scan_policy(err, &config->policies.scan,
-                                        scan_policy, validate_keys);
+                                        scan_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *operate_policy = PyDict_GetItemString(py_policies, "operate");
+    PyObject *operate_policy =
+        PyDict_GetItemString(py_policies_dict, "operate");
     set_policy_status = set_operate_policy(err, &config->policies.operate,
-                                           operate_policy, validate_keys);
+                                           operate_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *info_policy = PyDict_GetItemString(py_policies, "info");
+    PyObject *info_policy = PyDict_GetItemString(py_policies_dict, "info");
     set_policy_status = set_info_policy(err, &config->policies.info,
-                                        info_policy, validate_keys);
+                                        info_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *admin_policy = PyDict_GetItemString(py_policies, "admin");
+    PyObject *admin_policy = PyDict_GetItemString(py_policies_dict, "admin");
     set_policy_status = set_admin_policy(err, &config->policies.admin,
-                                         admin_policy, validate_keys);
+                                         admin_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
     PyObject *batch_apply_policy =
-        PyDict_GetItemString(py_policies, "batch_apply");
-    set_policy_status = set_batch_apply_policy(
-        err, &config->policies.batch_apply, batch_apply_policy, validate_keys);
+        PyDict_GetItemString(py_policies_dict, "batch_apply");
+    set_policy_status =
+        set_batch_apply_policy(err, &config->policies.batch_apply,
+                               batch_apply_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
     PyObject *batch_remove_policy =
-        PyDict_GetItemString(py_policies, "batch_remove");
+        PyDict_GetItemString(py_policies_dict, "batch_remove");
     set_policy_status =
         set_batch_remove_policy(err, &config->policies.batch_remove,
-                                batch_remove_policy, validate_keys);
+                                batch_remove_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
     PyObject *batch_write_policy =
-        PyDict_GetItemString(py_policies, "batch_write");
-    set_policy_status = set_batch_write_policy(
-        err, &config->policies.batch_write, batch_write_policy, validate_keys);
+        PyDict_GetItemString(py_policies_dict, "batch_write");
+    set_policy_status =
+        set_batch_write_policy(err, &config->policies.batch_write,
+                               batch_write_policy, self->validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -137,14 +139,17 @@ as_status set_subpolicies(as_error *err, as_config *config,
     const char *batch_policy_names[] = {"batch", "batch_parent_write",
                                         "txn_verify", "txn_roll"};
     as_policy_batch *batch_policies[] = {
-        &config->policies.batch, &config->policies.batch_parent_write,
-        &config->policies.txn_verify, &config->policies.txn_roll};
+        &config->policies.batch,
+        &config->policies.batch_parent_write,
+        &config->policies.txn_verify,
+        &config->policies.txn_roll,
+    };
     for (unsigned long i = 0;
          i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
         PyObject *py_batch_policy =
-            PyDict_GetItemString(py_policies, batch_policy_names[i]);
-        set_policy_status = set_batch_policy(err, batch_policies[i],
-                                             py_batch_policy, validate_keys);
+            PyDict_GetItemString(py_policies_dict, batch_policy_names[i]);
+        set_policy_status = set_batch_policy(
+            err, batch_policies[i], py_batch_policy, self->validate_keys);
         if (set_policy_status != AEROSPIKE_OK) {
             return set_policy_status;
         }
@@ -152,203 +157,6 @@ as_status set_subpolicies(as_error *err, as_config *config,
     // Default metrics policy is processed right after this call in the client constructor code
     // If this function fails, the calling function always sets as_error with our own error code and message
     // But when reading the config-level metrics policy, we want to propagate native Python exceptions up to the user
-    return AEROSPIKE_OK;
-}
-
-as_status set_read_policy(as_error *err, as_policy_read *read_policy,
-                          PyObject *py_policy, int validate_keys)
-{
-
-    as_status status = AEROSPIKE_OK;
-    if (!py_policy) {
-        return AEROSPIKE_OK;
-    }
-
-    if (!PyDict_Check(py_policy)) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    if (validate_keys) {
-        int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_read_policy_valid_keys,
-            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-        if (retval != 1) {
-            return AEROSPIKE_ERR_PARAM;
-        }
-    }
-
-    status = set_base_policy(&read_policy->base, py_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_key(&read_policy->key, py_policy, "key");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_replica(&read_policy->replica, py_policy, "replica");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_bool_property(&read_policy->deserialize, py_policy,
-                                        "deserialize");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_ap_read_mode(&read_policy->read_mode_ap, py_policy,
-                                       "read_mode_ap");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_sc_read_mode(&read_policy->read_mode_sc, py_policy,
-                                       "read_mode_sc");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_int_property(&read_policy->read_touch_ttl_percent,
-                                       py_policy, "read_touch_ttl_percent");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    return AEROSPIKE_OK;
-}
-
-as_status set_write_policy(as_error *err, as_policy_write *write_policy,
-                           PyObject *py_policy, int validate_keys)
-{
-
-    as_status status = AEROSPIKE_OK;
-
-    if (!py_policy) {
-        return AEROSPIKE_OK;
-    }
-
-    if (!PyDict_Check(py_policy)) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    if (validate_keys) {
-        int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_write_policy_valid_keys,
-            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-        if (retval != 1) {
-            return AEROSPIKE_ERR_PARAM;
-        }
-    }
-
-    status = set_base_policy(&write_policy->base, py_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_key(&write_policy->key, py_policy, "key");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_replica(&write_policy->replica, py_policy, "replica");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_commit_level(&write_policy->commit_level, py_policy,
-                                       "commit_level");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_gen(&write_policy->gen, py_policy, "gen");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_exists(&write_policy->exists, py_policy, "exists");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_uint32_property(&write_policy->ttl, py_policy, "ttl");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_uint32_property(
-        (uint32_t *)&write_policy->compression_threshold, py_policy,
-        "compression_threshold");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_bool_property(&write_policy->durable_delete,
-                                        py_policy, "durable_delete");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    return AEROSPIKE_OK;
-}
-
-as_status set_apply_policy(as_error *err, as_policy_apply *apply_policy,
-                           PyObject *py_policy, int validate_keys)
-{
-
-    as_status status = AEROSPIKE_OK;
-
-    if (!py_policy) {
-        return AEROSPIKE_OK;
-    }
-
-    if (!PyDict_Check(py_policy)) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    if (validate_keys) {
-        int retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_apply_policy_valid_keys,
-            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-        if (retval != 1) {
-            return AEROSPIKE_ERR_PARAM;
-        }
-    }
-
-    status = set_base_policy(&apply_policy->base, py_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_key(&apply_policy->key, py_policy, "key");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_uint32_property(&apply_policy->ttl, py_policy, "ttl");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_commit_level(&apply_policy->commit_level, py_policy,
-                                       "commit_level");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_bool_property(&apply_policy->durable_delete,
-                                        py_policy, "durable_delete");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
     return AEROSPIKE_OK;
 }
 

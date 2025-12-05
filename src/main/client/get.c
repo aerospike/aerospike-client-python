@@ -53,10 +53,6 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     as_key key;
     as_record *rec = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Initialised flags
     bool key_initialised = false;
     bool record_initialised = false;
@@ -83,12 +79,14 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     // Key is successfully initialised.
     key_initialised = true;
 
-    // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+    if (py_policy) {
+        as_policy_read_copy_and_set_from_pyobject(
+            self, &err, py_policy, &read_policy,
+            &self->as->config.policies.read);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        read_policy_p = &read_policy;
     }
 
     // Invoke operation
@@ -102,7 +100,8 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
             AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        if (!read_policy_p ||
+        if ((!read_policy_p &&
+             self->as->config.policies.read.key == AS_POLICY_KEY_DIGEST) ||
             (read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
             // This is a special case.
             // C-client returns NULL key, so to the user
@@ -117,9 +116,8 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
+    if (read_policy_p) {
+        as_exp_destroy(read_policy_p->base.filter_exp);
     }
 
     if (key_initialised == true) {
@@ -167,6 +165,10 @@ PyObject *AerospikeClient_Get(AerospikeClient *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, &py_key,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     // Invoke Operation

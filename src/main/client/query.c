@@ -276,10 +276,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     PyObject *py_ustr2 = NULL;
     PyObject *py_ustr3 = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
@@ -327,13 +323,13 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     is_query_init = true;
 
     if (py_policy) {
-        pyobject_to_policy_write(
-            self, &err, py_policy, &write_policy, &write_policy_p,
-            &self->as->config.policies.write, &exp_list, &exp_list_p, true);
-
+        as_policy_write_copy_and_set_from_pyobject(
+            self, &err, py_policy, &write_policy,
+            &self->as->config.policies.write);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
+        write_policy_p = &write_policy;
     }
 
     char *module_p = NULL;
@@ -460,8 +456,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     }
 
 CLEANUP:
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (write_policy_p) {
+        as_exp_destroy(write_policy_p->base.filter_exp);
     }
 
     if (py_ustr1) {
@@ -526,6 +522,10 @@ PyObject *AerospikeClient_QueryApply(AerospikeClient *self, PyObject *args,
                                     &py_module, &py_function, &py_args,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     // Invoke Operation
