@@ -25,6 +25,10 @@
 
 #define CLUSTER_NPARTITIONS (4096)
 
+#define DEPRECATE_META_PARAMETER_WARNING_MESSAGE                               \
+    "meta parameter is deprecated and will be removed in the "                 \
+    "next client major release"
+
 /*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/
