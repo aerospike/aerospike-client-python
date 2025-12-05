@@ -1219,7 +1219,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_app_id = NULL;
     retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
-    if (retval == 1) {
+    if (retval == 1 && !Py_IsNone(py_app_id)) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
             Py_DECREF(py_app_id);

@@ -163,16 +163,18 @@ class TestMetrics:
                 os.remove(item)
 
     @pytest.fixture(scope="function", params=[None, "my_app"])
-    def client_with_app_id(self, request):
+    def app_id_and_client(self, request):
         config = TestBaseClass.get_connection_config()
         config["app_id"] = request.param
         client = aerospike.client(config)
 
-        yield client
+        yield request.param, client
 
         client.close()
 
-    def test_setting_metrics_policy_custom_settings(self, client_with_app_id):
+    def test_setting_metrics_policy_custom_settings(self, app_id_and_client):
+        app_id, client = app_id_and_client
+
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -187,9 +189,9 @@ class TestMetrics:
             labels={"a": "b"},
         )
 
-        client_with_app_id.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
         time.sleep(3)
-        client_with_app_id.disable_metrics()
+        client.disable_metrics()
 
         # These callbacks should've been called
         assert enable_triggered is True
@@ -206,7 +208,7 @@ class TestMetrics:
             assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
-            assert cluster.app_id is app_id
+            assert cluster.app_id == app_id
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node
