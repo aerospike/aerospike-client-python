@@ -169,6 +169,7 @@ class TestMetrics:
             "myapp"
         ]
     )
+    @pytest.fixture(scope="function")
     def client_with_app_id(self, app_id):
         config = TestBaseClass.get_connection_config()
         config["app_id"] = app_id
