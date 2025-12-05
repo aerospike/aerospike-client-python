@@ -1,0 +1,316 @@
+run-name: "Run QE test (python-client-version=${{ inputs.python-client-version-in-jfrog-to-test }}, feature=${{ inputs.feature }}, num_records=${{ inputs.num_records }}, insert_mode=${{ inputs.insert_mode }})"
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      python-client-version-in-jfrog-to-test:
+        type: string
+        required: true
+        description: Python client version
+      feature:
+        required: true
+        description: "Client feature to test"
+      num_records:
+        type: number
+        default: 1000000
+        description: Number of records to use in workload
+      insert_mode:
+        required: true
+        type: choice
+        description: Insert mode means don't check for outliers.
+        options:
+          - insert
+          - outlier
+  workflow_call:
+    inputs:
+      # workflow_call hack
+      is-workflow-call:
+        type: boolean
+        default: true
+        required: false
+      get-wheel-from-jfrog:
+        type: boolean
+        default: true
+        required: false
+      # Optional since calling workflow can also pass in their own wheel built from a feature branch
+      python-client-version-in-jfrog-to-test:
+        type: string
+        required: false
+        description: Python client version
+      test-definition:
+        type: string
+        required: true
+        description: Test definition
+
+# Prevent another job from overriding the Docker image
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  register-test-definition-with-custom-env-var-parameters:
+    runs-on: ubuntu-24.04
+    env:
+      REGISTER_FILE_PATH_IN_REPO: perf_regression/register-client-tests.yaml
+    steps:
+    # TODO: composite action for this would be helpful
+    # TODO: need special testctl not in jfrog yet
+    - name: Get test-register
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-register
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-register to PATH
+      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf rt download --fail-no-op qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: qe-tools/bin
+
+    - name: Add AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        cd ~/.aws
+        sections=("default" "qe")
+        for section in ${sections[@]};
+        do
+          cat <<-EOF >> credentials
+          [$section]
+          aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+          region = us-west-1
+        	EOF
+        done
+      shell: bash
+
+    - uses: actions/checkout@v4
+      with:
+        # Entire repo must be cloned because the test definition includes this repo
+        repository: citrusleaf/aerospike-tests-python
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: aerospike-tests-python
+        ref: CLIENT-3541-add-client-centered-performance-regression-tests
+        fetch-depth: 0
+
+    - name: Environment variable overrides
+      run: |
+        yq eval ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        cat ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+      working-directory: aerospike-tests-python
+
+    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
+      working-directory: aerospike-tests-python
+
+  # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
+  # https://github.com/citrusleaf/qe-docker/commit/d72f2d3fda70e199e24f4f670811d6e33e7f92be
+  add-python-client-to-qe-test-image-for-performance-regression-tests:
+    env:
+      WHEEL_ARCH: x86_64
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Get Github action to download wheel from JFrog
+      uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+
+    - name: Get Github actions workflow to build Docker image
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-docker
+        path: qe-docker
+        ref: cicd-client-performance-regression-tests-requirements-txt
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+
+    - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
+      with:
+        # Calling workflow only builds wheel from source
+        get_from_jfrog: ${{ inputs.is-workflow-call == false && true || inputs.get-wheel-from-jfrog }}
+        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
+        dist_type_to_get: 'wheel'
+        wheel_python_version: '3.10'
+        wheel_os: manylinux
+        wheel_cpu_arch: ${{ env.WHEEL_ARCH }}
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
+
+    - name: Add wheel to staging folder for building Docker image
+      run: mv *linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
+
+    - name: Log in to QE's Docker registry to download base image and publish new image
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.QE_DOCKER_REGISTRY_URL }}
+        username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    # No way to set our own tag
+    # - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        # TODO: set branch in tag
+        file: ./qe-docker/test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
+        # Although our client perf test definitions state the test images where the tag doesn't have the arm- prefix
+        # Bob seems to look for the same tag from the test definition, but prefixed with arm-
+        tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:arm-${{ env.TEST_IMAGE_TAG }}
+        context: ./qe-docker/test/python/_files
+      env:
+        TEST_IMAGE_TAG: 3.11-mavenAnsible-client
+
+  run-qe-test:
+    env:
+      TEST_CONFIG_FILE_NAME: client_perf.yaml
+      TESTCTL_BINARY_NAME: testctl
+    runs-on: ubuntu-24.04
+    needs: [
+      add-python-client-to-qe-test-image-for-performance-regression-tests,
+      register-test-definition-with-custom-env-var-parameters
+    ]
+    steps:
+    # - name: Setup Rclone
+    #   uses: AnimMouse/setup-rclone@0d99fa3878a334d3e307c1a8372ad55550fdaea7
+    #   with:
+    #     rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+    # - name: Download test-enqueue and testctl
+    #   run: 'rclone --drive-root-folder-id ${{ secrets.TEST_ENQUEUE_PERF_GOOGLE_DRIVE_FOLDER_ID }} copy remote:/ ~/bin'
+
+    # - name: Add test-enqueue and testctl to PATH
+    #   run: |
+    #     ls -l ~/bin
+    #     echo "$(realpath ~/bin)" >> $GITHUB_PATH
+
+    - name: Get test-enqueue
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-enqueue
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-enqueue to PATH
+      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf rt download qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: qe-tools/bin
+
+    - uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+        sparse-checkout: |
+          test/${{ env.TEST_CONFIG_FILE_NAME }}
+        sparse-checkout-cone-mode: false
+
+    - name: Add AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        cd ~/.aws
+        sections=("default" "qe")
+        for section in ${sections[@]};
+        do
+          cat <<-EOF >> credentials
+          [$section]
+          aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+          region = us-west-1
+        	EOF
+        done
+      shell: bash
+
+    - run: testctl --version
+
+    # test-enqueue hides testctl's output, so this can be helpful for debugging
+    # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
+      working-directory: aerospike-client-python/test/
+
+    - name: Allows us to get the exact test run id that was created by test-enqueue.
+      run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
+
+    # - run: yq -i '.definitions.std.[0] = "${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
+    #   working-directory: aerospike-client-python/test/
+
+    - name: Tailscale VPN
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_SECRET }}
+        tags: tag:python-client-ci
+        args: "--exit-node=${{ vars.TAILSCALE_EXIT_NODE }}"
+        version: 1.70.0
+
+    - name: Enqueue test run and fail fast if unable to enqueue
+      # if: ${{ false }}
+      run: |
+        test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | tee test-enqueue-output.log
+        enqueue_count=$(grep "COUNT:" test-enqueue-output.log | sed 's/COUNT\://' | xargs)
+        if [[ "$enqueue_count" != "1" ]]; then
+          echo "We expected 1 test run to be enqueued, but $enqueue_count was actually enqueued."
+          exit 1
+        fi
+      working-directory: aerospike-client-python/test/
+
+    # - name: Print test logs in real time
+    #   run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
+
+    - name: Wait for test run to finish
+      id: poll-run-id
+      run: |
+        while true; do
+          # Color messes up the run_id's string
+          # Use xargs to trim whitespace from testctl's output
+          run_id=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+          if [[ -z "$run_id" ]]; then
+            echo "Test run has not finished yet..."
+            sleep 2
+          else
+            echo "Test run $run_id has finished."
+            break
+          fi
+        done
+        echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+    # Downloading builds doesn't work here, so we disable it
+    - run: ${{ env.TESTCTL_BINARY_NAME }} --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
+
+    - name: Print test run logs
+      run: |
+        cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
+        echo "stdout:"
+        cat stdout
+        echo "stderr:"
+        cat stderr
+
+    - name: Set Github job status
+      run: |
+        run_status=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
+        echo $run_status
+        if [[ "$run_status" == "Failure" ]]; then
+          exit 1
+        else
+          exit 0
+        fi
