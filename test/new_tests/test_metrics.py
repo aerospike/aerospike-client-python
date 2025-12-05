@@ -7,6 +7,8 @@ import os
 import time
 from typing import Optional
 import re
+import aerospike
+from .test_base_class import TestBaseClass
 from importlib.metadata import version
 
 # Flags for testing callbacks
@@ -160,7 +162,23 @@ class TestMetrics:
             for item in metrics_log_filenames:
                 os.remove(item)
 
-    def test_setting_metrics_policy_custom_settings(self):
+    @pytest.mark.parametrize(
+        "app_id",
+        [
+            None,
+            "myapp"
+        ]
+    )
+    def client_with_app_id(self, app_id):
+        config = TestBaseClass.get_connection_config()
+        config["app_id"] = app_id
+        client = aerospike.client(config)
+
+        yield client
+
+        client.close()
+
+    def test_setting_metrics_policy_custom_settings(self, client_with_app_id):
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -175,9 +193,9 @@ class TestMetrics:
             labels={"a": "b"},
         )
 
-        self.as_connection.enable_metrics(policy=policy)
+        client_with_app_id.enable_metrics(policy=policy)
         time.sleep(3)
-        self.as_connection.disable_metrics()
+        client_with_app_id.disable_metrics()
 
         # These callbacks should've been called
         assert enable_triggered is True
@@ -194,8 +212,7 @@ class TestMetrics:
             assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
-            # as_connection doesn't set an app_id
-            assert cluster.app_id is None
+            assert cluster.app_id is app_id
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node
