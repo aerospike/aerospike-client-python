@@ -162,17 +162,10 @@ class TestMetrics:
             for item in metrics_log_filenames:
                 os.remove(item)
 
-    @pytest.mark.parametrize(
-        "app_id",
-        [
-            None,
-            "myapp"
-        ]
-    )
-    @pytest.fixture(scope="function")
-    def client_with_app_id(self, app_id):
+    @pytest.fixture(scope="function", params=[None, "my_app"])
+    def client_with_app_id(request):
         config = TestBaseClass.get_connection_config()
-        config["app_id"] = app_id
+        config["app_id"] = request.param
         client = aerospike.client(config)
 
         yield client
