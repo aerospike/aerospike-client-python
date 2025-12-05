@@ -15,40 +15,31 @@
 # limitations under the License.
 ################################################################################
 
-from __future__ import print_function
 import os
 import platform
 import sys
-from subprocess import Popen
-from subprocess import call, run
+import subprocess
 from setuptools import setup, Extension
-from distutils.command.build import build
+from setuptools.command.build_ext import build_ext
 from distutils.command.clean import clean
-from multiprocessing import cpu_count
-import time
-import io
 import xml.etree.ElementTree as ET
 import glob
 
 ################################################################################
 # ENVIRONMENT VARIABLES
 ################################################################################
-machine = platform.machine()
-os.putenv('ARCHFLAGS', '-arch ' + machine)
-os.environ['ARCHFLAGS'] = '-arch ' + machine
-AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
-BASEPATH = os.path.dirname(os.path.abspath(__file__))
-AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
 
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+AEROSPIKE_C_HOME = os.path.join(BASE_PATH, 'aerospike-client-c')
 AEROSPIKE_C_TARGET = None
+
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 WINDOWS = 'Windows' in PLATFORM
 
 CWD = os.path.abspath(os.path.dirname(__file__))
-STATIC_SSL = os.getenv('STATIC_SSL')
-SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
+
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
@@ -59,56 +50,73 @@ UNOPTIMIZED = os.getenv('UNOPTIMIZED')
 # Include debug information on macOS (not included by default)
 INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
+
+machine = platform.machine()
+if DARWIN:
+    os.putenv('ARCHFLAGS', '-arch ' + machine)
+    os.environ['ARCHFLAGS'] = '-arch ' + machine
+
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
 
-include_dirs = ['src/include'] + \
-    [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
-    ['/usr/local/opt/openssl/include'] + \
-    ['aerospike-client-c/modules/common/src/include']
-extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
-    '-fno-common', '-fno-strict-aliasing',
-    '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
-    '-DMARCH_' + machine,
+include_dirs = [
+    'src/include',
+    f'{AEROSPIKE_C_HOME}/src/include',
+    'aerospike-client-c/modules/common/src/include'
 ]
 
-if not WINDOWS:
-    # Windows does not have this flag
-    extra_compile_args.append("-Wno-strict-prototypes")
-
-if machine == 'x86_64':
-    extra_compile_args.append('-march=nocona')
-extra_objects = []
+# TODO: use CMake to generate compiler-independent flags?
+if WINDOWS:
+    extra_compile_args = []
+else:
+    extra_compile_args = [
+        '-std=gnu99',
+        '-g',
+        '-Wall',
+        '-fPIC',
+        '-O1',
+        '-fno-common',
+        '-fno-strict-aliasing',
+        '-D_FILE_OFFSET_BITS=64',
+        '-D_REENTRANT',
+        '-Wno-strict-prototypes'
+    ]
+    if machine == 'x86_64':
+        extra_compile_args.append('-march=nocona')
 
 extra_link_args = []
 
-SANITIZER=os.getenv('SANITIZER')
+SANITIZER = os.getenv('SANITIZER')
 if SANITIZER:
-    sanitizer_c_and_ld_flags = [
+    SANITIZER_C_AND_LD_FLAGS = [
         '-fsanitize=address',
         '-fno-omit-frame-pointer'
     ]
-    sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
-    sanitizer_cflags.append('-fsanitize-recover=all')
-    extra_compile_args.extend(sanitizer_cflags)
+    SANITIZER_CFLAGS = SANITIZER_C_AND_LD_FLAGS.copy()
+    SANITIZER_CFLAGS.append('-fsanitize-recover=all')
+    extra_compile_args.extend(SANITIZER_CFLAGS)
 
-    sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
-    extra_link_args.extend(sanitizer_ldflags)
+    SANITIZER_LDFLAGS = SANITIZER_C_AND_LD_FLAGS.copy()
+    extra_link_args.extend(SANITIZER_LDFLAGS)
 
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
-    libraries = [
+    # The Python client's C code doesn't rely on these libraries.
+    # But the C client does rely on them, and we need to bundle these libraries
+    # with the Python client wheel so users don't need to install the libraries locally.
+    #
+    # When repairing the wheel, we will copy these libraries into the wheel
+    # and change the Python client shared library's RPATH to point to these bundled libraries.
+    c_client_libraries = [
         'm',
         'z',
         'yaml',
         'ssl',
         'crypto',
         'pthread'
-]
+    ]
 else:
-    libraries = []
+    c_client_libraries = []
 
 ##########################
 # GITHUB ACTIONS SETTINGS
@@ -126,14 +134,18 @@ if UNOPTIMIZED:
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
+extra_objects = []
+
+STATIC_SSL = os.getenv('STATIC_SSL')
 if STATIC_SSL:
-    extra_objects.extend(
-        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
-    libraries.remove('ssl')
-    libraries.remove('crypto')
-    library_dirs.remove('/usr/local/opt/openssl/lib')
-elif os.path.exists("/usr/local/opt/openssl/lib") is False:
-    library_dirs.remove('/usr/local/opt/openssl/lib')
+    # Statically link openssl
+    SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
+    extra_objects.append(SSL_LIB_PATH + 'libssl.a')
+    extra_objects.append(SSL_LIB_PATH + 'libcrypto.a')
+else:
+    # Dynamically link openssl
+    c_client_libraries.append('ssl')
+    c_client_libraries.append('crypto')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
@@ -150,9 +162,7 @@ if DARWIN:
     # ---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
-    extra_compile_args = extra_compile_args + [
-        '-D_DARWIN_UNLIMITED_SELECT'
-    ]
+    extra_compile_args.append('-D_DARWIN_UNLIMITED_SELECT')
 
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-' + machine
 
@@ -160,56 +170,41 @@ elif LINUX:
     # ---------------------------------------------------------------------------
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
-    extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions'
-    ]
-    libraries = libraries + ['rt']
+    extra_compile_args.append('-rdynamic')
+    extra_compile_args.append('-finline-functions')
+
+    c_client_libraries.append('rt')
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    libraries.append("pthreadVC2")
+    c_client_libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
-    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-include_dirs = include_dirs + [
-    '/usr/local/opt/openssl/include',
+# We don't specify common places where users may install their own build of OpenSSL (that doesn't come with the distro);
+# there would be too many places to check,
+# and those places may not even exist for other users on different platforms.
+# Users who build the sdist should specify the OpenSSL location using env vars
+library_dirs = []
 
-]
 if not WINDOWS:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
-    extra_objects = extra_objects + [
-        AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
-    ]
+    extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
 else:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
-    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.\
+                        {c_client_dependencies_version}/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
-
-os.putenv('CPATH', ':'.join(include_dirs))
-os.environ['CPATH'] = ':'.join(include_dirs)
 
 ################################################################################
 # SETUP
 ################################################################################
 
-# Get the long description from the relevant file
-with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
-    long_description = f.read()
 
-# Get the version from the relevant file
-with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
-    version = f.read()
-
-BASEPATH = os.path.dirname(os.path.abspath(__file__))
-CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
-
-
-class CClientBuild(build):
+class BuildAerospikeModule(build_ext):
 
     def run(self):
+        # TODO: not sure if force needed if building in isolated temp venv?
         if self.force == 1:
             # run original c-extension clean task
             # clean.run(self)
@@ -217,20 +212,28 @@ class CClientBuild(build):
                 'make',
                 'clean'
             ]
+
             def clean():
-                call(cmd, cwd=CCLIENT_PATH)
+                subprocess.run(cmd, cwd=AEROSPIKE_C_HOME)
+
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
-        os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-        os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
-        os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
-        os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        # TODO: not sure if we need?
+        # if LINUX:
+        #     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+        #     os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        # elif DARWIN:
+        #     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+        #     os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
+
         # build core client
         if WINDOWS:
             cmd = [
                 'msbuild',
                 'vs/aerospike.sln',
-                '/property:Configuration=Release'
+                '/property:Configuration=Release',
+                # Don't build the examples
+                '/t:aerospike'
             ]
         else:
             cmd = [
@@ -240,18 +243,16 @@ class CClientBuild(build):
             if UNOPTIMIZED:
                 cmd.append('O=0')
             if SANITIZER:
-                ext_cflags = " ".join(sanitizer_cflags)
+                ext_cflags = " ".join(SANITIZER_CFLAGS)
                 cmd.append(f"EXT_CFLAGS={ext_cflags}")
-                ldflags = " ".join(sanitizer_ldflags)
+                ldflags = " ".join(SANITIZER_LDFLAGS)
                 cmd.append(f"LDFLAGS={ldflags}")
 
-        def compile():
-            print(cmd, library_dirs, libraries)
-            call(cmd, cwd=CCLIENT_PATH)
+        print(cmd, library_dirs, c_client_libraries)
+        subprocess.run(cmd, cwd=AEROSPIKE_C_HOME, check=True)
 
-        self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
-        build.run(self)
+        build_ext.run(self)
 
         # For debugging in macOS, we need to generate and include the debug info for the CPython
         # extension in the wheel, since this isn't done automatically
@@ -266,13 +267,14 @@ class CClientBuild(build):
                 exit(1)
 
             shared_library_path = shared_library_paths[0]
-            run(["dsymutil", shared_library_path], check=True)
+            subprocess.run(["dsymutil", shared_library_path], check=True)
 
             dsym_path = f"{shared_library_path}.dSYM"
             print("Including debug information with wheel")
             extra_objects.append(dsym_path)
 
-class CClientClean(clean):
+
+class CleanAerospikeModule(clean):
 
     def run(self):
         # run original c-extension clean task
@@ -283,19 +285,18 @@ class CClientClean(clean):
         ]
 
         def clean():
-            call(cmd, cwd=CCLIENT_PATH)
+            subprocess.run(cmd, cwd=AEROSPIKE_C_HOME)
 
         self.execute(clean, [], 'Clean core aerospike-client-c')
+
 
 source_files = glob.glob(pathname="src/main/**/*.c", recursive=True)
 
 setup(
-    version=version.strip(),
     # Data files
     ext_modules=[
         Extension(
-            # Extension Name
-            'aerospike',
+            name='aerospike',
 
             # Compile
             sources=source_files,
@@ -304,25 +305,13 @@ setup(
 
             # Link
             library_dirs=library_dirs,
-            libraries=libraries,
+            libraries=c_client_libraries,
             extra_objects=extra_objects,
             extra_link_args=extra_link_args,
         )
     ],
-    package_data={
-        "aerospike-stubs": [
-            "__init__.pyi",
-            "aerospike.pyi",
-            "exception.pyi",
-            "predicates.pyi",
-        ]
-    },
-    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
-              'aerospike_helpers.expressions',
-              'aerospike_helpers.metrics',
-              'aerospike-stubs'],
     cmdclass={
-        'build': CClientBuild,
-        'clean': CClientClean
+        'build_ext': BuildAerospikeModule,
+        'clean': CleanAerospikeModule
     }
 )
