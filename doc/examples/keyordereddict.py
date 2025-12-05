@@ -5,7 +5,7 @@ import aerospike_helpers.cdt_ctx as ctx
 from aerospike import KeyOrderedDict
 
 config = { 'hosts': [ ("localhost", 3000), ] }
-client = aerospike.client(config).connect()
+client = aerospike.client(config)
 map_policy={'map_order': aerospike.MAP_KEY_VALUE_ORDERED}
 
 key = ("test", "demo", 100)
