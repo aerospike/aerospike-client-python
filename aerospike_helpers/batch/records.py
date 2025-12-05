@@ -113,6 +113,8 @@ class Write(BatchRecord):
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
+        .. include:: ./deprecate_meta.rst
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
