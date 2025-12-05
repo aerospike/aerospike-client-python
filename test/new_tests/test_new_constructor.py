@@ -322,6 +322,8 @@ def test_config_level_misc_options():
     # We just make sure that the above options are allowed as dict keys
     try:
         aerospike.client(config)
+    except e.ParamError as exc:
+        raise exc
     except:
         pass
 
