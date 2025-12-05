@@ -291,7 +291,7 @@ def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=Non
         bit_size (int): How many bits of value to add.
         value (int): The value to be added.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
-        action (aerospike.constant): Action taken if an overflow/underflow occurs.
+        action (int): Action taken if an overflow/underflow occurs.
             Action must be one of the following.
 
             - :data:`aerospike.BIT_OVERFLOW_FAIL`
