@@ -183,6 +183,8 @@ Record Commands
         (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. )
 
+        .. include:: ./deprecate_meta.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -209,6 +211,8 @@ Record Commands
 
         Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
 
+        .. include:: ./deprecate_meta.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -226,6 +230,8 @@ Record Commands
 
         Touch the given record, setting its time-to-live and incrementing its generation.
 
+        .. include:: ./deprecate_meta.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
         :param dict meta: record metadata to be set. see :ref:`metadata_dict`
@@ -239,6 +245,8 @@ Record Commands
     .. method:: remove(key[meta: dict[, policy: dict]])
 
         Remove a record matching the *key* from the cluster.
+
+        .. include:: ./deprecate_meta.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
@@ -412,6 +420,8 @@ String Operations
 
         Append a string to the string value in bin.
 
+        .. include:: ./deprecate_meta.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
@@ -430,6 +440,8 @@ String Operations
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
         Prepend the string value in *bin* with the string *val*.
+
+        .. include:: ./deprecate_meta.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -459,6 +471,8 @@ Numeric Operations
     .. method:: increment(key, bin, offset[, meta: dict[, policy: dict]])
 
         Increment the integer value in *bin* by the integer *val*.
+
+        .. include:: ./deprecate_meta.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
