@@ -14,7 +14,7 @@ import time
 import glob
 import re
 import os
-from conftest import verify_record_ttl
+from .conftest import verify_record_ttl
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
