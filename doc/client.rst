@@ -1009,7 +1009,7 @@ connected to a Community Edition cluster (see
 A user is validated by the client against the server whenever a \
 connection is established through the use of a username and password \
 (passwords hashed using bcrypt). \
-When security is enabled, each operation is validated against the \
+When security is enabled, each command is validated against the \
 user\'s roles. Users are assigned roles, which are collections of \
 :ref:`aerospike_privilege_dict`.
 
@@ -1019,8 +1019,12 @@ user\'s roles. Users are assigned roles, which are collections of \
     from aerospike import exception as ex
     import time
 
-    config = {'hosts': [('127.0.0.1', 3000)] }
-    client = aerospike.client(config).connect('ipji', 'life is good')
+    config = {
+        'hosts': [('127.0.0.1', 3000)],
+        'user': 'ipji',
+        'password': 'life is good'
+    }
+    client = aerospike.client(config)
 
     try:
         dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
