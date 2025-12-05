@@ -165,7 +165,7 @@ class TestConnect(object):
         if cluster_name is None:
             cm = nullcontext()
         else:
-            cm = pytest.raises(e.ClusterError)
+            cm = pytest.raises(e.ClientError)
 
         with cm:
             self.client = aerospike.client(config)
