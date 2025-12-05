@@ -394,6 +394,7 @@ jobs:
       if: ${{ failure() }}
       run: |
         docker container logs aerospike
+        docker exec aerospike cat /var/log/aerospike/aerospike.log
         cat ./configs/aerospike.conf
 
   sphinx:
