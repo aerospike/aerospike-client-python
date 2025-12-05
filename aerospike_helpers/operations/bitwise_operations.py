@@ -594,11 +594,6 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
         value (int): The value to be subtracted.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
         action (aerospike.constant): Action taken if an overflow/underflow occurs. Action must be one of the following:
-
-            - :data:`aerospike.BIT_OVERFLOW_FAIL`
-            - :data:`aerospike.BIT_OVERFLOW_SATURATE`
-            - :data:`aerospike.BIT_OVERFLOW_WRAP`
-
             See :ref:`Bitwise Overflow <aerospike_bitwise_overflow>` for more information.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
