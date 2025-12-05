@@ -757,6 +757,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
+                    PyErr_WarnEx(
+                        PyExc_FutureWarning,
+                        "In the next Python client major release, an exception "
+                        "will be raised if the port number is not an integer",
+                        2);
                     port = 0;
                 }
                 // Set TLS Name if provided

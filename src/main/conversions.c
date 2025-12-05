@@ -406,6 +406,8 @@ as_status as_partitions_status_to_pyobject(
             Py_XDECREF(py_id);
             goto END;
         }
+        // Must be decref'd because PyDict_SetItem does not steal a reference
+        Py_DECREF(new_py_tuple);
         Py_DECREF(py_id);
     }
 
@@ -1604,9 +1606,8 @@ typedef struct {
     void *udata;
 } conversion_data;
 
-as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
-                             const as_val *val, PyObject **py_val,
-                             bool cnvt_list_to_map)
+as_status val_to_pyobject(AerospikeClient *self, as_error *err,
+                          const as_val *val, PyObject **py_val)
 {
     as_error_reset(err);
     switch (as_val_type(val)) {
@@ -1669,12 +1670,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
         as_list *l = as_list_fromval((as_val *)val);
         if (l) {
             PyObject *py_list = NULL;
-            if (cnvt_list_to_map) {
-                as_list_of_map_to_py_tuple_list(self, err, l, &py_list);
-            }
-            else {
-                list_to_pyobject(self, err, l, &py_list);
-            }
+            list_to_pyobject(self, err, l, &py_list);
             if (err->code == AEROSPIKE_OK) {
                 *py_val = py_list;
             }
@@ -1727,82 +1723,6 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
         return err->code;
     }
-    }
-
-    return err->code;
-}
-
-as_status val_to_pyobject(AerospikeClient *self, as_error *err,
-                          const as_val *val, PyObject **py_val)
-{
-    return do_val_to_pyobject(self, err, val, py_val, false);
-}
-
-as_status val_to_pyobject_cnvt_list_to_map(AerospikeClient *self, as_error *err,
-                                           const as_val *val, PyObject **py_val)
-{
-    return do_val_to_pyobject(self, err, val, py_val, true);
-}
-
-as_status as_list_of_map_to_py_tuple_list(AerospikeClient *self, as_error *err,
-                                          const as_list *list,
-                                          PyObject **py_list)
-{
-    PyObject *py_tuple = NULL;
-
-    int size = as_list_size((as_list *)list);
-
-    if (size % 2 != 0) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Invalid key list of key/value pairs");
-    }
-
-    *py_list = PyList_New(0);
-    if (!*py_list) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate memory for list.");
-    }
-
-    for (int i = 0; i < size; i += 2) {
-        as_val *key = as_list_get(list, i);
-        as_val *value = as_list_get(list, i + 1);
-
-        if (!key || !value) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Null object found in returned list");
-            goto CLEANUP;
-        }
-
-        PyObject *py_key = NULL;
-        PyObject *py_value = NULL;
-
-        if (val_to_pyobject(self, err, key, &py_key) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-        if (val_to_pyobject(self, err, value, &py_value) != AEROSPIKE_OK) {
-            Py_XDECREF(py_key);
-            goto CLEANUP;
-        }
-        py_tuple = PyTuple_New(2);
-
-        if (!py_tuple) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to allocate memory for tuple");
-            Py_XDECREF(py_key);
-            Py_XDECREF(py_value);
-            goto CLEANUP;
-        }
-
-        PyTuple_SetItem(py_tuple, 0, py_key);
-        PyTuple_SetItem(py_tuple, 1, py_value);
-
-        PyList_Append(*py_list, py_tuple);
-        Py_DECREF(py_tuple);
-    }
-
-CLEANUP:
-    if (err->code != AEROSPIKE_OK) {
-        Py_DECREF(*py_list);
     }
 
     return err->code;
@@ -1944,9 +1864,9 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
-                                const as_record *rec, const as_key *key,
-                                PyObject **obj, bool cnvt_list_to_map)
+as_status record_to_pyobject(AerospikeClient *self, as_error *err,
+                             const as_record *rec, const as_key *key,
+                             PyObject **obj)
 {
     as_error_reset(err);
     *obj = NULL;
@@ -1970,8 +1890,7 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
-        AEROSPIKE_OK) {
+    if (bins_to_pyobject(self, err, rec, &py_rec_bins) != AEROSPIKE_OK) {
         Py_CLEAR(py_rec_key);
         Py_CLEAR(py_rec_meta);
         return err->code;
@@ -1999,62 +1918,6 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
 
     *obj = py_rec;
     return err->code;
-}
-
-as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
-                                   const as_record *rec, PyObject **obj)
-{
-    as_error_reset(err);
-    *obj = NULL;
-
-    if (!rec) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-    }
-
-    PyObject *py_rec = NULL;
-    PyObject *py_rec_meta = NULL;
-    PyObject *py_rec_bins = NULL;
-
-    if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (bins_to_pyobject(self, err, rec, &py_rec_bins, false) != AEROSPIKE_OK) {
-        Py_CLEAR(py_rec_meta);
-        return err->code;
-    }
-
-    if (!py_rec_meta) {
-        Py_INCREF(Py_None);
-        py_rec_meta = Py_None;
-    }
-
-    if (!py_rec_bins) {
-        Py_INCREF(Py_None);
-        py_rec_bins = Py_None;
-    }
-
-    py_rec = PyTuple_New(2);
-    PyTuple_SetItem(py_rec, 0, py_rec_meta);
-    PyTuple_SetItem(py_rec, 1, py_rec_bins);
-
-    *obj = py_rec;
-    return err->code;
-}
-
-as_status record_to_pyobject(AerospikeClient *self, as_error *err,
-                             const as_record *rec, const as_key *key,
-                             PyObject **obj)
-{
-    return do_record_to_pyobject(self, err, rec, key, obj, false);
-}
-
-as_status record_to_pyobject_cnvt_list_to_map(AerospikeClient *self,
-                                              as_error *err,
-                                              const as_record *rec,
-                                              const as_key *key, PyObject **obj)
-{
-    return do_record_to_pyobject(self, err, rec, key, obj, true);
 }
 
 as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
@@ -2159,8 +2022,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     return err->code;
 }
 
-static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
-                                     void *udata, bool cnvt_list_to_map)
+static bool bins_to_pyobject_each(const char *name, const as_val *val,
+                                  void *udata)
 {
     if (!name || !val) {
         return false;
@@ -2171,12 +2034,7 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
     PyObject *py_bins = (PyObject *)convd->udata;
     PyObject *py_val = NULL;
 
-    if (cnvt_list_to_map) {
-        val_to_pyobject_cnvt_list_to_map(convd->client, err, val, &py_val);
-    }
-    else {
-        val_to_pyobject(convd->client, err, val, &py_val);
-    }
+    val_to_pyobject(convd->client, err, val, &py_val);
 
     if (err->code != AEROSPIKE_OK) {
         return false;
@@ -2190,22 +2048,8 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
     return true;
 }
 
-static bool bins_to_pyobject_each_cnvt_list_to_map(const char *name,
-                                                   const as_val *val,
-                                                   void *udata)
-{
-    return do_bins_to_pyobject_each(name, val, udata, true);
-}
-
-static bool bins_to_pyobject_each(const char *name, const as_val *val,
-                                  void *udata)
-{
-    return do_bins_to_pyobject_each(name, val, udata, false);
-}
-
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
-                           const as_record *rec, PyObject **py_bins,
-                           bool cnvt_list_to_map)
+                           const as_record *rec, PyObject **py_bins)
 {
     as_error_reset(err);
 
@@ -2219,10 +2063,7 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
     conversion_data convd = {
         .err = err, .count = 0, .client = self, .udata = *py_bins};
 
-    as_record_foreach(rec,
-                      cnvt_list_to_map ? bins_to_pyobject_each_cnvt_list_to_map
-                                       : bins_to_pyobject_each,
-                      &convd);
+    as_record_foreach(rec, bins_to_pyobject_each, &convd);
 
     if (err->code != AEROSPIKE_OK) {
         Py_DECREF(*py_bins);
@@ -2430,41 +2271,6 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
-// TODO: dead code
-as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
-                                   PyObject *py_bin, char **bin)
-{
-    as_error_reset(err);
-
-    if (py_bin) {
-        if (PyUnicode_Check(py_bin)) {
-            *bin = (char *)PyUnicode_AsUTF8(py_bin);
-        }
-        else if (PyByteArray_Check(py_bin)) {
-            *bin = PyByteArray_AsString(py_bin);
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Bin name should be of type string");
-            goto CLEANUP;
-        }
-
-        if (self->strict_types) {
-            if (strlen(*bin) > AS_BIN_NAME_MAX_LEN) {
-                as_error_update(
-                    err, AEROSPIKE_ERR_BIN_NAME,
-                    "A bin name should not exceed 15 characters limit");
-            }
-        }
-    }
-
-CLEANUP:
-    if (err->code != AEROSPIKE_OK) {
-        raise_exception(err);
-    }
-    return err->code;
-}
-
 /**
  *******************************************************************************************************
  * This function checks for metadata and if present set it into the
@@ -2570,120 +2376,6 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
     }
 
     return err->code;
-}
-
-as_status as_batch_read_results_to_pyobject(as_error *err,
-                                            AerospikeClient *client,
-                                            const as_batch_read *results,
-                                            uint32_t size,
-                                            PyObject **py_records)
-{
-    *py_records = NULL;
-    PyObject *temp_py_recs = PyList_New(0);
-
-    if (!temp_py_recs) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate memory for batch results");
-    }
-
-    // Loop over results array
-    for (uint32_t i = 0; i < size; i++) {
-        PyObject *py_rec = NULL;
-        PyObject *py_key = NULL;
-        if (results[i].result == AEROSPIKE_OK) {
-            /* There was a record for the item, but we failed to convert it, probably a deserialize issue, error out */
-            record_to_pyobject(client, err, &results[i].record, results[i].key,
-                               &py_rec);
-            if (!py_rec || err->code != AEROSPIKE_OK) {
-                Py_XDECREF(temp_py_recs);
-                return err->code;
-            }
-            /* The record wasn't found, build a (key, None, None) tuple */
-        }
-        else {
-            key_to_pyobject(err, results[i].key, &py_key);
-            if (!py_key || err->code != AEROSPIKE_OK) {
-                Py_XDECREF(temp_py_recs);
-                return err->code;
-            }
-            py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
-            Py_DECREF(py_key);
-        }
-
-        if (!py_rec) {
-            /* This means that build value, failed, so we are in trouble*/
-            Py_XDECREF(temp_py_recs);
-            return as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Failed to allocate memory for record entry");
-        }
-
-        if (PyList_Append(temp_py_recs, py_rec) != 0) {
-            Py_DECREF(py_rec);
-            Py_DECREF(temp_py_recs);
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Failed to add record to results");
-        }
-        Py_DECREF(py_rec);
-    }
-
-    // Release Python State
-    *py_records = temp_py_recs;
-    return AEROSPIKE_OK;
-}
-
-as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
-                                         as_batch_read_records *records,
-                                         PyObject **py_recs)
-{
-    *py_recs = PyList_New(0);
-
-    if (!(*py_recs)) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate return list of records");
-    }
-    as_vector *list = &records->list;
-    for (uint32_t i = 0; i < list->size; i++) {
-
-        as_batch_read_record *batch = as_vector_get(list, i);
-        PyObject *py_rec = NULL;
-        PyObject *py_key = NULL;
-
-        /* There should be a record, so convert it to a tuple */
-        if (batch->result == AEROSPIKE_OK) {
-            record_to_pyobject(self, err, &batch->record, &batch->key, &py_rec);
-            if (!py_rec || err->code != AEROSPIKE_OK) {
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-            /* No record, convert to (key, None, None) */
-        }
-        else {
-            key_to_pyobject(err, &batch->key, &py_key);
-            if (!py_key || err->code != AEROSPIKE_OK) {
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-            py_rec = Py_BuildValue("OOO", py_key, Py_None, Py_None);
-            Py_DECREF(py_key);
-            if (!py_rec) {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to create a record tuple");
-                Py_CLEAR(*py_recs);
-                return err->code;
-            }
-        }
-
-        if (PyList_Append(*py_recs, py_rec) != 0) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to add record tuple to return list");
-            Py_XDECREF(py_rec);
-            Py_CLEAR(*py_recs);
-            return err->code;
-        }
-        Py_DECREF(py_rec);
-    }
-    return AEROSPIKE_OK;
 }
 
 /*
