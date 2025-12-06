@@ -4,6 +4,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -297,7 +298,10 @@ class TestOperate(object):
         Invoke operate() with gen ignore.
         """
 
-        key, meta, bins = self.as_connection.operate(key, llist, meta, policy)
+        with warnings.catch_warnings(record=True) as warning_list:
+            key, meta, bins = self.as_connection.operate(key, llist, meta, policy)
+        assert len(warning_list) == 1
+        assert warning_list[0].category == DeprecationWarning
 
         assert bins == {"name": "name1aa"}
         assert key == (

@@ -14,6 +14,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 
 @contextmanager
@@ -262,7 +263,11 @@ class TestGetPut:
             "gen": aerospike.POLICY_GEN_IGNORE,
             "key": aerospike.POLICY_KEY_SEND,
         }
-        assert 0 == self.as_connection.put(key, rec, meta, policy)
+
+        with warnings.catch_warnings(record=True) as warning_list:
+            assert 0 == self.as_connection.put(key, rec, meta, policy)
+        assert len(warning_list) == 1
+        assert warning_list[0].category == DeprecationWarning
 
         (key, meta, bins) = self.as_connection.get(key)
         assert rec == bins
