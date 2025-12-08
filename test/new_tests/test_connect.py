@@ -155,9 +155,9 @@ class TestConnect(object):
             "invalid-cluster-name"
         ]
     )
-    def test_connect_positive_cluster_name(self, cluster_name):
+    def test_connect_with_cluster_name(self, cluster_name):
         """
-        Invoke connect() giving a cluster name)
+        Invoke connect() giving a cluster name
         """
         config = self.connection_config.copy()
         config["cluster_name"] = cluster_name
