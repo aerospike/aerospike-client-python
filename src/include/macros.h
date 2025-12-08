@@ -22,22 +22,33 @@
 
 #include <aerospike/as_error.h>
 
-// Append to original error message
-#undef as_error_update
+// Cannot use multi-line macro because it cannot return a value.
+static inline as_status
+as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
+                               const char *func, const char *file,
+                               uint32_t line, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
 
-#define as_error_update(__err, __code, __fmt, ...)                             \
-    {                                                                          \
-        if ((__err)->code != AEROSPIKE_OK) {                                   \
-            as_error_set_message(__err, __code, (__err)->message);             \
-            (__err)->code = __code;                                            \
-            char str_to_append[AS_ERROR_MESSAGE_MAX_LEN];                      \
-            snprintf(str_to_append, AS_ERROR_MESSAGE_MAX_LEN, __fmt,           \
-                     ##__VA_ARGS__);                                           \
-            as_error_append(__err, str_to_append);                             \
-            return __code;                                                     \
-        }                                                                      \
-        else {                                                                 \
-            return as_error_setallv(__err, __code, __func__, __FILE__,         \
-                                    __LINE__, __fmt, ##__VA_ARGS__);           \
-        }                                                                      \
+    char err_msg_to_prepend[AS_ERROR_MESSAGE_MAX_LEN];
+    vsnprintf(err_msg_to_prepend, AS_ERROR_MESSAGE_MAX_LEN, fmt, ap);
+
+    // Prepend our new error message to the existing one.
+    char orig_err_msg[AS_ERROR_MESSAGE_MAX_LEN];
+    strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
+
+    if (err->code != AEROSPIKE_OK) {
+        as_error_setall(err, code, err_msg_to_prepend, func, file, line);
+        err->code = code;
     }
+
+    as_error_append(err, orig_err_msg);
+
+    va_end(ap);
+    return code;
+}
+
+#define as_error_set_or_prepend(__err, __code, __fmt, ...)                     \
+    as_error_set_or_prepend_helper(__err, __code, __fmt, __func__, __FILE__,   \
+                                   __LINE__, ##__VA_ARGS__);
