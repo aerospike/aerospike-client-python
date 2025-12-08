@@ -24,11 +24,12 @@
 
 // Append to original error message
 #undef as_error_update
+
 #define as_error_update(__err, __code, __fmt, ...)                             \
     {                                                                          \
-        if (__err->code != AEROSPIKE_OK) {                                     \
-            as_error_set_message(__err, __code, __err->message);               \
-            __err->code = __code;                                              \
+        if ((__err)->code != AEROSPIKE_OK) {                                   \
+            as_error_set_message(__err, __code, (__err)->message);             \
+            (__err)->code = __code;                                            \
             char str_to_append[AS_ERROR_MESSAGE_MAX_LEN];                      \
             snprintf(str_to_append, AS_ERROR_MESSAGE_MAX_LEN, __fmt,           \
                      ##__VA_ARGS__);                                           \
