@@ -29,7 +29,7 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
                                uint32_t line, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
+    va_start(ap, line);
 
     char err_msg_to_prepend[AS_ERROR_MESSAGE_MAX_LEN];
     vsnprintf(err_msg_to_prepend, AS_ERROR_MESSAGE_MAX_LEN, fmt, ap);
