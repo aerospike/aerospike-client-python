@@ -88,8 +88,8 @@ static PyObject *Aerospike_Calc_Digest_Invoke(PyObject *py_ns, PyObject *py_set,
         Py_DECREF(py_len);
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                "Digest could not be calculated");
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Digest could not be calculated");
         goto CLEANUP;
     }
 
