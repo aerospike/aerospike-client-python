@@ -13,7 +13,6 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
-      ref: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
