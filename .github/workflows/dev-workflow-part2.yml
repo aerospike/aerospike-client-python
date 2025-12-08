@@ -2,6 +2,7 @@ name: Dev workflow (part 2)
 
 on:
   # This will ignore bump commits because those commits have [skip ci]
+  pull_request:
   push:
     branches:
     - 'dev*'
@@ -9,6 +10,7 @@ on:
 
 jobs:
   bump-dev-number:
+    if: ${{ false }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
