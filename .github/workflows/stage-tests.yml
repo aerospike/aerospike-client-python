@@ -193,10 +193,11 @@ jobs:
     if: ${{ inputs.test-macos-x86 }}
     strategy:
       matrix:
-        runner-os: [
+        runner-os-and-arch: [
           # These larger runners run on intel
-          macos-14-large,
-          macos-15-large
+          ["macos-15-large", "x86_64"],
+          # arm64, since x86 not avaiable as Github hosted runner
+          ["macos-26", "arm64"]
         ]
         python-version: [
           "3.9",
@@ -206,7 +207,7 @@ jobs:
           "3.13",
         ]
       fail-fast: false
-    runs-on: ${{ matrix.runner-os }}
+    runs-on: ${{ matrix.runner-os-and-arch[0] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
@@ -229,7 +230,7 @@ jobs:
         dist_type_to_get: 'wheel'
         wheel_python_version: ${{ matrix.python-version }}
         wheel_os: macosx
-        wheel_cpu_arch: x86_64
+        wheel_cpu_arch: ${{ matrix.runner-os-and-arch[1] }}
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
@@ -238,9 +239,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: ./.github/actions/setup-docker-on-macos
+    - if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/run-ee-server
+    - if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
+      uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
@@ -253,10 +256,16 @@ jobs:
       run: python3 -m pip install *.whl
 
     - name: Install test dependencies
+      if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
       run: python3 -m pip install pytest -c requirements.txt
       working-directory: test
 
     - name: Run tests
+      if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
       run: python3 -m pytest new_tests/
-      id: test
+      working-directory: test
+
+    - name: Run tests on macos 26
+      if: ${{ matrix.runner-os-and-arch[1] == 'arm64' }}
+      run: python3 -c "import aerospike"
       working-directory: test
