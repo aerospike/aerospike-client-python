@@ -163,7 +163,7 @@ class TestMetrics:
                 os.remove(item)
 
     @pytest.fixture(scope="function", params=[None, "my_app"])
-    def app_id_and_client(self, request):
+    def get_client_and_app_id(self, request):
         config = TestBaseClass.get_connection_config()
         config["app_id"] = request.param
         client = aerospike.client(config)
@@ -172,8 +172,8 @@ class TestMetrics:
 
         client.close()
 
-    def test_setting_metrics_policy_custom_settings(self, app_id_and_client):
-        app_id, client = app_id_and_client
+    def test_setting_metrics_policy_custom_settings(self, get_client_and_app_id):
+        app_id, client = get_client_and_app_id
 
         self.metrics_log_folder = "./metrics-logs"
 
