@@ -29,13 +29,12 @@
         if (__err->code != AEROSPIKE_OK) {                                     \
             as_error_set_message(__err, __code, __err->message);               \
             __err->code = __code;                                              \
-            if (fmt != NULL) {                                                 \
-                char str_to_append[AS_ERROR_MESSAGE_MAX_LEN];                  \
-                snprintf(str_to_append, AS_ERROR_MESSAGE_MAX_LEN, __fmt,       \
-                         ##__VA_ARGS__);                                       \
-                as_error_append(__err, str_to_append);                         \
-            }                                                                  \
-            else {                                                             \
+            char str_to_append[AS_ERROR_MESSAGE_MAX_LEN];                      \
+            snprintf(str_to_append, AS_ERROR_MESSAGE_MAX_LEN, __fmt,           \
+                     ##__VA_ARGS__);                                           \
+            as_error_append(__err, str_to_append);                             \
+            else                                                               \
+            {                                                                  \
                 as_error_setallv(__err, __code, __func__, __FILE__, __LINE__,  \
                                  __fmt, ##__VA_ARGS__);                        \
             }                                                                  \
