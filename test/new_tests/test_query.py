@@ -63,7 +63,8 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 class TestQuery(TestBaseClass):
     # TODO: This fixture should be split up to speed up this test class
-    def setup_class(cls, as_connection):
+    @pytest.fixture(autouse=True, scope="class")
+    def setupClass(self, as_connection):
         try:
             as_connection.index_integer_create("test", "demo", "test_age", "age_index")
         except e.IndexFoundError:
