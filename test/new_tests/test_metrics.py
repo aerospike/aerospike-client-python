@@ -212,7 +212,7 @@ class TestMetrics:
                 assert cluster.app_id == app_id
             else:
                 # The app_id can default to be the username,
-                # Or potentially None if not set. TODO: need to verify this.
+                # Or None if not set
                 assert type(cluster.app_id) == str or cluster.app_id is None
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
