@@ -14,6 +14,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
+      ref: ${{ github.base_ref }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
