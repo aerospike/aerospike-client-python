@@ -104,7 +104,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
-        :param dict meta: Deprecated: record metadata to be set. see :ref:`metadata_dict`.
+        :param dict meta: record metadata to be set. see :ref:`metadata_dict`.
         :param dict policy: see :ref:`aerospike_write_policies`.
 
         :param serializer: override the serialization mode of the client \
