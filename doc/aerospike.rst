@@ -324,7 +324,7 @@ Other
     .. code-block:: python
 
         import aerospike
-        import pprint
+        import pprint as pp
 
         digest = aerospike.calc_digest("test", "demo", 1 )
         pp.pprint(digest)
