@@ -2520,7 +2520,8 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 }
 
                 as_exp *expr = NULL;
-                as_exp_new_from_pyobject(self, py_expr, &expr, err, false);
+                status =
+                    as_exp_new_from_pyobject(self, py_expr, &expr, err, false);
                 Py_DECREF(py_expr);
                 if (err->code != AEROSPIKE_OK) {
                     goto CLEANUP1;
