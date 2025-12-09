@@ -6,7 +6,8 @@ import glob
 import os
 import time
 from typing import Optional
-
+import re
+from importlib.metadata import version
 
 # Flags for testing callbacks
 enable_triggered = False
@@ -141,6 +142,24 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
+        # The client language and version should be correct
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Skip header
+                f.readline()
+                # Each line will show the client language and version
+                data = f.readline()
+            # Each line includes cluster[cluster_name,client_language,client_version,...
+            # cluster_name can be empty
+            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]*,([A-Za-z]+),([0-9.a-zA-Z+]+),", string=data)
+            client_language, client_version = regex.groups()
+
+            assert client_language == "python"
+            assert client_version == version("aerospike")
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+
     def test_setting_metrics_policy_custom_settings(self):
         self.metrics_log_folder = "./metrics-logs"
 
@@ -186,6 +205,8 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
+                assert type(node.conns.recovered) == int
+                assert type(node.conns.aborted) == int
                 # Check NodeMetrics
                 assert type(node.metrics) == list
                 ns_metrics = node.metrics

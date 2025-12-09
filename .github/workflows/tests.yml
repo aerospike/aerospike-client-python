@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        py-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        py-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         # Make sure we can build and run tests on an instrumented build that uses libasan
         # We aren't necessarily checking for memory errors / leaks in this test
         sanitizer: [false]
@@ -71,10 +71,11 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
+        allow-prereleases: true
 
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
@@ -230,11 +231,18 @@ jobs:
     - name: Install client
       run: pip install *.whl
 
-    - run: pip install mypy
+    - run: pip install mypy -c requirements.txt
+      working-directory: .github/workflows
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
 
-  test-sanitizer:
+  test-full-suite:
+    strategy:
+      matrix:
+        type:
+          - sanitizer
+          - dont_validate_keys
+      fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -247,7 +255,11 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+    - if: ${{ matrix.type == 'sanitizer' }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+
+    - if: ${{ matrix.type == 'dont_validate_keys' }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
     - uses: actions/download-artifact@v4
       with:
@@ -261,7 +273,8 @@ jobs:
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
-    - run: |
+    - if: ${{ matrix.type == 'sanitizer' }}
+      run: |
         echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
@@ -271,6 +284,10 @@ jobs:
         server-tag: ${{ env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - if: ${{ matrix.type == 'dont_validate_keys' }}
+      run: crudini --existing=param --set config.conf input-validation validate_keys false
+      working-directory: test
 
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
@@ -288,7 +305,8 @@ jobs:
           "3.10",
           "3.11",
           "3.12",
-          "3.13"
+          "3.13",
+          "3.14"
         ]
       fail-fast: false
 
@@ -297,10 +315,11 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
+        allow-prereleases: true
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
@@ -406,8 +425,8 @@ jobs:
     strategy:
       matrix:
         suffix:
-        - node_close_listener
-        - cluster_name
+        - ext_metrics_node_close_listener
+        - ext_metrics_cluster_name
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
@@ -421,9 +440,9 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
-      working-directory: test/metrics
+      working-directory: test/standalone
     - run: python3 test_${{ matrix.suffix }}.py
-      working-directory: test/metrics
+      working-directory: test/standalone
 
   test-misc:
     needs: build
@@ -461,7 +480,8 @@ jobs:
       with:
         container-name: aerospike
 
-    - uses: ./.github/actions/run-ee-server
+    - id: run-ee-server
+      uses: ./.github/actions/run-ee-server
       if: ${{ matrix.test-case == 'user_agent_with_ee' }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
@@ -469,7 +489,7 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         # The user agent can also send the client's username if app-id is not set by the client
-        docker-run-extra-flags: '-e NO_SC=1 -e NO_TLS=1'
+        env-vars: 'SECURITY=1'
 
     - name: Install test dependencies
       if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
@@ -489,6 +509,7 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
       name: Run client in background
       run: |
+        set -x
         cat <<-EOF >> run-client-in-bg.py
         import aerospike
         import time
@@ -513,20 +534,25 @@ jobs:
     - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
-        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        if [[ "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true" ]]; then
+          CREDENTIALS="-U superuser -P superuser"
+        fi
+
+        server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
         if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
           exit 0
         fi
 
-        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        info_cmd_response=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         # Response format: user-agent=<base64 encoded string>:...
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
         echo $user_agent_base64_encoded
         user_agent=$(echo $user_agent_base64_encoded | base64 -d)
         echo $user_agent
+        # TODO: combine into one regex
         # User agent format: <format-version>,<client language>-<version>,...
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
         client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
@@ -539,5 +565,3 @@ jobs:
         expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
         test "$client_version" = "$expected_client_version"
       shell: bash
-      env:
-        CONTAINER_NAME: aerospike

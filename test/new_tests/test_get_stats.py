@@ -12,6 +12,7 @@ class TestGetStats(object):
         assert isinstance(cluster_stats.nodes, list)
         assert isinstance(cluster_stats.retry_count, int)
         assert isinstance(cluster_stats.thread_pool_queued_tasks, int)
+        assert isinstance(cluster_stats.recover_queue_size, int)
 
         for single_node_stats in cluster_stats.nodes:
             assert isinstance(single_node_stats, NodeStats)
