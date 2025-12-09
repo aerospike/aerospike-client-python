@@ -54,13 +54,14 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -68,15 +69,16 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
     as_cluster *cluster = as->cluster;
     // If the cluster goes down between the last call and this call, this could theoretically occur.
     if (!cluster) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "invalid aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "invalid aerospike cluster");
         goto CLEANUP;
     }
 
     nodes = as_nodes_reserve(cluster);
 
     if (!nodes) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Cluster is empty");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "Cluster is empty");
         goto CLEANUP;
     }
 
@@ -85,8 +87,8 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
         hostname = (char *)as_node_get_address_string(node);
         split_point = strrchr(hostname, ':');
         if (!split_point) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Malformed host name string");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Malformed host name string");
             goto CLEANUP;
         }
 
@@ -102,8 +104,8 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
             PyUnicode_FromStringAndSize(real_hostname_start, py_host_length);
 
         if (!py_hostname) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to create python hostname");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to create python hostname");
             goto CLEANUP;
         }
 
@@ -112,8 +114,8 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
         if (!py_port || PyErr_Occurred()) {
             // py_port exists
             Py_XDECREF(py_hostname);
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Non numeric port found");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Non numeric port found");
             goto CLEANUP;
         }
         PyObject *py_host_pair = Py_BuildValue("OO", py_hostname, py_port);
@@ -122,8 +124,8 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
         Py_XDECREF(py_hostname);
 
         if (!py_host_pair) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to build node info tuple");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to build node info tuple");
             goto CLEANUP;
         }
 
@@ -186,13 +188,14 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object.");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -200,15 +203,16 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
     as_cluster *cluster = as->cluster;
     // If the cluster goes down between the last call and this call, this could theoretically occur.
     if (!cluster) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "invalid aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "invalid aerospike cluster.");
         goto CLEANUP;
     }
 
     nodes = as_nodes_reserve(cluster);
 
     if (!nodes) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "Cluster is empty.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "Cluster is empty.");
         goto CLEANUP;
     }
 
@@ -217,8 +221,8 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
         hostname = (char *)as_node_get_address_string(node);
         split_point = strrchr(hostname, ':');
         if (!split_point) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Malformed host name string.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Malformed host name string.");
             goto CLEANUP;
         }
 
@@ -234,23 +238,23 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
             PyUnicode_FromStringAndSize(real_hostname_start, py_host_length);
 
         if (!py_hostname) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to create python hostname.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to create python hostname.");
             goto CLEANUP;
         }
 
         // convert "3000" -> 3000, using base 10 | use long since it works in 2 & 3
         py_port = PyLong_FromString(split_point + 1, NULL, 10);
         if (!py_port || PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Non numeric port found.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Non numeric port found.");
             goto CLEANUP;
         }
 
         py_node_name = PyUnicode_FromString(node->name);
         if (py_node_name == NULL) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to get node name.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to get node name.");
             goto CLEANUP;
         }
 
@@ -259,8 +263,8 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
         const char *node_name_key = "node_name";
         py_return_dict = PyDict_New();
         if (!py_return_dict) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to build node info dictionary.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to build node info dictionary.");
             goto CLEANUP;
         }
 
@@ -269,14 +273,15 @@ static PyObject *AerospikeClient_GetNodeNames_Invoke(AerospikeClient *self)
             PyDict_SetItemString(py_return_dict, port_key, py_port) == -1 ||
             PyDict_SetItemString(py_return_dict, node_name_key, py_node_name) ==
                 -1) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to add dictionary item.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to add dictionary item.");
             goto CLEANUP;
         }
 
         if (PyList_Append(return_value, py_return_dict) == -1) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to append py_return_dict to return_value.");
+            as_error_set_or_prepend(
+                &err, AEROSPIKE_ERR_CLIENT,
+                "Failed to append py_return_dict to return_value.");
             goto CLEANUP;
         }
     }

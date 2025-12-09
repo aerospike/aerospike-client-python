@@ -85,19 +85,21 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     }
 
     if (language != AS_UDF_TYPE_LUA) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid UDF language");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Invalid UDF language");
         goto CLEANUP;
     }
     py_udf_type = PyLong_FromLong(language);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -108,8 +110,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         filename = PyBytes_AsString(py_ustr);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Filename should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Filename should be a string");
         goto CLEANUP;
     }
 
@@ -141,12 +143,13 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         filename_length = strlen(extracted_filename) -
                           1; // Length of the filename after the last '/'
         if (!filename_length) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, "Empty udf filename");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Empty udf filename");
             goto CLEANUP;
         }
         if (user_path_len + filename_length > max_copy_path_length) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Lua file pathname too long");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Lua file pathname too long");
             goto CLEANUP;
         }
         memcpy(copy_filepath + user_path_len, extracted_filename + 1,
@@ -156,12 +159,13 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     else {
         filename_length = strlen(filename);
         if (!filename_length) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, "Empty udf filename");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Empty udf filename");
             goto CLEANUP;
         }
         if (user_path_len + filename_length > max_copy_path_length) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Lua file pathname too long");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Lua file pathname too long");
             goto CLEANUP;
         }
         memcpy(copy_filepath + user_path_len, filename, strlen(filename));
@@ -169,8 +173,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     }
 
     if (!file_p) {
-        as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
-                        "cannot open script file");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
+                                "cannot open script file");
         goto CLEANUP;
     }
 
@@ -178,16 +182,16 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     int fileSize = ftell(file_p);
     fseek(file_p, 0, SEEK_SET);
     if (fileSize <= 0) {
-        as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
-                        "Script file is empty");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
+                                "Script file is empty");
         fclose(file_p);
         file_p = NULL;
         goto CLEANUP;
     }
 
     if (fileSize >= SCRIPT_LEN_MAX) {
-        as_error_update(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
-                        "Script File is too large");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_LUA_FILE_NOT_FOUND,
+                                "Script File is too large");
         fclose(file_p);
         file_p = NULL;
         goto CLEANUP;
@@ -195,7 +199,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     bytes = (uint8_t *)malloc(SCRIPT_LEN_MAX);
     if (!bytes) {
-        as_error_update(&err, errno, "malloc failed");
+        as_error_set_or_prepend(&err, errno, "malloc failed");
         goto CLEANUP;
     }
 
@@ -216,8 +220,9 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         // Copy lua script to user path
         copy_file_p = fopen(copy_filepath, "w+");
         if (copy_file_p == NULL) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "No permissions to write lua file to user path");
+            as_error_set_or_prepend(
+                &err, AEROSPIKE_ERR_CLIENT,
+                "No permissions to write lua file to user path");
             goto CLEANUP;
         }
 
@@ -225,8 +230,9 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         while ((ch = fgetc(file_p)) != EOF) {
             int retVal = fputc(ch, copy_file_p);
             if (retVal == EOF) {
-                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                                "Write of lua file to user path failed");
+                as_error_set_or_prepend(
+                    &err, AEROSPIKE_ERR_CLIENT,
+                    "Write of lua file to user path failed");
                 goto CLEANUP;
             }
         }
@@ -237,8 +243,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     // Copy lua script to buffer so we can send it to server
     int numBytesRead = fread(buff, 1, fileSize, file_p);
     if (numBytesRead != fileSize) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to send lua file to server");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to send lua file to server");
         goto CLEANUP;
     }
 
@@ -319,13 +325,14 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -340,8 +347,8 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
         filename = PyBytes_AsString(py_ustr);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Filename should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Filename should be a string");
         goto CLEANUP;
     }
 
@@ -404,13 +411,14 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -490,18 +498,19 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     if (language != AS_UDF_TYPE_LUA) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Invalid language");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT, "Invalid language");
         goto CLEANUP;
     }
     char *strModule = NULL;
@@ -513,8 +522,9 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
         strModule = (char *)PyUnicode_AsUTF8(py_module);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Module name should be a string or unicode string.");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "Module name should be a string or unicode string.");
         goto CLEANUP;
     }
 

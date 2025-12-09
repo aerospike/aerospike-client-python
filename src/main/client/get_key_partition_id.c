@@ -48,46 +48,47 @@ PyObject *AerospikeClient_Get_Key_PartitionID_Invoke(AerospikeClient *self,
     as_error_init(&err);
 
     if (!PyUnicode_Check(py_ns)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Namespace should be a string.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Namespace should be a string.");
         goto CLEANUP;
     }
     if (!PyUnicode_Check(py_set)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Set should be a string or unicode.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Set should be a string or unicode.");
         goto CLEANUP;
     }
     if (!PyUnicode_Check(py_key) && !PyLong_Check(py_key) &&
         !PyByteArray_Check(py_key)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key is invalid.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM, "Key is invalid.");
         goto CLEANUP;
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     py_keydict = PyDict_New();
     if (PyDict_SetItemString(py_keydict, "ns", py_ns) == -1) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to add dictionary item ns.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to add dictionary item ns.");
         goto CLEANUP;
     }
     if (PyDict_SetItemString(py_keydict, "set", py_set) == -1) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to add dictionary item set.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to add dictionary item set.");
         goto CLEANUP;
     }
     if (PyDict_SetItemString(py_keydict, "key", py_key) == -1) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to add dictionary item key.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to add dictionary item key.");
         goto CLEANUP;
     }
 
@@ -102,8 +103,8 @@ PyObject *AerospikeClient_Get_Key_PartitionID_Invoke(AerospikeClient *self,
     // Invoke operation
     digest = as_key_digest(&key);
     if (!digest->init) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Digest could not be calculated");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Digest could not be calculated");
         goto CLEANUP;
     }
 

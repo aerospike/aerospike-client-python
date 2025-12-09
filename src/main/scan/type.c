@@ -267,7 +267,8 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
         Py_XDECREF(self);
         as_error err;
         as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Parameters are incorrect");
         raise_exception(&err);
         return NULL;
     }

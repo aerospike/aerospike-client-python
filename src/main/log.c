@@ -55,15 +55,15 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
 
     // Type check for incoming parameters
     if (!PyLong_Check(py_log_level)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM, "Invalid log level");
         goto CLEANUP;
     }
 
     long lLogLevel = PyLong_AsLong(py_log_level);
     if (lLogLevel == (uint32_t)-1 && PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "integer value exceeds sys.maxsize");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "integer value exceeds sys.maxsize");
             goto CLEANUP;
         }
     }

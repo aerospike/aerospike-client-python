@@ -100,12 +100,13 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -114,7 +115,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
         self->client, &err, py_policy, &scan_policy, &scan_policy_p,
         &self->client->as->config.policies.scan, &exp_list, &exp_list_p, false);
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
+        as_error_set_or_prepend(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -139,8 +140,8 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
             nodename = (char *)PyUnicode_AsUTF8(py_nodename);
         }
         else {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "nodename must be a string");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "nodename must be a string");
             goto CLEANUP;
         }
     }

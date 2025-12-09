@@ -82,13 +82,14 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -121,7 +122,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
         module = PyBytes_AsString(py_umodule);
     }
     else {
-        as_error_update(
+        as_error_set_or_prepend(
             &err, AEROSPIKE_ERR_CLIENT,
             "udf module argument must be a string or unicode string");
         goto CLEANUP;
@@ -132,8 +133,9 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
         function = PyBytes_AsString(py_ufunction);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "function name must be a string or unicode string");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "function name must be a string or unicode string");
         goto CLEANUP;
     }
 

@@ -13,14 +13,14 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
         // op_dict does not contain key
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to convert %s", key);
     }
 
     if (!PyBool_Check(py_val)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "key %s does not point to a boolean in the dict",
-                               key);
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "key %s does not point to a boolean in the dict", key);
     }
 
     *boolean = (bool)PyObject_IsTrue(py_val);
@@ -40,8 +40,8 @@ as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
     PyObject *py_bin = PyDict_GetItemString(op_dict, AS_PY_BIN_KEY);
 
     if (!py_bin) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"bin\" entry");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM, "Operation must contain a \"bin\" entry");
     }
 
     if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, binName,
@@ -72,9 +72,9 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
         if (required) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation must contain a \"%s\" entry",
-                                   key);
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "Operation must contain a \"%s\" entry", key);
         }
         else {
             *val = NULL;
@@ -99,12 +99,13 @@ as_status get_val_list(AerospikeClient *self, as_error *err,
     *list_val = NULL;
     PyObject *py_val = PyDict_GetItemString(op_dict, list_key);
     if (!py_val) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"values\" entry");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "Operation must contain a \"values\" entry");
     }
     if (!PyList_Check(py_val)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Value must be a list");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Value must be a list");
     }
     return pyobject_to_list(self, err, py_val, list_val, static_pool,
                             serializer_type);
@@ -120,8 +121,9 @@ as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
     }
 
     if (!found) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation missing required entry %s", key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Operation missing required entry %s",
+                                       key);
     }
     return AEROSPIKE_OK;
 }
@@ -137,18 +139,18 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     }
 
     if (!PyLong_Check(py_val)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s must be an integer", key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "%s must be an integer", key);
     }
 
     *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
-                                   key);
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "%s too large", key);
         }
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to convert %s", key);
     }
 
     *found = true;
@@ -165,8 +167,8 @@ as_status get_int_from_py_dict(as_error *err, const char *key,
     }
 
     if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s too large for C int.", key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "%s too large for C int.", key);
     }
     *int_pointer = int64_to_return;
 
@@ -191,8 +193,8 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
         py_bool_val = PyObject_IsTrue(py_inverted);
         /* Essentially bool(py_bool_val) failed, so we raise an exception*/
         if (py_bool_val == -1) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid inverted option");
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "Invalid inverted option");
         }
         if (py_bool_val == 1) {
             *return_type |= AS_LIST_RETURN_INVERTED;

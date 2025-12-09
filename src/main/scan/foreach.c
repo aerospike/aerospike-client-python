@@ -96,8 +96,8 @@ static bool each_result(const as_val *val, void *udata)
     if (!py_return) {
         // an exception was raised, handle it (someday)
         // for now, we bail from the loop
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Callback function raised an exception");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Callback function raised an exception");
         rval = false;
     }
     else if (PyBool_Check(py_return)) {
@@ -161,14 +161,14 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     as_error_init(&data.error);
 
     if (!self || !self->client->as) {
-        as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
-                        "Invalid aerospike object");
+        as_error_set_or_prepend(&data.error, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&data.error, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&data.error, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -207,8 +207,8 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
             nodename = (char *)PyUnicode_AsUTF8(py_nodename);
         }
         else {
-            as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
-                            "nodename must be a string");
+            as_error_set_or_prepend(&data.error, AEROSPIKE_ERR_PARAM,
+                                    "nodename must be a string");
             goto CLEANUP;
         }
     }

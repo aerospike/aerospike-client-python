@@ -134,8 +134,9 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
         str = str_array_ptr[i];
         PyObject *py_str = Py_BuildValue("s", str);
         if (py_str == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build string value from %s.", str);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to build string value from %s.",
+                                    str);
             break;
         }
 
@@ -158,8 +159,9 @@ as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
         str = str_array_ptr[i];
         PyObject *py_str = Py_BuildValue("s", str);
         if (py_str == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build string value from %s.", str);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to build string value from %s.",
+                                    str);
             break;
         }
 
@@ -187,8 +189,8 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
         }
         if (PyDict_SetItemString(py_users, users[i]->name, py_as_user) == -1) {
             Py_DECREF(py_as_user);
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to set user info in users.");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to set user info in users.");
             break;
         }
         Py_DECREF(py_as_user);
@@ -232,7 +234,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
                 privileges[i]->code = PyLong_AsLong(py_code);
             }
             else {
-                as_error_update(
+                as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Code is a compulsory parameter in privileges dictionary");
                 break;
@@ -327,7 +329,8 @@ as_status as_partition_status_to_pyobject(
     int PARTITION_TUPLE_STATUS_SIZE = 5;
     PyObject *new_tuple = PyTuple_New((Py_ssize_t)PARTITION_TUPLE_STATUS_SIZE);
     if (new_tuple == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create py_tuple");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "failed to create py_tuple");
         goto END;
     }
 
@@ -366,7 +369,8 @@ as_status as_partitions_status_to_pyobject(
 
     PyObject *new_dict = PyDict_New();
     if (new_dict == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create new_dict");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "failed to create new_dict");
         goto END;
     }
 
@@ -399,8 +403,8 @@ as_status as_partitions_status_to_pyobject(
         PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part->part_id);
 
         if (PyDict_SetItem(new_dict, py_id, new_py_tuple) != 0) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "failed set item in new_dict");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "failed set item in new_dict");
             Py_DECREF(new_dict);
             Py_DECREF(new_py_tuple);
             Py_XDECREF(py_id);
@@ -436,8 +440,8 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
             py_info, "read_info",
             Py_BuildValue("i", (user->read_info ? *(user->read_info) : 0))) ==
         -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "read_info");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_info.", "read_info");
         Py_DECREF(py_roles);
         Py_DECREF(py_info);
         goto END;
@@ -446,23 +450,23 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
             py_info, "write_info",
             Py_BuildValue("i", (user->write_info ? *(user->write_info) : 0))) ==
         -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "write_info");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_info.", "write_info");
         Py_DECREF(py_roles);
         Py_DECREF(py_info);
         goto END;
     }
     if (PyDict_SetItemString(py_info, "conns_in_use",
                              Py_BuildValue("i", user->conns_in_use)) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "conns_in_use");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_info.", "conns_in_use");
         Py_DECREF(py_roles);
         Py_DECREF(py_info);
         goto END;
     }
     if (PyDict_SetItemString(py_info, "roles", py_roles) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "roles");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_info.", "roles");
         Py_DECREF(py_roles);
         Py_DECREF(py_info);
         goto END;
@@ -515,9 +519,10 @@ as_status as_role_to_pyobject(as_error *err, as_role *role,
     PyObject *py_whitelist = PyList_New(0);
 
     if (py_privileges == NULL || py_whitelist == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create py_as_role_dict, py_privileges, or "
-                        "py_whitelist.");
+        as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Failed to create py_as_role_dict, py_privileges, or "
+            "py_whitelist.");
         goto END;
     }
 
@@ -529,8 +534,9 @@ as_status as_role_to_pyobject(as_error *err, as_role *role,
 
     if (PyDict_SetItemString(py_as_role_dict, privelege_key, py_privileges) ==
         -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_as_role_dict.", privelege_key);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_as_role_dict.",
+                                privelege_key);
         goto END;
     }
 
@@ -542,31 +548,34 @@ as_status as_role_to_pyobject(as_error *err, as_role *role,
 
     if (PyDict_SetItemString(py_as_role_dict, whitelist_key, py_whitelist) ==
         -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_as_role_dict.", whitelist_key);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_as_role_dict.",
+                                whitelist_key);
         goto END;
     }
 
     py_read_quota = Py_BuildValue("i", role->read_quota);
     py_write_quota = Py_BuildValue("i", role->write_quota);
     if (py_read_quota == NULL || py_write_quota == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create py_read_quota or py_write_quota.");
+        as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Failed to create py_read_quota or py_write_quota.");
         goto END;
     }
 
     if (PyDict_SetItemString(py_as_role_dict, read_quota_key, py_read_quota) ==
         -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_as_role_dict.", read_quota_key);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_as_role_dict.",
+                                read_quota_key);
         goto END;
     }
 
     if (PyDict_SetItemString(py_as_role_dict, write_quota_key,
                              py_write_quota) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_as_role_dict.",
-                        write_quota_key);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to set %s in py_as_role_dict.",
+                                write_quota_key);
         goto END;
     }
 
@@ -617,33 +626,33 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     // Long term TODO: duplicate check in admin_create_user_helper before this is called
     if (!PyList_Check(py_list)) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT, "not a list");
     }
 
     // TODO: same as above
     Py_ssize_t size = PyList_Size(py_list);
     if (PyErr_Occurred()) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to get list size");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "Failed to get list size");
     }
 
     const char *str = NULL;
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
         if (!py_val) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Unable to get list item.");
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                           "Unable to get list item.");
         }
 
         str = convert_pyobject_to_str(py_val);
         if (!str) {
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to convert unicode object to C string");
         }
         if (strlen(str) >= max_len) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "String exceeds max length");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "String exceeds max length");
             return err->code;
         }
         strcpy(arr[i], str);
@@ -697,7 +706,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         int is_pydict_keyordered =
             PyObject_IsInstance(py_dict, AerospikeKeyOrderedDict_Get_Type());
         if (PyErr_Occurred()) {
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to check if dictionary is key ordered or not");
         }
@@ -756,9 +765,9 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
          i++) {
         PyObject *py_value = PyLong_FromLong(conn_stats[i]);
         if (!py_value) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to get ConnectionStats field %s",
-                            field_names[i]);
+            as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                    "Unable to get ConnectionStats field %s",
+                                    field_names[i]);
             goto error;
         }
         int result =
@@ -766,9 +775,9 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         // Either way if call succeeded or failed, we don't need py_value anymore
         Py_DECREF(py_value);
         if (result == -1) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to set ConnectionStats field %s",
-                            field_names[i]);
+            as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                    "Unable to set ConnectionStats field %s",
+                                    field_names[i]);
             goto error;
         }
     }
@@ -796,9 +805,9 @@ static inline PyObject *create_py_list_of_buckets_from_as_latency_list(
     // Each "bucket" is an integer
     PyObject *py_list_of_buckets = PyList_New(buckets->size);
     if (!py_list_of_buckets) {
-        as_error_update(error_p, AEROSPIKE_ERR,
-                        "Failed to create list of buckets for %s",
-                        latency_type);
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Failed to create list of buckets for %s",
+                                latency_type);
         goto AS_LATENCY_RELEASE_ON_ERROR;
     }
 
@@ -808,17 +817,17 @@ static inline PyObject *create_py_list_of_buckets_from_as_latency_list(
         uint64_t bucket = as_latency_get_bucket(buckets, i);
         PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
         if (!py_bucket) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Failed to create bucket at index %d for %s", i,
-                            latency_type);
+            as_error_set_or_prepend(
+                error_p, AEROSPIKE_ERR,
+                "Failed to create bucket at index %d for %s", i, latency_type);
             goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
         }
 
         int result = PyList_SetItem(py_list_of_buckets, i, py_bucket);
         if (result == -1) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Failed to append bucket at index %d for %s", i,
-                            latency_type);
+            as_error_set_or_prepend(
+                error_p, AEROSPIKE_ERR,
+                "Failed to append bucket at index %d for %s", i, latency_type);
             goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
         }
 
@@ -892,9 +901,9 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
             PyObject_SetAttrString(py_ns_metrics, latency_types[i], py_buckets);
         Py_DECREF(py_buckets);
         if (result == -1) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to set list of bucket for %s",
-                            latency_types[i]);
+            as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                    "Unable to set list of bucket for %s",
+                                    latency_types[i]);
             goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
     }
@@ -1108,25 +1117,25 @@ PyObject *create_class_instance_from_module(as_error *error_p,
     PyObject *py_instance = NULL;
     PyObject *py_module = PyImport_ImportModule(module_name);
     if (py_module == NULL) {
-        as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                        "Unable to import %s module", module_name);
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR_CLIENT,
+                                "Unable to import %s module", module_name);
         return NULL;
     }
 
     PyObject *py_class = PyObject_GetAttrString(py_module, class_name);
     if (py_class == NULL) {
-        as_error_update(error_p, AEROSPIKE_ERR,
-                        "Unable to import %s class from "
-                        "%s module",
-                        class_name, module_name);
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Unable to import %s class from "
+                                "%s module",
+                                class_name, module_name);
         goto CLEANUP1;
     }
 
     if (!PyCallable_Check(py_class)) {
-        as_error_update(error_p, AEROSPIKE_ERR,
-                        "Unable to create %s instance; "
-                        "%s class is not callable",
-                        class_name, class_name);
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Unable to create %s instance; "
+                                "%s class is not callable",
+                                class_name, class_name);
         goto CLEANUP2;
     }
 
@@ -1237,7 +1246,8 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
 
     if (!py_obj) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "value is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "value is null");
     }
     else if (
         PyBool_Check(
@@ -1260,16 +1270,17 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
             *val = (as_val *)converted_integer;
             break;
         default:
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Unknown value for send_bool_as.");
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                           "Unknown value for send_bool_as.");
         }
     }
     else if (PyLong_Check(py_obj)) {
         int64_t i = (int64_t)PyLong_AsLongLong(py_obj);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
+                return as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value exceeds sys.maxsize");
             }
         }
         *val = (as_val *)as_integer_new(i);
@@ -1277,8 +1288,9 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
     else if (PyUnicode_Check(py_obj)) {
         PyObject *py_ustr = PyUnicode_AsUTF8String(py_obj);
         if (!py_ustr) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Unicode value not encoded in utf-8.");
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unicode value not encoded in utf-8.");
         }
         char *str = PyBytes_AsString(py_ustr);
         *val = (as_val *)as_string_new(strdup(str), true);
@@ -1293,7 +1305,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         as_bytes *bytes = as_bytes_new_wrap(new_buffer, b_len, true);
         if (bytes == NULL) {
             free(new_buffer);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to convert Python bytes to C client's as_bytes");
         }
@@ -1390,11 +1402,13 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
     if (!py_bins_dict) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
     }
     else if (!PyDict_Check(py_bins_dict)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Record should be passed as bin-value pair");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "Record should be passed as bin-value pair");
     }
 
     PyObject *py_bin_name = NULL, *py_bin_value = NULL;
@@ -1406,21 +1420,23 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
     while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
         if (!PyUnicode_Check(py_bin_name)) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "A bin name must be a string or unicode string.");
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_CLIENT,
+                "A bin name must be a string or unicode string.");
             goto CLEANUP;
         }
 
         name = PyUnicode_AsUTF8(py_bin_name);
         if (!name) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to convert unicode object to C string");
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert unicode object to C string");
             goto CLEANUP;
         }
 
         if (self->strict_types) {
             if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                as_error_update(
+                as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_BIN_NAME,
                     "A bin name should not exceed 15 characters limit");
                 goto CLEANUP;
@@ -1429,7 +1445,8 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
         if (!py_bin_value) {
             // this should never happen, but if it did...
-            as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "record is null");
             goto CLEANUP;
         }
 
@@ -1443,8 +1460,8 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         bool success = as_record_set(rec, name, (as_bin_value *)val);
         if (success == false) {
             as_val_destroy(val);
-            as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                            "Unable to set key-value pair");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_BIN_NAME,
+                                    "Unable to set key-value pair");
             goto CLEANUP;
         }
     }
@@ -1473,15 +1490,16 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 
     if (!py_keytuple) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM, "key is null");
     }
     else if (PyTuple_Check(py_keytuple)) {
         size = PyTuple_Size(py_keytuple);
 
         if (size < 3 || size > 4) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "key tuple must be (Namespace, Set, Key) or "
-                                   "(Namespace, Set, None, Digest)");
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "key tuple must be (Namespace, Set, Key) or "
+                "(Namespace, Set, None, Digest)");
         }
 
         py_ns = PyTuple_GetItem(py_keytuple, 0);
@@ -1499,16 +1517,17 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         py_digest = PyDict_GetItemString(py_keytuple, "digest");
     }
     else {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "key is invalid");
     }
 
     if (!py_ns) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "namespace is required");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "namespace is required");
     }
     else if (!PyUnicode_Check(py_ns)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "namespace must be a string");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "namespace must be a string");
     }
     else {
         ns = (char *)PyUnicode_AsUTF8(py_ns);
@@ -1519,8 +1538,8 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             set = (char *)PyUnicode_AsUTF8(py_set);
         }
         else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "set must be a string");
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "set must be a string");
         }
     }
 
@@ -1540,8 +1559,9 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "integer value for KEY exceeds sys.maxsize");
+                as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value for KEY exceeds sys.maxsize");
             }
             else {
                 returnResult = as_key_init_int64(key, ns, set, k);
@@ -1551,8 +1571,8 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             uint32_t sz = (uint32_t)PyByteArray_Size(py_key);
 
             if (sz <= 0) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Byte array size cannot be 0");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Byte array size cannot be 0");
             }
             else {
                 uint8_t *byte_array = (uint8_t *)PyByteArray_AsString(py_key);
@@ -1564,7 +1584,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM, "key is invalid");
         }
     }
     else if (py_digest && py_digest != Py_None) {
@@ -1572,10 +1592,11 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             uint32_t sz = (uint32_t)PyByteArray_Size(py_digest);
 
             if (sz != AS_DIGEST_VALUE_SIZE) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "digest size is invalid. should be 20 bytes, "
-                                "but received %d",
-                                sz);
+                as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "digest size is invalid. should be 20 bytes, "
+                    "but received %d",
+                    sz);
             }
             else {
                 uint8_t *digest = (uint8_t *)PyByteArray_AsString(py_digest);
@@ -1583,17 +1604,17 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             }
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "digest is invalid. expected a bytearray");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                    "digest is invalid. expected a bytearray");
         }
     }
     else {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "either key or digest is required");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "either key or digest is required");
     }
 
     if (!returnResult) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM, "key is invalid");
     }
 
     return err->code;
@@ -1615,8 +1636,8 @@ as_status val_to_pyobject(AerospikeClient *self, as_error *err,
         as_integer *i = as_integer_fromval(val);
         *py_val = PyLong_FromLongLong((long long)as_integer_get(i));
         if (!*py_val) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to create integer or long.");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to create integer or long.");
         }
         break;
     }
@@ -1625,8 +1646,8 @@ as_status val_to_pyobject(AerospikeClient *self, as_error *err,
         *py_val = PyFloat_FromDouble(as_double_get(d));
 
         if (!*py_val) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to create float.");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to create float.");
         }
 
         break;
@@ -1641,8 +1662,8 @@ as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                 *py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
             }
             if (*py_val == NULL) {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "Unknown type for value");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                        "Unknown type for value");
                 return err->code;
             }
         }
@@ -1720,7 +1741,8 @@ as_status val_to_pyobject(AerospikeClient *self, as_error *err,
         break;
     }
     default: {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unknown type for value");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Unknown type for value");
         return err->code;
     }
     }
@@ -1757,8 +1779,8 @@ as_status list_to_pyobject(AerospikeClient *self, as_error *err,
     *py_list = PyList_New(as_list_size((as_list *)list));
 
     if (!*py_list) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate memory for list");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "Failed to allocate memory for list");
     }
 
     conversion_data convd = {
@@ -1782,8 +1804,8 @@ static bool map_to_pyobject_each(const as_val *key, const as_val *val,
     as_error *err = convd->err;
 
     if (!key || !val) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Received null key or value");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Received null key or value");
         return false;
     }
 
@@ -1809,13 +1831,13 @@ static bool map_to_pyobject_each(const as_val *key, const as_val *val,
 	 */
     if (PyDict_SetItem(py_dict, py_key, py_val) == -1) {
         if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_TypeError)) {
-            as_error_update(
+            as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to use unhashable type as a dictionary key");
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to add dictionary item");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to add dictionary item");
         }
         Py_CLEAR(py_key);
         Py_CLEAR(py_val);
@@ -1834,8 +1856,9 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
 {
     *py_map = PyDict_New();
     if (!*py_map) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to allocate memory for dictionary.");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Failed to allocate memory for dictionary.");
     }
 
     // as_orderedmap has flags set to 1
@@ -1845,8 +1868,9 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
             PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map, NULL);
         Py_DECREF(*py_map);
         if (py_keyordereddict == NULL) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Failed to create KeyOrderedDict instance.");
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to create KeyOrderedDict instance.");
         }
         *py_map = py_keyordereddict;
     }
@@ -1872,7 +1896,8 @@ as_status record_to_pyobject(AerospikeClient *self, as_error *err,
     *obj = NULL;
 
     if (!rec) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
     }
 
     PyObject *py_rec = NULL;
@@ -1927,7 +1952,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     *obj = NULL;
 
     if (!key) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "key is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "key is null");
     }
 
     PyObject *py_namespace = NULL;
@@ -1964,8 +1990,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
                 py_key = PyBytes_FromString(as_string_get(sval));
             }
             if (!py_key) {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "Unknown type for value");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                        "Unknown type for value");
                 Py_XDECREF(py_namespace);
                 Py_XDECREF(py_set);
                 return err->code;
@@ -2055,7 +2081,8 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
 
     if (!rec) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
     }
 
     *py_bins = PyDict_New();
@@ -2095,7 +2122,8 @@ as_status operate_bins_to_pyobject(AerospikeClient *self, as_error *err,
 
     if (!rec) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
     }
 
     *py_bins = PyList_New(0);
@@ -2112,14 +2140,14 @@ as_status operate_bins_to_pyobject(AerospikeClient *self, as_error *err,
             goto CLEANUP;
         }
         if (!py_bin_value) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Null entry in operate ordered conversion");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Null entry in operate ordered conversion");
             goto CLEANUP;
         }
         py_bin_pair = Py_BuildValue("sO", as_bin_get_name(bin), py_bin_value);
         if (!py_bin_pair) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build bin entry");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to build bin entry");
             Py_DECREF(py_bin_value);
             goto CLEANUP;
         }
@@ -2144,7 +2172,8 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
 
     if (!rec) {
         // this should never happen, but if it did...
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "record is null");
     }
 
     PyObject *py_ttl = PyLong_FromLong(rec->ttl);
@@ -2296,8 +2325,8 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
             if (retval == -1) {
                 // This shouldn't happen, but if it did...
                 // TODO: wrong error message
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+                return as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR, ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
                 return err->code;
@@ -2313,12 +2342,12 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
                 ttl = (uint32_t)PyLong_AsLong(py_ttl);
             }
             else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Ttl should be an int or long");
+                return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                               "Ttl should be an int or long");
             }
 
             if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-                return as_error_update(
+                return as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for ttl exceeds sys.maxsize");
             }
@@ -2335,12 +2364,13 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
                 gen = (uint16_t)PyLong_AsLong(py_gen);
             }
             else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Generation should be an int or long");
+                return as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "Generation should be an int or long");
             }
 
             if ((uint16_t)-1 == gen && PyErr_Occurred()) {
-                return as_error_update(
+                return as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for gen exceeds sys.maxsize");
             }
@@ -2348,8 +2378,8 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         }
     }
     else if (py_meta && (py_meta != Py_None)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Metadata should be of type dictionary");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Metadata should be of type dictionary");
     }
     else {
         // Metadata dict was not set by user
@@ -2365,14 +2395,15 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
         *long_val = PyLong_AsLong(py_value);
         if (*long_val == -1 && PyErr_Occurred() && self->strict_types) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
+                return as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value exceeds sys.maxsize");
             }
         }
     }
     else {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Offset should be of int or long type");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Offset should be of int or long type");
     }
 
     return err->code;
@@ -2394,7 +2425,8 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
         *c_str_ptr = (char *)PyUnicode_AsUTF8(py_string);
         return AEROSPIKE_OK;
     }
-    return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
+    return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                   "String value required");
 }
 
 // This function converts a list of cdt_ctx from aerospike_helpers.ctx to
@@ -2420,8 +2452,8 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     PyObject *py_extra_args = NULL;
 
     if (!PyList_Check(py_ctx_list)) {
-        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                 "Failed to convert %s", CTX_KEY);
+        status = as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                         "Failed to convert %s", CTX_KEY);
         goto CLEANUP4;
     }
 
@@ -2435,33 +2467,34 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         py_id = PyObject_GetAttrString(py_cdt_ctx, "id");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                     "Failed to convert %s, id", CTX_KEY);
+            status = as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM, "Failed to convert %s, id", CTX_KEY);
             goto CLEANUP4;
         }
 
         py_value = PyObject_GetAttrString(py_cdt_ctx, "value");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                     "Failed to convert %s, value", CTX_KEY);
+            status =
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Failed to convert %s, value", CTX_KEY);
             goto CLEANUP3;
         }
 
         py_extra_args = PyObject_GetAttrString(py_cdt_ctx, "extra_args");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                     "Failed to convert %s", CTX_KEY);
+            status = as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                             "Failed to convert %s", CTX_KEY);
             goto CLEANUP2;
         }
 
         uint64_t item_type = PyLong_AsUnsignedLongLong(py_id);
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                     "Failed to convert %s, id to uint64_t",
-                                     CTX_KEY);
+            status = as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "Failed to convert %s, id to uint64_t", CTX_KEY);
             goto CLEANUP1;
         }
 
@@ -2470,9 +2503,9 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             int_val = PyLong_AsLong(py_value);
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
-                status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                         "Failed to convert %s, value to long",
-                                         CTX_KEY);
+                status = as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "Failed to convert %s, value to long", CTX_KEY);
                 goto CLEANUP1;
             }
             switch (item_type) {
@@ -2499,7 +2532,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 break;
             default:
                 as_cdt_ctx_destroy(cdt_ctx);
-                status = as_error_update(
+                status = as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Failed to convert, unknown ctx operation %s", CTX_KEY);
                 goto CLEANUP1;
@@ -2514,8 +2547,8 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 int retval = PyDict_GetItemStringRef(
                     py_extra_args, _CDT_CTX_FILTER_EXPR_KEY, &py_expr);
                 if (retval != 1) {
-                    status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                             "Invalid cdt_ctx_exp");
+                    status = as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                                     "Invalid cdt_ctx_exp");
                     goto CLEANUP1;
                 }
 
@@ -2535,7 +2568,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             if (as_val_new_from_pyobject(self, err, py_value, &val, static_pool,
                                          serializer_type) != AEROSPIKE_OK) {
                 as_cdt_ctx_destroy(cdt_ctx);
-                status = as_error_update(
+                status = as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Failed to convert %s, value to as_val", CTX_KEY);
                 goto CLEANUP1;
@@ -2559,7 +2592,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 break;
             default:
                 as_cdt_ctx_destroy(cdt_ctx);
-                status = as_error_update(
+                status = as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Failed to convert, unknown ctx operation %s", CTX_KEY);
                 goto CLEANUP1;
@@ -2602,13 +2635,13 @@ static as_status as_integer_new_from_py_bool(as_error *err, PyObject *py_bool,
 {
     int py_bool_as_num = PyObject_IsTrue(py_bool);
     if (py_bool_as_num == -1) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to get truth value of py_bool.");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "Failed to get truth value of py_bool.");
     }
 
     *target = as_integer_new((int64_t)py_bool_as_num);
     if (*target == NULL) {
-        return as_error_update(
+        return as_error_set_or_prepend(
             err, AEROSPIKE_ERR_CLIENT,
             "Failed to create new as_integer from py_bool_as_num.");
     }
@@ -2627,13 +2660,13 @@ static as_status as_bool_new_from_py_bool(as_error *err, PyObject *py_bool,
 {
     int py_bool_as_num = PyObject_IsTrue(py_bool);
     if (py_bool_as_num == -1) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to get truth value of py_bool.");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                       "Failed to get truth value of py_bool.");
     }
 
     *target = as_boolean_new((bool)py_bool_as_num);
     if (*target == NULL) {
-        return as_error_update(
+        return as_error_set_or_prepend(
             err, AEROSPIKE_ERR_CLIENT,
             "Failed to create new as_boolean from py_bool_as_num.");
     }
@@ -2648,24 +2681,26 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name)
 {
     if (!PyLong_Check(py_long)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s must be an integer.", py_object_name);
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM, "%s must be an integer.", py_object_name);
     }
 
     int int_to_return = PyLong_AsLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "%s too large for C long.", py_object_name);
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "%s too large for C long.",
+                                           py_object_name);
         }
 
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to convert %s.", py_object_name);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to convert %s.", py_object_name);
     }
 
     if (int_to_return > INT_MAX || int_to_return < INT_MIN) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s too large for C int.", py_object_name);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "%s too large for C int.",
+                                       py_object_name);
     }
 
     *int_pointer = int_to_return;
@@ -2884,27 +2919,27 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
          i++) {
         PyObject *py_value = PyLong_FromUnsignedLong(field_values[i]);
         if (!py_value) {
-            as_error_update(err, AEROSPIKE_ERR,
-                            "Unable to get ClusterStats field %s",
-                            field_names[i]);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR,
+                                    "Unable to get ClusterStats field %s",
+                                    field_names[i]);
             goto error;
         }
         int result =
             PyObject_SetAttrString(py_cluster_stats, field_names[i], py_value);
         Py_DECREF(py_value);
         if (result == -1) {
-            as_error_update(err, AEROSPIKE_ERR,
-                            "Unable to set ClusterStats field %s",
-                            field_names[i]);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR,
+                                    "Unable to set ClusterStats field %s",
+                                    field_names[i]);
             goto error;
         }
     }
 
     PyObject *py_retry_count = PyLong_FromUnsignedLongLong(stats->retry_count);
     if (!py_retry_count) {
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to get ClusterStats field %s",
-                        RETRY_COUNT_FIELD_NAME);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR,
+                                "Unable to get ClusterStats field %s",
+                                RETRY_COUNT_FIELD_NAME);
         goto error;
     }
     int result = PyObject_SetAttrString(py_cluster_stats,
@@ -2912,9 +2947,9 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
     Py_DECREF(py_retry_count);
     if (result == -1) {
         PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Unable to set ClusterStats field %s",
-                        RETRY_COUNT_FIELD_NAME);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR,
+                                "Unable to set ClusterStats field %s",
+                                RETRY_COUNT_FIELD_NAME);
         goto error;
     }
 

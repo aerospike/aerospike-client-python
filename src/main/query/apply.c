@@ -57,13 +57,14 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid query object");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -79,7 +80,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         module = PyBytes_AsString(py_umodule);
     }
     else {
-        as_error_update(
+        as_error_set_or_prepend(
             &err, AEROSPIKE_ERR_CLIENT,
             "udf module argument must be a string or unicode string");
         goto CLEANUP;
@@ -90,7 +91,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         function = PyBytes_AsString(py_ufunction);
     }
     else {
-        as_error_update(
+        as_error_set_or_prepend(
             &err, AEROSPIKE_ERR_CLIENT,
             "udf function argument must be a string or unicode string");
         goto CLEANUP;
@@ -102,9 +103,10 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             Py_ssize_t size = PyList_Size(py_args);
 
             if (Illegal_UDF_Args_Check(py_args)) {
-                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                                "udf function argument type must be supported "
-                                "by Aerospike");
+                as_error_set_or_prepend(
+                    &err, AEROSPIKE_ERR_CLIENT,
+                    "udf function argument type must be supported "
+                    "by Aerospike");
                 goto CLEANUP;
             }
 
@@ -115,7 +117,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                 as_val_new_from_pyobject(self->client, &err, py_val, &val,
                                          &static_pool, SERIALIZER_PYTHON);
                 if (err.code != AEROSPIKE_OK) {
-                    as_error_update(&err, err.code, NULL);
+                    as_error_set_or_prepend(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);
                     goto CLEANUP;
                 }
@@ -125,7 +127,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             }
         }
         else {
-            as_error_update(
+            as_error_set_or_prepend(
                 &err, AEROSPIKE_ERR_CLIENT,
                 "udf function arguments must be enclosed in a list");
             as_arraylist_destroy(arglist);

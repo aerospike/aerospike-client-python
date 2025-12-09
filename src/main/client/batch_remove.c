@@ -138,13 +138,14 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     uint64_t processed_key_count = 0;
 
     if (!self || !self->as) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -153,15 +154,15 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
         as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
 
         if (!PyTuple_Check(py_key)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "key should be an aerospike key tuple");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                    "key should be an aerospike key tuple");
             goto CLEANUP;
         }
 
         pyobject_to_key(err, py_key, tmp_key);
         if (err->code != AEROSPIKE_OK) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "failed to convert key at index: %d", i);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                    "failed to convert key at index: %d", i);
             goto CLEANUP;
         }
 
@@ -204,8 +205,8 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     }
 
     if (!br_module) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to load batch_records module");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to load batch_records module");
         goto CLEANUP;
     }
 
@@ -214,8 +215,8 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     br_instance =
         PyObject_CallMethodObjArgs(br_module, obj_name, res_list, NULL);
     if (!br_instance) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to instance BatchRecords");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to instance BatchRecords");
         Py_DECREF(br_module);
         Py_DECREF(obj_name);
         Py_DECREF(res_list);
@@ -310,8 +311,9 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
 
     // required arg so don't need to check for NULL
     if (!PyList_Check(py_keys)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "keys should be a list of aerospike key tuples");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "keys should be a list of aerospike key tuples");
         goto error;
     }
 

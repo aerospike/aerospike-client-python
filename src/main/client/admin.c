@@ -46,19 +46,21 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto RAISE_EXCEPTION;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto RAISE_EXCEPTION;
     }
 
     // Convert python object to an array of roles
     if (!PyList_Check(py_roles)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Roles should be a list");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Roles should be a list");
         goto RAISE_EXCEPTION;
     }
     int roles_size = PyList_Size(py_roles);
@@ -79,8 +81,8 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     // Convert python objects to username and password strings
     const char *user = convert_pyobject_to_str(py_user);
     if (!user) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
-                        "Username");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                STR_CONVERSION_ERROR_MSG, "Username");
         goto CLEANUP_AND_RAISE_EXCEPTION;
     }
 
@@ -88,8 +90,8 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (py_password) {
         password = convert_pyobject_to_str(py_password);
         if (!password) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
-                            "Password");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    STR_CONVERSION_ERROR_MSG, "Password");
             goto CLEANUP_AND_RAISE_EXCEPTION;
         }
     }
@@ -227,13 +229,14 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -249,8 +252,8 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
 
     // Convert python object to username string
     if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
@@ -322,13 +325,14 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -344,16 +348,16 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
 
     // Convert python objects into username and password strings
     if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
     user = PyUnicode_AsUTF8(py_user);
 
     if (!PyUnicode_Check(py_password)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Password should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Password should be a string");
         goto CLEANUP;
     }
 
@@ -413,13 +417,14 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -435,16 +440,16 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
 
     // Convert python objects into username and password strings
     if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
     user = PyUnicode_AsUTF8(py_user);
 
     if (!PyUnicode_Check(py_password)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Password should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Password should be a string");
         goto CLEANUP;
     }
 
@@ -521,13 +526,14 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
     const char *user;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -548,8 +554,8 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
 
     // Convert python object into username string
     if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
@@ -626,13 +632,14 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
     char **roles = NULL;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -657,8 +664,8 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
 
     // Convert python object to username string
     if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
@@ -736,13 +743,14 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
     as_user *user = NULL;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -755,8 +763,8 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
 
     // Convert python object to username string
     if (!PyUnicode_Check(py_user_name)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Username should be a string");
         goto CLEANUP;
     }
 
@@ -773,7 +781,7 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
     // Convert returned as_user struct to python object
     as_user_info_to_pyobject(&err, user, &py_user);
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
+        as_error_set_or_prepend(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -832,13 +840,14 @@ PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
     as_user **users = NULL;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -860,7 +869,7 @@ PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
     // Convert returned array of as_user structs into python object;
     as_user_info_array_to_pyobject(&err, users, &py_users, users_size);
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
+        as_error_set_or_prepend(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -925,13 +934,14 @@ PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
 
     // sanity connection checks.
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -940,16 +950,16 @@ PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
     // Convert python object to an array of privileges.
     if (py_privileges != NULL) {
         if (!PyList_Check(py_privileges)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Privileges should be a list");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Privileges should be a list");
             goto CLEANUP;
         }
 
@@ -977,8 +987,8 @@ PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
 
     if (py_whitelist != NULL) {
         if (!PyList_Check(py_whitelist)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Whitelist must be a list of IP strings.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Whitelist must be a list of IP strings.");
             goto CLEANUP;
         }
 
@@ -1068,13 +1078,14 @@ PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
 
     // Sanity connection checks.
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object.");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -1093,8 +1104,8 @@ PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string.");
         goto CLEANUP;
     }
 
@@ -1116,8 +1127,9 @@ PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
         whitelist_size = 0;
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Whitelist must be a list of IP strings, or None.");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Whitelist must be a list of IP strings, or None.");
         goto CLEANUP;
     }
 
@@ -1181,13 +1193,14 @@ PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
 
     // Sanity connection checks.
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object.");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -1207,8 +1220,8 @@ PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string.");
         goto CLEANUP;
     }
 
@@ -1289,13 +1302,14 @@ PyObject *AerospikeClient_Admin_Drop_Role(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -1310,8 +1324,8 @@ PyObject *AerospikeClient_Admin_Drop_Role(AerospikeClient *self, PyObject *args,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
@@ -1372,20 +1386,21 @@ PyObject *AerospikeClient_Admin_Grant_Privileges(AerospikeClient *self,
     as_privilege **privileges = NULL;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     // Convert python object to an array of privileges
     if (!PyList_Check(py_privileges)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Privileges should be a list");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Privileges should be a list");
         goto CLEANUP;
     }
 
@@ -1409,8 +1424,8 @@ PyObject *AerospikeClient_Admin_Grant_Privileges(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
@@ -1482,20 +1497,21 @@ PyObject *AerospikeClient_Admin_Revoke_Privileges(AerospikeClient *self,
     as_privilege **privileges = NULL;
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     // Convert python object to an array of privileges
     if (!PyList_Check(py_privileges)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Privileges should be a list");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Privileges should be a list");
         goto CLEANUP;
     }
 
@@ -1519,8 +1535,8 @@ PyObject *AerospikeClient_Admin_Revoke_Privileges(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
@@ -1588,13 +1604,14 @@ PyObject *AerospikeClient_Admin_Query_Role(AerospikeClient *self,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -1609,8 +1626,8 @@ PyObject *AerospikeClient_Admin_Query_Role(AerospikeClient *self,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
@@ -1678,13 +1695,14 @@ PyObject *AerospikeClient_Admin_Query_Roles(AerospikeClient *self,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -1759,13 +1777,14 @@ PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -1780,8 +1799,8 @@ PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
         role = PyUnicode_AsUTF8(py_role);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Role name should be a string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Role name should be a string");
         goto CLEANUP;
     }
 
@@ -1795,8 +1814,8 @@ PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
 
     py_ret_role = PyDict_New();
     if (py_ret_role == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create py_ret_role.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to create py_ret_role.");
         goto CLEANUP;
     }
 
@@ -1856,13 +1875,14 @@ PyObject *AerospikeClient_Admin_Get_Roles(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 

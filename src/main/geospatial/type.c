@@ -72,7 +72,7 @@ void store_geodata(AerospikeGeospatial *self, as_error *err,
         self->geo_data = py_geodata;
     }
     else {
-        as_error_update(
+        as_error_set_or_prepend(
             err, AEROSPIKE_ERR_PARAM,
             "Geospatial data should be a dictionary or raw GeoJSON string");
     }
@@ -101,16 +101,16 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:GeoJSON", kwlist,
                                     &py_geodata) == false) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "GeoJSON() expects exactly 1 parameter");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "GeoJSON() expects exactly 1 parameter");
         goto CLEANUP;
     }
 
     if (PyUnicode_Check(py_geodata)) {
         initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
         if (!initresult) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "String is not GeoJSON serializable");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "String is not GeoJSON serializable");
             goto CLEANUP;
         }
         store_geodata(self, &err, initresult);
@@ -144,14 +144,15 @@ AerospikeGeospatial *self;
     as_error_init(&err);
 
     if (!self) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid geospatial object");
         goto CLEANUP;
     }
 
     initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
     if (!initresult) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to call get data in str format");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to call get data in str format");
         goto CLEANUP;
     }
     char *initresult_str = (char *)PyUnicode_AsUTF8(initresult);
@@ -187,14 +188,15 @@ AerospikeGeospatial *self;
     as_error_init(&err);
 
     if (!self) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid geospatial object");
         goto CLEANUP;
     }
 
     initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
     if (!initresult) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to call get data in str format");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to call get data in str format");
         goto CLEANUP;
     }
 
@@ -306,8 +308,8 @@ AerospikeGeospatial *Aerospike_Set_Geo_Data(PyObject *parent, PyObject *args,
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "The geospatial data should be a dictionary");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "The geospatial data should be a dictionary");
     }
 
     if (err.code != AEROSPIKE_OK) {
@@ -344,8 +346,9 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "The geospatial data should be a GeoJSON string");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "The geospatial data should be a GeoJSON string");
     }
 
     if (err.code != AEROSPIKE_OK) {

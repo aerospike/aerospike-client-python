@@ -71,8 +71,8 @@ PyObject *AerospikeClient_Set_Serializer(AerospikeClient *self, PyObject *args,
         return PyLong_FromLong(0);
     }
     if (!PyCallable_Check(py_func)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Parameter must be a callable");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Parameter must be a callable");
         goto CLEANUP;
     }
 
@@ -131,8 +131,8 @@ PyObject *AerospikeClient_Set_Deserializer(AerospikeClient *self,
     }
 
     if (!PyCallable_Check(py_func)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Parameter must be a callable");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Parameter must be a callable");
         goto CLEANUP;
     }
     is_user_deserializer_registered = 1;
@@ -169,14 +169,16 @@ void set_as_bytes(as_bytes **bytes, uint8_t *bytes_string,
                   as_error *error_p)
 {
     if ((!bytes) || (!bytes_string)) {
-        as_error_update(error_p, AEROSPIKE_ERR, "Unable to set as_bytes");
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Unable to set as_bytes");
         goto CLEANUP;
     }
 
     as_bytes_init(*bytes, bytes_string_len);
 
     if (!as_bytes_set(*bytes, 0, bytes_string, bytes_string_len)) {
-        as_error_update(error_p, AEROSPIKE_ERR, "Unable to set as_bytes");
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Unable to set as_bytes");
     }
     else {
         as_bytes_set_type(*bytes, bytes_type);
@@ -256,13 +258,13 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     }
     else {
         if (serialize_flag) {
-            as_error_update(
+            as_error_set_or_prepend(
                 error_p, AEROSPIKE_ERR,
                 "Unable to call user's registered serializer callback");
             goto CLEANUP;
         }
         else {
-            as_error_update(
+            as_error_set_or_prepend(
                 error_p, AEROSPIKE_ERR,
                 "Unable to call user's registered deserializer callback");
             goto CLEANUP;
@@ -311,8 +313,8 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
 
     switch (serializer_policy) {
     case SERIALIZER_NONE:
-        as_error_update(error_p, AEROSPIKE_ERR_PARAM,
-                        "Cannot serialize: SERIALIZER_NONE selected");
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR_PARAM,
+                                "Cannot serialize: SERIALIZER_NONE selected");
         goto CLEANUP;
     case SERIALIZER_PYTHON: {
         /*
@@ -334,8 +336,9 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
             set_as_bytes(bytes, my_bytes, my_bytes_len, AS_BYTES_BLOB, error_p);
         }
         else {
-            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                            "Unable to serialize unknown Python native type.");
+            as_error_set_or_prepend(
+                error_p, AEROSPIKE_ERR_CLIENT,
+                "Unable to serialize unknown Python native type.");
         }
     } break;
     case SERIALIZER_JSON:
@@ -344,8 +347,9 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
 			 *     Handle JSON serialization after support for AS_BYTES_JSON
 			 *     is added in aerospike-client-c
 			 */
-        as_error_update(error_p, AEROSPIKE_ERR,
-                        "Unable to serialize using standard json serializer");
+        as_error_set_or_prepend(
+            error_p, AEROSPIKE_ERR,
+            "Unable to serialize using standard json serializer");
         goto CLEANUP;
 
     case SERIALIZER_USER:
@@ -372,14 +376,15 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
                 }
             }
             else {
-                as_error_update(error_p, AEROSPIKE_ERR,
-                                "No serializer callback registered");
+                as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                        "No serializer callback registered");
                 goto CLEANUP;
             }
         }
         break;
     default:
-        as_error_update(error_p, AEROSPIKE_ERR, "Unsupported serializer");
+        as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                "Unsupported serializer");
         goto CLEANUP;
     }
 
@@ -423,12 +428,13 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         PyObject *py_val = PyByteArray_FromStringAndSize(
             (char *)as_bytes_get(bytes), bval_size);
         if (!py_val) {
-            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                            "Unable to deserialize AS_BYTES_PYTHON bytes");
+            as_error_set_or_prepend(
+                error_p, AEROSPIKE_ERR_CLIENT,
+                "Unable to deserialize AS_BYTES_PYTHON bytes");
             goto CLEANUP;
         }
         *retval = py_val;
-        as_error_update(error_p, AEROSPIKE_OK, NULL);
+        as_error_set_or_prepend(error_p, AEROSPIKE_OK, NULL);
     case AS_BYTES_BLOB: {
         if (self->user_deserializer_call_info.callback) {
             execute_user_callback(&self->user_deserializer_call_info, &bytes,
@@ -438,12 +444,12 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 PyObject *py_val = PyBytes_FromStringAndSize(
                     (char *)as_bytes_get(bytes), bval_size);
                 if (!py_val) {
-                    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                    "Unable to deserialize bytes");
+                    as_error_set_or_prepend(error_p, AEROSPIKE_ERR_CLIENT,
+                                            "Unable to deserialize bytes");
                     goto CLEANUP;
                 }
                 *retval = py_val;
-                as_error_update(error_p, AEROSPIKE_OK, NULL);
+                as_error_set_or_prepend(error_p, AEROSPIKE_OK, NULL);
             }
         }
         else {
@@ -455,11 +461,11 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                     PyObject *py_val = PyBytes_FromStringAndSize(
                         (char *)as_bytes_get(bytes), bval_size);
                     if (!py_val) {
-                        as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                        "Unable to deserialize bytes");
+                        as_error_set_or_prepend(error_p, AEROSPIKE_ERR_CLIENT,
+                                                "Unable to deserialize bytes");
                         goto CLEANUP;
                     }
-                    as_error_update(error_p, AEROSPIKE_OK, NULL);
+                    as_error_set_or_prepend(error_p, AEROSPIKE_OK, NULL);
                     *retval = py_val;
                 }
             }
@@ -468,8 +474,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 PyObject *py_val = PyBytes_FromStringAndSize(
                     (char *)as_bytes_get(bytes), bval_size);
                 if (!py_val) {
-                    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                    "Unable to deserialize bytes");
+                    as_error_set_or_prepend(error_p, AEROSPIKE_ERR_CLIENT,
+                                            "Unable to deserialize bytes");
                     goto CLEANUP;
                 }
                 *retval = py_val;
@@ -481,7 +487,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         PyObject *py_bytes = PyBytes_FromStringAndSize(
             (const char *)bytes->value, (Py_ssize_t)bytes->size);
         if (py_bytes == NULL) {
-            as_error_update(
+            as_error_set_or_prepend(
                 error_p, AEROSPIKE_ERR_CLIENT,
                 "Unable to convert C client's as_bytes to Python bytes");
             goto CLEANUP;
@@ -504,8 +510,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             *retval = py_val;
         }
         else {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to deserialize bytes");
+            as_error_set_or_prepend(error_p, AEROSPIKE_ERR,
+                                    "Unable to deserialize bytes");
             goto CLEANUP;
         }
     }

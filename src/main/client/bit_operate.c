@@ -222,7 +222,8 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Unknown operation");
     }
 
     return err->code;
@@ -254,8 +255,8 @@ static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_resize(ops, bin, NULL, &bit_policy, new_size,
                                   flags)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit resize operation");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit resize operation");
     }
 
     return AEROSPIKE_OK;
@@ -295,28 +296,29 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
         uint8_t *value = NULL;
         if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
             AEROSPIKE_OK) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "unable to parse value from add_op_bit_set");
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "unable to parse value from add_op_bit_set");
         }
 
         if (!as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
                                    bit_size, value_byte_size, value)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to add bit set operation")
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "Failed to add bit set operation")
         }
     }
     else if (operation_code == OP_BIT_SET_INT) {
         int64_t value = 0;
         if (get_int64_t(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_PARAM,
                 "unable to parse value while adding bit set int operation");
         }
 
         if (!as_operations_bit_set_int(ops, bin, NULL, &bit_policy, bit_offset,
                                        bit_size, value)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to add bit set int operation")
+            return as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM, "Failed to add bit set int operation")
         }
     }
 
@@ -350,8 +352,8 @@ static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_remove(ops, bin, NULL, &bit_policy, byte_offset,
                                   byte_size)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit remove operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit remove operation")
     }
 
     return AEROSPIKE_OK;
@@ -377,8 +379,8 @@ static as_status add_op_bit_count(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_bit_count(ops, bin, NULL, bit_offset, bit_size)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit count operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit count operation")
     }
 
     return AEROSPIKE_OK;
@@ -427,8 +429,8 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
 
     if (!as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
                                bit_size, value, sign, action)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit add operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit add operation")
     }
 
     return AEROSPIKE_OK;
@@ -467,14 +469,15 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
 
     if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
         AEROSPIKE_OK) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "unable to parse value from add_op_bit_and");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "unable to parse value from add_op_bit_and");
     }
 
     if (!as_operations_bit_and(ops, bin, NULL, &bit_policy, bit_offset,
                                bit_size, value_byte_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit and operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit and operation")
     }
 
     return AEROSPIKE_OK;
@@ -499,8 +502,8 @@ static as_status add_op_bit_get(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (!as_operations_bit_get(ops, bin, NULL, bit_offset, bit_size)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit get int operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit get int operation")
     }
 
     return AEROSPIKE_OK;
@@ -532,8 +535,8 @@ static as_status add_op_bit_get_int(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_get_int(ops, bin, NULL, bit_offset, bit_size,
                                    sign)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit get operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit get operation")
     }
 
     return AEROSPIKE_OK;
@@ -567,14 +570,15 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
 
     if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
         AEROSPIKE_OK) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "unable to parse value from add_op_bit_insert");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "unable to parse value from add_op_bit_insert");
     }
 
     if (!as_operations_bit_insert(ops, bin, NULL, &bit_policy, byte_offset,
                                   value_byte_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit insert operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit insert operation")
     }
 
     return AEROSPIKE_OK;
@@ -605,8 +609,8 @@ static as_status add_op_bit_lscan(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_bit_lscan(ops, bin, NULL, bit_offset, bit_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit lscan operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit lscan operation")
     }
 
     return AEROSPIKE_OK;
@@ -645,8 +649,8 @@ static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_lshift(ops, bin, NULL, &bit_policy, bit_offset,
                                   bit_size, shift)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit lshift operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit lshift operation")
     }
 
     return AEROSPIKE_OK;
@@ -678,8 +682,8 @@ static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
 
     if (!as_operations_bit_not(ops, bin, NULL, &bit_policy, bit_offset,
                                bit_size)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit not operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit not operation")
     }
 
     return AEROSPIKE_OK;
@@ -717,14 +721,15 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
 
     if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
         AEROSPIKE_OK) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "unable to parse value from add_op_bit_or");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "unable to parse value from add_op_bit_or");
     }
 
     if (!as_operations_bit_or(ops, bin, NULL, &bit_policy, bit_offset, bit_size,
                               value_byte_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit or operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit or operation")
     }
 
     return AEROSPIKE_OK;
@@ -755,8 +760,8 @@ static as_status add_op_bit_rscan(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_bit_rscan(ops, bin, NULL, bit_offset, bit_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit rscan operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit rscan operation")
     }
 
     return AEROSPIKE_OK;
@@ -795,8 +800,8 @@ static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_rshift(ops, bin, NULL, &bit_policy, bit_offset,
                                   bit_size, shift)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit rshift operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit rshift operation")
     }
 
     return AEROSPIKE_OK;
@@ -846,8 +851,8 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
 
     if (!as_operations_bit_subtract(ops, bin, NULL, &bit_policy, bit_offset,
                                     bit_size, value, sign, action)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit subtract operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit subtract operation")
     }
 
     return AEROSPIKE_OK;
@@ -886,14 +891,15 @@ static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
 
     if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
         AEROSPIKE_OK) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "unable to parse value from add_op_bit_xor");
+        return as_error_set_or_prepend(
+            err, AEROSPIKE_ERR_PARAM,
+            "unable to parse value from add_op_bit_xor");
     }
 
     if (!as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
                                bit_size, value_byte_size, value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to add bit xor operation")
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to add bit xor operation")
     }
 
     return AEROSPIKE_OK;
@@ -936,27 +942,27 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key)
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Failed to convert %s", key)
     }
 
     if (PyBytes_Check(py_val)) {
         *value = (uint8_t *)PyBytes_AsString(py_val);
         if (PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "Failed to convert %s", key);
         }
     }
     else if (PyByteArray_Check(py_val)) {
         *value = (uint8_t *)PyByteArray_AsString(py_val);
         if (PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "Failed to convert %s", key);
         }
     }
     else {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s must be bytes or byte array", key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "%s must be bytes or byte array", key);
     }
 
     return AEROSPIKE_OK;
@@ -972,8 +978,8 @@ static as_status get_uint32t_from_pyargs(as_error *err, char *key,
     }
 
     if (value64 < 0 || value64 > UINT32_MAX) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s is not a valid uint32", key);
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "%s is not a valid uint32", key);
     }
 
     *value = (uint32_t)value64;

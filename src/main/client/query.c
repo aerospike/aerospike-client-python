@@ -68,8 +68,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 bin = PyByteArray_AsString(py_bin);
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Bin must be a string or unicode");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Bin must be a string or unicode");
                 return 1;
             }
 
@@ -77,7 +77,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 val = strdup((char *)PyUnicode_AsUTF8(py_val1));
             }
             else {
-                as_error_update(
+                as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Comparison value for string equality must be a string");
                 return 1;
@@ -98,8 +98,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                                as_contains(MAPVALUES, STRING, val));
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Invalid query index type");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Invalid query index type");
                 return 1;
             }
             if (py_ubin) {
@@ -116,8 +116,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 bin = PyByteArray_AsString(py_bin);
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Bin must be a string or unicode");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Bin must be a string or unicode");
                 return 1;
             }
             int64_t val = pyobject_to_int64(py_val1);
@@ -137,8 +137,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                                as_contains(MAPVALUES, NUMERIC, val));
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Invalid query index types");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Invalid query index types");
                 return 1;
             }
             if (py_ubin) {
@@ -148,7 +148,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
         }
         else {
             // If it ain't expected, raise and error
-            as_error_update(
+            as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_PARAM,
                 "predicate 'equals' expects a string or integer value.");
             return 1;
@@ -166,14 +166,14 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 bin = PyByteArray_AsString(py_bin);
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Bin must be a string or unicode");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Bin must be a string or unicode");
                 return 1;
             }
 
             if (py_val1 == Py_None || py_val2 == Py_None) {
                 Py_XDECREF(py_ubin);
-                as_error_update(
+                as_error_set_or_prepend(
                     err, AEROSPIKE_ERR_PARAM,
                     "Min and max must be provided for a range query");
                 return 1;
@@ -183,8 +183,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
             else {
                 Py_XDECREF(py_ubin);
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Min value must be an integer or long");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Min value must be an integer or long");
                 return 1;
             }
 
@@ -193,8 +193,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
             else {
                 Py_XDECREF(py_ubin);
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Max value must be an integer or long");
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "Max value must be an integer or long");
                 return 1;
             }
 
@@ -224,21 +224,24 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
         }
         else if (in_datatype == AS_INDEX_STRING) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Range predicate not supported for strings");
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "Range predicate not supported for strings");
             return 1;
         }
         else {
             // If it ain't right, raise and error
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "predicate 'between' expects two integer values.");
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "predicate 'between' expects two integer values.");
             return 1;
         }
         break;
     }
     default: {
         // If it ain't supported, raise and error
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "unknown predicate type");
         return 1;
     }
     }
@@ -287,13 +290,14 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -301,14 +305,14 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
     if (!(namespace_p) || !(py_set) || !(py_predicate) || !(py_module) ||
         !(py_function)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Parameter should not be null");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Parameter should not be null");
         goto CLEANUP;
     }
 
     if (!PyList_Check(py_args)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Arguments should be a list");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Arguments should be a list");
         goto CLEANUP;
     }
 
@@ -319,7 +323,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     }
     else if (Py_None != py_set) {
         // Scan whole namespace if set is 'None' else error
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Set name should be string");
         goto CLEANUP;
     }
 
@@ -342,8 +347,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         module_p = PyBytes_AsString(py_ustr2);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Module name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Module name should be string");
         goto CLEANUP;
     }
 
@@ -353,8 +358,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         function_p = PyBytes_AsString(py_ustr3);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Function name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Function name should be string");
         goto CLEANUP;
     }
 
@@ -369,40 +374,42 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
         Py_ssize_t size = PyTuple_Size(py_predicate);
         if (size < 2) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid predicate");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Invalid predicate");
             goto CLEANUP;
         }
 
         PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
         if (!py_op) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to get predicate elements");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to get predicate elements");
             goto CLEANUP;
         }
 
         PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
         if (!py_op_data) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to get predicate elements");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to get predicate elements");
             goto CLEANUP;
         }
         else if (!PyLong_Check(py_op_data)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Predicate");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Invalid Predicate");
             goto CLEANUP;
         }
 
         long op = PyLong_AsLong(py_op);
         if (op == -1 && PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "unknown predicate type");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "unknown predicate type");
             goto CLEANUP;
         }
 
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
         if (op == -1 && PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "unknown index data type");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "unknown index data type");
             goto CLEANUP;
         }
 
@@ -419,13 +426,14 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Predicate must be a tuple");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Predicate must be a tuple");
         goto CLEANUP;
     }
 
     if (!as_query_apply(&query, module_p, function_p, arglist)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Unable to apply UDF on the scan");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Unable to apply UDF on the scan");
         goto CLEANUP;
     }
 
@@ -574,13 +582,14 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -593,9 +602,10 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
     }
 
     if (strcmp(module, "scan") && strcmp(module, "query")) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Module can have only two values: aerospike.JOB_SCAN "
-                        "or aerospike.JOB_QUERY");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Module can have only two values: aerospike.JOB_SCAN "
+            "or aerospike.JOB_QUERY");
         goto CLEANUP;
     }
 

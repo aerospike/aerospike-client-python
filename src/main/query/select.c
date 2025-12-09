@@ -40,29 +40,32 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || (self->client && !self->client->as)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
     else if (!self->client) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "This query object was created with aerospike.Query() "
-                        "and is invalid. Use aerospike.Client.query() instead "
-                        "to create the query object.");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "This query object was created with aerospike.Query() "
+            "and is invalid. Use aerospike.Client.query() instead "
+            "to create the query object.");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     // Query object should still be safe to use if this fails
     bool success = as_query_select_init(&self->query, nbins);
     if (!success) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Query.select() cannot be called more than once on the "
-                        "same instance.");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "Query.select() cannot be called more than once on the "
+            "same instance.");
         goto CLEANUP;
     }
 
@@ -81,8 +84,8 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
         }
         else {
             // TRACE();
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Bin name should be of type string");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Bin name should be of type string");
             raise_exception(&err);
             return NULL;
         }

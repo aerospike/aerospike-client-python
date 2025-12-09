@@ -59,9 +59,9 @@
                                  INVALID_DICTIONARY_KEY_ERROR_PART1) &&                      \
                           strstr(err->message,                                               \
                                  INVALID_DICTIONARY_KEY_ERROR_PART2))) {                     \
-                        as_error_update(err, AEROSPIKE_ERR_PARAM,                            \
-                                        FAILED_TO_CONVERT_POLICY_ERROR,                      \
-                                        __batch_type);                                       \
+                        as_error_set_or_prepend(                                             \
+                            err, AEROSPIKE_ERR_PARAM,                                        \
+                            FAILED_TO_CONVERT_POLICY_ERROR, __batch_type);                   \
                     }                                                                        \
                     Py_DECREF(py___policy);                                                  \
                     goto CLEANUP_ON_ERROR;                                                   \
@@ -69,9 +69,9 @@
                 garb->expressions_to_free = expr_p;                                          \
             }                                                                                \
             else {                                                                           \
-                as_error_update(err, AEROSPIKE_ERR_PARAM,                                    \
-                                "batch_type: %s, policy must be a dict",                     \
-                                __batch_type);                                               \
+                as_error_set_or_prepend(                                                     \
+                    err, AEROSPIKE_ERR_PARAM,                                                \
+                    "batch_type: %s, policy must be a dict", __batch_type);                  \
                 goto CLEANUP_ON_ERROR;                                                       \
             }                                                                                \
         }                                                                                    \
@@ -152,18 +152,20 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     as_vector *garbage_list_p = NULL;
 
     if (!self || !self->as) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP4;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP4;
     }
 
     if (py_obj == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "py_obj value is null");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "py_obj value is null");
         goto CLEANUP4;
     }
 
@@ -178,18 +180,18 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     if (!is_pyobj_correct_as_helpers_type(py_obj, "batch.records",
                                           "BatchRecords", false)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "batch_records must be an "
-                        "aerospike_helpers.batch.records.BatchRecords "
-                        "instance");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "batch_records must be an "
+                                "aerospike_helpers.batch.records.BatchRecords "
+                                "instance");
         goto CLEANUP4;
     }
 
     py_batch_records = PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
     if (py_batch_records == NULL || !PyList_Check(py_batch_records)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "%s must be a list of BatchRecord",
-                        FIELD_NAME_BATCH_RECORDS);
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                "%s must be a list of BatchRecord",
+                                FIELD_NAME_BATCH_RECORDS);
         goto CLEANUP3;
     }
 
@@ -208,7 +210,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         garbage *garb = as_vector_get(&garbage_list, i);
         PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
         if (py_batch_record == NULL) {
-            as_error_update(
+            as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_PARAM,
                 "py_batch_record is NULL, %s must be a list of BatchRecord",
                 FIELD_NAME_BATCH_RECORDS);
@@ -217,7 +219,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
         if (is_pyobj_correct_as_helpers_type(py_batch_record, "batch.records",
                                              "BatchRecord", true) == false) {
-            as_error_update(
+            as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_PARAM,
                 "batch_record must be a BatchRecord class instance");
             goto CLEANUP3;
@@ -227,10 +229,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         // all batch_records classes should have these
         py_key = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_KEY);
         if (py_key == NULL || !PyTuple_Check(py_key)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "py_key is NULL or not a tuple, %s must be a "
-                            "aerospike key tuple",
-                            FIELD_NAME_BATCH_KEY);
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "py_key is NULL or not a tuple, %s must be a "
+                "aerospike key tuple",
+                FIELD_NAME_BATCH_KEY);
             goto CLEANUP3;
         }
 
@@ -239,10 +242,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         if (py_batch_type == NULL ||
             !PyLong_Check(
                 py_batch_type)) { // TODO figure away around this being an enum
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "py_batch_type is NULL or not an int, %s must be "
-                            "an int from batch_records._Types",
-                            FIELD_NAME_BATCH_TYPE);
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "py_batch_type is NULL or not an int, %s must be "
+                "an int from batch_records._Types",
+                FIELD_NAME_BATCH_TYPE);
             goto CLEANUP2;
         }
 
@@ -251,9 +255,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         uint8_t batch_type = 0;
         batch_type = PyLong_AsLong(py_batch_type);
         if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "py_batch_type aka %s is too large for C long",
-                            FIELD_NAME_BATCH_TYPE);
+            as_error_set_or_prepend(
+                err, AEROSPIKE_ERR_PARAM,
+                "py_batch_type aka %s is too large for C long",
+                FIELD_NAME_BATCH_TYPE);
             goto CLEANUP1;
         }
 
@@ -265,10 +270,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             // batch Read can have None ops if it is using read_all_bins
             if ((batch_type == BATCH_TYPE_READ && py_ops_list != Py_None) ||
                 batch_type == BATCH_TYPE_WRITE) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "py_ops_list is NULL or not a list, %s must be "
-                                "a list of aerospike operation dicts",
-                                FIELD_NAME_BATCH_OPS);
+                as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "py_ops_list is NULL or not a list, %s must be "
+                    "a list of aerospike operation dicts",
+                    FIELD_NAME_BATCH_OPS);
                 goto CLEANUP0;
             }
 
@@ -309,7 +315,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
                 PyObject *py_op = PyList_GetItem(py_ops_list, i);
                 if (py_op == NULL || !PyDict_Check(py_op)) {
-                    as_error_update(
+                    as_error_set_or_prepend(
                         err, AEROSPIKE_ERR_PARAM,
                         "py_op is NULL or not a dict, %s must be a dict \
                                     produced by an aerospike operation helper",
@@ -379,8 +385,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             PyObject *py_mod = PyObject_GetAttrString(py_batch_record,
                                                       FIELD_NAME_BATCH_MODULE);
             if (py_mod == NULL || !PyUnicode_Check(py_mod)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string",
-                                FIELD_NAME_BATCH_MODULE);
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "%s must be a string",
+                                        FIELD_NAME_BATCH_MODULE);
                 Py_XDECREF(py_mod);
                 goto CLEANUP_ON_ERROR;
             }
@@ -390,8 +397,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             PyObject *py_func = PyObject_GetAttrString(
                 py_batch_record, FIELD_NAME_BATCH_FUNCTION);
             if (py_func == NULL || !PyUnicode_Check(py_func)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a string",
-                                FIELD_NAME_BATCH_FUNCTION);
+                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                        "%s must be a string",
+                                        FIELD_NAME_BATCH_FUNCTION);
                 Py_XDECREF(py_func);
                 goto CLEANUP_ON_ERROR;
             }
@@ -401,9 +409,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             PyObject *py_args =
                 PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_ARGS);
             if (py_args == NULL || !PyList_Check(py_args)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "%s must be a list of arguments for the UDF",
-                                FIELD_NAME_BATCH_ARGS);
+                as_error_set_or_prepend(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "%s must be a list of arguments for the UDF",
+                    FIELD_NAME_BATCH_ARGS);
                 Py_XDECREF(py_args);
                 goto CLEANUP_ON_ERROR;
             }
@@ -450,8 +459,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             break;
 
         default:
-            as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type unkown: %d",
-                            batch_type);
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                    "batch_type unkown: %d", batch_type);
             goto CLEANUP_ON_ERROR;
             break;
         }

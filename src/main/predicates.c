@@ -225,15 +225,16 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
         py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
 
         if (!py_shape) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to call dumps function");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to call dumps function");
             goto CLEANUP;
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Latitude, longitude and radius should be integer or "
-                        "double type, bin of string type");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Latitude, longitude and radius should be integer or "
+            "double type, bin of string type");
         goto CLEANUP;
     }
     Py_CLEAR(py_geo_object);
@@ -325,15 +326,16 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
         Py_CLEAR(py_geo_object);
 
         if (!py_shape) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to call dumps function");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to call dumps function");
             goto CLEANUP;
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Latitude and longitude should be integer or double "
-                        "type, bin of string type");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Latitude and longitude should be integer or double "
+            "type, bin of string type");
         goto CLEANUP;
     }
     PyObject *ret_val =

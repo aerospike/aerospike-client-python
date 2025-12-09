@@ -75,8 +75,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
         data_center_str_p = PyUnicode_AsUTF8(py_data_center);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Data_center should be a string.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Data_center should be a string.");
         goto CLEANUP;
     }
 
@@ -85,8 +85,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
         namespace_str_p = PyUnicode_AsUTF8(py_namespace);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Namespace should be a string.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Namespace should be a string.");
         goto CLEANUP;
     }
 
@@ -122,8 +122,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
                                   strlen(base64_filter) + 1 - 6;
     request_str_p = cf_malloc(request_length * sizeof(char));
     if (request_str_p == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to allocate memory for request.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to allocate memory for request.");
         goto CLEANUP;
     }
 
@@ -141,12 +141,12 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
             py_response = PyUnicode_FromString(response_p);
         }
         else if (response_p == NULL) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Invalid info operation.");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Invalid info operation.");
             goto CLEANUP;
         }
         else if (status != AEROSPIKE_OK) {
-            as_error_update(&err, status, "Info operation failed.");
+            as_error_set_or_prepend(&err, status, "Info operation failed.");
             goto CLEANUP;
         }
     }

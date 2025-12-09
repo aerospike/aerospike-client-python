@@ -91,27 +91,28 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     self->is_client_put_serializer = false;
 
     if (!(namespace_p) || !(py_set) || !(py_module) || !(py_function)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Parameter should not be null");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Parameter should not be null");
         goto CLEANUP;
     }
 
     if (py_args && !PyList_Check(py_args) && (Py_None != py_args)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Arguments should be a list");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Arguments should be a list");
         goto CLEANUP;
     }
 
@@ -122,7 +123,8 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     }
     else if (Py_None != py_set) {
         // Scan whole namespace if set is 'None' else error
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Set name should be string");
         goto CLEANUP;
     }
 
@@ -153,8 +155,8 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         module_p = PyBytes_AsString(py_ustr2);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Module name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Module name should be string");
         goto CLEANUP;
     }
 
@@ -164,8 +166,8 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         function_p = PyBytes_AsString(py_ustr3);
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Function name should be string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Function name should be string");
         goto CLEANUP;
     }
 
@@ -178,8 +180,8 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     }
 
     if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Unable to apply UDF on the scan");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Unable to apply UDF on the scan");
         goto CLEANUP;
     }
 

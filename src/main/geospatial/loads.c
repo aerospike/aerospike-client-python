@@ -40,8 +40,8 @@ PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
     PyObject *initresult = NULL;
     if (!json_module) {
         /* insert error handling here! and exit this function */
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to load json module");
+        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to load json module");
     }
     else {
         PyObject *py_funcname = PyUnicode_FromString("loads");
@@ -50,8 +50,8 @@ PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
         initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
                                                 py_geodata, NULL);
         if (!initresult) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to load GeoJSON");
+            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to load GeoJSON");
         }
         Py_DECREF(json_module);
         Py_DECREF(py_funcname);
@@ -79,7 +79,8 @@ PyObject *AerospikeGeospatial_Loads(AerospikeGeospatial *self, PyObject *args,
     as_error_init(&err);
 
     if (!self) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial data");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid geospatial data");
         goto CLEANUP;
     }
 
@@ -87,8 +88,8 @@ PyObject *AerospikeGeospatial_Loads(AerospikeGeospatial *self, PyObject *args,
     if (PyUnicode_Check(py_geodata)) {
         initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
         if (!initresult) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "String is not GeoJSON serializable");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                    "String is not GeoJSON serializable");
             goto CLEANUP;
         }
         else {
@@ -96,8 +97,8 @@ PyObject *AerospikeGeospatial_Loads(AerospikeGeospatial *self, PyObject *args,
         }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Argument should be a GeoJSON string");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Argument should be a GeoJSON string");
         goto CLEANUP;
     }
 

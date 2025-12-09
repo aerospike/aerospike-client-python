@@ -86,8 +86,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     if (py_expr == NULL && index_name == NULL) {
         // Bin is required in this case.
         if (py_bin == Py_None) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Bin should be a string");
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    "Bin should be a string");
             goto CLEANUP_EXP_ON_ERROR;
         }
 
@@ -184,9 +184,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     // Query object should still be safe to use if this fails
     bool success = as_query_where_init(&self->query, 1);
     if (!success) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Query.where() cannot be called more than once on the "
-                        "same instance.");
+        as_error_set_or_prepend(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "Query.where() cannot be called more than once on the "
+            "same instance.");
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
@@ -254,7 +255,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
     else {
         // If it ain't supported, raise and error
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "unknown predicate type");
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
@@ -325,12 +327,13 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid aerospike object");
         goto CLEANUP;
     }
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -340,36 +343,36 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     // All tuple members from bin name and onward are optional
 
     if (!PyTuple_Check(py_predicate)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        PREDICATE_INVALID_ERROR_MSG1);
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
     Py_ssize_t predicate_size = PyTuple_Size(py_predicate);
     if (predicate_size <= PREDICATE_TUPLE_MIN_SIZE ||
         predicate_size > PREDICATE_TUPLE_MAX_SIZE) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        PREDICATE_INVALID_ERROR_MSG1);
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
 
     PyObject *py_predicate_type =
         PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_PRED_TYPE);
     if (!py_predicate_type) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        PREDICATE_INVALID_ERROR_MSG2);
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                PREDICATE_INVALID_ERROR_MSG2);
         goto CLEANUP;
     }
     PyObject *py_index_datatype =
         PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_INDEX_DATATYPE);
     if (!py_index_datatype) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        PREDICATE_INVALID_ERROR_MSG2);
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
+                                PREDICATE_INVALID_ERROR_MSG2);
         goto CLEANUP;
     }
 
     if (!PyLong_Check(py_predicate_type) || !PyLong_Check(py_index_datatype)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        PREDICATE_INVALID_ERROR_MSG1);
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
 
@@ -417,8 +420,8 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
             goto CLEANUP;
         }
         if (!PyLong_Check(py_index_type)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            PREDICATE_INVALID_ERROR_MSG1);
+            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                    PREDICATE_INVALID_ERROR_MSG1);
             goto CLEANUP;
         }
         index_type = PyLong_AsLong(py_index_type);
@@ -435,7 +438,8 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                       index_type, py_expr, index_name);
     /* Failed to add the predicate for some reason */
     if (rc != 0) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Failed to add predicate");
         goto CLEANUP;
     }
 CLEANUP:

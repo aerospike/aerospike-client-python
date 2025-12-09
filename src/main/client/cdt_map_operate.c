@@ -89,7 +89,8 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
     }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                       "Unknown operation");
     }
 
     return err->code;
@@ -135,7 +136,7 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map remove by value rank relative operation");
         }
@@ -145,7 +146,7 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map remove by value rank relative operation");
         }
@@ -198,7 +199,7 @@ static as_status add_op_map_get_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map get by value rank relative operation");
         }
@@ -208,7 +209,7 @@ static as_status add_op_map_get_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map get by value rank relative operation");
         }
@@ -261,7 +262,7 @@ static as_status add_op_map_remove_by_key_rel_index_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), key, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map remove by key rank relative operation");
         }
@@ -270,7 +271,7 @@ static as_status add_op_map_remove_by_key_rel_index_range(
         if (!as_operations_map_remove_by_key_rel_index_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), key, rank, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map remove by key rank relative operation");
         }
@@ -323,7 +324,7 @@ static as_status add_op_map_get_by_key_rel_index_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), key, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map get by key rank relative operation");
         }
@@ -332,7 +333,7 @@ static as_status add_op_map_get_by_key_rel_index_range(
         if (!as_operations_map_get_by_key_rel_index_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), key, rank, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_update(
+            return as_error_set_or_prepend(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add map get by key rank relative operation");
         }
@@ -363,8 +364,8 @@ static as_status get_map_return_type(as_error *err, PyObject *op_dict,
         py_bool_val = PyObject_IsTrue(py_inverted);
         /* Essentially bool(py_bool_val) failed, so we raise an exception */
         if (py_bool_val == -1) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid inverted option");
+            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
+                                           "Invalid inverted option");
         }
         if (py_bool_val == 1) {
             *return_type |= AS_MAP_RETURN_INVERTED;

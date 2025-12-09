@@ -30,13 +30,14 @@ PyObject *AerospikeQuery_Paginate(AerospikeQuery *self)
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid query object.");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -61,13 +62,14 @@ PyObject *AerospikeQuery_Is_Done(AerospikeQuery *self)
     bool query_done = 0;
 
     if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
+                                "Invalid query object.");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster.");
+        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
+                                "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
