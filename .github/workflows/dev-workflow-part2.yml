@@ -31,23 +31,28 @@ jobs:
     outputs:
       jfrog-project: ${{ steps.get-env-vars.outputs.jfrog_project }}
       jfrog-build-name: ${{ steps.get-env-vars.outputs.jfrog_build_name }}
-
     steps:
     - name: Get outputs
       id: get-env-vars
       run: |
         echo jfrog_project=${{ env.JFROG_PYTHON_CLIENT_PROJECT }} >> $GITHUB_OUTPUT
         echo jfrog_build_name=${{ env.JFROG_BUILD_NAME }} >> $GITHUB_OUTPUT
+      env:
+        JFROG_PYTHON_CLIENT_PROJECT: clients
+        JFROG_BUILD_NAME: python-client
 
   upload-github-artifacts-to-jfrog:
     needs: [
       bump-dev-number,
       get-jfrog-project-to-store-artifacts
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@489212b8911ea431131ed468599db705f0767274
     with:
-      project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
-      build-name: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}
+      jf-project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
+      jf-build-name: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}
+      jf-build-id: ${{ github.run_number }}
+      jf-metadata-build-id: ${{ github.run_number }}-metadata
+      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       version: ${{ needs.bump-dev-number.outputs.new_version }}
 
   create-jfrog-release-bundle:
@@ -56,25 +61,15 @@ jobs:
       get-jfrog-project-to-store-artifacts,
       upload-github-artifacts-to-jfrog
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
     with:
-      project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
-      build-names: "${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}:${{ needs.bump-dev-number.outputs.new_version }}"
-      bundle-name: asdf
+      jf-project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
+      jf-build-names: "${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}"
+      jf-bundle-name: python-client-release
       version: ${{ needs.bump-dev-number.outputs.new_version }}
-
-  # upload-to-jfrog:
-  #   name: Upload artifacts to JFrog
-  #   needs: [
-  #     bump-dev-number,
-  #     rebuild-artifacts-with-new-dev-num
-  #   ]
-  #   uses: ./.github/workflows/upload-to-jfrog.yml
-  #   with:
-  #     version: ${{ needs.bump-dev-number.outputs.new_version }}
-  #   secrets: inherit
+      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
 
   # We don't want the artifacts in JFrog to also exist in Github
-  # delete-artifacts:
-  #   needs: upload-to-jfrog
-  #   uses: ./.github/workflows/delete-artifacts.yml
+  delete-artifacts:
+    needs: upload-github-artifacts-to-jfrog
+    uses: ./.github/workflows/delete-artifacts.yml
