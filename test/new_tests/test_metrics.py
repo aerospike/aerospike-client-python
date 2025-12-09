@@ -210,11 +210,8 @@ class TestMetrics:
             assert type(cluster.nodes) == list
             if type(app_id) == str:
                 assert cluster.app_id == app_id
-            elif TestBaseClass.auth_in_use():
-                # The app_id will default to be the username
-                assert type(cluster.app_id) == str
             else:
-                # Or None if the username is not set
+                # Or None if the app_id is not set
                 assert cluster.app_id is None
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
