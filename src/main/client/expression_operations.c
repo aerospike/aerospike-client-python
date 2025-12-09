@@ -59,8 +59,8 @@ as_status add_new_expr_op(AerospikeClient *self, as_error *err,
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                       "Unknown expression operation");
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unknown expression operation");
     }
 
     return err->code;
@@ -93,8 +93,8 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_exp_write(ops, bin, exp_list_p, exp_write_flags)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to pack write expression op.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to pack write expression op.");
     }
 
     if (exp_list_p) {
@@ -131,8 +131,8 @@ static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_exp_read(ops, bin, exp_list_p, exp_read_flags)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to pack read expression op.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to pack read expression op.");
     }
 
     if (exp_list_p) {

@@ -73,7 +73,7 @@ as_status convert_partition_filter(AerospikeClient *self,
     // TODO what if py_partition_filter is NULL?
 
     if (!PyDict_Check(py_partition_filter)) {
-        as_error_set_or_prepend(
+        as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "invalid partition_filter policy, partition_filter must be a dict");
         goto ERROR_CLEANUP;
@@ -86,7 +86,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         PyDict_GetItemString(py_partition_filter, "partition_status");
 
     if (parts_stat && !PyDict_Check(parts_stat)) {
-        as_error_set_or_prepend(
+        as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "invalid partition_filter policy, partition_status must be a dict");
         goto ERROR_CLEANUP;
@@ -97,28 +97,26 @@ as_status convert_partition_filter(AerospikeClient *self,
         tmp_begin = PyLong_AsLong(begin);
     }
     else if (begin) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_PARAM,
-            "invalid partition_filter policy begin, begin must \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition_filter policy begin, begin must \
 						be an int between 0 and %d inclusive",
-            CLUSTER_NPARTITIONS - 1);
+                        CLUSTER_NPARTITIONS - 1);
         goto ERROR_CLEANUP;
     }
 
     if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                "invalid begin for partition id: %d, \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid begin for partition id: %d, \
 						begin must fit in long",
-                                ps->part_id);
+                        ps->part_id);
         goto ERROR_CLEANUP;
     }
 
     if (tmp_begin >= CLUSTER_NPARTITIONS || tmp_begin < 0) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_PARAM,
-            "invalid partition_filter policy begin, begin must \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition_filter policy begin, begin must \
 						be an int between 0 and %d inclusive",
-            CLUSTER_NPARTITIONS - 1);
+                        CLUSTER_NPARTITIONS - 1);
         goto ERROR_CLEANUP;
     }
 
@@ -129,38 +127,36 @@ as_status convert_partition_filter(AerospikeClient *self,
         tmp_count = PyLong_AsLong(count);
     }
     else if (count) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_PARAM,
-            "invalid partition_filter policy count, count must \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition_filter policy count, count must \
 						be an int between 1 and %d inclusive",
-            CLUSTER_NPARTITIONS);
+                        CLUSTER_NPARTITIONS);
         goto ERROR_CLEANUP;
     }
 
     if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                "invalid count for partition id: %d, \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid count for partition id: %d, \
 						count must fit in long",
-                                ps->part_id);
+                        ps->part_id);
         goto ERROR_CLEANUP;
     }
 
     if (tmp_count > CLUSTER_NPARTITIONS || tmp_count < 1) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_PARAM,
-            "invalid partition_filter policy count, count must \
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition_filter policy count, count must \
 						be an int between 1 and %d inclusive",
-            CLUSTER_NPARTITIONS);
+                        CLUSTER_NPARTITIONS);
         goto ERROR_CLEANUP;
     }
 
     filter->count = tmp_count;
 
     if (filter->begin + filter->count > CLUSTER_NPARTITIONS) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_PARAM, "invalid partition filter range,\
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition filter range,\
 						begin: %u count: %u, valid range when begin + count <= %d",
-            filter->begin, filter->count, CLUSTER_NPARTITIONS);
+                        filter->begin, filter->count, CLUSTER_NPARTITIONS);
         goto ERROR_CLEANUP;
     }
 
@@ -189,9 +185,9 @@ as_status convert_partition_filter(AerospikeClient *self,
         PyObject *py_done =
             PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_DONE);
         if (!py_done) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                    "partition_status dict missing key '%s'",
-                                    PARTITIONS_STATUS_KEY_DONE);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "partition_status dict missing key '%s'",
+                            PARTITIONS_STATUS_KEY_DONE);
             goto ERROR_CLEANUP;
         }
 
@@ -199,19 +195,18 @@ as_status convert_partition_filter(AerospikeClient *self,
             parts_all->done = (bool)PyLong_AsLong(py_done);
         }
         else {
-            as_error_set_or_prepend(
-                err, AEROSPIKE_ERR_PARAM,
-                "partition_status dict key '%s' must be an int",
-                PARTITIONS_STATUS_KEY_DONE);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "partition_status dict key '%s' must be an int",
+                            PARTITIONS_STATUS_KEY_DONE);
             goto ERROR_CLEANUP;
         }
 
         PyObject *py_retry =
             PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_RETRY);
         if (!py_retry) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                    "partition_status dict missing key '%s'",
-                                    PARTITIONS_STATUS_KEY_RETRY);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "partition_status dict missing key '%s'",
+                            PARTITIONS_STATUS_KEY_RETRY);
             goto ERROR_CLEANUP;
         }
 
@@ -219,10 +214,9 @@ as_status convert_partition_filter(AerospikeClient *self,
             parts_all->retry = (bool)PyLong_AsLong(py_retry);
         }
         else {
-            as_error_set_or_prepend(
-                err, AEROSPIKE_ERR_PARAM,
-                "partition_status dict key '%s' must be an int",
-                PARTITIONS_STATUS_KEY_RETRY);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "partition_status dict key '%s' must be an int",
+                            PARTITIONS_STATUS_KEY_RETRY);
             goto ERROR_CLEANUP;
         }
 
@@ -243,9 +237,8 @@ as_status convert_partition_filter(AerospikeClient *self,
                 ps->digest.init = PyLong_AsLong(init);
             }
             else if (init) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "invalid init for part_id: %d",
-                                        ps->part_id);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "invalid init for part_id: %d", ps->part_id);
                 goto ERROR_CLEANUP;
             }
 
@@ -254,9 +247,8 @@ as_status convert_partition_filter(AerospikeClient *self,
                 ps->retry = (bool)PyLong_AsLong(retry);
             }
             else if (retry) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "invalid retry for part_id: %d",
-                                        ps->part_id);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "invalid retry for part_id: %d", ps->part_id);
                 goto ERROR_CLEANUP;
             }
 
@@ -267,9 +259,9 @@ as_status convert_partition_filter(AerospikeClient *self,
                 memcpy(ps->digest.value, bytes_array, AS_DIGEST_VALUE_SIZE);
             }
             else if (value) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "invalid digest value for part_id: %d",
-                                        ps->part_id);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "invalid digest value for part_id: %d",
+                                ps->part_id);
                 goto ERROR_CLEANUP;
             }
 
@@ -285,18 +277,16 @@ as_status convert_partition_filter(AerospikeClient *self,
                 ps->bval = PyLong_AsUnsignedLongLong(py_bval);
                 if (PyErr_Occurred() &&
                     PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    as_error_set_or_prepend(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "invalid bval for partition id: %d, bval "
-                        "must fit in unsigned long long",
-                        ps->part_id);
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "invalid bval for partition id: %d, bval "
+                                    "must fit in unsigned long long",
+                                    ps->part_id);
                     goto ERROR_CLEANUP;
                 }
             }
             else if (py_bval) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "invalid bval for part_id: %d",
-                                        ps->part_id);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "invalid bval for part_id: %d", ps->part_id);
                 goto ERROR_CLEANUP;
             }
         }

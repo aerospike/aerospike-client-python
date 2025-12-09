@@ -419,8 +419,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                       "Unknown operation");
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
     }
 
     return err->code;
@@ -454,8 +453,8 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_get_by_index(ops, bin, (ctx_in_use ? &ctx : NULL),
                                          index, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add get_by_list_index operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add get_by_list_index operation");
     }
 
     if (ctx_in_use) {
@@ -510,9 +509,8 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (!success) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add get_by_list_index_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add get_by_list_index_range operation");
     }
 
     if (ctx_in_use) {
@@ -550,8 +548,8 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_get_by_rank(ops, bin, (ctx_in_use ? &ctx : NULL),
                                         rank, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add get_by_list_index operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add get_by_list_index operation");
     }
 
     if (ctx_in_use) {
@@ -605,9 +603,8 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (!success) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_get_by_rank_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_get_by_rank_range operation");
     }
 
     if (ctx_in_use) {
@@ -639,14 +636,14 @@ static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
 
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
                     serializer_type) != AEROSPIKE_OK) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to convert ctx list");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to convert ctx list");
     }
 
     if (!as_operations_list_get_by_value(ops, bin, (ctx_in_use ? &ctx : NULL),
                                          val, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add list_get_by_value operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_get_by_value operation");
     }
 
     if (ctx_in_use) {
@@ -686,9 +683,8 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
     if (!as_operations_list_get_by_value_list(
             ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type)) {
         /* Failed to add the operation, we need to destroy the list of values*/
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_get_by_value_list operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_get_by_value_list operation");
         as_val_destroy(value_list);
     }
 
@@ -734,9 +730,8 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
     if (!as_operations_list_get_by_value_range(
             ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
             return_type)) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_get_by_value_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_get_by_value_range operation");
         goto error;
     }
 
@@ -790,8 +785,8 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
 
     if (!as_operations_list_remove_by_index(
             ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add remove_by_list_index operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add remove_by_list_index operation");
     }
 
     if (ctx_in_use) {
@@ -845,9 +840,8 @@ static as_status add_op_list_remove_by_index_range(
     }
 
     if (!success) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add remove_by_list_index_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add remove_by_list_index_range operation");
     }
 
     if (ctx_in_use) {
@@ -884,8 +878,8 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
 
     if (!as_operations_list_remove_by_rank(ops, bin, (ctx_in_use ? &ctx : NULL),
                                            rank, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add list_remove_by_rank operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_remove_by_rank operation");
     }
 
     if (ctx_in_use) {
@@ -938,9 +932,8 @@ static as_status add_op_list_remove_by_rank_range(
     }
 
     if (!success) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_remove_by_rank_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_remove_by_rank_range operation");
     }
 
     if (ctx_in_use) {
@@ -978,8 +971,8 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
 
     if (!as_operations_list_remove_by_value(
             ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add list_remove_by_value operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_remove_by_value operation");
     }
 
     if (ctx_in_use) {
@@ -1018,9 +1011,8 @@ static as_status add_op_list_remove_by_value_list(
     if (!as_operations_list_remove_by_value_list(
             ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type)) {
         /* Failed to add the operation, we need to destroy the list of values*/
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_get_by_value_list operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_get_by_value_list operation");
         as_val_destroy(value_list);
     }
 
@@ -1063,9 +1055,8 @@ static as_status add_op_list_remove_by_value_range(
     if (!as_operations_list_remove_by_value_range(
             ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
             return_type)) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_remove_by_value_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_remove_by_value_range operation");
         goto error;
     }
 
@@ -1115,9 +1106,8 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
     if (!as_operations_list_set_order(ops, bin, (ctx_in_use ? &ctx : NULL),
                                       (as_list_order)order_type_int)) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_set_order operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_set_order operation");
     }
 
     if (ctx_in_use) {
@@ -1150,8 +1140,8 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
     if (!as_operations_list_sort(ops, bin, (ctx_in_use ? &ctx : NULL),
                                  (as_list_sort_flags)sort_flags)) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_sort operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_sort operation");
     }
 
     if (ctx_in_use) {
@@ -1203,8 +1193,8 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return AEROSPIKE_OK;
     }
     else {
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_create operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_create operation");
     }
 }
 
@@ -1241,8 +1231,8 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
                                    val)) {
         as_val_destroy(val);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_append operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_append operation");
     }
 
     if (ctx_in_use) {
@@ -1285,9 +1275,8 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
                                          items_list)) {
         as_val_destroy(items_list);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_append_items operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_append_items operation");
     }
 
     if (ctx_in_use) {
@@ -1335,8 +1324,8 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
                                    val)) {
         as_val_destroy(val);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_insert operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_insert operation");
     }
 
     if (ctx_in_use) {
@@ -1384,9 +1373,8 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
                                          index, items_list)) {
         as_val_destroy(items_list);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_insert_items operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_insert_items operation");
     }
 
     if (ctx_in_use) {
@@ -1434,9 +1422,8 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
                                       index, incr)) {
         as_val_destroy(incr);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add list_increment operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_increment operation");
     }
 
     if (ctx_in_use) {
@@ -1467,8 +1454,8 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_list_pop(ops, bin, (ctx_in_use ? &ctx : NULL), index)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add list_pop operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add list_pop operation");
     }
 
     if (ctx_in_use) {
@@ -1506,8 +1493,8 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_pop_range(ops, bin, (ctx_in_use ? &ctx : NULL),
                                       index, (uint64_t)count)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to list_pop_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to list_pop_range operation");
     }
 
     if (ctx_in_use) {
@@ -1540,8 +1527,8 @@ static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
     if (!as_operations_list_remove(ops, bin, (ctx_in_use ? &ctx : NULL),
                                    index)) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_remove operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_remove operation");
     }
 
     if (ctx_in_use) {
@@ -1579,8 +1566,8 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_remove_range(ops, bin, (ctx_in_use ? &ctx : NULL),
                                          index, (uint64_t)count)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to list_remove_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to list_remove_range operation");
     }
 
     if (ctx_in_use) {
@@ -1606,8 +1593,8 @@ static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_clear(ops, bin, (ctx_in_use ? &ctx : NULL))) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_clear operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_clear operation");
     }
 
     if (ctx_in_use) {
@@ -1655,8 +1642,8 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
                                 val)) {
         as_val_destroy(val);
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_set operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_set operation");
     }
 
     if (ctx_in_use) {
@@ -1687,8 +1674,8 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_get(ops, bin, (ctx_in_use ? &ctx : NULL), index)) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_get operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_get operation");
     }
 
     if (ctx_in_use) {
@@ -1726,8 +1713,8 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_get_range(ops, bin, (ctx_in_use ? &ctx : NULL),
                                       index, (uint64_t)count)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to list_get_range operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to list_get_range operation");
     }
 
     if (ctx_in_use) {
@@ -1765,8 +1752,8 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_trim(ops, bin, (ctx_in_use ? &ctx : NULL), index,
                                  (uint64_t)count)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to list_trim operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to list_trim operation");
     }
 
     if (ctx_in_use) {
@@ -1792,8 +1779,8 @@ static as_status add_op_list_size(AerospikeClient *self, as_error *err,
 
     if (!as_operations_list_size(ops, bin, (ctx_in_use ? &ctx : NULL))) {
         as_cdt_ctx_destroy(&ctx);
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list_size operation");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_size operation");
     }
 
     if (ctx_in_use) {
@@ -1843,7 +1830,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_set_or_prepend(
+            return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add list remove by value rank relative operation");
         }
@@ -1853,7 +1840,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_set_or_prepend(
+            return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add list remove by value rank relative operation");
         }
@@ -1907,7 +1894,7 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_set_or_prepend(
+            return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add list remove by value rank relative operation");
         }
@@ -1917,7 +1904,7 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
                 ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
                 return_type)) {
             as_cdt_ctx_destroy(&ctx);
-            return as_error_set_or_prepend(
+            return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to add list remove by value rank relative operation");
         }

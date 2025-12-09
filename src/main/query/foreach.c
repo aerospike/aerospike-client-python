@@ -103,8 +103,8 @@ static bool each_result(const as_val *val, void *udata)
     if (!py_return) {
         // an exception was raised, handle it (someday)
         // for now, we bail from the loop
-        as_error_set_or_prepend(&thread_err_local, AEROSPIKE_ERR_CLIENT,
-                                "Callback function contains an error");
+        as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
+                        "Callback function contains an error");
         retval = false;
     }
     else if (py_return == Py_False) {
@@ -175,14 +175,13 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     // Initialize error
 
     if (!self || !self->client->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 

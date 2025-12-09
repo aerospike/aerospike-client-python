@@ -31,8 +31,7 @@ PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self)
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid query object.");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
         goto CLEANUP;
     }
 

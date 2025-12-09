@@ -190,8 +190,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
                                     &py_namespace, &py_set) == false) {
         as_query_destroy(&self->query);
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "query() expects atleast 1 parameter");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "query() expects atleast 1 parameter");
         goto CLEANUP;
     }
 
@@ -202,8 +202,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
         namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Namespace should be a string");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace should be a string");
         goto CLEANUP;
     }
 
@@ -212,8 +212,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
             set = (char *)PyUnicode_AsUTF8(py_set);
         }
         else if (py_set != Py_None) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                    "Set should be string, unicode or None");
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Set should be string, unicode or None");
             goto CLEANUP;
         }
     }

@@ -61,14 +61,13 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -102,16 +101,15 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
                             (uint16_t)PyLong_AsLongLong(py_gen);
                         if ((uint16_t)-1 == remove_policy_p->generation &&
                             PyErr_Occurred()) {
-                            as_error_set_or_prepend(
+                            as_error_update(
                                 &err, AEROSPIKE_ERR_PARAM,
                                 "integer value for gen exceeds sys.maxsize");
                             goto CLEANUP;
                         }
                     }
                     else {
-                        as_error_set_or_prepend(
-                            &err, AEROSPIKE_ERR_PARAM,
-                            "Generation should be an int or long");
+                        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                        "Generation should be an int or long");
                     }
                 }
             }

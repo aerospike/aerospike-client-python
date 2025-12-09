@@ -314,14 +314,13 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -335,8 +334,8 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
 
     // Convert python object into namespace string
     if (!PyUnicode_Check(py_ns)) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Namespace should be a string");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace should be a string");
         goto CLEANUP;
     }
     char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
@@ -348,8 +347,8 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
         name = PyBytes_AsString(py_ustr_name);
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Index name should be string or unicode");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Index name should be string or unicode");
         goto CLEANUP;
     }
 
@@ -506,15 +505,15 @@ static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
         type = PyLong_AsLong(py_datatype);
         if (type == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "integer value exceeds sys.maxsize");
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "integer value exceeds sys.maxsize");
                 goto CLEANUP;
             }
         }
     }
     else {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                "Index type must be an integer");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Index type must be an integer");
         goto CLEANUP;
     }
 
@@ -578,15 +577,14 @@ static PyObject *createIndexWithDataAndCollectionType(
     as_index_task task;
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         //raise_exception(&err, -2, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -600,8 +598,8 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Convert python object into namespace string
     if (!PyUnicode_Check(py_ns)) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Namespace should be a string");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace should be a string");
         goto CLEANUP;
     }
     char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
@@ -613,8 +611,8 @@ static PyObject *createIndexWithDataAndCollectionType(
         set_ptr = PyBytes_AsString(py_ustr_set);
     }
     else if (py_set != Py_None) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Set should be string, unicode or None");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Set should be string, unicode or None");
         goto CLEANUP;
     }
 
@@ -629,8 +627,8 @@ static PyObject *createIndexWithDataAndCollectionType(
             bin_ptr = PyByteArray_AsString(py_bin);
         }
         else {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                    "Bin should be a string");
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
             goto CLEANUP;
         }
     }
@@ -642,8 +640,8 @@ static PyObject *createIndexWithDataAndCollectionType(
         name = PyBytes_AsString(py_ustr_name);
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Index name should be string or unicode");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Index name should be string or unicode");
         goto CLEANUP;
     }
 

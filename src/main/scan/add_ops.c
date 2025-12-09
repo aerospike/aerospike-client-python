@@ -53,14 +53,13 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid scan object.");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster.");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -75,21 +74,20 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
                 if (add_op(self->client, &err, py_val, self->unicodeStrVector,
                            self->static_pool, self->scan.ops, &operation,
                            &return_type) != AEROSPIKE_OK) {
-                    as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                            "Failed to convert ops.");
+                    as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                    "Failed to convert ops.");
                     goto CLEANUP;
                 }
             }
             else {
-                as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                        "Failed to convert ops.");
+                as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                "Failed to convert ops.");
                 goto CLEANUP;
             }
         }
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                "Ops must be list.");
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Ops must be list.");
         goto CLEANUP;
     }
 

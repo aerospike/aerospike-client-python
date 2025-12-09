@@ -454,8 +454,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
     }
 
     if (size_to_alloc <= 0) {
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                       "Invalid expression");
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid expression");
     }
 
     return AEROSPIKE_OK;
@@ -475,8 +474,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     as_error_reset(err);
 
     if (!py_obj) {
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                       "py_obj value is null");
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "py_obj value is null");
     }
     else if (PyBool_Check(py_obj)) {
         as_exp_entry tmp_entry = as_exp_bool(PyObject_IsTrue(py_obj));
@@ -487,9 +486,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         int64_t l = (int64_t)PyLong_AsLongLong(py_obj);
         if (l == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_set_or_prepend(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "integer value exceeds sys.maxsize");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "integer value exceeds sys.maxsize");
             }
         }
 
@@ -724,8 +722,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 temp_expr->val_flag = VAL_STRING_P_ACTIVE;
             }
             else {
-                return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                               "regex_str must be a string.");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "regex_str must be a string.");
             }
 
             APPEND_ARRAY(1, as_exp_cmp_regex(lval1, regex_str, NIL));
@@ -1627,8 +1625,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 def_var_name = PyUnicode_AsUTF8(py_val_from_dict);
             }
             else {
-                return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                               "regex_str must be a string.");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "regex_str must be a string.");
             }
 
             APPEND_ARRAY(1, as_exp_def(def_var_name, NIL)); // - 1 for __expr
@@ -1641,8 +1639,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 var_name = PyUnicode_AsUTF8(py_val_from_dict);
             }
             else {
-                return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                               "regex_str must be a string.");
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "regex_str must be a string.");
             }
 
             APPEND_ARRAY(0, as_exp_var(var_name));
@@ -1666,7 +1664,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 PyObject *py_mod_exp = PyDict_GetItemString(
                     temp_expr->pydict, _CDT_APPLY_MOD_EXP_KEY);
                 if (!py_mod_exp) {
-                    return as_error_set_or_prepend(
+                    return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
                         "mod_exp is required for cdt_apply() expression.");
                 }
@@ -1686,8 +1684,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             break;
         default:
-            return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                           "Unrecognised expression op type.");
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Unrecognised expression op type.");
             break;
         }
     }
@@ -1712,17 +1710,16 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     int bottom = 0;
 
     if (py_expr == NULL) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                EXPR_INVALID_TYPE_MSG);
+        as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
         goto FINISH_WITHOUT_CLEANUP;
     }
     else if (allow_base64_encoded_exprs && PyUnicode_Check(py_expr)) {
         // We assume the string is base64 encoded
         const char *expr_str = PyUnicode_AsUTF8(py_expr);
         if (!expr_str) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                    "Unable to convert Python base64 encoded "
-                                    "expression to C string");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to convert Python base64 encoded "
+                            "expression to C string");
             goto FINISH_WITHOUT_CLEANUP;
         }
 
@@ -1731,15 +1728,13 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         goto FINISH_WITHOUT_CLEANUP;
     }
     else if (!PyList_Check(py_expr)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                EXPR_INVALID_TYPE_MSG);
+        as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
         goto FINISH_WITHOUT_CLEANUP;
     }
 
     Py_ssize_t size = PyList_Size(py_expr);
     if (size <= 0) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                EXPR_INVALID_TYPE_MSG);
+        as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
         goto FINISH_WITHOUT_CLEANUP;
     }
 
@@ -1772,7 +1767,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
         py_expr_tuple = PyList_GetItem(py_expr, (Py_ssize_t)i);
         if (!PyTuple_Check(py_expr_tuple) || PyTuple_Size(py_expr_tuple) != 4) {
-            as_error_set_or_prepend(
+            as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "Expressions must be a non empty list of 4 element tuples, "
                 "generated by a compiled aerospike expression");
@@ -1782,7 +1777,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         temp_expr.pytuple = py_expr_tuple;
         temp_expr.op = PyLong_AsLongLong(PyTuple_GetItem(py_expr_tuple, 0));
         if (temp_expr.op == -1 && PyErr_Occurred()) {
-            as_error_set_or_prepend(
+            as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "Failed to get op from expression tuple, op must be an int.");
             goto CLEANUP;
@@ -1792,10 +1787,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         if (rt_tmp != Py_None) {
             temp_expr.result_type = PyLong_AsLongLong(rt_tmp);
             if (temp_expr.result_type == -1 && PyErr_Occurred()) {
-                as_error_set_or_prepend(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "Failed to get result_type from expression "
-                    "tuple, rt must be an int.");
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "Failed to get result_type from expression "
+                                "tuple, rt must be an int.");
                 goto CLEANUP;
             }
         }
@@ -1803,10 +1797,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         temp_expr.pydict = PyTuple_GetItem(py_expr_tuple, 2);
         if (temp_expr.pydict != Py_None) {
             if (!PyDict_Check(temp_expr.pydict)) {
-                as_error_set_or_prepend(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "Failed to get fixed dictionary from "
-                    "expression tuple, fixed must be a dict.");
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "Failed to get fixed dictionary from "
+                                "expression tuple, fixed must be a dict.");
                 goto CLEANUP;
             }
         }
@@ -1817,9 +1810,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         if (py_ctx_list_p != NULL) {
             temp_expr.ctx = malloc(sizeof(as_cdt_ctx));
             if (temp_expr.ctx == NULL) {
-                as_error_set_or_prepend(
-                    err, AEROSPIKE_ERR,
-                    "Could not malloc mem for temp_expr.ctx.");
+                as_error_update(err, AEROSPIKE_ERR,
+                                "Could not malloc mem for temp_expr.ctx.");
                 goto CLEANUP;
             }
 
@@ -1838,7 +1830,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 PyDict_Size(py_list_policy_p) > 0) {
                 temp_expr.list_policy = malloc(sizeof(as_list_policy));
                 if (temp_expr.list_policy == NULL) {
-                    as_error_set_or_prepend(
+                    as_error_update(
                         err, AEROSPIKE_ERR,
                         "Could not malloc mem for temp_expr.list_policy.");
                     goto CLEANUP;
@@ -1861,7 +1853,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 PyDict_Size(py_map_policy_p) > 0) {
                 temp_expr.map_policy = malloc(sizeof(as_map_policy));
                 if (temp_expr.map_policy == NULL) {
-                    as_error_set_or_prepend(
+                    as_error_update(
                         err, AEROSPIKE_ERR,
                         "Could not malloc mem for temp_expr.map_policy.");
                     goto CLEANUP;
@@ -1879,10 +1871,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         temp_expr.num_children =
             PyLong_AsLongLong(PyTuple_GetItem(py_expr_tuple, 3));
         if (temp_expr.num_children == -1 && PyErr_Occurred()) {
-            as_error_set_or_prepend(
-                err, AEROSPIKE_ERR_PARAM,
-                "Failed to get num_children from expression tuple, "
-                "num_children must be an int.");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to get num_children from expression tuple, "
+                            "num_children must be an int.");
             goto CLEANUP;
         }
 
@@ -1899,8 +1890,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     c_expr_entries = (as_exp_entry *)malloc(size_to_alloc);
     if (c_expr_entries == NULL) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR,
-                                "Could not malloc mem for c_expr_entries.");
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Could not malloc mem for c_expr_entries.");
         goto CLEANUP;
     }
 
@@ -1984,8 +1975,8 @@ static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
         as_map_destroy(temp_expr->val.val_map_p);
         break;
     default:
-        as_error_set_or_prepend(err, AEROSPIKE_ERR, "Unexpected val_flag %u.",
-                                temp_expr->val_flag);
+        as_error_update(err, AEROSPIKE_ERR, "Unexpected val_flag %u.",
+                        temp_expr->val_flag);
         return false;
     }
     return true;

@@ -78,7 +78,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
                              &write_policy_p, &self->as->config.policies.write,
                              &exp_list, &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
     }
 
@@ -91,10 +91,9 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
             binName = PyBytes_AsString(py_ustr);
         }
         else {
-            as_error_set_or_prepend(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Invalid bin name, bin name should be a string or "
-                "unicode string") goto CLEANUP;
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Invalid bin name, bin name should be a string or "
+                            "unicode string") goto CLEANUP;
         }
         if (!as_record_set_nil(&rec, binName)) {
             goto CLEANUP;
@@ -170,20 +169,18 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     if (!PyList_Check(py_binList)) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Bins should be a list");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins should be a list");
         goto CLEANUP;
     }
 

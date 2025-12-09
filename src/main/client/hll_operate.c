@@ -160,8 +160,7 @@ as_status add_new_hll_op(AerospikeClient *self, as_error *err,
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                       "Unknown operation");
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
     }
 
     return err->code;
@@ -201,24 +200,24 @@ static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
     if (mh_bit_count != -1) {
         if (!as_operations_hll_add_mh(ops, bin, NULL, hll_policy_p, value_list,
                                       index_bit_count, mh_bit_count)) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Failed to add hll_add_mh operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add hll_add_mh operation.");
             goto cleanup;
         }
     }
     else if (index_bit_count != -1) {
         if (!as_operations_hll_add(ops, bin, NULL, hll_policy_p, value_list,
                                    index_bit_count)) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Failed to add hll_add operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add hll_add operation.");
             goto cleanup;
         }
     }
     else {
         if (!as_operations_hll_update(ops, bin, NULL, hll_policy_p,
                                       value_list)) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Failed to add hll_update operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add hll_update operation.");
             goto cleanup;
         }
     }
@@ -260,16 +259,16 @@ static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
     if (mh_bit_count != -1) {
         if (!as_operations_hll_init_mh(ops, bin, NULL, hll_policy_p,
                                        index_bit_count, mh_bit_count)) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Failed to add hll_init_mh operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add hll_init_mh operation.");
             goto cleanup;
         }
     }
     else {
         if (!as_operations_hll_init(ops, bin, NULL, hll_policy_p,
                                     index_bit_count)) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Failed to add hll_init operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add hll_init operation.");
             goto cleanup;
         }
     }
@@ -285,8 +284,8 @@ static as_status add_op_hll_get_count(AerospikeClient *self, as_error *err,
                                       int serializer_type)
 {
     if (!as_operations_hll_get_count(ops, bin, NULL)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_get_count operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_get_count operation.");
         goto cleanup;
     }
 
@@ -301,8 +300,8 @@ static as_status add_op_hll_describe(AerospikeClient *self, as_error *err,
                                      int serializer_type)
 {
     if (!as_operations_hll_describe(ops, bin, NULL)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_describe operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_describe operation.");
         goto cleanup;
     }
 
@@ -324,8 +323,8 @@ static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_hll_fold(ops, bin, NULL, index_bit_count)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_fold operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_fold operation.");
         goto cleanup;
     }
 
@@ -346,9 +345,8 @@ add_op_hll_get_intersect_count(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (!as_operations_hll_get_intersect_count(ops, bin, NULL, value_list)) {
-        as_error_set_or_prepend(
-            err, AEROSPIKE_ERR_CLIENT,
-            "Failed to add hll_get_intersect_count operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_get_intersect_count operation.");
         goto cleanup;
     }
 
@@ -374,8 +372,8 @@ static as_status add_op_hll_get_similarity(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_hll_get_similarity(ops, bin, NULL, value_list)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_get_similarity operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_get_similarity operation.");
         goto cleanup;
     }
 
@@ -401,8 +399,8 @@ static as_status add_op_hll_get_union(AerospikeClient *self, as_error *err,
     }
 
     if (!as_operations_hll_get_union(ops, bin, NULL, value_list)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_get_union operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_get_union operation.");
         goto cleanup;
     }
 
@@ -427,8 +425,8 @@ add_op_hll_get_union_count(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (!as_operations_hll_get_union_count(ops, bin, NULL, value_list)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_get_union_count operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_get_union_count operation.");
         goto cleanup;
     }
 
@@ -447,8 +445,8 @@ static as_status add_op_hll_refresh_count(AerospikeClient *self, as_error *err,
                                           int serializer_type)
 {
     if (!as_operations_hll_refresh_count(ops, bin, NULL)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_refresh_count operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_refresh_count operation.");
         goto cleanup;
     }
 
@@ -478,8 +476,8 @@ static as_status add_op_hll_set_union(AerospikeClient *self, as_error *err,
 
     if (!as_operations_hll_set_union(ops, bin, NULL, hll_policy_p,
                                      value_list)) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to add hll_set_union operation.");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to add hll_set_union operation.");
         goto cleanup;
     }
 

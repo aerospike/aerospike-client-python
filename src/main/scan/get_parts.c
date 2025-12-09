@@ -31,8 +31,7 @@ PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self)
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid scan object.");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
         goto CLEANUP;
     }
 

@@ -58,6 +58,8 @@ RETURN_EARLY:
     return code;
 }
 
-#define as_error_set_or_prepend(__err, __code, __fmt, ...)                     \
+#undef as_error_update
+
+#define as_error_update(__err, __code, __fmt, ...)                             \
     as_error_set_or_prepend_helper(__err, __code, __fmt, __func__, __FILE__,   \
                                    __LINE__, ##__VA_ARGS__);

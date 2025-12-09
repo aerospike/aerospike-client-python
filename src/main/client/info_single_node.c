@@ -49,14 +49,13 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
     char *response_p = NULL;
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object.");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object.");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster.");
+        as_error_update(err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -77,15 +76,13 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
             node_name = PyUnicode_AsUTF8(py_host);
             target_node = as_node_get_by_name(self->as->cluster, node_name);
             if (!target_node) {
-                as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                        "Could not get node with name %s.",
-                                        node_name);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "Could not get node with name %s.", node_name);
                 goto CLEANUP;
             }
         }
         else {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                    "Host must be a string.");
+            as_error_update(err, AEROSPIKE_ERR_PARAM, "Host must be a string.");
             goto CLEANUP;
         }
     }
@@ -95,8 +92,8 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
         request_str_p = PyUnicode_AsUTF8(py_request_str);
     }
     else {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM,
-                                "Request should be a string.");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Request should be a string.");
         goto CLEANUP;
     }
 
@@ -112,12 +109,12 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
             py_response = PyUnicode_FromString(response_p);
         }
         else if (response_p == NULL) {
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                    "Invalid info operation.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Invalid info operation.");
             goto CLEANUP;
         }
         else if (status != AEROSPIKE_OK) {
-            as_error_set_or_prepend(err, status, "Info operation failed.");
+            as_error_update(err, status, "Info operation failed.");
             goto CLEANUP;
         }
     }

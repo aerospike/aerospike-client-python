@@ -73,7 +73,7 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
     PyGILState_STATE gil_state = PyGILState_Ensure();
 
     if (err && err->code != AEROSPIKE_OK) {
-        as_error_set_or_prepend(err, err->code, NULL);
+        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
 
@@ -159,13 +159,12 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
     as_error_init(&info_callback_udata.error);
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -183,8 +182,7 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
         request = PyBytes_AsString(py_ustr);
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Request must be a string");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
         goto CLEANUP;
     }
 
@@ -196,7 +194,7 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
     Py_END_ALLOW_THREADS
 
     if (info_callback_udata.error.code != AEROSPIKE_OK) {
-        as_error_set_or_prepend(&err, err.code, NULL);
+        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 CLEANUP:

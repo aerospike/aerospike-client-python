@@ -41,8 +41,8 @@ PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 
     if (!json_module) {
         /* insert error handling here! and exit this function */
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT,
-                                "Unable to load json module");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to load json module");
     }
     else {
         PyObject *py_funcname = PyUnicode_FromString("dumps");
@@ -66,15 +66,14 @@ PyObject *AerospikeGeospatial_Dumps(AerospikeGeospatial *self, PyObject *args,
     as_error_init(&err);
 
     if (!self) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid geospatial data");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial data");
         goto CLEANUP;
     }
 
     initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
     if (!initresult) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                "Unable to call dumps function");
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to call dumps function");
         goto CLEANUP;
     }
 

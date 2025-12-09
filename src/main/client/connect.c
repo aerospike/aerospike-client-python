@@ -45,9 +45,8 @@ int AerospikeClientConnect(AerospikeClient *self)
 
     if (!self || !self->as || !self->as->config.hosts ||
         !self->as->config.hosts->size) {
-        as_error_set_or_prepend(
-            &err, AEROSPIKE_ERR_PARAM,
-            "Invalid aerospike object or hosts not configured");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Invalid aerospike object or hosts not configured");
         goto CLEANUP;
     }
 
@@ -240,14 +239,13 @@ PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 

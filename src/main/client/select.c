@@ -67,14 +67,13 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     as_error_init(&err);
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -107,8 +106,8 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
             }
             else {
                 // Bin name wasn't a string raise error and exit
-                as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                        "Bin name must be a string");
+                as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                "Bin name must be a string");
                 goto CLEANUP;
             }
         }
@@ -133,16 +132,14 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
                 bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
             }
             else {
-                as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                        "not string type");
+                as_error_update(&err, AEROSPIKE_ERR_PARAM, "not string type");
                 goto CLEANUP;
             }
         }
         bins[size] = NULL;
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "not a list or tuple");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "not a list or tuple");
         goto CLEANUP;
     }
 

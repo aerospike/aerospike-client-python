@@ -553,7 +553,7 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                 goto internal_error;
             }
 
-            as_error_set_or_prepend(err, AEROSPIKE_ERR_PARAM, error_msg);
+            as_error_update(err, AEROSPIKE_ERR_PARAM, error_msg);
             Py_DECREF(py_error_msg);
 
             return 0;
@@ -606,9 +606,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
     else if (retval == 1) {
         if (!PyBool_Check(py_validate_keys)) {
-            as_error_set_or_prepend(
-                &constructor_err, AEROSPIKE_ERR_PARAM,
-                "config[\"validate_keys\"] must be a boolean");
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "config[\"validate_keys\"] must be a boolean");
             Py_DECREF(py_validate_keys);
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
@@ -656,11 +655,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         // It is optional so just move on
     }
     else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "config_provider must be an "
-                                "aerospike.ConfigProvider class instance. But "
-                                "a %s was received instead",
-                                py_obj_config_provider->ob_type->tp_name);
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "config_provider must be an "
+                        "aerospike.ConfigProvider class instance. But "
+                        "a %s was received instead",
+                        py_obj_config_provider->ob_type->tp_name);
         goto RAISE_EXCEPTION_WITH_AS_ERROR;
     }
     else {
@@ -1076,7 +1075,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                                   false) == false) {
             // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
             // But we want to set a different error message here
-            as_error_set_or_prepend(
+            as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
                 "metrics must be an "
                 "aerospike_helpers.metrics.MetricsPolicy class instance. But "
@@ -1306,69 +1305,68 @@ CONSTRUCTOR_ERROR:
         return 0;
     }
     case INIT_NO_CONFIG_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "No config argument");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "No config argument");
         break;
     }
     case INIT_CONFIG_TYPE_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Config must be a dict");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Config must be a dict");
         break;
     }
     case INIT_LUA_USER_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Lua user path too long");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Lua user path too long");
         break;
     }
     case INIT_LUA_SYS_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Lua system path too long");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Lua system path too long");
         break;
     }
     case INIT_HOST_TYPE_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Hosts must be a list");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Hosts must be a list");
         break;
     }
     case INIT_EMPTY_HOSTS_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Hosts must not be empty");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Hosts must not be empty");
         break;
     }
     case INIT_INVALID_ADRR_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Invalid host");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Invalid host");
         break;
     }
     case INIT_SERIALIZE_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Serializer must be callable");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Serializer must be callable");
         break;
     }
     case INIT_DESERIALIZE_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Deserializer must be callable");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Deserializer must be callable");
         break;
     }
     case INIT_COMPRESSION_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Compression value must not be negative");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Compression value must not be negative");
         break;
     }
     case INIT_POLICY_PARAM_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Invalid Policy setting value");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Invalid Policy setting value");
         break;
     }
     case INIT_INVALID_AUTHMODE_ERR: {
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Specify valid auth_mode");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Specify valid auth_mode");
         break;
     }
     default:
         // If a generic error was caught during init, use this message
-        as_error_set_or_prepend(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Invalid Parameters");
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Invalid Parameters");
         break;
     }
 
@@ -1600,8 +1598,7 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
 
     as_error err;
     as_error_init(&err);
-    as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                            "Failed to construct object");
+    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
     raise_exception(&err);
 
 CLEANUP:

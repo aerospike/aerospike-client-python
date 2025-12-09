@@ -55,14 +55,13 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
     as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid query object.");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster.");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster.");
         goto CLEANUP;
     }
 
@@ -70,8 +69,8 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
         Py_ssize_t size = PyList_Size(py_ops);
         self->query.ops = as_operations_new((uint16_t)size);
         if (self->query.ops == NULL) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                    "Failed to create new as_operations.");
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Failed to create new as_operations.");
             goto CLEANUP;
         }
 
@@ -82,21 +81,20 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
                            self->static_pool, self->query.ops, &operation,
                            &return_type) !=
                     AEROSPIKE_OK) { //something wrong with ops bin name and value
-                    as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                            "Failed to convert ops.");
+                    as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                    "Failed to convert ops.");
                     goto CLEANUP;
                 }
             }
             else {
-                as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                        "Failed to convert ops.");
+                as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                "Failed to convert ops.");
                 goto CLEANUP;
             }
         }
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                "Ops must be list.");
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Ops must be list.");
         goto CLEANUP;
     }
 

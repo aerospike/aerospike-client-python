@@ -39,7 +39,7 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
                             self->validate_keys, SECOND_AS_POLICY_NONE);
 
     if (err->code != AEROSPIKE_OK) {
-        as_error_set_or_prepend(err, AEROSPIKE_ERR_CLIENT, "Incorrect Policy");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect Policy");
         goto CLEANUP;
     }
 
@@ -82,13 +82,12 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     }
 
     if (!self || !self->as) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid aerospike object");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
     if (!self->is_conn_16) {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLUSTER,
-                                "No connection to aerospike cluster");
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
@@ -97,14 +96,14 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         namespace = strdup((char *)PyUnicode_AsUTF8(py_ns));
         // If we failed to copy the string, exit
         if (!namespace) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                    "Memory allocation failed");
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Memory allocation failed");
             goto CLEANUP;
         }
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Namespace must be unicode or string type");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace must be unicode or string type");
         goto CLEANUP;
     }
 
@@ -113,15 +112,15 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         set = strdup((char *)PyUnicode_AsUTF8(py_set));
         // If we called strdup, and it failed we need to exit
         if (!set) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_CLIENT,
-                                    "Memory allocation failed");
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Memory allocation failed");
             goto CLEANUP;
         }
     }
     else if (py_set != Py_None) {
         // If the set is none, this is fine
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Set must be None, or unicode or string type");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Set must be None, or unicode or string type");
         goto CLEANUP;
     }
 
@@ -131,8 +130,8 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         temp_long = PyLong_AsLongLong(py_nanos);
         // There was a negative number outside of the range of - 2 ^ 63
         if (temp_long < 0 && !PyErr_Occurred()) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                    "Nanoseconds must be a positive value");
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Nanoseconds must be a positive value");
             goto CLEANUP;
         }
         // Its possible that this is a valid uint64 between 2 ^ 63 and 2^64 -1
@@ -140,14 +139,14 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         nanos = (uint64_t)PyLong_AsUnsignedLongLong(py_nanos);
 
         if (PyErr_Occurred()) {
-            as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                    "Nanoseconds value too large");
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Nanoseconds value too large");
             goto CLEANUP;
         }
     }
     else {
-        as_error_set_or_prepend(&err, AEROSPIKE_ERR_PARAM,
-                                "Nanoseconds must be a long type");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Nanoseconds must be a long type");
         goto CLEANUP;
     }
 
