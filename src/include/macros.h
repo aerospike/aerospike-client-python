@@ -42,6 +42,7 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     // Prepend our new error message to the existing one.
     char orig_err_msg[AS_ERROR_MESSAGE_MAX_SIZE];
     strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
+    // Handles edge case where max number of chars is copied (without null terminator)
     orig_err_msg[AS_ERROR_MESSAGE_MAX_LEN] = '\0';
 
     as_error_setall(err, code, err_msg_to_prepend, func, file, line);
