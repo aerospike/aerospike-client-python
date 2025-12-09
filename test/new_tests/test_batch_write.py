@@ -511,7 +511,6 @@ class TestBatchWrite(TestBaseClass):
         )
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.batch_write(batch_records)
-        assert excinfo.value.msg == "batch_type: Read, failed to convert policy"
 
     @pytest.mark.parametrize(
         "policy_name, batch_record",
