@@ -2525,7 +2525,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         }
         else if (item_type == AS_CDT_CTX_EXP) {
             if (Py_IsNone(py_extra_args)) {
-                as_cdt_ctx_add_all_children(cdt_ctx);
+                as_cdt_ctx_add_all(cdt_ctx);
             }
             else {
                 PyObject *py_expr = NULL;
@@ -2545,7 +2545,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 }
 
                 // This C client call memcpy's the expr's contents
-                as_cdt_ctx_add_all_children_with_filter(cdt_ctx, expr);
+                as_cdt_ctx_add_exp(cdt_ctx, expr);
                 as_exp_destroy(expr);
             }
         }
