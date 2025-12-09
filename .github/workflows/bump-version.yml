@@ -82,7 +82,10 @@ jobs:
 
     - name: Get new version
       id: get-new-version
-      run: echo new_version=$(python3 .github/workflows/${{ inputs.change }}.py ${{ needs.get-current-version.outputs.current_version }}) >> $GITHUB_OUTPUT
+      run: echo new_version=$(python3 .github/workflows/${CHANGE_VERSION_SCRIPT_NAME}.py "${CURRENT_VERSION}") >> $GITHUB_OUTPUT
+      env:
+        CURRENT_VERSION: ${{ needs.get-current-version.outputs.current_version }}
+        CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.change }}
 
   update-version-in-repo:
     needs: get-new-version
