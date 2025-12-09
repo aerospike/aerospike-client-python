@@ -1067,6 +1067,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
     }
 
     int retval = PyObject_SetAttrString(py_cluster, "app_id", py_app_id);
+    Py_DECREF(py_app_id);
     if (retval == -1) {
         goto error;
     }
