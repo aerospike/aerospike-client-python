@@ -41,8 +41,10 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     as_error_setall(err, code, err_msg_to_prepend, func, file, line);
     err->code = code;
 
-    as_error_append(err, " -> ");
-    as_error_append(err, orig_err_msg);
+    if (strlen(orig_err_msg)) {
+        as_error_append(err, " -> ");
+        as_error_append(err, orig_err_msg);
+    }
 
     va_end(ap);
     return code;

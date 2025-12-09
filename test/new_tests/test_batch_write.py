@@ -509,7 +509,7 @@ class TestBatchWrite(TestBaseClass):
                 )
             ]
         )
-        with pytest.raises(e.ParamError) as excinfo:
+        with pytest.raises(e.ParamError):
             self.as_connection.batch_write(batch_records)
 
     @pytest.mark.parametrize(
