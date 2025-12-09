@@ -31,11 +31,11 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     va_list ap;
     va_start(ap, line);
 
-    char err_msg_to_prepend[AS_ERROR_MESSAGE_MAX_LEN];
-    vsnprintf(err_msg_to_prepend, AS_ERROR_MESSAGE_MAX_LEN, fmt, ap);
+    char err_msg_to_prepend[AS_ERROR_MESSAGE_MAX_SIZE];
+    vsnprintf(err_msg_to_prepend, AS_ERROR_MESSAGE_MAX_SIZE, fmt, ap);
 
     // Prepend our new error message to the existing one.
-    char orig_err_msg[AS_ERROR_MESSAGE_MAX_LEN];
+    char orig_err_msg[AS_ERROR_MESSAGE_MAX_SIZE];
     strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
 
     as_error_setall(err, code, err_msg_to_prepend, func, file, line);
