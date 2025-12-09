@@ -38,10 +38,8 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     char orig_err_msg[AS_ERROR_MESSAGE_MAX_LEN];
     strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
 
-    if (err->code != AEROSPIKE_OK) {
-        as_error_setall(err, code, err_msg_to_prepend, func, file, line);
-        err->code = code;
-    }
+    as_error_setall(err, code, err_msg_to_prepend, func, file, line);
+    err->code = code;
 
     as_error_append(err, orig_err_msg);
 
