@@ -206,10 +206,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 {
 
     static const int EXPR_SIZES[] = {
-        [_AS_EXP_CODE_CALL_SELECT] =
-            EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
+        [_AS_EXP_CODE_CALL_SELECT] = EXP_SZ(as_exp_cdt_select(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
-            EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
+            EXP_SZ(as_exp_cdt_apply(NULL, 0, NULL, 0, NIL)),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
