@@ -39,7 +39,6 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
 
     as_error_setall(err, code, err_msg_to_prepend, func, file, line);
-    err->code = code;
 
     if (strlen(orig_err_msg)) {
         as_error_append(err, " -> ");
