@@ -1,6 +1,9 @@
 # Takes in how to bump version as input
 # Commits changes to bump version and outputs the new version and commit hash as output
 
+permissions:
+  contents: write
+
 name: Bump version
 on:
   workflow_dispatch:
