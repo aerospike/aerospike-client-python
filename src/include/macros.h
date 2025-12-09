@@ -28,6 +28,11 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
                                const char *func, const char *file,
                                uint32_t line, ...)
 {
+    if (!fmt) {
+        err->code = code;
+        goto RETURN_EARLY;
+    }
+
     va_list ap;
     va_start(ap, line);
 
@@ -37,6 +42,7 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     // Prepend our new error message to the existing one.
     char orig_err_msg[AS_ERROR_MESSAGE_MAX_SIZE];
     strncpy(orig_err_msg, err->message, AS_ERROR_MESSAGE_MAX_LEN);
+    orig_err_msg[AS_ERROR_MESSAGE_MAX_LEN] = '\0';
 
     as_error_setall(err, code, err_msg_to_prepend, func, file, line);
 
@@ -46,6 +52,8 @@ as_error_set_or_prepend_helper(as_error *err, as_status code, const char *fmt,
     }
 
     va_end(ap);
+
+RETURN_EARLY:
     return code;
 }
 
