@@ -24,6 +24,8 @@ import warnings
 import aerospike
 from typing import Optional
 
+from aerospike_helpers.cdt_ctx import _cdt_ctx
+
 
 def read(bin_name):
     """Create a read operation dictionary.
@@ -130,4 +132,45 @@ def touch(ttl: Optional[int] = None):
     if ttl:
         warnings.warn("TTL should be specified in the meta dictionary for operate", DeprecationWarning)
         op_dict["val"] = ttl
+    return op_dict
+
+
+def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
+    """
+    Create CDT select operation.
+
+    Args:
+        bin_name: Bin name
+        ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+        flags: See :ref:`cdt_select_flags` for the set of valid flags for this function.
+
+    Returns:
+        A dictionary to be passed to operate or operate_ordered.
+    """
+    op_dict = {"op": aerospike._AS_OPERATOR_CDT_READ, "bin": bin_name, "ctx": ctx, aerospike._CDT_FLAGS_KEY: flags}
+    return op_dict
+
+
+def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
+    """
+    Create CDT modification operation.
+
+    The results of the evaluation of the modifying expression will replace the
+    selected map, and the changes are written back to storage.
+
+    Args:
+        bin_name: Bin name
+        ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+        expr: compiled modifying expression.
+        flags: See :ref:`cdt_modify_flags` for the set of valid flags for this function.
+
+    Returns:
+        A dictionary to be passed to operate or operate_ordered.
+    """
+    op_dict = {
+        "op": aerospike._AS_OPERATOR_CDT_MODIFY,
+        "bin": bin_name,
+        "ctx": ctx, aerospike._CDT_APPLY_MOD_EXP_KEY: expr,
+        aerospike._CDT_FLAGS_KEY: flags
+    }
     return op_dict
