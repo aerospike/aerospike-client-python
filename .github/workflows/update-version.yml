@@ -9,6 +9,11 @@ on:
         type: string
         description: Version string to set in the repo
         required: true
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: No tagging in repo
   workflow_call:
     inputs:
       new_version:
@@ -19,6 +24,11 @@ on:
         type: string
         description: commit/branch to change version
         required: false
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: No tagging in repo
       # A hack to tell if workflow is triggered by workflow_call or not
       # Calling workflows should not set this input
       # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
@@ -61,7 +71,7 @@ jobs:
       with:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        tagging_message: ${{ inputs.new_version }}
+        tagging_message: ${{ inputs.dry-run && inputs.new_version || '' }}
         branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
 
     - name: Output bump commit hash for next jobs to use

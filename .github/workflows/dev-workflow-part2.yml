@@ -6,12 +6,19 @@ on:
     branches:
     - 'dev*'
   workflow_dispatch:
+    inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: Dry run
 
 jobs:
   bump-dev-number:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
