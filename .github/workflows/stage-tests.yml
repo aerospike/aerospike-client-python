@@ -50,6 +50,7 @@ jobs:
       matrix:
         test-case: [
           # Docker image + tag, test category, Docker image platform (cpu arch), Python version
+          ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
           ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
@@ -83,7 +84,6 @@ jobs:
           ["redhat/ubi8", 2, "linux/arm64", "3.11"],
           ["registry.access.redhat.com/ubi9/python-311", 2, "linux/amd64", "3.11"],
           ["registry.access.redhat.com/ubi9/python-311", 2, "linux/arm64", "3.11"],
-          ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
           ["registry.access.redhat.com/ubi9/python-311", 1, "linux/amd64", "3.11"],
         ]
       fail-fast: false
