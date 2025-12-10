@@ -165,7 +165,7 @@ jobs:
 
     - name: 'Cat 1: Install build dependencies using yum'
       if: ${{ env.TEST_CATEGORY == '1' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y libyaml-devel openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y libyaml-devel openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python3.11-devel
 
     - if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:24.04' }}
       run: echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
