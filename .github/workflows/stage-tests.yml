@@ -82,10 +82,10 @@ jobs:
           ["redhat/ubi8", 2, "linux/amd64", "3.11"],
           ["redhat/ubi8", 2, "linux/arm64", "3.11"],
           # TODO
-          ["redhat/ubi9", 2, "linux/amd64", "3.9"],
-          ["redhat/ubi9", 2, "linux/arm64", "3.9"],
-          ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
-          ["redhat/ubi9", 1, "linux/amd64", "3.9"],
+          ["registry.access.redhat.com/ubi9/python-311", 2, "linux/amd64", "3.11"],
+          ["registry.access.redhat.com/ubi9/python-311", 2, "linux/arm64", "3.11"],
+          ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
+          ["registry.access.redhat.com/ubi9/python-311", 1, "linux/amd64", "3.11"],
         ]
       fail-fast: false
     env:
