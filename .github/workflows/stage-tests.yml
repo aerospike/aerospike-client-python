@@ -145,7 +145,7 @@ jobs:
 
     - name: 'Amazon Linux 2023: install python 3.11 if applicable'
       if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' && env.PYTHON_VERSION == '3.11' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y python3.11
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python3.11
 
     - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
@@ -163,9 +163,9 @@ jobs:
       if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi') || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'python') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ensurepip
 
-    - name: 'Cat 1: Install build dependencies using yum'
+    - name: 'Cat 1: Install build dependencies using dnf'
       if: ${{ env.TEST_CATEGORY == '1' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y libyaml-devel openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python3.11-devel
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y libyaml-devel openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python3.11-devel
 
     - if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:24.04' }}
       run: echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
