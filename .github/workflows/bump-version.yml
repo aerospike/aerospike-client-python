@@ -48,7 +48,12 @@ jobs:
       current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
@@ -64,7 +69,12 @@ jobs:
       new_version: ${{ steps.get-new-version.outputs.new_version }}
     steps:
     # Checkout branch where workflow is being called from
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
     - name: Install library that parses PEP 440 versions
       run: pip install parver -c requirements.txt
