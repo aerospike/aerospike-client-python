@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        py-version: ["3.10", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         # Make sure we can build and run tests on an instrumented build that uses libasan
         # We aren't necessarily checking for memory errors / leaks in this test
         sanitizer: [false]
