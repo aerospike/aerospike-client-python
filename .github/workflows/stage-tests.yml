@@ -50,8 +50,6 @@ jobs:
       matrix:
         test-case: [
           # Docker image + tag, test category, Docker image platform (cpu arch), Python version
-          ["amazonlinux:2023", 2, "linux/amd64", "3.9"],
-          ["amazonlinux:2023", 2, "linux/arm64", "3.9"],
           ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
           ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
@@ -59,8 +57,6 @@ jobs:
           ["ubuntu:24.04", 2, "linux/amd64", "3.12"],
           ["ubuntu:24.04", 2, "linux/arm64", "3.12"],
           # Bullseye is Debian 11
-          ["python:3.9-bullseye", 2, "linux/amd64", "3.9"],
-          ["python:3.9-bullseye", 2, "linux/arm64", "3.9"],
           ["python:3.10-bullseye", 2, "linux/amd64", "3.10"],
           ["python:3.10-bullseye", 2, "linux/arm64", "3.10"],
           ["python:3.11-bullseye", 2, "linux/amd64", "3.11"],
@@ -72,8 +68,6 @@ jobs:
           ["python:3.14-rc-bullseye", 2, "linux/amd64", "3.14"],
           ["python:3.14-rc-bullseye", 2, "linux/arm64", "3.14"],
           # Bookworm is Debian 12
-          ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
-          ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
           ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
           ["python:3.10-bookworm", 2, "linux/arm64", "3.10"],
           ["python:3.11-bookworm", 2, "linux/amd64", "3.11"],
@@ -87,6 +81,7 @@ jobs:
           # QE currently covers Debian 13 on all client-supported Python versions
           ["redhat/ubi8", 2, "linux/amd64", "3.11"],
           ["redhat/ubi8", 2, "linux/arm64", "3.11"],
+          # TODO
           ["redhat/ubi9", 2, "linux/amd64", "3.9"],
           ["redhat/ubi9", 2, "linux/arm64", "3.9"],
           ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
@@ -200,7 +195,6 @@ jobs:
           ["macos-26", "arm64"]
         ]
         python-version: [
-          "3.9",
           "3.10",
           "3.11",
           "3.12",
