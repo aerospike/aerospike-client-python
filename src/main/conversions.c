@@ -2422,11 +2422,10 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     if (!PyList_Check(py_ctx_list)) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert %s", CTX_KEY);
-        goto CLEANUP4;
+        goto CLEANUP5;
     }
 
     Py_ssize_t py_list_size = PyList_Size(py_ctx_list);
-    // TODO: refactor *_destroy() method...
     as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
 
     for (int i = 0; i < py_list_size; i++) {
@@ -2575,6 +2574,7 @@ CLEANUP3:
     Py_DECREF(py_id);
 CLEANUP4:
     as_cdt_ctx_destroy(cdt_ctx);
+CLEANUP5:
     return status;
 }
 
