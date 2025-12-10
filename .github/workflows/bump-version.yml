@@ -51,7 +51,12 @@ jobs:
       current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
@@ -67,7 +72,12 @@ jobs:
       new_version: ${{ steps.get-new-version.outputs.new_version }}
     steps:
     # Checkout branch where workflow is being called from
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
     - name: Install library that parses PEP 440 versions
       run: pip install parver -c requirements.txt
@@ -75,7 +85,10 @@ jobs:
 
     - name: Get new version
       id: get-new-version
-      run: echo new_version=$(python3 .github/workflows/${{ inputs.change }}.py ${{ needs.get-current-version.outputs.current_version }}) >> $GITHUB_OUTPUT
+      run: echo new_version=$(python3 .github/workflows/${CHANGE_VERSION_SCRIPT_NAME}.py "${CURRENT_VERSION}") >> $GITHUB_OUTPUT
+      env:
+        CURRENT_VERSION: ${{ needs.get-current-version.outputs.current_version }}
+        CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.change }}
 
   update-version-in-repo:
     needs: get-new-version
