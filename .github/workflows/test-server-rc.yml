@@ -34,7 +34,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
@@ -83,7 +83,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - uses: ./.github/actions/setup-docker-on-macos
 
@@ -134,7 +134,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
