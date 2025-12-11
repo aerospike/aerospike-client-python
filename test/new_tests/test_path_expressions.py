@@ -364,6 +364,20 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins == {self.MAP_OF_NESTED_MAPS_BIN_NAME: expected_bin_value}
 
+    def test_cdt_ctx_all_children_with_filter_with_invalid_expr(self):
+        op = operations.select_by_path(
+            bin_name=self.MAP_BIN_NAME,
+            ctx=[
+                cdt_ctx.cdt_ctx_all_children_with_filter(expression=1)
+            ],
+            flags=aerospike.CDT_SELECT_VALUES
+        )
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.key, ops)
+
     def test_neg_iterate_on_unexpected_type(self):
         op = operations.select_by_path(
             bin_name=self.MAP_BIN_NAME,
