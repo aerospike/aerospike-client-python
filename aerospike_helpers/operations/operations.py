@@ -159,7 +159,7 @@ def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     selected map, and the changes are written back to storage.
 
     Args:
-        bin_name: Bin name
+        bin_name: Name of bin that this modify operation is performed against
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
         expr: compiled modifying expression.
         flags: See :ref:`exp_path_modify_flags` for the set of valid flags for this function.
