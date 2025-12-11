@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -85,7 +85,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         type: string
         required: true
