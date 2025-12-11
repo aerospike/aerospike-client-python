@@ -6,44 +6,42 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
-@pytest.mark.usefixtures("connection_config")
-class TestQueryRole:
+class TestQueryRole(TestBaseClass):
+
+    pytestmark = pytest.mark.skipif(
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    )
 
     def setup_method(self, method):
         """
         Setup method
         """
-        if not TestBaseClass.auth_in_use():
-            pytest.skip(reason="No user specified, may be not secured cluster.")
-
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            admin_drop_role_and_poll(self.client, "usr-sys-admin")
+            self.client.admin_drop_role("usr-sys-admin")
+            time.sleep(2)
         except Exception:
             pass
-        usr_sys_admin_privs = [
-            {"code": aerospike.PRIV_USER_ADMIN},
-            {"code": aerospike.PRIV_SYS_ADMIN},
-        ]
+        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
-            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except Exception:
             pass
-        admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
+        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+
         self.delete_users = []
+        time.sleep(1)
 
     def teardown_method(self, method):
         """
         Teardown method
         """
         try:
-            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
+            self.client.admin_drop_role("usr-sys-admin-test")
         except Exception:
             pass
         self.client.close()
@@ -60,20 +58,14 @@ class TestQueryRole:
         Query role positive
         """
         roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
-            {"code": 0, "ns": "", "set": ""},
-            {"code": 1, "ns": "", "set": ""},
-        ]
+        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_positive_with_policy(self):
         """
         Query role positive policy
         """
         roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 180000})
-        assert roles == [
-            {"code": 0, "ns": "", "set": ""},
-            {"code": 1, "ns": "", "set": ""},
-        ]
+        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_incorrect_role_name(self):
         """

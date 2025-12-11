@@ -6,7 +6,6 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestRevokeRoles(TestBaseClass):
@@ -23,7 +22,8 @@ class TestRevokeRoles(TestBaseClass):
         TestRevokeRoles.Me = self
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            admin_drop_user_and_poll(self.client, "example-test")
+            self.client.admin_drop_user("example-test")
+            time.sleep(1)
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -31,7 +31,8 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            admin_create_user_and_poll(self.client, user, password, roles)
+            self.client.admin_create_user(user, password, roles)
+            time.sleep(1)
         except e.UserExistsError:
             pass
 
@@ -43,7 +44,8 @@ class TestRevokeRoles(TestBaseClass):
         """
 
         try:
-            admin_drop_user_and_poll(self.client, "example-test")
+            self.client.admin_drop_user("example-test")
+            time.sleep(1)
         except e.InvalidUser:
             pass
         self.client.close()
@@ -71,6 +73,7 @@ class TestRevokeRoles(TestBaseClass):
         user = "example-test"
         roles = ["read", "sys-admin", "read-write"]
 
+        time.sleep(2)
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         time.sleep(2)
@@ -162,7 +165,8 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = admin_create_user_and_poll(self.client, user, password, roles)
+        status = self.client.admin_create_user(user, password, roles)
+        time.sleep(2)
 
         assert status == 0
         status = self.client.admin_revoke_roles(user, roles)
@@ -175,7 +179,7 @@ class TestRevokeRoles(TestBaseClass):
 
         assert user_details["roles"] == []
 
-        status = admin_drop_user_and_poll(self.client, "!#Q#AEQ@#$%&^*((^&*~~~````[[")
+        status = self.client.admin_drop_user("!#Q#AEQ@#$%&^*((^&*~~~````[[")
         assert status == 0
 
     def test_revoke_roles_nonpossessed(self):
@@ -184,7 +188,8 @@ class TestRevokeRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = admin_create_user_and_poll(self.client, user, password, roles)
+        status = self.client.admin_create_user(user, password, roles)
+        time.sleep(2)
 
         assert status == 0
         roles = ["read"]
@@ -197,7 +202,7 @@ class TestRevokeRoles(TestBaseClass):
         assert user_details["roles"] == ["read-write"]
 
         assert status == 0
-        status = admin_drop_user_and_poll(self.client, user)
+        status = self.client.admin_drop_user(user)
         assert status == 0
 
     def test_revoke_roles_with_roles_exceeding_max_length(self):

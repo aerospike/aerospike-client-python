@@ -6,15 +6,13 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 @pytest.mark.usefixtures("connection_config")
 class TestDropUser(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.",
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
     )
 
     def setup_method(self, method):
@@ -23,11 +21,10 @@ class TestDropUser(object):
         """
         config = TestBaseClass.get_connection_config()
         TestDropUser.Me = self
-        self.client = aerospike.client(config).connect(
-            config["user"], config["password"]
-        )
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            admin_drop_user_and_poll(self.client, "foo-test")
+            self.client.admin_drop_user("foo-test")
+            time.sleep(2)
         except Exception:
             pass
 
@@ -54,13 +51,23 @@ class TestDropUser(object):
         user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
-        admin_create_user_and_poll(self.client, user, password, roles, policy)
 
-        status = admin_drop_user_and_poll(self.client, user, policy)
+        status = self.client.admin_create_user(user, password, roles, policy)
+
+        time.sleep(2)
+
+        assert status == 0
+        user_info = self.client.admin_query_user_info(user, policy)
+
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
+
+        status = self.client.admin_drop_user(user, policy)
+
         assert status == 0
 
         try:
             self.client.admin_query_user_info(user)
+
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
@@ -70,7 +77,7 @@ class TestDropUser(object):
         Invoke drop_user() with policy none
         """
         try:
-            admin_drop_user_and_poll(self.client, None)
+            self.client.admin_drop_user(None)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -84,14 +91,22 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(self.client, user, password, roles)
+        status = self.client.admin_create_user(user, password, roles)
+
+        time.sleep(1)
+
+        assert status == 0
+        user_info = self.client.admin_query_user_info(user)
+
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
+        status = self.client.admin_drop_user(user)
         assert status == 0
 
-        status = admin_drop_user_and_poll(self.client, user)
-        assert status == 0
+        time.sleep(2)
 
         try:
             self.client.admin_query_user_info(user)
+
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
@@ -104,13 +119,22 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(self.client, user, password, roles)
+        status = self.client.admin_create_user(user, password, roles)
 
-        status = admin_drop_user_and_poll(self.client, user)
+        time.sleep(1)
+
         assert status == 0
+        user_info = self.client.admin_query_user_info(user)
+
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
+        status = self.client.admin_drop_user(user)
+        assert status == 0
+
+        time.sleep(1)
 
         try:
             self.client.admin_query_user_info(user)
+
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
@@ -128,7 +152,7 @@ class TestDropUser(object):
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
         try:
-            admin_drop_user_and_poll(self.client, user)
+            self.client.admin_drop_user(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -142,7 +166,9 @@ class TestDropUser(object):
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = admin_create_user_and_poll(self.client, user, password, roles)
+        status = self.client.admin_create_user(user, password, roles)
+
+        time.sleep(1)
 
         assert status == 0
         user_details = self.client.admin_query_user_info(user)
@@ -150,28 +176,24 @@ class TestDropUser(object):
         assert user_details["roles"] == ["read", "read-write", "sys-admin"]
         policy = {"timeout": 0.2}
         try:
-            status = admin_drop_user_and_poll(self.client, user, policy)
+            status = self.client.admin_drop_user(user, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
-        status = admin_drop_user_and_poll(self.client, user)
+        status = self.client.admin_drop_user(user)
 
     def test_drop_user_with_extra_argument(self):
         """
         Invoke drop_user() with extra argument.
         """
         with pytest.raises(TypeError) as typeError:
-            admin_drop_user_and_poll(self.client, "foo-test", None, "")
+            self.client.admin_drop_user("foo-test", None, "")
 
-        assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(
-            typeError.value
-        )
+        assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(typeError.value)
 
-    @pytest.mark.xfail(
-        reason="It is no longer possible to create a user with" "a name too long"
-    )
+    @pytest.mark.xfail(reason="It is no longer possible to create a user with" "a name too long")
     def test_drop_user_with_too_long_username(self):
 
         user = "user$" * 1000
@@ -179,14 +201,14 @@ class TestDropUser(object):
         roles = ["sys-admin"]
 
         try:
-            admin_create_user_and_poll(self.client, user, password, roles)
+            self.client.admin_create_user(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
         try:
-            admin_drop_user_and_poll(self.client, user)
+            self.client.admin_drop_user(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -199,11 +221,12 @@ class TestDropUser(object):
         roles = ["read-write"]
 
         try:
-            status = admin_create_user_and_poll(self.client, user, password, roles)
+            status = self.client.admin_create_user(user, password, roles)
             assert status == 0
+            time.sleep(1)
         except Exception:
             pass
 
-        status = admin_drop_user_and_poll(self.client, user)
+        status = self.client.admin_drop_user(user)
 
         assert status == 0
