@@ -156,7 +156,7 @@ jobs:
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
 
-    - name: 'RHEL 9: Install python 3 that comes by default (step 2)'
+    - name: 'RHEL: Install python 3 that comes by default (step 2)'
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python311
 
