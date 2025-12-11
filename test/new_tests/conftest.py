@@ -332,3 +332,8 @@ def admin_drop_role_and_poll(client: aerospike.Client, role: str, *args, **kwarg
     retval = client.admin_drop_role(role, *args, **kwargs)
     poll_until_role_doesnt_exist(role, client)
     return retval
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)

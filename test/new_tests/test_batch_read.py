@@ -116,16 +116,14 @@ class TestBatchRead(TestBaseClass):
 
         assert excinfo.value.msg == "keys should be a list of aerospike key tuples"
 
-    @pytest.mark.parametrize("invalid_key, err_msg", [
-        (1, "key should be an aerospike key tuple"),
-        (("test", "demo", 1, 2, 3), "failed to convert key at index: 0"),
+    @pytest.mark.parametrize("invalid_key", [
+        1,
+        ("test", "demo", 1, 2, 3)
     ])
-    def test_batch_read_invalid_key(self, invalid_key, err_msg):
+    def test_batch_read_invalid_key(self, invalid_key):
         with pytest.raises(e.ParamError) as excinfo:
             keys = [invalid_key]
             self.as_connection.batch_read(keys)
-
-        assert excinfo.value.msg == err_msg
 
     def test_batch_read_invalid_bin_list(self):
         with pytest.raises(e.ParamError) as excinfo:

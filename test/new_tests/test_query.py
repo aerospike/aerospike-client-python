@@ -9,6 +9,7 @@ from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
+import warnings
 import time
 
 from aerospike_helpers.expressions.arithmetic import Add
@@ -63,89 +64,87 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 class TestQuery(TestBaseClass):
     # TODO: This fixture should be split up to speed up this test class
     @pytest.fixture(autouse=True, scope="class")
-    def setup(cls, as_connection):
-        client = as_connection
-
+    def setupClass(self, as_connection):
         try:
-            client.index_integer_create("test", "demo", "test_age", "age_index")
+            as_connection.index_integer_create("test", "demo", "test_age", "age_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_string_create("test", "demo", "addr", "addr_index")
+            as_connection.index_string_create("test", "demo", "addr", "addr_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", "age1", "age_index1")
+            as_connection.index_integer_create("test", "demo", "age1", "age_index1")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
+            as_connection.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
+            as_connection.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
+            as_connection.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
+            as_connection.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
+            as_connection.index_map_values_create(
                 "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
+            as_connection.index_map_values_create(
                 "test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", None, "test_age_none", "age_index_none")
+            as_connection.index_integer_create("test", None, "test_age_none", "age_index_none")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
+            as_connection.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
         except e.IndexFoundError:
             pass
 
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
             # These indexes are only used for server 7.0+ tests
             try:
-                client.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
+                as_connection.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
             except e.IndexFoundError:
                 pass
 
             try:
-                client.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
+                as_connection.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
             except e.IndexFoundError:
                 pass
 
             try:
-                client.index_map_values_create(
+                as_connection.index_map_values_create(
                     "test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_values_index"
                 )
             except e.IndexFoundError:
                 pass
 
         try:
-            client.index_cdt_create(
+            as_connection.index_cdt_create(
                 "test",
                 "demo",
                 "numeric_list",
@@ -158,7 +157,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_cdt_create(
+            as_connection.index_cdt_create(
                 "test",
                 "demo",
                 "numeric_map",
@@ -192,85 +191,85 @@ class TestQuery(TestBaseClass):
                 "no": i,
                 "blob": i.to_bytes(length=1, byteorder='big')
             }
-            client.put(key, rec)
+            as_connection.put(key, rec)
         for i in range(5, 10):
             key = ("test", "demo", i)
             rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
-            client.put(key, rec)
+            as_connection.put(key, rec)
 
         key = ("test", "demo", 122)
         llist = [{"op": aerospike.OPERATOR_WRITE, "bin": bytearray("sal\0kj", "utf-8"), "val": 80000}]
-        client.operate(key, llist)
+        as_connection.operate(key, llist)
 
         key = ("test", None, 145)
         rec = {"test_age_none": 1}
-        client.put(key, rec)
+        as_connection.put(key, rec)
 
         yield
 
         policy = {}
         try:
-            client.index_remove("test", "age_index", policy)
+            as_connection.index_remove("test", "age_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "age_index1", policy)
+            as_connection.index_remove("test", "age_index1", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "addr_index", policy)
+            as_connection.index_remove("test", "addr_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_list_index", policy)
+            as_connection.index_remove("test", "numeric_list_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_list_index", policy)
+            as_connection.index_remove("test", "string_list_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_index", policy)
+            as_connection.index_remove("test", "numeric_map_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_map_index", policy)
+            as_connection.index_remove("test", "string_map_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_values_index", policy)
+            as_connection.index_remove("test", "numeric_map_values_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_map_values_index", policy)
+            as_connection.index_remove("test", "string_map_values_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "age_index_none", policy)
+            as_connection.index_remove("test", "age_index_none", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "sal_index")
+            as_connection.index_remove("test", "sal_index")
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_list_cdt_index", policy)
+            as_connection.index_remove("test", "numeric_list_cdt_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_cdt_index", policy)
+            as_connection.index_remove("test", "numeric_map_cdt_index", policy)
         except e.IndexNotFound:
             pass
 
@@ -281,18 +280,18 @@ class TestQuery(TestBaseClass):
         ]
         for name in blob_index_names_to_remove:
             try:
-                client.index_remove("test", name, policy)
+                as_connection.index_remove("test", name, policy)
             except e.IndexNotFound:
                 pass
 
         for i in range(10):
             key = ("test", "demo", i)
-            client.remove(key)
+            as_connection.remove(key)
 
         key = ("test", "demo", 122)
-        client.remove(key)
+        as_connection.remove(key)
         key = ("test", None, 145)
-        client.remove(key)
+        as_connection.remove(key)
 
     def test_query_with_correct_parameters_hi(self):
         """
@@ -988,6 +987,15 @@ class TestQuery(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_creating_query_using_constructor_in_aerospike_module(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter(action="always", category=DeprecationWarning)
+            query = aerospike.Query("test", "demo")
+            assert len(w) == 1
+
+        with pytest.raises(e.ClientError):
+            query.select("bin1")
 
     def test_query_with_correct_parameters_without_connection(self):
         """
