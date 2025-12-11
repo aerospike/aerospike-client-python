@@ -1120,6 +1120,19 @@ class LoopVarBool(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_BOOL
 
 
+# TODO: remove?
+# class LoopVarInfinity(LoopVar):
+#     _op = aerospike._AS_EXP_LOOPVAR_INF
+
+
+class LoopVarNil(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_NIL
+
+
+class LoopVarGeoJson(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_GEOJSON
+
+
 class ResultRemove(_BaseExpr):
     """
     Indicates entry deletion for modify_by_path.
