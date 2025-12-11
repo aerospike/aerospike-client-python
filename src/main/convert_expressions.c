@@ -660,6 +660,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_LOOPVAR_STR:
         case _AS_EXP_LOOPVAR_BOOL:
         case _AS_EXP_LOOPVAR_BLOB:
+        case _AS_EXP_LOOPVAR_NIL:
+        case _AS_EXP_LOOPVAR_GEOJSON:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -686,6 +688,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             case _AS_EXP_LOOPVAR_BOOL:
                 APPEND_ARRAY(0, as_exp_loopvar_bool(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_NIL:
+                APPEND_ARRAY(0, as_exp_loopvar_nil(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_GEOJSON:
+                APPEND_ARRAY(0, as_exp_loopvar_geojson(lval1));
                 break;
             }
 
