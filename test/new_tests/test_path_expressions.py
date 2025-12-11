@@ -382,7 +382,7 @@ class TestPathExprOperations:
             ctx=[
                 cdt_ctx.cdt_ctx_all_children_with_filter(expression=1)
             ],
-            flags=aerospike.CDT_SELECT_VALUES
+            flags=aerospike.EXP_PATH_SELECT_VALUE
         )
         ops = [
             op
