@@ -1820,13 +1820,13 @@ Transaction State
 
         Return the list of map values of the nodes finally selected by the context.
         This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
-        source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUES`.
+        source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
 
     .. data:: EXP_PATH_SELECT_MAP_KEYS
 
         Return the list of map keys of the nodes finally selected by the context.
 
-    .. data:: EXP_PATH_SELECT_MAP_KEY_VALUES
+    .. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
 
         Returns the list of map (key, value) pairs of the nodes finally selected
         by the context. This is a synonym for setting both
