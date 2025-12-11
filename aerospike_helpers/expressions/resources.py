@@ -10,6 +10,7 @@ from typing import List, Optional, Tuple, Union, Dict, Any
 class _Keys:
     VALUE_TYPE_KEY = "value_type"
     BIN_KEY = "bin"
+    RETURN_TYPE_KEY = "return_type"
     CTX_KEY = "ctx"
     VALUE_KEY = "val"
     LIST_POLICY_KEY = "list_policy"
