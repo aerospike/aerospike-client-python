@@ -328,7 +328,6 @@ class TestPathExprOperations:
                 aerospike.EXP_PATH_SELECT_MAP_KEY,
                 ["book", "ferry", "food", "game", "plants", "stickers"]
             ),
-            # TODO: need to document this better
             pytest.param(
                 aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE,
                 [
@@ -430,8 +429,8 @@ class TestPathExprOperations:
         ]
 
         bin_expr=MapBin(bin=self.MAP_OF_NESTED_MAPS_BIN_NAME)
-        modify_expr = ModifyByPath(ctx=ctx, return_type=ResultType.MAP, mod_exp=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR, flags=aerospike.EXP_PATH_MODIFY_DEFAULT, bin=bin_expr).compile()
-        select_expr = SelectByPath(ctx=ctx, return_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
+        modify_expr = ModifyByPath(ctx=ctx, value_type=ResultType.MAP, mod_exp=self.SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR, flags=aerospike.EXP_PATH_MODIFY_DEFAULT, bin=bin_expr).compile()
+        select_expr = SelectByPath(ctx=ctx, value_type=ResultType.LIST, flags=aerospike.EXP_LOOPVAR_VALUE, bin=bin_expr).compile()
         ops = [
             expr_ops.expression_write(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=modify_expr),
             expr_ops.expression_read(bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME, expression=select_expr)
