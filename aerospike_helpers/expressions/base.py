@@ -1153,18 +1153,18 @@ class SelectByPath(_BaseExpr):
     """
     _op = aerospike._AS_EXP_CODE_CALL_SELECT
 
-    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, flags: int, bin: _BaseExpr):
+    def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, flags: int, bin: _BaseExpr):
         """
         Args:
             ctx: list of CDT contexts. This cannot be None or an empty list.
-            return_type: Return type specifier.
+            value_type: Return type specifier.
             flags: See :ref:`exp_path_select_flags` for possible values.
             bin: Bin expression to which this expression applies.
 
         :return: (expression)
         """
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.VALUE_TYPE_KEY: value_type,
             _Keys.CTX_KEY: ctx,
             aerospike._CDT_FLAGS_KEY: flags,
         }
@@ -1173,18 +1173,18 @@ class SelectByPath(_BaseExpr):
 
 class ModifyByPath(_BaseExpr):
     """
-    Constructs a CDT apply operation.
+    Constructs an apply by path operation.
 
     The results of the evaluation of the modifying expression will replace the
     selected map, and the changes are written back to storage.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 
-    def __init__(self, ctx: list[_cdt_ctx], return_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
+    def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
         """
         Args:
             ctx: list of CDT contexts. This cannot be None or an empty list.
-            return_type: Return type specifier.
+            value_type: Value type specifier.
             mod_exp: Compiled expression to apply.
             flags: See :ref:`exp_path_modify_flags` for possible values.
             bin: Bin expression to which this expression applies.
@@ -1192,7 +1192,7 @@ class ModifyByPath(_BaseExpr):
         :return: (expression)
         """
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.VALUE_TYPE_KEY: value_type,
             _Keys.CTX_KEY: ctx,
             aerospike._CDT_FLAGS_KEY: flags,
             aerospike._CDT_APPLY_MOD_EXP_KEY: mod_exp

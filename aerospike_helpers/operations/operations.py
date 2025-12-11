@@ -140,7 +140,7 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
     Create path expression select operation.
 
     Args:
-        bin_name: Bin name
+        bin_name: Name of bin where this select operation is performed against.
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
         flags: See :ref:`exp_path_select_flags` for the set of valid flags for this function.
 
