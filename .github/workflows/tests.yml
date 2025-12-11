@@ -159,33 +159,17 @@ jobs:
     - name: Copy over source files to build dir
       if: ${{ !cancelled() }}
       # The build/temp*/src/main directory will contain a hierarchy of object .o files
-      # But the source files must be stored in the same folder hierarchy at build/temp*/src/main/src/main
+      # In the same folder hierarchy as src/main
+      # But the source files must be stored with its corresponding .o file
       run: |
+        # working-directory doesn't support glob paths
         cd build/temp*/src/main
-        mkdir -p src/main/
-        mkdir -p cdt_types/src/main/cdt_types
-        mkdir -p client/src/main/client
-        mkdir -p geospatial/src/main/geospatial
-        mkdir -p global_hosts/src/main/global_hosts
-        mkdir -p key_ordered_dict/src/main/key_ordered_dict
-        mkdir -p nullobject/src/main/nullobject
-        mkdir -p query/src/main/query
-        mkdir -p scan/src/main/scan
-        mkdir -p transaction/src/main/transaction
-        mkdir -p config_provider/src/main/config_provider
-
-        cd ../../../../
-        cp src/main/*.c build/temp*/src/main/src/main
-        cp src/main/cdt_types/*.c build/temp*/src/main/cdt_types/src/main/cdt_types/
-        cp src/main/client/*.c build/temp*/src/main/client/src/main/client/
-        cp src/main/geospatial/*.c build/temp*/src/main/geospatial/src/main/geospatial/
-        cp src/main/global_hosts/*.c build/temp*/src/main/global_hosts/src/main/global_hosts/
-        cp src/main/key_ordered_dict/*.c build/temp*/src/main/key_ordered_dict/src/main/key_ordered_dict/
-        cp src/main/nullobject/*.c build/temp*/src/main/nullobject/src/main/nullobject/
-        cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
-        cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
-        cp src/main/transaction/*.c build/temp*/src/main/transaction/src/main/transaction/
-        cp src/main/config_provider/*.c build/temp*/src/main/config_provider/src/main/config_provider/
+        # Cannot use -exec or we will recursively create new folders and "find" will also iterate on them
+        dirs=$(find . -type d)
+        for dir in $dirs; do
+          mkdir -p $dir/src/main/$dir
+          mv $GITHUB_WORKSPACE/src/main/$dir/*.c $dir/src/main/$dir/
+        done
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
