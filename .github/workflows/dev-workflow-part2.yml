@@ -44,6 +44,8 @@ jobs:
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       version: ${{ needs.bump-dev-number.outputs.new_version }}
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
+      oidc-provider-name: clients-gh-aerospike
+      oidc-audience: clients-gh-aerospike
 
   create-jfrog-release-bundle:
     needs: [
