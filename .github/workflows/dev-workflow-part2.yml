@@ -11,7 +11,7 @@ on:
         required: false
         default: false
         type: boolean
-        description: Dry run
+        description: Don't create tags and don't upload to JFrog
 
 jobs:
   bump-dev-number:
@@ -43,6 +43,7 @@ jobs:
       jf-metadata-build-id: ${{ github.run_number }}-metadata
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       version: ${{ needs.bump-dev-number.outputs.new_version }}
+      dry-run: ${{ inputs.dry-run }}
 
   create-jfrog-release-bundle:
     needs: [
