@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
-      dry-run: ${{ inputs.dry-run }}
+      dry-run: ${{ github.event == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
@@ -43,7 +43,7 @@ jobs:
       jf-metadata-build-id: ${{ github.run_number }}-metadata
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       version: ${{ needs.bump-dev-number.outputs.new_version }}
-      dry-run: ${{ inputs.dry-run }}
+      dry-run: ${{ github.event == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
 
   create-jfrog-release-bundle:
     needs: [
@@ -57,6 +57,7 @@ jobs:
       jf-bundle-name: python-client-release
       version: ${{ needs.bump-dev-number.outputs.new_version }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
+      dry-run: ${{ github.event == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
 
   # We don't want the artifacts in JFrog to also exist in Github
   delete-artifacts:
