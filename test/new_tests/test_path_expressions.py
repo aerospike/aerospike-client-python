@@ -407,7 +407,7 @@ class TestPathExprOperations:
 
     @pytest.mark.parametrize("ctx_list, expected_context", [
         (None, pytest.raises(e.ParamError)),
-        ([], pytest.raises(e.InvalidRequest))
+        ([], pytest.raises(e.ClientError))
     ])
     @pytest.mark.parametrize(
         "op_method, op_kwargs", [

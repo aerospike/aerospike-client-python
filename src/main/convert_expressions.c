@@ -1672,8 +1672,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case _AS_EXP_CODE_CALL_SELECT:
         case _AS_EXP_CODE_CALL_APPLY:
-            if (get_int64_t(err, "return_type", temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
