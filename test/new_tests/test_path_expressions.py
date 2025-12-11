@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -38,7 +38,9 @@ class TestPathExprOperations:
             },
             "b": 2,
             "c": True,
-            "d": bytearray(b'123')
+            "d": bytearray(b'123'),
+            "e": aerospike.null(),
+            "f": aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
         },
         LIST_BIN_NAME: [
             {
@@ -226,6 +228,17 @@ class TestPathExprOperations:
                 [bytearray(b'123')],
                 id="LoopVarBlob"
             ),
+            pytest.param(
+                Eq(LoopVarNil(aerospike.EXP_LOOPVAR_VALUE), None),
+                [bytearray(b'123')],
+                id="LoopVarNil"
+            ),
+            pytest.param(
+                Eq(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')),
+                [bytearray(b'123')],
+                id="LoopVarGeoJson"
+            ),
+
         ]
     )
     def test_exp_loopvar_types(self, filter_expr, expected_bin_value):
