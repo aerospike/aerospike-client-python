@@ -85,6 +85,8 @@ jobs:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
 
   # We don't want the artifacts in JFrog to also exist in Github
   delete-artifacts:
