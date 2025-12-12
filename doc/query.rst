@@ -12,6 +12,8 @@ Overview
 Constructing A Query
 --------------------
 
+.. warning:: :meth:`aerospike.Query` should not be called directly to create a :class:`~aerospike.Query` object.
+
 The query object is used for executing queries over a secondary index of a specified set.
 It can be created by calling :meth:`aerospike.Client.query`.
 
@@ -25,8 +27,8 @@ In this case, if the set is initialized to :py:obj:`None`, then the query will o
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
-    the deprecated `predicate expressions <https://aerospike.com/docs/server/guide/predicate>`_.
-    For more details, read this `guide <https://aerospike.com/docs/server/guide/query>`_.
+    the deprecated `predicate expressions`.
+    For more details, read this `guide <https://aerospike.com/docs/develop/learn/queries/secondary-index>`_.
 
 Writing Using Query
 -------------------
@@ -54,8 +56,8 @@ Finally, the query is invoked using one of these methods:
 - :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
-    `Queries <https://aerospike.com/docs/server/guide/query.html>`_ and \
-    `Managing Queries <https://aerospike.com/docs/server/operations/manage/queries/>`_.
+    `Queries <https://aerospike.com/docs/develop/learn/queries/>`_ and \
+    `Managing Queries <https://aerospike.com/docs/database/manage/cluster/queries>`_.
 
 Fields
 ======
@@ -244,13 +246,13 @@ Assume this boilerplate code is run before all examples below:
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
-        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_. If no \
+        `UDF <https://aerospike.com/docs/database/learn/architecture/udf/#stream-udfs>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/client/python/data-types/>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
         .. seealso:: `Developing Stream UDFs <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_
