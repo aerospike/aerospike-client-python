@@ -38,8 +38,8 @@ class TestPathExprOperations:
             },
             "b": 2,
             "c": True,
-            "d": bytearray(b'123'),
-            "e": aerospike.null(),
+            "d": b'123',
+            "e": None,
             "f": aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
         },
         LIST_BIN_NAME: [
