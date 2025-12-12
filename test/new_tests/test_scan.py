@@ -7,7 +7,7 @@ from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
 
 import aerospike
-
+import warnings
 
 class TestScan(TestBaseClass):
     @pytest.fixture(autouse=True)

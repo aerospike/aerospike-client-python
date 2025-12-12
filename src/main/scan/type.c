@@ -124,6 +124,14 @@ PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
+    if (self->client == NULL) {
+        // Use stack count of 2 so we know which Python function called this
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "aerospike.Scan is deprecated. Please use "
+                     "aerospike.Client.scan() instead",
+                     2);
+    }
+
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
 
