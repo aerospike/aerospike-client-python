@@ -230,12 +230,12 @@ class TestPathExprOperations:
             ),
             pytest.param(
                 Eq(LoopVarNil(aerospike.EXP_LOOPVAR_VALUE), None),
-                [bytearray(b'123')],
+                [None],
                 id="LoopVarNil"
             ),
             pytest.param(
                 Eq(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')),
-                [bytearray(b'123')],
+                [aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')],
                 id="LoopVarGeoJson"
             ),
 
