@@ -31,9 +31,33 @@ jobs:
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
+  reupload-github-artifacts-as-one:
+    needs: rebuild-artifacts-with-new-dev-num
+    name: Reupload Github artifacts as one artifact
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - name: Download artifacts
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: '*.build'
+        merge-multiple: true
+        path: artifacts
+
+    - name: Reupload artifacts as one
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        # Not actually signed...
+        name: signed-artifacts
+        path: ./artifacts
+
   upload-github-artifacts-to-jfrog:
     needs: [
-      rebuild-artifacts-with-new-dev-num
+      reupload-github-artifacts-as-one
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@489212b8911ea431131ed468599db705f0767274
     with:
