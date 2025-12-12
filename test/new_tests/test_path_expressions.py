@@ -29,7 +29,9 @@ class TestPathExprOperations:
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     NESTED_LIST_BIN_NAME = "list_of_lists"
-
+    MAP_WITH_GEOJSON_BIN_NAME = "map_w_geo_bin"
+    
+    GEOJSON_VALUE = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
     RECORD_BINS = {
         MAP_BIN_NAME: {
             "a": 1,
@@ -40,7 +42,9 @@ class TestPathExprOperations:
             "c": True,
             "d": b'123',
             "e": None,
-            "f": aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
+        },
+        MAP_WITH_GEOJSON_BIN_NAME: {
+            "f": GEOJSON_VALUE
         },
         LIST_BIN_NAME: [
             {
@@ -232,13 +236,7 @@ class TestPathExprOperations:
                 Eq(LoopVarNil(aerospike.EXP_LOOPVAR_VALUE), None),
                 [None],
                 id="LoopVarNil"
-            ),
-            pytest.param(
-                Eq(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')),
-                [aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')],
-                id="LoopVarGeoJson"
-            ),
-
+            )
         ]
     )
     def test_exp_loopvar_types(self, filter_expr, expected_bin_value):
@@ -253,11 +251,22 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            # The list should only have one element anyways
-            if type(bins[self.MAP_BIN_NAME][0]) == aerospike.GeoJSON:
-                assert bins[self.MAP_BIN_NAME][0].geo_data == expected_bin_value[0].geo_data
-            else:
-                assert bins[self.MAP_BIN_NAME] == expected_bin_value
+            assert bins[self.MAP_BIN_NAME] == expected_bin_value
+
+    def test_exp_loopvar_geojson(self):
+        filter_expr = Eq(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), self.GEOJSON_VALUE)
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_WITH_GEOJSON_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=filter_expr.compile())
+                ],
+                flags=aerospike.EXP_PATH_SELECT_VALUE
+            )
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_WITH_GEOJSON_BIN_NAME][0].geo_data == self.GEOJSON_VALUE.geo_data
 
     LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUE)), 2)
 
