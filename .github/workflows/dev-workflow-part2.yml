@@ -80,7 +80,7 @@ jobs:
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-names: ${{ vars.JFROG_BUILD_NAME }}
+      jf-build-names: ${{ format('{0}:{1}', vars.JFROG_BUILD_NAME, needs.bump-dev-number.outputs.new_version) }}
       jf-bundle-name: python-client-release
       version: ${{ needs.bump-dev-number.outputs.new_version }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
