@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -254,7 +254,16 @@ class TestPathExprOperations:
             assert bins[self.MAP_BIN_NAME] == expected_bin_value
 
     def test_exp_loopvar_geojson(self):
-        filter_expr = Eq(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), self.GEOJSON_VALUE)
+        rectangle = aerospike.GeoJSON({'type': "Polygon",
+                         'coordinates': [
+                          [[-80.590000, 28.60000],
+                           [-80.590000, 28.61800],
+                           [-80.620000, 28.61800],
+                           [-80.620000, 28.60000],
+                           [-80.590000, 28.60000]]]})
+
+        # Check if point is within rect region
+        filter_expr = CmpGeo(LoopVarGeoJson(aerospike.EXP_LOOPVAR_VALUE), rectangle)
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_WITH_GEOJSON_BIN_NAME,
