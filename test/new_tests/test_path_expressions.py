@@ -253,7 +253,11 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_BIN_NAME] == expected_bin_value
+            # The list should only have one element anyways
+            if type(bins[self.MAP_BIN_NAME][0]) == aerospike.GeoJSON:
+                assert bins[self.MAP_BIN_NAME][0].geo_data == expected_bin_value[0].geo_data
+            else:
+                assert bins[self.MAP_BIN_NAME] == expected_bin_value
 
     LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUE)), 2)
 
