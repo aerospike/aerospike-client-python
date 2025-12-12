@@ -355,7 +355,7 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     aerospike_udf_remove(self->as, &err, info_policy_p, filename);
     Py_END_ALLOW_THREADS
 
-    if ((&err)->code != AEROSPIKE_OK) {
+    if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
