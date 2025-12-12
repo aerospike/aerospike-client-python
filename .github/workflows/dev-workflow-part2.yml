@@ -57,6 +57,7 @@ jobs:
 
   upload-github-artifacts-to-jfrog:
     needs: [
+      bump-dev-number,
       reupload-github-artifacts-as-one
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@489212b8911ea431131ed468599db705f0767274
