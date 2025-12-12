@@ -799,7 +799,19 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **use_services_alternate** (:class:`bool`)
-            Flag to signify if "services-alternate" should be used instead of "services".
+            Flag to signify if alternate IP address discovery info commands should be used.
+
+            If false, use:
+            IP address: service-clear-std
+            TLS IP address: service-tls-std
+            Peers addresses: peers-clear-std
+            Peers TLS addresses: peers-tls-std
+
+            If true, use:
+            IP address: service-clear-alt
+            TLS IP address: service-tls-alt
+            Peers addresses: peers-clear-alt
+            Peers TLS addresses: peers-tls-alt
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
