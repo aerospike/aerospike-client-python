@@ -1001,15 +1001,6 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    def test_creating_query_using_constructor_in_aerospike_module(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=DeprecationWarning)
-            query = aerospike.Query("test", "demo")
-            assert len(w) == 1
-
-        with pytest.raises(e.ClientError):
-            query.select("bin1")
-
     def test_query_with_correct_parameters_without_connection(self):
         """
         Invoke query() with correct arguments without connection
@@ -1339,3 +1330,7 @@ class TestQuery(TestBaseClass):
             query2 = query2.where_with_expr(expr_base64_encoded, predicate)
             recs = query2.results()
             assert len(recs) == expected_rec_count
+
+    def test_creating_query_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Query("test", "demo")
