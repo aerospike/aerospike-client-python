@@ -72,6 +72,11 @@ jobs:
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
+  # We don't want the artifacts in JFrog to also exist in Github
+  delete-artifacts:
+    needs: upload-github-artifacts-to-jfrog
+    uses: ./.github/workflows/delete-artifacts.yml
+
   create-jfrog-release-bundle:
     needs: [
       bump-dev-number,
@@ -88,7 +93,20 @@ jobs:
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: upload-github-artifacts-to-jfrog
-    uses: ./.github/workflows/delete-artifacts.yml
+  promote-release-bundle-to-dev:
+    runs-on: ubuntu-24.04
+    needs: [
+      bump-dev-number,
+      create-jfrog-release-bundle
+    ]
+    steps:
+    - name: Setup JFrog CLI
+    - uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      env:
+        JF_URL: https://artifact.aerospike.io
+        jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ inputs.oidc-provider-name }}
+        oidc-audience: ${{ inputs.oidc-audience }}
+
+    - run: jf rbp python-client-release ${{ needs.bump-dev-number.outputs.new_version }} DEV
