@@ -309,6 +309,7 @@ TXN_STATE_VERIFIED: Literal[1]
 TXN_STATE_COMMITTED: Literal[2]
 TXN_STATE_ABORTED: Literal[3]
 
+
 @final
 class CDTInfinite:
     def __init__(self, *args, **kwargs) -> None: ...

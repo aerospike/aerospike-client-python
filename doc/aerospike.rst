@@ -343,6 +343,64 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any:
+
+                - :ref:`aerospike_policies`
+                - :ref:`metadata_dict`
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
+            Invalid policy example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
+                client.get(key, policy=policy)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
@@ -1737,3 +1795,77 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+..
+    Path Expression Flags
+    ---------------------
+
+    .. data:: EXP_PATH_SELECT_MATCHING_TREE
+
+        Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+
+    .. data:: EXP_PATH_SELECT_VALUE
+
+        Return the list of the values of the nodes finally selected by the context.
+
+        For maps, this returns the value of each (key, value) pair.
+
+    .. data:: EXP_PATH_SELECT_LIST_VALUE
+
+        Return the list of the values of the nodes finally selected by the context.
+        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+        source code that you're expecting a list.
+
+    .. data:: EXP_PATH_SELECT_MAP_VALUE
+
+        Return the list of map values of the nodes finally selected by the context.
+        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+        source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
+
+    .. data:: EXP_PATH_SELECT_MAP_KEYS
+
+        Return the list of map keys of the nodes finally selected by the context.
+
+    .. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
+
+        Returns the list of map (key, value) pairs of the nodes finally selected
+        by the context. This is a synonym for setting both
+        :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE`` bits together.
+        The list is formatted as ``[key0, value0, key1, value1...]``.
+
+    .. data:: EXP_PATH_SELECT_NO_FAIL
+
+        If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+        do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+    .. _exp_path_modify_flags:
+
+    CDT Modify Flags
+    ----------------
+
+    .. data:: EXP_PATH_MODIFY_DEFAULT
+
+        If the expression in the context hits an invalid type, the operation
+        will fail.  This is the default behavior.
+
+    .. data:: EXP_PATH_MODIFY_NO_FAIL
+
+        If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+        not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+    .. _exp_loopvar_metadata:
+
+    Expression Loop Variable Metadata
+    ---------------------------------
+
+    .. data:: EXP_LOOPVAR_KEY
+
+        The key associated with this value if part of a key-value pair of a map.
+
+    .. data:: EXP_LOOPVAR_VALUE
+
+        List item, or value from a map key-value pair.
+
+    .. data:: EXP_LOOPVAR_INDEX
+
+        The index if this element was part of a list.
