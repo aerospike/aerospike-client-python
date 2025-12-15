@@ -1,0 +1,1116 @@
+2025-11-21T21:33:33.4706866Z ==8329== 168 bytes in 1 blocks are possibly lost in loss record 5,761 of 7,564
+2025-11-21T21:33:33.4708389Z ==8329==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+2025-11-21T21:33:33.4709382Z ==8329==    by 0x49C0249: new_keys_object (dictobject.c:570)
+2025-11-21T21:33:33.4710197Z ==8329==    by 0x49C0249: insert_to_emptydict (dictobject.c:1141)
+2025-11-21T21:33:33.4710991Z ==8329==    by 0x49C2490: PyDict_SetItemString (dictobject.c:3509)
+2025-11-21T21:33:33.4711859Z ==8329==    by 0x97E1978: metadata_to_pyobject (conversions.c:2152)
+2025-11-21T21:33:33.4712762Z ==8329==    by 0x97E1ACD: record_to_pyobject (conversions.c:1886)
+2025-11-21T21:33:33.4713554Z ==8329==    by 0x97CE78B: AerospikeClient_Get_Invoke (get.c:101)
+2025-11-21T21:33:33.4714294Z ==8329==    by 0x97CE868: AerospikeClient_Get (get.c:173)
+2025-11-21T21:33:33.4715129Z ==8329==    by 0x49AA662: method_vectorcall_VARARGS_KEYWORDS (descrobject.c:348)
+2025-11-21T21:33:33.4716019Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4717054Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4717496Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4717930Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.4718520Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4719292Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4719985Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4720503Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4720974Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4721400Z ==8329==    by 0x49A7339: PyVectorcall_Call (call.c:243)
+2025-11-21T21:33:33.4721801Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4722224Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4722681Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4723083Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4723417Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4723740Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4724068Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4724427Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4724758Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4725084Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4725444Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4725807Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4726351Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4726690Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4727047Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4727382Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4727730Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4728088Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4728440Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4728797Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4729118Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4729443Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4729787Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4730111Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4730431Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4730942Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.4731289Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.4731612Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.4731933Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.4732289Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.4732661Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.4733012Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4733500Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4733847Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4734190Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4734520Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4735003Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4735363Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4735677Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4736015Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.4736537Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4736867Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4737181Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4737499Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4737844Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4738165Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4738484Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4738839Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4739201Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4739519Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4739839Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4740182Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4740511Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4740858Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4741208Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4741572Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4741930Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4742243Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4742585Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4742956Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4743306Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4743664Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4744028Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.4744382Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.4744707Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.4745020Z ==8329==    by 0x49A721B: _PyObject_Call (call.c:281)
+2025-11-21T21:33:33.4745327Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4745658Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4746010Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4746613Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4747084Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4747441Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4747809Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4748132Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4748460Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4748804Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4749127Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4749449Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4749803Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4750159Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4750513Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4751007Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4751337Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4751675Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4752019Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4752340Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4752660Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4752975Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4753294Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4753638Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4753960Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4754297Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4754658Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4755012Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4755327Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4755646Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4755985Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4756423Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4756739Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4757087Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4757439Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4757758Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4758094Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4758450Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4758789Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4759099Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4759420Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4759762Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4760082Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4760401Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4760761Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4761123Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4761439Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4761761Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4762104Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4762559Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4762906Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4763255Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4763602Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4763951Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4764274Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4764600Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4764941Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4765260Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4765581Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4766046Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.4766660Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.4766992Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.4767317Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.4767673Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.4768048Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.4768400Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4768717Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4769041Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4769384Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4769719Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4770029Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4770363Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4770707Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4771029Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4771353Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4771705Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4772059Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4772376Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4772699Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4773040Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4773371Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4773716Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4774073Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4774432Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4774792Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4775113Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4775451Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4775794Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4776215Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4776540Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4776890Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.4777238Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.4777564Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.4778046Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.4778396Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.4778765Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.4779120Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4779436Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4779761Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4780106Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4780439Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4780827Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4781186Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4781522Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4781969Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4782317Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4782644Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4782992Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4783342Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4783664Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4784102Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4784500Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4784830Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4785159Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.4785480Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.4785826Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4786369Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4786700Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4787047Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4787402Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4787718Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4788038Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4788385Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4788717Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4789060Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4789427Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.4789780Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4790134Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4790449Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4790769Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4791108Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4791432Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4791756Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4792110Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.4792470Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.4792792Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.4793117Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.4793465Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.4793977Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.4794343Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4794662Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4794996Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.4795336Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4795667Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4796012Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4796477Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4796795Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4797129Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4797615Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4797966Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.4798310Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4798660Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4798974Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4799295Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.4799636Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4799958Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4800289Z ==8329==    by 0x49F94E4: _PyEval_EvalCodeWithName (ceval.c:4361)
+2025-11-21T21:33:33.4800619Z ==8329==    by 0x49F9476: PyEval_EvalCodeEx (ceval.c:4377)
+2025-11-21T21:33:33.4800945Z ==8329==    by 0x4A72A9E: PyEval_EvalCode (ceval.c:828)
+2025-11-21T21:33:33.4801283Z ==8329==    by 0x4A7188F: builtin_exec_impl (bltinmodule.c:1026)
+2025-11-21T21:33:33.4801638Z ==8329==    by 0x4A7188F: builtin_exec (bltinmodule.c.h:396)
+2025-11-21T21:33:33.4802018Z ==8329==    by 0x49C7F5F: cfunction_vectorcall_FASTCALL (methodobject.c:430)
+2025-11-21T21:33:33.4802424Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4802783Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4803106Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4803453Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4803803Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4804131Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4804454Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4804816Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.4805173Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.4805508Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.4805831Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.4806428Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.4806762Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.4807083Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.4807407Z ==8329==    by 0x4A8DCB6: pymain_run_module (main.c:291)
+2025-11-21T21:33:33.4807717Z ==8329==    by 0x4A8D98E: pymain_run_python (main.c:596)
+2025-11-21T21:33:33.4808020Z ==8329==    by 0x4A8D98E: Py_RunMain (main.c:681)
+2025-11-21T21:33:33.4808318Z ==8329==    by 0x4A8D4CC: Py_BytesMain (main.c:735)
+2025-11-21T21:33:33.4808651Z ==8329==    by 0x4C40D8F: (below main) (libc_start_call_main.h:58)
+2025-11-21T21:33:33.4808941Z ==8329== 
+
+2025-11-21T21:33:33.5964768Z ==8329== 342 (160 direct, 182 indirect) bytes in 2 blocks are definitely lost in loss record 6,455 of 7,564
+2025-11-21T21:33:33.5965197Z ==8329==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+2025-11-21T21:33:33.5965468Z ==8329==    by 0x4A1F5D7: _PyObject_GC_Alloc (gcmodule.c:2267)
+2025-11-21T21:33:33.5965707Z ==8329==    by 0x4A1F5D7: _PyObject_GC_Malloc (gcmodule.c:2294)
+2025-11-21T21:33:33.5965938Z ==8329==    by 0x4A1F6CF: _PyObject_GC_NewVar (gcmodule.c:2323)
+2025-11-21T21:33:33.5966385Z ==8329==    by 0x49D040E: tuple_alloc (tupleobject.c:92)
+2025-11-21T21:33:33.5966621Z ==8329==    by 0x49D040E: PyTuple_New (tupleobject.c:110)
+2025-11-21T21:33:33.5966864Z ==8329==    by 0x97E2497: error_to_pyobject (conversions.c:2187)
+2025-11-21T21:33:33.5967391Z ==8329==    by 0x97F1074: raise_exception_base (exception.c:473)
+2025-11-21T21:33:33.5967647Z ==8329==    by 0x97D4CFF: AerospikeClient_Operate (operate.c:1059)
+2025-11-21T21:33:33.5967967Z ==8329==    by 0x49AA662: method_vectorcall_VARARGS_KEYWORDS (descrobject.c:348)
+2025-11-21T21:33:33.5968242Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5968480Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5968674Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5968925Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.5969156Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5969363Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5969586Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5969845Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5970307Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5970531Z ==8329==    by 0x49A7339: PyVectorcall_Call (call.c:243)
+2025-11-21T21:33:33.5970731Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5970975Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5971209Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5971397Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5971620Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5971807Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5972041Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5972270Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5972709Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5972946Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5973911Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5974182Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5974917Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5975318Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5975720Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5975935Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5976435Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5976654Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5976906Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5977450Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5978182Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5979006Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5979622Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5981025Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5981911Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5982190Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5982426Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5983333Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5983880Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5984380Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5984638Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5984870Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5985307Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5985558Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5985787Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5986009Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5986419Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5986648Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5986830Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5987070Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.5987298Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5987616Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5987809Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5988246Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5988481Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5988673Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5988889Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5989137Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5989353Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5989540Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5989765Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5989984Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5990194Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5990451Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5990681Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5990922Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5991149Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5991335Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5991568Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5991785Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5991985Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5992209Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5992453Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5992675Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5992873Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5993071Z ==8329==    by 0x49A721B: _PyObject_Call (call.c:281)
+2025-11-21T21:33:33.5993245Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5993481Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5993699Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5993887Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5994101Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5994342Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5994563Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5994747Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5994983Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5995200Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5995571Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5995968Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5996475Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5996701Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5997631Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6001341Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6001815Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6002206Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.6002606Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6002806Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6003020Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6003581Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.6003862Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.6004286Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6004488Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6004715Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6004959Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6005357Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6005547Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6005784Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6006011Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6006465Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6006694Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6006961Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6007190Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6007374Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6007614Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.6007842Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6008056Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6008243Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.6008667Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.6016269Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6016540Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6016783Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6017064Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6017305Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6017569Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6017816Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6018049Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6018263Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6018526Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6018752Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.6019005Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6019234Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6019427Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6020132Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6020366Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6020576Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6020802Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6021054Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.6021278Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.6021483Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.6021702Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.6021954Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.6022212Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.6022439Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6022794Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6023043Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.6023266Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6023485Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6023669Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.6023915Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.6024135Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6024333Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6024544Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6024799Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6025031Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6025224Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6025473Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6025696Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6025914Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6026306Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6026536Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.6026786Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6027006Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6027197Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6027428Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6027651Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6027848Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6028068Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6028316Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.6028529Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.6028734Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.6028940Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.6029189Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.6029429Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.6029649Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6029839Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6030070Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.6030300Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6030678Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6030920Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6031132Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6031317Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6031535Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6031736Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6031954Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6032195Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6032417Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6032599Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6032987Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6033418Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6033630Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6033813Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.6034045Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.6034272Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6034468Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6034687Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6034946Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6035162Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6035352Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6035580Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6035812Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6036024Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6036417Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6036640Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.6036884Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6037108Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6037291Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6037526Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6037740Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6037937Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6038156Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6038411Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.6038630Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.6038832Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.6039045Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.6039289Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.6039536Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.6039757Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6039935Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6040165Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.6040381Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6040597Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6041010Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6041235Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6041421Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6041643Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6041866Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6042073Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.6042320Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6042537Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6042728Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6042969Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.6043203Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6043575Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6043818Z ==8329==    by 0x49F94E4: _PyEval_EvalCodeWithName (ceval.c:4361)
+2025-11-21T21:33:33.6044032Z ==8329==    by 0x49F9476: PyEval_EvalCodeEx (ceval.c:4377)
+2025-11-21T21:33:33.6044229Z ==8329==    by 0x4A72A9E: PyEval_EvalCode (ceval.c:828)
+2025-11-21T21:33:33.6044465Z ==8329==    by 0x4A7188F: builtin_exec_impl (bltinmodule.c:1026)
+2025-11-21T21:33:33.6044688Z ==8329==    by 0x4A7188F: builtin_exec (bltinmodule.c.h:396)
+2025-11-21T21:33:33.6044983Z ==8329==    by 0x49C7F5F: cfunction_vectorcall_FASTCALL (methodobject.c:430)
+2025-11-21T21:33:33.6045244Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6045469Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6045664Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6045901Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6046341Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6046552Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6046771Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6047026Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.6047247Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.6047439Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.6047668Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.6047900Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.6048101Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.6048314Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.6048520Z ==8329==    by 0x4A8DCB6: pymain_run_module (main.c:291)
+2025-11-21T21:33:33.6048721Z ==8329==    by 0x4A8D98E: pymain_run_python (main.c:596)
+2025-11-21T21:33:33.6048914Z ==8329==    by 0x4A8D98E: Py_RunMain (main.c:681)
+2025-11-21T21:33:33.6049101Z ==8329==    by 0x4A8D4CC: Py_BytesMain (main.c:735)
+2025-11-21T21:33:33.6049345Z ==8329==    by 0x4C40D8F: (below main) (libc_start_call_main.h:58)
+2025-11-21T21:33:33.6049476Z ==8329== 
+
+2025-11-21T21:33:33.5082189Z ==8329== 207 bytes in 2 blocks are definitely lost in loss record 5,964 of 7,564
+2025-11-21T21:33:33.5082759Z ==8329==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+2025-11-21T21:33:33.5083107Z ==8329==    by 0x49DCEAB: PyUnicode_New (unicodeobject.c:1451)
+2025-11-21T21:33:33.5083484Z ==8329==    by 0x49E5338: _PyUnicode_JoinArray (unicodeobject.c:10363)
+2025-11-21T21:33:33.5083824Z ==8329==    by 0x49E5145: PyUnicode_Join (unicodeobject.c:10255)
+2025-11-21T21:33:33.5084108Z ==8329==    by 0x4A336D5: join_list_unicode (accu.c:12)
+2025-11-21T21:33:33.5084357Z ==8329==    by 0x4A3365D: flush_accumulator (accu.c:40)
+2025-11-21T21:33:33.5084633Z ==8329==    by 0x4A335DE: _PyAccu_FinishAsList (accu.c:81)
+2025-11-21T21:33:33.5084878Z ==8329==    by 0x848322E: encoder_call (_json.c:1303)
+2025-11-21T21:33:33.5085156Z ==8329==    by 0x49A5E5F: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5085491Z ==8329==    by 0x49FEFF0: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5085825Z ==8329==    by 0x49FEFF0: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5086493Z ==8329==    by 0x49FEFF0: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5086750Z ==8329==    by 0x49FEFF0: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5087064Z ==8329==    by 0x49FEFF0: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5087366Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5087620Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5087910Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5088247Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5088542Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5088868Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5089157Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5089419Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5089916Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5090296Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5090576Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5090895Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5091189Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5091447Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5091758Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.5092047Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5092242Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5092419Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5092613Z ==8329==    by 0x49A6105: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5092768Z ==8329==    by 0x49A6105: object_vacall (call.c:792)
+2025-11-21T21:33:33.5092963Z ==8329==    by 0x4A3BEA8: PyObject_CallMethodObjArgs (call.c:852)
+2025-11-21T21:33:33.5093151Z ==8329==    by 0x97F1263: AerospikeGeospatial_DoDumps (dumps.c:49)
+2025-11-21T21:33:33.5093374Z ==8329==    by 0x97E4998: get_exp_val_from_pyval (convert_expressions.c:517)
+2025-11-21T21:33:33.5093540Z ==8329==    by 0x97E6003: add_expr_macros (convert_expressions.c:682)
+2025-11-21T21:33:33.5093720Z ==8329==    by 0x97E556A: as_exp_new_from_pyobject (convert_expressions.c:1898)
+2025-11-21T21:33:33.5093860Z ==8329==    by 0x97F2E46: pyobject_to_policy_base (policy.c:336)
+2025-11-21T21:33:33.5094013Z ==8329==    by 0x97F8FB8: pyobject_to_policy_operate (policy.c:784)
+2025-11-21T21:33:33.5094180Z ==8329==    by 0x97D4119: AerospikeClient_Operate_Invoke (operate.c:936)
+2025-11-21T21:33:33.5094325Z ==8329==    by 0x97D4CCF: AerospikeClient_Operate (operate.c:1050)
+2025-11-21T21:33:33.5094464Z ==8329==    by 0x49C8011: cfunction_call (methodobject.c:543)
+2025-11-21T21:33:33.5094595Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5094745Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5094887Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5095134Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5095344Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5095595Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5095828Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5096023Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5096373Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5096621Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5096846Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5097246Z ==8329==    by 0x49A7339: PyVectorcall_Call (call.c:243)
+2025-11-21T21:33:33.5097434Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5097679Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5097899Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5098105Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5105534Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5105789Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5106197Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5106457Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5106666Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5106890Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5107354Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5107597Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5107806Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5107996Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5108142Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5108284Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5108435Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5108702Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5108930Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5109071Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5109189Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5109335Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5109478Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5109600Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5109728Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5109876Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5110013Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5110134Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5110270Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5110414Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5110562Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5110697Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5110811Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5110955Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5111084Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5111213Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5111353Z ==8329==    by 0x49FA9F6: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5111488Z ==8329==    by 0x49FA9F6: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5111600Z ==8329==    by 0x49FA9F6: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5111734Z ==8329==    by 0x49FA9F6: _PyEval_EvalFrameDefault (ceval.c:3506)
+2025-11-21T21:33:33.5111866Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5111988Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5112103Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5112236Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5112521Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5112643Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5112765Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5112913Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5113038Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5113150Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5113284Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5113416Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5113544Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5113684Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5113812Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5114043Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5114177Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5114286Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5114424Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5114557Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5114671Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5114802Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5114945Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5115075Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5115193Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5115305Z ==8329==    by 0x49A721B: _PyObject_Call (call.c:281)
+2025-11-21T21:33:33.5115430Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5115564Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5115697Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5115810Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5115942Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5116284Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5116464Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5116585Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5116720Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5116851Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5116962Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5117094Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5117241Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5117371Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5117519Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5117642Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5117754Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5117887Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5118016Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5118130Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5118261Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5118375Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5118517Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5118783Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5118895Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5119022Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5119166Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5119295Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5119408Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5119541Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5119672Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5119784Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5119912Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5120158Z ==8329==    by 0x49FB581: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5120298Z ==8329==    by 0x49FB581: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5120412Z ==8329==    by 0x49FB581: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5120543Z ==8329==    by 0x49FB581: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5120673Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5120794Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5120902Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5121033Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5121164Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5121284Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5121406Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5121556Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5121697Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5121814Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5121966Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5122109Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5122245Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5122388Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5122522Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5122663Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5122796Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5122906Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5123044Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5123186Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5123300Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5123431Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5123573Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5123702Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5123820Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5123953Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5124102Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5124244Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5124376Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5124482Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5124717Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5124846Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5124973Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5125084Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5125216Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5125346Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5125457Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5125586Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5125729Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5125861Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5125974Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5126354Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5126504Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5126626Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5126776Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5126902Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5127051Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5127181Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5127287Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5127424Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5127549Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5127667Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5127796Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5127945Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5128075Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5128195Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5128324Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5128465Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5128610Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5128738Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5128852Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5128989Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5129115Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5129247Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5129393Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5129524Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5129632Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5129770Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5129900Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5130022Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5130163Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5130289Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5130400Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5130532Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5130667Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5130941Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5131045Z ==8329==    by 0x49FE0FA: do_call_core (ceval.c:5125)
+2025-11-21T21:33:33.5131180Z ==8329==    by 0x49FE0FA: _PyEval_EvalFrameDefault (ceval.c:3582)
+2025-11-21T21:33:33.5131305Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5131421Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5131544Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5131800Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5131931Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5132038Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5132173Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5132298Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5132510Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5132659Z ==8329==    by 0x49A8010: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5132783Z ==8329==    by 0x49A8010: method_vectorcall (classobject.c:53)
+2025-11-21T21:33:33.5132932Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5133057Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5133167Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5133298Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5133426Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5133543Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5133666Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5133809Z ==8329==    by 0x49A5BDC: _PyObject_FastCallDictTstate (call.c:129)
+2025-11-21T21:33:33.5133939Z ==8329==    by 0x49A6D5B: _PyObject_Call_Prepend (call.c:489)
+2025-11-21T21:33:33.5134059Z ==8329==    by 0x4A54501: slot_tp_call (typeobject.c:6731)
+2025-11-21T21:33:33.5134181Z ==8329==    by 0x49A5EF7: _PyObject_MakeTpCall (call.c:191)
+2025-11-21T21:33:33.5134326Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:116)
+2025-11-21T21:33:33.5134471Z ==8329==    by 0x49FF723: _PyObject_VectorcallTstate (abstract.h:103)
+2025-11-21T21:33:33.5134597Z ==8329==    by 0x49FF723: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5134707Z ==8329==    by 0x49FF723: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5134839Z ==8329==    by 0x49FF723: _PyEval_EvalFrameDefault (ceval.c:3537)
+2025-11-21T21:33:33.5134965Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5135086Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5135232Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5135368Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5135473Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5135610Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5135737Z ==8329==    by 0x49A67A2: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5135863Z ==8329==    by 0x49A67A2: function_code_fastcall (call.c:330)
+2025-11-21T21:33:33.5136006Z ==8329==    by 0x49FF0D1: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5136235Z ==8329==    by 0x49FF0D1: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5136348Z ==8329==    by 0x49FF0D1: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5136477Z ==8329==    by 0x49FF0D1: _PyEval_EvalFrameDefault (ceval.c:3489)
+2025-11-21T21:33:33.5136606Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5136717Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5136983Z ==8329==    by 0x49F94E4: _PyEval_EvalCodeWithName (ceval.c:4361)
+2025-11-21T21:33:33.5137099Z ==8329==    by 0x49F9476: PyEval_EvalCodeEx (ceval.c:4377)
+2025-11-21T21:33:33.5137216Z ==8329==    by 0x4A72A9E: PyEval_EvalCode (ceval.c:828)
+2025-11-21T21:33:33.5137353Z ==8329==    by 0x4A7188F: builtin_exec_impl (bltinmodule.c:1026)
+2025-11-21T21:33:33.5137483Z ==8329==    by 0x4A7188F: builtin_exec (bltinmodule.c.h:396)
+2025-11-21T21:33:33.5137668Z ==8329==    by 0x49C7F5F: cfunction_vectorcall_FASTCALL (methodobject.c:430)
+2025-11-21T21:33:33.5137825Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5137968Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5138081Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5138230Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5138374Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5138603Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5138745Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5139043Z ==8329==    by 0x49FA712: _PyObject_VectorcallTstate (abstract.h:118)
+2025-11-21T21:33:33.5139210Z ==8329==    by 0x49FA712: PyObject_Vectorcall (abstract.h:127)
+2025-11-21T21:33:33.5139320Z ==8329==    by 0x49FA712: call_function (ceval.c:5077)
+2025-11-21T21:33:33.5139461Z ==8329==    by 0x49FA712: _PyEval_EvalFrameDefault (ceval.c:3520)
+2025-11-21T21:33:33.5139595Z ==8329==    by 0x49F97B7: _PyEval_EvalFrame (pycore_ceval.h:40)
+2025-11-21T21:33:33.5139708Z ==8329==    by 0x49F97B7: _PyEval_EvalCode (ceval.c:4329)
+2025-11-21T21:33:33.5139839Z ==8329==    by 0x49A65D4: _PyFunction_Vectorcall (call.c:396)
+2025-11-21T21:33:33.5139959Z ==8329==    by 0x4A8DCB6: pymain_run_module (main.c:291)
+2025-11-21T21:33:33.5140077Z ==8329==    by 0x4A8D98E: pymain_run_python (main.c:596)
+2025-11-21T21:33:33.5140195Z ==8329==    by 0x4A8D98E: Py_RunMain (main.c:681)
+2025-11-21T21:33:33.5140317Z ==8329==    by 0x4A8D4CC: Py_BytesMain (main.c:735)
+2025-11-21T21:33:33.5140464Z ==8329==    by 0x4C40D8F: (below main) (libc_start_call_main.h:58)
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:new_keys_object
+   fun:insert_to_emptydict
+   fun:PyDict_SetItemString
+   fun:metadata_to_pyobject
+   fun:do_record_to_pyobject
+   fun:record_to_pyobject
+   fun:AerospikeClient_Get_Invoke
+   fun:AerospikeClient_Get
+   fun:method_vectorcall_VARARGS_KEYWORDS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:PyVectorcall_Call
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_call
+   fun:_PyObject_Call
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:function_code_fastcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyEval_EvalCodeWithName
+   fun:PyEval_EvalCodeEx
+   fun:PyEval_EvalCode
+   fun:builtin_exec_impl
+   fun:builtin_exec
+   fun:cfunction_vectorcall_FASTCALL
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_EvalCode
+   fun:_PyFunction_Vectorcall
+   fun:pymain_run_module
+   fun:pymain_run_python
+   fun:Py_RunMain
+   fun:Py_BytesMain
+   fun:(below main)
+}
