@@ -803,17 +803,17 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             If false, use:
 
-            IP address: ``service-clear-std``
-            TLS IP address: ``service-tls-std``
-            Peers addresses: ``peers-clear-std``
-            Peers TLS addresses: ``peers-tls-std``
+            - IP address: ``service-clear-std``
+            - TLS IP address: ``service-tls-std``
+            - Peers addresses: ``peers-clear-std``
+            - Peers TLS addresses: ``peers-tls-std``
 
             If true, use:
 
-            IP address: ``service-clear-alt``
-            TLS IP address: ``service-tls-alt``
-            Peers addresses: ``peers-clear-alt``
-            Peers TLS addresses: ``peers-tls-alt``
+            - IP address: ``service-clear-alt``
+            - TLS IP address: ``service-tls-alt``
+            - Peers addresses: ``peers-clear-alt``
+            - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
