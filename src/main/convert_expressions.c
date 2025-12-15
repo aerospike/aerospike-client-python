@@ -1697,12 +1697,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     return err->code;
                 }
 
-                APPEND_ARRAY(1, as_exp_cdt_apply(temp_expr->ctx, lval1, mod_exp,
-                                                 lval2, NIL));
+                APPEND_ARRAY(1, as_exp_modify_by_path(temp_expr->ctx, lval1,
+                                                      mod_exp, lval2, NIL));
             }
             else {
-                APPEND_ARRAY(
-                    1, as_exp_cdt_select(temp_expr->ctx, lval1, lval2, NIL));
+                APPEND_ARRAY(1, as_exp_select_by_path(temp_expr->ctx, lval1,
+                                                      lval2, NIL));
             }
             break;
         case _AS_EXP_CODE_RESULT_REMOVE:
