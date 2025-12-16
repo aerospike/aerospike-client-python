@@ -93,7 +93,6 @@ jobs:
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-
   promote-release-bundle-to-dev:
     needs: [
       bump-dev-number,
