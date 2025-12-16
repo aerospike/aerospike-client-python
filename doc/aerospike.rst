@@ -1796,60 +1796,76 @@ Transaction State
 
 .. data:: TXN_STATE_ABORTED
 
-.. _cdt_select_flags:
+..
+    Path Expression Flags
+    ---------------------
 
-CDT Select Flags
-----------------
+    .. data:: EXP_PATH_SELECT_MATCHING_TREE
 
-.. data:: CDT_SELECT_MATCHING_TREE
+        Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+    .. data:: EXP_PATH_SELECT_VALUE
 
-.. data:: CDT_SELECT_VALUES
+        Return the list of the values of the nodes finally selected by the context.
 
-    Return the list of the values of the nodes finally selected by the context.
+        For maps, this returns the value of each (key, value) pair.
 
-.. data:: CDT_SELECT_MAP_KEY_VALUES
+    .. data:: EXP_PATH_SELECT_LIST_VALUE
 
-    Return a list of key-value pairs.
+        Return the list of the values of the nodes finally selected by the context.
+        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+        source code that you're expecting a list.
 
-.. data:: CDT_SELECT_MAP_KEYS
+    .. data:: EXP_PATH_SELECT_MAP_VALUE
 
-    For final selected nodes which are elements of maps, return the appropriate map key.
+        Return the list of map values of the nodes finally selected by the context.
+        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+        source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
 
-.. data:: CDT_SELECT_NO_FAIL
+    .. data:: EXP_PATH_SELECT_MAP_KEYS
 
-    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
-    do not fail the operation; just ignore those elements.
+        Return the list of map keys of the nodes finally selected by the context.
 
-.. _cdt_modify_flags:
+    .. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
 
-CDT Modify Flags
-----------------
+        Returns the list of map (key, value) pairs of the nodes finally selected
+        by the context. This is a synonym for setting both
+        :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE`` bits together.
+        The list is formatted as ``[key0, value0, key1, value1...]``.
 
-.. data:: CDT_MODIFY_DEFAULT
+    .. data:: EXP_PATH_SELECT_NO_FAIL
 
-    If the expression in the context hits an invalid type, the operation
-    will fail.  This is the default behavior.
+        If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+        do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
-.. data:: CDT_MODIFY_NO_FAIL
+    .. _exp_path_modify_flags:
 
-    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
-    not fail the operation; just ignore those elements.
+    CDT Modify Flags
+    ----------------
 
-.. _exp_loopvar_metadata:
+    .. data:: EXP_PATH_MODIFY_DEFAULT
 
-Expression Loop Variable Metadata
----------------------------------
+        If the expression in the context hits an invalid type, the operation
+        will fail.  This is the default behavior.
 
-.. data:: EXP_LOOPVAR_KEY
+    .. data:: EXP_PATH_MODIFY_NO_FAIL
 
-    The key associated with this value if part of a key-value pair of a map.
+        If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+        not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
-.. data:: EXP_LOOPVAR_VALUE
+    .. _exp_loopvar_metadata:
 
-    List item, or value from a map key-value pair.
+    Expression Loop Variable Metadata
+    ---------------------------------
 
-.. data:: EXP_LOOPVAR_INDEX
+    .. data:: EXP_LOOPVAR_KEY
 
-    The index if this element was part of a list.
+        The key associated with this value if part of a key-value pair of a map.
+
+    .. data:: EXP_LOOPVAR_VALUE
+
+        List item, or value from a map key-value pair.
+
+    .. data:: EXP_LOOPVAR_INDEX
+
+        The index if this element was part of a list.

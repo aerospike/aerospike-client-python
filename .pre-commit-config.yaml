@@ -33,3 +33,10 @@ repos:
     -   id: doc8
         args: ["doc/", "--extension", ".rst"]
         pass_filenames: false
+-   repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+    -   id: shellcheck
+        # Running on all files causes this issue:
+        # scripts/manylinux2014build.sh: scripts/manylinux2014build.sh: openBinaryFile: does not exist (No such file or directory)
+        files: ".github/workflows/docker-setup/"
