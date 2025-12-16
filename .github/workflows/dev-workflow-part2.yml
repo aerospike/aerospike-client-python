@@ -101,7 +101,7 @@ jobs:
     ]
     steps:
     - name: Setup JFrog CLI
-    - uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://artifact.aerospike.io
         jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
