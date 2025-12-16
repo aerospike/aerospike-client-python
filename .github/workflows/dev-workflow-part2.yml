@@ -98,7 +98,7 @@ jobs:
       bump-dev-number,
       create-jfrog-release-bundle
     ]
-    uses: .github/workflows/promote-release-bundle.yml
+    uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: python-client-release
       release-bundle-version: ${{ needs.bump-dev-number.outputs.new_version }}

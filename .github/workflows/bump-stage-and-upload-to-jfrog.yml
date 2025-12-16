@@ -28,7 +28,7 @@ jobs:
     needs: [
       ff-stage-to-dev-tag,
     ]
-    uses: .github/workflows/promote-release-bundle.yml
+    uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: python-client-release
       release-bundle-version: ${{ inputs.passed-dev-tag }}
