@@ -69,8 +69,6 @@ jobs:
           ["python:3.14-rc-bookworm", 2, "linux/amd64", "3.14"],
           ["python:3.14-rc-bookworm", 2, "linux/arm64", "3.14"],
           # QE currently covers Debian 13 on all client-supported Python versions
-          ["redhat/ubi8", 2, "linux/amd64", "3.11"],
-          ["redhat/ubi8", 2, "linux/arm64", "3.11"],
           # We do not use ubi9/python-311 because we cannot install packages using dnf as root
           ["redhat/ubi9", 2, "linux/amd64", "3.11"],
           ["redhat/ubi9", 2, "linux/arm64", "3.11"],
