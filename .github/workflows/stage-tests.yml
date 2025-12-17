@@ -132,7 +132,7 @@ jobs:
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
     - name: 'DNF based distros: install python3'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || contains(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'rhel') }}
+      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || contains(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubi') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python3.11
 
     - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
