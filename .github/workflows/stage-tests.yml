@@ -143,6 +143,8 @@ jobs:
 
     - name: Make sure pip is installed
       # This is good to check in general, so we run for all distros
+      # Ubuntu doesn't have this by default though, but it's fine since it has pip already
+      if: ${{ !startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ensurepip
 
     - name: 'Cat 1: Install build dependencies using dnf'
