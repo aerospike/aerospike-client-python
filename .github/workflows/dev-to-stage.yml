@@ -11,7 +11,7 @@ jobs:
       # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
