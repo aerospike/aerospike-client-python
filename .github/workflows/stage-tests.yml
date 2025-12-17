@@ -138,7 +138,7 @@ jobs:
     - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: |
-        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt update && apt install python3 python3-pip -y
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt-get update && apt-get install python3 python3-pip -y
 
     - name: Make sure pip is installed
       # This is good to check in general, so we run for all distros
