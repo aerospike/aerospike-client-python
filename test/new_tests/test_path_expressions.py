@@ -2,13 +2,15 @@ import pytest
 
 import aerospike
 from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL
 from aerospike_helpers.expressions.map import MapGetByKey
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
+from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
-from aerospike_helpers import cdt_ctx
+from aerospike_helpers import cdt_ctx, HyperLogLog
 from aerospike import exception as e
 from contextlib import nullcontext
 from .test_base_class import TestBaseClass
@@ -30,7 +32,7 @@ class TestPathExprOperations:
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     NESTED_LIST_BIN_NAME = "list_of_lists"
     MAP_WITH_GEOJSON_BIN_NAME = "map_w_geo_bin"
-    
+
     GEOJSON_VALUE = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
     RECORD_BINS = {
         MAP_BIN_NAME: {
@@ -296,6 +298,34 @@ class TestPathExprOperations:
                 [4, 5]
             ]
 
+    MAP_WITH_HLL_BIN_NAME = "map_w_hll_bin"
+
+    @pytest.fixture
+    def setup_hll_bin(self):
+        ops = [
+            hll_ops.hll_add(self.MAP_WITH_HLL_BIN_NAME, [i for i in range(5000)]),
+        ]
+        self.as_connection.operate(self.key, ops)
+
+        _, _, bins = self.as_connection.get(self.key)
+        self.expected_hll_value = bins[self.MAP_WITH_HLL_BIN_NAME]
+        yield
+        self.as_connection.remove_bin(self.key, bins=[self.MAP_WITH_HLL_BIN_NAME])
+
+    def test_exp_loopvar_hll(self, setup_hll_bin):
+        filter_expr = hll.HLLMayContain(LoopVarHLL([1], aerospike.EXP_LOOPVAR_VALUE)).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_WITH_HLL_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_VALUE
+            )
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_WITH_HLL_BIN_NAME] == self.expected_hll_value
 
     SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
     # Expected results
