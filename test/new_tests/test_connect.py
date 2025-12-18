@@ -7,6 +7,8 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+import warnings
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -27,12 +29,6 @@ def open_as_connection(config):
 # adds cls.connection_config to this class
 @pytest.mark.usefixtures("connection_config")
 class TestConnect(object):
-    def test_version(self):
-        """
-        Check for aerospike vrsion
-        """
-        assert aerospike.__version__ is not None
-
     def test_connect_positive(self):
         """
         Invoke connect() with positive parameters.
@@ -94,25 +90,39 @@ class TestConnect(object):
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
             assert client.shm_key() == 3
 
-    # TODO: this test doesn't actually check if min_conns_per_node works properly
+    # This test doesn't actually check if the options work properly
     # It just checks that the setting is configured in the Python client (basically a coverage test)
-    def test_connect_positive_min_conns_per_node(self):
+    @pytest.mark.parametrize(
+        "other_config",
+        [
+            {"min_conns_per_node": 0},
+            {"app_id": "app_name"}
+        ]
+    )
+    def test_connect_positive_config_options(self, other_config):
         """
         Invoke connect() with min_conns_per_node specified
         """
         config = self.connection_config.copy()
-        config["min_conns_per_node"] = 0
+        config.update(other_config)
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
+
+    def test_invalid_app_id(self):
+        config = self.connection_config.copy()
+        config["app_id"] = 1
+
+        with pytest.raises(TypeError):
+            aerospike.client(config)
 
     def test_connect_positive_shm_key_default(self):
         """
@@ -137,18 +147,18 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
     def test_connect_positive_cluster_name(self):
         """
-        Invoke connect() giving a cluster name
+        Invoke connect() giving a cluster name. This is just a usage test (doesn't care if the server's cluster name
+        matches or not)
         """
         config = self.connection_config.copy()
         config["cluster_name"] = "test-cluster"
 
-        with pytest.raises(e.ClientError) as err_info:
+        try:
             self.client = aerospike.client(config).connect()
-
-        assert err_info.value.code == -1
+        except e.ClientError:
+            pass
 
     def test_connect_positive_reconnect(self):
         """
@@ -194,7 +204,8 @@ class TestConnect(object):
             ({}, e.ParamError, -2, "Hosts must be a list"),
             ({"": [("127.0.0.1", 3000)]}, e.ParamError, -2, "Hosts must be a list"),
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
-            ({"hosts": [("127.0.0.1", 2000)]}, e.ClientError, -10, "Failed to connect"),
+            # Errors that throw -10 can also throw 9
+            ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
             ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
         ],
         ids=[
@@ -206,9 +217,22 @@ class TestConnect(object):
             "hosts port is string",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
-        with pytest.raises(err) as err_info:
-            self.client = aerospike.client(config).connect()
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
+        if request.node.callspec.id == "hosts port is string":
+            warning_context = warnings.catch_warnings(record=True)
+        else:
+            warning_context = nullcontext()
 
-        assert err_info.value.code == err_code
+        with warning_context as warning_list:
+            with pytest.raises(err) as err_info:
+                self.client = aerospike.client(config).connect()
+
+        if type(err_code) == tuple:
+            assert err_info.value.code in err_code
+        else:
+            assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+        if type(warning_context) != nullcontext:
+            assert len(warning_list) == 1
+            assert warning_list[0].category == FutureWarning

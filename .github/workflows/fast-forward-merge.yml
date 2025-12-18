@@ -1,0 +1,48 @@
+# As of this writing, there are no Github Actions in the marketplace
+# that allow fast forwarding using a personal access token
+# So we need to use this for now
+name: 'Fast forward merge'
+on:
+  workflow_dispatch:
+    inputs:
+      ref_to_merge:
+        type: string
+        required: true
+      base_branch:
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      # If another branch, it must be origin/<branch>
+      ref_to_merge:
+        type: string
+        required: true
+      base_branch:
+        type: string
+        required: true
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Fetch the whole history to prevent unrelated history errors
+          fetch-depth: '0'
+          ref: ${{ inputs.base_branch }}
+          token: ${{ secrets.CLIENT_BOT_PAT }}
+
+      - name: Fast forward
+        run: git merge --ff-only ${{ inputs.ref_to_merge }}
+
+      - name: Upload changes to remote head branch
+        run: git push

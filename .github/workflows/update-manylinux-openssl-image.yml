@@ -1,0 +1,108 @@
+name: Build manylinux openssl image
+run-name: 'Build manylinux openssl image (openssl-version=${{ inputs.openssl-version }})'
+
+on:
+  workflow_dispatch:
+    inputs:
+      openssl-version:
+        required: true
+        description: "Openssl version bundled with wheel"
+
+env:
+  MANYLINUX_TAG: manylinux_2_28
+jobs:
+  main:
+    env:
+      REGISTRY: ghcr.io
+      CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH: cibuildwheel/resources/pinned_docker_images.cfg
+    strategy:
+      matrix:
+        arch-and-runner-os: [
+          [x86_64, ubuntu-24.04],
+          [aarch64, ubuntu-22.04-arm]
+        ]
+      fail-fast: false
+
+    runs-on: ${{ matrix.arch-and-runner-os[1] }}
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      with:
+        sparse-checkout: |
+          .github/workflows
+        path: aerospike-client-python
+
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+      id: meta
+      with:
+        images: ${{ env.REGISTRY }}/aerospike/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
+        # These images aren't used by customers, anyway.
+        flavor: latest=false
+
+    - name: Set up Docker Buildx so we can cache our Docker image layers
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+    - name: Get cibuildwheel version used to build wheels
+      run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
+      working-directory: aerospike-client-python/.github/workflows
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      with:
+        repository: pypa/cibuildwheel
+        ref: ${{ env.CIBW_VERSION }}
+        sparse-checkout: |
+          ${{ env.CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH }}
+        sparse-checkout-cone-mode: false
+        path: cibuildwheel
+
+    - name: Get manylinux base image to use
+      id: get-manylinux-base-image
+      run: |
+        import os
+        import configparser
+
+        config = configparser.ConfigParser()
+        config.read('${{ env.CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH }}')
+        BASE_IMAGE = config['${{ matrix.arch-and-runner-os[0] }}']['${{ env.MANYLINUX_TAG }}']
+
+        output_file = os.getenv('GITHUB_OUTPUT')
+        if not output_file:
+          print(f"Error: GITHUB_OUTPUT environment variable not found.")
+          exit(1)
+
+        with open(output_file, 'a') as f:
+          print("base image:", BASE_IMAGE)
+          f.write(f"manylinux_base_image={BASE_IMAGE}\n")
+      shell: python
+      working-directory: cibuildwheel
+
+    - name: Build and push
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      with:
+        # Don't want to use default Git context or else it will clone the whole Python client repo again
+        context: ${{ github.workspace }}/aerospike-client-python/.github/workflows
+        file: ${{ github.workspace }}/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
+        build-args: |
+          OPENSSL_VERSION=${{ inputs.openssl-version }}
+          CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}
+          BASE_IMAGE=${{ steps.get-manylinux-base-image.outputs.manylinux_base_image }}
+        pull: true
+        # setup-buildx-action configures Docker to use the docker-container build driver
+        # This driver doesn't publish an image locally by default
+        # so we have to manually enable it
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        # Also cache intermediate layers to make development faster
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

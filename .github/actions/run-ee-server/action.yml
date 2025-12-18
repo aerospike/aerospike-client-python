@@ -1,62 +1,139 @@
-name: 'Run EE Server'
-description: 'Run EE server'
+name: 'Run EE Server in a Docker container'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+# NOTE: do not share this server container with others
+# since it's using the default admin / admin credentials
 inputs:
-  use-server-rc:
-    required: true
-    default: false
+  # All inputs in composite actions are strings
+  registry-name:
+    description: Registry name
+    required: false
+    default: docker.io
+  registry-username:
+    description: Required for using release candidates
+    required: false
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  registry-password:
+    description: Required for using release candidates
+    required: false
+  image-name:
+    required: false
+    description: aerospike/aerospike-server-enterprise
+    default: 'aerospike/aerospike-server-enterprise'
   server-tag:
     required: true
+    description: Specify Docker tag
     default: 'latest'
+  where-is-client-connecting-from:
+    required: false
+    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
+    default: 'docker-host'
+  env-vars:
+    required: false
+    description: Used to disable server features
+    default: 'STRONG_CONSISTENCY=1 SECURITY=1 MUTUAL_TLS=1'
 
 runs:
   using: "composite"
   steps:
-  - name: Install crudini to manipulate config.conf
-    run: pip install crudini==0.9.4
+  # Start up server
+
+  - name: Log into registry to get non-public server RCs
+    # We can still pull public images while logged in, so just do this all the time to make things simple
+    uses: docker/login-action@v3
+    with:
+      registry: ${{ inputs.registry-name }}
+      username: ${{ inputs.registry-username }}
+      password: ${{ inputs.registry-password }}
+
+  - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - name: Add enterprise edition config to config.conf
-    run: |
-      crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --set config.conf enterprise-edition user superuser
-      crudini --set config.conf enterprise-edition password superuser
+  - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
+    shell: bash
+
+  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+    shell: bash
+
+  - name: 'macOS: install timeout command'
+    if: ${{ runner.os == 'macOS' }}
+    run: brew install coreutils
+    shell: bash
+
+  # Github composite actions don't support env variables for the whole composite action,
+  # so this is a workaround
+  - id: get-container-name
+    run: echo container-name=aerospike >> $GITHUB_OUTPUT
+    shell: bash
+
+  - run: ${{ inputs.env-vars }} bash ./run-ee-server.bash
+    working-directory: .github/workflows/docker-setup
+    shell: bash
+    env:
+      CONTAINER_NAME: ${{ steps.get-container-name.outputs.container-name }}
+
+  # Configure tests
+
+  - name: Install crudini to manipulate config.conf
+    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
     working-directory: test
     shell: bash
 
-  - name: Create config folder to store configs in
-    run: mkdir configs
+  - name: Disable community edition connection
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
     shell: bash
 
-  - name: Use release server
-    if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
-  - name: Use release candidate server
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Get default aerospike.conf from Docker server EE container
+  - name: Set credentials in config file
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --set config.conf tls enable true
+      # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
+      crudini --set config.conf tls cafile ../.github/workflows/docker-setup/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-setup/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-setup/client.cer
+
+    working-directory: test
     shell: bash
 
-  - name: Enable security features using aerospike.conf
-    # Security stanza
-    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
-    working-directory: ./configs
+  - name: Set IP address to localhost
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    working-directory: test
     shell: bash
 
-  - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+  - name: Set IP address to remote machine running the Docker daemon
+    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
+    run: |
+      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
+      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ steps.get-container-name.outputs.container-name }}) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
+  # Here we just assume that TLS is enabled. Whenever the dev tests are run with run-ee-server.yml, TLS is enabled anyways.
+  # TODO: but this needs to be fixed eventually for other clients that disable TLS for their tests.
+  - name: Set EE server's IP address and TLS name for test config
+    run: |
+      cluster_name=$(docker run --rm --network host aerospike/aerospike-tools asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2)
+      crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${cluster_name}"
+    working-directory: test
     shell: bash

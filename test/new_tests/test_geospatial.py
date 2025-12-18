@@ -51,13 +51,6 @@ def add_geo_indexes(connection):
         pass
 
     try:
-        connection.index_map_keys_create(
-            "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE, "geo_map_key_index"
-        )
-    except (e.IndexFoundError):
-        pass
-
-    try:
         connection.index_map_values_create(
             "test", "demo", "geo_map_vals", aerospike.INDEX_GEO2DSPHERE, "geo_map_val_index"
         )
@@ -66,13 +59,6 @@ def add_geo_indexes(connection):
 
     try:
         connection.index_list_create("test", "demo", "geo_loc_list", aerospike.INDEX_GEO2DSPHERE, "geo_loc_list_index")
-    except (e.IndexFoundError):
-        pass
-
-    try:
-        connection.index_map_keys_create(
-            "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_key_index"
-        )
     except (e.IndexFoundError):
         pass
 
@@ -94,10 +80,9 @@ def add_geo_data(connection):
         s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf)
         geo_object = aerospike.geojson(s)
         geo_list = [geo_object]
-        geo_map_key = {geo_object: i}
         geo_map_val = {i: geo_object}
         connection.put(
-            key, {"loc": geo_object, "geo_list": geo_list, "geo_map_keys": geo_map_key, "geo_map_vals": geo_map_val}
+            key, {"loc": geo_object, "geo_list": geo_list, "geo_map_vals": geo_map_val}
         )
 
     key = ("test", "demo", "polygon")
@@ -117,14 +102,12 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
-    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
-            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
@@ -146,14 +129,12 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
-    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
-            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
@@ -982,12 +963,10 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_list", aerospike.INDEX_TYPE_LIST),
-            ("geo_map_keys", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_map_vals", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_within_radius_pred(self, bin_name, idx_type):
-
         records = []
         query = self.as_connection.query("test", "demo")
 
@@ -1006,12 +985,10 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_list", aerospike.INDEX_TYPE_LIST),
-            ("geo_map_keys", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_map_vals", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_within_geojson_region_pred(self, bin_name, idx_type):
-
         records = []
         query = self.as_connection.query("test", "demo")
 
@@ -1081,12 +1058,10 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_loc_list", aerospike.INDEX_TYPE_LIST),
-            ("geo_loc_mk", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_loc_mv", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_contains_point_pred(self, bin_name, idx_type):
-
         records = []
         query = self.as_connection.query("test", "demo")
         lat = -122.45
@@ -1107,12 +1082,10 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_loc_list", aerospike.INDEX_TYPE_LIST),
-            ("geo_loc_mk", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_loc_mv", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_contains_json_point_pred(self, bin_name, idx_type):
-
         records = []
         query = self.as_connection.query("test", "demo")
         lat = -122.45

@@ -1,0 +1,185 @@
+name: Test cibuildwheel artifacts against server RC
+run-name: Test cibuildwheel artifacts against server RC
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
+
+jobs:
+  manylinux:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
+        ]
+        platform: [
+          ["x86_64", "ubuntu-22.04"],
+          ["aarch64", "aerospike_arm_runners_2"]
+        ]
+    runs-on: ${{ matrix.platform[1] }}
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: latest
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: 'docker-container'
+
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform[0] }}.build
+        path: ./
+
+    - name: Copy repo and wheel into manylinux container
+      run: docker cp ../aerospike-client-python manylinux:/
+
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python manylinux python${{ matrix.python[0] }} -m pip install *.whl
+
+    - name: Install test prerequisites
+      run: docker exec --workdir /aerospike-client-python/test manylinux python${{ matrix.python[0] }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test manylinux python${{ matrix.python[0] }} -m pytest new_tests/
+
+  macOS-x86:
+    # Skip macOS x86 testing since it's unstable
+    if: ${{ false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
+        ]
+    runs-on: macos-12-large
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+    - uses: ./.github/actions/setup-docker-on-macos
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: latest
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: ${{ matrix.python[1] }}-macosx_x86_64.build
+        path: ./
+
+    - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
+      with:
+        python-version: ${{ matrix.python[0] }}
+
+    - run: python${{ matrix.python[0] }} -m pip install *.whl
+
+    - run: python${{ matrix.python[0] }} -m pip install -r requirements.txt
+      working-directory: test
+
+    - run: python${{ matrix.python[0] }} -m pytest new_tests/
+      id: test
+      working-directory: test
+
+  macOS-m1:
+    # TODO: this shares a lot of steps as in the build wheels workflow
+    runs-on: [
+      self-hosted,
+      macOS,
+      ARM64
+    ]
+    strategy:
+      matrix:
+        python-version: [
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
+        ]
+      fail-fast: false
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: ${{ matrix.python-version[1] }}-macosx_arm64.build
+        path: ./
+
+    # Update dependencies if needed
+    - name: Add brew to path
+      run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
+
+    - name: Install or upgrade Python
+      run: brew install python@${{ matrix.python-version[0] }}
+
+    # Self-hosted runner only
+    # Need to be able to save Docker Hub credentials to keychain
+    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run server RC
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - name: Install wheel
+      run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages *.whl
+
+    - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
+
+    - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
+      id: test
+      working-directory: test
+
+    - name: Stop server
+      if: ${{ always() }}
+      run: |
+        docker container stop aerospike
+        docker container prune -f

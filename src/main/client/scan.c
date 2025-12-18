@@ -71,8 +71,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     as_list *arglist = NULL;
     as_policy_scan scan_policy;
     as_policy_scan *scan_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
     as_error err;
     as_scan scan;
     uint64_t scan_id = 0;
@@ -134,7 +132,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p);
+                                &exp_list, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -191,14 +189,18 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
+            as_policy_info info_policy;
+            as_policy_info *info_policy_p = NULL;
             if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
+                pyobject_to_policy_info(
+                    &err, py_policy, &info_policy, &info_policy_p,
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_SCAN);
                 if (err.code != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
             }
+
             Py_BEGIN_ALLOW_THREADS
             aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
             Py_END_ALLOW_THREADS
@@ -239,7 +241,8 @@ CLEANUP:
         return NULL;
     }
 
-    return PyLong_FromLong(scan_id);
+    // TODO: Doesn't match api
+    return PyLong_FromUnsignedLongLong(scan_id);
 }
 
 /**

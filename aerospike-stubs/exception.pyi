@@ -1,9 +1,15 @@
+from typing import Union
+
 class AerospikeError(Exception):
-    code: int
-    msg: str
-    file: str
-    line: int
-    in_doubt: bool
+    # When attributes are first assigned to exception class, they have an initial value of None
+    code: Union[int, None]
+    msg: Union[str, None]
+    file: Union[str, None]
+    line: Union[int, None]
+    in_doubt: Union[bool, None]
+
+class TimeoutError(AerospikeError):
+     pass
 
 class ClientError(AerospikeError):
     pass
@@ -12,6 +18,15 @@ class InvalidHostError(ClientError):
     pass
 
 class ParamError(ClientError):
+    pass
+
+class TransactionFailed(ClientError):
+    pass
+
+class TransactionAlreadyAborted(ClientError):
+    pass
+
+class TransactionAlreadyCommitted(ClientError):
     pass
 
 class ServerError(AerospikeError):
@@ -51,8 +66,8 @@ class ElementNotFoundError(ServerError):
     pass
 
 class RecordError(ServerError):
-    key: tuple
-    bin: str
+    key: Union[tuple, None]
+    bin: Union[str, None]
 
 class RecordKeyMismatch(RecordError):
     pass
@@ -79,7 +94,7 @@ class BinIncompatibleType(RecordError):
     pass
 
 class IndexError(ServerError):
-    pass
+    name: Union[str, None]
 
 class IndexNotFound(IndexError):
     pass
@@ -169,8 +184,8 @@ class UserExistsError(AdminError):
 	pass
 
 class UDFError(ServerError):
-    module: str
-    func: str
+    module: Union[str, None]
+    func: Union[str, None]
 
 class UDFNotFound(UDFError):
     pass

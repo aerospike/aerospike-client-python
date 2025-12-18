@@ -30,6 +30,9 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         response = self.as_connection.info_single_node("bins", self.host_name)
 
         # This should probably make sure that a bin is actually named 'names'
@@ -84,9 +87,9 @@ class TestInfoSingleNode(object):
             pytest.xfail()
         host = self.host_name
         policy = {"timeout": 180000}
-        response = self.as_connection.info_single_node("bins", host, policy)
+        response = self.as_connection.info_single_node("namespaces", host, policy)
 
-        assert "names" in response
+        assert "test" in response
 
     def test_info_single_node_positive_with_host(self):
         """
@@ -95,9 +98,9 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         host = self.host_name
-        response = self.as_connection.info_single_node("bins", host)
+        response = self.as_connection.info_single_node("namespaces", host)
 
-        assert "names" in response
+        assert "test" in response
 
     def test_info_single_node_positive_with_all_parameters(self):
         """

@@ -476,6 +476,25 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
+    case AS_BYTES_HLL: {
+        // Convert bytes to Python bytes object
+        PyObject *py_bytes = PyBytes_FromStringAndSize(
+            (const char *)bytes->value, (Py_ssize_t)bytes->size);
+        if (py_bytes == NULL) {
+            as_error_update(
+                error_p, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert C client's as_bytes to Python bytes");
+            goto CLEANUP;
+        }
+        PyObject *py_hll = create_class_instance_from_module(
+            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
+        Py_DECREF(py_bytes);
+        if (!py_hll) {
+            goto CLEANUP;
+        }
+        *retval = py_hll;
+        break;
+    }
     default: {
         // First try to return a raw byte array, if that fails raise an error
         uint32_t bval_size = as_bytes_size(bytes);
