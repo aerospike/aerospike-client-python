@@ -32,7 +32,10 @@ jobs:
         platform-tag: [
           "manylinux_x86_64",
           "manylinux_aarch64",
-          "macosx_x86_64"
+          # For macos 15
+          "macosx_x86_64",
+          # For macos 26
+          "macosx_arm64"
         ]
       # Need all the artifacts to run all the stage tests, so fail fast
     uses: ./.github/workflows/build-wheels.yml

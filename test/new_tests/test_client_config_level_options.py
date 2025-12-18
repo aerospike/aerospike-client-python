@@ -14,6 +14,7 @@ import time
 import glob
 import re
 import os
+from .conftest import verify_record_ttl
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -115,9 +116,17 @@ def test_neg_setting_rack_ids(rack_ids):
         aerospike.client(config)
 
 
-def test_setting_use_services_alternate():
+@pytest.mark.parametrize(
+    "setting",
+    [
+        "use_services_alternate",
+        "force_single_node",
+        "fail_if_not_connected"
+     ]
+)
+def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config["use_services_alternate"] = True
+    config[setting] = True
     client = aerospike.client(config)
     assert client is not None
 
@@ -268,6 +277,56 @@ def test_query_invalid_expected_duration():
         aerospike.client(config)
     assert excinfo.value.msg == "Invalid Policy setting value"
 
+# We want to make sure that these options are allowed when config["validate_keys"] is True
+# Some of these options may not be documented, but they are allowed in the code and customers may be using them
+def test_config_level_misc_options():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["socket_timeout"] = 1
+    config["policies"]["total_timeout"] = 1
+    config["policies"]["max_retries"] = 1
+    config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
+    config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
+    config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
+    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
+    config["policies"]["max_threads"] = 16
+    config["policies"]["thread_pool_size"] = 16
+    config["thread_pool_size"] = 16
+    config["max_threads"] = 16
+    config["max_conns_per_node"] = 16
+    config["connect_timeout"] = 16
+    config["use_shared_connection"] = False
+    config["compression_threshold"] = 50
+    config["cluster_name"] = "test"
+    config["max_socket_idle"] = 20
+    config["fail_if_not_connected"] = True
+    if "shm" not in config:
+        config["shm"] = {}
+    config["shm"] = {}
+    config["shm"]["max_namespaces"] = 8
+    config["shm"]["max_nodes"] = 3
+    config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["crl_check"] = True
+    config["tls"]["crl_check_all"] = True
+    config["tls"]["log_session_info"] = True
+    config["tls"]["for_login_only"] = True
+    config["tls"]["cafile"] = "./dummy"
+    config["tls"]["capath"] = "./dummy"
+    config["tls"]["protocols"] = "blaah"
+    config["tls"]["cipher_suite"] = "aes_256"
+    config["tls"]["cert_blacklist"] = "aes_256"
+    config["tls"]["keyfile"] = "aes_256"
+    config["tls"]["certfile"] = "aes_256"
+    config["tls"]["keyfile_pw"] = "aes_256"
+    config["validate_keys"] = True
+
+    # We don't care if the client connects or not
+    # We just make sure that the above options are allowed as dict keys
+    try:
+        aerospike.client(config)
+    except:
+        pass
+
+KEY = ("test", "demo", 0)
 
 class TestConfigTTL:
     NEW_TTL = 9000
@@ -279,7 +338,7 @@ class TestConfigTTL:
             "ttl": self.NEW_TTL
         }
         self.client = aerospike.client(config)
-        self.key = ("test", "demo", 0)
+        self.client.put(KEY, {"a": "a", "b": "b"})
 
         if "apply" in policy_name:
             self.client.udf_put("test_record_udf.lua")
@@ -296,14 +355,11 @@ class TestConfigTTL:
                 pass
 
         try:
-            self.client.remove(self.key)
+            self.client.remove(KEY)
         except e.RecordNotFound:
             pass
 
-    def check_ttl(self):
-        _, meta = self.client.exists(self.key)
-        clock_skew_tolerance_secs = 50
-        assert meta["ttl"] in range(self.NEW_TTL - clock_skew_tolerance_secs, self.NEW_TTL + clock_skew_tolerance_secs)
+        self.client.close()
 
     @pytest.mark.parametrize("policy_name", ["write"])
     @pytest.mark.parametrize(
@@ -311,16 +367,17 @@ class TestConfigTTL:
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
         ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
     )
-    def test_setting_write_ttl(self, config_ttl_setup, meta):
-        self.client.put(self.key, bins={"a": 1}, meta=meta)
-        self.check_ttl()
+    @pytest.mark.parametrize("api_method, kwargs", [
+        (aerospike.Client.put, {"key": KEY, "bins": {"a": 1}}),
+        (aerospike.Client.remove_bin, {"key": KEY, "list": ["a"]}),
+    ])
+    def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
+        api_method(self.client, **kwargs, meta=meta)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["operate"])
     @pytest.mark.parametrize(
         "meta",
-        # The reason we also test a metadata dict without ttl for operate()
-        # is the codepath that handles the metadata dict for operate() is different
-        # from that for put()
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
         ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
     )
@@ -328,18 +385,18 @@ class TestConfigTTL:
         ops = [
             operations.write("a", 1)
         ]
-        self.client.operate(self.key, ops, meta=meta)
-        self.check_ttl()
+        self.client.operate(KEY, ops, meta=meta)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["apply"])
     def test_setting_apply_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
-        # Call without setting the ttl in the transaction's apply policy
+        # Call without setting the ttl in the command's apply policy
         # Args: bin name, str
-        self.client.apply(self.key, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
+        self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
@@ -352,14 +409,14 @@ class TestConfigTTL:
             operations.write("bin", 1)
         ]
         batch_records = BatchRecords([
-            Write(self.key, ops=ops, meta=meta)
+            Write(KEY, ops=ops, meta=meta)
         ])
         brs = self.client.batch_write(batch_records)
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
@@ -370,30 +427,30 @@ class TestConfigTTL:
         ops = [
             operations.write("bin", 1)
         ]
-        keys = [self.key]
+        keys = [KEY]
         brs = self.client.batch_operate(keys, ops, ttl=ttl)
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_apply"])
     def test_setting_batch_apply_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
         # Call without setting the ttl in batch_apply()'s batch apply policy
         keys = [
-            self.key
+            KEY
         ]
         self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
     def test_setting_scan_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"})
+        self.client.put(KEY, {"bin": "a"})
 
         # Tell scan to use client config's scan policy ttl
         scan = self.client.scan("test", "demo")
@@ -406,12 +463,12 @@ class TestConfigTTL:
 
         wait_for_job_completion(self.client, job_id)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(self.key, {"bin": "a"}, meta={"ttl": 90})
+        self.client.put(KEY, {"bin": "a"}, meta={"ttl": 90})
 
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")
@@ -424,7 +481,7 @@ class TestConfigTTL:
 
         wait_for_job_completion(self.client, job_id)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize(
         "policy_name",

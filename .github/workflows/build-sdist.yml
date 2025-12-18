@@ -19,6 +19,11 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - name: Show job status for commit
       # Commit status will already be shown by the calling workflow for push and pull request events, but not
       # for any other event like workflow_dispatch. so we have to do it manually
@@ -26,12 +31,12 @@ jobs:
       # The calling workflow can be triggered by push or pull request events, so there's that
       # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD }}
@@ -44,13 +49,13 @@ jobs:
       run: python3 -m build --sdist
 
     - name: Upload source distribution to GitHub
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         path: ./dist/*.tar.gz
         name: sdist.build
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
       # Always run even if job failed or is cancelled
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}

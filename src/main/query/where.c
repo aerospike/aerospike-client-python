@@ -80,8 +80,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_exp *exp_list = NULL;
     if (py_expr) {
-        as_status status =
-            convert_exp_list(self->client, py_expr, &exp_list, &err);
+        as_status status = as_exp_new_from_pyobject(self->client, py_expr,
+                                                    &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
@@ -186,7 +186,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
-    as_query_where_init(&self->query, 1);
+    // Query object should still be safe to use if this fails
+    bool success = as_query_where_init(&self->query, 1);
+    if (!success) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.where() cannot be called more than once on the "
+                        "same instance.");
+        goto CLEANUP_VALUES_ON_ERROR;
+    }
 
     // We have 9 separate codepaths because we need to pass in either 1, 2, or 3 optional arguments to the C client call
     // and for each of those, we have to call one of the three as_query_where_with_{exp,index_name,ctx}()
@@ -281,7 +288,7 @@ CLEANUP_VALUES_ON_ERROR:
 CLEANUP_EXP_ON_ERROR:
 
     if (exp_list) {
-        free(exp_list);
+        as_exp_destroy(exp_list);
     }
 
 CLEANUP_CTX_ON_ERROR:
