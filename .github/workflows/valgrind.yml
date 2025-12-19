@@ -29,7 +29,7 @@ on:
         default: false
 
 env:
-  PYTHON_TAG: cp39
+  PYTHON_TAG: cp310
 
 jobs:
   look-for-wheel-in-jfrog:
