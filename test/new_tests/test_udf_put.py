@@ -2,7 +2,7 @@
 
 import pytest
 from .as_status_codes import AerospikeStatus
-from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
+from .udf_helpers import wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
@@ -22,7 +22,6 @@ class TestUdfPut(TestBaseClass):
         for udf in udf_list:
             if udf["name"] == self.udf_name:
                 self.as_connection.udf_remove(self.udf_name)
-                wait_for_udf_removal(self.as_connection, self.udf_name)
 
     def test_udf_put_with_proper_parameters_no_policy(self):
         """
