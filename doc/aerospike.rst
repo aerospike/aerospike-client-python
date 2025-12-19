@@ -775,7 +775,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: :py:obj:`None`
         * **app_id** (:class:`Optional[str]`)
-            Application identifier. If not set to a string, uses the client's username by default.
+            Application identifier.
+
+            If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
+            this is set to ``not-set``.
 
             Default: :py:obj:`None`
         * **rack_id** (:class:`int`)

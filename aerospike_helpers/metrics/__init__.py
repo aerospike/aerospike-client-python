@@ -105,7 +105,7 @@ class Cluster:
 
     Attributes:
         cluster_name (Optional[str]): Expected cluster name for all nodes. May be :py:obj:`None`.
-        app_id (str): Application identifier. Will be set to the username if not set to a string in the client config's
+        app_id (str): Application identifier. Will be set to the client's username if not set to a string in the client config's
             ``app_id`` option. If the client does not have a username, this will be set to ``not-set``.
         invalid_node_count (int): Count of add node failures in the most recent cluster tend iteration.
         command_count (int): Command count. The value is cumulative and not reset per metrics interval.
