@@ -41,7 +41,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
@@ -207,7 +207,7 @@ jobs:
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
@@ -233,7 +233,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
@@ -437,7 +437,7 @@ jobs:
         cat ./configs/aerospike.conf
 
   sphinx:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     strategy:
       fail-fast: false
       matrix:
