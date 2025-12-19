@@ -6,19 +6,12 @@ on:
     branches:
     - 'dev*'
   workflow_dispatch:
-    inputs:
-      dry-run:
-        required: false
-        default: false
-        type: boolean
-        description: Don't create tags and don't upload to JFrog
 
 jobs:
   bump-dev-number:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
-      dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
@@ -31,75 +24,18 @@ jobs:
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
-  reupload-github-artifacts-as-one:
-    needs: rebuild-artifacts-with-new-dev-num
-    name: Reupload Github artifacts as one artifact
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
-      with:
-        egress-policy: audit
-
-    - name: Download artifacts
-      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-      with:
-        pattern: '*.build'
-        merge-multiple: true
-        path: artifacts
-
-    - name: Reupload artifacts as one
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      with:
-        # Not actually signed...
-        name: signed-artifacts
-        path: ./artifacts
-
-  upload-github-artifacts-to-jfrog:
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      reupload-github-artifacts-as-one
+      rebuild-artifacts-with-new-dev-num
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@489212b8911ea431131ed468599db705f0767274
+    uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
-      jf-build-id: ${{ github.run_number }}
-      jf-metadata-build-id: ${{ github.run_number }}-metadata
-      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       version: ${{ needs.bump-dev-number.outputs.new_version }}
-      dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
-      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+    secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
   delete-artifacts:
-    needs: upload-github-artifacts-to-jfrog
+    needs: upload-to-jfrog
     uses: ./.github/workflows/delete-artifacts.yml
-
-  create-jfrog-release-bundle:
-    needs: [
-      bump-dev-number,
-      upload-github-artifacts-to-jfrog
-    ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
-    with:
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-names: ${{ format('{0}:{1}', vars.JFROG_BUILD_NAME, github.run_number) }}
-      jf-bundle-name: python-client-release
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
-      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
-      dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
-      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-
-  promote-release-bundle-to-dev:
-    needs: [
-      bump-dev-number,
-      create-jfrog-release-bundle
-    ]
-    uses: ./.github/workflows/promote-release-bundle.yml
-    with:
-      release-bundle-name: python-client-release
-      release-bundle-version: ${{ needs.bump-dev-number.outputs.new_version }}
-      new-environment: DEV
