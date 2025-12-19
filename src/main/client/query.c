@@ -22,8 +22,6 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"
-// Required for Py_NewRef in python 3.9
-#include "pythoncapi_compat.h"
 
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_job.h>
