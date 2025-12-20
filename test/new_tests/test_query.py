@@ -9,8 +9,8 @@ from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
-import warnings
 import time
+
 
 from aerospike_helpers.expressions.arithmetic import Add
 from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
