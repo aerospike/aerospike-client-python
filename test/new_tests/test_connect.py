@@ -216,7 +216,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, None),
         ],
         ids=[
             "config not dict",
@@ -228,21 +228,13 @@ class TestConnect(object):
         ],
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
-        if request.node.callspec.id == "hosts port is string":
-            warning_context = warnings.catch_warnings(record=True)
-        else:
-            warning_context = nullcontext()
-
-        with warning_context as warning_list:
-            with pytest.raises(err) as err_info:
-                self.client = aerospike.client(config).connect()
+        with pytest.raises(err) as err_info:
+            self.client = aerospike.client(config).connect()
 
         if type(err_code) == tuple:
             assert err_info.value.code in err_code
         else:
             assert err_info.value.code == err_code
-        assert err_info.value.msg == err_msg
 
-        if type(warning_context) != nullcontext:
-            assert len(warning_list) == 1
-            assert warning_list[0].category == FutureWarning
+        if err_msg:
+            assert err_info.value.msg == err_msg
