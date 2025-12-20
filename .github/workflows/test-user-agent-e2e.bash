@@ -1,3 +1,10 @@
+if [[ $# -lt 1 ]]; then
+    echo "Usage: ./test-user-agent-e2e.bash (true|false) [<app-id>]"
+    echo "First argument is whether to have client log in with a username"
+    echo "Second argument is the app id string to pass to the client"
+    exit 1
+fi
+
 set -x
 
 python_background_script_name=run-client-in-bg.py
@@ -25,7 +32,7 @@ while True:
 EOF
 
 # This shell will be closed once this step completes
-nohup python3 "$python_background_script_name" "$@" &
+python3 "$python_background_script_name" "$@" &
 # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
 # When background processes fail, this step won't fail.
 
@@ -66,9 +73,10 @@ test "$client_version" = "$expected_client_version"
 app_id=$(echo $user_agent | perl -n -E 'say $1 if m/ ,([a-z\-]+)$ /x')
 if [[ $# -eq 2 ]]; then
     expected_app_id="$2"
-elif [[ "$use_security_credentials" == "true" ]]
+elif [[ "$use_security_credentials" == "true" ]]; then
     expected_app_id="superuser"
 else
     expected_app_id="not-set"
 fi
+
 test "$app_id" = "$expected_app_id"
