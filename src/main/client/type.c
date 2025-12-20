@@ -757,6 +757,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
+                    as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                                    "The host port must be an integer");
                     error_code = INIT_INVALID_ADRR_ERR;
                     goto CONSTRUCTOR_ERROR;
                 }
