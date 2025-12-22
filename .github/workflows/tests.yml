@@ -107,7 +107,7 @@ jobs:
       run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
 
     - name: Send wheel to test jobs
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
@@ -199,7 +199,7 @@ jobs:
 
     - name: Upload coverage report folder to Github
       if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: coverage-report
         path: build/temp*/src/main/
