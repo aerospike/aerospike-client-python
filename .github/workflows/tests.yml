@@ -540,7 +540,7 @@ jobs:
         env-vars: 'SECURITY=1'
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
