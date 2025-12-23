@@ -546,3 +546,5 @@ jobs:
     - name: Run client in background
       run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
       working-directory: .github/workflows
+
+    - run: docker logs aerospike
