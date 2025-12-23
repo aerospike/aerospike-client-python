@@ -25,7 +25,7 @@ if sys.argv[1] == "true":
     config["user"] = "superuser"
     config["password"] = "superuser"
 if len(sys.argv) == 2:
-    config["app_id"] = sys.argv[1]
+    config["app_id"] = sys.argv[2]
 client = aerospike.client(config)
 while True:
     time.sleep(1)
