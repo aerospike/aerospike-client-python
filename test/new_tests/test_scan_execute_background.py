@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception, predicates
 from aerospike_helpers.operations import operations, map_operations
 from aerospike_helpers import expressions as exp
+from .conftest import wait_for_job_completion
 
 TEST_NS = "test"
 TEST_SET = "background_scan1"
@@ -18,18 +19,6 @@ try:
     long
 except NameError:
     long = int
-
-
-def wait_for_job_completion(as_connection, job_id):
-    """
-    Blocks until the job has completed
-    """
-    time.sleep(0.1)
-    while True:
-        response = as_connection.job_info(job_id, aerospike.JOB_SCAN)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
 
 
 def add_test_udf(client):
@@ -92,7 +81,7 @@ class TestScanApply(object):
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, 1])
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         for i, key in enumerate(keys):
             _, _, bins = self.as_connection.get(key)
@@ -112,7 +101,7 @@ class TestScanApply(object):
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, 1])
         job_id = scan.execute_background(policy)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         for i, key in enumerate(keys):
             _, _, bins = self.as_connection.get(key)
@@ -140,7 +129,7 @@ class TestScanApply(object):
         scan.where(number_predicate)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = scan.execute_background(policy)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -167,7 +156,7 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background(policy)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -194,7 +183,7 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background(policy)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -224,7 +213,7 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
@@ -241,7 +230,7 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         brs = self.as_connection.batch_read(keys)
         # Sort batch records by user key
@@ -269,7 +258,7 @@ class TestScanApply(object):
         scan.add_ops(ops)
         scan.where(number_predicate)
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record[test_bin] == "aerospike"
@@ -282,7 +271,7 @@ class TestScanApply(object):
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
@@ -300,7 +289,7 @@ class TestScanApply(object):
         scan.where(number_predicate)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = scan.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, aerospike.JOB_SCAN)
 
         keys = [(TEST_NS, TEST_SET, i) for i in range(50) if i != 5]
         validate_records(self.as_connection, keys, lambda rec: test_bin not in rec)

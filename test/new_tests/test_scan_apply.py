@@ -5,20 +5,9 @@ from .as_status_codes import AerospikeStatus
 from aerospike_helpers import expressions as exp
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .conftest import wait_for_job_completion
 
 import aerospike
-
-
-def wait_for_job_completion(as_connection, job_id):
-    """
-    Blocks until the job has completed
-    """
-    time.sleep(0.1)
-    while True:
-        response = as_connection.job_info(job_id, aerospike.JOB_SCAN)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
 
 
 class TestScanApply(object):
@@ -53,7 +42,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -70,7 +59,7 @@ class TestScanApply(object):
         policy = {"socket_timeout": 180000}
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -90,7 +79,7 @@ class TestScanApply(object):
         policy = {"total_timeout": 180000, "expressions": expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -118,7 +107,7 @@ class TestScanApply(object):
         policy = {}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -138,7 +127,7 @@ class TestScanApply(object):
         policy = {"expressions": expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -157,7 +146,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2, 3])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -170,7 +159,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformextra", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -184,7 +173,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformless", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -198,7 +187,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformless")
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -213,7 +202,7 @@ class TestScanApply(object):
         options = {"concurrent": False}
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy, options)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -226,7 +215,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -239,7 +228,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua_incorrect", "mytransform", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -252,7 +241,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform_incorrect", ["age", 2])
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         for i in range(5):
             key = ("test", "demo", i)
@@ -265,7 +254,7 @@ class TestScanApply(object):
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", None)
 
-        wait_for_job_completion(self.as_connection, scan_id)
+        wait_for_job_completion(self.as_connection, scan_id, aerospike.JOB_SCAN)
 
         # The function application should have failed and not changed
         # any bin values
