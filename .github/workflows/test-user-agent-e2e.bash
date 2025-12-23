@@ -70,7 +70,7 @@ test "$client_language" = "python"
 expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
 test "$client_version" = "$expected_client_version"
 
-app_id=$(echo $user_agent | perl -n -E 'say $1 if m/ ,([a-z\-]+)$ /x')
+app_id=$(echo $user_agent | perl -n -E 'say $1 if m/ ,([a-z\-_]+)$ /x')
 if [[ $# -eq 2 ]]; then
     # app_id was explicitly set in client config
     expected_app_id="$2"
