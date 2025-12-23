@@ -21,6 +21,7 @@ config = {
         ("127.0.0.1", 3000)
     ]
 }
+print(config)
 if sys.argv[1] == "true":
     config["user"] = "superuser"
     config["password"] = "superuser"
