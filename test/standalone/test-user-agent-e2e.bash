@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [[ $# -lt 1 ]]; then
     echo "Usage: ./test-user-agent-e2e.bash (true|false) [<app-id>]"
     echo "First argument is whether to have client log in with a username"
@@ -11,26 +13,6 @@ python_background_script_name=run-client-in-bg.py
 
 # First arg (bool): should client log in with username and password?
 # Second arg (str): optional client config app id to set
-
-cat <<-EOF >> $python_background_script_name
-import aerospike
-import time
-import sys
-config = {
-    "hosts": [
-        ("127.0.0.1", 3000)
-    ]
-}
-print(config)
-if sys.argv[1] == "true":
-    config["user"] = "superuser"
-    config["password"] = "superuser"
-if len(sys.argv) == 3:
-    config["app_id"] = sys.argv[2]
-client = aerospike.client(config)
-while True:
-    time.sleep(1)
-EOF
 
 # This shell will be closed once this step completes
 python3 "$python_background_script_name" "$@" &
