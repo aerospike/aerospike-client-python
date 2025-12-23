@@ -9,8 +9,8 @@ set -x
 
 python_background_script_name=run-client-in-bg.py
 
-# First arg (bool): should client config app_id be set?
-# Second arg (bool): should client log in with username and password?
+# First arg (bool): should client log in with username and password?
+# Second arg (str): optional client config app id to set
 
 cat <<-EOF >> $python_background_script_name
 import aerospike
