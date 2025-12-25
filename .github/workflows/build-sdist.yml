@@ -31,7 +31,7 @@ jobs:
       # The calling workflow can be triggered by push or pull request events, so there's that
       # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
@@ -55,7 +55,7 @@ jobs:
         name: sdist.build
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       # Always run even if job failed or is cancelled
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
