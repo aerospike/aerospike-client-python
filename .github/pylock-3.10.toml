@@ -1,0 +1,24 @@
+lock-version = "1.0"
+created-by = "pip"
+
+[[packages]]
+name = "delvewheel"
+version = "1.11.2"
+
+[[packages.wheels]]
+name = "delvewheel-1.11.2-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/58/44/ba50aa4c7c70b802a4335d43b6053101736a2597bbe1c10d1202600357e1/delvewheel-1.11.2-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "0e7fcd24d4cefb3285e1e40b9873e9164ebd310f7e2597015d3b6adbd1605d01"
+
+[[packages]]
+name = "pefile"
+version = "2024.8.26"
+
+[[packages.wheels]]
+name = "pefile-2024.8.26-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f"
