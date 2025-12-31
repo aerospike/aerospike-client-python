@@ -1,4 +1,4 @@
-name: PR tests
+name: Smoke tests
 permissions:
   contents: read
 
@@ -16,7 +16,7 @@ on:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
     paths:
-      - .github/workflows/tests.yml
+      - .github/workflows/smoke-tests.yml
       - src/**/*
       - setup.py
   workflow_dispatch:
