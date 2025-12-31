@@ -16,7 +16,7 @@ on:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
     paths:
-      - .github/workflows/build.yml
+      - .github/workflows/tests.yml
       - src/**/*
       - setup.py
     branches: ["dev*", "stage*", "v*-backport*"]
