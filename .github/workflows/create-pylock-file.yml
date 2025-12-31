@@ -24,7 +24,7 @@ jobs:
     - run: pip install delvewheel -c requirements.txt
       working-directory: .github/workflows
     - run: |
-        pip lock -r requirements.txt
+        pip lock delvewheel
         git add pylock.toml
       working-directory: .github/workflows
     - name: Commit lock file
