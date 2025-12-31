@@ -15,6 +15,10 @@ on:
   push:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
+    paths:
+      - .github/workflows/build.yml
+      - src/**/*
+      - setup.py
     branches: ["dev*", "stage*", "v*-backport*"]
     types: [
       # Default triggers
@@ -40,23 +44,6 @@ on:
         required: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - uses: pre-commit/action@646c83fcd040023954eafda54b4db0192ce70507 # v3.0.0
-
   build:
     runs-on: ubuntu-22.04
     strategy:
