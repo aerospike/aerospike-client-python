@@ -50,30 +50,14 @@ jobs:
       matrix:
         test-case: [
           # Docker image + tag, test category, Docker image platform (cpu arch), Python version
-          ["amazonlinux:2023", 2, "linux/amd64", "3.9"],
-          ["amazonlinux:2023", 2, "linux/arm64", "3.9"],
+          ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
           ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
           ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
           ["ubuntu:24.04", 2, "linux/amd64", "3.12"],
           ["ubuntu:24.04", 2, "linux/arm64", "3.12"],
-          # Bullseye is Debian 11
-          ["python:3.9-bullseye", 2, "linux/amd64", "3.9"],
-          ["python:3.9-bullseye", 2, "linux/arm64", "3.9"],
-          ["python:3.10-bullseye", 2, "linux/amd64", "3.10"],
-          ["python:3.10-bullseye", 2, "linux/arm64", "3.10"],
-          ["python:3.11-bullseye", 2, "linux/amd64", "3.11"],
-          ["python:3.11-bullseye", 2, "linux/arm64", "3.11"],
-          ["python:3.12-bullseye", 2, "linux/amd64", "3.12"],
-          ["python:3.12-bullseye", 2, "linux/arm64", "3.12"],
-          ["python:3.13-bullseye", 2, "linux/amd64", "3.13"],
-          ["python:3.13-bullseye", 2, "linux/arm64", "3.13"],
-          ["python:3.14-rc-bullseye", 2, "linux/amd64", "3.14"],
-          ["python:3.14-rc-bullseye", 2, "linux/arm64", "3.14"],
           # Bookworm is Debian 12
-          ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
-          ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
           ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
           ["python:3.10-bookworm", 2, "linux/arm64", "3.10"],
           ["python:3.11-bookworm", 2, "linux/amd64", "3.11"],
@@ -85,12 +69,10 @@ jobs:
           ["python:3.14-rc-bookworm", 2, "linux/amd64", "3.14"],
           ["python:3.14-rc-bookworm", 2, "linux/arm64", "3.14"],
           # QE currently covers Debian 13 on all client-supported Python versions
-          ["redhat/ubi8", 2, "linux/amd64", "3.11"],
-          ["redhat/ubi8", 2, "linux/arm64", "3.11"],
-          ["redhat/ubi9", 2, "linux/amd64", "3.9"],
-          ["redhat/ubi9", 2, "linux/arm64", "3.9"],
-          ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
-          ["redhat/ubi9", 1, "linux/amd64", "3.9"],
+          # We do not use ubi9/python-311 because we cannot install packages using dnf as root
+          ["redhat/ubi9", 2, "linux/amd64", "3.11"],
+          ["redhat/ubi9", 2, "linux/arm64", "3.11"],
+          ["redhat/ubi9", 1, "linux/amd64", "3.11"],
         ]
       fail-fast: false
     env:
@@ -106,7 +88,7 @@ jobs:
         egress-policy: audit
 
     - name: Get tests and Github action scripts
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -149,31 +131,38 @@ jobs:
     - name: Copy repo (and artifact) to container
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
-    - name: 'Amazon Linux 2023: install python 3.11 if applicable'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' && env.PYTHON_VERSION == '3.11' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y python3.11
+    - name: 'DNF based distros: install python3'
+      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || contains(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubi') }}
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python3.11
 
     - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt update
-
-    - name: 'Ubuntu: Install python 3 that comes by default (step 2)'
-      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
-
-    - name: 'RHEL 9: Install python 3 that comes by default (step 2)'
-      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi8') }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python311
+      run: |
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt-get update
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt-get install python3 python3-pip -y
 
     - name: Make sure pip is installed
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi') || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'python') }}
+      # This is good to check in general, so we run for all distros
+      # Ubuntu doesn't have this by default though, but it's fine since it has pip already
+      if: ${{ !startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ensurepip
 
-    - name: 'Cat 1: Install build dependencies using yum'
+    - name: 'Cat 1: Install build dependencies using dnf'
+      # Here we assume all cat 1 tests are running on a dnf-based. distro
       if: ${{ env.TEST_CATEGORY == '1' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y libyaml-devel openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+      run: |
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y libyaml-devel \
+          openssl-devel \
+          glibc-devel \
+          autoconf \
+          automake \
+          libtool \
+          zlib-devel \
+          openssl-devel \
+          python3.11-devel
 
     - if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:24.04' }}
+      # Python 3.12+ fails to install packages to the system directory by default
       run: echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
 
     - name: 'Cat 1: Install pip build frontend'
@@ -200,11 +189,11 @@ jobs:
           ["macos-26", "arm64"]
         ]
         python-version: [
-          "3.9",
           "3.10",
           "3.11",
           "3.12",
           "3.13",
+          "3.14"
         ]
       fail-fast: false
     runs-on: ${{ matrix.runner-os-and-arch[0] }}
@@ -215,7 +204,7 @@ jobs:
         egress-policy: audit
 
     - name: Get tests and Github action scripts
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -235,7 +224,7 @@ jobs:
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
-    - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4.9.1
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.python-version }}
 
