@@ -5,6 +5,14 @@ jobs:
   create-lock-file-for-windows:
     # Should be same environment used to build wheels on Windows
     runs-on: windows-2022
+    strategy:
+      matrix:
+        python-version:
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
@@ -16,6 +24,8 @@ jobs:
       working-directory: .github/workflows
     - name: Install the latest version of uv
       uses: astral-sh/setup-uv@v7
+      with:
+        python-version: ${{ matrix.python-version }}
     - run: |
         uv export --format pylock.toml
         git add pylock.toml
