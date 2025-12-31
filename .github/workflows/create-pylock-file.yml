@@ -27,7 +27,7 @@ jobs:
     - run: pip install delvewheel -c requirements.txt
       working-directory: .github/workflows
     - run: |
-        pip lock delvewheel
+        pip lock delvewheel -o pylock-${{ matrix.python-version }}.toml
         git add pylock-${{ matrix.python-version }}.toml
       working-directory: .github
     - name: Commit lock file
