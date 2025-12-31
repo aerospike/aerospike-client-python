@@ -5,7 +5,9 @@ permissions:
 on:
   pull_request:
     paths:
+    - '.github/workflows/doc-tests.yml'
     - 'doc/**/*'
+    - 'aerospike_helpers/**/*'
   push:
     # To any central branch
     branches:
