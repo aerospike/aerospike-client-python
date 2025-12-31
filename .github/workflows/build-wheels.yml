@@ -315,7 +315,7 @@ jobs:
         CIBW_BEFORE_ALL_LINUX: >
           yum install libyaml-devel -y
         # delvewheel is not enabled by default but we do need to repair the wheel
-        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
+        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel -c requirements.txt"
         # We want to check that our wheel links to the new openssl 3 install, not the system default
         # This assumes that ldd prints out the "soname" for the libraries
         # We can also manually verify the repair worked by checking the repaired wheel's compatibility tag
