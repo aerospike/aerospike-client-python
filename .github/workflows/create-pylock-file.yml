@@ -28,7 +28,7 @@ jobs:
       working-directory: .github/workflows
     - run: |
         pip lock delvewheel
-        git add pylock.toml
+        git add pylock-${{ matrix.python-version }}.toml
       working-directory: .github
     - name: Commit lock file
       uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
