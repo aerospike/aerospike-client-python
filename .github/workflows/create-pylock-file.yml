@@ -22,12 +22,8 @@ jobs:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
     - run: pip install delvewheel -c requirements.txt
       working-directory: .github/workflows
-    - name: Install the latest version of uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        python-version: ${{ matrix.python-version }}
     - run: |
-        uv export --format pylock.toml
+        pip lock -r requirements.txt
         git add pylock.toml
       working-directory: .github/workflows
     - name: Commit lock file
