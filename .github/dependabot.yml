@@ -9,3 +9,7 @@ updates:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"
     target-branch: "dev"
+  - package-ecosystem: "pip"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
