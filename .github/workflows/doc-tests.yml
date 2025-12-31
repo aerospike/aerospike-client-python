@@ -5,6 +5,8 @@ permissions:
 on:
   pull_request:
     paths:
+      # doc8.ini not committed because it will cause pre-commit hooks to fail,
+      # which will lead to changes to the below files anyways
     - '.github/workflows/doc-tests.yml'
     - 'doc/**/*'
     - 'aerospike_helpers/**/*'

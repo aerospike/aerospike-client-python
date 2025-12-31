@@ -16,10 +16,17 @@ on:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
     paths:
-      - .github/workflows/smoke-tests.yml
+      # In case any upstream workflows used by this workflow are updated
+      - .github/**/*
+      # Source code changes
+      - setup.py
+      - aerospike-client-c
       - src/**/*
       - aerospike_helpers/**/*
-      - setup.py
+      - .clang-format
+      - .flake8
+      # Test changes
+      - tests/**/*
   workflow_dispatch:
     inputs:
       # Used to test server RCs
