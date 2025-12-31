@@ -1,6 +1,9 @@
 permissions:
   contents: read
 
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.10'
+
 on:
   push:
     branches:
