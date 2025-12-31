@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -85,7 +85,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         type: string
         required: true
@@ -195,13 +195,13 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -210,7 +210,7 @@ jobs:
 
     - name: 'Windows: Add msbuild to PATH'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
-      uses: microsoft/setup-msbuild@34cfbaee7f672c76950673338facd8a73f637506 # v1.1.3
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
 
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -349,7 +349,7 @@ jobs:
       shell: bash
 
     - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       if: ${{ !cancelled() }}
       with:
         path: ./wheelhouse/*.whl
@@ -357,7 +357,7 @@ jobs:
         if-no-files-found: error
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -386,13 +386,13 @@ jobs:
         shell: bash
 
       - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
@@ -411,7 +411,7 @@ jobs:
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
@@ -424,7 +424,7 @@ jobs:
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           allow-prereleases: true
@@ -443,7 +443,7 @@ jobs:
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           status: ${{ job.status }}
