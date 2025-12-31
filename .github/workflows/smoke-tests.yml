@@ -19,15 +19,6 @@ on:
       - .github/workflows/tests.yml
       - src/**/*
       - setup.py
-    types: [
-      # Default triggers
-      opened,
-      synchronize,
-      reopened,
-      # Additional triggers
-      labeled,
-      unlabeled
-    ]
   workflow_dispatch:
     inputs:
       # Used to test server RCs
