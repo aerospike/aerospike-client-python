@@ -16,15 +16,17 @@ on:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
     paths-ignore:
+      # Only doc related changes
       - doc/**/*
-      - .git-blame-ignore-revs
       - .readthedocs.yml
-      - benchmarks/**/*
+      # Only for ignoring git commits when using 'git blame'
+      - .git-blame-ignore-revs
       # Only used by QE
       - scripts/**/*
       - .build.yml
+      # Other misc files not related to source code changes
+      - benchmarks/**/*
       - '**/*.md'
-      - 'README.rst'
   workflow_dispatch:
     inputs:
       # Used to test server RCs
