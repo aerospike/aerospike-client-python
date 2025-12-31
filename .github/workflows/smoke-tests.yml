@@ -15,18 +15,16 @@ on:
   push:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
-    paths:
-      # In case any upstream workflows used by this workflow are updated
-      - .github/**/*
-      # Source code changes
-      - setup.py
-      - aerospike-client-c
-      - src/**/*
-      - aerospike_helpers/**/*
-      - .clang-format
-      - .flake8
-      # Test changes
-      - tests/**/*
+    paths-ignore:
+      - doc/**/*
+      - .git-blame-ignore-revs
+      - .readthedocs.yml
+      - benchmarks/**/*
+      # Only used by QE
+      - scripts/**/*
+      - .build.yml
+      - '**/*.md'
+      - 'README.rst'
   workflow_dispatch:
     inputs:
       # Used to test server RCs
