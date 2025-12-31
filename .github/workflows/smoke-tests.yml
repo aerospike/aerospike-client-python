@@ -18,6 +18,7 @@ on:
     paths:
       - .github/workflows/smoke-tests.yml
       - src/**/*
+      - aerospike_helpers/**/*
       - setup.py
   workflow_dispatch:
     inputs:
