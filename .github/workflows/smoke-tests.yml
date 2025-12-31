@@ -19,7 +19,6 @@ on:
       - .github/workflows/tests.yml
       - src/**/*
       - setup.py
-    branches: ["dev*", "stage*", "v*-backport*"]
     types: [
       # Default triggers
       opened,
