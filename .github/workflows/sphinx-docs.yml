@@ -1,7 +1,14 @@
 on:
-  push:
+  pull_request:
     paths:
     - 'doc/**/*'
+  push:
+    # To any central branch
+    branches:
+      - "dev*"
+      - "stage*"
+      - "master*"
+      - "v*-backport*"
   # For debugging this workflow
   workflow_dispatch:
 
