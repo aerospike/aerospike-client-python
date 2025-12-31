@@ -10,7 +10,8 @@ updates:
       interval: "daily"
     target-branch: "dev"
   - package-ecosystem: "pip"
-    directory: "**/*"
+    directories:
+      - "**/*"
     schedule:
       interval: "daily"
     target-branch: "dev"
