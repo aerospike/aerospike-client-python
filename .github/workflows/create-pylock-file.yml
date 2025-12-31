@@ -1,0 +1,26 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  create-lock-file-for-windows:
+    # Should be same environment used to build wheels on Windows
+    runs-on: windows-2022
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - run: pip install delvewheel -c requirements.txt
+      working-directory: .github/workflows
+    - run: |
+        uv export --format pylock.toml
+        git add pylock.toml
+      working-directory: .github/workflows
+    - name: Commit lock file
+      uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
+      with:
+        commit_message: 'Generate lock file'
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        branch: ${{ github.ref }}
