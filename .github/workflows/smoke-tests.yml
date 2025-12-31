@@ -21,12 +21,10 @@ on:
       - .readthedocs.yml
       # Only for ignoring git commits when using 'git blame'
       - .git-blame-ignore-revs
-      # Only used by QE
-      - scripts/**/*
+      # Only used by QE for building their own wheels
       - .build.yml
       # Other misc files not related to source code changes
       - benchmarks/**/*
-      - '**/*.md'
   workflow_dispatch:
     inputs:
       # Used to test server RCs
