@@ -1,6 +1,10 @@
 on:
   push:
-    branches: ["dev*", "stage*", "master*", "v*-backport*"]
+    branches:
+    - "dev*"
+    - "stage*"
+    - "master*"
+    - "v*-backport*"
   pull_request:
 
 jobs:
