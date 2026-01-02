@@ -989,6 +989,7 @@ Index Operations
                 bin="fav_movies",
                 index_type=aerospike.INDEX_TYPE_MAPKEYS,
                 index_datatype=aerospike.INDEX_STRING,
+                ctx=ctx_map_rank,
                 name="demo_fav_movies_titles_idx"
             )
             client.close()
