@@ -222,7 +222,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [_AS_EXP_LOOPVAR_BLOB] = EXP_SZ(as_exp_loopvar_blob(0)),
         [_AS_EXP_LOOPVAR_GEOJSON] = EXP_SZ(as_exp_loopvar_geojson(0)),
         [_AS_EXP_LOOPVAR_NIL] = EXP_SZ(as_exp_loopvar_nil(0)),
-        // [_AS_EXP_LOOPVAR_INF] = EXP_SZ(as_exp_loopvar_infinity(0)),
+        [_AS_EXP_LOOPVAR_HLL] = EXP_SZ(as_exp_loopvar_hll(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(
@@ -661,6 +661,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_LOOPVAR_BOOL:
         case _AS_EXP_LOOPVAR_BLOB:
         case _AS_EXP_LOOPVAR_NIL:
+        case _AS_EXP_LOOPVAR_HLL:
         case _AS_EXP_LOOPVAR_GEOJSON:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
@@ -694,6 +695,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             case _AS_EXP_LOOPVAR_GEOJSON:
                 APPEND_ARRAY(0, as_exp_loopvar_geojson(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_HLL:
+                APPEND_ARRAY(0, as_exp_loopvar_hll(lval1));
                 break;
             }
 
