@@ -960,8 +960,7 @@ Index Operations
         :param index_type: See :ref:`aerospike_index_types` for possible values.
         :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param str name: the name of the index.
-        :param dict ctx: a dictionary with a key named ``ctx`` mapped to a :class:`list` of contexts produced by
-            :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
