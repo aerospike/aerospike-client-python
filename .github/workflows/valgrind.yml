@@ -2,12 +2,13 @@ name: Valgrind
 run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: &workflow_inputs
     inputs:
       test-file:
         description: 'new_test/<test-file>'
         required: false
         default: ""
+        type: string
       registry-name:
         type: string
         required: false
@@ -22,11 +23,13 @@ on:
         required: false
         description: Server tag
         default: latest
+        type: string
       massif:
         type: boolean
         description: 'Use massif for testing memory usage'
         required: false
         default: false
+  workflow_call: *workflow_inputs
 
 env:
   PYTHON_TAG: cp310

@@ -8,50 +8,29 @@ on:
         description: Don't create release bundle
 
 jobs:
-  promote-dev-version-to-rc-version:
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: promote-dev-build-to-rc
-
-  promote-rc-version-to-release-version:
-    needs: promote-dev-version-to-rc-version
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: promote-rc-build-to-release
-
-  build-artifacts:
-    needs: promote-rc-version-to-release-version
+  run-dev-tests:
     uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
 
-  run-dev-tests:
-    needs: build-artifacts
-    uses: ./.github/workflows/test-server-rc.yml
-    # TODO: stub
-    secrets: inherit
-
+  # TODO: this should be run in parallel with build-artifacts after the manylinux wheel test has passed.
+  # TODO: this should use a wheel built from run-dev-tests
   valgrind:
-    needs: build-artifacts
-    strategy:
-      matrix:
-        massif: [
-            false
-            true
-        ]
-      fail-fast: false
+    needs: run-dev-tests
     uses: ./.github/workflows/valgrind.yml
+    with:
+      massif: false
 
   create-jfrog-release-bundle:
     needs: [
-      run-dev-tests,
-      valgrind
+      valgrind,
+      run-dev-tests
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: ${{ format('{0}:{1}', vars.JFROG_BUILD_NAME, github.run_number) }}
       jf-bundle-name: python-client-release
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
+      version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
