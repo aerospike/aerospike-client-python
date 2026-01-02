@@ -2399,29 +2399,24 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
-                                        PyObject *py_cdt_ctx, bool *ctx_in_use,
+                                        PyObject *py_ctx_list, bool *ctx_in_use,
                                         as_static_pool *static_pool,
                                         int serializer_type)
 {
-    PyObject *py_ctx_list = PyDict_GetItemString(py_cdt_ctx, CTX_KEY);
+    as_status status = 0;
 
-    if (!py_ctx_list) {
-        return AEROSPIKE_OK;
+    if (!py_ctx_list || !PyList_Check(py_ctx_list)) {
+        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                 "Failed to convert %s", CTX_KEY);
+        goto CLEANUP5;
     }
 
     long int_val = 0;
     as_val *val = NULL;
 
-    as_status status = 0;
     PyObject *py_id = NULL;
     PyObject *py_value = NULL;
     PyObject *py_extra_args = NULL;
-
-    if (!PyList_Check(py_ctx_list)) {
-        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                 "Failed to convert %s", CTX_KEY);
-        goto CLEANUP5;
-    }
 
     Py_ssize_t py_list_size = PyList_Size(py_ctx_list);
     as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
@@ -2574,6 +2569,21 @@ CLEANUP4:
     as_cdt_ctx_destroy(cdt_ctx);
 CLEANUP5:
     return status;
+}
+
+as_status as_cdt_ctx_init_from_py_operation_dict(
+    AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
+    PyObject *py_op_dict, bool *ctx_in_use, as_static_pool *static_pool,
+    int serializer_type)
+{
+    PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
+    if (!py_ctx_list) {
+        return AEROSPIKE_OK;
+    }
+
+    return as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list,
+                                         ctx_in_use, static_pool,
+                                         serializer_type);
 }
 
 static bool requires_int(uint64_t op)

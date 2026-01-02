@@ -47,7 +47,6 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
 
-    PyObject *op_dict = NULL;
     char *base64 = NULL;
     PyObject *py_response = NULL;
 
@@ -75,23 +74,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
-    // Convert Python cdt_ctx to C version
-    // Pass in ctx into a dict so we can use helper function
-    op_dict = PyDict_New();
-    if (op_dict == NULL) {
-        as_error_update(
-            &err, AEROSPIKE_ERR,
-            "unable to convert Python cdtctx to it's C client counterpart");
-        goto CLEANUP;
-    }
-    int retval = PyDict_SetItemString(op_dict, "ctx", py_cdtctx);
-    if (retval == -1) {
-        as_error_update(
-            &err, AEROSPIKE_ERR,
-            "unable to convert Python cdtctx to it's C client counterpart");
-        goto CLEANUP;
-    }
-    if (as_cdt_ctx_init_from_pyobject(self, &err, &ctx, op_dict, &ctx_in_use,
+    if (as_cdt_ctx_init_from_pyobject(self, &err, &ctx, py_cdtctx, &ctx_in_use,
                                       &static_pool,
                                       SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -128,8 +111,6 @@ CLEANUP:
         raise_exception(&err);
         return NULL;
     }
-
-    Py_XDECREF(op_dict);
 
     return py_response;
 }

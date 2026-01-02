@@ -446,9 +446,9 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -494,9 +494,9 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -543,9 +543,9 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -590,9 +590,9 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -638,9 +638,9 @@ static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to convert ctx list");
     }
@@ -678,9 +678,9 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         /* Failed to add the operation, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
@@ -728,9 +728,9 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
         goto error;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         goto error;
     }
 
@@ -785,9 +785,9 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -832,9 +832,9 @@ static as_status add_op_list_remove_by_index_range(
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -880,9 +880,9 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -926,9 +926,9 @@ static as_status add_op_list_remove_by_rank_range(
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -974,9 +974,9 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1013,9 +1013,9 @@ static as_status add_op_list_remove_by_value_list(
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         /* Failed to convert ctx, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
@@ -1060,9 +1060,9 @@ static as_status add_op_list_remove_by_value_range(
         goto error;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         goto error;
     }
 
@@ -1112,9 +1112,9 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1147,9 +1147,9 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1192,9 +1192,9 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1237,9 +1237,9 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1282,9 +1282,9 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
@@ -1332,9 +1332,9 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1382,9 +1382,9 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
@@ -1432,9 +1432,9 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(incr);
         return err->code;
     }
@@ -1470,9 +1470,9 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1509,9 +1509,9 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1542,9 +1542,9 @@ static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         ;
         return err->code;
     }
@@ -1584,9 +1584,9 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1612,9 +1612,9 @@ static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1658,9 +1658,9 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1695,9 +1695,9 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1735,9 +1735,9 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1775,9 +1775,9 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1803,9 +1803,9 @@ static as_status add_op_list_size(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1852,9 +1852,9 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1917,9 +1917,9 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, &ctx_in_use,
-                                      static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_py_operation_dict(
+            self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+            serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
