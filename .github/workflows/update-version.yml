@@ -72,7 +72,7 @@ jobs:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ inputs.dry-run == false && inputs.new_version || '' }}
-        branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+        branch: ${{ inputs.new_version }}
 
     - name: Output bump commit hash for next jobs to use
       id: get-bump-commit-sha
