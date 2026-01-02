@@ -464,6 +464,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
 
                 Contains :ref:`aerospike_batch_policies`.
+
+            .. _config_batch_remove:
+
             * **batch_remove** (:class:`dict`)
                 Default delete policy used in batch remove commands.
 
@@ -473,6 +476,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
 
                 Contains :ref:`aerospike_batch_remove_policies`.
+
+            .. _config_batch_apply:
+
             * **batch_apply** (:class:`dict`)
                 Default user defined function policy used in batch UDF apply commands.
 
@@ -482,6 +488,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
 
                 Contains :ref:`aerospike_batch_apply_policies`.
+
+            .. _config_batch_write:
+
             * **batch_write** (:class:`dict`)
                 Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
 
@@ -489,6 +498,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
 
                 Contains :ref:`aerospike_batch_write_policies`.
+
+            .. _config_batch_parent_write:
+
             * **batch_parent_write** (:class:`dict`)
                 Default parent batch policy used in batch write commands.
 
