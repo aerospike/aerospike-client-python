@@ -542,6 +542,8 @@ User Defined Functions
 
         Register a UDF module with the cluster.
 
+        This waits for the UDF to be added to all nodes in the server before returning.
+
         :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -566,7 +568,9 @@ User Defined Functions
 
     .. method:: udf_remove(module[, policy: dict])
 
-        Remove a  previously registered UDF module from the cluster.
+        Remove a previously registered UDF module from the cluster.
+
+        This waits for the UDF to be removed from the server completely before returning.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.

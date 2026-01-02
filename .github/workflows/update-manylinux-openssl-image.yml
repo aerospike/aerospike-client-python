@@ -30,7 +30,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         sparse-checkout: |
           .github/workflows
@@ -50,13 +50,13 @@ jobs:
         flavor: latest=false
 
     - name: Set up Docker Buildx so we can cache our Docker image layers
-      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      uses: step-security/setup-buildx-action@8c8aef2d414c0b66518fee2b7084e0986f82d7ac # v3.11.1
 
     - name: Get cibuildwheel version used to build wheels
       run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
       working-directory: aerospike-client-python/.github/workflows
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         repository: pypa/cibuildwheel
         ref: ${{ env.CIBW_VERSION }}
