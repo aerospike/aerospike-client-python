@@ -9,3 +9,9 @@ updates:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"
     target-branch: "dev"
+  - package-ecosystem: "pip"
+    directories:
+      - "**/*"
+    schedule:
+      interval: "daily"
+    target-branch: "dev"
