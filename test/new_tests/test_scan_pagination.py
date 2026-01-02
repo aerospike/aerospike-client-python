@@ -7,77 +7,78 @@ import aerospike
 from .as_status_codes import AerospikeStatus
 
 
-class TestScanPagination(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        self.test_ns = "test"
-        self.test_set = "demo"
+@pytest.fixture(autouse=True, scope="class")
+def setup(request, as_connection):
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
 
-        self.partition_1000_count = 0
-        self.partition_1001_count = 0
-        self.partition_1002_count = 0
-        self.partition_1003_count = 0
+    request.cls.partition_1000_count = 0
+    request.cls.partition_1001_count = 0
+    request.cls.partition_1002_count = 0
+    request.cls.partition_1003_count = 0
 
-        as_connection.truncate(self.test_ns, None, 0)
+    as_connection.truncate(request.cls.test_ns, None, 0)
 
+    for i in range(1, 100000):
+        put = 0
+        rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
+
+        if rec_partition == 1000:
+            request.cls.partition_1000_count += 1
+            put = 1
+        if rec_partition == 1001:
+            request.cls.partition_1001_count += 1
+            put = 1
+        if rec_partition == 1002:
+            request.cls.partition_1002_count += 1
+            put = 1
+        if rec_partition == 1003:
+            request.cls.partition_1003_count += 1
+            put = 1
+        if put:
+            rec = {
+                "i": i,
+                "s": "xyz",
+                "l": [2, 4, 8, 16, 32, None, 128, 256],
+                "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
+            }
+            key = {
+                "ns": request.cls.test_ns,
+                "set": request.cls.test_set,
+                "key": str(i),
+                "digest": aerospike.calc_digest(request.cls.test_ns, request.cls.test_set, str(i)),
+            }
+            as_connection.put(key, rec)
+    # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
+    #         {request.cls.partition_1001_count} records are put in partition 1001, \
+    #         {request.cls.partition_1002_count} records are put in partition 1002, \
+    #         {request.cls.partition_1003_count} records are put in partition 1003")
+
+    def teardown():
         for i in range(1, 100000):
             put = 0
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            key = ("test", "demo", str(i))
+            rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
 
             if rec_partition == 1000:
-                self.partition_1000_count += 1
+                request.cls.partition_1000_count += 1
                 put = 1
             if rec_partition == 1001:
-                self.partition_1001_count += 1
+                request.cls.partition_1001_count += 1
                 put = 1
             if rec_partition == 1002:
-                self.partition_1002_count += 1
+                request.cls.partition_1002_count += 1
                 put = 1
             if rec_partition == 1003:
-                self.partition_1003_count += 1
+                request.cls.partition_1003_count += 1
                 put = 1
             if put:
-                rec = {
-                    "i": i,
-                    "s": "xyz",
-                    "l": [2, 4, 8, 16, 32, None, 128, 256],
-                    "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
-                }
-                key = {
-                    "ns": self.test_ns,
-                    "set": self.test_set,
-                    "key": str(i),
-                    "digest": aerospike.calc_digest(self.test_ns, self.test_set, str(i)),
-                }
-                as_connection.put(key, rec)
-        # print(f"{self.partition_1000_count} records are put in partition 1000, \
-        #         {self.partition_1001_count} records are put in partition 1001, \
-        #         {self.partition_1002_count} records are put in partition 1002, \
-        #         {self.partition_1003_count} records are put in partition 1003")
+                as_connection.remove(key)
 
-        def teardown():
-            for i in range(1, 100000):
-                put = 0
-                key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+    request.addfinalizer(teardown)
 
-                if rec_partition == 1000:
-                    self.partition_1000_count += 1
-                    put = 1
-                if rec_partition == 1001:
-                    self.partition_1001_count += 1
-                    put = 1
-                if rec_partition == 1002:
-                    self.partition_1002_count += 1
-                    put = 1
-                if rec_partition == 1003:
-                    self.partition_1003_count += 1
-                    put = 1
-                if put:
-                    as_connection.remove(key)
 
-        request.addfinalizer(teardown)
-
+class TestScanPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_existent_ns_and_set(self):
 

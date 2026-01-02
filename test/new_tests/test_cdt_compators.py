@@ -17,12 +17,12 @@ def get_list_result_from_operation(client, key, operation, binname):
 
 
 class TestNewRelativeCDTValues(object):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    @pytest.fixture(autouse=True, scope="class")
+    def setup(self, as_connection):
         """
         Setup Method
         """
-        self.keys = []
+        self.__class__.keys = []
         cdt_list_val = [[0, "a"], [1, "b"], [1, "c"], [1, "d", "e"], [2, "f"], [2, "two"], [3, "g"]]
         cdt_map_val = {
             "a": [0, "a"],
@@ -34,22 +34,22 @@ class TestNewRelativeCDTValues(object):
             "g": [3, "g"],
         }
 
-        self.cdt_key = ("test", "cdt_values", "wildcard")
-        self.cdt_list_bin = "cdt_list_bin"
-        self.cdt_map_bin = "cdt_map_bin"
+        self.__class__.cdt_key = ("test", "cdt_values", "wildcard")
+        self.__class__.cdt_list_bin = "cdt_list_bin"
+        self.__class__.cdt_map_bin = "cdt_map_bin"
 
-        self.as_connection.put(self.cdt_key, {self.cdt_list_bin: cdt_list_val, self.cdt_map_bin: cdt_map_val})
+        as_connection.put(self.__class__.cdt_key, {self.__class__.cdt_list_bin: cdt_list_val, self.__class__.cdt_map_bin: cdt_map_val})
         # Make sure the list is ordered, in order to get expected return order.
-        ops = [lo.list_sort(self.cdt_list_bin, 0), lo.list_set_order(self.cdt_list_bin, aerospike.LIST_ORDERED)]
-        self.as_connection.operate(self.cdt_key, ops)
+        ops = [lo.list_sort(self.__class__.cdt_list_bin, 0), lo.list_set_order(self.__class__.cdt_list_bin, aerospike.LIST_ORDERED)]
+        as_connection.operate(self.__class__.cdt_key, ops)
 
-        self.keys.append(self.cdt_key)
+        self.__class__.keys.append(self.__class__.cdt_key)
 
         yield
 
-        for rec_key in self.keys:
+        for rec_key in self.__class__.keys:
             try:
-                self.as_connection.remove(rec_key)
+                as_connection.remove(rec_key)
             except e.AerospikeError:
                 pass
 
