@@ -151,7 +151,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
             )
         except e.IndexFoundError:
             pass
@@ -164,7 +164,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_map_cdt_index",
-                {"ctx": ctx_map_index},
+                ctx_map_index,
             )
         except e.IndexFoundError:
             pass
