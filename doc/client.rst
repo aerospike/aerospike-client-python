@@ -542,6 +542,8 @@ User Defined Functions
 
         Register a UDF module with the cluster.
 
+        This waits for the UDF to be added to all nodes in the server before returning.
+
         :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -566,7 +568,9 @@ User Defined Functions
 
     .. method:: udf_remove(module[, policy: dict])
 
-        Remove a  previously registered UDF module from the cluster.
+        Remove a previously registered UDF module from the cluster.
+
+        This waits for the UDF to be removed from the server completely before returning.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -1048,7 +1052,7 @@ connected to a Community Edition cluster (see
 A user is validated by the client against the server whenever a \
 connection is established through the use of a username and password \
 (passwords hashed using bcrypt). \
-When security is enabled, each operation is validated against the \
+When security is enabled, each command is validated against the \
 user\'s roles. Users are assigned roles, which are collections of \
 :ref:`aerospike_privilege_dict`.
 
@@ -1058,8 +1062,12 @@ user\'s roles. Users are assigned roles, which are collections of \
     from aerospike import exception as ex
     import time
 
-    config = {'hosts': [('127.0.0.1', 3000)] }
-    client = aerospike.client(config).connect('ipji', 'life is good')
+    config = {
+        'hosts': [('127.0.0.1', 3000)],
+        'user': 'ipji',
+        'password': 'life is good'
+    }
+    client = aerospike.client(config)
 
     try:
         dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
@@ -2213,6 +2221,8 @@ Info Policies
 
         * **timeout** (:class:`int`)
             | Read timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_admin_policies:
@@ -2229,6 +2239,8 @@ Admin Policies
 
         * **timeout** (:class:`int`)
             | Admin operation timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_list_policies:

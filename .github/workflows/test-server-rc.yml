@@ -1,4 +1,4 @@
-name: Test cibuildwheel artifacts against server RC
+name: (UNUSED) Test cibuildwheel artifacts against server RC
 run-name: Test cibuildwheel artifacts against server RC
 
 on:
@@ -18,7 +18,6 @@ jobs:
       matrix:
         # Python versions to build wheels on
         python: [
-          ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
           ["3.12", "cp312"]
@@ -29,7 +28,12 @@ jobs:
         ]
     runs-on: ${{ matrix.platform[1] }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
@@ -41,7 +45,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'docker-container'
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform[0] }}.build
         path: ./
@@ -66,14 +70,18 @@ jobs:
       fail-fast: false
       matrix:
         python: [
-          ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
           ["3.12", "cp312"]
         ]
     runs-on: macos-12-large
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - uses: ./.github/actions/setup-docker-on-macos
 
@@ -84,12 +92,12 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ matrix.python[1] }}-macosx_x86_64.build
         path: ./
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.python[0] }}
 
@@ -112,16 +120,20 @@ jobs:
     strategy:
       matrix:
         python-version: [
-          ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
           ["3.12", "cp312"]
         ]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ matrix.python-version[1] }}-macosx_arm64.build
         path: ./
@@ -137,7 +149,7 @@ jobs:
     # Need to be able to save Docker Hub credentials to keychain
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}

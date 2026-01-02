@@ -165,6 +165,7 @@ aerospike\_helpers\.expressions\.base module
 ---------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.base
+    :exclude-members: LoopVar, LoopVarMap, LoopVarList, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarBlob, LoopVarBool, LoopVarNil, LoopVarGeoJson, SelectByPath, ModifyByPath, ResultRemove
     :members:
     :special-members:
     :show-inheritance:
