@@ -91,8 +91,9 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
             "unable to convert Python cdtctx to it's C client counterpart");
         goto CLEANUP;
     }
-    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &static_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+    if (as_cdt_ctx_init_from_pyobject(self, &err, &ctx, op_dict, &ctx_in_use,
+                                      &static_pool,
+                                      SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {

@@ -1840,9 +1840,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 goto CLEANUP;
             }
 
-            if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
-                            &ctx_in_use, &static_pool,
-                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            if (as_cdt_ctx_init_from_pyobject(
+                    self, err, temp_expr.ctx, temp_expr.pydict, &ctx_in_use,
+                    &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }

@@ -2401,11 +2401,13 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 // an as_cdt_ctx object for use with the c-client. the cdt_ctx parameter should be an uninitialized as_cdt_ctx
 // object. This function will initilaise it, and free it IF an error occurs, otherwise, the caller must destroy
 // the as_cdt_ctx when it is done.
-as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-                      PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type)
+as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                        as_cdt_ctx *cdt_ctx,
+                                        PyObject *py_cdt_ctx, bool *ctx_in_use,
+                                        as_static_pool *static_pool,
+                                        int serializer_type)
 {
-    PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
+    PyObject *py_ctx_list = PyDict_GetItemString(py_cdt_ctx, CTX_KEY);
 
     if (!py_ctx_list) {
         return AEROSPIKE_OK;
