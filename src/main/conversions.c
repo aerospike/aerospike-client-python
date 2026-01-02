@@ -2397,10 +2397,6 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
 }
 
-// This function converts a list of cdt_ctx from aerospike_helpers.ctx to
-// an as_cdt_ctx object for use with the c-client. the cdt_ctx parameter should be an uninitialized as_cdt_ctx
-// object. This function will initilaise it, and free it IF an error occurs, otherwise, the caller must destroy
-// the as_cdt_ctx when it is done.
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_cdt_ctx, bool *ctx_in_use,
