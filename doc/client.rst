@@ -949,6 +949,45 @@ Index Operations
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
             client.close()
 
+    .. method:: index_cdt_create(ns, set, bin, index_type, index_datatype, name, ctx[, policy: dict])
+
+        Create an index named *name* for numeric, string or GeoJSON values \
+        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
+        whose *bin* is a Collection Data Type whose context is *ctx*. *index_type* describes the CDT type.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_type: Possible values are ``aerospike.INDEX_TYPE_DEFAULT``, ``aerospike.INDEX_TYPE_LIST``, ``aerospike.INDEX_TYPE_MAPKEYS``, and ``aerospike.INDEX_TYPE_MAPVALUES``
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param str name: the name of the index.
+        :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 4.6.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map inside the `martha` map.
+            ctx_map_rank = []
+            ctx_map_rank.append(add_ctx_op(map_rank, -1))
+            index_cdt_create("test", "demo", "martha", aerospike.INDEX_TYPE_MAPKEYS, aerospike.INDEX_STRING, "demo_fav_movies_titles_idx", ctx_map_rank
+                "test_string_list_cdt_index",
+                ctx_map_rank,
+                policy,
+            )
+            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
+            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
+
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
 
         Create a geospatial 2D spherical index with *name* on the *bin* \
