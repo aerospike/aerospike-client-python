@@ -303,7 +303,7 @@ class TestPathExprOperations:
     @pytest.fixture
     def setup_hll_bin(self):
         ops = [
-            hll_ops.hll_add(self.MAP_WITH_HLL_BIN_NAME, [i for i in range(5000)]),
+            hll_ops.hll_add(self.MAP_WITH_HLL_BIN_NAME, [i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
         ]
         self.as_connection.operate(self.key, ops)
 
