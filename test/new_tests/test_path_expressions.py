@@ -313,7 +313,8 @@ class TestPathExprOperations:
         self.as_connection.remove_bin(self.key, bins=[self.MAP_WITH_HLL_BIN_NAME])
 
     def test_exp_loopvar_hll(self, setup_hll_bin):
-        filter_expr = hll.HLLMayContain(LoopVarHLL([1], aerospike.EXP_LOOPVAR_VALUE)).compile()
+        # HLL bin value should always be returned
+        filter_expr = GE(hll.HLLGetCount(bin=LoopVarHLL(var_id=aerospike.EXP_LOOPVAR_VALUE)), 0).compile()
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_WITH_HLL_BIN_NAME,
