@@ -173,6 +173,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 // The cdt_ctx parameter should point to an uninitialized as_cdt_ctx
 // object. This function will initialize it, and free it IF an error occurs. Otherwise, the caller must destroy
 // the as_cdt_ctx when it is done.
+// py_cdt_ctx must be a non-NULL python object
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_cdt_ctx, bool *ctx_in_use,
