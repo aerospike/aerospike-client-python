@@ -1769,7 +1769,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     PyObject *py_expr_tuple = NULL;
     PyObject *py_list_policy_p = NULL;
     PyObject *py_map_policy_p = NULL;
-    PyObject *py_ctx_list_p = NULL;
     as_vector intermediate_expr_queue;
     intermediate_expr temp_expr;
     as_exp_entry *c_expr_entries = NULL;
