@@ -167,9 +167,23 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
                                          as_error *err);
 
-as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-                      PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type);
+// This function takes in a python list of contexts from aerospike_helpers.cdt_ctx
+// and converts it to an as_cdt_ctx object for use with the c-client.
+//
+// The cdt_ctx parameter should point to an uninitialized as_cdt_ctx
+// object. This function will initialize it, and free it IF an error occurs. Otherwise, the caller must destroy
+// the as_cdt_ctx when it is done.
+// py_cdt_ctx must be a non-NULL python object
+as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                        as_cdt_ctx *cdt_ctx,
+                                        PyObject *py_cdt_ctx, bool *ctx_in_use,
+                                        as_static_pool *static_pool,
+                                        int serializer_type);
+
+as_status as_cdt_ctx_init_from_py_operation_dict(
+    AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
+    PyObject *py_op_dict, bool *ctx_in_use, as_static_pool *static_pool,
+    int serializer_type);
 
 // allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 // if false, the Python object should only be a compiled Python expression object from aerospike_helpers
