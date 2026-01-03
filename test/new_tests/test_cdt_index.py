@@ -124,7 +124,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
