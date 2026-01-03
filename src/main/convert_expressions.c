@@ -1765,7 +1765,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     int processed_exp_count = 0;
     int size_to_alloc = 0;
-    bool ctx_in_use = false;
     PyObject *py_expr_tuple = NULL;
     PyObject *py_list_policy_p = NULL;
     PyObject *py_map_policy_p = NULL;
@@ -1785,7 +1784,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     for (int i = 0; i < size; ++i) {
         memset(&temp_expr, 0, sizeof(intermediate_expr));
-        ctx_in_use = false;
         // Reset flag for next temp expr being built
         is_ctx_initialized = false;
 
@@ -1834,7 +1832,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         if (status != AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        is_ctx_initialized = true;
 
         py_list_policy_p =
             PyDict_GetItemString(temp_expr.pydict, AS_PY_LIST_POLICY);
