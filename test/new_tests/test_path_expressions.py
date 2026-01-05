@@ -3,9 +3,10 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
+from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL
-from aerospike_helpers.expressions.map import MapGetByKey
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, HLLBin
+from aerospike_helpers.expressions.map import MapGetByKey, MapPut
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers.expressions import hll
@@ -302,14 +303,19 @@ class TestPathExprOperations:
 
     @pytest.fixture
     def setup_hll_bin(self):
+        move_hll_into_map_as_map_value_expr = MapPut(ctx=None, policy=None, key="a", value=HLLBin(self.MAP_WITH_HLL_BIN_NAME)).compile()
         ops = [
-            hll_ops.hll_add(self.MAP_WITH_HLL_BIN_NAME, [i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
+            # Insert root level HLL bin
+            hll_ops.hll_add(bin_name=self.MAP_WITH_HLL_BIN_NAME, values=[i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
+            expr_ops.expression_write(bin_name=self.MAP_WITH_HLL_BIN_NAME, expression=move_hll_into_map_as_map_value_expr)
         ]
         self.as_connection.operate(self.key, ops)
 
         _, _, bins = self.as_connection.get(self.key)
         self.expected_hll_value = bins[self.MAP_WITH_HLL_BIN_NAME]
+
         yield
+
         self.as_connection.remove_bin(self.key, list=[self.MAP_WITH_HLL_BIN_NAME])
 
     def test_exp_loopvar_hll(self, setup_hll_bin):
