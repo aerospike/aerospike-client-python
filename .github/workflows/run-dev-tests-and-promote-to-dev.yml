@@ -5,6 +5,8 @@ permissions:
   # TODO: look into more
   id-token: write
   statuses: write
+  # For downloading docker images from ghcr.io
+  packages: read
 
 on:
   workflow_dispatch:
