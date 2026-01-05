@@ -62,6 +62,7 @@ jobs:
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+    secrets: inherit
 
   reupload-github-artifacts-as-one:
     needs: valgrind
