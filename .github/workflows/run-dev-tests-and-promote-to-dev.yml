@@ -1,3 +1,6 @@
+name: Run dev tests and promote release bundle to DEV
+run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
+
 permissions:
   # We are building the artifacts in build-artifacts.yml
   contents: read
