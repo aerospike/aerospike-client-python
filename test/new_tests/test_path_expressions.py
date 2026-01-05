@@ -10,7 +10,7 @@ from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
-from aerospike_helpers import cdt_ctx, HyperLogLog
+from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 from contextlib import nullcontext
 from .test_base_class import TestBaseClass
