@@ -11,11 +11,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      dry-run:
-        required: false
-        default: false
-        type: boolean
-        description: Don't create release bundle
       # These inputs are in case we need to test against a server RC
       registry-name:
         type: string
@@ -32,6 +27,16 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag (e.g to test a client backport version)'
+      # For testing purposes
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: Don't create release bundle
+      test-file:
+        required: false
+        type: string
+        description: For speeding up debugging
 
 jobs:
   run-dev-tests:
@@ -43,6 +48,7 @@ jobs:
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
       sha-to-build-and-test: ${{ github.sha }}
+      test-file: ${{ inputs.test-file }}
 
   valgrind:
     needs: run-dev-tests
@@ -52,6 +58,7 @@ jobs:
       registry-name: ${{ inputs.registry-name }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
 
   reupload-github-artifacts-as-one:
     needs: valgrind
