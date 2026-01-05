@@ -206,7 +206,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "The host port must be an integer"),
         ],
         ids=[
             "config not dict",
