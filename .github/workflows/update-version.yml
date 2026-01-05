@@ -57,7 +57,7 @@ jobs:
         new_version: ${{ inputs.new_version }}
 
     - name: Commit new version
-      uses: step-security/git-auto-commit-action@e2d505468267a3cb406af729d48d664de1f16393 # v6.0.2
+      uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
       with:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
