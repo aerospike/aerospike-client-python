@@ -61,19 +61,19 @@ jobs:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
 
-    - name: Update version in repo
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ inputs.new_version }}
+    # - name: Update version in repo
+    #   uses: ./.github/actions/update-version
+    #   with:
+    #     new_version: ${{ inputs.new_version }}
 
-    - name: Commit new version
+    - name: Tag new version
       uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
       with:
-        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
-        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        # commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
+        # commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ inputs.dry-run == false && inputs.new_version || '' }}
-        branch: ${{ inputs.new_version }}
+        # branch: ${{ inputs.new_version }}
 
-    - name: Output bump commit hash for next jobs to use
-      id: get-bump-commit-sha
-      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+    # - name: Output bump commit hash for next jobs to use
+    #   id: get-bump-commit-sha
+    #   run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT

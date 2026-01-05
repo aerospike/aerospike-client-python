@@ -6,12 +6,19 @@ on:
     branches:
     - 'dev*'
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Don't create tag in repo
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   tag-new-commit-with-dev-number:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
@@ -22,6 +29,7 @@ jobs:
       # On pull_request_target, the bump version commit will be ignored
       # So we must pass it manually to the workflow
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
+      override-version: ${{ needs.tag-new-commit-with-dev-number.outputs.new_version }}
     secrets: inherit
 
   upload-to-jfrog:
@@ -33,6 +41,7 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
