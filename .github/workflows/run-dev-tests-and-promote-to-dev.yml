@@ -1,5 +1,6 @@
 permissions:
   contents: read
+  id-token: write
 
 on:
   workflow_dispatch:
@@ -86,8 +87,6 @@ jobs:
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-    permissions:
-      id-token: write
 
   create-jfrog-release-bundle:
     needs: [
@@ -105,8 +104,6 @@ jobs:
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-    permissions:
-      id-token: write
 
   promote-release-bundle-to-dev:
     needs: [
