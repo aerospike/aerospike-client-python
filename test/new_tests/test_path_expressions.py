@@ -303,7 +303,7 @@ class TestPathExprOperations:
 
     @pytest.fixture
     def setup_hll_bin(self):
-        move_hll_into_map_as_map_value_expr = MapPut(ctx=None, policy=None, key="a", value=HLLBin(self.MAP_WITH_HLL_BIN_NAME)).compile()
+        move_hll_into_map_as_map_value_expr = MapPut(ctx=None, policy=None, key="a", value=HLLBin(self.MAP_WITH_HLL_BIN_NAME), bin=self.MAP_WITH_HLL_BIN_NAME).compile()
         ops = [
             # Insert root level HLL bin
             hll_ops.hll_add(bin_name=self.MAP_WITH_HLL_BIN_NAME, values=[i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
