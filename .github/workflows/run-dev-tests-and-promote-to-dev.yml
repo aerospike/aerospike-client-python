@@ -36,6 +36,7 @@ jobs:
       registry-name: ${{ inputs.registry-name }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
+      sha-to-build-and-test: ${{ github.sha }}
 
   valgrind:
     needs: run-dev-tests
