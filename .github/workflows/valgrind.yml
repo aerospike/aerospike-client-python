@@ -189,7 +189,7 @@ jobs:
 
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
-        merge-multiple: true
+        name: ${{ env.PYTHON_TAG }}-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
