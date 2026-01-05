@@ -310,7 +310,7 @@ class TestPathExprOperations:
         _, _, bins = self.as_connection.get(self.key)
         self.expected_hll_value = bins[self.MAP_WITH_HLL_BIN_NAME]
         yield
-        self.as_connection.remove_bin(self.key, bins=[self.MAP_WITH_HLL_BIN_NAME])
+        self.as_connection.remove_bin(self.key, list=[self.MAP_WITH_HLL_BIN_NAME])
 
     def test_exp_loopvar_hll(self, setup_hll_bin):
         # HLL bin value should always be returned
