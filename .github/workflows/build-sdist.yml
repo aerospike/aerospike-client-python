@@ -54,7 +54,7 @@ jobs:
       run: python3 -m build --sdist
 
     - id: get-sdist-version
-      run: export "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+      run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
     - name: Upload source distribution to GitHub
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
