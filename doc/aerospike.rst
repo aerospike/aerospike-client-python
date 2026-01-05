@@ -1810,7 +1810,7 @@ Transaction State
 
 .. data:: TXN_STATE_ABORTED
 
-.. _cdt_select_flags:
+.. _exp_path_select_flags:
 
 Path Expression Flags
 ---------------------
