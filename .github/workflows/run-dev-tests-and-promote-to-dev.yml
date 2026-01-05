@@ -1,6 +1,10 @@
 permissions:
+  # We are building the artifacts in build-artifacts.yml
   contents: read
+  # For shared reusable workflows
+  # TODO: look into more
   id-token: write
+  statuses: write
 
 on:
   workflow_dispatch:
