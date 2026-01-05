@@ -336,7 +336,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_WITH_HLL_BIN_NAME] == self.expected_hll_value
+            assert bins[self.MAP_WITH_HLL_BIN_NAME] == [self.expected_hll_value]
 
     SUBTRACT_FIVE_FROM_ITERATED_FLOAT_EXPR = Sub(LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE), 5.0).compile()
     # Expected results
