@@ -36,8 +36,6 @@ jobs:
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
 
-  # TODO: this should be run in parallel with build-artifacts after the manylinux wheel test has passed.
-  # TODO: add input to disable look-for-wheel-in-jfrog job
   valgrind:
     needs: run-dev-tests
     uses: ./.github/workflows/valgrind.yml
@@ -96,8 +94,9 @@ jobs:
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      # <Build name>:<build id>
       jf-build-names: ${{ format('{0}:{1}', vars.JFROG_BUILD_NAME, github.run_number) }}
-      jf-bundle-name: python-client-release
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
@@ -110,6 +109,6 @@ jobs:
     ]
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
-      release-bundle-name: python-client-release
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.bump-dev-number.outputs.new_version }}
       new-environment: DEV

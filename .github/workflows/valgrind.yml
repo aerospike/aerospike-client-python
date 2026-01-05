@@ -2,7 +2,7 @@ name: Valgrind
 run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
 on:
-  workflow_dispatch: &workflow_inputs
+  workflow_dispatch:
     inputs:
       test-file:
         description: 'new_test/<test-file>'
@@ -29,13 +29,46 @@ on:
         description: 'Use massif for testing memory usage'
         required: false
         default: false
-  workflow_call: *workflow_inputs
+  workflow_call:
+    inputs:
+      test-file:
+        description: 'new_test/<test-file>'
+        required: false
+        default: ""
+        type: string
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        required: false
+        description: Server tag
+        default: latest
+        type: string
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
+        default: false
+      # Workflow call specific inputs
+      # Will be false for workflow_dispatch trigger
+      download-wheel-from-github-artifacts:
+        type: boolean
+        required: false
+        default: true
 
 env:
   PYTHON_TAG: cp310
 
 jobs:
   look-for-wheel-in-jfrog:
+    if: ${{ inputs.download-wheel-from-github-artifacts == false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       # So we can pass the python tag to a reusable workflow
@@ -104,7 +137,7 @@ jobs:
 
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
-    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+    if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
@@ -127,12 +160,12 @@ jobs:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
     needs: [
-      look-for-wheel-in-jfrog,
-      build-manylinux-wheel
+      upload-built-wheel-to-jfrog
     ]
-    # Case 1: Found artifact in JFrog
-    # Case 2: Did not find artifact in JFrog, had to build it in GHA
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
+    # Case 1: Did not find artifact in JFrog, had to build it in GHA
+    # Case 2: Found artifact in JFrog
+    # Case 3: Not using JFrog artifact (i.e using wheel from Github artifact)
+    if: ${{ !cancelled() && (needs.upload-built-wheel-to-jfrog.result == 'success' || needs.upload-built-wheel-to-jfrog.result == 'skipped') }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
