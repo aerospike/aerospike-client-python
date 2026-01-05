@@ -232,5 +232,5 @@ jobs:
       valgrind
     ]
     # Workflow run must clean up after itself even if cancelled
-    if: ${{ always() }}
+    if: ${{ always() && github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/delete-artifacts.yml

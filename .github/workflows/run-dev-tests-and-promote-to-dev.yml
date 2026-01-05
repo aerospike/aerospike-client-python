@@ -87,6 +87,7 @@ jobs:
         # TODO: Not actually signed...
         name: signed-artifacts
         path: ./artifacts
+        if-no-files-found: error
 
   upload-github-artifacts-as-jfrog-build:
     needs: [
