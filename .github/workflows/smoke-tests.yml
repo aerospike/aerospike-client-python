@@ -80,7 +80,7 @@ jobs:
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
     - name: Build client
-      run: python3 -m build
+      run: python3 -m build -C="-j"
       env:
         CFLAGS: '-Werror'
 
@@ -119,7 +119,7 @@ jobs:
       # and .gcda files will be generated there after running the tests
       run: |
         python3 -m pip install build -c requirements.txt
-        COVERAGE=1 UNOPTIMIZED=1 python3 -m build --wheel
+        COVERAGE=1 UNOPTIMIZED=1 python3 -m build -C="-j" --wheel
 
     - name: Install client
       # Install in user directory to prevent permission errors
