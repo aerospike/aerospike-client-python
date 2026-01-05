@@ -542,6 +542,8 @@ User Defined Functions
 
         Register a UDF module with the cluster.
 
+        This waits for the UDF to be added to all nodes in the server before returning.
+
         :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -945,6 +947,50 @@ Index Operations
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
+
+    .. method:: index_cdt_create(ns, set, bin, index_type, index_datatype, name, ctx[, policy: dict])
+
+        Create an index named *name* for a data type (as defined by *index_datatype*) on records of the specified *ns*,
+        *set*, *bin*, and *ctx*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
+        :param str name: the name of the index.
+        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 4.6.0
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike_helpers import cdt_ctx
+
+            client = aerospike.client(
+                {
+                    'hosts': [ ('127.0.0.1', 3000)]
+                }
+            )
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            ctx_map_rank = [
+                cdt_ctx.cdt_ctx_map_rank(-1)
+            ]
+            client.index_cdt_create(
+                ns="test",
+                set="demo",
+                bin="fav_movies",
+                index_type=aerospike.INDEX_TYPE_MAPKEYS,
+                index_datatype=aerospike.INDEX_STRING,
+                ctx=ctx_map_rank,
+                name="demo_fav_movies_titles_idx"
+            )
             client.close()
 
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
