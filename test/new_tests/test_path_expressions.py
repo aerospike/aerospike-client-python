@@ -303,16 +303,20 @@ class TestPathExprOperations:
 
     @pytest.fixture
     def setup_hll_bin(self):
-        move_hll_into_map_as_map_value_expr = MapPut(ctx=None, policy=None, key="a", value=HLLBin(self.MAP_WITH_HLL_BIN_NAME), bin=self.MAP_WITH_HLL_BIN_NAME).compile()
         ops = [
             # Insert root level HLL bin
+            # Using a second operation to move the hll value into a map doesn't work...
             hll_ops.hll_add(bin_name=self.MAP_WITH_HLL_BIN_NAME, values=[i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
-            expr_ops.expression_write(bin_name=self.MAP_WITH_HLL_BIN_NAME, expression=move_hll_into_map_as_map_value_expr)
         ]
         self.as_connection.operate(self.key, ops)
 
         _, _, bins = self.as_connection.get(self.key)
         self.expected_hll_value = bins[self.MAP_WITH_HLL_BIN_NAME]
+
+        map_with_hll_value = {
+            "a": bins[self.MAP_WITH_HLL_BIN_NAME]
+        }
+        self.as_connection.put(self.key, bins={self.MAP_WITH_HLL_BIN_NAME: map_with_hll_value})
 
         yield
 
