@@ -1812,8 +1812,8 @@ Transaction State
 
 .. _exp_path_select_flags:
 
-Path Expression Flags
----------------------
+Path Expression Select Flags
+----------------------------
 
 .. data:: EXP_PATH_SELECT_MATCHING_TREE
 
@@ -1855,8 +1855,8 @@ Path Expression Flags
 
 .. _exp_path_modify_flags:
 
-CDT Modify Flags
-----------------
+Path Expression Modify Flags
+----------------------------
 
 .. data:: EXP_PATH_MODIFY_DEFAULT
 
@@ -1870,8 +1870,8 @@ CDT Modify Flags
 
 .. _exp_loopvar_metadata:
 
-Expression Loop Variable Metadata
----------------------------------
+Path Expression Loop Variable Metadata
+--------------------------------------
 
 .. data:: EXP_LOOPVAR_KEY
 
