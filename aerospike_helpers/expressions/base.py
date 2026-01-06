@@ -1175,7 +1175,7 @@ class ModifyByPath(_BaseExpr):
     Constructs an apply by path operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 
