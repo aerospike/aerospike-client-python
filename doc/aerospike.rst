@@ -1845,7 +1845,7 @@ Path Expression Select Flags
 
     Returns the list of map (key, value) pairs of the nodes finally selected
     by the context. This is a synonym for setting both
-    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE`` bits together.
+    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE` bits together.
     The list is formatted as ``[key0, value0, key1, value1...]``.
 
 .. data:: EXP_PATH_SELECT_NO_FAIL
