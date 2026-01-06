@@ -38,10 +38,11 @@ jobs:
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
-    - uses: actions/cache@v5
+    - uses: actions/cache/restore@v5
       id: download-c-client
       with:
         key: c-client-${{ env.C_CLIENT_REVISION }}
+        path: libaerospike.a
 
     - run: ls -R
 
