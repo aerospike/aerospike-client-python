@@ -460,7 +460,7 @@ class TestConfigTTL:
         scan.add_ops(ops)
         job_id = scan.execute_background()
 
-        wait_for_job_completion(self.client, job_id)
+        wait_for_job_completion(self.client, job_id, job_module=aerospike.JOB_SCAN)
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
