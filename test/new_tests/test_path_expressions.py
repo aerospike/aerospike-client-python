@@ -347,7 +347,7 @@ class TestPathExprOperations:
         aerospike.EXP_PATH_MODIFY_NO_FAIL,
         aerospike.EXP_PATH_MODIFY_DEFAULT,
     ])
-    def test_cdt_modify(self, flags):
+    def test_modify_by_path(self, flags):
         ops = [
             operations.modify_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
