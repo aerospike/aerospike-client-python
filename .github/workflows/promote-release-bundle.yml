@@ -24,4 +24,4 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - run: jf rbp --signing-key=aerospike ${{ inputs.release-bundle-name }} ${{ inputs.release-bundle-version }} ${{ inputs.new-environment }}
+    - run: jf rbp --signing-key=aerospike --include-repos ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-generic-dev-local ${{ inputs.release-bundle-name }} ${{ inputs.release-bundle-version }} ${{ inputs.new-environment }}
