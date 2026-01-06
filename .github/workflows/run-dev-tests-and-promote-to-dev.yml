@@ -125,7 +125,8 @@ jobs:
 
   promote-release-bundle-to-dev:
     needs: [
-      create-jfrog-release-bundle
+      create-jfrog-release-bundle,
+      run-dev-tests
     ]
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
