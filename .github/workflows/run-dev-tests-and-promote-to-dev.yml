@@ -136,5 +136,5 @@ jobs:
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ needs.run-dev-tests.outputs.build-version }}
+      release-bundle-version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
       new-environment: DEV
