@@ -1,9 +1,9 @@
-name: PR tests
+name: Smoke tests
 permissions:
   contents: read
 
 env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.9'
+  LOWEST_SUPPORTED_PY_VERSION: '3.10'
   # pull_request event doesn't support inputs
   REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
   SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
@@ -15,16 +15,16 @@ on:
   push:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
-    branches: ["dev*", "stage*", "v*-backport*"]
-    types: [
-      # Default triggers
-      opened,
-      synchronize,
-      reopened,
-      # Additional triggers
-      labeled,
-      unlabeled
-    ]
+    paths-ignore:
+      # Only doc related changes
+      - doc/**/*
+      - .readthedocs.yml
+      # Only for ignoring git commits when using 'git blame'
+      - .git-blame-ignore-revs
+      # Only used by QE for building their own wheels
+      - .build.yml
+      # Other misc files not related to source code changes
+      - benchmarks/**/*
   workflow_dispatch:
     inputs:
       # Used to test server RCs
@@ -40,18 +40,6 @@ on:
         required: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - uses: pre-commit/action@v3.0.0
-
   # TODO: check if C client was already built for current submodule revision
   # TODO: define a var for the same OS used in the other build job
   build-c-client:
@@ -83,22 +71,27 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        py-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         # Make sure we can build and run tests on an instrumented build that uses libasan
         # We aren't necessarily checking for memory errors / leaks in this test
         sanitizer: [false]
         include:
-        - py-version: 3.9
+        - py-version: '3.10'
           sanitizer: true
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -132,7 +125,7 @@ jobs:
       run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
 
     - name: Send wheel to test jobs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
@@ -140,12 +133,17 @@ jobs:
   generate-coverage-report:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -219,7 +217,7 @@ jobs:
 
     - name: Upload coverage report folder to Github
       if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: coverage-report
         path: build/temp*/src/main/
@@ -229,16 +227,21 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: coverage-report
         path: ./coverage-report
 
-    - uses: codecov/codecov-action@v5
+    - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
       with:
         directory: coverage-report
         verbose: true # optional (default = false)
@@ -250,16 +253,21 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -281,11 +289,16 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -296,7 +309,7 @@ jobs:
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
@@ -336,7 +349,6 @@ jobs:
     strategy:
       matrix:
         py-version: [
-          "3.9",
           "3.10",
           "3.11",
           "3.12",
@@ -346,11 +358,16 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -358,7 +375,7 @@ jobs:
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
@@ -368,7 +385,7 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
         username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
@@ -393,16 +410,21 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: "3.13"
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: wheel-3.13
 
@@ -431,30 +453,6 @@ jobs:
         docker container logs aerospike
         cat ./configs/aerospike.conf
 
-  sphinx:
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        builder-command:
-        - 'spelling . spelling -W --keep-going'
-        # -vv is too verbose and makes it hard to read logs
-        - 'linkcheck -v . links'
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.11
-        architecture: 'x64'
-    - name: Install dependencies
-      # TODO: find way to split up dependencies
-      run: python -m pip install -r doc/requirements.txt
-    - name: Run builder
-      run: sphinx-build -b ${{ matrix.builder-command }}
-      working-directory: doc
-
   test-metrics:
     needs: build
     strategy:
@@ -465,12 +463,17 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
@@ -490,17 +493,22 @@ jobs:
           - "user_agent_with_ee"
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
         username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
@@ -515,7 +523,8 @@ jobs:
       with:
         container-name: aerospike
 
-    - uses: ./.github/actions/run-ee-server
+    - id: run-ee-server
+      uses: ./.github/actions/run-ee-server
       if: ${{ matrix.test-case == 'user_agent_with_ee' }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
@@ -523,7 +532,7 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         # The user agent can also send the client's username if app-id is not set by the client
-        docker-run-extra-flags: '-e NO_SC=1 -e NO_TLS=1'
+        env-vars: 'SECURITY=1'
 
     - name: Install test dependencies
       if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
@@ -543,6 +552,7 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
       name: Run client in background
       run: |
+        set -x
         cat <<-EOF >> run-client-in-bg.py
         import aerospike
         import time
@@ -567,14 +577,18 @@ jobs:
     - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
-        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        if [[ "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true" ]]; then
+          CREDENTIALS="-U superuser -P superuser"
+        fi
+
+        server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
         if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
           exit 0
         fi
 
-        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        info_cmd_response=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         # Response format: user-agent=<base64 encoded string>:...
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
@@ -594,5 +608,3 @@ jobs:
         expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
         test "$client_version" = "$expected_client_version"
       shell: bash
-      env:
-        CONTAINER_NAME: aerospike

@@ -1,19 +1,17 @@
-import pytest
-from aerospike import exception as e
-import time
-
-from aerospike_helpers.operations import operations, bitwise_operations, map_operations, list_operations, hll_operations
-from aerospike_helpers.batch import records as br
-from .test_base_class import TestBaseClass
-from contextlib import nullcontext
 import aerospike
+from aerospike_helpers.batch import records as br
+from aerospike_helpers.operations import operations, bitwise_operations, map_operations, list_operations, hll_operations
+from aerospike import exception as e
+
+import pytest
+from contextlib import nullcontext
 from typing import Callable
 
-SKIP_MSG = "read_touch_ttl_percent only supported on server 7.1 or higher"
 KEY = ("test", "demo", 1)
 OPS_LIST = [
     operations.read(bin_name="a")
 ]
+
 INVALID_POLICY = {"a": "key"}
 BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY = br.BatchRecords(
     [
@@ -39,100 +37,20 @@ OPS_LIST_WITH_INVALID_HLL_POLICY = [
     hll_operations.hll_add("bin_name", values=[1, 2, 3], policy={"a": "key"})
 ]
 
+EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED = pytest.raises(e.ParamError)
 
-class TestReadTouchTTLPercent:
-    @pytest.fixture(autouse=True)
+
+class TestValidateKeys:
+    @pytest.fixture(autouse=True, scope="class")
     def setup(self, as_connection):
-        ttl = 2
-        self.as_connection.put(KEY, bins={"a": 1}, meta={"ttl": ttl})
-        self.policy = {
-            "read_touch_ttl_percent": 50
-        }
-        self.invalid_policy = {
-            "read_touch_ttl_percent": "1"
-        }
-        self.delay = ttl / 2 + 0.1
+        as_connection.put(KEY, {"a": "a"})
 
         yield
 
-        # Some tests call the client remove API
         try:
-            self.as_connection.remove(KEY)
+            as_connection.remove(KEY)
         except e.RecordNotFound:
             pass
-
-    def test_read_invalid(self):
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.get(KEY, self.invalid_policy)
-        assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
-
-    def test_operate_invalid(self):
-        ops = [
-            operations.read("a")
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(KEY, ops, policy=self.invalid_policy)
-        assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
-
-    def test_batch_invalid(self):
-        keys = [
-            KEY
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_read(keys, policy=self.invalid_policy)
-        assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
-
-    def test_get(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
-            pytest.skip(SKIP_MSG)
-        time.sleep(self.delay)
-        # By this time, the record's ttl should be less than 1 second left
-        # Reset record TTL
-        self.as_connection.get(KEY, policy=self.policy)
-        time.sleep(self.delay)
-        # Record should not have expired
-        self.as_connection.get(KEY)
-
-    def test_operate(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
-            pytest.skip(SKIP_MSG)
-        time.sleep(self.delay)
-        ops = [
-            operations.read("a")
-        ]
-        self.as_connection.operate(KEY, ops, policy=self.policy)
-        time.sleep(self.delay)
-        self.as_connection.get(KEY)
-
-    def test_batch(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
-            pytest.skip(SKIP_MSG)
-        time.sleep(self.delay)
-        keys = [
-            KEY
-        ]
-        self.as_connection.batch_read(keys, policy=self.policy)
-        time.sleep(self.delay)
-        self.as_connection.get(KEY)
-
-    def test_batch_write(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
-            pytest.skip(SKIP_MSG)
-        batch_records = br.BatchRecords(
-            [
-                br.Read(
-                    key=KEY,
-                    ops=[
-                        operations.read("a"),
-                    ],
-                    policy=self.policy
-                )
-            ]
-        )
-        time.sleep(self.delay)
-        self.as_connection.batch_write(batch_records)
-        time.sleep(self.delay)
-        self.as_connection.get(KEY)
 
     # Test all policy code paths for invalid policy keys
     # This codepath is only for command (e.g transaction)-level policies. Config level policies
@@ -154,7 +72,7 @@ class TestReadTouchTTLPercent:
             # Batch policy
             (aerospike.Client.batch_read, {"keys": [KEY], "policy": INVALID_POLICY}, nullcontext()),
             # Batch write policy
-            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch": INVALID_POLICY}, nullcontext()),
+            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch_write": INVALID_POLICY}, nullcontext()),
             # Batch read policy
             (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}, nullcontext()),
             # Batch apply policy
@@ -176,8 +94,8 @@ class TestReadTouchTTLPercent:
     )
     def test_invalid_policy_keys(self, api_method: Callable, kwargs: dict, context_if_validate_keys_is_false):
         if self.config["validate_keys"]:
-            context = pytest.raises(e.ParamError)
             EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid policy dictionary key'
+            context = EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED
         else:
             context = context_if_validate_keys_is_false
 
@@ -190,6 +108,21 @@ class TestReadTouchTTLPercent:
 
         with context as excinfo:
             api_method(invoker, **kwargs)
+
+        if self.config["validate_keys"]:
+            assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg
+
+    def test_invalid_metadata_dictionary_key(self):
+        INVALID_METADATA_KEY = "generation"
+        if self.config["validate_keys"]:
+            EXPECTED_ERROR_MESSAGE = f"\"{INVALID_METADATA_KEY}\" is an invalid record metadata dictionary key"
+            context = EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED
+        else:
+            context = nullcontext()
+
+        meta = {"ttl": 30, INVALID_METADATA_KEY: 1}
+        with context as excinfo:
+            self.as_connection.put(key=KEY, bins={"a": 1}, meta=meta)
 
         if self.config["validate_keys"]:
             assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg

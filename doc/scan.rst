@@ -8,6 +8,9 @@
 
 .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
+.. warning:: :meth:`aerospike.Scan` should not be called directly to create a :class:`~aerospike.Scan` object.
+    Please use :meth:`aerospike.Client.scan` instead.
+
 Overview
 ========
 

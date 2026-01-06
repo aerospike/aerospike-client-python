@@ -525,7 +525,7 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
 
 int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                     PyObject *py_set_of_valid_keys,
-                                    bool is_py_dict_a_policy)
+                                    const char *adjective)
 {
     Py_ssize_t pos = 0;
     PyObject *py_key = NULL;
@@ -540,8 +540,6 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
         }
         else if (res == 0) {
             // Key is invalid
-            const char *adjective =
-                is_py_dict_a_policy ? "policy" : "client config";
             // py_key may not be a string
             PyObject *py_error_msg = PyUnicode_FromFormat(
                 INVALID_DICTIONARY_KEY_ERROR, py_key, adjective);
@@ -566,6 +564,8 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
 internal_error:
     return -1;
 }
+
+#define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
 
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
@@ -624,7 +624,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            &constructor_err, py_config, py_client_config_valid_keys, false);
+            &constructor_err, py_config, py_client_config_valid_keys,
+            CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
         if (retval == -1) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
@@ -681,7 +682,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_lua, py_client_config_lua_valid_keys,
-                false);
+                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -719,7 +720,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_tls, py_client_config_tls_valid_keys,
-                false);
+                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -756,6 +757,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
+                    PyErr_WarnEx(
+                        PyExc_FutureWarning,
+                        "In the next Python client major release, an exception "
+                        "will be raised if the port number is not an integer",
+                        2);
                     port = 0;
                 }
                 // Set TLS Name if provided
@@ -801,7 +807,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_shm, py_client_config_shm_valid_keys,
-                false);
+                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -895,7 +901,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_policies,
-                py_client_config_policies_valid_keys, false);
+                py_client_config_policies_valid_keys,
+                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }

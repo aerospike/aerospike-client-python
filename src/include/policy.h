@@ -180,6 +180,11 @@ enum {
     _AS_EXP_LOOPVAR_LIST,
     _AS_EXP_LOOPVAR_MAP,
     _AS_EXP_LOOPVAR_STR,
+    _AS_EXP_LOOPVAR_BLOB,
+    _AS_EXP_LOOPVAR_BOOL,
+    // _AS_EXP_LOOPVAR_INF,
+    _AS_EXP_LOOPVAR_NIL,
+    _AS_EXP_LOOPVAR_GEOJSON,
     _AS_EXP_CODE_CALL_SELECT,
     _AS_EXP_CODE_CALL_APPLY,
 };
@@ -332,3 +337,5 @@ typedef struct {
 } PyListenerData;
 
 void free_py_listener_data(PyListenerData *py_listener_data);
+
+#define POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "policy"
