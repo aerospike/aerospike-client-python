@@ -36,6 +36,11 @@ on:
         default: false
         type: boolean
         description: Don't create release bundle
+      run_tests:
+        required: false
+        default: false
+        type: boolean
+        description: Run dev tests
       test-file:
         required: false
         type: string
@@ -46,7 +51,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
     with:
-      run_tests: true
+      run_tests: ${{ inputs.run_tests }}
       registry-name: ${{ inputs.registry-name }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
