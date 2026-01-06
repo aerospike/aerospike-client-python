@@ -19,7 +19,7 @@ jobs:
       uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
