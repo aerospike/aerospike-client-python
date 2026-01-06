@@ -1134,7 +1134,7 @@ class LoopVarHLL(LoopVar):
 
 class ResultRemove(_BaseExpr):
     """
-    Indicates entry deletion for modify_by_path.
+    Indicates entry deletion for :py:class:`ModifyByPath`.
     """
     _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
 
