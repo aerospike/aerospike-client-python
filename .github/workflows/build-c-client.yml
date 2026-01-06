@@ -28,11 +28,3 @@ jobs:
         sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev &&
         make build
       working-directory: aerospike-client-c
-
-    - name: Send C client static library to job that builds Python client
-      uses: actions/upload-artifact@v4
-      with:
-        name: c-client-${{ env.C_CLIENT_REVISION }}
-        # TODO: not the precise folder
-        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
-        if-no-files-found: error
