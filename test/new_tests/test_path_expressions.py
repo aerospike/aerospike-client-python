@@ -168,7 +168,7 @@ class TestPathExprOperations:
             )
         ]
     )
-    def test_exp_path_basic_functionality(self, op, expected_bins):
+    def test_select_by_path_operation(self, op, expected_bins):
         ops = [
             op
         ]
@@ -181,7 +181,7 @@ class TestPathExprOperations:
         20.0
     ).compile()
 
-    def test_exp_path_with_filter(self):
+    def test_select_by_path_operation_with_filter(self):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -347,7 +347,7 @@ class TestPathExprOperations:
         aerospike.EXP_PATH_MODIFY_NO_FAIL,
         aerospike.EXP_PATH_MODIFY_DEFAULT,
     ])
-    def test_modify_by_path(self, flags):
+    def test_modify_by_path_operation(self, flags):
         ops = [
             operations.modify_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
@@ -373,7 +373,7 @@ class TestPathExprOperations:
             assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
 
 
-    # Test path expression flags
+    # Test path expression select flags
 
     def test_exp_path_flag_matching_tree(self):
         ops = [
@@ -498,7 +498,7 @@ class TestPathExprOperations:
         with expected_context:
             self.as_connection.operate(self.key, ops)
 
-    def test_exp_select_by_path(self):
+    def test_select_by_path_expression(self):
         ctx=[
             cdt_ctx.cdt_ctx_all_children(),
             cdt_ctx.cdt_ctx_all_children()
