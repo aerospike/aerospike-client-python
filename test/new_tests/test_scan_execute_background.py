@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception, predicates
 from aerospike_helpers.operations import operations, map_operations
 from aerospike_helpers import expressions as exp
+from .conftest import wait_for_job_completion
 
 TEST_NS = "test"
 TEST_SET = "background_scan1"
@@ -18,18 +19,6 @@ try:
     long
 except NameError:
     long = int
-
-
-def wait_for_job_completion(as_connection, job_id):
-    """
-    Blocks until the job has completed
-    """
-    time.sleep(0.1)
-    while True:
-        response = as_connection.job_info(job_id, aerospike.JOB_SCAN)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
 
 
 def add_test_udf(client):
