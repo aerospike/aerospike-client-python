@@ -25,7 +25,8 @@ jobs:
       if: ${{ steps.download-c-client.outputs.cache-hit != 'true' }}
       run: |
         sudo apt update &&
-        sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
+        sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev &&
+        make build
       working-directory: aerospike-client-c
 
     - name: Send C client static library to job that builds Python client
