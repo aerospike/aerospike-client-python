@@ -15,7 +15,7 @@ jobs:
     - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
       working-directory: aerospike-client-c
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/cache@v5
       id: download-c-client
       with:
         name: c-client-${{ env.C_CLIENT_REVISION }}
