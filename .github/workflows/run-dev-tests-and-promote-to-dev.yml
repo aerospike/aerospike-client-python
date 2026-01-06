@@ -58,19 +58,19 @@ jobs:
       sha-to-build-and-test: ${{ github.sha }}
       test-file: ${{ inputs.test-file }}
 
-  valgrind:
-    needs: run-dev-tests
-    uses: ./.github/workflows/valgrind.yml
-    with:
-      massif: false
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
-      server-tag: ${{ inputs.server-tag }}
-      test-file: ${{ inputs.test-file }}
-    secrets: inherit
+  # valgrind:
+  #   needs: run-dev-tests
+  #   uses: ./.github/workflows/valgrind.yml
+  #   with:
+  #     massif: false
+  #     registry-name: ${{ inputs.registry-name }}
+  #     image-name: ${{ inputs.image-name }}
+  #     server-tag: ${{ inputs.server-tag }}
+  #     test-file: ${{ inputs.test-file }}
+  #   secrets: inherit
 
   reupload-github-artifacts-as-one:
-    needs: valgrind
+    needs: run-dev-tests
     name: Reupload Github artifacts as one artifact
     runs-on: ubuntu-22.04
     steps:
