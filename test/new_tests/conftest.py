@@ -241,3 +241,8 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)
