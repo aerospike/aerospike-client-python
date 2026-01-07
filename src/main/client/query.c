@@ -49,15 +49,17 @@ AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
     AerospikeQuery *query = (AerospikeQuery *)AerospikeQuery_Type_New(
-        &AerospikeQuery_Type, args, kwds);
-    query->client = (AerospikeClient *)Py_NewRef(self);
-
-    if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == 0) {
-        return query;
+        &AerospikeQuery_Type, self, NULL);
+    if (!query) {
+        return NULL;
     }
 
-    AerospikeQuery_Type.tp_free(query);
-    return NULL;
+    if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == -1) {
+        AerospikeQuery_Type.tp_free(query);
+        return NULL;
+    }
+
+    return query;
 }
 
 static int query_where_add(as_query **query, as_predicate_type predicate,

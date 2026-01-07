@@ -151,15 +151,32 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
     {NULL} /* Sentinel */
 };
 
+extern PyTypeObject AerospikeClient_Type;
+
 /*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
+// A Query class instance has a hard dependency on a Client instance to function.
 PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                   PyObject *kwds)
 {
     AerospikeQuery *self = (AerospikeQuery *)type->tp_alloc(type, 0);
+    if (!self) {
+        return NULL;
+    }
+
+    PyObject *py_client = NULL;
+    if (!PyArg_ParseTuple(args, "O!", &AerospikeClient_Type, &py_client)) {
+        goto CLEANUP_ON_ERROR;
+    }
+
+    self->client = Py_NewRef(py_client);
     return (PyObject *)self;
+
+CLEANUP_ON_ERROR:
+    type->tp_dealloc((PyObject *)self);
+    return NULL;
 }
 
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
