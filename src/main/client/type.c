@@ -782,20 +782,20 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)atoi(temp);
                 }
             }
-            if (addr) {
-                if (tls_name) {
-                    as_config_tls_add_host(&config, addr, tls_name, port);
-                    free(tls_name);
-                }
-                else {
-                    as_config_add_host(&config, addr, port);
-                }
-                free(addr);
-            }
-            else {
+
+            if (!addr) {
                 error_code = INIT_INVALID_ADRR_ERR;
                 goto CONSTRUCTOR_ERROR;
             }
+
+            if (tls_name) {
+                as_config_tls_add_host(&config, addr, tls_name, port);
+                free(tls_name);
+            }
+            else {
+                as_config_add_host(&config, addr, port);
+            }
+            free(addr);
         }
     }
     else {
