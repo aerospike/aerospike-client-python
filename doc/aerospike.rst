@@ -523,7 +523,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 Default: :data:`aerospike.AUTH_INTERNAL`
             * **login_timeout_ms** (:class:`int`)
-                Representing the node login timeout in milliseconds.
+                Representing the node login timeout in milliseconds. (32-bit unsigned integer)
 
                 Default: ``5000``.
             * **key**
@@ -576,19 +576,19 @@ Only the `hosts` key is required; the rest of the keys are optional.
             If multiple clients are instantiated and talking to the same cluster the *shm* cluster-tending should be used.
 
             * **max_nodes** (:class:`int`)
-                Maximum number of nodes allowed.
+                Maximum number of nodes allowed. (32-bit unsigned integer)
 
                 Pad this value so new nodes can be added without configuration changes.
 
                 Default: ``16``
             * **max_namespaces** (:class:`int`)
-                Maximum number of namespaces allowed.
+                Maximum number of namespaces allowed. (32-bit unsigned integer)
 
                 Pad this value so new namespaces can be added without configuration changes.
 
                 Default: ``8``
             * **takeover_threshold_sec**  (:class:`int`)
-                Take over tending if the cluster hasn't been checked for this many seconds
+                Take over tending if the cluster hasn't been checked for this many seconds (32-bit unsigned integer)
 
                 Default: ``30``
             * **shm_key**
@@ -689,11 +689,12 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
         * **thread_pool_size** (:class:`int`)
-            Number of threads in the pool that is used in batch/scan/query commands.
+            Number of threads in the pool that is used in batch/scan/query commands. (32-bit unsigned integer)
 
             Default: ``16``
         * **max_socket_idle** (:class:`int`)
-            Maximum socket idle in seconds. Connection pools will discard sockets that have been idle longer than the maximum.
+            Maximum socket idle in seconds.
+            Connection pools will discard sockets that have been idle longer than the maximum.
 
             Connection pools are now implemented by a LIFO stack.
             Connections at the tail of the stack will always be the least used.
@@ -711,7 +712,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Default: ``0``
 
         * **min_conns_per_node** (:class:`int`)
-            Minimum number of synchronous connections allowed per server node. Preallocate minimum
+            Minimum number of synchronous connections allowed per server node. (32-bit unsigned integer) Preallocate minimum
             connections on client node creation.  The client will periodically allocate new connections
             if count falls below min connections.
 
@@ -721,10 +722,12 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``0``
         * **max_conns_per_node** (:class:`int`)
-            Maximum number of pipeline connections allowed for each node
+            Maximum number of pipeline connections allowed for each node (32-bit unsigned integer)
 
             Default: ``100``
         * **max_error_rate** (:class:`int`)
+            (32-bit unsigned integer)
+
             Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns
             :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate``
             is zero, there is no error limit.
@@ -748,6 +751,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
+            (32-bit unsigned integer)
+
             The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is
             defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
             reset to zero and backoff state is removed on all nodes.
@@ -758,13 +763,16 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
+            (32-bit unsigned integer)
+
             Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
+            Polling interval in milliseconds for tending the cluster. 
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
             **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
 
-            Compress data for transmission if the object size is greater than a given number of bytes
+            Compress data for transmission if the object size is greater than a given number of bytes. (32-bit unsigned integer)
 
             Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str`)
@@ -817,7 +825,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Cluster tend info command timeout in milliseconds.
+            Cluster tend info command timeout in milliseconds. (32-bit unsigned integer)
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)

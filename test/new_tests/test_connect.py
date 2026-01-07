@@ -206,7 +206,9 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "config[\"hosts\"][0][1] must be a int"),
+            ({"hosts": [(1, 3000, "tls-name")]}, e.ParamError, -2, "config[\"hosts\"][0][0] must be a str"),
+            ({"hosts": [("127.0.0.1", 3000, 1)]}, e.ParamError, -2, "config[\"hosts\"][0][2] must be a str"),
         ],
         ids=[
             "config not dict",
@@ -215,6 +217,8 @@ class TestConnect(object):
             "hosts missing address",
             "hosts port is incorrect",
             "hosts port is string",
+            "host name is non-str",
+            "host tls-name is non-str"
         ],
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):

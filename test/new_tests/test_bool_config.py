@@ -47,7 +47,7 @@ class TestBitwiseOperations(object):
         """
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = send_bool_as
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect()
         ops = [
             operation.write("cfg_true", True),
             operation.write("cfg_false", False),

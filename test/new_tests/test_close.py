@@ -10,8 +10,6 @@ class TestClose:
     def setup_class(cls):
         config = TestBaseClass.get_connection_config()
         TestClose.hostlist = config["hosts"]
-        TestClose.user = config["user"]
-        TestClose.password = config["password"]
         TestClose.auth_mode = config["policies"]["auth_mode"]
 
     def test_pos_close(self):
@@ -53,10 +51,7 @@ class TestClose:
         Client call itself establishes connection.
         """
         config = TestBaseClass.get_connection_config()
-        if TestClose.user is None and TestClose.password is None:
-            self.client = aerospike.client(config).connect()
-        else:
-            self.client = aerospike.client(config).connect(TestClose.user, TestClose.password)
+        self.client = aerospike.client(config).connect()
 
         assert self.client.is_connected()
         self.client.close()

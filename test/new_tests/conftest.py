@@ -85,10 +85,7 @@ def as_connection(request) -> aerospike.Client:
             wait_for_port(a, p)
     # We are using tls otherwise, so rely on the server being ready
 
-    if config["user"] is None and config["password"] is None:
-        as_client = aerospike.client(config).connect()
-    else:
-        as_client = aerospike.client(config).connect(config["user"], config["password"])
+    as_client = aerospike.client(config).connect()
 
     # Some tests need to get the client config
     request.cls.config = config

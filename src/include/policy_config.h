@@ -72,3 +72,4 @@ as_status set_batch_write_policy(as_error *err,
 as_status set_batch_remove_policy(as_error *err,
                                   as_policy_batch_remove *batch_remove_policy,
                                   PyObject *py_policy, int validate_keys);
+as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32);

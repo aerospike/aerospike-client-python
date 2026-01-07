@@ -164,10 +164,6 @@ class TestBaseClass(object):
             config[key] = add_config[key]
 
         client = aerospike.client(config)
-        if config["user"] is None and config["password"] is None:
-            client.connect()
-        else:
-            client.connect(config["user"], config["password"])
 
         if client is not None:
             build_info = client.info_all("build")
@@ -213,8 +209,11 @@ class TestBaseClass(object):
         config["hosts"] = hosts_conf
         config["tls"] = tls_conf
         config["policies"] = policies_conf
-        config["user"] = TestBaseClass.user
-        config["password"] = TestBaseClass.password
+        # Cannot pass `None` as a config value
+        if TestBaseClass.user is not None:
+            config["user"] = TestBaseClass.user
+        if TestBaseClass.password is not None:
+            config["password"] = TestBaseClass.password
 
         config_parser = configparser.ConfigParser()
         config_parser.read("config.conf")

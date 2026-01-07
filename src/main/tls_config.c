@@ -16,7 +16,7 @@
 
 #include "tls_config.h"
 
-static void _set_config_str_if_present(as_config *config, PyObject *tls_config,
+static bool _set_config_str_if_present(as_config *config, PyObject *tls_config,
                                        const char *key);
 
 static char *get_string_from_string_like(PyObject *string_like);
@@ -25,68 +25,59 @@ static char *get_string_from_string_like(PyObject *string_like);
  *	Param: tls_conf PyDict.
  *	Fill in the appropriate TLS values of config based on the contents of
  *	tls_config
+    Returns NULL if no error occurred, or the config key and expected value type where the error occurred
 ***/
-void setup_tls_config(as_config *config, PyObject *tls_config)
+as_error_type_info *setup_tls_config(as_config *config, PyObject *tls_config)
 {
-
-    PyObject *config_value = NULL;
-    int truth_value = -1;
-
     // Setup string values in the tls config struct
-    _set_config_str_if_present(config, tls_config, "cafile");
-    _set_config_str_if_present(config, tls_config, "capath");
-    _set_config_str_if_present(config, tls_config, "protocols");
-    _set_config_str_if_present(config, tls_config, "cipher_suite");
-    _set_config_str_if_present(config, tls_config, "cert_blacklist");
-    _set_config_str_if_present(config, tls_config, "keyfile");
-    _set_config_str_if_present(config, tls_config, "certfile");
-    _set_config_str_if_present(config, tls_config, "keyfile_pw");
+    char *tls_config_keys[] = {"cafile",       "capath",         "protocols",
+                               "cipher_suite", "cert_blacklist", "keyfile",
+                               "certfile",     "keyfile_pw"};
+    for (unsigned long i = 0;
+         i < sizeof(tls_config_keys) / sizeof(tls_config_keys[0]); i++) {
+        bool error =
+            _set_config_str_if_present(config, tls_config, tls_config_keys[i]);
+        if (error) {
+            as_error_type_info *info =
+                (as_error_type_info *)malloc(sizeof(as_error_type_info));
+            info->tls_key = tls_config_keys[i];
+            info->expected_type = "str";
+            return info;
+        }
+    }
 
     // Setup The boolean values of the struct if they are present
-    config_value = PyDict_GetItemString(tls_config, "enable");
-    if (config_value) {
-        truth_value = PyObject_IsTrue(config_value);
-        if (truth_value != -1) {
-            config->tls.enable = (bool)truth_value;
-            truth_value = -1;
+    char *tls_config_keys_with_bool_value[] = {
+        "enable", "crl_check", "crl_check_all", "log_session_info",
+        "for_login_only"};
+    bool *config_bool_ptrs[] = {
+        &config->tls.enable, &config->tls.crl_check, &config->tls.crl_check_all,
+        &config->tls.log_session_info, &config->tls.for_login_only};
+    PyObject *config_value = NULL;
+    int truth_value = -1;
+    unsigned long config_key_count = sizeof(tls_config_keys_with_bool_value) /
+                                     sizeof(tls_config_keys_with_bool_value[0]);
+    for (unsigned long i = 0; i < config_key_count; i++) {
+        config_value = PyDict_GetItemString(tls_config,
+                                            tls_config_keys_with_bool_value[i]);
+        Py_XINCREF(config_value);
+        if (config_value) {
+            if (!PyBool_Check(config_value)) {
+                as_error_type_info *info =
+                    (as_error_type_info *)malloc(sizeof(as_error_type_info));
+                info->tls_key = tls_config_keys_with_bool_value[i];
+                info->expected_type = "bool";
+                return info;
+            }
+            truth_value = PyObject_IsTrue(config_value);
+            if (truth_value != -1) {
+                *config_bool_ptrs[i] = (bool)truth_value;
+            }
         }
+        Py_XDECREF(config_value);
     }
 
-    config_value = PyDict_GetItemString(tls_config, "crl_check");
-    if (config_value) {
-        truth_value = PyObject_IsTrue(config_value);
-        if (truth_value != -1) {
-            config->tls.crl_check = (bool)truth_value;
-            truth_value = -1;
-        }
-    }
-
-    config_value = PyDict_GetItemString(tls_config, "crl_check_all");
-    if (config_value) {
-        truth_value = PyObject_IsTrue(config_value);
-        if (truth_value != -1) {
-            config->tls.crl_check_all = (bool)truth_value;
-            truth_value = -1;
-        }
-    }
-
-    config_value = PyDict_GetItemString(tls_config, "log_session_info");
-    if (config_value) {
-        truth_value = PyObject_IsTrue(config_value);
-        if (truth_value != -1) {
-            config->tls.log_session_info = (bool)truth_value;
-            truth_value = -1;
-        }
-    }
-
-    config_value = PyDict_GetItemString(tls_config, "for_login_only");
-    if (config_value) {
-        truth_value = PyObject_IsTrue(config_value);
-        if (truth_value != -1) {
-            config->tls.for_login_only = (bool)truth_value;
-            truth_value = -1;
-        }
-    }
+    return NULL;
 }
 
 /***
@@ -95,11 +86,12 @@ void setup_tls_config(as_config *config, PyObject *tls_config)
  * Param config: the as_config in which to store information
  * If tls_config is a string type, and key is valid,
  * the appropriate field is set
-
+ * Returns false if no error, true if an invalid value type was passed to the TLS config at "key"
 ***/
-static void _set_config_str_if_present(as_config *config, PyObject *tls_config,
+static bool _set_config_str_if_present(as_config *config, PyObject *tls_config,
                                        const char *key)
 {
+
     PyObject *config_value = NULL;
     char *config_value_str = NULL;
 
@@ -142,7 +134,11 @@ static void _set_config_str_if_present(as_config *config, PyObject *tls_config,
                                              (const char *)config_value_str);
             }
         }
+        else {
+            return true;
+        }
     }
+    return false;
 }
 
 /***

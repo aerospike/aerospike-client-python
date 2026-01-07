@@ -51,6 +51,7 @@ enum {
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
+    INIT_CONFIG_VALUE_TYPE_ERR
 };
 
 /*******************************************************************************
@@ -523,6 +524,19 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+#define MAX_ERR_MSG_SIZE 250
+
+static void initialize_config_value_type_err(
+    char error_msg[MAX_ERR_MSG_SIZE],
+    // config_keys should look like ["lua"]["user_path"]
+    const char *config_keys, const char *expected_type_name,
+    int *error_code_ptr)
+{
+    snprintf(error_msg, MAX_ERR_MSG_SIZE, "config%s must be a %s", config_keys,
+             expected_type_name);
+    *error_code_ptr = INIT_CONFIG_VALUE_TYPE_ERR;
+}
+
 int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                     PyObject *py_set_of_valid_keys,
                                     const char *adjective)
@@ -677,8 +691,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     bool lua_user_path = false;
+
+    char config_value_type_error_msg[MAX_ERR_MSG_SIZE];
+
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");
-    if (py_lua && PyDict_Check(py_lua)) {
+    if (py_lua) {
+        if (!PyDict_Check(py_lua)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"lua\"]", "dict", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_lua, py_client_config_lua_valid_keys,
@@ -692,7 +715,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
 
         PyObject *py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
-        if (py_lua_user_path && PyUnicode_Check(py_lua_user_path)) {
+        if (py_lua_user_path) {
+            if (!PyUnicode_Check(py_lua_user_path)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"lua\"][\"user_path\"]",
+                                                 "str", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+
             lua_user_path = true;
             if (strnlen((char *)PyUnicode_AsUTF8(py_lua_user_path),
                         AS_CONFIG_PATH_MAX_SIZE) > AS_CONFIG_PATH_MAX_LEN) {
@@ -716,892 +746,1112 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_tls = PyDict_GetItemString(py_config, "tls");
-    if (py_tls && PyDict_Check(py_tls)) {
-        if (validate_keys) {
-            int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_tls, py_client_config_tls_valid_keys,
-                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-            if (retval == -1) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-            else if (retval == 0) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
-            }
-        }
-        setup_tls_config(&config, py_tls);
-    }
-
-    PyObject *py_hosts = PyDict_GetItemString(py_config, "hosts");
-    if (py_hosts && PyList_Check(py_hosts)) {
-        int size = (int)PyList_Size(py_hosts);
-        if (!size) {
-            error_code = INIT_EMPTY_HOSTS_ERR;
+    if (py_tls) {
+        if (!PyDict_Check(py_tls)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"tls\"]", "dict", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        for (int i = 0; i < size; i++) {
-            char *addr = NULL;
-            char *tls_name = NULL;
-            uint16_t port = 3000;
-            PyObject *py_host = PyList_GetItem(py_hosts, i);
-            PyObject *py_addr, *py_port, *py_tls_name;
 
-            if (PyTuple_Check(py_host) && PyTuple_Size(py_host) >= 2 &&
-                PyTuple_Size(py_host) <= 3) {
+        int retval = does_py_dict_contain_valid_keys(
+            &constructor_err, py_tls, py_client_config_tls_valid_keys,
+            CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else if (retval == 0) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
 
-                py_addr = PyTuple_GetItem(py_host, 0);
-                if (PyUnicode_Check(py_addr)) {
-                    addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
-                }
-                py_port = PyTuple_GetItem(py_host, 1);
-                if (PyLong_Check(py_port)) {
-                    port = (uint16_t)PyLong_AsLong(py_port);
-                }
-                else {
-                    PyErr_WarnEx(
-                        PyExc_FutureWarning,
-                        "In the next Python client major release, an exception "
-                        "will be raised if the port number is not an integer",
-                        2);
-                    port = 0;
-                }
-                // Set TLS Name if provided
-                if (PyTuple_Size(py_host) == 3) {
-                    py_tls_name = PyTuple_GetItem(py_host, 2);
-                    if (PyUnicode_Check(py_tls_name)) {
-                        tls_name =
-                            strdup((char *)PyUnicode_AsUTF8(py_tls_name));
+        as_error_type_info *err_info = setup_tls_config(&config, py_tls);
+        if (err_info) {
+            char tls_keys_with_invalid_value[100];
+            snprintf(tls_keys_with_invalid_value, 100, "[\"tls\"][\"%s\"]",
+                     err_info->tls_key);
+            initialize_config_value_type_err(
+                config_value_type_error_msg, tls_keys_with_invalid_value,
+                err_info->expected_type, &error_code);
+            free(err_info);
+            goto CONSTRUCTOR_ERROR;
+        }
+
+        PyObject *py_hosts = PyDict_GetItemString(py_config, "hosts");
+        if (py_hosts && PyList_Check(py_hosts)) {
+            int size = (int)PyList_Size(py_hosts);
+            if (!size) {
+                error_code = INIT_EMPTY_HOSTS_ERR;
+                goto CONSTRUCTOR_ERROR;
+            }
+            for (int i = 0; i < size; i++) {
+                char *addr = NULL;
+                char *tls_name = NULL;
+                uint16_t port = 3000;
+                PyObject *py_host = PyList_GetItem(py_hosts, i);
+                PyObject *py_addr, *py_port, *py_tls_name;
+
+                if (PyTuple_Check(py_host) && PyTuple_Size(py_host) >= 2 &&
+                    PyTuple_Size(py_host) <= 3) {
+
+                    py_addr = PyTuple_GetItem(py_host, 0);
+                    if (PyUnicode_Check(py_addr)) {
+                        addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
+                    }
+                    else {
+                        // ["hosts"][<10 chars max>][0]
+                        // 1234567890123456789012345678
+                        // 0        10        20    + 1 = 29
+                        char keys_str[29];
+                        snprintf(keys_str, 29, "[\"hosts\"][%d][0]", i);
+                        initialize_config_value_type_err(
+                            config_value_type_error_msg, keys_str, "str",
+                            &error_code);
+                        goto CONSTRUCTOR_ERROR;
+                    }
+
+                    py_port = PyTuple_GetItem(py_host, 1);
+                    if (PyLong_CheckExact(py_port)) {
+                        port = (uint16_t)PyLong_AsLong(py_port);
+                    }
+                    else {
+                        PyErr_WarnEx(PyExc_FutureWarning,
+                                     "In the next Python client major release, "
+                                     "an exception "
+                                     "will be raised if the port number is not "
+                                     "an integer",
+                                     2);
+                        port = 0;
+                    }
+                    // Set TLS Name if provided
+                    if (PyTuple_Size(py_host) == 3) {
+                        py_tls_name = PyTuple_GetItem(py_host, 2);
+                        if (PyUnicode_Check(py_tls_name)) {
+                            tls_name =
+                                strdup((char *)PyUnicode_AsUTF8(py_tls_name));
+                        }
+                        else {
+                            char keys_str[29];
+                            snprintf(keys_str, 29, "[\"hosts\"][%d][2]", i);
+                            initialize_config_value_type_err(
+                                config_value_type_error_msg, keys_str, "str",
+                                &error_code);
+                            free(addr);
+                            goto CONSTRUCTOR_ERROR;
+                        }
                     }
                 }
-            }
-            else if (PyUnicode_Check(py_host)) {
-                addr = strdup(strtok((char *)PyUnicode_AsUTF8(py_host), ":"));
-                addr = strtok(addr, ":");
-                char *temp = strtok(NULL, ":");
-                if (NULL != temp) {
-                    port = (uint16_t)atoi(temp);
+                else if (PyUnicode_Check(py_host)) {
+                    addr =
+                        strdup(strtok((char *)PyUnicode_AsUTF8(py_host), ":"));
+                    addr = strtok(addr, ":");
+                    char *temp = strtok(NULL, ":");
+                    if (NULL != temp) {
+                        port = (uint16_t)atoi(temp);
+                    }
                 }
-            }
-            if (addr) {
-                if (tls_name) {
-                    as_config_tls_add_host(&config, addr, tls_name, port);
-                    free(tls_name);
+
+                if (addr) {
+                    if (tls_name) {
+                        as_config_tls_add_host(&config, addr, tls_name, port);
+                        free(tls_name);
+                    }
+                    else {
+                        as_config_add_host(&config, addr, port);
+                    }
+                    free(addr);
                 }
                 else {
-                    as_config_add_host(&config, addr, port);
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
-                free(addr);
             }
-            else {
-                error_code = INIT_INVALID_ADRR_ERR;
+        }
+        else {
+            error_code = INIT_HOST_TYPE_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+
+        PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
+        if (py_shm) {
+            if (!PyDict_Check(py_shm)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"shm\"]", "dict",
+                                                 &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-        }
-    }
-    else {
-        error_code = INIT_HOST_TYPE_ERR;
-        goto CONSTRUCTOR_ERROR;
-    }
 
-    PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
-    if (py_shm && PyDict_Check(py_shm)) {
-        if (validate_keys) {
-            int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_shm, py_client_config_shm_valid_keys,
-                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-            if (retval == -1) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            if (validate_keys) {
+                int retval = does_py_dict_contain_valid_keys(
+                    &constructor_err, py_shm, py_client_config_shm_valid_keys,
+                    CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+                if (retval == -1) {
+                    goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+                }
+                else if (retval == 0) {
+                    goto RAISE_EXCEPTION_WITH_AS_ERROR;
+                }
             }
-            else if (retval == 0) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+
+            config.use_shm = true;
+
+            // This does not match documentation (wrong name and location in dict),
+            //  but leave it for now for customers who may be using it
+            PyObject *py_shm_max_nodes =
+                PyDict_GetItemString(py_shm, "shm_max_nodes");
+            if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
+                config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
+            }
+
+            py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
+            if (py_shm_max_nodes) {
+                as_status return_code =
+                    get_uint32_value(py_shm_max_nodes, &config.shm_max_nodes);
+                if (return_code != AEROSPIKE_OK) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg, "[\"shm\"][\"max_nodes\"]",
+                        "32-bit unsigned int", &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+            }
+
+            // This does not match documentation (wrong name and location in dict),
+            //  but leave it for now for customers who may be using it
+            PyObject *py_shm_max_namespaces =
+                PyDict_GetItemString(py_shm, "shm_max_namespaces");
+            if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
+                config.shm_max_namespaces =
+                    PyLong_AsLong(py_shm_max_namespaces);
+            }
+            py_shm_max_namespaces =
+                PyDict_GetItemString(py_shm, "max_namespaces");
+            if (py_shm_max_namespaces) {
+                as_status return_code = get_uint32_value(
+                    py_shm_max_namespaces, &config.shm_max_namespaces);
+                if (return_code != AEROSPIKE_OK) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg,
+                        "[\"shm\"][\"max_namespaces\"]", "32-bit unsigned int",
+                        &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+            }
+
+            // This does not match documentation (wrong name and location in dict),
+            //  but leave it for now for customers who may be using it
+            PyObject *py_shm_takeover_threshold_sec =
+                PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
+            if (py_shm_takeover_threshold_sec &&
+                PyLong_Check(py_shm_takeover_threshold_sec)) {
+                config.shm_takeover_threshold_sec =
+                    PyLong_AsLong(py_shm_takeover_threshold_sec);
+            }
+            py_shm_takeover_threshold_sec =
+                PyDict_GetItemString(py_shm, "takeover_threshold_sec");
+            if (py_shm_takeover_threshold_sec) {
+                as_status return_code =
+                    get_uint32_value(py_shm_takeover_threshold_sec,
+                                     &config.shm_takeover_threshold_sec);
+                if (return_code != AEROSPIKE_OK) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg,
+                        "[\"shm\"][\"takeover_threshold_sec\"]",
+                        "32-bit unsigned int", &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+            }
+
+            PyObject *py_shm_cluster_key =
+                PyDict_GetItemString(py_shm, "shm_key");
+            if (py_shm_cluster_key) {
+                if (!PyLong_CheckExact(py_shm_cluster_key)) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg, "[\"shm\"][\"shm_key\"]",
+                        "int", &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+                user_shm_key = true;
+                config.shm_key = PyLong_AsLong(py_shm_cluster_key);
             }
         }
 
-        config.use_shm = true;
-
-        // This does not match documentation (wrong name and location in dict),
-        //  but leave it for now for customers who may be using it
-        PyObject *py_shm_max_nodes =
-            PyDict_GetItemString(py_shm, "shm_max_nodes");
-        if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
-        }
-        py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
-        if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
-        }
-
-        // This does not match documentation (wrong name and location in dict),
-        //  but leave it for now for customers who may be using it
-        PyObject *py_shm_max_namespaces =
-            PyDict_GetItemString(py_shm, "shm_max_namespaces");
-        if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
-        }
-        py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
-        if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
-        }
-
-        // This does not match documentation (wrong name and location in dict),
-        //  but leave it for now for customers who may be using it
-        PyObject *py_shm_takeover_threshold_sec =
-            PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
-        if (py_shm_takeover_threshold_sec &&
-            PyLong_Check(py_shm_takeover_threshold_sec)) {
-            config.shm_takeover_threshold_sec =
-                PyLong_AsLong(py_shm_takeover_threshold_sec);
-        }
-        py_shm_takeover_threshold_sec =
-            PyDict_GetItemString(py_shm, "takeover_threshold_sec");
-        if (py_shm_takeover_threshold_sec &&
-            PyLong_Check(py_shm_takeover_threshold_sec)) {
-            config.shm_takeover_threshold_sec =
-                PyLong_AsLong(py_shm_takeover_threshold_sec);
-        }
-
-        PyObject *py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
-        if (py_shm_cluster_key && PyLong_Check(py_shm_cluster_key)) {
-            user_shm_key = true;
-            config.shm_key = PyLong_AsLong(py_shm_cluster_key);
-        }
-    }
-
-    self->is_client_put_serializer = false;
-    self->user_serializer_call_info.callback = NULL;
-    self->user_deserializer_call_info.callback = NULL;
-    PyObject *py_serializer_option =
-        PyDict_GetItemString(py_config, "serialization");
-    if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
-        PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
-        if (py_serializer && py_serializer != Py_None) {
-            if (!PyCallable_Check(py_serializer)) {
-                error_code = INIT_SERIALIZE_ERR;
+        self->is_client_put_serializer = false;
+        self->user_serializer_call_info.callback = NULL;
+        self->user_deserializer_call_info.callback = NULL;
+        PyObject *py_serializer_option =
+            PyDict_GetItemString(py_config, "serialization");
+        if (py_serializer_option) {
+            if (!PyTuple_Check(py_serializer_option)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"serialization\"]", "tuple",
+                                                 &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            memset(&self->user_serializer_call_info, 0,
-                   sizeof(self->user_serializer_call_info));
-            self->user_serializer_call_info.callback = py_serializer;
+
+            PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
+            if (py_serializer && py_serializer != Py_None) {
+                if (!PyCallable_Check(py_serializer)) {
+                    error_code = INIT_SERIALIZE_ERR;
+                    goto CONSTRUCTOR_ERROR;
+                }
+                memset(&self->user_serializer_call_info, 0,
+                       sizeof(self->user_serializer_call_info));
+                self->user_serializer_call_info.callback = py_serializer;
+            }
+            PyObject *py_deserializer =
+                PyTuple_GetItem(py_serializer_option, 1);
+            if (py_deserializer && py_deserializer != Py_None) {
+                if (!PyCallable_Check(py_deserializer)) {
+                    error_code = INIT_DESERIALIZE_ERR;
+                    goto CONSTRUCTOR_ERROR;
+                }
+                memset(&self->user_deserializer_call_info, 0,
+                       sizeof(self->user_deserializer_call_info));
+                self->user_deserializer_call_info.callback = py_deserializer;
+            }
         }
-        PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
-        if (py_deserializer && py_deserializer != Py_None) {
-            if (!PyCallable_Check(py_deserializer)) {
-                error_code = INIT_DESERIALIZE_ERR;
+
+        //Set default value of use_batch_direct
+
+        PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
+        if (py_policies) {
+            if (!PyDict_Check(py_policies)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"policies\"]", "dict",
+                                                 &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            memset(&self->user_deserializer_call_info, 0,
-                   sizeof(self->user_deserializer_call_info));
-            self->user_deserializer_call_info.callback = py_deserializer;
-        }
-    }
 
-    //Set default value of use_batch_direct
-
-    PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
-    if (py_policies && PyDict_Check(py_policies)) {
-        if (validate_keys) {
-            int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_policies,
-                py_client_config_policies_valid_keys,
-                CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-            if (retval == -1) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            if (validate_keys) {
+                int retval = does_py_dict_contain_valid_keys(
+                    &constructor_err, py_policies,
+                    py_client_config_policies_valid_keys,
+                    CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+                if (retval == -1) {
+                    goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+                }
+                else if (retval == 0) {
+                    goto RAISE_EXCEPTION_WITH_AS_ERROR;
+                }
             }
-            else if (retval == 0) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+
+            //global defaults setting
+            PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
+            if (py_key_policy && PyLong_Check(py_key_policy)) {
+                long long_key_policy = PyLong_AsLong(py_key_policy);
+                config.policies.read.key = long_key_policy;
+                config.policies.write.key = long_key_policy;
+                config.policies.apply.key = long_key_policy;
+                config.policies.operate.key = long_key_policy;
+                config.policies.remove.key = long_key_policy;
             }
-        }
-        //global defaults setting
-        PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
-        if (py_key_policy && PyLong_Check(py_key_policy)) {
-            long long_key_policy = PyLong_AsLong(py_key_policy);
-            config.policies.read.key = long_key_policy;
-            config.policies.write.key = long_key_policy;
-            config.policies.apply.key = long_key_policy;
-            config.policies.operate.key = long_key_policy;
-            config.policies.remove.key = long_key_policy;
-        }
 
-        PyObject *py_sock_timeout =
-            PyDict_GetItemString(py_policies, "socket_timeout");
-        if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {
-            long long_timeout = PyLong_AsLong(py_sock_timeout);
+            PyObject *py_sock_timeout =
+                PyDict_GetItemString(py_policies, "socket_timeout");
+            if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {
+                long long_timeout = PyLong_AsLong(py_sock_timeout);
 
-            config.policies.write.base.socket_timeout = long_timeout;
-            config.policies.read.base.socket_timeout = long_timeout;
-            config.policies.apply.base.socket_timeout = long_timeout;
-            config.policies.operate.base.socket_timeout = long_timeout;
-            config.policies.query.base.socket_timeout = long_timeout;
-            config.policies.scan.base.socket_timeout = long_timeout;
-            config.policies.remove.base.socket_timeout = long_timeout;
-            config.policies.batch.base.socket_timeout = long_timeout;
-        }
+                config.policies.write.base.socket_timeout = long_timeout;
+                config.policies.read.base.socket_timeout = long_timeout;
+                config.policies.apply.base.socket_timeout = long_timeout;
+                config.policies.operate.base.socket_timeout = long_timeout;
+                config.policies.query.base.socket_timeout = long_timeout;
+                config.policies.scan.base.socket_timeout = long_timeout;
+                config.policies.remove.base.socket_timeout = long_timeout;
+                config.policies.batch.base.socket_timeout = long_timeout;
+            }
 
-        PyObject *py_total_timeout =
-            PyDict_GetItemString(py_policies, "total_timeout");
-        if (py_total_timeout && PyLong_Check(py_total_timeout)) {
-            long long_total_timeout = PyLong_AsLong(py_total_timeout);
+            PyObject *py_total_timeout =
+                PyDict_GetItemString(py_policies, "total_timeout");
+            if (py_total_timeout && PyLong_Check(py_total_timeout)) {
+                long long_total_timeout = PyLong_AsLong(py_total_timeout);
 
-            config.policies.write.base.total_timeout = long_total_timeout;
-            config.policies.read.base.total_timeout = long_total_timeout;
-            config.policies.apply.base.total_timeout = long_total_timeout;
-            config.policies.operate.base.total_timeout = long_total_timeout;
-            config.policies.query.base.total_timeout = long_total_timeout;
-            config.policies.scan.base.total_timeout = long_total_timeout;
-            config.policies.remove.base.total_timeout = long_total_timeout;
-            config.policies.batch.base.total_timeout = long_total_timeout;
-        }
+                config.policies.write.base.total_timeout = long_total_timeout;
+                config.policies.read.base.total_timeout = long_total_timeout;
+                config.policies.apply.base.total_timeout = long_total_timeout;
+                config.policies.operate.base.total_timeout = long_total_timeout;
+                config.policies.query.base.total_timeout = long_total_timeout;
+                config.policies.scan.base.total_timeout = long_total_timeout;
+                config.policies.remove.base.total_timeout = long_total_timeout;
+                config.policies.batch.base.total_timeout = long_total_timeout;
+            }
 
-        PyObject *py_max_retry =
-            PyDict_GetItemString(py_policies, "max_retries");
-        if (py_max_retry && PyLong_Check(py_max_retry)) {
-            long long_max_retries = PyLong_AsLong(py_max_retry);
-            config.policies.write.base.max_retries = long_max_retries;
-            config.policies.read.base.max_retries = long_max_retries;
-            config.policies.apply.base.max_retries = long_max_retries;
-            config.policies.operate.base.max_retries = long_max_retries;
-            config.policies.query.base.max_retries = long_max_retries;
-            config.policies.scan.base.max_retries = long_max_retries;
-            config.policies.remove.base.max_retries = long_max_retries;
-            config.policies.batch.base.max_retries = long_max_retries;
-        }
+            PyObject *py_max_retry =
+                PyDict_GetItemString(py_policies, "max_retries");
+            if (py_max_retry && PyLong_Check(py_max_retry)) {
+                long long_max_retries = PyLong_AsLong(py_max_retry);
+                config.policies.write.base.max_retries = long_max_retries;
+                config.policies.read.base.max_retries = long_max_retries;
+                config.policies.apply.base.max_retries = long_max_retries;
+                config.policies.operate.base.max_retries = long_max_retries;
+                config.policies.query.base.max_retries = long_max_retries;
+                config.policies.scan.base.max_retries = long_max_retries;
+                config.policies.remove.base.max_retries = long_max_retries;
+                config.policies.batch.base.max_retries = long_max_retries;
+            }
 
-        PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
-        if (py_exists && PyLong_Check(py_exists)) {
-            long long_exists = PyLong_AsLong(py_exists);
-            config.policies.write.exists = long_exists;
-        }
+            PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
+            if (py_exists && PyLong_Check(py_exists)) {
+                long long_exists = PyLong_AsLong(py_exists);
+                config.policies.write.exists = long_exists;
+            }
 
-        PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
-        if (py_replica && PyLong_Check(py_replica)) {
-            long long_replica = PyLong_AsLong(py_replica);
-            config.policies.read.replica = long_replica;
-            config.policies.write.replica = long_replica;
-            config.policies.apply.replica = long_replica;
-            config.policies.operate.replica = long_replica;
-            config.policies.remove.replica = long_replica;
-            config.policies.batch.replica = long_replica;
-            config.policies.scan.replica = long_replica;
-            config.policies.query.replica = long_replica;
-        }
+            PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
+            if (py_replica && PyLong_Check(py_replica)) {
+                long long_replica = PyLong_AsLong(py_replica);
+                config.policies.read.replica = long_replica;
+                config.policies.write.replica = long_replica;
+                config.policies.apply.replica = long_replica;
+                config.policies.operate.replica = long_replica;
+                config.policies.remove.replica = long_replica;
+                config.policies.batch.replica = long_replica;
+                config.policies.scan.replica = long_replica;
+                config.policies.query.replica = long_replica;
+            }
 
-        PyObject *py_ap_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_ap");
-        if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
-            as_policy_read_mode_ap ap_read_mode =
-                (as_policy_read_mode_ap)PyLong_AsLong(py_ap_read_mode);
-            config.policies.read.read_mode_ap = ap_read_mode;
-            config.policies.operate.read_mode_ap = ap_read_mode;
-            config.policies.batch.read_mode_ap = ap_read_mode;
-        }
+            PyObject *py_ap_read_mode =
+                PyDict_GetItemString(py_policies, "read_mode_ap");
+            if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
+                as_policy_read_mode_ap ap_read_mode =
+                    (as_policy_read_mode_ap)PyLong_AsLong(py_ap_read_mode);
+                config.policies.read.read_mode_ap = ap_read_mode;
+                config.policies.operate.read_mode_ap = ap_read_mode;
+                config.policies.batch.read_mode_ap = ap_read_mode;
+            }
 
-        PyObject *py_sc_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_sc");
-        if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
-            as_policy_read_mode_sc sc_read_mode =
-                (as_policy_read_mode_sc)PyLong_AsLong(py_sc_read_mode);
-            config.policies.read.read_mode_sc = sc_read_mode;
-            config.policies.operate.read_mode_sc = sc_read_mode;
-            config.policies.batch.read_mode_sc = sc_read_mode;
-        }
+            PyObject *py_sc_read_mode =
+                PyDict_GetItemString(py_policies, "read_mode_sc");
+            if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
+                as_policy_read_mode_sc sc_read_mode =
+                    (as_policy_read_mode_sc)PyLong_AsLong(py_sc_read_mode);
+                config.policies.read.read_mode_sc = sc_read_mode;
+                config.policies.operate.read_mode_sc = sc_read_mode;
+                config.policies.batch.read_mode_sc = sc_read_mode;
+            }
 
-        PyObject *py_commit_level =
-            PyDict_GetItemString(py_policies, "commit_level");
-        if (py_commit_level && PyLong_Check(py_commit_level)) {
-            long long_commit_level = PyLong_AsLong(py_commit_level);
-            config.policies.write.commit_level = long_commit_level;
-            config.policies.apply.commit_level = long_commit_level;
-            config.policies.operate.commit_level = long_commit_level;
-            config.policies.remove.commit_level = long_commit_level;
-        }
+            PyObject *py_commit_level =
+                PyDict_GetItemString(py_policies, "commit_level");
+            if (py_commit_level && PyLong_Check(py_commit_level)) {
+                long long_commit_level = PyLong_AsLong(py_commit_level);
+                config.policies.write.commit_level = long_commit_level;
+                config.policies.apply.commit_level = long_commit_level;
+                config.policies.operate.commit_level = long_commit_level;
+                config.policies.remove.commit_level = long_commit_level;
+            }
 
-        // This does not match documentation (should not be in policies),
-        //  but leave it for now for customers who may be using it
-        PyObject *py_max_threads =
-            PyDict_GetItemString(py_policies, "max_threads");
-        if (py_max_threads && PyLong_Check(py_max_threads)) {
-            config.max_conns_per_node = PyLong_AsLong(py_max_threads);
-        }
+            // This does not match documentation (should not be in policies),
+            //  but leave it for now for customers who may be using it
+            PyObject *py_max_threads =
+                PyDict_GetItemString(py_policies, "max_threads");
+            if (py_max_threads && PyLong_Check(py_max_threads)) {
+                config.max_conns_per_node = PyLong_AsLong(py_max_threads);
+            }
 
-        // This does not match documentation (should not be in policies),
-        //  but leave it for now for customers who may be using it
-        PyObject *py_thread_pool_size =
-            PyDict_GetItemString(py_policies, "thread_pool_size");
-        if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
-            config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
-        }
+            // This does not match documentation (should not be in policies),
+            //  but leave it for now for customers who may be using it
+            PyObject *py_thread_pool_size =
+                PyDict_GetItemString(py_policies, "thread_pool_size");
+            if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
+                config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
+            }
 
-        /*
+            /*
 		 * Generation policy is removed from constructor.
 		 */
 
-        /*
+            /*
 		 * Set individual policy groups, and base policies for each
 		 * Set the individual policy groups new in 3.0
 		 * */
 
-        if (set_subpolicies(&constructor_err, &config, py_policies,
-                            validate_keys) != AEROSPIKE_OK) {
-            if (constructor_err.code != AEROSPIKE_OK) {
-                // This would only be set if an invalid key was passed to a policy.
-                // Don't override the error caused by validating the dictionary keys
+            if (set_subpolicies(&constructor_err, &config, py_policies,
+                                validate_keys) != AEROSPIKE_OK) {
+                if (constructor_err.code != AEROSPIKE_OK) {
+                    // This would only be set if an invalid key was passed to a policy.
+                    // Don't override the error caused by validating the dictionary keys
+                    goto RAISE_EXCEPTION_WITH_AS_ERROR;
+                }
+                else {
+                    // Original behavior
+                    error_code = INIT_POLICY_PARAM_ERR;
+                    goto CONSTRUCTOR_ERROR;
+                }
+            }
+
+            // See comment at end of set_subpolicies() for why we process metrics policy here
+            PyObject *py_metrics_policy_option_name =
+                PyUnicode_FromString("metrics");
+            if (py_metrics_policy_option_name == NULL) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            PyObject *py_obj_metrics_policy = PyDict_GetItemWithError(
+                py_policies, py_metrics_policy_option_name);
+            Py_DECREF(py_metrics_policy_option_name);
+
+            if (py_obj_metrics_policy == NULL) {
+                if (PyErr_Occurred()) {
+                    goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+                }
+                // User didn't provide default metrics policy.
+                // It is optional so just move on
+            }
+            else if (is_pyobj_correct_as_helpers_type(
+                         py_obj_metrics_policy, "metrics", "MetricsPolicy",
+                         false) == false) {
+                // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+                // But we want to set a different error message here
+                as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                                "metrics must be an "
+                                "aerospike_helpers.metrics.MetricsPolicy class "
+                                "instance. But "
+                                "a %s was received instead",
+                                py_obj_metrics_policy->ob_type->tp_name);
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
             else {
-                // Original behavior
-                error_code = INIT_POLICY_PARAM_ERR;
+                int retval = set_as_metrics_policy_using_pyobject(
+                    &constructor_err, py_obj_metrics_policy,
+                    &(config.policies.metrics));
+                if (retval != AEROSPIKE_OK) {
+                    goto RAISE_EXCEPTION_WITH_AS_ERROR;
+                }
+            }
+
+            PyObject *py_login_timeout =
+                PyDict_GetItemString(py_policies, "login_timeout_ms");
+            if (py_login_timeout) {
+                as_status return_code = get_uint32_value(
+                    py_login_timeout, &config.login_timeout_ms);
+                if (return_code != AEROSPIKE_OK) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg,
+                        "[\"policies\"][\"login_timeout_ms\"]",
+                        "32-bit unsigned int", &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+            }
+
+            PyObject *py_auth_mode =
+                PyDict_GetItemString(py_policies, "auth_mode");
+            if (py_auth_mode) {
+                if (PyLong_Check(py_auth_mode)) {
+                    long auth_mode = PyLong_AsLong(py_auth_mode);
+                    if ((long)AS_AUTH_INTERNAL == auth_mode ||
+                        (long)AS_AUTH_EXTERNAL == auth_mode ||
+                        (long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
+                        (long)AS_AUTH_PKI == auth_mode) {
+                        config.auth_mode = auth_mode;
+                    }
+                    else {
+                        error_code = INIT_INVALID_AUTHMODE_ERR;
+                        goto CONSTRUCTOR_ERROR;
+                    }
+                }
+                else {
+                    //it may come like auth_mode = None, for those non-integer cases, treat them as non-set
+                    //error_code = INIT_INVALID_AUTHMODE_ERR;
+                    //goto CONSTRUCTOR_ERROR;
+                }
+            }
+        }
+
+        // thread_pool_size
+        PyObject *py_thread_pool_size =
+            PyDict_GetItemString(py_config, "thread_pool_size");
+        if (py_thread_pool_size) {
+            as_status return_code =
+                get_uint32_value(py_thread_pool_size, &config.thread_pool_size);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"thread_pool_size\"]",
+                    "32-bit unsigned int", &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
         }
 
-        // See comment at end of set_subpolicies() for why we process metrics policy here
-        PyObject *py_metrics_policy_option_name =
-            PyUnicode_FromString("metrics");
-        if (py_metrics_policy_option_name == NULL) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        // max_threads (backward compatibility)
+        PyObject *py_max_threads =
+            PyDict_GetItemString(py_config, "max_threads");
+        if (py_max_threads && PyLong_Check(py_max_threads)) {
+            config.max_conns_per_node = PyLong_AsLong(py_max_threads);
         }
-        PyObject *py_obj_metrics_policy =
-            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
-        Py_DECREF(py_metrics_policy_option_name);
 
-        if (py_obj_metrics_policy == NULL) {
-            if (PyErr_Occurred()) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-            // User didn't provide default metrics policy.
-            // It is optional so just move on
-        }
-        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
-                                                  "metrics", "MetricsPolicy",
-                                                  false) == false) {
-            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
-            // But we want to set a different error message here
-            as_error_update(
-                &constructor_err, AEROSPIKE_ERR_PARAM,
-                "metrics must be an "
-                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
-                "a %s was received instead",
-                py_obj_metrics_policy->ob_type->tp_name);
-            goto RAISE_EXCEPTION_WITH_AS_ERROR;
-        }
-        else {
-            int retval = set_as_metrics_policy_using_pyobject(
-                &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics));
-            if (retval != AEROSPIKE_OK) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        PyObject *py_min_conns_per_node =
+            PyDict_GetItemString(py_config, "min_conns_per_node");
+        if (py_min_conns_per_node) {
+            as_status return_code = get_uint32_value(
+                py_min_conns_per_node, &config.min_conns_per_node);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"min_conns_per_node\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
             }
         }
 
-        PyObject *py_login_timeout =
-            PyDict_GetItemString(py_policies, "login_timeout_ms");
-        if (py_login_timeout && PyLong_Check(py_login_timeout)) {
-            config.login_timeout_ms = PyLong_AsLong(py_login_timeout);
+        // max_conns_per_node
+        PyObject *py_max_conns =
+            PyDict_GetItemString(py_config, "max_conns_per_node");
+        if (py_max_conns) {
+            as_status return_code =
+                get_uint32_value(py_max_conns, &config.max_conns_per_node);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"max_conns_per_node\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
         }
 
-        PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
-        if (py_auth_mode) {
-            if (PyLong_Check(py_auth_mode)) {
-                long auth_mode = PyLong_AsLong(py_auth_mode);
-                if ((long)AS_AUTH_INTERNAL == auth_mode ||
-                    (long)AS_AUTH_EXTERNAL == auth_mode ||
-                    (long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
-                    (long)AS_AUTH_PKI == auth_mode) {
-                    config.auth_mode = auth_mode;
-                }
-                else {
-                    error_code = INIT_INVALID_AUTHMODE_ERR;
-                    goto CONSTRUCTOR_ERROR;
-                }
+        // max_error_rate
+        PyObject *py_max_error_rate =
+            PyDict_GetItemString(py_config, "max_error_rate");
+        Py_XINCREF(py_max_error_rate);
+        if (py_max_error_rate) {
+            as_status return_code =
+                get_uint32_value(py_max_error_rate, &config.max_error_rate);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"max_error_rate\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+        }
+        Py_XDECREF(py_max_error_rate);
+
+        // error_rate_window
+        PyObject *py_error_rate_window =
+            PyDict_GetItemString(py_config, "error_rate_window");
+        Py_XINCREF(py_error_rate_window);
+        if (py_error_rate_window) {
+            as_status return_code = get_uint32_value(py_error_rate_window,
+                                                     &config.error_rate_window);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"error_rate_window\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+        }
+        Py_XDECREF(py_error_rate_window);
+
+        //conn_timeout_ms
+        PyObject *py_connect_timeout =
+            PyDict_GetItemString(py_config, "connect_timeout");
+        if (py_connect_timeout) {
+            as_status return_code =
+                get_uint32_value(py_connect_timeout, &config.conn_timeout_ms);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"connect_timeout\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+        }
+
+        //Whether to utilize shared connection
+        PyObject *py_share_connect =
+            PyDict_GetItemString(py_config, "use_shared_connection");
+        if (py_share_connect) {
+            if (!PyBool_Check(py_share_connect)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"use_shared_connection\"]",
+                                                 "bool", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+            self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+        }
+
+        PyObject *py_send_bool_as =
+            PyDict_GetItemString(py_config, "send_bool_as");
+        if (py_send_bool_as != NULL) {
+            if (!PyLong_CheckExact(py_send_bool_as)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"send_bool_as\"]", "int",
+                                                 &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+            int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
+            if (send_bool_as_temp >= SEND_BOOL_AS_INTEGER &&
+                send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
+                self->send_bool_as = send_bool_as_temp;
+            }
+        }
+
+        //compression_threshold
+        PyObject *py_compression_threshold =
+            PyDict_GetItemString(py_config, "compression_threshold");
+        if (py_compression_threshold) {
+            if (!PyLong_CheckExact(py_compression_threshold)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"compression_threshold\"]",
+                                                 "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+            int compression_value = PyLong_AsLong(py_compression_threshold);
+            if (compression_value >= 0) {
+                config.policies.write.compression_threshold = compression_value;
             }
             else {
-                //it may come like auth_mode = None, for those non-integer cases, treat them as non-set
-                //error_code = INIT_INVALID_AUTHMODE_ERR;
-                //goto CONSTRUCTOR_ERROR;
+                error_code = INIT_COMPRESSION_ERR;
+                goto CONSTRUCTOR_ERROR;
             }
         }
-    }
 
-    // thread_pool_size
-    PyObject *py_thread_pool_size =
-        PyDict_GetItemString(py_config, "thread_pool_size");
-    if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
-        config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
-    }
-
-    // max_threads (backward compatibility)
-    PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
-    if (py_max_threads && PyLong_Check(py_max_threads)) {
-        config.max_conns_per_node = PyLong_AsLong(py_max_threads);
-    }
-
-    PyObject *py_min_conns_per_node =
-        PyDict_GetItemString(py_config, "min_conns_per_node");
-    if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
-        config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
-    }
-
-    // max_conns_per_node
-    PyObject *py_max_conns =
-        PyDict_GetItemString(py_config, "max_conns_per_node");
-    if (py_max_conns && PyLong_Check(py_max_conns)) {
-        config.max_conns_per_node = PyLong_AsLong(py_max_conns);
-    }
-
-    // max_error_rate
-    PyObject *py_max_error_rate =
-        PyDict_GetItemString(py_config, "max_error_rate");
-    Py_XINCREF(py_max_error_rate);
-    if (py_max_error_rate && PyLong_Check(py_max_error_rate)) {
-        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
-    }
-    Py_XDECREF(py_max_error_rate);
-
-    // error_rate_window
-    PyObject *py_error_rate_window =
-        PyDict_GetItemString(py_config, "error_rate_window");
-    Py_XINCREF(py_error_rate_window);
-    if (py_error_rate_window && PyLong_Check(py_error_rate_window)) {
-        config.error_rate_window = PyLong_AsLong(py_error_rate_window);
-    }
-    Py_XDECREF(py_error_rate_window);
-
-    //conn_timeout_ms
-    PyObject *py_connect_timeout =
-        PyDict_GetItemString(py_config, "connect_timeout");
-    if (py_connect_timeout && PyLong_Check(py_connect_timeout)) {
-        config.conn_timeout_ms = PyLong_AsLong(py_connect_timeout);
-    }
-
-    //Whether to utilize shared connection
-    PyObject *py_share_connect =
-        PyDict_GetItemString(py_config, "use_shared_connection");
-    if (py_share_connect) {
-        self->use_shared_connection = PyObject_IsTrue(py_share_connect);
-    }
-
-    PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
-    if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
-        int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
-        if (send_bool_as_temp >= SEND_BOOL_AS_INTEGER &&
-            send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
-            self->send_bool_as = send_bool_as_temp;
+        PyObject *py_tend_interval =
+            PyDict_GetItemString(py_config, "tend_interval");
+        if (py_tend_interval) {
+            as_status return_code =
+                get_uint32_value(py_tend_interval, &config.tender_interval);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"tend_interval\"]",
+                    "32-bit unsigned int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
         }
-    }
 
-    //compression_threshold
-    PyObject *py_compression_threshold =
-        PyDict_GetItemString(py_config, "compression_threshold");
-    if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
-        int compression_value = PyLong_AsLong(py_compression_threshold);
-        if (compression_value >= 0) {
-            config.policies.write.compression_threshold = compression_value;
-        }
-        else {
-            error_code = INIT_COMPRESSION_ERR;
-            goto CONSTRUCTOR_ERROR;
-        }
-    }
+        PyObject *py_cluster_name =
+            PyDict_GetItemString(py_config, "cluster_name");
+        if (py_cluster_name) {
+            if (PyUnicode_Check(py_cluster_name)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"cluster_name\"]", "str",
+                                                 &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
 
-    PyObject *py_tend_interval =
-        PyDict_GetItemString(py_config, "tend_interval");
-    if (py_tend_interval && PyLong_Check(py_tend_interval)) {
-        config.tender_interval = PyLong_AsLong(py_tend_interval);
-    }
-
-    PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
-    if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
-        const char *cluster_name = PyUnicode_AsUTF8(py_cluster_name);
-        if (!cluster_name) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-        as_config_set_cluster_name(&config, cluster_name);
-    }
-
-    PyObject *py_app_id = NULL;
-    retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
-    if (retval == 1) {
-        const char *str = convert_pyobject_to_str(py_app_id);
-        if (!str) {
-            Py_DECREF(py_app_id);
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-        as_config_set_app_id(&config, str);
-        Py_DECREF(py_app_id);
-    }
-    else if (retval == -1) {
-        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-    }
-
-    //strict_types check
-    self->strict_types = true;
-    PyObject *py_strict_types = PyDict_GetItemString(py_config, "strict_types");
-    if (py_strict_types && PyBool_Check(py_strict_types)) {
-        if (Py_False == py_strict_types) {
-            self->strict_types = false;
-        }
-    }
-
-    if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
-        error_code = INIT_POLICY_PARAM_ERR;
-        goto CONSTRUCTOR_ERROR;
-    }
-    if (set_use_services_alternate(&config, py_config) != INIT_SUCCESS) {
-        error_code = INIT_POLICY_PARAM_ERR;
-        goto CONSTRUCTOR_ERROR;
-    }
-
-    PyObject *py_max_socket_idle = NULL;
-    py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
-    if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
-        long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
-        if (max_socket_idle >= 0) {
-            config.max_socket_idle = (uint32_t)max_socket_idle;
-        }
-    }
-
-    bool *bool_config_refs[] = {&config.force_single_node,
-                                &config.fail_if_not_connected};
-    const char *bool_config_name[] = {"force_single_node",
-                                      "fail_if_not_connected"};
-
-    // TODO: needs better input validation.
-    // i.e throw an exception if value is not a bool type
-    for (unsigned long i = 0;
-         i < sizeof(bool_config_name) / sizeof(bool_config_name[0]); i++) {
-        PyObject *py_bool_value =
-            PyDict_GetItemString(py_config, bool_config_name[i]);
-        if (py_bool_value && PyBool_Check(py_bool_value)) {
-            int retval = PyObject_IsTrue(py_bool_value);
-            if (retval == -1) {
+            const char *cluster_name = PyUnicode_AsUTF8(py_cluster_name);
+            if (!cluster_name) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
-            *bool_config_refs[i] = (bool)retval;
+
+            as_config_set_cluster_name(&config, cluster_name);
         }
-    }
 
-    PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
-    PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
-    if (py_user_name && PyUnicode_Check(py_user_name) && py_user_pwd &&
-        PyUnicode_Check(py_user_pwd)) {
-        char *username = (char *)PyUnicode_AsUTF8(py_user_name);
-        char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
-        as_config_set_user(&config, username, password);
-    }
+        PyObject *py_app_id = NULL;
+        retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+        if (retval == 1) {
+            const char *str = convert_pyobject_to_str(py_app_id);
+            if (!str) {
+                Py_DECREF(py_app_id);
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            as_config_set_app_id(&config, str);
+            Py_DECREF(py_app_id);
+        }
+        else if (retval == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
 
-    self->as = aerospike_new(&config);
+        //strict_types check
+        self->strict_types = true;
+        PyObject *py_strict_types =
+            PyDict_GetItemString(py_config, "strict_types");
+        if (py_strict_types && PyBool_Check(py_strict_types)) {
+            if (Py_False == py_strict_types) {
+                self->strict_types = false;
+            }
+        }
 
-    if (AerospikeClientConnect(self) == -1) {
+        if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
+            error_code = INIT_POLICY_PARAM_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (set_use_services_alternate(&config, py_config) != INIT_SUCCESS) {
+            error_code = INIT_POLICY_PARAM_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+
+        PyObject *py_max_socket_idle = NULL;
+        py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
+        if (py_max_socket_idle) {
+            if (!PyLong_CheckExact(py_max_socket_idle)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"max_socket_idle\"]", "int",
+                                                 &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+            long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
+            if (max_socket_idle >= 0) {
+                config.max_socket_idle = (uint32_t)max_socket_idle;
+            }
+        }
+
+        bool *bool_config_refs[] = {&config.force_single_node,
+                                    &config.fail_if_not_connected};
+        const char *bool_config_name[] = {"force_single_node",
+                                          "fail_if_not_connected"};
+
+        // TODO: needs better input validation.
+        // i.e throw an exception if value is not a bool type
+        for (unsigned long i = 0;
+             i < sizeof(bool_config_name) / sizeof(bool_config_name[0]); i++) {
+            PyObject *py_bool_value =
+                PyDict_GetItemString(py_config, bool_config_name[i]);
+            if (py_bool_value) {
+                if (!PyBool_Check(py_bool_value)) {
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg,
+                        "[\"fail_if_not_connected\"]", "bool", &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+
+                int retval = PyObject_IsTrue(py_bool_value);
+                if (retval == -1) {
+                    goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+                }
+                *bool_config_refs[i] = (bool)retval;
+            }
+        }
+
+        PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
+        if (py_user_name) {
+            if (!PyUnicode_Check(py_user_name)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"user\"]", "str",
+                                                 &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+        }
+
+        PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
+        if (py_user_pwd) {
+            if (!PyUnicode_Check(py_user_pwd)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"password\"]", "str",
+                                                 &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+        }
+
+        if (py_user_name && py_user_pwd) {
+            char *username = (char *)PyUnicode_AsUTF8(py_user_name);
+            char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
+            as_config_set_user(&config, username, password);
+        }
+
+        self->as = aerospike_new(&config);
+
+        if (AerospikeClientConnect(self) == -1) {
+            return -1;
+        }
+
+        return 0;
+
+    CONSTRUCTOR_ERROR:
+        switch (error_code) {
+        // 0 Is success
+        case 0: {
+            // TODO: this is dead code
+            // Initialize connection flag
+            return 0;
+        }
+        case INIT_NO_CONFIG_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "No config argument");
+            break;
+        }
+        case INIT_CONFIG_TYPE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Config must be a dict");
+            break;
+        }
+        case INIT_CONFIG_VALUE_TYPE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            config_value_type_error_msg);
+            break;
+        }
+        case INIT_LUA_USER_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Lua user path too long");
+            break;
+        }
+        case INIT_LUA_SYS_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Lua system path too long");
+            break;
+        }
+        case INIT_HOST_TYPE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Hosts must be a list");
+            break;
+        }
+        case INIT_EMPTY_HOSTS_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Hosts must not be empty");
+            break;
+        }
+        case INIT_INVALID_ADRR_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Invalid host");
+            break;
+        }
+        case INIT_SERIALIZE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Serializer must be callable");
+            break;
+        }
+        case INIT_DESERIALIZE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Deserializer must be callable");
+            break;
+        }
+        case INIT_COMPRESSION_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Compression value must not be negative");
+            break;
+        }
+        case INIT_POLICY_PARAM_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Invalid Policy setting value");
+            break;
+        }
+        case INIT_INVALID_AUTHMODE_ERR: {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Specify valid auth_mode");
+            break;
+        }
+        default:
+            // If a generic error was caught during init, use this message
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "Invalid Parameters");
+            break;
+        }
+
+    RAISE_EXCEPTION_WITH_AS_ERROR:
+        raise_exception(&constructor_err);
+    RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+        as_config_destroy(&config);
         return -1;
     }
 
-    return 0;
-
-CONSTRUCTOR_ERROR:
-    switch (error_code) {
-    // 0 Is success
-    case 0: {
-        // TODO: this is dead code
-        // Initialize connection flag
-        return 0;
-    }
-    case INIT_NO_CONFIG_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "No config argument");
-        break;
-    }
-    case INIT_CONFIG_TYPE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Config must be a dict");
-        break;
-    }
-    case INIT_LUA_USER_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Lua user path too long");
-        break;
-    }
-    case INIT_LUA_SYS_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Lua system path too long");
-        break;
-    }
-    case INIT_HOST_TYPE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Hosts must be a list");
-        break;
-    }
-    case INIT_EMPTY_HOSTS_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Hosts must not be empty");
-        break;
-    }
-    case INIT_INVALID_ADRR_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM, "Invalid host");
-        break;
-    }
-    case INIT_SERIALIZE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Serializer must be callable");
-        break;
-    }
-    case INIT_DESERIALIZE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Deserializer must be callable");
-        break;
-    }
-    case INIT_COMPRESSION_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Compression value must not be negative");
-        break;
-    }
-    case INIT_POLICY_PARAM_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Invalid Policy setting value");
-        break;
-    }
-    case INIT_INVALID_AUTHMODE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Specify valid auth_mode");
-        break;
-    }
-    default:
-        // If a generic error was caught during init, use this message
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Invalid Parameters");
-        break;
-    }
-
-RAISE_EXCEPTION_WITH_AS_ERROR:
-    raise_exception(&constructor_err);
-RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-    as_config_destroy(&config);
-    return -1;
-}
-
-static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
-{
-    PyObject *py_config_value;
-    long rack_id;
-    py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
-    if (py_config_value) {
-        if (PyBool_Check(py_config_value)) {
-            conf->rack_aware = PyObject_IsTrue(py_config_value);
-        }
-        else {
-            return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of rack_aware
-        }
-    }
-
-    py_config_value = PyDict_GetItemString(config_dict, "rack_id");
-    if (py_config_value) {
-        if (PyLong_Check(py_config_value)) {
-            rack_id = PyLong_AsLong(py_config_value);
-        }
-        else {
-            return INIT_POLICY_PARAM_ERR; // A non integer passed in.
-        }
-        if (rack_id == -1 && PyErr_Occurred()) {
-            return INIT_POLICY_PARAM_ERR; // We had overflow.
-        }
-
-        if (rack_id > INT_MAX || rack_id < INT_MIN) {
-            return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
-        }
-        conf->rack_id = (int)rack_id;
-    }
-
-    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
-    if (rack_ids_pylist == NULL) {
-        return INIT_SUCCESS;
-    }
-    Py_INCREF(rack_ids_pylist);
-
-    if (!PyList_Check(rack_ids_pylist)) {
-        goto PARAM_ERROR;
-    }
-
-    size_t size = PyList_Size(rack_ids_pylist);
-
-    for (size_t i = 0; i < size; i++) {
-        PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
-        if (rack_id_pyobj == NULL) {
-            // This shouldn't happen, but just return an error if it does
-            goto PARAM_ERROR;
-        }
-
-        Py_INCREF(rack_id_pyobj);
-        if (PyLong_Check(rack_id_pyobj) == false) {
-            Py_DECREF(rack_id_pyobj);
-            goto PARAM_ERROR;
-        }
-
-        long rack_id = PyLong_AsLong(rack_id_pyobj);
-        if (rack_id == -1) {
-            // Error occurred
-            Py_DECREF(rack_id_pyobj);
-            goto PARAM_ERROR;
-        }
-
-        as_config_add_rack_id(conf, (int)rack_id);
-        Py_DECREF(rack_id_pyobj);
-    }
-
-    Py_DECREF(rack_ids_pylist);
-    return INIT_SUCCESS;
-
-PARAM_ERROR:
-    // In any case param error is thrown
-    // rack ids is a PyObject that needs to be freed
-    Py_DECREF(rack_ids_pylist);
-    return INIT_POLICY_PARAM_ERR;
-}
-
-static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
-{
-    PyObject *py_config_value;
-    py_config_value =
-        PyDict_GetItemString(config_dict, "use_services_alternate");
-    if (py_config_value) {
-        if (PyBool_Check(py_config_value)) {
-            conf->use_services_alternate = PyObject_IsTrue(py_config_value);
-        }
-        else {
-            return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of use_services_alternate
-        }
-    }
-    return INIT_SUCCESS;
-}
-
-static void AerospikeClient_Type_Dealloc(PyObject *self)
-{
-
-    as_error err;
-    char *alias_to_search = NULL;
-    PyObject *py_persistent_item = NULL;
-    AerospikeGlobalHosts *global_host = NULL;
-    AerospikeClient *client = (AerospikeClient *)self;
-
-    // If the client has never connected
-    // It is safe to destroy the aerospike structure
-    if (client->as) {
-        if (!client->has_connected) {
-            aerospike_destroy(client->as);
-        }
-        else {
-
-            // If the connection is possibly shared, use reference counted deletes
-            if (client->use_shared_connection) {
-                // If this client was still connected, deal with the global host object
-                if (client->is_conn_16) {
-                    alias_to_search = return_search_string(client->as);
-                    py_persistent_item =
-                        PyDict_GetItemString(py_global_hosts, alias_to_search);
-                    if (py_persistent_item) {
-                        global_host =
-                            (AerospikeGlobalHosts *)py_persistent_item;
-                        // Only modify the global as object if the client points to it
-                        if (client->as == global_host->as) {
-                            close_aerospike_object(client->as, &err,
-                                                   alias_to_search,
-                                                   py_persistent_item, false);
-                        }
-                    }
-                }
-                // Connection is not shared, so it is safe to destroy the as object
+    static int set_rack_aware_config(as_config * conf, PyObject * config_dict)
+    {
+        PyObject *py_config_value;
+        long rack_id;
+        py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
+        if (py_config_value) {
+            if (PyBool_Check(py_config_value)) {
+                conf->rack_aware = PyObject_IsTrue(py_config_value);
             }
             else {
-                if (client->is_conn_16) {
-                    aerospike_close(client->as, &err);
-                }
-                aerospike_destroy(client->as);
+                return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of rack_aware
             }
         }
-    }
-    self->ob_type->tp_free((PyObject *)self);
-}
 
-/*******************************************************************************
+        py_config_value = PyDict_GetItemString(config_dict, "rack_id");
+        if (py_config_value) {
+            if (PyLong_CheckExact(py_config_value)) {
+                rack_id = PyLong_AsLong(py_config_value);
+            }
+            else {
+                return INIT_POLICY_PARAM_ERR; // A non integer passed in.
+            }
+            if (rack_id == -1 && PyErr_Occurred()) {
+                return INIT_POLICY_PARAM_ERR; // We had overflow.
+            }
+
+            if (rack_id > INT_MAX || rack_id < INT_MIN) {
+                return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
+            }
+            conf->rack_id = (int)rack_id;
+        }
+
+        PyObject *rack_ids_pylist =
+            PyDict_GetItemString(config_dict, "rack_ids");
+        if (rack_ids_pylist == NULL) {
+            return INIT_SUCCESS;
+        }
+        Py_INCREF(rack_ids_pylist);
+
+        if (!PyList_Check(rack_ids_pylist)) {
+            goto PARAM_ERROR;
+        }
+
+        size_t size = PyList_Size(rack_ids_pylist);
+
+        for (size_t i = 0; i < size; i++) {
+            PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
+            if (rack_id_pyobj == NULL) {
+                // This shouldn't happen, but just return an error if it does
+                goto PARAM_ERROR;
+            }
+
+            Py_INCREF(rack_id_pyobj);
+            if (PyLong_CheckExact(rack_id_pyobj) == false) {
+                Py_DECREF(rack_id_pyobj);
+                goto PARAM_ERROR;
+            }
+
+            long rack_id = PyLong_AsLong(rack_id_pyobj);
+            if (rack_id == -1) {
+                // Error occurred
+                Py_DECREF(rack_id_pyobj);
+                goto PARAM_ERROR;
+            }
+
+            as_config_add_rack_id(conf, (int)rack_id);
+            Py_DECREF(rack_id_pyobj);
+        }
+
+        Py_DECREF(rack_ids_pylist);
+        return INIT_SUCCESS;
+
+    PARAM_ERROR:
+        // In any case param error is thrown
+        // rack ids is a PyObject that needs to be freed
+        Py_DECREF(rack_ids_pylist);
+        return INIT_POLICY_PARAM_ERR;
+    }
+
+    static int set_use_services_alternate(as_config * conf,
+                                          PyObject * config_dict)
+    {
+        PyObject *py_config_value;
+        py_config_value =
+            PyDict_GetItemString(config_dict, "use_services_alternate");
+        if (py_config_value) {
+            if (PyBool_Check(py_config_value)) {
+                conf->use_services_alternate = PyObject_IsTrue(py_config_value);
+            }
+            else {
+                return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of use_services_alternate
+            }
+        }
+        return INIT_SUCCESS;
+    }
+
+    static void AerospikeClient_Type_Dealloc(PyObject * self)
+    {
+
+        as_error err;
+        char *alias_to_search = NULL;
+        PyObject *py_persistent_item = NULL;
+        AerospikeGlobalHosts *global_host = NULL;
+        AerospikeClient *client = (AerospikeClient *)self;
+
+        // If the client has never connected
+        // It is safe to destroy the aerospike structure
+        if (client->as) {
+            if (!client->has_connected) {
+                aerospike_destroy(client->as);
+            }
+            else {
+
+                // If the connection is possibly shared, use reference counted deletes
+                if (client->use_shared_connection) {
+                    // If this client was still connected, deal with the global host object
+                    if (client->is_conn_16) {
+                        alias_to_search = return_search_string(client->as);
+                        py_persistent_item = PyDict_GetItemString(
+                            py_global_hosts, alias_to_search);
+                        if (py_persistent_item) {
+                            global_host =
+                                (AerospikeGlobalHosts *)py_persistent_item;
+                            // Only modify the global as object if the client points to it
+                            if (client->as == global_host->as) {
+                                close_aerospike_object(
+                                    client->as, &err, alias_to_search,
+                                    py_persistent_item, false);
+                            }
+                        }
+                    }
+                    // Connection is not shared, so it is safe to destroy the as object
+                }
+                else {
+                    if (client->is_conn_16) {
+                        aerospike_close(client->as, &err);
+                    }
+                    aerospike_destroy(client->as);
+                }
+            }
+        }
+        self->ob_type->tp_free((PyObject *)self);
+    }
+
+    /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeClient_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-        FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
-    sizeof(AerospikeClient),                  // tp_basicsize
-    0,                                        // tp_itemsize
-    (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
-    0,                                        // tp_print
-    0,                                        // tp_getattr
-    0,                                        // tp_setattr
-    0,                                        // tp_compare
-    0,                                        // tp_repr
-    0,                                        // tp_as_number
-    0,                                        // tp_as_sequence
-    0,                                        // tp_as_mapping
-    0,                                        // tp_hash
-    0,                                        // tp_call
-    0,                                        // tp_str
-    0,                                        // tp_getattro
-    0,                                        // tp_setattro
-    0,                                        // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    // tp_flags
-    "The Client class manages the connections and trasactions against\n"
-    "an Aerospike cluster.\n",
-    // tp_doc
-    0,                            // tp_traverse
-    0,                            // tp_clear
-    0,                            // tp_richcompare
-    0,                            // tp_weaklistoffset
-    0,                            // tp_iter
-    0,                            // tp_iternext
-    AerospikeClient_Type_Methods, // tp_methods
-    0,                            // tp_members
-    0,                            // tp_getset
-    0,                            // tp_base
-    0,                            // tp_dict
-    0,                            // tp_descr_get
-    0,                            // tp_descr_set
-    0,                            // tp_dictoffset
-    (initproc)AerospikeClient_Type_Init,
-    // tp_init
-    0,                        // tp_alloc
-    AerospikeClient_Type_New, // tp_new
-    0,                        // tp_free
-    0,                        // tp_is_gc
-    0                         // tp_bases
-};
+    static PyTypeObject AerospikeClient_Type = {
+        PyVarObject_HEAD_INIT(NULL, 0)
+            FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
+        sizeof(AerospikeClient),                  // tp_basicsize
+        0,                                        // tp_itemsize
+        (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
+        0,                                        // tp_print
+        0,                                        // tp_getattr
+        0,                                        // tp_setattr
+        0,                                        // tp_compare
+        0,                                        // tp_repr
+        0,                                        // tp_as_number
+        0,                                        // tp_as_sequence
+        0,                                        // tp_as_mapping
+        0,                                        // tp_hash
+        0,                                        // tp_call
+        0,                                        // tp_str
+        0,                                        // tp_getattro
+        0,                                        // tp_setattro
+        0,                                        // tp_as_buffer
+        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+        // tp_flags
+        "The Client class manages the connections and trasactions against\n"
+        "an Aerospike cluster.\n",
+        // tp_doc
+        0,                            // tp_traverse
+        0,                            // tp_clear
+        0,                            // tp_richcompare
+        0,                            // tp_weaklistoffset
+        0,                            // tp_iter
+        0,                            // tp_iternext
+        AerospikeClient_Type_Methods, // tp_methods
+        0,                            // tp_members
+        0,                            // tp_getset
+        0,                            // tp_base
+        0,                            // tp_dict
+        0,                            // tp_descr_get
+        0,                            // tp_descr_set
+        0,                            // tp_dictoffset
+        (initproc)AerospikeClient_Type_Init,
+        // tp_init
+        0,                        // tp_alloc
+        AerospikeClient_Type_New, // tp_new
+        0,                        // tp_free
+        0,                        // tp_is_gc
+        0                         // tp_bases
+    };
 
-/*******************************************************************************
+    /*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject *AerospikeClient_Ready()
-{
-    return PyType_Ready(&AerospikeClient_Type) == 0 ? &AerospikeClient_Type
-                                                    : NULL;
-}
-
-AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
-                                     PyObject *kwds)
-{
-    AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
-        &AerospikeClient_Type, args, kwds);
-
-    int return_code =
-        AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
-    if (return_code == 0) {
-        return self;
-    }
-    if (PyErr_Occurred()) {
-        goto CLEANUP;
+    PyTypeObject *AerospikeClient_Ready()
+    {
+        return PyType_Ready(&AerospikeClient_Type) == 0 ? &AerospikeClient_Type
+                                                        : NULL;
     }
 
-    as_error err;
-    as_error_init(&err);
-    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
-    raise_exception(&err);
+    AerospikeClient *AerospikeClient_New(PyObject * parent, PyObject * args,
+                                         PyObject * kwds)
+    {
+        AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
+            &AerospikeClient_Type, args, kwds);
 
-CLEANUP:
-    AerospikeClient_Type.tp_dealloc((PyObject *)self);
-    return NULL;
-}
+        int return_code =
+            AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
+        if (return_code == 0) {
+            return self;
+        }
+        if (PyErr_Occurred()) {
+            goto CLEANUP;
+        }
+
+        as_error err;
+        as_error_init(&err);
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Failed to construct object");
+        raise_exception(&err);
+
+    CLEANUP:
+        AerospikeClient_Type.tp_dealloc((PyObject *)self);
+        return NULL;
+    }
