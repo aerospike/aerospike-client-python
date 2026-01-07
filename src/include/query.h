@@ -148,5 +148,8 @@ PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
 int64_t pyobject_to_int64(PyObject *py_obj);
 
+// We need to share this with src/main/client/query.c because this function is no longer assigned
+// to the query type's tp_new slot. We are trying to prevent users from using the query type's constructor directly
+// to create a query instance.
 PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                   PyObject *kwds);
