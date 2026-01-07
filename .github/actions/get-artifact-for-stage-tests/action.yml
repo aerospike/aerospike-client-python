@@ -78,5 +78,6 @@ runs:
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
-    run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog_build_version }} "${{ inputs.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+    # TODO: download latest build in dev repo somehow
+    run: jf rt dl --fail-no-op --bundle python-client-release/18.2.0rc1.dev15-26 'database-generic-dev-local/*.whl'
     shell: bash
