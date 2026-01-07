@@ -49,7 +49,7 @@ AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
     AerospikeQuery *query = (AerospikeQuery *)AerospikeQuery_Type_New(
-        &AerospikeQuery_Type, self, NULL);
+        &AerospikeQuery_Type, (PyObject *)self, NULL);
     if (!query) {
         return NULL;
     }
