@@ -166,12 +166,9 @@ AerospikeQuery *AerospikeQuery_Type_New(PyTypeObject *type,
         return NULL;
     }
 
-    self->client = Py_NewRef(py_client);
+    Py_INCREF((PyObject *)py_client);
+    self->client = py_client;
     return self;
-
-CLEANUP_ON_ERROR:
-    type->tp_dealloc((PyObject *)self);
-    return NULL;
 }
 
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
