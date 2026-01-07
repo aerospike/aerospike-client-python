@@ -171,7 +171,7 @@ PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
         goto CLEANUP_ON_ERROR;
     }
 
-    self->client = Py_NewRef(py_client);
+    self->client = (AerospikeClient *)Py_NewRef(py_client);
     return (PyObject *)self;
 
 CLEANUP_ON_ERROR:
