@@ -159,11 +159,6 @@ PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                   PyObject *kwds)
 {
     AerospikeQuery *self = (AerospikeQuery *)type->tp_alloc(type, 0);
-
-    if (self) {
-        self->client = NULL;
-    }
-
     return (PyObject *)self;
 }
 
