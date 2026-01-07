@@ -130,5 +130,5 @@ PyObject *AerospikeScan_Is_Done(AerospikeScan *self, PyObject *args,
  */
 PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self);
 
-PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                 PyObject *kwds);
+AerospikeScan *AerospikeScan_Type_New(PyTypeObject *type,
+                                      AerospikeClient *client);

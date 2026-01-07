@@ -54,7 +54,7 @@ AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
     }
 
     if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == -1) {
-        AerospikeQuery_Type.tp_free(query);
+        Py_DECREF(query);
         return NULL;
     }
 

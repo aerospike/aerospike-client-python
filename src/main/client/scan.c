@@ -49,14 +49,9 @@ extern PyTypeObject AerospikeScan_Type;
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
-    AerospikeScan *scan = (AerospikeScan *)AerospikeScan_Type_New(
-        &AerospikeScan_Type, args, kwds);
-    scan->client = self;
-    Py_INCREF(self);
-    if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) != -1) {
-        return scan;
-    }
-    else {
+    AerospikeScan *scan = AerospikeScan_Type_New(&AerospikeScan_Type, self);
+
+    if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
         Py_XDECREF(scan);
         as_error err;
         as_error_init(&err);
@@ -64,6 +59,8 @@ AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
         raise_exception(&err);
         return NULL;
     }
+
+    return scan;
 }
 
 /**

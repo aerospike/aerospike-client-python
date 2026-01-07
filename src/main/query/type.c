@@ -151,8 +151,6 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
     {NULL} /* Sentinel */
 };
 
-extern PyTypeObject AerospikeClient_Type;
-
 /*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/

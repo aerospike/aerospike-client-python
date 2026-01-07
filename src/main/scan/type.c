@@ -109,16 +109,17 @@ static PyMemberDef AerospikeScan_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                 PyObject *kwds)
+AerospikeScan *AerospikeScan_Type_New(PyTypeObject *type,
+                                      AerospikeClient *py_client)
 {
     AerospikeScan *self = (AerospikeScan *)type->tp_alloc(type, 0);
-
-    if (self) {
-        self->client = NULL;
+    if (!self) {
+        return NULL;
     }
 
-    return (PyObject *)self;
+    Py_INCREF((PyObject *)py_client);
+    self->client = py_client;
+    return self;
 }
 
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
