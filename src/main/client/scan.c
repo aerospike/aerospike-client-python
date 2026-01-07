@@ -50,6 +50,9 @@ AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
     AerospikeScan *scan = AerospikeScan_Type_New(&AerospikeScan_Type, self);
+    if (!scan) {
+        return NULL;
+    }
 
     if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
         Py_XDECREF(scan);
