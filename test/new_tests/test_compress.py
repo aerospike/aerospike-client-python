@@ -57,7 +57,7 @@ class TestCompress:
 
         policy = {"compress": True}
 
-        self.as_connection.put(key, rec, policy)
+        self.as_connection.put(key, rec, policy=policy)
         _, _, bins = self.as_connection.get(key, policy)
 
         assert bins["val"] == expected
@@ -106,7 +106,7 @@ class TestCompress:
 
         policy = {"key": aerospike.POLICY_KEY_SEND, "compress": True}
 
-        self.as_connection.put(key, rec, policy)
+        self.as_connection.put(key, rec, policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 

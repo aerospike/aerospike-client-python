@@ -44,7 +44,7 @@
 #include <aerospike/aerospike_txn.h>
 #include <aerospike/version.h>
 
-PyObject *py_global_hosts;
+PyObject *py_global_hosts = NULL;
 int counter = 0xA8000000;
 bool user_shm_key = false;
 
@@ -102,6 +102,31 @@ struct module_constant_name_to_value {
     } value;
 };
 
+#define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
+    macro_name_without_prefix)                                                 \
+    {                                                                          \
+        #macro_name_without_prefix,                                            \
+            .value.integer = AS_##macro_name_without_prefix                    \
+    }
+
+#define STRINGIFY(X) #X
+
+#define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
+    {                                                                          \
+        STRINGIFY(_##macro_name_without_prefix),                               \
+            .value.integer = macro_name_without_prefix                         \
+    }
+
+#define EXPOSE_MACRO(macro_name)                                               \
+    {                                                                          \
+        #macro_name, .value.integer = macro_name                               \
+    }
+
+#define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
+    {                                                                          \
+        #macro_name, .is_str_value = true, .value.string = macro_name          \
+    }
+
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
 // TODO: regression tests for all these constants
@@ -113,6 +138,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_READ),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_MODIFY),
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
@@ -431,6 +458,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
@@ -522,7 +550,57 @@ static struct module_constant_name_to_value module_constants[] = {
     {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
-    {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
+    {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
+
+    /*
+        When doing a path expression select/apply operation, and applying an expression on each
+        iterated object, this lets us choose a specific value over each iterated
+        object.
+    */
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_INDEX),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MATCHING_TREE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_LIST_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_MAP_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_KEY_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_NO_FAIL),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_NO_FAIL),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_DEFAULT),
+
+    // For aerospike_helpers to use. Not to be exposed in public API
+    // TODO: move all internal constants used by aerospike_helpers to this loc
+
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_FLOAT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_INT),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BLOB),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BOOL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_NIL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_GEOJSON),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_HLL),
+
+    // C client uses the same expression code for these two expressions
+    // so we define unique ones in the Python client code
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+    EXPOSE_MACRO(_AS_EXP_CODE_RESULT_REMOVE),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_CTX_FILTER_EXPR_KEY),
+};
 
 struct submodule_name_to_creation_method {
     const char *name;
@@ -562,6 +640,232 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
 
+// We use a macro to avoid repetition
+#define DEFINE_SET_OF_VALID_KEYS(array_name_prefix, ...)                       \
+    const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
+    PyObject *py_##array_name_prefix##_valid_keys = NULL;
+
+DEFINE_SET_OF_VALID_KEYS(
+    client_config, "lua", "config_provider", "tls", "hosts", "shm",
+    "serialization", "policies", "thread_pool_size", "max_threads",
+    "min_conns_per_node", "max_conns_per_node", "max_error_rate",
+    "error_rate_window", "connect_timeout", "use_shared_connection",
+    "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
+    "strict_types", "rack_aware", "rack_id", "rack_ids",
+    "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
+    "user", "password", "validate_keys", "app_id", "force_single_node", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
+                         "shm_max_namespaces", "max_namespaces",
+                         "shm_takeover_threshold_sec", "takeover_threshold_sec",
+                         "shm_key", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_lua, "system_path", "user_path", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
+                         "operate", "remove", "query", "scan", "batch",
+                         "batch_remove", "batch_apply", "batch_write",
+                         "batch_parent_write", "info", "admin", "txn_verify",
+                         "txn_roll", "total_timeout", "auth_mode",
+                         "login_timeout_ms", "key", "exists", "max_retries",
+                         "replica", "commit_level", "metrics", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
+                         "protocols", "cipher_suite", "keyfile", "keyfile_pw",
+                         "cert_blacklist", "certfile", "crl_check",
+                         "crl_check_all", "log_session_info", "for_login_only",
+                         NULL
+
+)
+
+#define BASE_POLICY_KEYS                                                       \
+    "total_timeout", "socket_timeout", "max_retries", "sleep_between_retries", \
+        "compress", "txn", "expressions", "connect_timeout", "timeout_delay"
+
+DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
+                         "commit_level", "durable_delete", "ttl",
+                         "on_locking_only", NULL
+
+)
+
+// send_as_is and check_bounds should not be used by the user
+// That's why they are not documented.
+// But they were already exposed in the API for a long time, so we allow them to be used
+#define INFO_POLICY_KEYS "timeout", "send_as_is", "check_bounds"
+DEFINE_SET_OF_VALID_KEYS(info_policy, INFO_POLICY_KEYS, NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(query_policy, BASE_POLICY_KEYS, "deserialize",
+                         "replica", "short_query", "expected_duration",
+                         "partition_filter", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(read_policy, BASE_POLICY_KEYS, "key", "replica",
+                         "deserialize", "read_touch_ttl_percent",
+                         "read_mode_ap", "read_mode_sc", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
+                         "gen", "commit_level", "replica", "durable_delete",
+                         NULL
+
+)
+
+#define SCAN_POLICY_KEYS                                                       \
+    "durable_delete", "records_per_second", "max_records", "replica", "ttl",   \
+        "partition_filter"
+
+DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, SCAN_POLICY_KEYS, NULL)
+
+DEFINE_SET_OF_VALID_KEYS(info_and_scan_policy, BASE_POLICY_KEYS,
+                         SCAN_POLICY_KEYS, INFO_POLICY_KEYS, NULL)
+
+#define WRITE_POLICY_KEYS                                                      \
+    "key", "gen", "exists", "commit_level", "durable_delete", "replica",       \
+        "compression_threshold", "on_locking_only", "ttl"
+
+DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, WRITE_POLICY_KEYS, NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(info_and_write_policy, BASE_POLICY_KEYS,
+                         WRITE_POLICY_KEYS, INFO_POLICY_KEYS, NULL)
+
+DEFINE_SET_OF_VALID_KEYS(operate_policy, BASE_POLICY_KEYS, "key", "gen",
+                         "commit_level", "replica", "durable_delete",
+                         "deserialize", "exists", "read_touch_ttl_percent",
+                         "on_locking_only", "read_mode_ap", "read_mode_sc",
+                         "ttl", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_policy, BASE_POLICY_KEYS, "concurrent",
+                         "allow_inline", "deserialize", "replica",
+                         "read_touch_ttl_percent", "read_mode_ap",
+                         "read_mode_sc", "allow_inline_ssd", "respond_all_keys",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_write_policy, "key", "gen", "commit_level",
+                         "durable_delete", "exists", "on_locking_only",
+                         "expressions", "ttl", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_read_policy, "read_touch_ttl_percent",
+                         "read_mode_ap", "read_mode_sc", "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_apply_policy, "key", "commit_level", "ttl",
+                         "durable_delete", "on_locking_only", "expressions",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_remove_policy, "key", "commit_level", "gen",
+                         "durable_delete", "generation", "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(bit_policy, "bit_write_flags", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(map_policy, "map_order", "map_write_flags",
+                         "persist_index", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(list_policy, "list_order", "write_flags", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", "ttl", NULL)
+
+// Use a struct to create pairs of pyobjects and list of strings defined above
+// When we initialize the module, we create sets for the valid keys that the client can use later
+
+struct py_set_name_to_str_list {
+    // We are setting the global PyObject *variables above, which can be accessed externally
+    PyObject **py_set_of_keys;
+    const char **valid_keys;
+};
+
+#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
+    {                                                                          \
+        &py_##array_name, array_name                                           \
+    }
+
+static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
+    PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_shm_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_lua_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_policies_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_tls_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(apply_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(info_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(admin_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(query_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(read_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(remove_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(scan_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(operate_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_read_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_apply_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_remove_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(bit_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(map_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(list_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(hll_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(info_and_write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(record_metadata_valid_keys),
+};
+
+// Return NULL if an exception is raised
+// Returns strong reference to new Python dictionary
+static PyObject *py_set_new_from_str_list(const char *const *str_list)
+{
+    PyObject *py_valid_keys = PySet_New(NULL);
+    if (py_valid_keys == NULL) {
+        goto error;
+    }
+
+    const char *const *curr_str_ref = str_list;
+    while (*curr_str_ref) {
+        PyObject *py_str = PyUnicode_FromString(*curr_str_ref);
+        if (py_str == NULL) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+
+        int result = PySet_Add(py_valid_keys, py_str);
+        Py_DECREF(py_str);
+        if (result == -1) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+        curr_str_ref++;
+    }
+
+    return py_valid_keys;
+
+CLEANUP_SET_ON_ERROR:
+    Py_DECREF(py_valid_keys);
+error:
+    return NULL;
+}
+
 AS_EXTERN extern char *aerospike_client_language;
 
 bool is_python_client_version_set_for_user_agent = false;
@@ -576,6 +880,14 @@ void aerospike_free(void *self)
         cf_free(aerospike_client_version);
         is_python_client_version_set_for_user_agent = false;
     }
+
+    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
+                                      sizeof(py_set_name_to_str_lists[0]);
+         i++) {
+        Py_XDECREF(*(py_set_name_to_str_lists[i].py_set_of_keys));
+    }
+
+    Py_XDECREF(py_global_hosts);
 }
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -595,19 +907,35 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     Aerospike_Enable_Default_Logging();
 
+    int retval;
+    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
+                                      sizeof(py_set_name_to_str_lists[0]);
+         i++) {
+        // just use a Python set so we don't need to implement a hashset in C
+        // The C client does not have a public API for a hashset yet
+        // Time complexity of set should be constant on avg:
+        // https://wiki.python.org/moin/TimeComplexity
+        PyObject *py_valid_keys =
+            py_set_new_from_str_list(py_set_name_to_str_lists[i].valid_keys);
+        if (py_valid_keys == NULL) {
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+        }
+
+        *(py_set_name_to_str_lists[i].py_set_of_keys) = py_valid_keys;
+    }
+
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     unsigned long i = 0;
-    int retval;
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
             py_module_types[i].pytype_ready_method;
         PyTypeObject *py_type = py_type_ready_func();
         if (py_type == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
 
         Py_INCREF(py_type);
@@ -615,7 +943,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_aerospike_module, py_module_types[i].name, (PyObject *)py_type);
         if (retval == -1) {
             Py_DECREF(py_type);
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
     }
 
@@ -636,7 +964,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
 
         if (retval == -1) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
     }
 
@@ -644,14 +972,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     // https://github.com/python/cpython/issues/87533#issuecomment-2373119452
     PyObject *py_sys = PyImport_ImportModule("sys");
     if (py_sys == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_sys_dot_modules_dict =
         PyObject_GetAttrString(py_sys, "modules");
     Py_DECREF(py_sys);
     if (py_sys_dot_modules_dict == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
@@ -686,28 +1014,28 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     PyObject *py_metadata_subpackage =
         PyImport_ImportModule("importlib.metadata");
     if (py_metadata_subpackage == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_version_callback =
         PyObject_GetAttrString(py_metadata_subpackage, "version");
     Py_DECREF(py_metadata_subpackage);
     if (py_version_callback == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_aerospike_module_version_str =
         PyObject_CallFunction(py_version_callback, "s", AEROSPIKE_MODULE_NAME);
     Py_DECREF(py_version_callback);
     if (py_aerospike_module_version_str == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     const char *aerospike_module_version =
         PyUnicode_AsUTF8(py_aerospike_module_version_str);
     if (aerospike_module_version == NULL) {
         Py_DECREF(py_aerospike_module_version_str);
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     // Here we assume that the original value of aerospike_client_version was not heap allocated
@@ -719,9 +1047,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
 SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR:
     Py_DECREF(py_sys_dot_modules_dict);
-
-GLOBAL_HOSTS_CLEANUP_ON_ERROR:
-    Py_DECREF(py_global_hosts);
 
 AEROSPIKE_MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);

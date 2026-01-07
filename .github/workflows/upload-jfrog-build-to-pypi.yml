@@ -16,7 +16,12 @@ jobs:
   publish-jfrog-build-to-pypi:
     runs-on: ubuntu-22.04
     steps:
-    - uses: jfrog/setup-jfrog-cli@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -25,7 +30,7 @@ jobs:
       run: jf rt dl --build python-client/${{ inputs.version }} ${{ vars.JFROG_REPO_NAME }}
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
       with:
         # This is the directory jf downloads the artifacts to
         packages-dir: aerospike/${{ inputs.version }}/artifacts

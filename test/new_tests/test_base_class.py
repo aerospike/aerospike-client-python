@@ -215,6 +215,15 @@ class TestBaseClass(object):
         if TestBaseClass.password is not None:
             config["password"] = TestBaseClass.password
 
+        config_parser = configparser.ConfigParser()
+        config_parser.read("config.conf")
+        VALIDATE_KEYS_SECTION = "input-validation"
+        VALIDATE_KEYS_OPTION = "validate_keys"
+        if config_parser.has_section(VALIDATE_KEYS_SECTION) and config_parser.has_option(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION):
+            config[VALIDATE_KEYS_OPTION] = config_parser.getboolean(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION)
+        else:
+            config[VALIDATE_KEYS_OPTION] = False
+
         # Disable total_timeout and timeout
         # config["timeout"] = 0
         # config["total_timeout"] = 0

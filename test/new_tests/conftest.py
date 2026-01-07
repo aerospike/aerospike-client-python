@@ -8,8 +8,7 @@ import pytest
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-
+import aerospike
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -72,8 +71,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 
 @pytest.fixture(scope="class")
-def as_connection(request):
+def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
+    # TODO: remove. this is a duplicate.
+    request.cls.config = config
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
@@ -85,6 +86,9 @@ def as_connection(request):
     # We are using tls otherwise, so rely on the server being ready
 
     as_client = aerospike.client(config).connect()
+
+    # Some tests need to get the client config
+    request.cls.config = config
 
     request.cls.skip_old_server = True
     request.cls.server_version = []
@@ -100,6 +104,7 @@ def as_connection(request):
                     request.cls.skip_old_server = False
                 TestBaseClass.major_ver = int(versionlist[0])
                 TestBaseClass.minor_ver = int(versionlist[1])
+                TestBaseClass.patch_ver = int(versionlist[2])
 
     request.cls.as_connection = as_client
 
@@ -233,3 +238,8 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)

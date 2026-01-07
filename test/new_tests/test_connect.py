@@ -7,6 +7,8 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+import warnings
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -88,7 +90,7 @@ class TestConnect(object):
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -219,12 +221,22 @@ class TestConnect(object):
             "host tls-name is non-str"
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
-        with pytest.raises(err) as err_info:
-            self.client = aerospike.client(config).connect()
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
+        if request.node.callspec.id == "hosts port is string":
+            warning_context = warnings.catch_warnings(record=True)
+        else:
+            warning_context = nullcontext()
+
+        with warning_context as warning_list:
+            with pytest.raises(err) as err_info:
+                self.client = aerospike.client(config).connect()
 
         if type(err_code) == tuple:
             assert err_info.value.code in err_code
         else:
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+        if type(warning_context) != nullcontext:
+            assert len(warning_list) == 1
+            assert warning_list[0].category == FutureWarning

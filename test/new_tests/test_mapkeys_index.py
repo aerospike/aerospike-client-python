@@ -140,13 +140,13 @@ class TestMapKeysIndex(object):
         Invoke createindex() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_map_keys_create(
                 "test1", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
             )
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_mapkeysindex_with_nonexistent_set(self):
         """
