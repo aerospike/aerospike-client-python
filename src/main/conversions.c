@@ -2405,10 +2405,10 @@ as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
 {
     as_status status = 0;
 
-    if (Py_IsNone(py_ctx_list)) {
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
         goto CLEANUP5;
     }
-    if (!PyList_Check(py_ctx_list)) {
+    else if (!PyList_Check(py_ctx_list)) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert %s", CTX_KEY);
         goto CLEANUP5;
