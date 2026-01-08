@@ -752,18 +752,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 if (PyUnicode_Check(py_addr)) {
                     addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
                 }
+
                 py_port = PyTuple_GetItem(py_host, 1);
                 if (PyLong_Check(py_port)) {
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
-                    PyErr_WarnEx(
-                        PyExc_FutureWarning,
-                        "In the next Python client major release, an exception "
-                        "will be raised if the port number is not an integer",
-                        2);
-                    port = 0;
+                    as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                                    "The host port must be an integer");
+                    free(addr);
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
+
                 // Set TLS Name if provided
                 if (PyTuple_Size(py_host) == 3) {
                     py_tls_name = PyTuple_GetItem(py_host, 2);
