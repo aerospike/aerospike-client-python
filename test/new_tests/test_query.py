@@ -311,8 +311,8 @@ class TestQuery(TestBaseClass):
         [
             # ctx
             [],
-            [None],
-            [[]]
+            [None]
+            # Empty context list raises an InvalidRequest exception
         ]
     )
     def test_query_with_correct_parameters_hi(self, extra_args):
@@ -1130,7 +1130,8 @@ class TestQuery(TestBaseClass):
 
     def test_query_with_invalid_ctx(self):
         query = self.as_connection.query("test", "demo")
-        query.where(p.equals("bin", 1), 1)
+        with pytest.raises(e.ParamError):
+            query.where(p.equals("bin", 1), 1)
 
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
