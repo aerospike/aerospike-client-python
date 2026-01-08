@@ -14,7 +14,6 @@ python_background_script_name=run-client-in-bg.py
 # First arg (bool): should client log in with username and password?
 # Second arg (str): optional client config app id to set
 
-# This shell will be closed once this step completes
 python3 "$python_background_script_name" "$@" &
 # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
 # When background processes fail, this step won't fail.
