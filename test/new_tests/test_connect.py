@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from contextlib import nullcontext
 
 
 @contextmanager
