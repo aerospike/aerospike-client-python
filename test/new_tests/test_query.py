@@ -1071,7 +1071,7 @@ class TestQuery(TestBaseClass):
 
         query = self.as_connection.query("test", "demo")
         query.select("numeric_list")
-        query.where(p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+        query.where(p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ctx_list_index)
 
         records = []
 
@@ -1113,7 +1113,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("numeric_map")
 
-        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_map_index})
+        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ctx_map_index)
 
         records = []
 
