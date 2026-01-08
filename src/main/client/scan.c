@@ -55,11 +55,7 @@ AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
     }
 
     if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
-        Py_XDECREF(scan);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        raise_exception(&err);
+        Py_DECREF(scan);
         return NULL;
     }
 

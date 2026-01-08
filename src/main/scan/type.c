@@ -143,7 +143,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
-        return -1;
+        goto RAISE_EXCEPTION_ON_ERROR;
     }
 
     if (py_set) {
@@ -164,6 +164,13 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         Py_DECREF(py_ustr);
     }
     return 0;
+
+RAISE_EXCEPTION_ON_ERROR:
+    as_error err;
+    as_error_init(&err);
+    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+    raise_exception(&err);
+    return -1;
 }
 
 static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
