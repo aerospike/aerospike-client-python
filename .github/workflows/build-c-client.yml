@@ -2,7 +2,6 @@ on:
   workflow_call:
 
 jobs:
-  # TODO: define a var for the same OS used in the other build job
   build-c-client:
     runs-on: ubuntu-22.04
     steps:
