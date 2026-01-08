@@ -455,8 +455,6 @@ jobs:
       fail-fast: false
       matrix:
         test-script-args:
-          # First arg: use EE?
-          # Second arg: app id to set in client config
           - "false"
           - "true"
           - "true my_app_id"
