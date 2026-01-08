@@ -2584,6 +2584,10 @@ as_status as_cdt_ctx_init_from_py_operation_dict(
         return AEROSPIKE_OK;
     }
 
+    if (!cdt_ctx) {
+        cdt_ctx = malloc(sizeof(as_cdt_ctx));
+    }
+
     return as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list,
                                          ctx_in_use, static_pool,
                                          serializer_type);
