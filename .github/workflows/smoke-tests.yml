@@ -496,7 +496,8 @@ jobs:
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
-    - uses: ./.github/actions/wait-for-ce-server-to-start
+    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
+      uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
