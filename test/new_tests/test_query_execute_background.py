@@ -18,8 +18,6 @@ try:
 except NameError:
     long = int
 
-
-
 def add_indexes_to_client(client):
     try:
         client.index_integer_create(TEST_NS, TEST_SET, "number", "test_background_number_idx")

@@ -14,7 +14,7 @@ import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl
+from .conftest import verify_record_ttl, wait_for_job_completion
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -461,7 +461,7 @@ class TestConfigTTL:
         scan.add_ops(ops)
         job_id = scan.execute_background()
 
-        wait_for_job_completion(self.client, job_id, aerospike.JOB_SCAN)
+        wait_for_job_completion(self.client, job_id, job_module=aerospike.JOB_SCAN)
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
