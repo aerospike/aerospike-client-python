@@ -499,7 +499,7 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
       run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
-      working-directory: .github/workflows
+      working-directory: test/standalone
 
     - if: ${{ !cancelled() }}
       run: docker logs aerospike
