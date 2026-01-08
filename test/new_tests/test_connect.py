@@ -7,8 +7,6 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-import warnings
-from contextlib import nullcontext
 
 
 @contextmanager
@@ -216,7 +214,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, None),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
         ],
         ids=[
             "config not dict",
@@ -235,6 +233,4 @@ class TestConnect(object):
             assert err_info.value.code in err_code
         else:
             assert err_info.value.code == err_code
-
-        if err_msg:
-            assert err_info.value.msg == err_msg
+        assert err_info.value.msg == err_msg
