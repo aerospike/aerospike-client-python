@@ -496,6 +496,10 @@ jobs:
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
+    - uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
+
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
       run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
