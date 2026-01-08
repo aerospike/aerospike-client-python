@@ -204,7 +204,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
         ],
         ids=[
             "config not dict",
@@ -215,7 +215,7 @@ class TestConnect(object):
             "hosts port is string",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 
