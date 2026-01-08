@@ -55,6 +55,10 @@ jobs:
     env:
       REGISTER_FILE_PATH_IN_REPO: perf_regression/register-client-tests.yaml
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
     # TODO: composite action for this would be helpful
     # TODO: need special testctl not in jfrog yet
     - name: Get test-register
@@ -122,6 +126,10 @@ jobs:
       WHEEL_ARCH: x86_64
     runs-on: ubuntu-24.04-arm
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
     - name: Get Github action to download wheel from JFrog
       uses: actions/checkout@v4
       with:
@@ -184,6 +192,10 @@ jobs:
       register-test-definition-with-custom-env-var-parameters
     ]
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
     # - name: Setup Rclone
     #   uses: AnimMouse/setup-rclone@0d99fa3878a334d3e307c1a8372ad55550fdaea7
     #   with:
