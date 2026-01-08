@@ -728,7 +728,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert "argument 'ns' (pos 1)" in str(typeError.value)
 
     def test_neg_cdtindex_with_invalid_ctx(self):
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(e.ParamError):
             self.as_connection.index_cdt_create(
                 ns="test",
                 set="demo",
