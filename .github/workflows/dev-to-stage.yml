@@ -3,6 +3,11 @@ name: Dev to stage
 on:
   # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
   workflow_dispatch:
+    inputs:
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
 
 jobs:
   # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
@@ -46,6 +51,7 @@ jobs:
     with:
       use_jfrog_builds: true
       jfrog-build-version-to-test: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+      server-tag: ${{ inputs.server-tag }}
 
   # Stage tests have passed or skipped
   # so it is safe to update the stage branch with the changes in dev, promote the version to an RC, and rebuild and upload the RC to JFrog
