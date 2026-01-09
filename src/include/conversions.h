@@ -169,7 +169,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 
 // Sets err on error. Return value can be NULL if as_cdt_ctx is optional
 // Returns as_cdt_ctx * value to be passed to the C client API
-as_cdt_ctx *optional_as_cdt_ctx_create_from_pyobject(
+as_cdt_ctx *as_cdt_ctx_create_from_pyobject(
     AerospikeClient *self, as_error *err, PyObject *py_ctx_list,
     as_static_pool *static_pool, int serializer_type, bool is_cdt_ctx_optional);
 
