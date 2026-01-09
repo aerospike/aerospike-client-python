@@ -65,16 +65,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // TODO: does static pool go out of scope?
         as_static_pool static_pool;
         memset(&static_pool, 0, sizeof(static_pool));
-        pctx = cf_malloc(sizeof(as_cdt_ctx));
-        memset(pctx, 0, sizeof(as_cdt_ctx));
+
+        if (PyList_Check(py_ctx)) {
+            pctx = cf_malloc(sizeof(as_cdt_ctx));
+        }
+
         if (as_cdt_ctx_init_from_pyobject(self->client, &err, pctx, py_ctx,
                                           &ctx_in_use, &static_pool,
                                           SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            return err.code;
-        }
-        if (!ctx_in_use) {
-            cf_free(pctx);
-            pctx = NULL;
+            goto CLEANUP_CTX_ON_ERROR;
         }
     }
 
