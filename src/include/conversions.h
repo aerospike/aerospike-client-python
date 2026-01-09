@@ -168,6 +168,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          as_error *err);
 
 // Sets err on error. Return value can be NULL if as_cdt_ctx is optional
+// Returns as_cdt_ctx * value to be passed to the C client API
 as_cdt_ctx *optional_as_cdt_ctx_create_from_pyobject(
     AerospikeClient *self, as_error *err, PyObject *py_ctx_list,
     as_static_pool *static_pool, int serializer_type, bool is_cdt_ctx_optional);
@@ -178,6 +179,8 @@ as_cdt_ctx *optional_as_cdt_ctx_create_from_pyobject(
 // The cdt_ctx parameter should point to an uninitialized as_cdt_ctx
 // object. This function will initialize it, and call as_cdt_ctx_destroy on it IF an error occurs. Otherwise, the caller
 // must do it themselves when they are done with the object.
+//
+// The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_cdt_ctx,
