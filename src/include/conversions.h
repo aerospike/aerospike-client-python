@@ -171,8 +171,8 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 // and converts it to an as_cdt_ctx object for use with the c-client.
 //
 // The cdt_ctx parameter should point to an uninitialized as_cdt_ctx
-// object. This function will initialize it, and free it IF an error occurs. Otherwise, the caller must destroy
-// the as_cdt_ctx when it is done.
+// object. This function will initialize it, and call as_cdt_ctx_destroy on it IF an error occurs. Otherwise, the caller
+// must do it themselves when they are done with the object.
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_cdt_ctx, bool *ctx_in_use,
