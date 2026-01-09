@@ -2,6 +2,7 @@ run-name: "Run QE test (python-client-version=${{ inputs.python-client-version-i
 
 permissions:
   contents: read
+  id-token: write
 
 on:
   workflow_dispatch:
