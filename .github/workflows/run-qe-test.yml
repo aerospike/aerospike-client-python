@@ -267,13 +267,13 @@ jobs:
     #   working-directory: aerospike-client-python/test/
 
     - name: Tailscale VPN
-      uses: tailscale/github-action@v4
+      uses: tailscale/github-action@v4.1.1
       with:
-        oauth-client-id: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.ASCLOUD_TS_OAUTH_CLIENT_SECRET }}
-        tags: tag:python-client-ci
-        args: "--exit-node=${{ vars.TAILSCALE_EXIT_NODE }}"
-        version: 1.70.0
+        oauth-client-id: ${{ vars.TAILSCALE_OIDC_CLIENT_ID }}
+        audience: ${{ vars.TAILSCALE_OIDC_AUDIENCE }}
+        tags: tag:aerospike-oidc
+        args: --exit-node=${{ vars.TAILSCALE_EXIT_NODE}}
+        version: 1.92.5
 
     - name: Enqueue test run and fail fast if unable to enqueue
       # if: ${{ false }}
