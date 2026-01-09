@@ -1835,17 +1835,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         //TODO Could it be moved somewhere else?
         py_ctx_list_p = PyDict_GetItemString(temp_expr.pydict, CTX_KEY);
         if (py_ctx_list_p != NULL) {
-            temp_expr.ctx = malloc(sizeof(as_cdt_ctx));
-            if (temp_expr.ctx == NULL) {
-                as_error_update(err, AEROSPIKE_ERR,
-                                "Could not malloc mem for temp_expr.ctx.");
-                goto CLEANUP;
-            }
-
-            if (get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
-                    self, err, temp_expr.ctx, temp_expr.pydict,
-                    &is_ctx_initialized, &static_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            temp_expr.ctx = as_cdt_ctx_create_from_pyobject(
+                self, err, temp_expr.pydict, &static_pool, SERIALIZER_PYTHON);
+            if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }

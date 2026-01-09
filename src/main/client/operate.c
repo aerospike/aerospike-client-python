@@ -422,7 +422,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
             }
             else if (strcmp(name, "ctx") == 0) {
                 CONVERT_PY_CTX_TO_AS_CTX();
-                ctx_ref = (ctx_in_use ? &ctx : NULL);
+                ctx_ref = ctx_ref;
             }
             else if (strcmp(name, "map_order") == 0) {
                 py_map_order = value;
