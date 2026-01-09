@@ -2400,7 +2400,6 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
                                             as_error *err,
                                             PyObject *py_ctx_list,
-                                            bool *was_as_cdt_ctx_initialized,
                                             as_static_pool *static_pool,
                                             int serializer_type)
 {
@@ -2409,9 +2408,8 @@ as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
     }
     as_cdt_ctx *cdt_ctx = cf_malloc(sizeof(as_cdt_ctx));
 
-    as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list,
-                                  was_as_cdt_ctx_initialized, static_pool,
-                                  serializer_type);
+    as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
+                                  serializer_type, false);
     if (err->code != AEROSPIKE_OK) {
         cf_free(cdt_ctx);
         return NULL;
@@ -2423,9 +2421,9 @@ as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_ctx_list,
-                                        bool *was_as_cdt_ctx_initialized,
                                         as_static_pool *static_pool,
-                                        int serializer_type)
+                                        int serializer_type,
+                                        bool is_cdt_ctx_optional)
 {
     as_status status = 0;
 
@@ -2600,17 +2598,19 @@ CLEANUP5:
 
 as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-    PyObject *py_op_dict, bool *was_as_cdt_ctx_initialized,
+    PyObject *py_op_dict, bool *was_cdt_ctx_not_set,
     as_static_pool *static_pool, int serializer_type)
 {
     PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
     if (!py_ctx_list) {
+        *was_cdt_ctx_not_set = false;
         return AEROSPIKE_OK;
     }
 
-    return as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list,
-                                         was_as_cdt_ctx_initialized,
-                                         static_pool, serializer_type);
+    as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
+                                  serializer_type, true);
+
+    *was_cdt_ctx_not_set = !PyList_Check(py_ctx_list);
 }
 
 static bool requires_int(uint64_t op)

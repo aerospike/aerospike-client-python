@@ -170,7 +170,6 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
                                             as_error *err,
                                             PyObject *py_ctx_list,
-                                            bool *was_as_cdt_ctx_initialized,
                                             as_static_pool *static_pool,
                                             int serializer_type);
 
@@ -183,9 +182,9 @@ as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_cdt_ctx,
-                                        bool *was_cdt_ctx_initialized,
                                         as_static_pool *static_pool,
-                                        int serializer_type);
+                                        int serializer_type,
+                                        bool is_cdt_ctx_optional);
 
 as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
