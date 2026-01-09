@@ -2574,7 +2574,7 @@ CLEANUP5:
     return status;
 }
 
-as_status get_optional_as_cdt_ctx_from_py_dict_and_init(
+as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     PyObject *py_op_dict, bool *ctx_in_use, as_static_pool *static_pool,
     int serializer_type)

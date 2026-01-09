@@ -1842,7 +1842,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 goto CLEANUP;
             }
 
-            if (get_optional_as_cdt_ctx_from_py_dict_and_init(
+            if (get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
                     self, err, temp_expr.ctx, temp_expr.pydict,
                     &is_ctx_initialized, &static_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
