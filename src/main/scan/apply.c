@@ -27,7 +27,7 @@
 #include "scan.h"
 #include "policy.h"
 
-bool Scan_Illegal_UDF_Args_Check(PyObject *py_args);
+bool Illegal_UDF_Args_Check(PyObject *py_args);
 
 AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
@@ -99,7 +99,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     if (py_args && PyList_Check(py_args)) {
         Py_ssize_t size = PyList_Size(py_args);
 
-        if (Scan_Illegal_UDF_Args_Check(py_args)) {
+        if (Illegal_UDF_Args_Check(py_args)) {
             as_error_update(
                 &err, AEROSPIKE_ERR_CLIENT,
                 "udf function argument type must be supported by Aerospike");
@@ -110,8 +110,8 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
         for (int i = 0; i < size; i++) {
             PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
             as_val *val = NULL;
-            pyobject_to_val(self->client, &err, py_val, &val, &static_pool,
-                            SERIALIZER_PYTHON);
+            as_val_new_from_pyobject(self->client, &err, py_val, &val,
+                                     &static_pool, SERIALIZER_PYTHON);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
                 as_arraylist_destroy(arglist);
@@ -145,17 +145,8 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", py_function);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, py_module, py_function,
+                             Py_None);
         return NULL;
     }
 
@@ -163,7 +154,7 @@ CLEANUP:
     return self;
 }
 
-bool Scan_Illegal_UDF_Args_Check(PyObject *py_args)
+bool Illegal_UDF_Args_Check(PyObject *py_args)
 {
     Py_ssize_t size = PyList_Size(py_args);
     PyObject *py_args_copy =
@@ -194,6 +185,7 @@ bool Scan_Illegal_UDF_Args_Check(PyObject *py_args)
                    AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME) ||
                    AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME) ||
                    PyBytes_Check(py_val))) {
+            Py_DECREF(py_args_copy);
             return true;
         }
     }

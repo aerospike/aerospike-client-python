@@ -19,11 +19,16 @@ on:
         required: false
       # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
       # If use_jfrog_builds is true, only the defaults will be used
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: false
-        default: false
-        description: 'Test against server release candidate?'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -35,41 +40,55 @@ on:
         default: false
         description: 'Test macOS x86 wheels (unstable)'
 
+env:
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
 jobs:
   linux-distro-tests:
     strategy:
       matrix:
         test-case: [
           # Docker image + tag, test category, Docker image platform (cpu arch), Python version
-          ["amazonlinux:2023", 2, "linux/amd64", "3.9"],
-          ["amazonlinux:2023", 2, "linux/arm64", "3.9"],
+          ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
           ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
           ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
           ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
+          ["ubuntu:24.04", 2, "linux/amd64", "3.12"],
+          ["ubuntu:24.04", 2, "linux/arm64", "3.12"],
           # Bookworm is Debian 12
-          ["python:3.8-bookworm", 2, "linux/amd64", "3.8"],
-          ["python:3.8-bookworm", 2, "linux/arm64", "3.8"],
-          ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
-          ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
           ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
           ["python:3.10-bookworm", 2, "linux/arm64", "3.10"],
           ["python:3.11-bookworm", 2, "linux/amd64", "3.11"],
           ["python:3.11-bookworm", 2, "linux/arm64", "3.11"],
           ["python:3.12-bookworm", 2, "linux/amd64", "3.12"],
           ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
-          ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
-          ["redhat/ubi9", 1, "linux/amd64", "3.9"],
+          ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
+          ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
+          ["python:3.14-rc-bookworm", 2, "linux/amd64", "3.14"],
+          ["python:3.14-rc-bookworm", 2, "linux/arm64", "3.14"],
+          # QE currently covers Debian 13 on all client-supported Python versions
+          # We do not use ubi9/python-311 because we cannot install packages using dnf as root
+          ["redhat/ubi9", 2, "linux/amd64", "3.11"],
+          ["redhat/ubi9", 2, "linux/arm64", "3.11"],
+          ["redhat/ubi9", 1, "linux/amd64", "3.11"],
         ]
       fail-fast: false
     env:
       LINUX_DISTRO_CONTAINER_NAME: linux-distro
-    runs-on: ${{ matrix.test-case[2] == 'linux/amd64' && 'ubuntu-22.04' || 'aerospike_arm_runners_2' }}
+      PIP_INSTALL_COMMAND: 'pip install'
+    runs-on: ${{ matrix.test-case[2] == 'linux/amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - name: Get tests and Github action scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -98,10 +117,12 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
       # Run distro container on host network to access the Aerospike server using localhost (without having to change config.conf)
@@ -110,35 +131,49 @@ jobs:
     - name: Copy repo (and artifact) to container
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
-    - name: 'Amazon Linux 2023: install python 3.11 if applicable'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' && env.PYTHON_VERSION == '3.11' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y python3.11
+    - name: 'DNF based distros: install python3'
+      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || contains(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubi') }}
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python3.11
 
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 1)'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:22.04' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt update
-
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 2)'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:22.04' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
+    - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
+      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
+      run: |
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt-get update
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt-get install python3 python3-pip -y
 
     - name: Make sure pip is installed
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || env.DISTRO_DOCKER_IMAGE_AND_TAG == 'redhat/ubi9' || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'python') }}
+      # This is good to check in general, so we run for all distros
+      # Ubuntu doesn't have this by default though, but it's fine since it has pip already
+      if: ${{ !startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ensurepip
 
-    - name: 'Cat 1: Install build dependencies using yum'
+    - name: 'Cat 1: Install build dependencies using dnf'
+      # Here we assume all cat 1 tests are running on a dnf-based. distro
       if: ${{ env.TEST_CATEGORY == '1' }}
-      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+      run: |
+        docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y libyaml-devel \
+          openssl-devel \
+          glibc-devel \
+          autoconf \
+          automake \
+          libtool \
+          zlib-devel \
+          openssl-devel \
+          python3.11-devel
+
+    - if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:24.04' }}
+      # Python 3.12+ fails to install packages to the system directory by default
+      run: echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
 
     - name: 'Cat 1: Install pip build frontend'
       if: ${{ env.TEST_CATEGORY == '1' }}
-      run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pip install -r requirements.txt
+      run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} -r requirements.txt
 
     - name: Install sdist or wheel distribution
-      run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pip install ${{ env.ARTIFACT_FILE_NAME_PATTERN }}
+      run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} ${{ env.ARTIFACT_FILE_NAME_PATTERN }}
 
     - name: Install pytest
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pip install pytest -c requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} pytest -c requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/
@@ -147,22 +182,29 @@ jobs:
     if: ${{ inputs.test-macos-x86 }}
     strategy:
       matrix:
-        runner-os: [
-          macos-13,
-          macos-14-large
+        runner-os-and-arch: [
+          # These larger runners run on intel
+          ["macos-15-large", "x86_64"],
+          # arm64, since x86 not avaiable as Github hosted runner
+          ["macos-26", "arm64"]
         ]
         python-version: [
-          "3.8",
-          "3.9",
           "3.10",
           "3.11",
           "3.12",
+          "3.13",
+          "3.14"
         ]
       fail-fast: false
-    runs-on: ${{ matrix.runner-os }}
+    runs-on: ${{ matrix.runner-os-and-arch[0] }}
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - name: Get tests and Github action scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -177,32 +219,42 @@ jobs:
         dist_type_to_get: 'wheel'
         wheel_python_version: ${{ matrix.python-version }}
         wheel_os: macosx
-        wheel_cpu_arch: x86_64
+        wheel_cpu_arch: ${{ matrix.runner-os-and-arch[1] }}
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: ./.github/actions/setup-docker-on-macos
+    - if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/run-ee-server
+    - if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
+      uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel
       run: python3 -m pip install *.whl
 
     - name: Install test dependencies
+      if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
       run: python3 -m pip install pytest -c requirements.txt
       working-directory: test
 
     - name: Run tests
+      if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
       run: python3 -m pytest new_tests/
-      id: test
+      working-directory: test
+
+    - name: Run tests on macos 26
+      if: ${{ matrix.runner-os-and-arch[1] == 'arm64' }}
+      run: python3 -c "import aerospike"
       working-directory: test

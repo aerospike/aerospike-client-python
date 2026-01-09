@@ -23,14 +23,14 @@ It also enables queries for regions that contain a given point using:
 
 On the client side, wrapping geospatial data in an instance of the
 :class:`aerospike.GeoJSON` class enables serialization of the data into the
-correct type during a write operation, such as :meth:`~aerospike.Client.put`.
+correct type during a write operation, such as in :meth:`~aerospike.Client.put`.
 
 When reading a record from the server, bins with geospatial data will be
 deserialized into a :class:`~aerospike.GeoJSON` instance.
 
 .. seealso::
     `Geospatial Index and Query
-    <https://aerospike.com/docs/server/guide/data-types/geospatial>`_.
+    <https://aerospike.com/docs/develop/data-types/geospatial/>`_.
 
 .. _example:
 

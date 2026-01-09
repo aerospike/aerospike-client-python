@@ -14,19 +14,19 @@ The client depends on:
 
 - The Python devel package
 - OpenSSL 1.1 >= 1.1.1
+- Libyaml
 - The Aerospike C client
 
-### RedHat, CentOS, Amazon Linux 2023
+### RedHat, Amazon Linux 2023
 
 The following are dependencies for:
 
 - RedHat Enterprise (RHEL) 8 or newer
-- CentOS 7 Linux
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
-sudo yum install python-devel # on CentOS 7
+sudo yum install libyaml-devel
 # Possibly needed
 sudo yum install python-setuptools
 ```
@@ -35,12 +35,12 @@ sudo yum install python-setuptools
 
 The following are dependencies for:
 
-- Debian 11 or newer
-- Ubuntu 20.04 or newer
+- Debian 12 or newer
+- Ubuntu 22.04 or newer
 - Related distributions which use the `apt` package manager
 
 ```sh
-sudo apt-get install libssl-dev
+sudo apt-get install libssl-dev libyaml-dev
 sudo apt-get install build-essential python-dev
 ```
 
@@ -87,8 +87,8 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1
-    # brew uninstall openssl@3
+    brew install openssl@3
+    brew install libyaml
 
 ### All distros
 
@@ -109,8 +109,8 @@ using the wrong version of the C client. This can causes strange issues when bui
 Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
 specify its location when building the wheel. In macOS, you would run these commands:
 ```
-export SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/"
-export CPATH="$(brew --prefix openssl@1.1)/include/"
+export SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/"
+export CPATH="$(brew --prefix openssl@3)/include/"
 export STATIC_SSL=1
 ```
 
@@ -170,6 +170,8 @@ Then once you install the build with sanitizer, you may run a Python script usin
 # ldconfig -p | grep libasan.so
 LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
 ```
+
+This is only supported for building with GCC.
 
 ### Troubleshooting macOS
 

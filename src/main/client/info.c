@@ -96,20 +96,12 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
 
 CLEANUP:
     if (udata_ptr->error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&udata_ptr->error, &py_err);
-        PyObject *exception_type = raise_exception_old(&udata_ptr->error);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&udata_ptr->error);
         PyGILState_Release(gil_state);
         return false;
     }
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception_old(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
         PyGILState_Release(gil_state);
         return false;
     }
@@ -178,7 +170,8 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
 
     // Convert python policy object to as_policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -209,12 +202,7 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (info_callback_udata.error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&info_callback_udata.error, &py_err);
-        PyObject *exception_type =
-            raise_exception_old(&info_callback_udata.error);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&info_callback_udata.error);
         if (py_nodes) {
             Py_DECREF(py_nodes);
         }

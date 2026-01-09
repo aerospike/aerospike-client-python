@@ -52,6 +52,7 @@ from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
 from aerospike import KeyOrderedDict
+from . import as_errors
 
 # Constants
 _NUM_RECORDS = 9
@@ -126,10 +127,11 @@ def add_ctx_op(ctx_type, value):
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -596,6 +598,30 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "expr, expected_results",
+        [
+            pytest.param(
+                MapRemoveByKeyRange(ctx=None, begin=3, end=None, bin="imap_bin"),
+                {
+                    1: 1,
+                    2: 2
+                    # Key 3 removed
+                }
+            ),
+            pytest.param(
+                MapGetByValueRange(ctx=None, return_type=aerospike.MAP_RETURN_VALUE, value_begin=6, value_end=None, bin="imap_bin"),
+                [6]
+            )
+        ]
+    )
+    def test_setting_end_param_to_none(self, expr, expected_results):
+        ops = [
+            expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, list=ops)
+        assert bins["ilist_bin"] == expected_results
 
     @pytest.mark.parametrize(
         "bin_name, expr, expected",

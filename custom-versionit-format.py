@@ -58,5 +58,7 @@ def my_format(
         version_str = append_to_local(version_str, "unoptimized")
     if os.getenv("INCLUDE_DSYM"):
         version_str = append_to_local(version_str, "dsym")
+    if os.getenv("SANITIZER"):
+        version_str = append_to_local(version_str, "sanitizer")
 
     return version_str

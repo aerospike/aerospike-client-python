@@ -23,6 +23,7 @@ from aerospike_helpers.expressions import (
 from aerospike_helpers.operations import hll_operations
 from aerospike_helpers.operations import expression_operations as expressions
 from math import sqrt, ceil, floor
+from . import as_errors
 
 import aerospike
 
@@ -31,10 +32,11 @@ _NUM_RECORDS = 9
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 

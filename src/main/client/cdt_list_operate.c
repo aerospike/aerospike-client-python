@@ -1211,8 +1211,8 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1255,8 +1255,8 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1304,8 +1304,8 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1353,8 +1353,8 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1398,8 +1398,8 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1618,8 +1618,8 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use) !=
-        AEROSPIKE_OK) {
+    if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
+                        self->validate_keys) != AEROSPIKE_OK) {
         return err->code;
     }
 

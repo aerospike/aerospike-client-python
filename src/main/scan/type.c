@@ -109,23 +109,23 @@ static PyMemberDef AerospikeScan_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                        PyObject *kwds)
+AerospikeScan *AerospikeScan_Type_New(PyTypeObject *type,
+                                      AerospikeClient *py_client)
 {
-    AerospikeScan *self = NULL;
-
-    self = (AerospikeScan *)type->tp_alloc(type, 0);
-
-    if (self) {
-        self->client = NULL;
+    AerospikeScan *self = (AerospikeScan *)type->tp_alloc(type, 0);
+    if (!self) {
+        return NULL;
     }
 
-    return (PyObject *)self;
+    Py_INCREF((PyObject *)py_client);
+    self->client = py_client;
+    return self;
 }
 
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
+    as_error err;
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
 
@@ -133,7 +133,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
                                     &py_namespace, &py_set) == false) {
-        return -1;
+        goto RAISE_EXCEPTION_ON_ERROR;
     }
 
     char *namespace = NULL;
@@ -144,7 +144,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
-        return -1;
+        goto RAISE_EXCEPTION_ON_ERROR;
     }
 
     if (py_set) {
@@ -165,6 +165,13 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         Py_DECREF(py_ustr);
     }
     return 0;
+
+RAISE_EXCEPTION_ON_ERROR:
+
+    as_error_init(&err);
+    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+    raise_exception(&err);
+    return -1;
 }
 
 static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
@@ -187,7 +194,7 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeScan_Type = {
+PyTypeObject AerospikeScan_Type = {
     PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("Scan"), // tp_name
     sizeof(AerospikeScan), // tp_basicsize
     0,                     // tp_itemsize
@@ -229,11 +236,11 @@ static PyTypeObject AerospikeScan_Type = {
     0,                                 // tp_dictoffset
     (initproc)AerospikeScan_Type_Init,
     // tp_init
-    0,                      // tp_alloc
-    AerospikeScan_Type_New, // tp_new
-    0,                      // tp_free
-    0,                      // tp_is_gc
-    0                       // tp_bases
+    0, // tp_alloc
+    0, // tp_new
+    0, // tp_free
+    0, // tp_is_gc
+    0  // tp_bases
 };
 
 /*******************************************************************************
@@ -243,24 +250,4 @@ static PyTypeObject AerospikeScan_Type = {
 PyTypeObject *AerospikeScan_Ready()
 {
     return PyType_Ready(&AerospikeScan_Type) == 0 ? &AerospikeScan_Type : NULL;
-}
-
-AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
-                                 PyObject *kwds)
-{
-    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type.tp_new(
-        &AerospikeScan_Type, args, kwds);
-    self->client = client;
-    Py_INCREF(client);
-    if (AerospikeScan_Type.tp_init((PyObject *)self, args, kwds) != -1) {
-        return self;
-    }
-    else {
-        Py_XDECREF(self);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        raise_exception(&err);
-        return NULL;
-    }
 }
