@@ -125,6 +125,7 @@ AerospikeScan *AerospikeScan_Type_New(PyTypeObject *type,
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
+    as_error err;
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
 
@@ -166,7 +167,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
     return 0;
 
 RAISE_EXCEPTION_ON_ERROR:
-    as_error err;
+
     as_error_init(&err);
     as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
     raise_exception(&err);
