@@ -2428,6 +2428,10 @@ as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
     as_status status = 0;
 
     if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
+        if (!is_cdt_ctx_optional) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Ctx must be a list of contexts");
+        }
         goto CLEANUP5;
     }
     else if (!PyList_Check(py_ctx_list)) {
@@ -2581,7 +2585,6 @@ as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_extra_args);
     }
 
-    *was_as_cdt_ctx_initialized = true;
     return AEROSPIKE_OK;
 
 CLEANUP1:
@@ -2602,11 +2605,6 @@ as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     as_static_pool *static_pool, int serializer_type)
 {
     PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
-    if (!py_ctx_list) {
-        *was_cdt_ctx_not_set = false;
-        return AEROSPIKE_OK;
-    }
-
     as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
                                   serializer_type, true);
 
