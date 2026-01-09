@@ -2607,8 +2607,12 @@ as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
     as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
                                   serializer_type, true);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
 
     *was_cdt_ctx_not_set = !PyList_Check(py_ctx_list);
+    return AEROSPIKE_OK;
 }
 
 static bool requires_int(uint64_t op)
