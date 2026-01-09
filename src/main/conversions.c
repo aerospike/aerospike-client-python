@@ -2397,19 +2397,22 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
 }
 
-as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
-                                            as_error *err,
-                                            PyObject *py_ctx_list,
-                                            as_static_pool *static_pool,
-                                            int serializer_type)
+as_cdt_ctx *as_cdt_ctx_create_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_ctx_list,
+    as_static_pool *static_pool, int serializer_type, bool is_cdt_ctx_optional)
 {
     if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
+        if (!is_cdt_ctx_optional) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "ctx must be a list of cdt_ctx");
+        }
         return NULL;
     }
+
     as_cdt_ctx *cdt_ctx = cf_malloc(sizeof(as_cdt_ctx));
 
     as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
-                                  serializer_type, false);
+                                  serializer_type, is_cdt_ctx_optional);
     if (err->code != AEROSPIKE_OK) {
         cf_free(cdt_ctx);
         return NULL;
