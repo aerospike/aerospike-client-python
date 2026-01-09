@@ -132,7 +132,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
                                     &py_namespace, &py_set) == false) {
-        return -1;
+        goto RAISE_EXCEPTION_ON_ERROR;
     }
 
     char *namespace = NULL;
