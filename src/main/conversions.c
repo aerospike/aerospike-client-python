@@ -2411,6 +2411,7 @@ as_status as_cdt_ctx_create_from_pyobject(AerospikeClient *self, as_error *err,
                                              was_as_cdt_ctx_initialized,
                                              static_pool, serializer_type);
     }
+    return AEROSPIKE_OK;
 }
 
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
