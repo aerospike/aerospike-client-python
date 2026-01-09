@@ -66,13 +66,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         as_static_pool static_pool;
         memset(&static_pool, 0, sizeof(static_pool));
 
-        if (PyList_Check(py_ctx)) {
-            pctx = cf_malloc(sizeof(as_cdt_ctx));
-        }
-
-        if (as_cdt_ctx_init_from_pyobject(
-                self->client, &err, pctx, py_ctx, &was_cdt_ctx_initialized,
-                &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+        pctx = as_cdt_ctx_create_from_pyobject(self->client, &err, pctx, py_ctx,
+                                               &was_cdt_ctx_initialized,
+                                               &static_pool, SERIALIZER_PYTHON);
+        if (err.code != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
     }

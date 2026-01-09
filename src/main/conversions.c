@@ -2397,6 +2397,22 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
 }
 
+as_status as_cdt_ctx_create_from_pyobject(AerospikeClient *self, as_error *err,
+                                          as_cdt_ctx **cdt_ctx,
+                                          PyObject *py_ctx_list,
+                                          bool *was_as_cdt_ctx_initialized,
+                                          as_static_pool *static_pool,
+                                          int serializer_type)
+{
+    if (py_ctx_list && PyList_Check(py_ctx_list)) {
+        *cdt_ctx = cf_malloc(sizeof(as_cdt_ctx));
+
+        return as_cdt_ctx_init_from_pyobject(self, err, *cdt_ctx, py_ctx_list,
+                                             was_as_cdt_ctx_initialized,
+                                             static_pool, serializer_type);
+    }
+}
+
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
                                         PyObject *py_ctx_list,
