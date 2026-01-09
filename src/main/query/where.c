@@ -59,7 +59,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_error err;
     as_error_init(&err);
     as_cdt_ctx *pctx = NULL;
-    bool ctx_in_use = false;
+    bool was_cdt_ctx_initialized = false;
 
     if (py_ctx) {
         // TODO: does static pool go out of scope?
@@ -70,9 +70,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             pctx = cf_malloc(sizeof(as_cdt_ctx));
         }
 
-        if (as_cdt_ctx_init_from_pyobject(self->client, &err, pctx, py_ctx,
-                                          &ctx_in_use, &static_pool,
-                                          SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+        if (as_cdt_ctx_init_from_pyobject(
+                self->client, &err, pctx, py_ctx, &was_cdt_ctx_initialized,
+                &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
     }
@@ -265,7 +265,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
-    if (ctx_in_use) {
+    if (was_cdt_ctx_initialized) {
         self->query.where.entries[0].ctx_free = true;
     }
     if (exp_list) {
@@ -292,7 +292,7 @@ CLEANUP_EXP_ON_ERROR:
 
 CLEANUP_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
-    if (ctx_in_use) {
+    if (was_cdt_ctx_initialized) {
         as_cdt_ctx_destroy(pctx);
     }
     if (pctx) {

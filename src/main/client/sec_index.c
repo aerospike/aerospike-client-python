@@ -221,7 +221,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_name = NULL;
     PyObject *py_ctx = NULL;
     as_cdt_ctx ctx;
-    bool ctx_in_use = false;
+    bool was_cdt_ctx_initialized = false;
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;
@@ -250,12 +250,12 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
-    if (as_cdt_ctx_init_from_pyobject(self, &err, &ctx, py_ctx, &ctx_in_use,
-                                      &static_pool,
+    if (as_cdt_ctx_init_from_pyobject(self, &err, &ctx, py_ctx,
+                                      &was_cdt_ctx_initialized, &static_pool,
                                       SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    if (!ctx_in_use) {
+    if (!was_cdt_ctx_initialized) {
         goto CLEANUP;
     }
 

@@ -2399,7 +2399,8 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
-                                        PyObject *py_ctx_list, bool *ctx_in_use,
+                                        PyObject *py_ctx_list,
+                                        bool *was_as_cdt_ctx_initialized,
                                         as_static_pool *static_pool,
                                         int serializer_type)
 {
@@ -2559,7 +2560,7 @@ as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_extra_args);
     }
 
-    *ctx_in_use = true;
+    *was_as_cdt_ctx_initialized = true;
     return AEROSPIKE_OK;
 
 CLEANUP1:
@@ -2576,8 +2577,8 @@ CLEANUP5:
 
 as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-    PyObject *py_op_dict, bool *ctx_in_use, as_static_pool *static_pool,
-    int serializer_type)
+    PyObject *py_op_dict, bool *was_as_cdt_ctx_initialized,
+    as_static_pool *static_pool, int serializer_type)
 {
     PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
     if (!py_ctx_list) {
@@ -2585,8 +2586,8 @@ as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     }
 
     return as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list,
-                                         ctx_in_use, static_pool,
-                                         serializer_type);
+                                         was_as_cdt_ctx_initialized,
+                                         static_pool, serializer_type);
 }
 
 static bool requires_int(uint64_t op)

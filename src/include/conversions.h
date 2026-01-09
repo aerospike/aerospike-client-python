@@ -175,14 +175,15 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 // must do it themselves when they are done with the object.
 as_status as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                         as_cdt_ctx *cdt_ctx,
-                                        PyObject *py_cdt_ctx, bool *ctx_in_use,
+                                        PyObject *py_cdt_ctx,
+                                        bool *was_cdt_ctx_initialized,
                                         as_static_pool *static_pool,
                                         int serializer_type);
 
 as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-    PyObject *py_op_dict, bool *ctx_in_use, as_static_pool *static_pool,
-    int serializer_type);
+    PyObject *py_op_dict, bool *was_cdt_ctx_initialized,
+    as_static_pool *static_pool, int serializer_type);
 
 // allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 // if false, the Python object should only be a compiled Python expression object from aerospike_helpers
