@@ -168,7 +168,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          as_error *err);
 
 as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
-                                            as_error *err, as_cdt_ctx **cdt_ctx,
+                                            as_error *err,
                                             PyObject *py_ctx_list,
                                             bool *was_as_cdt_ctx_initialized,
                                             as_static_pool *static_pool,
