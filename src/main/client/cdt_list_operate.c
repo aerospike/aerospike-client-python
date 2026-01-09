@@ -212,7 +212,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_get_by_index_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
         }
-
+    }
     case OP_LIST_GET_BY_RANK: {
         success = as_operations_list_get_by_rank(
             ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
@@ -229,7 +229,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                 ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
         }
     }
-
     case OP_LIST_GET_BY_VALUE: {
         success = as_operations_list_get_by_value(
             ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
@@ -384,17 +383,15 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         }
         break;
 
-    default: {
+    default:
         // This should never be possible since we only get here if we know that the operation is valid.
         return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
     }
+
+    if (!success) {
+        // TODO: regression in error message
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add operation");
     }
 
-        if (!success) {
-            // TODO: regression in error message
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to add operation");
-        }
-
-        return err->code;
-    }
+    return err->code;
+}
