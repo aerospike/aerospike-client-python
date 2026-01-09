@@ -2604,7 +2604,7 @@ CLEANUP5:
 
 as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-    PyObject *py_op_dict, bool *was_cdt_ctx_not_set,
+    PyObject *py_op_dict, bool *was_cdt_ctx_initialized,
     as_static_pool *static_pool, int serializer_type)
 {
     PyObject *py_ctx_list = PyDict_GetItemString(py_op_dict, CTX_KEY);
@@ -2614,7 +2614,7 @@ as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
         return err->code;
     }
 
-    *was_cdt_ctx_not_set = !py_ctx_list || Py_IsNone(py_ctx_list);
+    *was_cdt_ctx_initialized = py_ctx_list && PyList_Check(py_ctx_list);
     return AEROSPIKE_OK;
 }
 
