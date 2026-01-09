@@ -221,7 +221,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_name = NULL;
     PyObject *py_ctx = NULL;
     as_cdt_ctx ctx;
-    bool was_cdt_ctx_initialized = false;
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;

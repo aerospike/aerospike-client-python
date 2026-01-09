@@ -260,7 +260,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
-    if (was_cdt_ctx_initialized) {
+    if (pctx) {
         self->query.where.entries[0].ctx_free = true;
     }
     if (exp_list) {
