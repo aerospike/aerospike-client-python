@@ -2614,7 +2614,7 @@ as_status get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
         return err->code;
     }
 
-    *was_cdt_ctx_not_set = !PyList_Check(py_ctx_list);
+    *was_cdt_ctx_not_set = !py_ctx_list || Py_IsNone(py_ctx_list);
     return AEROSPIKE_OK;
 }
 
