@@ -236,7 +236,6 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
                         "double type, bin of string type");
         goto CLEANUP;
     }
-    Py_CLEAR(py_geo_object);
 
     ret_val = Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                             py_bin, py_shape, Py_None, py_indexType);
@@ -319,10 +318,8 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
         py_list = Py_BuildValue("[OO]", py_lat, py_long);
 
         PyDict_SetItemString(py_geo_object, "coordinates", py_list);
-        Py_CLEAR(py_list);
 
         py_shape = AerospikeGeospatial_DoDumps(py_geo_object, &err);
-        Py_CLEAR(py_geo_object);
 
         if (!py_shape) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
