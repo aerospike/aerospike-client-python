@@ -317,6 +317,10 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
+        success = as_operations_list_get_by_value_rel_rank_range(
+            ops, bin, (ctx_in_use ? &ctx : NULL), val, rank, (uint64_t)count,
+            return_type);
+        break;
     }
 
     case OP_LIST_CREATE: {
