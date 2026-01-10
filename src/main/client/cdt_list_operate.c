@@ -211,10 +211,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_TRIM:
         success = as_operations_list_trim(ops, bin, (ctx_in_use ? &ctx : NULL),
                                           index, (uint64_t)count);
+        break;
     case OP_LIST_GET_BY_INDEX: {
         success = as_operations_list_get_by_index(
             ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
-    }
+    } break;
 
     case OP_LIST_GET_BY_INDEX_RANGE: {
         if (range_specified) {
@@ -226,11 +227,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_get_by_index_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
         }
-    }
+    } break;
     case OP_LIST_GET_BY_RANK: {
         success = as_operations_list_get_by_rank(
             ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
-    }
+    } break;
 
     case OP_LIST_GET_BY_RANK_RANGE: {
         if (range_specified) {
@@ -242,21 +243,21 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_get_by_rank_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
         }
-    }
+    } break;
     case OP_LIST_GET_BY_VALUE: {
         success = as_operations_list_get_by_value(
             ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
-    }
+    } break;
     case OP_LIST_GET_BY_VALUE_LIST: {
         success = as_operations_list_get_by_value_list(
             ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
-    }
+    } break;
 
     case OP_LIST_GET_BY_VALUE_RANGE: {
         success = as_operations_list_get_by_value_range(
             ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
             return_type);
-    }
+    } break;
 
     case OP_LIST_REMOVE_BY_INDEX: {
         success = as_operations_list_remove_by_index(
@@ -274,7 +275,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_remove_by_index_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
         }
-    }
+    } break;
 
     case OP_LIST_REMOVE_BY_RANK: {
         success = as_operations_list_remove_by_rank(
@@ -292,7 +293,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_remove_by_rank_range_to_end(
                 ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
         }
-    }
+    } break;
 
     case OP_LIST_REMOVE_BY_VALUE: {
         success = as_operations_list_remove_by_value(
@@ -309,7 +310,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_remove_by_value_range(
             ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
             return_type);
-    }
+    } break;
 
     case OP_LIST_SET_ORDER: {
         success =
@@ -373,6 +374,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_insert_items(
             ops, bin, (ctx_in_use ? &ctx : NULL),
             (policy_in_use ? &list_policy : NULL), index, value_list);
+        break;
     case OP_LIST_INCREMENT:
         success = as_operations_list_increment(
             ops, bin, (ctx_in_use ? &ctx : NULL),
