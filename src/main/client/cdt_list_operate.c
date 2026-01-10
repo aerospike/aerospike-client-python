@@ -95,8 +95,10 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     int return_type = AS_LIST_RETURN_VALUE;
-    if (operation_code >= OP_LIST_GET_BY_INDEX &&
-        operation_code <= OP_LIST_REMOVE_BY_VALUE_RANGE) {
+    if ((operation_code >= OP_LIST_GET_BY_INDEX &&
+         operation_code <= OP_LIST_REMOVE_BY_VALUE_RANGE) ||
+        (operation_code >= OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL &&
+         operation_code <= OP_LIST_REMOVE_BY_RANK_RANGE_TO_END)) {
         if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
             return err->code;
         }
