@@ -13,8 +13,18 @@ on:
         - bump-dev-num
         - promote-dev-build-to-rc
         - promote-rc-build-to-release
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: No tagging in repo
   workflow_call:
     inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: Dry run
       change:
         # Since workflow_call doesn't support 'options' input type,
         # we take in a string instead that must be a valid Python script name (excluding the .py part)
@@ -37,8 +47,6 @@ on:
     outputs:
       new_version:
         value: ${{ jobs.get-new-version.outputs.new_version }}
-      bump_sha:
-        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
 
 jobs:
   get-current-version:
@@ -57,10 +65,14 @@ jobs:
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
+        # Get all tags
+        fetch-depth: 0
 
-    - name: Get current version
+    - name: Get tag from previous commit
       id: get-current-version
-      run: echo current_version=$(cat VERSION) >> $GITHUB_OUTPUT
+      run: |
+        prev_commit=$(git rev-parse HEAD~)
+        echo current_version=$(git describe --tags --exact-match $prev_commit) >> $GITHUB_OUTPUT
 
   get-new-version:
     runs-on: ubuntu-22.04
@@ -93,4 +105,5 @@ jobs:
     with:
       new_version: ${{ needs.get-new-version.outputs.new_version }}
       ref: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
