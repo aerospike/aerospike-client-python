@@ -103,7 +103,21 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     int64_t index;
-    if (operation_code == OP_LIST_POP) {
+    switch (operation_code) {
+    case OP_LIST_POP:
+    case OP_LIST_POP_RANGE:
+    case OP_LIST_REMOVE:
+    case OP_LIST_REMOVE_RANGE:
+    case OP_LIST_SET:
+    case OP_LIST_GET_RANGE:
+    case OP_LIST_TRIM:
+    case OP_LIST_GET_BY_INDEX:
+    case OP_LIST_GET_BY_INDEX_RANGE:
+    case OP_LIST_REMOVE_BY_INDEX:
+    case OP_LIST_REMOVE_BY_INDEX_RANGE:
+    case OP_LIST_INSERT:
+    case OP_LIST_INSERT_ITEMS:
+    case OP_LIST_INCREMENT:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             return err->code;
