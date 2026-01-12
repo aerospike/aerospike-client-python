@@ -62,19 +62,19 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     as_val *val = NULL;
     switch (operation_code) {
-    case OP_LIST_GET_BY_VALUE:
-    case OP_LIST_GET_BY_VALUE_LIST:
-    case OP_LIST_GET_RANGE:
-    case OP_LIST_REMOVE_BY_VALUE:
-    case OP_LIST_TRIM:
     case OP_LIST_APPEND:
     case OP_LIST_APPEND_ITEMS:
     case OP_LIST_INSERT:
     case OP_LIST_INSERT_ITEMS:
     case OP_LIST_POP_RANGE:
     case OP_LIST_REMOVE_RANGE:
-    case OP_LIST_INCREMENT:
     case OP_LIST_SET:
+    case OP_LIST_INCREMENT:
+    case OP_LIST_GET_BY_VALUE:
+    case OP_LIST_GET_BY_VALUE_LIST:
+    case OP_LIST_GET_RANGE:
+    case OP_LIST_TRIM:
+    case OP_LIST_REMOVE_BY_VALUE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
         if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
@@ -93,11 +93,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         }
         break;
     case OP_LIST_GET_BY_INDEX_RANGE:
-    case OP_LIST_REMOVE_BY_INDEX_RANGE:
     case OP_LIST_GET_BY_RANK_RANGE:
+    case OP_LIST_REMOVE_BY_INDEX_RANGE:
     case OP_LIST_REMOVE_BY_RANK_RANGE:
-    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
             return err->code;
@@ -117,6 +117,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     int64_t index;
     switch (operation_code) {
+    case OP_LIST_INSERT:
+    case OP_LIST_INSERT_ITEMS:
     case OP_LIST_POP:
     case OP_LIST_POP_RANGE:
     case OP_LIST_REMOVE:
@@ -125,13 +127,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET:
     case OP_LIST_GET_RANGE:
     case OP_LIST_TRIM:
+    case OP_LIST_INCREMENT:
     case OP_LIST_GET_BY_INDEX:
     case OP_LIST_GET_BY_INDEX_RANGE:
     case OP_LIST_REMOVE_BY_INDEX:
     case OP_LIST_REMOVE_BY_INDEX_RANGE:
-    case OP_LIST_INSERT:
-    case OP_LIST_INSERT_ITEMS:
-    case OP_LIST_INCREMENT:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             return err->code;
