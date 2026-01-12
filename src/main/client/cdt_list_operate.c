@@ -234,7 +234,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     case OP_LIST_SET:
         success = as_operations_list_set(ops, bin, ctx_ref, list_policy_ref,
-                                         index, P);
+                                         index, val);
         break;
     case OP_LIST_GET:
         success = as_operations_list_get(ops, bin, ctx_ref, index);
