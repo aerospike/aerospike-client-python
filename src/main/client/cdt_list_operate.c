@@ -72,6 +72,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_LIST_APPEND_ITEMS:
         if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
                       serializer_type, true) != AEROSPIKE_OK) {
             return err->code;
@@ -159,11 +160,22 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     as_list *value_list = NULL;
+    const char *list_values_key = NULL;
     switch (operation_code) {
-    case OP_LIST_APPEND_ITEMS:
     case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
-        if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
+        list_values_key = AS_PY_VALUES_KEY;
+        break;
+    case OP_LIST_APPEND_ITEMS:
+        list_values_key = AS_PY_VAL_KEY;
+        break;
+    }
+
+    switch (operation_code) {
+    case OP_LIST_GET_BY_VALUE_LIST:
+    case OP_LIST_REMOVE_BY_VALUE_LIST:
+    case OP_LIST_APPEND_ITEMS:
+        if (get_val_list(self, err, list_values_key, op_dict, &value_list,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
             return err->code;
         }
@@ -376,8 +388,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     case OP_LIST_APPEND_ITEMS:
         success = as_operations_list_append_items(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL),
-            value_list);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), val);
         break;
     case OP_LIST_INSERT:
         success = as_operations_list_insert(
