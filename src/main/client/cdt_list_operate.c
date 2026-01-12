@@ -64,7 +64,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_APPEND:
     case OP_LIST_INSERT:
-    case OP_LIST_INSERT_ITEMS:
     case OP_LIST_POP_RANGE:
     case OP_LIST_SET:
     case OP_LIST_INCREMENT:
@@ -167,6 +166,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         list_values_key = AS_PY_VALUES_KEY;
         break;
     case OP_LIST_APPEND_ITEMS:
+    case OP_LIST_INSERT_ITEMS:
         list_values_key = AS_PY_VAL_KEY;
         break;
     }
@@ -388,7 +388,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     case OP_LIST_APPEND_ITEMS:
         success = as_operations_list_append_items(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), val);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL),
+            value_list);
         break;
     case OP_LIST_INSERT:
         success = as_operations_list_insert(
