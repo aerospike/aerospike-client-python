@@ -707,7 +707,7 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
     as_val *val_end = NULL;
 
     as_cdt_ctx ctx;
-
+    as_cdt_ctx *ctx_ref = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -724,7 +724,7 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
         goto error;
     }
 
-    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+    ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
         self, err, &ctx, op_dict, static_pool, serializer_type);
     if (err->code != AEROSPIKE_OK) {
         goto error;
@@ -1037,6 +1037,7 @@ static as_status add_op_list_remove_by_value_range(
     as_val *val_end = NULL;
 
     as_cdt_ctx ctx;
+    as_cdt_ctx *ctx_ref = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -1053,7 +1054,7 @@ static as_status add_op_list_remove_by_value_range(
         goto error;
     }
 
-    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+    ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
         self, err, &ctx, op_dict, static_pool, serializer_type);
     if (err->code != AEROSPIKE_OK) {
         goto error;
