@@ -434,7 +434,7 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
 {
     int64_t index;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -446,18 +446,19 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_get_by_index(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         index, return_type)) {
+    if (!as_operations_list_get_by_index(ops, bin, ctx_ref, index,
+                                         return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add get_by_list_index operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -475,7 +476,7 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
     bool range_specified = false;
     bool success = false;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -493,19 +494,19 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (range_specified) {
         success = as_operations_list_get_by_index_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-            return_type);
+            ops, bin, ctx_ref, index, (uint64_t)count, return_type);
     }
     else {
         success = as_operations_list_get_by_index_range_to_end(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+            ops, bin, ctx_ref, index, return_type);
     }
 
     if (!success) {
@@ -513,7 +514,7 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
                         "Failed to add get_by_list_index_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -529,7 +530,7 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
 {
     int64_t rank;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -541,18 +542,18 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_get_by_rank(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                        rank, return_type)) {
+    if (!as_operations_list_get_by_rank(ops, bin, ctx_ref, rank, return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add get_by_list_index operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -570,7 +571,7 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
     bool range_specified = false;
     bool success = false;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -587,19 +588,19 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (range_specified) {
         success = as_operations_list_get_by_rank_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-            return_type);
+            ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
     }
     else {
         success = as_operations_list_get_by_rank_range_to_end(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+            ops, bin, ctx_ref, rank, return_type);
     }
 
     if (!success) {
@@ -607,7 +608,7 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
                         "Failed to add list_get_by_rank_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -622,7 +623,7 @@ static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
 {
     as_val *val = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -634,19 +635,19 @@ static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to convert ctx list");
     }
 
-    if (!as_operations_list_get_by_value(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         val, return_type)) {
+    if (!as_operations_list_get_by_value(ops, bin, ctx_ref, val, return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_get_by_value operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -661,7 +662,7 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
 {
     as_list *value_list = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -673,22 +674,23 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         /* Failed to add the operation, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
     }
 
-    if (!as_operations_list_get_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type)) {
+    if (!as_operations_list_get_by_value_list(ops, bin, ctx_ref, value_list,
+                                              return_type)) {
         /* Failed to add the operation, we need to destroy the list of values*/
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_get_by_value_list operation");
         as_val_destroy(value_list);
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -703,9 +705,9 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
 {
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
-    bool ctx_in_use = false;
-    as_cdt_ctx ctx;
 
+    as_cdt_ctx ctx;
+    as_cdt_ctx *ctx_ref = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -722,20 +724,20 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
         goto error;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         goto error;
     }
 
-    if (!as_operations_list_get_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type)) {
+    if (!as_operations_list_get_by_value_range(ops, bin, ctx_ref, val_begin,
+                                               val_end, return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_get_by_value_range operation");
         goto error;
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -751,7 +753,7 @@ error:
         as_val_destroy(val_end);
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -766,7 +768,7 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
 {
     int64_t index;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -778,18 +780,19 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_remove_by_index(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type)) {
+    if (!as_operations_list_remove_by_index(ops, bin, ctx_ref, index,
+                                            return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add remove_by_list_index operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -806,7 +809,7 @@ static as_status add_op_list_remove_by_index_range(
     bool range_specified = false;
     bool success = false;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -824,19 +827,19 @@ static as_status add_op_list_remove_by_index_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (range_specified) {
         success = as_operations_list_remove_by_index_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-            return_type);
+            ops, bin, ctx_ref, index, (uint64_t)count, return_type);
     }
     else {
         success = as_operations_list_remove_by_index_range_to_end(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+            ops, bin, ctx_ref, index, return_type);
     }
 
     if (!success) {
@@ -844,7 +847,7 @@ static as_status add_op_list_remove_by_index_range(
                         "Failed to add remove_by_list_index_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -859,7 +862,7 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
 {
     int64_t rank;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -871,18 +874,19 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_remove_by_rank(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                           rank, return_type)) {
+    if (!as_operations_list_remove_by_rank(ops, bin, ctx_ref, rank,
+                                           return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_remove_by_rank operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -899,7 +903,7 @@ static as_status add_op_list_remove_by_rank_range(
     bool range_specified = false;
     bool success = false;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -916,19 +920,19 @@ static as_status add_op_list_remove_by_rank_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (range_specified) {
         success = as_operations_list_remove_by_rank_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-            return_type);
+            ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
     }
     else {
         success = as_operations_list_remove_by_rank_range_to_end(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+            ops, bin, ctx_ref, rank, return_type);
     }
 
     if (!success) {
@@ -936,7 +940,7 @@ static as_status add_op_list_remove_by_rank_range(
                         "Failed to add list_remove_by_rank_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -951,7 +955,7 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
 {
     as_val *val = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -963,19 +967,20 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
 
-    if (!as_operations_list_remove_by_value(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type)) {
+    if (!as_operations_list_remove_by_value(ops, bin, ctx_ref, val,
+                                            return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_remove_by_value operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -989,7 +994,7 @@ static as_status add_op_list_remove_by_value_list(
 {
     as_list *value_list = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -1001,22 +1006,23 @@ static as_status add_op_list_remove_by_value_list(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         /* Failed to convert ctx, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
     }
 
-    if (!as_operations_list_remove_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type)) {
+    if (!as_operations_list_remove_by_value_list(ops, bin, ctx_ref, value_list,
+                                                 return_type)) {
         /* Failed to add the operation, we need to destroy the list of values*/
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_get_by_value_list operation");
         as_val_destroy(value_list);
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1029,8 +1035,9 @@ static as_status add_op_list_remove_by_value_range(
 {
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
+    as_cdt_ctx *ctx_ref = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -1047,20 +1054,20 @@ static as_status add_op_list_remove_by_value_range(
         goto error;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         goto error;
     }
 
-    if (!as_operations_list_remove_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type)) {
+    if (!as_operations_list_remove_by_value_range(ops, bin, ctx_ref, val_begin,
+                                                  val_end, return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_remove_by_value_range operation");
         goto error;
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1076,7 +1083,7 @@ error:
         as_val_destroy(val_end);
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1090,7 +1097,7 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
                                        int serializer_type)
 {
     int64_t order_type_int;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
@@ -1098,19 +1105,20 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_set_order(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_set_order(ops, bin, ctx_ref,
                                       (as_list_order)order_type_int)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_set_order operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1124,7 +1132,7 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
                                   int serializer_type)
 {
     int64_t sort_flags;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
@@ -1132,19 +1140,20 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_sort(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_sort(ops, bin, ctx_ref,
                                  (as_list_sort_flags)sort_flags)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_sort operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1159,7 +1168,7 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
 {
     int64_t order_type_int;
     as_cdt_ctx ctx;
-    bool ctx_in_use = false;
+
     bool pad, persist_index;
 
     if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
@@ -1176,16 +1185,16 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     bool add_op_successful = as_operations_list_create_all(
-        ops, bin, (ctx_in_use ? &ctx : NULL), (as_list_order)order_type_int,
-        pad, persist_index);
+        ops, bin, ctx_ref, (as_list_order)order_type_int, pad, persist_index);
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1207,7 +1216,7 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
     as_val *val = NULL;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
@@ -1220,22 +1229,22 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
 
-    if (!as_operations_list_append(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                   (policy_in_use ? &list_policy : NULL),
-                                   val)) {
+    if (!as_operations_list_append(
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), val)) {
         as_val_destroy(val);
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_append operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1251,7 +1260,7 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
     as_list *items_list = NULL;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
@@ -1264,13 +1273,14 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
 
-    if (!as_operations_list_append_items(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_append_items(ops, bin, ctx_ref,
                                          (policy_in_use ? &list_policy : NULL),
                                          items_list)) {
         as_val_destroy(items_list);
@@ -1279,7 +1289,7 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
                                "Failed to add list_append_items operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1296,7 +1306,7 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
     int64_t index;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
@@ -1313,13 +1323,14 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
 
-    if (!as_operations_list_insert(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_insert(ops, bin, ctx_ref,
                                    (policy_in_use ? &list_policy : NULL), index,
                                    val)) {
         as_val_destroy(val);
@@ -1328,7 +1339,7 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
                                "Failed to add list_insert operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1345,7 +1356,7 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
     int64_t index;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
@@ -1362,13 +1373,14 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
 
-    if (!as_operations_list_insert_items(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_insert_items(ops, bin, ctx_ref,
                                          (policy_in_use ? &list_policy : NULL),
                                          index, items_list)) {
         as_val_destroy(items_list);
@@ -1377,7 +1389,7 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
                                "Failed to add list_insert_items operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1394,7 +1406,7 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
     int64_t index;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
@@ -1411,13 +1423,14 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(incr);
         return err->code;
     }
 
-    if (!as_operations_list_increment(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_increment(ops, bin, ctx_ref,
                                       (policy_in_use ? &list_policy : NULL),
                                       index, incr)) {
         as_val_destroy(incr);
@@ -1426,7 +1439,7 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
                                "Failed to add list_increment operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1440,7 +1453,7 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
                                  int serializer_type)
 {
     int64_t index;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -1448,17 +1461,18 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_pop(ops, bin, (ctx_in_use ? &ctx : NULL), index)) {
+    if (!as_operations_list_pop(ops, bin, ctx_ref, index)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_pop operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1473,7 +1487,7 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
 {
     int64_t index;
     int64_t count;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -1486,18 +1500,19 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_pop_range(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                      index, (uint64_t)count)) {
+    if (!as_operations_list_pop_range(ops, bin, ctx_ref, index,
+                                      (uint64_t)count)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to list_pop_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1511,27 +1526,27 @@ static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
                                     int serializer_type)
 {
     int64_t index;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         ;
         return err->code;
     }
 
-    if (!as_operations_list_remove(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                   index)) {
+    if (!as_operations_list_remove(ops, bin, ctx_ref, index)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_remove operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1546,7 +1561,7 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
 {
     int64_t index;
     int64_t count;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -1559,18 +1574,19 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_remove_range(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         index, (uint64_t)count)) {
+    if (!as_operations_list_remove_range(ops, bin, ctx_ref, index,
+                                         (uint64_t)count)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to list_remove_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1583,21 +1599,22 @@ static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
                                    as_static_pool *static_pool,
                                    int serializer_type)
 {
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_clear(ops, bin, (ctx_in_use ? &ctx : NULL))) {
+    if (!as_operations_list_clear(ops, bin, ctx_ref)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_clear operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1614,7 +1631,7 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
     int64_t index;
     as_list_policy list_policy;
     bool policy_in_use = false;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
@@ -1631,13 +1648,14 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
 
-    if (!as_operations_list_set(ops, bin, (ctx_in_use ? &ctx : NULL),
+    if (!as_operations_list_set(ops, bin, ctx_ref,
                                 (policy_in_use ? &list_policy : NULL), index,
                                 val)) {
         as_val_destroy(val);
@@ -1646,7 +1664,7 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
                                "Failed to add list_set operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1660,25 +1678,26 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
                                  int serializer_type)
 {
     int64_t index;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_get(ops, bin, (ctx_in_use ? &ctx : NULL), index)) {
+    if (!as_operations_list_get(ops, bin, ctx_ref, index)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_get operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1693,7 +1712,7 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
 {
     int64_t index;
     int64_t count;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -1706,18 +1725,19 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_get_range(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                      index, (uint64_t)count)) {
+    if (!as_operations_list_get_range(ops, bin, ctx_ref, index,
+                                      (uint64_t)count)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to list_get_range operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1732,7 +1752,7 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
 {
     int64_t index;
     int64_t count;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     /* Get the index*/
@@ -1745,18 +1765,18 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_trim(ops, bin, (ctx_in_use ? &ctx : NULL), index,
-                                 (uint64_t)count)) {
+    if (!as_operations_list_trim(ops, bin, ctx_ref, index, (uint64_t)count)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to list_trim operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1769,21 +1789,22 @@ static as_status add_op_list_size(AerospikeClient *self, as_error *err,
                                   as_static_pool *static_pool,
                                   int serializer_type)
 {
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (!as_operations_list_size(ops, bin, (ctx_in_use ? &ctx : NULL))) {
+    if (!as_operations_list_size(ops, bin, ctx_ref)) {
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_size operation");
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1799,7 +1820,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
     int return_type;
     int64_t rank;
     as_val *value = NULL;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -1820,15 +1841,15 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (count_present) {
         if (!as_operations_list_remove_by_value_rel_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                (uint64_t)count, return_type)) {
+                ops, bin, ctx_ref, value, rank, (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
@@ -1837,8 +1858,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
     }
     else {
         if (!as_operations_list_remove_by_value_rel_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                return_type)) {
+                ops, bin, ctx_ref, value, rank, return_type)) {
             as_cdt_ctx_destroy(&ctx);
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
@@ -1846,7 +1866,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
         }
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 
@@ -1863,7 +1883,7 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
     int return_type;
     int64_t rank;
     as_val *value = NULL;
-    bool ctx_in_use = false;
+
     as_cdt_ctx ctx;
 
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
@@ -1884,15 +1904,15 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+        self, err, &ctx, op_dict, static_pool, serializer_type);
+    if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
 
     if (count_present) {
         if (!as_operations_list_get_by_value_rel_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                (uint64_t)count, return_type)) {
+                ops, bin, ctx_ref, value, rank, (uint64_t)count, return_type)) {
             as_cdt_ctx_destroy(&ctx);
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
@@ -1901,8 +1921,7 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
     }
     else {
         if (!as_operations_list_get_by_value_rel_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                return_type)) {
+                ops, bin, ctx_ref, value, rank, return_type)) {
             as_cdt_ctx_destroy(&ctx);
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
@@ -1910,7 +1929,7 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
         }
     }
 
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 

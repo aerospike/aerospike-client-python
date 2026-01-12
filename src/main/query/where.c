@@ -59,17 +59,16 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_error err;
     as_error_init(&err);
     as_cdt_ctx *pctx = NULL;
-    bool ctx_in_use = false;
 
     if (py_ctx) {
         // TODO: does static pool go out of scope?
         as_static_pool static_pool;
         memset(&static_pool, 0, sizeof(static_pool));
-        pctx = cf_malloc(sizeof(as_cdt_ctx));
-        memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            return err.code;
+
+        pctx = as_cdt_ctx_create_from_pyobject(self->client, &err, py_ctx,
+                                               &static_pool, SERIALIZER_PYTHON);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP_CTX_ON_ERROR;
         }
     }
 
@@ -261,7 +260,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
-    if (ctx_in_use) {
+    if (pctx) {
         self->query.where.entries[0].ctx_free = true;
     }
     if (exp_list) {
@@ -288,10 +287,8 @@ CLEANUP_EXP_ON_ERROR:
 
 CLEANUP_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(pctx);
-    }
     if (pctx) {
+        as_cdt_ctx_destroy(pctx);
         cf_free(pctx);
     }
 
