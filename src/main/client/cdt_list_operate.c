@@ -66,14 +66,12 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_APPEND:
     case OP_LIST_INSERT:
-    case OP_LIST_POP_RANGE:
     case OP_LIST_SET:
     case OP_LIST_INCREMENT:
     case OP_LIST_GET_BY_VALUE:
     case OP_LIST_REMOVE_BY_VALUE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
-    case OP_LIST_APPEND_ITEMS:
         if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
                       serializer_type, true) != AEROSPIKE_OK) {
             goto exit;
