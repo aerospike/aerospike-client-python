@@ -142,6 +142,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
+    as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
 
     int64_t rank;
     switch (operation_code) {
@@ -199,149 +200,138 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     bool success = false;
     switch (operation_code) {
     case OP_LIST_SIZE:
-        success = as_operations_list_size(ops, bin, (ctx_in_use ? &ctx : NULL));
+        success = as_operations_list_size(ops, bin, ctx_ref);
         break;
     case OP_LIST_POP:
-        success =
-            as_operations_list_pop(ops, bin, (ctx_in_use ? &ctx : NULL), index);
+        success = as_operations_list_pop(ops, bin, ctx_ref, index);
         break;
     case OP_LIST_POP_RANGE:
-        success = as_operations_list_pop_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+        success = as_operations_list_pop_range(ops, bin, ctx_ref, index,
+                                               (uint64_t)count);
         break;
     case OP_LIST_REMOVE:
-        success = as_operations_list_remove(ops, bin,
-                                            (ctx_in_use ? &ctx : NULL), index);
+        success = as_operations_list_remove(ops, bin, ctx_ref, index);
         break;
     case OP_LIST_REMOVE_RANGE:
-        success = as_operations_list_remove_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+        success = as_operations_list_remove_range(ops, bin, ctx_ref, index,
+                                                  (uint64_t)count);
         break;
     case OP_LIST_CLEAR:
-        success =
-            as_operations_list_clear(ops, bin, (ctx_in_use ? &ctx : NULL));
+        success = as_operations_list_clear(ops, bin, ctx_ref);
         break;
     case OP_LIST_SET:
-        success = as_operations_list_set(ops, bin, (ctx_in_use ? &ctx : NULL),
+        success = as_operations_list_set(ops, bin, ctx_ref,
                                          (policy_in_use ? &list_policy : NULL),
                                          index, val);
         break;
     case OP_LIST_GET:
-        success =
-            as_operations_list_get(ops, bin, (ctx_in_use ? &ctx : NULL), index);
+        success = as_operations_list_get(ops, bin, ctx_ref, index);
         break;
     case OP_LIST_GET_RANGE:
-        success = as_operations_list_get_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+        success = as_operations_list_get_range(ops, bin, ctx_ref, index,
+                                               (uint64_t)count);
         break;
     case OP_LIST_TRIM:
-        success = as_operations_list_trim(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                          index, (uint64_t)count);
+        success =
+            as_operations_list_trim(ops, bin, ctx_ref, index, (uint64_t)count);
         break;
     case OP_LIST_GET_BY_INDEX: {
-        success = as_operations_list_get_by_index(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+        success = as_operations_list_get_by_index(ops, bin, ctx_ref, index,
+                                                  return_type);
     } break;
 
     case OP_LIST_GET_BY_INDEX_RANGE: {
         if (range_specified) {
             success = as_operations_list_get_by_index_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-                return_type);
+                ops, bin, ctx_ref, index, (uint64_t)count, return_type);
         }
         else {
             success = as_operations_list_get_by_index_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+                ops, bin, ctx_ref, index, return_type);
         }
     } break;
     case OP_LIST_GET_BY_RANK: {
-        success = as_operations_list_get_by_rank(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+        success = as_operations_list_get_by_rank(ops, bin, ctx_ref, rank,
+                                                 return_type);
     } break;
 
     case OP_LIST_GET_BY_RANK_RANGE: {
         if (range_specified) {
             success = as_operations_list_get_by_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-                return_type);
+                ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
         }
         else {
             success = as_operations_list_get_by_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+                ops, bin, ctx_ref, rank, return_type);
         }
     } break;
     case OP_LIST_GET_BY_VALUE: {
-        success = as_operations_list_get_by_value(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
+        success = as_operations_list_get_by_value(ops, bin, ctx_ref, val,
+                                                  return_type);
     } break;
     case OP_LIST_GET_BY_VALUE_LIST: {
-        success = as_operations_list_get_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
+        success = as_operations_list_get_by_value_list(ops, bin, ctx_ref,
+                                                       value_list, return_type);
     } break;
 
     case OP_LIST_GET_BY_VALUE_RANGE: {
         success = as_operations_list_get_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type);
+            ops, bin, ctx_ref, val_begin, val_end, return_type);
     } break;
 
     case OP_LIST_REMOVE_BY_INDEX: {
-        success = as_operations_list_remove_by_index(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+        success = as_operations_list_remove_by_index(ops, bin, ctx_ref, index,
+                                                     return_type);
         break;
     }
 
     case OP_LIST_REMOVE_BY_INDEX_RANGE: {
         if (range_specified) {
             success = as_operations_list_remove_by_index_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-                return_type);
+                ops, bin, ctx_ref, index, (uint64_t)count, return_type);
         }
         else {
             success = as_operations_list_remove_by_index_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+                ops, bin, ctx_ref, index, return_type);
         }
     } break;
 
     case OP_LIST_REMOVE_BY_RANK: {
-        success = as_operations_list_remove_by_rank(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+        success = as_operations_list_remove_by_rank(ops, bin, ctx_ref, rank,
+                                                    return_type);
         break;
     }
 
     case OP_LIST_REMOVE_BY_RANK_RANGE: {
         if (range_specified) {
             success = as_operations_list_remove_by_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-                return_type);
+                ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
         }
         else {
             success = as_operations_list_remove_by_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+                ops, bin, ctx_ref, rank, return_type);
         }
     } break;
 
     case OP_LIST_REMOVE_BY_VALUE: {
-        success = as_operations_list_remove_by_value(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
+        success = as_operations_list_remove_by_value(ops, bin, ctx_ref, val,
+                                                     return_type);
         break;
     }
 
     case OP_LIST_REMOVE_BY_VALUE_LIST: {
         success = as_operations_list_remove_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
+            ops, bin, ctx_ref, value_list, return_type);
     } break;
 
     case OP_LIST_REMOVE_BY_VALUE_RANGE: {
         success = as_operations_list_remove_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type);
+            ops, bin, ctx_ref, val_begin, val_end, return_type);
     } break;
 
     case OP_LIST_SET_ORDER: {
-        success =
-            as_operations_list_set_order(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         (as_list_order)order_type_int);
+        success = as_operations_list_set_order(ops, bin, ctx_ref,
+                                               (as_list_order)order_type_int);
         break;
     }
 
@@ -352,15 +342,14 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             AEROSPIKE_OK) {
             return err->code;
         }
-        success = as_operations_list_sort(ops, bin, (ctx_in_use ? &ctx : NULL),
+        success = as_operations_list_sort(ops, bin, ctx_ref,
                                           (as_list_sort_flags)sort_flags);
         break;
     }
 
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
         success = as_operations_list_get_by_value_rel_rank_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, rank, (uint64_t)count,
-            return_type);
+            ops, bin, ctx_ref, val, rank, (uint64_t)count, return_type);
         break;
     }
 
@@ -376,45 +365,43 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             return err->code;
         }
 
-        success = as_operations_list_create_all(
-            ops, bin, (ctx_in_use ? &ctx : NULL), (as_list_order)order_type_int,
-            pad, persist_index);
+        success = as_operations_list_create_all(ops, bin, ctx_ref,
+                                                (as_list_order)order_type_int,
+                                                pad, persist_index);
         break;
     }
     case OP_LIST_APPEND:
         success = as_operations_list_append(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), val);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), val);
         break;
     case OP_LIST_APPEND_ITEMS:
         success = as_operations_list_append_items(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), value_list);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL),
+            value_list);
         break;
     case OP_LIST_INSERT:
         success = as_operations_list_insert(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, val);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
+            val);
         break;
     case OP_LIST_INSERT_ITEMS:
         success = as_operations_list_insert_items(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, value_list);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
+            value_list);
         break;
     case OP_LIST_INCREMENT:
         success = as_operations_list_increment(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, val);
+            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
+            val);
         break;
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (range_specified) {
             success = as_operations_list_remove_by_value_rel_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
-                (uint64_t)count, return_type);
+                ops, bin, ctx_ref, val, rank, (uint64_t)count, return_type);
         }
         else {
             success = as_operations_list_remove_by_value_rel_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), val, rank, return_type);
+                ops, bin, ctx_ref, val, rank, return_type);
         }
         break;
     default:
