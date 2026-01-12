@@ -443,3 +443,4 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
         return err->code;
     }
+}
