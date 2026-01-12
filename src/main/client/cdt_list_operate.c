@@ -45,7 +45,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     as_list_policy list_policy;
     as_list_policy *list_policy_ref = NULL;
-    bool policy_in_use = false;
 
     switch (operation_code) {
     case OP_LIST_APPEND:
@@ -53,13 +52,15 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_INSERT:
     case OP_LIST_INSERT_ITEMS:
     case OP_LIST_INCREMENT:
-    case OP_LIST_SET:
+    case OP_LIST_SET: {
+        bool policy_in_use = false;
         if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
                             self->validate_keys) != AEROSPIKE_OK) {
             goto exit;
         }
         list_policy_ref = policy_in_use ? &list_policy : NULL;
         break;
+    }
     }
 
     as_val *val = NULL;
@@ -247,12 +248,12 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success =
             as_operations_list_trim(ops, bin, ctx_ref, index, (uint64_t)count);
         break;
-    case OP_LIST_GET_BY_INDEX: {
+    case OP_LIST_GET_BY_INDEX:
         success = as_operations_list_get_by_index(ops, bin, ctx_ref, index,
                                                   return_type);
-    } break;
+        break;
 
-    case OP_LIST_GET_BY_INDEX_RANGE: {
+    case OP_LIST_GET_BY_INDEX_RANGE:
         if (range_specified) {
             success = as_operations_list_get_by_index_range(
                 ops, bin, ctx_ref, index, (uint64_t)count, return_type);
@@ -261,13 +262,13 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_get_by_index_range_to_end(
                 ops, bin, ctx_ref, index, return_type);
         }
-    } break;
-    case OP_LIST_GET_BY_RANK: {
+        break;
+    case OP_LIST_GET_BY_RANK:
         success = as_operations_list_get_by_rank(ops, bin, ctx_ref, rank,
                                                  return_type);
-    } break;
+        break;
 
-    case OP_LIST_GET_BY_RANK_RANGE: {
+    case OP_LIST_GET_BY_RANK_RANGE:
         if (range_specified) {
             success = as_operations_list_get_by_rank_range(
                 ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
@@ -276,28 +277,25 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_get_by_rank_range_to_end(
                 ops, bin, ctx_ref, rank, return_type);
         }
-    } break;
-    case OP_LIST_GET_BY_VALUE: {
+        break;
+    case OP_LIST_GET_BY_VALUE:
         success = as_operations_list_get_by_value(ops, bin, ctx_ref, val,
                                                   return_type);
-    } break;
-    case OP_LIST_GET_BY_VALUE_LIST: {
+        break;
+    case OP_LIST_GET_BY_VALUE_LIST:
         success = as_operations_list_get_by_value_list(ops, bin, ctx_ref,
                                                        value_list, return_type);
-    } break;
-
-    case OP_LIST_GET_BY_VALUE_RANGE: {
+        break;
+    case OP_LIST_GET_BY_VALUE_RANGE:
         success = as_operations_list_get_by_value_range(
             ops, bin, ctx_ref, val_begin, val_end, return_type);
-    } break;
+        break;
 
-    case OP_LIST_REMOVE_BY_INDEX: {
+    case OP_LIST_REMOVE_BY_INDEX:
         success = as_operations_list_remove_by_index(ops, bin, ctx_ref, index,
                                                      return_type);
         break;
-    }
-
-    case OP_LIST_REMOVE_BY_INDEX_RANGE: {
+    case OP_LIST_REMOVE_BY_INDEX_RANGE:
         if (range_specified) {
             success = as_operations_list_remove_by_index_range(
                 ops, bin, ctx_ref, index, (uint64_t)count, return_type);
@@ -306,15 +304,14 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_remove_by_index_range_to_end(
                 ops, bin, ctx_ref, index, return_type);
         }
-    } break;
+        break;
 
-    case OP_LIST_REMOVE_BY_RANK: {
+    case OP_LIST_REMOVE_BY_RANK:
         success = as_operations_list_remove_by_rank(ops, bin, ctx_ref, rank,
                                                     return_type);
         break;
-    }
 
-    case OP_LIST_REMOVE_BY_RANK_RANGE: {
+    case OP_LIST_REMOVE_BY_RANK_RANGE:
         if (range_specified) {
             success = as_operations_list_remove_by_rank_range(
                 ops, bin, ctx_ref, rank, (uint64_t)count, return_type);
@@ -323,31 +320,25 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
             success = as_operations_list_remove_by_rank_range_to_end(
                 ops, bin, ctx_ref, rank, return_type);
         }
-    } break;
+        break;
 
-    case OP_LIST_REMOVE_BY_VALUE: {
+    case OP_LIST_REMOVE_BY_VALUE:
         success = as_operations_list_remove_by_value(ops, bin, ctx_ref, val,
                                                      return_type);
         break;
-    }
-
-    case OP_LIST_REMOVE_BY_VALUE_LIST: {
+    case OP_LIST_REMOVE_BY_VALUE_LIST:
         success = as_operations_list_remove_by_value_list(
             ops, bin, ctx_ref, value_list, return_type);
-    } break;
-
-    case OP_LIST_REMOVE_BY_VALUE_RANGE: {
+        break;
+    case OP_LIST_REMOVE_BY_VALUE_RANGE:
         success = as_operations_list_remove_by_value_range(
             ops, bin, ctx_ref, val_begin, val_end, return_type);
-    } break;
-
-    case OP_LIST_SET_ORDER: {
+        break;
+    case OP_LIST_SET_ORDER:
         success = as_operations_list_set_order(ops, bin, ctx_ref,
                                                (as_list_order)order_type_int);
         break;
-    }
-
-    case OP_LIST_SORT: {
+    case OP_LIST_SORT:
         int64_t sort_flags;
 
         if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
@@ -357,15 +348,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_sort(ops, bin, ctx_ref,
                                           (as_list_sort_flags)sort_flags);
         break;
-    }
-
-    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
         success = as_operations_list_get_by_value_rel_rank_range(
             ops, bin, ctx_ref, val, rank, (uint64_t)count, return_type);
         break;
-    }
-
-    case OP_LIST_CREATE: {
+    case OP_LIST_CREATE:
         bool pad, persist_index;
         if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) !=
             AEROSPIKE_OK) {
@@ -381,7 +368,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                                                 (as_list_order)order_type_int,
                                                 pad, persist_index);
         break;
-    }
     case OP_LIST_APPEND:
         success =
             as_operations_list_append(ops, bin, ctx_ref, list_policy_ref, val);
