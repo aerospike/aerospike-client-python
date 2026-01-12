@@ -64,9 +64,15 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_GET_BY_VALUE:
     case OP_LIST_GET_BY_VALUE_LIST:
+    case OP_LIST_GET_RANGE:
     case OP_LIST_REMOVE_BY_VALUE:
+    case OP_LIST_TRIM:
+    case OP_LIST_APPEND:
     case OP_LIST_APPEND_ITEMS:
     case OP_LIST_INSERT:
+    case OP_LIST_INSERT_ITEMS:
+    case OP_LIST_POP_RANGE:
+    case OP_LIST_REMOVE_RANGE:
     case OP_LIST_INCREMENT:
     case OP_LIST_SET:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
@@ -87,6 +93,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         }
         break;
     case OP_LIST_GET_BY_INDEX_RANGE:
+    case OP_LIST_REMOVE_BY_INDEX_RANGE:
+    case OP_LIST_GET_BY_RANK_RANGE:
+    case OP_LIST_REMOVE_BY_RANK_RANGE:
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
             return err->code;
@@ -98,7 +109,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     if ((operation_code >= OP_LIST_GET_BY_INDEX &&
          operation_code <= OP_LIST_REMOVE_BY_VALUE_RANGE) ||
         (operation_code >= OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL &&
-         operation_code <= OP_LIST_REMOVE_BY_RANK_RANGE_TO_END)) {
+         operation_code <= OP_LIST_GET_BY_VALUE_RANK_RANGE_REL)) {
         if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
             return err->code;
         }
@@ -111,6 +122,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE:
     case OP_LIST_REMOVE_RANGE:
     case OP_LIST_SET:
+    case OP_LIST_GET:
     case OP_LIST_GET_RANGE:
     case OP_LIST_TRIM:
     case OP_LIST_GET_BY_INDEX:
@@ -128,7 +140,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
-    // TODO: not all operations may take in ctx param
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
@@ -137,13 +148,20 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     int64_t rank;
     switch (operation_code) {
     case OP_LIST_GET_BY_RANK:
+    case OP_LIST_GET_BY_RANK_RANGE:
+    case OP_LIST_REMOVE_BY_RANK:
+    case OP_LIST_REMOVE_BY_RANK_RANGE:
+    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (get_int64_t(err, AS_PY_RANK_KEY, op_dict, &rank) != AEROSPIKE_OK) {
             return err->code;
         }
+        break;
     }
 
     as_list *value_list = NULL;
     switch (operation_code) {
+    case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
         if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
@@ -154,266 +172,274 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
-    if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
-                  static_pool, serializer_type, false) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, static_pool,
-                  serializer_type, false) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    int64_t order_type_int;
-    if (operation_code == OP_LIST_CREATE) {
-        if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
-            AEROSPIKE_OK) {
-            return err->code;
-        }
-    }
-
-    bool success = false;
     switch (operation_code) {
-    case OP_LIST_SIZE:
-        success = as_operations_list_size(ops, bin, (ctx_in_use ? &ctx : NULL));
-        break;
-    case OP_LIST_POP:
-        success =
-            as_operations_list_pop(ops, bin, (ctx_in_use ? &ctx : NULL), index);
-        break;
-    case OP_LIST_POP_RANGE:
-        success = as_operations_list_pop_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
-        break;
-    case OP_LIST_REMOVE:
-        success = as_operations_list_remove(ops, bin,
-                                            (ctx_in_use ? &ctx : NULL), index);
-        break;
-    case OP_LIST_REMOVE_RANGE:
-        success = as_operations_list_remove_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
-        break;
-    case OP_LIST_CLEAR:
-        success =
-            as_operations_list_clear(ops, bin, (ctx_in_use ? &ctx : NULL));
-        break;
-    case OP_LIST_SET:
-        success = as_operations_list_set(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         (policy_in_use ? &list_policy : NULL),
-                                         index, val);
-        break;
-    case OP_LIST_GET:
-        success =
-            as_operations_list_get(ops, bin, (ctx_in_use ? &ctx : NULL), index);
-        break;
-    case OP_LIST_GET_RANGE:
-        success = as_operations_list_get_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
-        break;
-    case OP_LIST_TRIM:
-        success = as_operations_list_trim(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                          index, (uint64_t)count);
-        break;
-    case OP_LIST_GET_BY_INDEX: {
-        success = as_operations_list_get_by_index(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
-    } break;
-
-    case OP_LIST_GET_BY_INDEX_RANGE: {
-        if (range_specified) {
-            success = as_operations_list_get_by_index_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-                return_type);
-        }
-        else {
-            success = as_operations_list_get_by_index_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
-        }
-    } break;
-    case OP_LIST_GET_BY_RANK: {
-        success = as_operations_list_get_by_rank(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
-    } break;
-
-    case OP_LIST_GET_BY_RANK_RANGE: {
-        if (range_specified) {
-            success = as_operations_list_get_by_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-                return_type);
-        }
-        else {
-            success = as_operations_list_get_by_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
-        }
-    } break;
-    case OP_LIST_GET_BY_VALUE: {
-        success = as_operations_list_get_by_value(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
-    } break;
-    case OP_LIST_GET_BY_VALUE_LIST: {
-        success = as_operations_list_get_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
-    } break;
-
-    case OP_LIST_GET_BY_VALUE_RANGE: {
-        success = as_operations_list_get_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type);
-    } break;
-
-    case OP_LIST_REMOVE_BY_INDEX: {
-        success = as_operations_list_remove_by_index(
-            ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
-        break;
-    }
-
-    case OP_LIST_REMOVE_BY_INDEX_RANGE: {
-        if (range_specified) {
-            success = as_operations_list_remove_by_index_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count,
-                return_type);
-        }
-        else {
-            success = as_operations_list_remove_by_index_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
-        }
-    } break;
-
-    case OP_LIST_REMOVE_BY_RANK: {
-        success = as_operations_list_remove_by_rank(
-            ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
-        break;
-    }
-
-    case OP_LIST_REMOVE_BY_RANK_RANGE: {
-        if (range_specified) {
-            success = as_operations_list_remove_by_rank_range(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
-                return_type);
-        }
-        else {
-            success = as_operations_list_remove_by_rank_range_to_end(
-                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
-        }
-    } break;
-
-    case OP_LIST_REMOVE_BY_VALUE: {
-        success = as_operations_list_remove_by_value(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
-        break;
-    }
-
-    case OP_LIST_REMOVE_BY_VALUE_LIST: {
-        success = as_operations_list_remove_by_value_list(
-            ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
-    } break;
-
-    case OP_LIST_REMOVE_BY_VALUE_RANGE: {
-        success = as_operations_list_remove_by_value_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
-            return_type);
-    } break;
-
-    case OP_LIST_SET_ORDER: {
-        success =
-            as_operations_list_set_order(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                         (as_list_order)order_type_int);
-        break;
-    }
-
-    case OP_LIST_SORT: {
-        int64_t sort_flags;
-
-        if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
-            AEROSPIKE_OK) {
-            return err->code;
-        }
-        success = as_operations_list_sort(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                          (as_list_sort_flags)sort_flags);
-        break;
-    }
-
-    case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
-        success = as_operations_list_get_by_value_rel_rank_range(
-            ops, bin, (ctx_in_use ? &ctx : NULL), val, rank, (uint64_t)count,
-            return_type);
-        break;
-    }
-
-    case OP_LIST_CREATE: {
-        bool pad, persist_index;
-        if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) !=
-            AEROSPIKE_OK) {
+    case OP_LIST_GET_BY_VALUE_LIST:
+    case OP_LIST_REMOVE_BY_VALUE_LIST:
+        if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
+                      static_pool, serializer_type, false) != AEROSPIKE_OK) {
             return err->code;
         }
 
-        if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict,
-                                 &persist_index) != AEROSPIKE_OK) {
+        if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end,
+                      static_pool, serializer_type, false) != AEROSPIKE_OK) {
             return err->code;
         }
+        break;
 
-        success = as_operations_list_create_all(
-            ops, bin, (ctx_in_use ? &ctx : NULL), (as_list_order)order_type_int,
-            pad, persist_index);
-        break;
-    }
-    case OP_LIST_APPEND:
-        success = as_operations_list_append(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), val);
-        break;
-    case OP_LIST_APPEND_ITEMS:
-        success = as_operations_list_append_items(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), value_list);
-        break;
-    case OP_LIST_INSERT:
-        success = as_operations_list_insert(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, val);
-        break;
-    case OP_LIST_INSERT_ITEMS:
-        success = as_operations_list_insert_items(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, value_list);
-        break;
-    case OP_LIST_INCREMENT:
-        success = as_operations_list_increment(
-            ops, bin, (ctx_in_use ? &ctx : NULL),
-            (policy_in_use ? &list_policy : NULL), index, val);
-        break;
-    case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
-        if (range_specified) {
-            if (!as_operations_list_remove_by_value_rel_rank_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
-                    (uint64_t)count, return_type)) {
-                as_cdt_ctx_destroy(&ctx);
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list remove by value "
-                                       "rank relative operation");
+        int64_t order_type_int;
+        if (operation_code == OP_LIST_CREATE) {
+            if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
+                AEROSPIKE_OK) {
+                return err->code;
             }
         }
-        else {
-            if (!as_operations_list_remove_by_value_rel_rank_range_to_end(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
-                    return_type)) {
-                as_cdt_ctx_destroy(&ctx);
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list remove by value "
-                                       "rank relative operation");
+
+        bool success = false;
+        switch (operation_code) {
+        case OP_LIST_SIZE:
+            success =
+                as_operations_list_size(ops, bin, (ctx_in_use ? &ctx : NULL));
+            break;
+        case OP_LIST_POP:
+            success = as_operations_list_pop(ops, bin,
+                                             (ctx_in_use ? &ctx : NULL), index);
+            break;
+        case OP_LIST_POP_RANGE:
+            success = as_operations_list_pop_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+            break;
+        case OP_LIST_REMOVE:
+            success = as_operations_list_remove(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index);
+            break;
+        case OP_LIST_REMOVE_RANGE:
+            success = as_operations_list_remove_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+            break;
+        case OP_LIST_CLEAR:
+            success =
+                as_operations_list_clear(ops, bin, (ctx_in_use ? &ctx : NULL));
+            break;
+        case OP_LIST_SET:
+            success = as_operations_list_set(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), index, val);
+            break;
+        case OP_LIST_GET:
+            success = as_operations_list_get(ops, bin,
+                                             (ctx_in_use ? &ctx : NULL), index);
+            break;
+        case OP_LIST_GET_RANGE:
+            success = as_operations_list_get_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+            break;
+        case OP_LIST_TRIM:
+            success = as_operations_list_trim(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, (uint64_t)count);
+            break;
+        case OP_LIST_GET_BY_INDEX: {
+            success = as_operations_list_get_by_index(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+        } break;
+
+        case OP_LIST_GET_BY_INDEX_RANGE: {
+            if (range_specified) {
+                success = as_operations_list_get_by_index_range(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), index,
+                    (uint64_t)count, return_type);
             }
+            else {
+                success = as_operations_list_get_by_index_range_to_end(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+            }
+        } break;
+        case OP_LIST_GET_BY_RANK: {
+            success = as_operations_list_get_by_rank(
+                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+        } break;
+
+        case OP_LIST_GET_BY_RANK_RANGE: {
+            if (range_specified) {
+                success = as_operations_list_get_by_rank_range(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
+                    return_type);
+            }
+            else {
+                success = as_operations_list_get_by_rank_range_to_end(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+            }
+        } break;
+        case OP_LIST_GET_BY_VALUE: {
+            success = as_operations_list_get_by_value(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
+        } break;
+        case OP_LIST_GET_BY_VALUE_LIST: {
+            success = as_operations_list_get_by_value_list(
+                ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
+        } break;
+
+        case OP_LIST_GET_BY_VALUE_RANGE: {
+            success = as_operations_list_get_by_value_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
+                return_type);
+        } break;
+
+        case OP_LIST_REMOVE_BY_INDEX: {
+            success = as_operations_list_remove_by_index(
+                ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+            break;
         }
-        break;
 
-    default:
-        // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+        case OP_LIST_REMOVE_BY_INDEX_RANGE: {
+            if (range_specified) {
+                success = as_operations_list_remove_by_index_range(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), index,
+                    (uint64_t)count, return_type);
+            }
+            else {
+                success = as_operations_list_remove_by_index_range_to_end(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), index, return_type);
+            }
+        } break;
+
+        case OP_LIST_REMOVE_BY_RANK: {
+            success = as_operations_list_remove_by_rank(
+                ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+            break;
+        }
+
+        case OP_LIST_REMOVE_BY_RANK_RANGE: {
+            if (range_specified) {
+                success = as_operations_list_remove_by_rank_range(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), rank, (uint64_t)count,
+                    return_type);
+            }
+            else {
+                success = as_operations_list_remove_by_rank_range_to_end(
+                    ops, bin, (ctx_in_use ? &ctx : NULL), rank, return_type);
+            }
+        } break;
+
+        case OP_LIST_REMOVE_BY_VALUE: {
+            success = as_operations_list_remove_by_value(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val, return_type);
+            break;
+        }
+
+        case OP_LIST_REMOVE_BY_VALUE_LIST: {
+            success = as_operations_list_remove_by_value_list(
+                ops, bin, (ctx_in_use ? &ctx : NULL), value_list, return_type);
+        } break;
+
+        case OP_LIST_REMOVE_BY_VALUE_RANGE: {
+            success = as_operations_list_remove_by_value_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val_begin, val_end,
+                return_type);
+        } break;
+
+        case OP_LIST_SET_ORDER: {
+            success = as_operations_list_set_order(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (as_list_order)order_type_int);
+            break;
+        }
+
+        case OP_LIST_SORT: {
+            int64_t sort_flags;
+
+            if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+            success =
+                as_operations_list_sort(ops, bin, (ctx_in_use ? &ctx : NULL),
+                                        (as_list_sort_flags)sort_flags);
+            break;
+        }
+
+        case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
+            success = as_operations_list_get_by_value_rel_rank_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
+                (uint64_t)count, return_type);
+            break;
+        }
+
+        case OP_LIST_CREATE: {
+            bool pad, persist_index;
+            if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict,
+                                     &persist_index) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            success = as_operations_list_create_all(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (as_list_order)order_type_int, pad, persist_index);
+            break;
+        }
+        case OP_LIST_APPEND:
+            success = as_operations_list_append(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), val);
+            break;
+        case OP_LIST_APPEND_ITEMS:
+            success = as_operations_list_append_items(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), value_list);
+            break;
+        case OP_LIST_INSERT:
+            success = as_operations_list_insert(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), index, val);
+            break;
+        case OP_LIST_INSERT_ITEMS:
+            success = as_operations_list_insert_items(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), index, value_list);
+            break;
+        case OP_LIST_INCREMENT:
+            success = as_operations_list_increment(
+                ops, bin, (ctx_in_use ? &ctx : NULL),
+                (policy_in_use ? &list_policy : NULL), index, val);
+            break;
+        case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
+            if (range_specified) {
+                if (!as_operations_list_remove_by_value_rel_rank_range(
+                        ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
+                        (uint64_t)count, return_type)) {
+                    as_cdt_ctx_destroy(&ctx);
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                           "Failed to add list remove by value "
+                                           "rank relative operation");
+                }
+            }
+            else {
+                if (!as_operations_list_remove_by_value_rel_rank_range_to_end(
+                        ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
+                        return_type)) {
+                    as_cdt_ctx_destroy(&ctx);
+                    return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                           "Failed to add list remove by value "
+                                           "rank relative operation");
+                }
+            }
+            break;
+
+        default:
+            // This should never be possible since we only get here if we know that the operation is valid.
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Unknown operation");
+        }
+
+        if (!success) {
+            // TODO: regression in error message
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to add operation");
+        }
+
+        return err->code;
     }
-
-    if (!success) {
-        // TODO: regression in error message
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add operation");
-    }
-
-    return err->code;
-}
