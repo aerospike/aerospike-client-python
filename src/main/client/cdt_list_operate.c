@@ -44,6 +44,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     as_list_policy list_policy;
+    as_list_policy *list_policy_ref = NULL;
     bool policy_in_use = false;
 
     switch (operation_code) {
@@ -57,6 +58,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                             self->validate_keys) != AEROSPIKE_OK) {
             return err->code;
         }
+        list_policy_ref = policy_in_use ? &list_policy : NULL;
         break;
     }
 
@@ -232,9 +234,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_clear(ops, bin, ctx_ref);
         break;
     case OP_LIST_SET:
-        success = as_operations_list_set(ops, bin, ctx_ref,
-                                         (policy_in_use ? &list_policy : NULL),
-                                         index, val);
+        success =
+            as_operations_list_set(ops, bin, ctx_ref, policy_ref, index, val);
         break;
     case OP_LIST_GET:
         success = as_operations_list_get(ops, bin, ctx_ref, index);
@@ -383,28 +384,24 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     }
     case OP_LIST_APPEND:
-        success = as_operations_list_append(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), val);
+        success =
+            as_operations_list_append(ops, bin, ctx_ref, list_policy_ref, val);
         break;
     case OP_LIST_APPEND_ITEMS:
-        success = as_operations_list_append_items(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL),
-            value_list);
+        success = as_operations_list_append_items(ops, bin, ctx_ref, policy_ref,
+                                                  value_list);
         break;
     case OP_LIST_INSERT:
-        success = as_operations_list_insert(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
-            val);
+        success = as_operations_list_insert(ops, bin, ctx_ref, policy_ref,
+                                            index, val);
         break;
     case OP_LIST_INSERT_ITEMS:
-        success = as_operations_list_insert_items(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
-            value_list);
+        success = as_operations_list_insert_items(ops, bin, ctx_ref, policy_ref,
+                                                  index, value_list);
         break;
     case OP_LIST_INCREMENT:
-        success = as_operations_list_increment(
-            ops, bin, ctx_ref, (policy_in_use ? &list_policy : NULL), index,
-            val);
+        success = as_operations_list_increment(ops, bin, ctx_ref, policy_ref,
+                                               index, val);
         break;
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (range_specified) {
