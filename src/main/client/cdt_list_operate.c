@@ -187,7 +187,9 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     int64_t order_type_int;
-    if (operation_code == OP_LIST_CREATE) {
+    switch (operation_code) {
+    case OP_LIST_SET_ORDER:
+    case OP_LIST_CREATE:
         if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
             AEROSPIKE_OK) {
             return err->code;
