@@ -405,8 +405,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     if (!success) {
-        // TODO: regression in error message
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add %s operation",
+                        op_code_to_names[operation_code]);
     }
 
 CLEANUP_CTX_ON_ERROR:

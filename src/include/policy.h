@@ -41,50 +41,46 @@ enum Aerospike_send_bool_as_values {
     SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
-enum Aerospike_list_operations {
-    OP_LIST_APPEND = 1001,
-    OP_LIST_APPEND_ITEMS,
-    OP_LIST_INSERT,
-    OP_LIST_INSERT_ITEMS,
-    OP_LIST_POP,
-    OP_LIST_POP_RANGE,
-    OP_LIST_REMOVE,
-    OP_LIST_REMOVE_RANGE,
-    OP_LIST_CLEAR,
-    OP_LIST_SET,
-    OP_LIST_GET,
-    OP_LIST_GET_RANGE,
-    OP_LIST_TRIM,
-    OP_LIST_SIZE,
-    OP_LIST_INCREMENT,
-    OP_LIST_GET_BY_INDEX,
-    OP_LIST_GET_BY_INDEX_RANGE,
-    OP_LIST_GET_BY_RANK,
-    OP_LIST_GET_BY_RANK_RANGE,
-    OP_LIST_GET_BY_VALUE,
-    OP_LIST_GET_BY_VALUE_LIST,
-    OP_LIST_GET_BY_VALUE_RANGE,
-    OP_LIST_REMOVE_BY_INDEX,
-    OP_LIST_REMOVE_BY_INDEX_RANGE,
-    OP_LIST_REMOVE_BY_RANK,
-    OP_LIST_REMOVE_BY_RANK_RANGE,
-    OP_LIST_REMOVE_BY_VALUE,
-    OP_LIST_REMOVE_BY_VALUE_LIST,
-    OP_LIST_REMOVE_BY_VALUE_RANGE,
-    OP_LIST_SET_ORDER,
-    OP_LIST_SORT,
-    OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL,
-    OP_LIST_GET_BY_VALUE_RANK_RANGE_REL,
+#define LIST_OP_NAMES_EXCEPT_LIST_APPEND                                       \
+    X(LIST_APPEND_ITEMS), X(LIST_INSERT), X(LIST_INSERT_ITEMS), X(LIST_POP),   \
+        X(LIST_POP_RANGE), X(LIST_REMOVE), X(LIST_REMOVE_RANGE),               \
+        X(LIST_CLEAR), X(LIST_SET), X(LIST_GET), X(LIST_GET_RANGE),            \
+        X(LIST_TRIM), X(LIST_SIZE), X(LIST_INCREMENT), X(LIST_GET_BY_INDEX),   \
+        X(LIST_GET_BY_INDEX_RANGE), X(LIST_GET_BY_RANK),                       \
+        X(LIST_GET_BY_RANK_RANGE), X(LIST_GET_BY_VALUE),                       \
+        X(LIST_GET_BY_VALUE_LIST), X(LIST_GET_BY_VALUE_RANGE),                 \
+        X(LIST_REMOVE_BY_INDEX), X(LIST_REMOVE_BY_INDEX_RANGE),                \
+        X(LIST_REMOVE_BY_RANK), X(LIST_REMOVE_BY_RANK_RANGE),                  \
+        X(LIST_REMOVE_BY_VALUE), X(LIST_REMOVE_BY_VALUE_LIST),                 \
+        X(LIST_REMOVE_BY_VALUE_RANGE), X(LIST_SET_ORDER), X(LIST_SORT),        \
+        X(LIST_REMOVE_BY_VALUE_RANK_RANGE_REL),                                \
+        X(LIST_GET_BY_VALUE_RANK_RANGE_REL),                                   \
+        X(LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END),                            \
+        X(LIST_GET_BY_INDEX_RANGE_TO_END), X(LIST_GET_BY_RANK_RANGE_TO_END),   \
+        X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
+        X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
+        X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
 
-    // for use in expressions
-    OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END,
-    OP_LIST_GET_BY_INDEX_RANGE_TO_END,
-    OP_LIST_GET_BY_RANK_RANGE_TO_END,
-    OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END,
-    OP_LIST_REMOVE_BY_REL_RANK_RANGE,
-    OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END,
-    OP_LIST_REMOVE_BY_RANK_RANGE_TO_END,
-    OP_LIST_CREATE
+enum Aerospike_list_operations {
+#define X(op_name) OP_##op_name
+    X(LIST_APPEND) = 1001,
+    LIST_OP_NAMES_EXCEPT_LIST_APPEND
+#undef X
+};
+
+typedef struct {
+    int operation_code;
+    const char *operation_name;
+} op_code_to_name;
+
+op_code_to_name op_code_to_names[] = {
+#define X(op_name)                                                             \
+    {                                                                          \
+        OP_##op_name, #op_name                                                 \
+    }
+    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
+#undef X
 };
 
 enum Aerospike_map_operations {
