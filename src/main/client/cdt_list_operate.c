@@ -177,6 +177,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
     case OP_LIST_APPEND_ITEMS:
+    case OP_LIST_INSERT_ITEMS:
         if (get_val_list(self, err, list_values_key, op_dict, &value_list,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
             return err->code;
