@@ -71,7 +71,6 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_SET:
     case OP_LIST_INCREMENT:
     case OP_LIST_GET_BY_VALUE:
-    case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_GET_RANGE:
     case OP_LIST_TRIM:
     case OP_LIST_REMOVE_BY_VALUE:
