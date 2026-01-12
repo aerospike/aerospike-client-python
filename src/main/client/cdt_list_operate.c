@@ -173,8 +173,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
     switch (operation_code) {
-    case OP_LIST_GET_BY_VALUE_LIST:
-    case OP_LIST_REMOVE_BY_VALUE_LIST:
+    case OP_LIST_GET_BY_VALUE_RANGE:
+    case OP_LIST_REMOVE_BY_VALUE_RANGE:
         if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
                       static_pool, serializer_type, false) != AEROSPIKE_OK) {
             return err->code;
