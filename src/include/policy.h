@@ -69,20 +69,6 @@ enum Aerospike_list_operations {
 #undef X
 };
 
-typedef struct {
-    int operation_code;
-    const char *operation_name;
-} op_code_to_name;
-
-op_code_to_name op_code_to_names[] = {
-#define X(op_name)                                                             \
-    {                                                                          \
-        OP_##op_name, #op_name                                                 \
-    }
-    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
-#undef X
-};
-
 enum Aerospike_map_operations {
     OP_MAP_SET_POLICY = 1101,
     OP_MAP_PUT,
