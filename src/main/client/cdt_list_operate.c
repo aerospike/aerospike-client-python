@@ -40,7 +40,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     char *bin = NULL;
 
     if (get_bin(err, op_dict, unicodeStrVector, &bin) != AEROSPIKE_OK) {
-        return err->code;
+        goto exit;
     }
 
     as_list_policy list_policy;
@@ -56,7 +56,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_SET:
         if (get_list_policy(err, op_dict, &list_policy, &policy_in_use,
                             self->validate_keys) != AEROSPIKE_OK) {
-            return err->code;
+            goto exit;
         }
         list_policy_ref = policy_in_use ? &list_policy : NULL;
         break;
@@ -76,7 +76,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_APPEND_ITEMS:
         if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
                       serializer_type, true) != AEROSPIKE_OK) {
-            return err->code;
+            goto exit;
         }
         break;
     }
@@ -89,7 +89,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_RANGE:
     case OP_LIST_TRIM:
         if (get_int64_t(err, AS_PY_VAL_KEY, op_dict, &count) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR1;
         }
         break;
     case OP_LIST_GET_BY_INDEX_RANGE:
@@ -100,7 +100,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR1;
         }
         break;
     }
@@ -111,7 +111,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         (operation_code >= OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL &&
          operation_code <= OP_LIST_GET_BY_VALUE_RANK_RANGE_REL)) {
         if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR1;
         }
     }
 
@@ -134,7 +134,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_INDEX_RANGE:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR1;
         }
     }
 
@@ -142,7 +142,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     as_cdt_ctx ctx;
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
                     serializer_type) != AEROSPIKE_OK) {
-        return err->code;
+        goto CLEANUP_ON_ERROR1;
     }
     as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
 
@@ -155,12 +155,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (get_int64_t(err, AS_PY_RANK_KEY, op_dict, &rank) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR2;
         }
         break;
     }
 
-    as_list *value_list = NULL;
     const char *list_values_key = NULL;
     switch (operation_code) {
     case OP_LIST_GET_BY_VALUE_LIST:
@@ -173,6 +172,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     }
 
+    as_list *value_list = NULL;
     switch (operation_code) {
     case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
@@ -180,7 +180,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_INSERT_ITEMS:
         if (get_val_list(self, err, list_values_key, op_dict, &value_list,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR2;
         }
         break;
     }
@@ -192,12 +192,12 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE_RANGE:
         if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
                       static_pool, serializer_type, false) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR3;
         }
 
         if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end,
                       static_pool, serializer_type, false) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR4;
         }
         break;
     }
@@ -208,7 +208,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_CREATE:
         if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
             AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR5;
         }
     }
 
@@ -354,7 +354,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
         if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
             AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR5;
         }
         success = as_operations_list_sort(ops, bin, ctx_ref,
                                           (as_list_sort_flags)sort_flags);
@@ -371,12 +371,12 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         bool pad, persist_index;
         if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) !=
             AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR5;
         }
 
         if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict,
                                  &persist_index) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP_ON_ERROR5;
         }
 
         success = as_operations_list_create_all(ops, bin, ctx_ref,
@@ -416,7 +416,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
+        goto CLEANUP_ON_ERROR5;
     }
 
     if (!success) {
@@ -424,5 +425,26 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add operation");
     }
 
+CLEANUP_ON_ERROR5:
+    if (val_end) {
+        as_val_destroy(val_end);
+    }
+CLEANUP_ON_ERROR4:
+    if (val_begin) {
+        as_val_destroy(val_begin);
+    }
+CLEANUP_ON_ERROR3:
+    if (value_list) {
+        as_list_destroy(value_list);
+    }
+CLEANUP_ON_ERROR2:
+    if (ctx_ref) {
+        as_cdt_ctx_destroy(ctx_ref);
+    }
+CLEANUP_ON_ERROR1:
+    if (val) {
+        as_val_destroy(val);
+    }
+exit:
     return err->code;
 }
