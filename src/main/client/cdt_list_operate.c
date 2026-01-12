@@ -408,27 +408,15 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         break;
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
         if (range_specified) {
-            if (!as_operations_list_remove_by_value_rel_rank_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
-                    (uint64_t)count, return_type)) {
-                as_cdt_ctx_destroy(&ctx);
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list remove by value "
-                                       "rank relative operation");
-            }
+            success = as_operations_list_remove_by_value_rel_rank_range(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
+                (uint64_t)count, return_type);
         }
         else {
-            if (!as_operations_list_remove_by_value_rel_rank_range_to_end(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), val, rank,
-                    return_type)) {
-                as_cdt_ctx_destroy(&ctx);
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "Failed to add list remove by value "
-                                       "rank relative operation");
-            }
+            success = as_operations_list_remove_by_value_rel_rank_range_to_end(
+                ops, bin, (ctx_in_use ? &ctx : NULL), val, rank, return_type);
         }
         break;
-
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         return as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
