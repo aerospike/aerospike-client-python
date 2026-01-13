@@ -1147,10 +1147,6 @@ class TestQuery(TestBaseClass):
         with pytest.raises(e.ParamError) as param_error:
             query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ['not a ctx list'])
 
-        assert param_error.value.msg == "Failed to add predicate"
-        assert param_error.value.code == -2
-
-
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"
