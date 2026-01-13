@@ -243,18 +243,17 @@ class TestNewListOperationsHelpers(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[:2] + self.test_list[3:]
 
-    @pytest.mark.parametrize("count, expected_result",
-        [(2, [5, 8]), (None, [5, 8, 9, 10])]
-    )
-    def test_remove_by_index_range(self, count, expected_result):
+    def test_remove_by_index_range(self):
         """
         Remove the 3rd item, a 5
         """
-        operation = list_operations.list_remove_by_index_range(self.test_bin, count, aerospike.LIST_RETURN_VALUE, count=2)
+        operation = list_operations.list_remove_by_index_range(self.test_bin, 2, aerospike.LIST_RETURN_VALUE, count=2)
 
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
 
-        assert result == expected_result
+        assert result == [5, 8]
+        _, _, bins = self.as_connection.get(self.test_key)
+        assert bins[self.test_bin] == self.test_list[:2] + self.test_list[4:]
 
     def test_remove_by_index_range_inverted(self):
         """
