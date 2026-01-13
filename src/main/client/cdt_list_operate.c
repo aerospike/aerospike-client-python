@@ -363,8 +363,14 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                                           (as_list_sort_flags)sort_flags);
         break;
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
-        success = as_operations_list_get_by_value_rel_rank_range(
-            ops, bin, ctx_ref, val, rank, (uint64_t)count, return_type);
+        if (range_specified) {
+            success = as_operations_list_get_by_value_rel_rank_range(
+                ops, bin, ctx_ref, val, rank, (uint64_t)count, return_type);
+        }
+        else {
+            success = as_operations_list_get_by_value_rel_rank_range_to_end(
+                ops, bin, ctx_ref, val, rank, return_type);
+        }
         break;
     case OP_LIST_CREATE:
         bool pad, persist_index;
