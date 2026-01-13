@@ -1117,7 +1117,7 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query("test", "demo")
 
-        with pytest.raises(e.ParamError) as param_error:
+        with pytest.raises(e.ParamError):
             query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ['not a ctx list'])
 
     def test_query_with_base64_cdt_ctx(self):
