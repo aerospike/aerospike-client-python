@@ -51,6 +51,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                           int serializer_type)
 
 {
+    // as_operations_add_* API methods can take ownership of heap allocated as_val
+    // objects even if the methods fail and return false.
     bool has_as_operations_taken_ownership_of_as_val_objs = false;
     char *bin = NULL;
 
