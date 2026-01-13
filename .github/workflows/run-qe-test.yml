@@ -117,7 +117,7 @@ jobs:
         cat ${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
-    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }} 2>&1 | grep -iv error
+    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }} 2>&1 | grep -i error
       working-directory: aerospike-tests-python
 
   # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
