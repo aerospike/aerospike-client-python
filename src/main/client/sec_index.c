@@ -191,6 +191,8 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
                                                 data_type, NULL, expr);
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 /**
  *******************************************************************************************************
  * Creates a cdt index for a bin in the Aerospike DB.
@@ -219,11 +221,13 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_indextype = NULL;
     PyObject *py_datatype = NULL;
     PyObject *py_name = NULL;
+
     PyObject *py_ctx = NULL;
+    // Used to pass ctx into get_cdt_ctx() helper
     PyObject *py_ctx_dict = NULL;
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
-    bool new_dict_in_use = false;
+
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;
@@ -249,10 +253,22 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
+    // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
+    // which only parses a dictionary containing a ctx list
     if (PyList_Check(py_ctx)) {
         py_ctx_dict = PyDict_New();
-        PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-        new_dict_in_use = true;
+
+        if (!py_ctx_dict) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP;
+        }
+        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        if (retval == -1) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP2;
+        }
     }
     else {
         py_ctx_dict = py_ctx;
@@ -263,13 +279,10 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &static_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-    if (new_dict_in_use) {
-        Py_DECREF(py_ctx_dict);
+        goto CLEANUP2;
     }
     if (!ctx_in_use) {
-        goto CLEANUP;
+        goto CLEANUP2;
     }
 
     py_obj = createIndexWithDataAndCollectionType(
@@ -278,10 +291,10 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     as_cdt_ctx_destroy(&ctx);
 
-    return py_obj;
+CLEANUP2:
+    Py_DECREF(py_ctx_dict);
 
 CLEANUP:
-
     if (py_obj == NULL) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
