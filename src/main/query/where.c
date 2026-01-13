@@ -76,7 +76,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // If user wanted to pass in an actual ctx
 
         // Glue code to pass into get_cdt_ctx()
-        PyObject *py_ctx_dict = PyDict_New();
+        py_ctx_dict = PyDict_New();
         if (!py_ctx_dict) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             CTX_PARSE_ERROR_MESSAGE);
