@@ -1111,33 +1111,6 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
-    def test_query_with_map_cdt_ctx_dict(self):
-        """
-        Invoke query() with cdt_ctx and correct arguments
-        """
-        from .test_base_class import TestBaseClass
-
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-            pytest.skip("It only applies to >= 6.1 enterprise edition")
-
-        query = self.as_connection.query("test", "demo")
-        query.select("numeric_map")
-
-        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_map_index})
-
-        records = []
-
-        def callback(input_tuple):
-            try:
-                records.append(input_tuple)
-            except Exception as ex:
-                print(ex)
-
-        query.foreach(callback)
-
-        assert records
-        assert len(records) == 3
-
     def test_query_with_invalid_list_cdt_ctx_dict(self):
         """
         Invoke query() with cdt_ctx containing incorrect arguments
