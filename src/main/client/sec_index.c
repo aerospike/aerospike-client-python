@@ -254,6 +254,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
+    py_ctx_dict = PyDict_New();
     if (!py_ctx_dict) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
         goto CLEANUP;
