@@ -275,17 +275,20 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     }
 
     if (!ctx_in_use) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Ctx must be a valid list of cdt_ctx");
+        as_error_update(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Ctx must be a valid list of cdt_ctx. It is not optional");
         goto CLEANUP;
     }
 
+    // Even if this call fails, the err object here will not be set, so we don't raise an exception twice
     py_obj = createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         &ctx, NULL);
 
-CLEANUP:
     as_cdt_ctx_destroy(&ctx);
+
+CLEANUP:
     Py_XDECREF(py_ctx_dict);
 
     if (err.code != AEROSPIKE_OK) {
