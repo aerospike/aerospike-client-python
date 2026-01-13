@@ -355,7 +355,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_set_order(ops, bin, ctx_ref,
                                                (as_list_order)order_type_int);
         break;
-    case OP_LIST_SORT:
+    case OP_LIST_SORT: {
         int64_t sort_flags;
 
         if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
@@ -365,6 +365,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
         success = as_operations_list_sort(ops, bin, ctx_ref,
                                           (as_list_sort_flags)sort_flags);
         break;
+    }
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
         if (range_specified) {
             success = as_operations_list_get_by_value_rel_rank_range(
@@ -375,7 +376,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                 ops, bin, ctx_ref, val, rank, return_type);
         }
         break;
-    case OP_LIST_CREATE:
+    case OP_LIST_CREATE: {
         bool pad, persist_index;
         if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) !=
             AEROSPIKE_OK) {
@@ -391,6 +392,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
                                                 (as_list_order)order_type_int,
                                                 pad, persist_index);
         break;
+    }
     case OP_LIST_APPEND:
         success =
             as_operations_list_append(ops, bin, ctx_ref, list_policy_ref, val);
