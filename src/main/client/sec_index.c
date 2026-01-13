@@ -282,19 +282,11 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         &ctx, NULL);
 
-    as_cdt_ctx_destroy(&ctx);
-    Py_DECREF(py_ctx_dict);
-
-    return py_obj;
-
 CLEANUP:
-    // This codepath only runs if the code in this function failed
-    // but *not* in createIndexWithDataAndCollectionType, which does not take in an as_error object.
-    // We want createIndexWithDataAndCollectionType to be responsible for setting its own as_error object
-    // and raising an exception instead of here.
+    as_cdt_ctx_destroy(&ctx);
     Py_XDECREF(py_ctx_dict);
 
-    if (py_obj == NULL) {
+    if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
