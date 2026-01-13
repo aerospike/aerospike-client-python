@@ -287,7 +287,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     return py_obj;
 
 CLEANUP:
-    // This codepath only runs if the code in this helper function failed
+    // This codepath only runs if the code in this function failed
     // but *not* in createIndexWithDataAndCollectionType, which does not take in an as_error object.
     // We want createIndexWithDataAndCollectionType to be responsible for setting its own as_error object
     // and raising an exception instead of here.
