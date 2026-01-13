@@ -275,6 +275,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     }
 
     if (!ctx_in_use) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Ctx must be a valid list of cdt_ctx");
         goto CLEANUP;
     }
 
