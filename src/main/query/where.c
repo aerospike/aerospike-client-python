@@ -42,6 +42,8 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 // The rest of the PyObject parameters can be NULL and are optional.
 // 3 cases for these optional parameters:
@@ -59,32 +61,36 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_error err;
     as_error_init(&err);
 
+    // TODO: does static pool go out of scope?
+    as_static_pool static_pool;
+    memset(&static_pool, 0, sizeof(static_pool));
+
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
     // Used to pass ctx into get_cdt_ctx() helper
+    // Declared here to make cleanup logic simpler
     PyObject *py_ctx_dict = NULL;
 
-    if (py_ctx) {
-        // TODO: does static pool go out of scope?
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
+    // Ctx is an optional parameter
+    if (py_ctx && !Py_IsNone(py_ctx)) {
+        // If user wanted to pass in an actual ctx
+
+        // Glue code to pass into get_cdt_ctx()
+        PyObject *py_ctx_dict = PyDict_New();
+        if (!py_ctx_dict) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP_CTX_ON_ERROR;
+        }
+        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        if (retval == -1) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP_CTX_ON_ERROR;
+        }
 
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-
-        if (PyList_Check(py_ctx)) {
-            py_ctx_dict = PyDict_New();
-            if (!py_ctx_dict) {
-                goto CLEANUP_CTX_ON_ERROR;
-            }
-            int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-            if (retval == -1) {
-                goto CLEANUP_CTX_ON_ERROR;
-            }
-        }
-        else {
-            py_ctx_dict = py_ctx;
-        }
 
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
