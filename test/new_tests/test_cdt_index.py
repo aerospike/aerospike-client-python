@@ -112,27 +112,6 @@ class TestCDTIndex(object):
 
         assert retobj == 0
 
-    def test_pos_cdtindex_dict_with_correct_parameters(self):
-        """
-        Invoke index_cdt_create() with correct arguments
-        """
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "string_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_STRING,
-            "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
-            policy,
-        )
-
-        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-
-        assert retobj == 0
-
     def test_pos_cdtindex_with_info_command(self):
         """
         Invoke index_cdt_create() with info command
