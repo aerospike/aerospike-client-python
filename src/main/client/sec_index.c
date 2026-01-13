@@ -225,6 +225,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_ctx = NULL;
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
+    PyObject *py_ctx_dict = NULL;
 
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
@@ -253,15 +254,15 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
-    PyObject *py_ctx_dict = PyDict_New();
     if (!py_ctx_dict) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
         goto CLEANUP;
     }
     int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
     if (retval == -1) {
+        Py_DECREF(py_ctx_dict);
         as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
-        goto CLEANUP2;
+        goto CLEANUP;
     }
 
     as_static_pool static_pool;
@@ -269,11 +270,11 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &static_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-        goto CLEANUP2;
+        goto CLEANUP;
     }
 
     if (!ctx_in_use) {
-        goto CLEANUP2;
+        goto CLEANUP;
     }
 
     py_obj = createIndexWithDataAndCollectionType(
@@ -281,11 +282,17 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         &ctx, NULL);
 
     as_cdt_ctx_destroy(&ctx);
-
-CLEANUP2:
     Py_DECREF(py_ctx_dict);
 
+    return py_obj;
+
 CLEANUP:
+    // This codepath only runs if the code in this helper function failed
+    // but *not* in createIndexWithDataAndCollectionType, which does not take in an as_error object.
+    // We want createIndexWithDataAndCollectionType to be responsible for setting its own as_error object
+    // and raising an exception instead of here.
+    Py_XDECREF(py_ctx_dict);
+
     if (py_obj == NULL) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
