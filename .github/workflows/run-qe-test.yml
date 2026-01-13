@@ -117,7 +117,15 @@ jobs:
         cat ${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
-    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }} 2>&1 | grep -i error || exit 1
+    - uses: tailscale/github-action@v4.1.1
+      with:
+        oauth-client-id: ${{ vars.TAILSCALE_OIDC_CLIENT_ID }}
+        audience: ${{ vars.TAILSCALE_OIDC_AUDIENCE }}
+        tags: tag:aerospike-oidc
+        args: --exit-node=${{ vars.TAILSCALE_EXIT_NODE}}
+        version: 1.92.5
+
+    - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
   # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
