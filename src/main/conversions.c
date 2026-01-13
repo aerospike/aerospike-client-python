@@ -2503,12 +2503,13 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             case CDT_CTX_LIST_INDEX_CREATE:;
                 int list_order = 0;
                 int pad = 0;
-                get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                                     &list_order);
+                status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY,
+                                              py_extra_args, &list_order);
                 if (err->code != AEROSPIKE_OK) {
                     goto CLEANUP1;
                 }
-                get_int_from_py_dict(err, CDT_CTX_PAD_KEY, py_extra_args, &pad);
+                status = get_int_from_py_dict(err, CDT_CTX_PAD_KEY,
+                                              py_extra_args, &pad);
                 if (err->code != AEROSPIKE_OK) {
                     goto CLEANUP1;
                 }
