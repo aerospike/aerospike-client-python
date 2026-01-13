@@ -223,8 +223,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_name = NULL;
 
     PyObject *py_ctx = NULL;
-    // Used to pass ctx into get_cdt_ctx() helper
-    PyObject *py_ctx_dict = NULL;
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
 
@@ -255,23 +253,21 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
-    if (PyList_Check(py_ctx)) {
-        py_ctx_dict = PyDict_New();
-
-        if (!py_ctx_dict) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP;
-        }
-        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-        if (retval == -1) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP2;
-        }
+    if (!PyList_Check(py_ctx)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ctx must be a list");
+        goto CLEANUP;
     }
-    else {
-        py_ctx_dict = py_ctx;
+
+    // Used to pass ctx into get_cdt_ctx() helper
+    PyObject *py_ctx_dict = PyDict_New();
+    if (!py_ctx_dict) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
+        goto CLEANUP;
+    }
+    int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+    if (retval == -1) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
+        goto CLEANUP2;
     }
 
     as_static_pool static_pool;
@@ -281,6 +277,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP2;
     }
+
     if (!ctx_in_use) {
         goto CLEANUP2;
     }
