@@ -736,7 +736,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         ]
     )
     def test_neg_cdtindex_with_invalid_ctx(self, ctx):
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ParamError):
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
