@@ -80,13 +80,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (!py_ctx_dict) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP_CTX_ON_ERROR;
+            goto error;
         }
         int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
         if (retval == -1) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP_CTX_ON_ERROR;
+            goto CLEANUP_PY_CTX_DICT_ON_ERROR;
         }
 
         pctx = cf_malloc(sizeof(as_cdt_ctx));
@@ -94,7 +94,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            goto CLEANUP_CTX_ON_ERROR;
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
@@ -103,7 +103,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         as_status status = as_exp_new_from_pyobject(self->client, py_expr,
                                                     &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP_CTX_ON_ERROR;
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
@@ -311,7 +311,7 @@ CLEANUP_EXP_ON_ERROR:
         as_exp_destroy(exp_list);
     }
 
-CLEANUP_CTX_ON_ERROR:
+CLEANUP_AS_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
     if (ctx_in_use) {
         as_cdt_ctx_destroy(pctx);
@@ -319,8 +319,11 @@ CLEANUP_CTX_ON_ERROR:
     if (pctx) {
         cf_free(pctx);
     }
+
+CLEANUP_PY_CTX_DICT_ON_ERROR:
     Py_XDECREF(py_ctx_dict);
 
+error:
     return 1;
 }
 
