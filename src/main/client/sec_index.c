@@ -281,7 +281,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    // Even if this call fails, the err object here will not be set, so we don't raise an exception twice
+    // Even if this call fails, it will raise its own exception
+    // and the err object here will not be set. We don't raise an exception twice
     py_obj = createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         &ctx, NULL);
