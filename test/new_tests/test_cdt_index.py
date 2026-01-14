@@ -726,3 +726,16 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             self.as_connection.index_cdt_create()
 
         assert "argument 'ns' (pos 1)" in str(typeError.value)
+
+    def test_neg_cdtindex_with_invalid_ctx(self):
+        with pytest.raises(TypeError):
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_STRING,
+                "test_string_list_cdt_index",
+                # Ctx must be a list
+                {"ctx": 1},
+            )
