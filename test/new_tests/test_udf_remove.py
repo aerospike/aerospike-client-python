@@ -3,7 +3,6 @@ from __future__ import print_function
 
 import pytest
 from .as_status_codes import AerospikeStatus
-from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
@@ -16,7 +15,6 @@ class TestUdfRemove(object):
         Setup Method, adds a UDF and waits for the UDF to exist
         """
         as_connection.udf_put(self.udf_name, 0, {})
-        wait_for_udf_to_exist(as_connection, self.udf_name)
 
         def teardown():
             """
@@ -30,7 +28,6 @@ class TestUdfRemove(object):
             for udf in udf_list:
                 if udf["name"] == udf_name:
                     as_connection.udf_remove(udf_name)
-                    wait_for_udf_removal(as_connection, udf_name)
                     break
 
         request.addfinalizer(teardown)
@@ -50,7 +47,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module)
         assert status == AerospikeStatus.AEROSPIKE_OK
 
-        wait_for_udf_removal(self.as_connection, module)
         udf_list = self.as_connection.udf_list({"timeout": 180000})
 
         present = False
@@ -71,9 +67,6 @@ class TestUdfRemove(object):
         with pytest.raises(e.ParamError):
             status = self.as_connection.udf_remove(module, policy)
 
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
-
         assert status == 0
 
     def test_udf_remove_with_proper_timeout_policy_value(self):
@@ -87,9 +80,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module, policy)
 
         assert status == AerospikeStatus.AEROSPIKE_OK
-
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
 
         udf_list = self.as_connection.udf_list({"timeout": 180000})
 
@@ -109,9 +99,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module, policy)
 
         assert status == AerospikeStatus.AEROSPIKE_OK
-
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
 
         udf_list = self.as_connection.udf_list({})
 

@@ -343,6 +343,64 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any:
+
+                - :ref:`aerospike_policies`
+                - :ref:`metadata_dict`
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
+            Invalid policy example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
+                client.get(key, policy=policy)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
@@ -554,7 +612,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -709,10 +767,20 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`str`)
-            Only server nodes matching this name will be used when determining the cluster name.
-        * **app_id** (:class:`str`)
+        * **cluster_name** (:class:`Optional[str]`)
+            Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
+            in the service section in each server configuration. This ensures that the specified
+            seed nodes belong to the expected cluster on startup. If not, the client will refuse
+            to add the node to the client's view of the cluster.
+
+            Default: :py:obj:`None`
+        * **app_id** (:class:`Optional[str]`)
             Application identifier.
+
+            If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
+            this is set to ``not-set``.
+
+            Default: :py:obj:`None`
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
@@ -741,17 +809,39 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **use_services_alternate** (:class:`bool`)
-            Flag to signify if "services-alternate" should be used instead of "services".
+            Flag to signify if alternate IP address discovery info commands should be used.
+
+            If false, use:
+
+            - IP address: ``service-clear-std``
+            - TLS IP address: ``service-tls-std``
+            - Peers addresses: ``peers-clear-std``
+            - Peers TLS addresses: ``peers-tls-std``
+
+            If true, use:
+
+            - IP address: ``service-clear-alt``
+            - TLS IP address: ``service-tls-alt``
+            - Peers addresses: ``peers-clear-alt``
+            - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========
@@ -1136,7 +1226,7 @@ Flags used by list order.
     Ordered list.
 
 .. note::
-    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1515,7 +1605,7 @@ Index data types
 
     An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
 .. _aerospike_index_types:
 
@@ -1729,3 +1819,78 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. _exp_path_select_flags:
+
+Path Expression Select Flags
+----------------------------
+
+.. data:: EXP_PATH_SELECT_MATCHING_TREE
+
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+
+.. data:: EXP_PATH_SELECT_VALUE
+
+    Return the list of the values of the nodes finally selected by the context.
+
+    For maps, this returns the value of each (key, value) pair.
+
+.. data:: EXP_PATH_SELECT_LIST_VALUE
+
+    Return the list of the values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a list.
+
+.. data:: EXP_PATH_SELECT_MAP_VALUE
+
+    Return the list of map values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
+
+.. data:: EXP_PATH_SELECT_MAP_KEYS
+
+    Return the list of map keys of the nodes finally selected by the context.
+
+.. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
+
+    Returns the list of map (key, value) pairs of the nodes finally selected
+    by the context. This is a synonym for setting both
+    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE` bits together.
+    The list is formatted as ``[key0, value0, key1, value1...]``.
+
+.. data:: EXP_PATH_SELECT_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+.. _exp_path_modify_flags:
+
+Path Expression Modify Flags
+----------------------------
+
+.. data:: EXP_PATH_MODIFY_DEFAULT
+
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
+
+.. data:: EXP_PATH_MODIFY_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+.. _exp_loopvar_metadata:
+
+Path Expression Loop Variable Metadata
+--------------------------------------
+
+.. data:: EXP_LOOPVAR_KEY
+
+    The key associated with this value if part of a key-value pair of a map.
+
+.. data:: EXP_LOOPVAR_VALUE
+
+    List item, or value from a map key-value pair.
+
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.

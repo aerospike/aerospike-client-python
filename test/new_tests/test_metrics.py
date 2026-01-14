@@ -7,6 +7,8 @@ import os
 import time
 from typing import Optional
 import re
+import aerospike
+from .test_base_class import TestBaseClass
 from importlib.metadata import version
 
 # Flags for testing callbacks
@@ -160,7 +162,19 @@ class TestMetrics:
             for item in metrics_log_filenames:
                 os.remove(item)
 
-    def test_setting_metrics_policy_custom_settings(self):
+    @pytest.fixture(scope="function", params=[None, "my_app"])
+    def get_client_and_app_id(self, request):
+        config = TestBaseClass.get_connection_config()
+        config["app_id"] = request.param
+        client = aerospike.client(config)
+
+        yield request.param, client
+
+        client.close()
+
+    def test_setting_metrics_policy_custom_settings(self, get_client_and_app_id):
+        app_id, client = get_client_and_app_id
+
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -175,9 +189,9 @@ class TestMetrics:
             labels={"a": "b"},
         )
 
-        self.as_connection.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
         time.sleep(3)
-        self.as_connection.disable_metrics()
+        client.disable_metrics()
 
         # These callbacks should've been called
         assert enable_triggered is True
@@ -194,6 +208,14 @@ class TestMetrics:
             assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
+            if type(app_id) == str:
+                assert cluster.app_id == app_id
+            elif TestBaseClass.auth_in_use():
+                # Or username if the app_id is not set
+                assert cluster.app_id == TestBaseClass.user
+            else:
+                assert cluster.app_id == "not-set"
+
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node
@@ -205,6 +227,8 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
+                assert type(node.conns.recovered) == int
+                assert type(node.conns.aborted) == int
                 # Check NodeMetrics
                 assert type(node.metrics) == list
                 ns_metrics = node.metrics

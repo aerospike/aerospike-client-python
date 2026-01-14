@@ -572,7 +572,7 @@ class TestOperateOrdered(object):
 
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": 3, "bin": "age", "val": 3},
+            {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
@@ -698,7 +698,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
 
-        llist = [{"op": 3, "bin": "age", "val": 3}, {"op": aerospike.OPERATOR_READ, "bin": "name"}]
+        llist = [{"op": 999, "bin": "age", "val": 3}, {"op": aerospike.OPERATOR_READ, "bin": "name"}]
 
         try:
             key, _, _ = self.as_connection.operate_ordered(key, llist)

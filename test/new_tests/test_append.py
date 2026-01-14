@@ -59,6 +59,8 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+            # Test that base policy's connect_timeout works
+            "connect_timeout": 0
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 

@@ -11,6 +11,7 @@ from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
 
+
 from aerospike_helpers.expressions.arithmetic import Add
 from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
 
@@ -62,89 +63,88 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 class TestQuery(TestBaseClass):
     # TODO: This fixture should be split up to speed up this test class
-    def setup_class(cls):
-        client = TestBaseClass.get_new_connection()
-
+    @pytest.fixture(autouse=True, scope="class")
+    def setupClass(self, as_connection):
         try:
-            client.index_integer_create("test", "demo", "test_age", "age_index")
+            as_connection.index_integer_create("test", "demo", "test_age", "age_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_string_create("test", "demo", "addr", "addr_index")
+            as_connection.index_string_create("test", "demo", "addr", "addr_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", "age1", "age_index1")
+            as_connection.index_integer_create("test", "demo", "age1", "age_index1")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
+            as_connection.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
+            as_connection.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
+            as_connection.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
+            as_connection.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
+            as_connection.index_map_values_create(
                 "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
+            as_connection.index_map_values_create(
                 "test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", None, "test_age_none", "age_index_none")
+            as_connection.index_integer_create("test", None, "test_age_none", "age_index_none")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
+            as_connection.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
         except e.IndexFoundError:
             pass
 
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
             # These indexes are only used for server 7.0+ tests
             try:
-                client.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
+                as_connection.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
             except e.IndexFoundError:
                 pass
 
             try:
-                client.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
+                as_connection.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
             except e.IndexFoundError:
                 pass
 
             try:
-                client.index_map_values_create(
+                as_connection.index_map_values_create(
                     "test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_values_index"
                 )
             except e.IndexFoundError:
                 pass
 
         try:
-            client.index_cdt_create(
+            as_connection.index_cdt_create(
                 "test",
                 "demo",
                 "numeric_list",
@@ -157,7 +157,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_cdt_create(
+            as_connection.index_cdt_create(
                 "test",
                 "demo",
                 "numeric_map",
@@ -169,74 +169,71 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
-        client.close()
-
-    def teardown_class(cls):
-        client = TestBaseClass.get_new_connection()
+        yield
 
         policy = {}
         try:
-            client.index_remove("test", "age_index", policy)
+            as_connection.index_remove("test", "age_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "age_index1", policy)
+            as_connection.index_remove("test", "age_index1", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "addr_index", policy)
+            as_connection.index_remove("test", "addr_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_list_index", policy)
+            as_connection.index_remove("test", "numeric_list_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_list_index", policy)
+            as_connection.index_remove("test", "string_list_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_index", policy)
+            as_connection.index_remove("test", "numeric_map_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_map_index", policy)
+            as_connection.index_remove("test", "string_map_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_values_index", policy)
+            as_connection.index_remove("test", "numeric_map_values_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "string_map_values_index", policy)
+            as_connection.index_remove("test", "string_map_values_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "age_index_none", policy)
+            as_connection.index_remove("test", "age_index_none", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "sal_index")
+            as_connection.index_remove("test", "sal_index")
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_list_cdt_index", policy)
+            as_connection.index_remove("test", "numeric_list_cdt_index", policy)
         except e.IndexNotFound:
             pass
 
         try:
-            client.index_remove("test", "numeric_map_cdt_index", policy)
+            as_connection.index_remove("test", "numeric_map_cdt_index", policy)
         except e.IndexNotFound:
             pass
 
@@ -247,14 +244,14 @@ class TestQuery(TestBaseClass):
         ]
         for name in blob_index_names_to_remove:
             try:
-                client.index_remove("test", name, policy)
+                as_connection.index_remove("test", name, policy)
             except e.IndexNotFound:
                 pass
 
-        client.close()
+        as_connection.close()
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, request, as_connection):
+    def setup_method(self, request):
         """
         Setup method.
         """
@@ -280,19 +277,19 @@ class TestQuery(TestBaseClass):
                 "no": i,
                 "blob": i.to_bytes(length=1, byteorder='big')
             }
-            as_connection.put(key, rec)
+            self.as_connection.put(key, rec)
         for i in range(5, 10):
             key = ("test", "demo", i)
             rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
-            as_connection.put(key, rec)
+            self.as_connection.put(key, rec)
 
         key = ("test", "demo", 122)
         llist = [{"op": aerospike.OPERATOR_WRITE, "bin": bytearray("sal\0kj", "utf-8"), "val": 80000}]
-        as_connection.operate(key, llist)
+        self.as_connection.operate(key, llist)
 
         key = ("test", None, 145)
         rec = {"test_age_none": 1}
-        as_connection.put(key, rec)
+        self.as_connection.put(key, rec)
 
         def teardown():
             """
@@ -300,12 +297,12 @@ class TestQuery(TestBaseClass):
             """
             for i in range(10):
                 key = ("test", "demo", i)
-                as_connection.remove(key)
+                self.as_connection.remove(key)
 
             key = ("test", "demo", 122)
-            as_connection.remove(key)
+            self.as_connection.remove(key)
             key = ("test", None, 145)
-            as_connection.remove(key)
+            self.as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
@@ -1333,3 +1330,7 @@ class TestQuery(TestBaseClass):
             query2 = query2.where_with_expr(expr_base64_encoded, predicate)
             recs = query2.results()
             assert len(recs) == expected_rec_count
+
+    def test_creating_query_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Query("test", "demo")
