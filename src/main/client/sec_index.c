@@ -274,13 +274,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    if (!ctx_in_use) {
-        as_error_update(
-            &err, AEROSPIKE_ERR_PARAM,
-            "Ctx must be a valid list of cdt_ctx. It is not optional");
-        goto CLEANUP;
-    }
-
     // Even if this call fails, it will raise its own exception
     // and the err object here will not be set. We don't raise an exception twice
     py_obj = createIndexWithDataAndCollectionType(
