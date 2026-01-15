@@ -1220,7 +1220,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_app_id = NULL;
     retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
-    if (retval == 1) {
+    if (retval == 1 && !Py_IsNone(py_app_id)) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
             Py_DECREF(py_app_id);
@@ -1524,7 +1524,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeClient_Type = {
+PyTypeObject AerospikeClient_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
         FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
     sizeof(AerospikeClient),                  // tp_basicsize

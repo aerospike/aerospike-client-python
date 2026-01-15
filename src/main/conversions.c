@@ -1054,6 +1054,24 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
         PyObject_SetAttrString(py_cluster, "cluster_name", Py_None);
     }
 
+    // App Id is optional (declared in client config)
+    PyObject *py_app_id = NULL;
+    if (cluster->app_id) {
+        py_app_id = PyUnicode_FromString(cluster->app_id);
+        if (!py_app_id) {
+            goto error;
+        }
+    }
+    else {
+        py_app_id = Py_NewRef(Py_None);
+    }
+
+    int retval = PyObject_SetAttrString(py_cluster, "app_id", py_app_id);
+    Py_DECREF(py_app_id);
+    if (retval == -1) {
+        goto error;
+    }
+
     PyObject *py_invalid_node_count =
         PyLong_FromUnsignedLong(cluster->invalid_node_count);
     PyObject_SetAttrString(py_cluster, "invalid_node_count",
