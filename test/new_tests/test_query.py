@@ -312,7 +312,8 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where(p.equals("test_age", 1))
+        # Here we explicitly test that ctx accepts None
+        query.where(p.equals("test_age", 1), None)
 
         records = []
 
