@@ -91,6 +91,15 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
+      working-directory: aerospike-client-c
+
+    - uses: actions/cache/restore@v5
+      with:
+        key: c-client-${{ env.C_CLIENT_REVISION }}
+        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        fail-on-cache-miss: true
+
     - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.py-version }}
@@ -105,15 +114,6 @@ jobs:
 
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
-
-    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
-      working-directory: aerospike-client-c
-
-    - uses: actions/cache/restore@v5
-      with:
-        key: c-client-${{ env.C_CLIENT_REVISION }}
-        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
-        fail-on-cache-miss: true
 
     - run: ls -R
 
