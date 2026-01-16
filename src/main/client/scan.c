@@ -43,10 +43,23 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeScan_Type;
+
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
-    return AerospikeScan_New(self, args, kwds);
+    AerospikeScan *scan = AerospikeScan_Type_New(&AerospikeScan_Type, self);
+    if (!scan) {
+        return NULL;
+    }
+
+    if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
+        Py_DECREF(scan);
+        return NULL;
+    }
+
+    return scan;
 }
 
 /**

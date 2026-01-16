@@ -241,3 +241,19 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)
+
+def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < time_limit_secs:
+        response = as_connection.job_info(job_id, job_module)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            break
+        time.sleep(0.1)
