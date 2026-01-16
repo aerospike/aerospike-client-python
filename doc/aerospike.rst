@@ -767,10 +767,20 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`str`)
-            Only server nodes matching this name will be used when determining the cluster name.
-        * **app_id** (:class:`str`)
+        * **cluster_name** (:class:`Optional[str]`)
+            Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
+            in the service section in each server configuration. This ensures that the specified
+            seed nodes belong to the expected cluster on startup. If not, the client will refuse
+            to add the node to the client's view of the cluster.
+
+            Default: :py:obj:`None`
+        * **app_id** (:class:`Optional[str]`)
             Application identifier.
+
+            If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
+            this is set to ``not-set``.
+
+            Default: :py:obj:`None`
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
@@ -1810,76 +1820,77 @@ Transaction State
 
 .. data:: TXN_STATE_ABORTED
 
-..
-    Path Expression Flags
-    ---------------------
+.. _exp_path_select_flags:
 
-    .. data:: EXP_PATH_SELECT_MATCHING_TREE
+Path Expression Select Flags
+----------------------------
 
-        Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+.. data:: EXP_PATH_SELECT_MATCHING_TREE
 
-    .. data:: EXP_PATH_SELECT_VALUE
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-        Return the list of the values of the nodes finally selected by the context.
+.. data:: EXP_PATH_SELECT_VALUE
 
-        For maps, this returns the value of each (key, value) pair.
+    Return the list of the values of the nodes finally selected by the context.
 
-    .. data:: EXP_PATH_SELECT_LIST_VALUE
+    For maps, this returns the value of each (key, value) pair.
 
-        Return the list of the values of the nodes finally selected by the context.
-        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
-        source code that you're expecting a list.
+.. data:: EXP_PATH_SELECT_LIST_VALUE
 
-    .. data:: EXP_PATH_SELECT_MAP_VALUE
+    Return the list of the values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a list.
 
-        Return the list of map values of the nodes finally selected by the context.
-        This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
-        source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
+.. data:: EXP_PATH_SELECT_MAP_VALUE
 
-    .. data:: EXP_PATH_SELECT_MAP_KEYS
+    Return the list of map values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
 
-        Return the list of map keys of the nodes finally selected by the context.
+.. data:: EXP_PATH_SELECT_MAP_KEYS
 
-    .. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
+    Return the list of map keys of the nodes finally selected by the context.
 
-        Returns the list of map (key, value) pairs of the nodes finally selected
-        by the context. This is a synonym for setting both
-        :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE`` bits together.
-        The list is formatted as ``[key0, value0, key1, value1...]``.
+.. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
 
-    .. data:: EXP_PATH_SELECT_NO_FAIL
+    Returns the list of map (key, value) pairs of the nodes finally selected
+    by the context. This is a synonym for setting both
+    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE` bits together.
+    The list is formatted as ``[key0, value0, key1, value1...]``.
 
-        If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
-        do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+.. data:: EXP_PATH_SELECT_NO_FAIL
 
-    .. _exp_path_modify_flags:
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
-    CDT Modify Flags
-    ----------------
+.. _exp_path_modify_flags:
 
-    .. data:: EXP_PATH_MODIFY_DEFAULT
+Path Expression Modify Flags
+----------------------------
 
-        If the expression in the context hits an invalid type, the operation
-        will fail.  This is the default behavior.
+.. data:: EXP_PATH_MODIFY_DEFAULT
 
-    .. data:: EXP_PATH_MODIFY_NO_FAIL
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
 
-        If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
-        not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+.. data:: EXP_PATH_MODIFY_NO_FAIL
 
-    .. _exp_loopvar_metadata:
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
-    Expression Loop Variable Metadata
-    ---------------------------------
+.. _exp_loopvar_metadata:
 
-    .. data:: EXP_LOOPVAR_KEY
+Path Expression Loop Variable Metadata
+--------------------------------------
 
-        The key associated with this value if part of a key-value pair of a map.
+.. data:: EXP_LOOPVAR_KEY
 
-    .. data:: EXP_LOOPVAR_VALUE
+    The key associated with this value if part of a key-value pair of a map.
 
-        List item, or value from a map key-value pair.
+.. data:: EXP_LOOPVAR_VALUE
 
-    .. data:: EXP_LOOPVAR_INDEX
+    List item, or value from a map key-value pair.
 
-        The index if this element was part of a list.
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.

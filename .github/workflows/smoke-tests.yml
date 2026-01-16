@@ -285,6 +285,7 @@ jobs:
         type:
           - sanitizer
           - dont_validate_keys
+          - lowest_supported_server_version
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
@@ -306,7 +307,7 @@ jobs:
     - if: ${{ matrix.type == 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
 
-    - if: ${{ matrix.type == 'dont_validate_keys' }}
+    - if: ${{ matrix.type != 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
@@ -329,7 +330,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
+        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
@@ -482,15 +483,16 @@ jobs:
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/standalone
 
-  test-misc:
+  # This is an e2e test to check that the user agent was sent correctly to the server
+  test-user-agent:
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        test-case:
-          - "lowest_supported_server_version"
-          - "user_agent_with_ce"
-          - "user_agent_with_ee"
+        test-script-args:
+          - "false"
+          - "true"
+          - "true my_app_id"
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -514,18 +516,8 @@ jobs:
         username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - name: Run Aerospike server
-      if: ${{ matrix.test-case != 'user_agent_with_ee' }}
-      run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
-
-    - uses: ./.github/actions/wait-for-ce-server-to-start
-      if: ${{ matrix.test-case != 'user_agent_with_ee' }}
-      with:
-        container-name: aerospike
-
-    - id: run-ee-server
-      uses: ./.github/actions/run-ee-server
-      if: ${{ matrix.test-case == 'user_agent_with_ee' }}
+    - uses: ./.github/actions/run-ee-server
+      if: ${{ startsWith(matrix.test-script-args, 'true') }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
@@ -534,77 +526,18 @@ jobs:
         # The user agent can also send the client's username if app-id is not set by the client
         env-vars: 'SECURITY=1'
 
-    - name: Install test dependencies
-      if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
-      run: pip install -r test/requirements.txt
+    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
-    - name: Create config.conf
-      if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
+      uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
 
-    - name: Run tests
-      if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
-      run: python -m pytest ./new_tests
-      working-directory: test
-
-    - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
-      name: Run client in background
-      run: |
-        set -x
-        cat <<-EOF >> run-client-in-bg.py
-        import aerospike
-        import time
-        import sys
-        config = {
-          "hosts": [
-            ("127.0.0.1", 3000)
-          ]
-        }
-        if "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true":
-          config["user"] = "superuser"
-          config["password"] = "superuser"
-        client = aerospike.client(config)
-        while True:
-          time.sleep(1)
-        EOF
-        # This shell will be closed once this step completes
-        nohup python3 run-client-in-bg.py &
-        # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
-        # When background processes fail, this step won't fail.
+    - name: Run client in background
+      run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
+      working-directory: test/standalone
 
-    - if: ${{ startsWith(matrix.test-case, 'user_agent') }}
-      name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
-      run: |
-        if [[ "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true" ]]; then
-          CREDENTIALS="-U superuser -P superuser"
-        fi
-
-        server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
-        major_num=$(echo $server_version | cut -d '.' -f 1)
-        minor_num=$(echo $server_version | cut -d '.' -f 2)
-        if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
-          exit 0
-        fi
-
-        info_cmd_response=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "user-agents" | head -n 1)
-        echo "Info command response: $info_cmd_response"
-        # Response format: user-agent=<base64 encoded string>:...
-        user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
-        echo $user_agent_base64_encoded
-        user_agent=$(echo $user_agent_base64_encoded | base64 -d)
-        echo $user_agent
-        # TODO: combine into one regex
-        # User agent format: <format-version>,<client language>-<version>,...
-        client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
-        client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
-        echo $client_language
-        echo $client_version
-
-        test "$client_language" = "python"
-
-        # Client version from user agent
-        expected_client_version=$(python3 -m pip show aerospike | grep -i version | cut -d " " -f 2-)
-        test "$client_version" = "$expected_client_version"
-      shell: bash
+    - if: ${{ !cancelled() }}
+      run: docker logs aerospike
