@@ -176,7 +176,7 @@ jobs:
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+    - run: echo VALGRIND_ARGS="--leak-check=full --num-callers=500" >> $GITHUB_ENV
       if: ${{ !inputs.massif }}
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
