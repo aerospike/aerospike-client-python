@@ -40,31 +40,31 @@ on:
         required: true
 
 jobs:
-  # TODO: check if C client was already built for current submodule revision
-  # TODO: define a var for the same OS used in the other build job
   build-c-client:
     runs-on: ubuntu-22.04
     steps:
-    - run: sudo apt update
-    - name: Install C client build dependencies
-      run: sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
-
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         sparse-checkout: |
           aerospike-client-c
 
-    - run: make build
+    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
       working-directory: aerospike-client-c
 
-    - name: Send C client static library to job that builds Python client
-      uses: actions/upload-artifact@v4
+    - uses: actions/cache@v5
+      id: download-c-client
       with:
-        name: c-client
-        # TODO: not the precise folder
+        key: c-client-${{ env.C_CLIENT_REVISION }}
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
-        if-no-files-found: error
+
+    - name: Install C client build dependencies
+      if: ${{ steps.download-c-client.outputs.cache-hit != 'true' }}
+      run: |
+        sudo apt update &&
+        sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev &&
+        make build
+      working-directory: aerospike-client-c
 
   build:
     needs: build-c-client
@@ -106,10 +106,13 @@ jobs:
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@v4
-      id: get-c-client
+    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
+      working-directory: aerospike-client-c
+
+    - uses: actions/cache/restore@v5
       with:
-        name: c-client
+        key: c-client-${{ env.C_CLIENT_REVISION }}
+        path: libaerospike.a
 
     - run: ls -R
 
