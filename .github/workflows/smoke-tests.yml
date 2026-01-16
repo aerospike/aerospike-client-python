@@ -41,6 +41,8 @@ on:
 
 jobs:
   build-c-client:
+    outputs:
+      c-client-sha: ${{ steps.get-c-client-sha.outputs.sha }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -49,13 +51,14 @@ jobs:
         sparse-checkout: |
           aerospike-client-c
 
-    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
+    - id: get-c-client-sha
+      run: echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
       working-directory: aerospike-client-c
 
     - uses: actions/cache@v5
       id: download-c-client
       with:
-        key: c-client-${{ env.C_CLIENT_REVISION }}
+        key: c-client-${{ steps.get-c-client-sha.outputs.sha }}
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
         lookup-only: true
 
@@ -92,12 +95,9 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - run: echo C_CLIENT_REVISION=$(git rev-parse HEAD) >> $GITHUB_ENV
-      working-directory: aerospike-client-c
-
     - uses: actions/cache/restore@v5
       with:
-        key: c-client-${{ env.C_CLIENT_REVISION }}
+        key: c-client-${{ needs.build-c-client.outputs.c-client-sha }}
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
         fail-on-cache-miss: true
 
