@@ -112,7 +112,7 @@ jobs:
     - uses: actions/cache/restore@v5
       with:
         key: c-client-${{ env.C_CLIENT_REVISION }}
-        path: libaerospike.a
+        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
         fail-on-cache-miss: true
 
     - run: ls -R
