@@ -57,6 +57,7 @@ jobs:
       with:
         key: c-client-${{ env.C_CLIENT_REVISION }}
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        lookup-only: true
 
     - name: Install C client build dependencies
       if: ${{ steps.download-c-client.outputs.cache-hit != 'true' }}
