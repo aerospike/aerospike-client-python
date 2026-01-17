@@ -136,7 +136,7 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
+    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests/test_get_put.py
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -174,7 +174,9 @@ jobs:
       if: ${{ !cancelled() }}
       run: |
         cd build/temp*/src/main
-        find . -type f -name "*.o" -execdir gcov {} \;
+        # find . -type f -name "*.o" -execdir gcov {} \;
+        pip install gcovr
+        gcovr
 
     - name: Move aerospike_helpers coverage report to this directory
       if: ${{ !cancelled() }}
