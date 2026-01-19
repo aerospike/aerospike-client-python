@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestGrantRoles(TestBaseClass):
@@ -23,8 +24,7 @@ class TestGrantRoles(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -32,8 +32,7 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -44,8 +43,7 @@ class TestGrantRoles(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         self.client.close()
@@ -141,8 +139,7 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
 
@@ -157,7 +154,7 @@ class TestGrantRoles(TestBaseClass):
 
         assert set(user_details["roles"]) == set(["read", "read-write"])
 
-        self.client.admin_drop_user(user)
+        admin_drop_user_and_poll(self.client, user)
 
     def test_grant_roles_with_empty_roles_list(self):
 
