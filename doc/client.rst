@@ -298,7 +298,10 @@ Batched Commands
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
         :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
-        :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch: Optional See :ref:`aerospike_batch_policies`. If a policy value is set in the dynamic config, it will take precedence
+            over the policy provided at the command level. If no batch policy is provided, the global :ref:`batch_parent_write policy <config_batch_parent_write>`
+            in the :ref:`Client Config <client_config>` will be used it exists; otherwise, the defaults for :ref:`batch policy <aerospike_batch_policies>`
+            will be applied.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
@@ -343,8 +346,14 @@ Batched Commands
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
-        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
-        :param dict policy_batch_write: See :ref:`aerospike_batch_write_policies`.
+        :param dict policy_batch: Optional See :ref:`aerospike_batch_policies`. If a policy value is set in the dynamic config, it will take precedence over
+            the policy provided at the command level. If no batch policy is provided, the global :ref:`batch_parent_write policy <config_batch_parent_write>`
+            in the :ref:`Client Config <client_config>` will be used it exists; otherwise, the defaults for :ref:`batch policy <aerospike_batch_policies>`
+            will be applied.
+        :param dict policy_batch_write: Optional See :ref:`aerospike_batch_write_policies`. If a policy value is set in the dynamic config, it will
+            take precedence over the  policy provided at the command level. If no batch write policy is provided, the global
+            :ref:`batch_write policy <config_batch_write>` in the :ref:`Client Config <client_config>` will be used it exists; otherwise,
+            the defaults for :ref:`batch write policy <aerospike_batch_write_policies>` will be applied.
         :param int ttl: The time-to-live (expiration) of each record in seconds.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
@@ -364,8 +373,14 @@ Batched Commands
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
-        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
-        :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
+        :param dict policy_batch: Optional See :ref:`aerospike_batch_policies`. If a policy value is set in the dynamic config, it will take precedence over the
+            policy provided at the command level. If no batch policy is provided, the global :ref:`batch_parent_write policy <config_batch_parent_write>`
+            in the :ref:`Client Config <client_config>` will be used it exists; otherwise, the defaults for :ref:`batch policy <aerospike_batch_policies>`
+            will be applied.
+        :param dict policy_batch_apply: Optional See :ref:`aerospike_batch_apply_policies`. If a policy value is set in the dynamic config, it will take precedence
+            over the policy provided at the command level. If no batch apply policy is provided, the global :ref:`batch_apply policy <config_batch_apply>`
+            in the :ref:`Client Config <client_config>` will be used it exists; otherwise, the defaults for
+            :ref:`batch apply policy <aerospike_batch_apply_policies>` will be applied.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
@@ -385,9 +400,14 @@ Batched Commands
         Remove multiple records by key.
 
         :param list keys: The keys to remove.
-        :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
-        :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
-        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+        :param dict policy_batch: Optional See :ref:`aerospike_batch_policies`. If a policy value is set in the dynamic config, it will take precedence over the
+            policy provided at the command level. If no batch policy is provided, the global :ref:`batch_parent_write policy <config_batch_parent_write>`
+            in the :ref:`Client Config <client_config>` will be used it exists; otherwise, the defaults for :ref:`batch policy <aerospike_batch_policies>`
+            will be applied.
+        :param dict policy_batch_remove: Optional See :ref:`aerospike_batch_remove_policies`. If a policy value is set in the dynamic config, it will take
+            precedence over the policy provided at the command level. If no batch remove policy is provided, the global
+            :ref:`batch_remove policy <config_batch_remove>` in the :ref:`Client Config <client_config>` will be used it exists;
+            otherwise, the defaults for :ref:`batch remove policy <aerospike_batch_remove_policies>` will be applied.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_remove.py
