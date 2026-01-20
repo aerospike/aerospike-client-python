@@ -9,34 +9,35 @@ from .as_status_codes import AerospikeStatus
 import aerospike
 
 
-class TestScan(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        self.test_ns = "test"
-        self.test_set = "demo"
+@pytest.fixture(autouse=True, scope="class")
+def setup(request, as_connection):
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
 
+    for i in range(19):
+        key = ("test", "demo", i)
+        rec = {"name": "name%s" % (str(i)), "age": i}
+        as_connection.put(key, rec)
+
+    key = ("test", "demo", 122)
+    llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
+    # Creates a record with the key 122, with one bytearray key.
+    request.cls.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
+    as_connection.operate(key, llist)
+    request.cls.record_count = 20
+
+    def teardown():
         for i in range(19):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "age": i}
-            as_connection.put(key, rec)
-
-        key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
-        # Creates a record with the key 122, with one bytearray key.
-        self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
-        as_connection.operate(key, llist)
-        self.record_count = 20
-
-        def teardown():
-            for i in range(19):
-                key = ("test", "demo", i)
-                as_connection.remove(key)
-
-            key = ("test", "demo", 122)
             as_connection.remove(key)
 
-        request.addfinalizer(teardown)
+        key = ("test", "demo", 122)
+        as_connection.remove(key)
 
+    request.addfinalizer(teardown)
+
+
+class TestScan(TestBaseClass):
     def test_scan_with_existent_ns_and_set(self):
 
         records = []
