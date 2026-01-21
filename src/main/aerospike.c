@@ -87,7 +87,7 @@ static PyMethodDef aerospike_methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Calculate the digest of a key"},
 
     //Get partition ID for given digest
-    {"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id, METH_VARARGS,
+    {"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id, METH_O,
      "Get partition ID for given digest"},
 
     {NULL}};

@@ -131,11 +131,11 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
     return Aerospike_Calc_Digest_Invoke(py_ns, py_set, py_key);
 }
 
-PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
+PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
     // Python Function Argument Parsing
     Py_buffer *py_buffer = NULL;
-    if (PyArg_Parse(args, "y*", &py_buffer) == false) {
+    if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
         return NULL;
     }
 
