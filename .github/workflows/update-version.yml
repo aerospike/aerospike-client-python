@@ -5,12 +5,22 @@ name: Update version in repo
 on:
   workflow_dispatch:
     inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: "Don't tag"
       new_version:
         type: string
         description: Version string to set in the repo
         required: true
   workflow_call:
     inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: "Don't tag"
       new_version:
         type: string
         description: Version string to set in the repo
@@ -61,6 +71,7 @@ jobs:
       with:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        # TODO
         tagging_message: ${{ inputs.new_version }}
         branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
 
