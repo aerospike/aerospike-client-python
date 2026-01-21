@@ -118,8 +118,6 @@ jobs:
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
-    - run: ls -R
-
     - name: Build client
       run: python3 -m build
       env:
