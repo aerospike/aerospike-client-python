@@ -4,6 +4,10 @@ on:
   # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
   workflow_dispatch:
     inputs:
+      registry-name:
+        required: true
+        default: docker.io
+        description: 'Docker registry'
       server-tag:
         required: true
         default: 'latest'
@@ -61,6 +65,7 @@ jobs:
     with:
       use_jfrog_builds: true
       jfrog-build-version-to-test: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+      registry-name: ${{ inputs.registry-name }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
 
