@@ -133,9 +133,6 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
 {
-    // Python Function Arguments
-    as_digest_value digest;
-
     // Python Function Argument Parsing
     Py_buffer *py_buffer = NULL;
     if (PyArg_Parse(args, "y*", &py_buffer) == false) {
