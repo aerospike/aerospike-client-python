@@ -137,13 +137,13 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
     as_digest_value digest;
 
     // Python Function Argument Parsing
-    if (PyArg_Parse(args, "(s)", &digest) == false) {
+    Py_buffer *py_buffer = NULL;
+    if (PyArg_Parse(args, "y*", &py_buffer) == false) {
         return NULL;
     }
 
-    uint32_t part_id = 0;
-
-    part_id = as_partition_getid(digest, 4096);
+    // TODO: needs to check that buffer is <= 20 bytes
+    uint32_t part_id = as_partition_getid(py_buffer->buf, 4096);
 
     // Invoke Operation
     return PyLong_FromLong(part_id);
