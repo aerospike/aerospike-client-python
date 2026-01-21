@@ -135,7 +135,7 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
     // Python Function Argument Parsing
     Py_buffer py_buffer;
-    if (PyArg_Parse(arg, "s#", &py_buffer) == false) {
+    if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
         return NULL;
     }
 
