@@ -55,11 +55,13 @@ jobs:
       run: echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
       working-directory: aerospike-client-c
 
+    - run: mv ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a .
+
     - uses: actions/cache@v5
       id: download-c-client
       with:
         key: c-client-${{ steps.get-c-client-sha.outputs.sha }}
-        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        path: ./libaerospike.a
         lookup-only: true
 
     - name: Install C client build dependencies
@@ -98,10 +100,8 @@ jobs:
     - uses: actions/cache/restore@v5
       with:
         key: c-client-${{ needs.build-c-client.outputs.c-client-sha }}
-        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        path: ./libaerospike.a
         fail-on-cache-miss: true
-
-    - run: mv ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a .
 
     - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
