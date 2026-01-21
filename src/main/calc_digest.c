@@ -134,13 +134,13 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
     // Python Function Argument Parsing
-    Py_buffer *py_buffer = NULL;
-    if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
+    Py_buffer py_buffer;
+    if (PyArg_Parse(arg, "s#", &py_buffer) == false) {
         return NULL;
     }
 
     // TODO: needs to check that buffer is <= 20 bytes
-    uint32_t part_id = as_partition_getid(py_buffer->buf, 4096);
+    uint32_t part_id = as_partition_getid(py_buffer.buf, 4096);
 
     // Invoke Operation
     return PyLong_FromLong(part_id);
