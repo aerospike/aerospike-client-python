@@ -55,8 +55,6 @@ jobs:
       run: echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
       working-directory: aerospike-client-c
 
-    - run: mv ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a .
-
     - uses: actions/cache@v5
       id: download-c-client
       with:
@@ -70,7 +68,7 @@ jobs:
         sudo apt update &&
         sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev &&
         make build
-      working-directory: aerospike-client-c
+    - run: mv ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a .
 
   build:
     needs: build-c-client
