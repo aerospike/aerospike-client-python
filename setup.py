@@ -64,7 +64,6 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 ################################################################################
 
 include_dirs = ['src/include'] + \
-    [f'{AEROSPIKE_C_HOME}/src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
