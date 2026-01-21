@@ -181,7 +181,7 @@ include_dirs = include_dirs + [
 C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
 
 if not WINDOWS:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
+    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     if C_CLIENT_SHARED_PATH:
         extra_objects.append(C_CLIENT_SHARED_PATH)
     else:
