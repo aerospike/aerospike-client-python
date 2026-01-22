@@ -15,7 +15,7 @@ class TestGetPartitionID:
         [
             # Digests must be exactly 20 bytes long
             (bytearray([0] * 21), e.ParamError),
-            bytearray([0] * 19, e.ParamError),
+            (bytearray([0] * 19), e.ParamError),
             # Does not accept strings
             ("1" * 20, TypeError)
         ]
