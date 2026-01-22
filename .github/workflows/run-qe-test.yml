@@ -181,7 +181,7 @@ jobs:
         yq eval ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         yq eval ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         yq eval ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
-        yq eval ".perf_regression/client_centered.image = docker.qe.aerospike.com/test/python@sha256:${{ needs.add-python-client-to-qe-test-image-for-performance-regression-tests.outputs.new-test-image-digest }}" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.image = \"docker.qe.aerospike.com/test/python@sha256:${{ needs.add-python-client-to-qe-test-image-for-performance-regression-tests.outputs.new-test-image-digest }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         cat ${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
