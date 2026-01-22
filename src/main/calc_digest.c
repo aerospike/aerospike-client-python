@@ -134,11 +134,13 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
     Py_buffer py_buffer;
-    as_error err;
 
     if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
-        goto CLEANUP_ON_ERROR;
+        goto error;
     }
+
+    as_error err;
+    as_error_init(&err);
 
     if (py_buffer.itemsize != 20) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -161,5 +163,7 @@ CLEANUP_ON_ERROR:
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
     }
+
+error:
     return NULL;
 }
