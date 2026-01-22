@@ -133,13 +133,13 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
-    // Python Function Argument Parsing
     Py_buffer py_buffer;
+    as_error err;
+
     if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
         goto CLEANUP_ON_ERROR;
     }
 
-    as_error err;
     if (py_buffer.itemsize != 20) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Digest must be 20 bytes long");
@@ -155,6 +155,11 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
         goto CLEANUP_ON_ERROR;
     }
 
+    return py_part_id;
+
 CLEANUP_ON_ERROR:
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+    }
     return NULL;
 }
