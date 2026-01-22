@@ -51,7 +51,74 @@ concurrency:
   group: ${{ github.workflow }}
 
 jobs:
+  # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
+  # https://github.com/citrusleaf/qe-docker/commit/d72f2d3fda70e199e24f4f670811d6e33e7f92be
+  add-python-client-to-qe-test-image-for-performance-regression-tests:
+    env:
+      WHEEL_ARCH: x86_64
+    outputs:
+      new-test-image-digest: ${{ steps.build.outputs.digest }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+    - name: Get Github action to download wheel from JFrog
+      uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+
+    - name: Get Github actions workflow to build Docker image
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-docker
+        path: qe-docker
+        ref: cicd-client-performance-regression-tests-requirements-txt
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+
+    - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
+      with:
+        # Calling workflow only builds wheel from source
+        get_from_jfrog: ${{ inputs.is-workflow-call == false && true || inputs.get-wheel-from-jfrog }}
+        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
+        dist_type_to_get: 'wheel'
+        wheel_python_version: '3.10'
+        wheel_os: manylinux
+        wheel_cpu_arch: ${{ env.WHEEL_ARCH }}
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
+
+    - name: Add wheel to staging folder for building Docker image
+      run: mv *linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
+
+    - name: Log in to QE's Docker registry to download base image and publish new image
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.QE_DOCKER_REGISTRY_URL }}
+        username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    # No way to set our own tag
+    # - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      id: build
+      with:
+        push: true
+        # TODO: set branch in tag
+        file: ./qe-docker/test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
+        # Although our client perf test definitions state the test images where the tag doesn't have the arm- prefix
+        # Bob seems to look for the same tag from the test definition, but prefixed with arm-
+        tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:arm-${{ env.TEST_IMAGE_TAG }}
+        context: ./qe-docker/test/python/_files
+      env:
+        TEST_IMAGE_TAG: 3.11-mavenAnsible-client
+
   register-test-definition-with-custom-env-var-parameters:
+    needs: add-python-client-to-qe-test-image-for-performance-regression-tests
     runs-on: ubuntu-24.04
     env:
       REGISTER_FILE_PATH_IN_REPO: perf_regression/register-client-tests.yaml
@@ -114,6 +181,7 @@ jobs:
         yq eval ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         yq eval ".perf_regression/client_centered.environment.NUM_RECORDS = \"${{ inputs.num_records }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         yq eval ".perf_regression/client_centered.environment.FEATURE = \"${{ inputs.feature }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+        yq eval ".perf_regression/client_centered.image = docker.qe.aerospike.com/test/python@sha256:${{ needs.add-python-client-to-qe-test-image-for-performance-regression-tests.outputs.new-test-image-digest }} -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
         cat ${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
@@ -128,76 +196,12 @@ jobs:
     - run: test-register --config staging ./${{ env.REGISTER_FILE_PATH_IN_REPO }}
       working-directory: aerospike-tests-python
 
-  # For this job, I used Andrew Kim's workflow in qe-docker repo as a reference
-  # https://github.com/citrusleaf/qe-docker/commit/d72f2d3fda70e199e24f4f670811d6e33e7f92be
-  add-python-client-to-qe-test-image-for-performance-regression-tests:
-    env:
-      WHEEL_ARCH: x86_64
-    runs-on: ubuntu-24.04-arm
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
-      with:
-        egress-policy: audit
-    - name: Get Github action to download wheel from JFrog
-      uses: actions/checkout@v4
-      with:
-        path: aerospike-client-python
-
-    - name: Get Github actions workflow to build Docker image
-      uses: actions/checkout@v4
-      with:
-        repository: citrusleaf/qe-docker
-        path: qe-docker
-        ref: cicd-client-performance-regression-tests-requirements-txt
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-
-    - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
-      with:
-        # Calling workflow only builds wheel from source
-        get_from_jfrog: ${{ inputs.is-workflow-call == false && true || inputs.get-wheel-from-jfrog }}
-        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
-        dist_type_to_get: 'wheel'
-        wheel_python_version: '3.10'
-        wheel_os: manylinux
-        wheel_cpu_arch: ${{ env.WHEEL_ARCH }}
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
-
-    - name: Add wheel to staging folder for building Docker image
-      run: mv *linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
-
-    - name: Log in to QE's Docker registry to download base image and publish new image
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ secrets.QE_DOCKER_REGISTRY_URL }}
-        username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
-    # No way to set our own tag
-    # - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
-
-    - name: Build and push
-      uses: docker/build-push-action@v6
-      with:
-        push: true
-        # TODO: set branch in tag
-        file: ./qe-docker/test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
-        # Although our client perf test definitions state the test images where the tag doesn't have the arm- prefix
-        # Bob seems to look for the same tag from the test definition, but prefixed with arm-
-        tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:arm-${{ env.TEST_IMAGE_TAG }}
-        context: ./qe-docker/test/python/_files
-      env:
-        TEST_IMAGE_TAG: 3.11-mavenAnsible-client
-
   run-qe-test:
     env:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
       TESTCTL_BINARY_NAME: testctl
     runs-on: ubuntu-24.04
     needs: [
-      add-python-client-to-qe-test-image-for-performance-regression-tests,
       register-test-definition-with-custom-env-var-parameters
     ]
     steps:
