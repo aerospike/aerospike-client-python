@@ -329,6 +329,14 @@ Other
         digest = aerospike.calc_digest("test", "demo", 1 )
         pp.pprint(digest)
 
+.. py:function:: get_partition_id(digest) -> int
+
+    Calculate the partition id for a record using its digest.
+
+    :param (bytes-like object) digest: the record's digest calculated by :py:meth:`aerospike.calc_digest`.
+    :return: the record's partition id
+    :rtype: :class:`int`
+
 .. _client_config:
 
 Client Configuration

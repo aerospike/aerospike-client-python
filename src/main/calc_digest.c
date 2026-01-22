@@ -136,12 +136,25 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
     // Python Function Argument Parsing
     Py_buffer py_buffer;
     if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
-        return NULL;
+        goto CLEANUP_ON_ERROR;
     }
 
-    // TODO: needs to check that buffer is <= 20 bytes
+    as_error err;
+    if (py_buffer.itemsize != 20) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Digest must be 20 bytes long");
+        goto CLEANUP_ON_ERROR;
+    }
+
     uint32_t part_id = as_partition_getid(py_buffer.buf, 4096);
 
-    // Invoke Operation
-    return PyLong_FromLong(part_id);
+    PyObject *py_part_id = PyLong_FromLong(part_id);
+    if (!py_part_id) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to retrieve partition id");
+        goto CLEANUP_ON_ERROR;
+    }
+
+CLEANUP_ON_ERROR:
+    return NULL;
 }
