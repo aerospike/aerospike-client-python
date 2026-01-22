@@ -142,7 +142,7 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
     as_error err;
     as_error_init(&err);
 
-    if (py_buffer.itemsize != 20) {
+    if (py_buffer.len != 20) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Digest must be 20 bytes long");
         goto CLEANUP_ON_ERROR;
