@@ -30,7 +30,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         sparse-checkout: |
           .github/workflows
@@ -56,7 +56,7 @@ jobs:
       run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
       working-directory: aerospike-client-python/.github/workflows
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: pypa/cibuildwheel
         ref: ${{ env.CIBW_VERSION }}
