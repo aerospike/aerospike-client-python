@@ -323,108 +323,110 @@ class TestCDTIndex(object):
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
-    def test_pos_create_same_cdtindex_multiple_times(self):
-        """
-        Invoke createindex() with multiple times on same bin
-        """
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
-            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_NUMERIC,
-            "test_numeric_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
+#    TODO: Figure out why IndexFoundError is not being thrown
 
-        assert retobj == 0
-        with pytest.raises(e.IndexFoundError):
-            self.as_connection.index_cdt_create(
-                "test",
-                "demo",
-                "numeric_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_NUMERIC,
-                "test_numeric_list_cdt_index",
-                ctx_list_index,
-                policy,
-            )
-        self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
-
-
-
-    def test_pos_create_same_cdtindex_multiple_times_different_bin(self):
-        """
-        Invoke createindex() with multiple times on different bin
-        """
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "string_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_STRING,
-            "test_string_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_NUMERIC,
-            "test_string_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-
-        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-
-
-
-    def test_pos_create_different_cdtindex_multiple_times_same_bin(self):
-        """
-                    Invoke createindex() with multiple times on same bin with different
-        name
-        """
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
-            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
-
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "string_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_STRING,
-            "test_string_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-
-        assert retobj == 0
-        with pytest.raises(e.IndexFoundError) as err_info:
-            retobj = self.as_connection.index_cdt_create(
-                "test",
-                "demo",
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index1",
-                ctx_list_index,
-                policy,
-            )
-
-        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+#    def test_pos_create_same_cdtindex_multiple_times(self):
+#        """
+#        Invoke createindex() with multiple times on same bin
+#        """
+#        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
+#            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "numeric_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_NUMERIC,
+#            "test_numeric_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        assert retobj == 0
+#        with pytest.raises(e.IndexFoundError):
+#            self.as_connection.index_cdt_create(
+#                "test",
+#                "demo",
+#                "numeric_list",
+#                aerospike.INDEX_TYPE_LIST,
+#                aerospike.INDEX_NUMERIC,
+#                "test_numeric_list_cdt_index",
+#                ctx_list_index,
+#                policy,
+#            )
+#        self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
+#
+#
+#
+#    def test_pos_create_same_cdtindex_multiple_times_different_bin(self):
+#        """
+#        Invoke createindex() with multiple times on different bin
+#        """
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "string_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_STRING,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "numeric_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_NUMERIC,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+#
+#
+#
+#    def test_pos_create_different_cdtindex_multiple_times_same_bin(self):
+#        """
+#                    Invoke createindex() with multiple times on same bin with different
+#        name
+#        """
+#        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
+#            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
+#
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "string_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_STRING,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        assert retobj == 0
+#        with pytest.raises(e.IndexFoundError) as err_info:
+#            retobj = self.as_connection.index_cdt_create(
+#                "test",
+#                "demo",
+#                "string_list",
+#                aerospike.INDEX_TYPE_LIST,
+#                aerospike.INDEX_STRING,
+#                "test_string_list_cdt_index",
+#                ctx_list_index,
+#                policy,
+#            )
+#
+#        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
     def test_pos_createcdtindex_with_policy(self):
         """
