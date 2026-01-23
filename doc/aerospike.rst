@@ -333,7 +333,7 @@ Other
 
     Calculate the partition id for a record using its digest.
 
-    :param (bytes-like object) digest: the record's digest calculated by :py:meth:`aerospike.calc_digest`.
+    :param bytes-like object digest: the record's digest calculated by :py:meth:`aerospike.calc_digest`.
     :return: the record's partition id
     :rtype: :class:`int`
 
