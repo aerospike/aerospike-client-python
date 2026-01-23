@@ -341,7 +341,7 @@ class TestCDTIndex(object):
             policy,
         )
 
-        assert retobj > 0
+        assert retobj == 0
         with pytest.raises(e.IndexFoundError):
             self.as_connection.index_cdt_create(
                 "test",
@@ -374,18 +374,17 @@ class TestCDTIndex(object):
             policy,
         )
 
-        assert retobj == 0
-        with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_cdt_create(
-                "test",
-                "demo",
-                "numeric_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_NUMERIC,
-                "test_string_list_cdt_index",
-                ctx_list_index,
-                policy,
-            )
+        retobj = self.as_connection.index_cdt_create(
+            "test",
+            "demo",
+            "numeric_list",
+            aerospike.INDEX_TYPE_LIST,
+            aerospike.INDEX_NUMERIC,
+            "test_string_list_cdt_index",
+            ctx_list_index,
+            policy,
+        )
+
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
@@ -597,7 +596,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             )
 
         assert err_info.value.code == -2
-        assert err_info.value.msg == "Set should be a string"
+        assert err_info.value.msg == "Set should be string, unicode or None"
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
