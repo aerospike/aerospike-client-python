@@ -13,13 +13,3 @@ scenarios:
 definitions:
   std:
      - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_insert
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_update
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_delete
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_batch_read
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_batch_write
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_scan
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_query
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_raise_exception
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_expressions
-    #  - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_command_level_policy

@@ -52,7 +52,7 @@ on:
       test-definition:
         type: string
         required: true
-        description: Test definition
+        description: "Test definition without the branch (i.e remove '<branch>@')"
 
 # Prevent another job from overriding the Docker image
 concurrency:
@@ -287,8 +287,9 @@ jobs:
     - name: Allows us to get the exact test run id that was created by test-enqueue.
       run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
 
-    # - run: yq -i '.definitions.std.[0] = "${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
-    #   working-directory: aerospike-client-python/test/
+    - name: Set the test code revision to run.
+      run: yq -i '.definitions.std.[0] = "${{ inputs.test-code-revision }}@${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
+      working-directory: aerospike-client-python/test/
 
     - name: Tailscale VPN
       uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9
