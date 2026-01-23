@@ -177,7 +177,7 @@ jobs:
         fetch-depth: 0
 
     - run: cp ${{ env.REGISTER_FILE_PATH_IN_REPO }}.template ${{ env.REGISTER_FILE_PATH_IN_REPO }}
-      working-directory: aerospike-tests-python/perf_regression
+      working-directory: aerospike-tests-python/
 
     - name: Environment variable overrides
       run: |
