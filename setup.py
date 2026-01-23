@@ -181,10 +181,12 @@ include_dirs = include_dirs + [
 C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
 
 if not WINDOWS:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     if C_CLIENT_SHARED_PATH:
+        # In this case, no headers will be installed in target directory.
+        include_dirs.append(AEROSPIKE_C_HOME + '/src/include')
         extra_objects.append(C_CLIENT_SHARED_PATH)
     else:
+        include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
         extra_objects = extra_objects + [
             AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
         ]
