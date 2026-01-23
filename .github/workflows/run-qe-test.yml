@@ -11,6 +11,10 @@ on:
         type: string
         required: true
         description: Python client version
+      test-code-revision:
+        type: string
+        required: true
+        description: "Test code revision"
       feature:
         required: true
         description: "Client feature to test"
@@ -41,6 +45,10 @@ on:
         type: string
         required: false
         description: Python client version
+      test-code-revision:
+        type: string
+        required: true
+        description: "Test code revision"
       test-definition:
         type: string
         required: true
@@ -173,7 +181,7 @@ jobs:
         repository: citrusleaf/aerospike-tests-python
         token: ${{ secrets.CLIENT_BOT_PAT }}
         path: aerospike-tests-python
-        ref: CLIENT-3541-add-client-centered-performance-regression-tests
+        ref: ${{ inputs.test-code-revision }}
         fetch-depth: 0
 
     - run: cp ${{ env.REGISTER_FILE_PATH_IN_REPO }}.template ${{ env.REGISTER_FILE_PATH_IN_REPO }}
