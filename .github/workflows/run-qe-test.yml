@@ -176,6 +176,8 @@ jobs:
         ref: CLIENT-3541-add-client-centered-performance-regression-tests
         fetch-depth: 0
 
+    - run: cp ${{ env.REGISTER_FILE_PATH_IN_REPO }}.template ${{ env.REGISTER_FILE_PATH_IN_REPO }}
+
     - name: Environment variable overrides
       run: |
         yq eval ".perf_regression/client_centered.environment.MODE = \"${{ inputs.insert_mode }}\"" -i ${{ env.REGISTER_FILE_PATH_IN_REPO }}
