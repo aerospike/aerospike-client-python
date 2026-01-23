@@ -92,7 +92,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             // Buffers must be heap allocated in order to persist after the current function returns
             self->dynamic_pool->allocate_buffers = true;
         }
-      
+
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,

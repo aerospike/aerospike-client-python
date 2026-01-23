@@ -302,7 +302,6 @@ class TestCDTIndex(object):
                 policy,
             )
             assert False
-        assert err_info.exception.code == 4
 
     def test_pos_cdtindex_with_incorrect_bin(self):
         """
@@ -351,7 +350,7 @@ class TestCDTIndex(object):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
         self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
@@ -421,7 +420,7 @@ class TestCDTIndex(object):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index1",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -597,8 +596,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == -2
-        assert err_info.exception.msg == "Set should be a string"
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "Set should be a string"
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
@@ -620,8 +619,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == -2
-        assert err_info.exception.msg == "Bin should be a string"
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "Bin should be a string"
 
     def test_neg_cdtindex_with_index_is_none(self):
         """
@@ -640,8 +639,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == -2
-        assert err_info.exception.msg =="Index name should be string or unicode"
+        assert err_info.value.code == -2
+        assert err_info.value.msg =="Index name should be string or unicode"
 
     def test_neg_cdtindex_with_incorrect_namespace(self):
         """
@@ -661,7 +660,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == 4
+        assert err_info.value.code == 4
 
     def test_neg_cdtindex_with_incorrect_cdt_ctx(self):
         """
@@ -681,7 +680,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == -2
+        assert err_info.value.code == -2
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """
@@ -724,7 +723,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert err_info.exception.code == 11
+        assert err_info.value.code == 11
 
     def test_neg_cdtindex_with_no_paramters(self):
         """

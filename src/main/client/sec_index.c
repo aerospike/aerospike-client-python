@@ -276,8 +276,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &dynamic_pool) !=
-        AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
+                    &dynamic_pool) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
