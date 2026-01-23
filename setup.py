@@ -29,6 +29,7 @@ import time
 import io
 import xml.etree.ElementTree as ET
 import glob
+from pathlib import Path
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -186,6 +187,10 @@ if not WINDOWS:
         # In this case, no headers will be installed in target directory.
         include_dirs.append(AEROSPIKE_C_HOME + '/src/include')
         extra_objects.append(C_CLIENT_SHARED_PATH)
+        # The C client isn't included in the sdist, so we need to explicitly tell linker to find it
+        # outside of the isolated build environment created by pypa/build
+        dir_containing_c_client_static_lib = Path(C_CLIENT_SHARED_PATH).parent.__str__
+        library_dirs.append(dir_containing_c_client_static_lib)
     else:
         include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
         extra_objects = extra_objects + [
