@@ -85,7 +85,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             goto CLEANUP_PY_CTX_DICT_ON_ERROR;
         }
 
-    if (py_ctx) {
         if (self->dynamic_pool == NULL) {
             self->dynamic_pool =
                 (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
