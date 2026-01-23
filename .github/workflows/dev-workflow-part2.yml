@@ -1,16 +1,14 @@
 name: Dev workflow (part 2)
 
 on:
-  pull_request_target:
+  # This will ignore bump commits because those commits have [skip ci]
+  push:
     branches:
     - 'dev*'
-    types:
-      - closed
   workflow_dispatch:
 
 jobs:
   bump-dev-number:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
