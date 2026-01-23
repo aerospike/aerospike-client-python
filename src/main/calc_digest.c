@@ -134,9 +134,10 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 {
     Py_buffer py_buffer;
+    PyObject *py_retval = NULL;
 
     if (PyArg_Parse(arg, "y*", &py_buffer) == false) {
-        goto error;
+        goto exit;
     }
 
     as_error err;
@@ -145,7 +146,7 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
     if (py_buffer.len != 20) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Digest must be 20 bytes long");
-        goto CLEANUP_ON_ERROR;
+        goto CLEANUP_AND_EXIT;
     }
 
     uint32_t part_id = as_partition_getid(py_buffer.buf, 4096);
@@ -154,16 +155,18 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
     if (!py_part_id) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Failed to retrieve partition id");
-        goto CLEANUP_ON_ERROR;
+        goto CLEANUP_AND_EXIT;
     }
 
     return py_part_id;
 
-CLEANUP_ON_ERROR:
+CLEANUP_AND_EXIT:
+    PyBuffer_Release(&py_buffer);
+
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
     }
 
-error:
-    return NULL;
+exit:
+    return py_retval;
 }
