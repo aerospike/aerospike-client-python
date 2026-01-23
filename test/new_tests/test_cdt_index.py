@@ -342,7 +342,7 @@ class TestCDTIndex(object):
         )
 
         assert retobj > 0
-        with pytest.raises(e.InvalidRequest):
+        with pytest.raises(e.IndexFoundError):
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -383,7 +383,7 @@ class TestCDTIndex(object):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -579,7 +579,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert err_info.value.code == -2
         assert err_info.value.msg ==  "Set should be string, unicode or None"
 
-    def test_neg_cdtindex_with_set_is_none(self):
+    def test_neg_cdtindex_with_set_is_invalid(self):
         """
         Invoke createindex() with set is None
         """
@@ -587,7 +587,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 "test",
-                None,
+                123,
                 "string_list",
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
@@ -648,7 +648,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_cdt_create(
                 "test1",
                 "demo",
