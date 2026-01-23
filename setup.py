@@ -189,7 +189,7 @@ if not WINDOWS:
         extra_objects.append(C_CLIENT_SHARED_PATH)
         # The C client isn't included in the sdist, so we need to explicitly tell linker to find it
         # outside of the isolated build environment created by pypa/build
-        dir_containing_c_client_static_lib = Path(C_CLIENT_SHARED_PATH).parent.__str__()
+        dir_containing_c_client_static_lib = os.path.dirname(os.path.abspath(C_CLIENT_SHARED_PATH))
         library_dirs.append(dir_containing_c_client_static_lib)
     else:
         include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
