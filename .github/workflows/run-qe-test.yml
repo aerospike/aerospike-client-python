@@ -11,6 +11,10 @@ on:
         type: string
         required: true
         description: Python client version
+      test-definition:
+        type: string
+        required: true
+        description: "Test definition without the branch (i.e remove '<branch>@')"
       test-code-revision:
         type: string
         required: true
