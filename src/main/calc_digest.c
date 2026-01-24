@@ -151,14 +151,12 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *arg)
 
     uint32_t part_id = as_partition_getid(py_buffer.buf, 4096);
 
-    PyObject *py_part_id = PyLong_FromLong(part_id);
-    if (!py_part_id) {
+    py_retval = PyLong_FromLong(part_id);
+    if (!py_retval) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Failed to retrieve partition id");
         goto CLEANUP_AND_EXIT;
     }
-
-    return py_part_id;
 
 CLEANUP_AND_EXIT:
     PyBuffer_Release(&py_buffer);
