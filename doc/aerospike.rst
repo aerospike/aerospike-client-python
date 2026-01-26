@@ -771,10 +771,20 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`str`)
-            Only server nodes matching this name will be used when determining the cluster name.
-        * **app_id** (:class:`str`)
+        * **cluster_name** (:class:`Optional[str]`)
+            Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
+            in the service section in each server configuration. This ensures that the specified
+            seed nodes belong to the expected cluster on startup. If not, the client will refuse
+            to add the node to the client's view of the cluster.
+
+            Default: :py:obj:`None`
+        * **app_id** (:class:`Optional[str]`)
             Application identifier.
+
+            If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
+            this is set to ``not-set``.
+
+            Default: :py:obj:`None`
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
@@ -803,7 +813,21 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **use_services_alternate** (:class:`bool`)
-            Flag to signify if "services-alternate" should be used instead of "services".
+            Flag to signify if alternate IP address discovery info commands should be used.
+
+            If false, use:
+
+            - IP address: ``service-clear-std``
+            - TLS IP address: ``service-tls-std``
+            - Peers addresses: ``peers-clear-std``
+            - Peers TLS addresses: ``peers-tls-std``
+
+            If true, use:
+
+            - IP address: ``service-clear-alt``
+            - TLS IP address: ``service-tls-alt``
+            - Peers addresses: ``peers-clear-alt``
+            - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
@@ -1800,51 +1824,68 @@ Transaction State
 
 .. data:: TXN_STATE_ABORTED
 
-.. _cdt_select_flags:
+.. _exp_path_select_flags:
 
-CDT Select Flags
-----------------
+Path Expression Select Flags
+----------------------------
 
-.. data:: CDT_SELECT_MATCHING_TREE
+.. data:: EXP_PATH_SELECT_MATCHING_TREE
 
     Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
 
-.. data:: CDT_SELECT_VALUES
+.. data:: EXP_PATH_SELECT_VALUE
 
     Return the list of the values of the nodes finally selected by the context.
 
-.. data:: CDT_SELECT_MAP_KEY_VALUES
+    For maps, this returns the value of each (key, value) pair.
 
-    Return a list of key-value pairs.
+.. data:: EXP_PATH_SELECT_LIST_VALUE
 
-.. data:: CDT_SELECT_MAP_KEYS
+    Return the list of the values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a list.
 
-    For final selected nodes which are elements of maps, return the appropriate map key.
+.. data:: EXP_PATH_SELECT_MAP_VALUE
 
-.. data:: CDT_SELECT_NO_FAIL
+    Return the list of map values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
+
+.. data:: EXP_PATH_SELECT_MAP_KEYS
+
+    Return the list of map keys of the nodes finally selected by the context.
+
+.. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
+
+    Returns the list of map (key, value) pairs of the nodes finally selected
+    by the context. This is a synonym for setting both
+    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE` bits together.
+    The list is formatted as ``[key0, value0, key1, value1...]``.
+
+.. data:: EXP_PATH_SELECT_NO_FAIL
 
     If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
-    do not fail the operation; just ignore those elements.
+    do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
-.. _cdt_modify_flags:
+.. _exp_path_modify_flags:
 
-CDT Modify Flags
-----------------
+Path Expression Modify Flags
+----------------------------
 
-.. data:: CDT_MODIFY_DEFAULT
+.. data:: EXP_PATH_MODIFY_DEFAULT
 
     If the expression in the context hits an invalid type, the operation
     will fail.  This is the default behavior.
 
-.. data:: CDT_MODIFY_NO_FAIL
+.. data:: EXP_PATH_MODIFY_NO_FAIL
 
     If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
-    not fail the operation; just ignore those elements.
+    not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
 
 .. _exp_loopvar_metadata:
 
-Expression Loop Variable Metadata
----------------------------------
+Path Expression Loop Variable Metadata
+--------------------------------------
 
 .. data:: EXP_LOOPVAR_KEY
 

@@ -210,6 +210,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
+        [_AS_EXP_CODE_RESULT_REMOVE] = EXP_SZ(as_exp_result_remove()),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
@@ -217,6 +218,11 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [_AS_EXP_LOOPVAR_LIST] = EXP_SZ(as_exp_loopvar_list(0)),
         [_AS_EXP_LOOPVAR_MAP] = EXP_SZ(as_exp_loopvar_map(0)),
         [_AS_EXP_LOOPVAR_STR] = EXP_SZ(as_exp_loopvar_str(0)),
+        [_AS_EXP_LOOPVAR_BOOL] = EXP_SZ(as_exp_loopvar_bool(0)),
+        [_AS_EXP_LOOPVAR_BLOB] = EXP_SZ(as_exp_loopvar_blob(0)),
+        [_AS_EXP_LOOPVAR_GEOJSON] = EXP_SZ(as_exp_loopvar_geojson(0)),
+        [_AS_EXP_LOOPVAR_NIL] = EXP_SZ(as_exp_loopvar_nil(0)),
+        [_AS_EXP_LOOPVAR_HLL] = EXP_SZ(as_exp_loopvar_hll(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(
@@ -652,6 +658,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_LOOPVAR_LIST:
         case _AS_EXP_LOOPVAR_MAP:
         case _AS_EXP_LOOPVAR_STR:
+        case _AS_EXP_LOOPVAR_BOOL:
+        case _AS_EXP_LOOPVAR_BLOB:
+        case _AS_EXP_LOOPVAR_NIL:
+        case _AS_EXP_LOOPVAR_HLL:
+        case _AS_EXP_LOOPVAR_GEOJSON:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -672,6 +683,21 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             case _AS_EXP_LOOPVAR_FLOAT:
                 APPEND_ARRAY(0, as_exp_loopvar_float(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_BLOB:
+                APPEND_ARRAY(0, as_exp_loopvar_blob(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_BOOL:
+                APPEND_ARRAY(0, as_exp_loopvar_bool(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_NIL:
+                APPEND_ARRAY(0, as_exp_loopvar_nil(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_GEOJSON:
+                APPEND_ARRAY(0, as_exp_loopvar_geojson(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_HLL:
+                APPEND_ARRAY(0, as_exp_loopvar_hll(lval1));
                 break;
             }
 
@@ -1650,8 +1676,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case _AS_EXP_CODE_CALL_SELECT:
         case _AS_EXP_CODE_CALL_APPLY:
-            if (get_int64_t(err, "return_type", temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
@@ -1682,6 +1708,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 APPEND_ARRAY(1, as_exp_select_by_path(temp_expr->ctx, lval1,
                                                       lval2, NIL));
             }
+            break;
+        case _AS_EXP_CODE_RESULT_REMOVE:
+            APPEND_ARRAY(0, as_exp_result_remove());
             break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
