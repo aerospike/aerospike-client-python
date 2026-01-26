@@ -27,8 +27,8 @@
 
 #define LOG_LEVEL_OFF -1
 
-static AerospikeLogData user_callback = {
-    .py_callback = NULL, .level = AS_LOG_LEVEL_ERROR, .logToConsole = true};
+bool is_current_log_level_off = true;
+PyObject *py_current_custom_callback = NULL;
 
 #ifdef _WIN32
     #define __sync_fetch_and_add InterlockedExchangeAdd64
@@ -54,9 +54,9 @@ bool default_log_handler(as_log_level level, const char *func, const char *file,
     return true;
 }
 
-static bool call_custom_py_callback(as_log_level level, const char *func,
-                                    const char *file, uint32_t line,
-                                    const char *fmt, ...)
+static bool call_custom_py_log_handler(as_log_level level, const char *func,
+                                       const char *file, uint32_t line,
+                                       const char *fmt, ...)
 {
 
     char msg[1024];
@@ -65,8 +65,6 @@ static bool call_custom_py_callback(as_log_level level, const char *func,
     vsnprintf(msg, 1024, fmt, ap);
     va_end(ap);
 
-    // Extract pyhton user callback
-    PyObject *py_callback = user_callback.py_callback;
     // User callback's argument list
     PyObject *py_arglist = NULL;
 
@@ -92,7 +90,7 @@ static bool call_custom_py_callback(as_log_level level, const char *func,
     PyTuple_SetItem(py_arglist, 4, message);
 
     // Invoke user callback, passing in argument's list
-    PyObject_Call(py_callback, py_arglist, NULL);
+    PyObject_Call(py_current_custom_callback, py_arglist, NULL);
 
     Py_DECREF(py_arglist);
 
@@ -105,14 +103,12 @@ static bool call_custom_py_callback(as_log_level level, const char *func,
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
-    // Aerospike vaiables
     as_status status = AEROSPIKE_OK;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"loglevel", NULL};
-
     // Python Function Argument Parsing
+    static char *kwlist[] = {"loglevel", NULL};
     PyObject *py_log_level = NULL;
+
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist,
                                     &py_log_level) == false) {
         return NULL;
@@ -136,21 +132,22 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
         }
     }
 
+    is_current_log_level_off = log_level == LOG_LEVEL_OFF;
+
     if (log_level == LOG_LEVEL_OFF) {
         as_log_set_callback(NULL);
     }
     else {
         as_log_set_level((as_log_level)log_level);
 
-        if (user_callback.py_callback != NULL) {
-            as_log_set_callback((as_log_callback)call_custom_py_callback);
+        // Re-enable log handler
+        if (py_current_custom_callback != NULL) {
+            as_log_set_callback((as_log_callback)call_custom_py_log_handler);
         }
-        else if (user_callback.logToConsole == true) {
+        else {
             as_log_set_callback((as_log_callback)default_log_handler);
         }
     }
-
-    user_callback.level = log_level;
 
 CLEANUP:
 
@@ -167,41 +164,35 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
 {
     // Python variables
     PyObject *py_callback = NULL;
-    as_error err;
-    as_error_init(&err);
     // Python function keyword arguments
     static char *kwlist[] = {"log_handler", NULL};
 
     // Python function arguments parsing
-    PyArg_ParseTupleAndKeywords(args, kwds, "|O:setLogHandler", kwlist,
-                                &py_callback);
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:setLogHandler", kwlist,
+                                    &py_callback) == false) {
+        return NULL;
+    }
 
-    if (py_callback && PyCallable_Check(py_callback)) {
-        // Store user callback
-        Py_INCREF(py_callback);
-        user_callback.py_callback = py_callback;
-        user_callback.logToConsole = false;
-        // Check log level to ensure log is enabled
-        if (user_callback.level != LOG_LEVEL_OFF) {
-            // Register callback to C-SDK
-            as_log_set_callback((as_log_callback)call_custom_py_callback);
+    // Clean up existing log handler
+    Py_CLEAR(py_current_custom_callback);
+
+    // 3 cases (when args are passed):
+    if (py_callback == NULL) {
+        // 1. No args -> enable Python client's default log handler IF log level is not OFF
+        // IF log level is OFF, don't enable the default log handler.
+        if (!is_current_log_level_off) {
+            as_log_set_callback((as_log_callback)default_log_handler);
         }
     }
-    else if (py_callback == Py_None) {
-        Py_XDECREF(user_callback.py_callback);
-        user_callback.py_callback = NULL;
-        user_callback.logToConsole = false;
+    else if (Py_IsNone(py_callback)) {
+        // Disable log handler altogether
         as_log_set_callback(NULL);
     }
-    else {
-        // Register callback to C-SDK
-        Py_XDECREF(user_callback.py_callback);
-        user_callback.py_callback = NULL;
-
-        user_callback.logToConsole = true;
-        // Check log level to ensure log is enabled
-        if (user_callback.level != LOG_LEVEL_OFF) {
-            as_log_set_callback((as_log_callback)default_log_handler);
+    else if (PyCallable_Check(py_callback)) {
+        // Register custom log handler
+        py_current_custom_callback = Py_NewRef(py_callback);
+        if (!is_current_log_level_off) {
+            as_log_set_callback((as_log_callback)call_custom_py_log_handler);
         }
     }
 
