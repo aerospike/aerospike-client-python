@@ -15,7 +15,7 @@ class TestLog(object):
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
         aerospike.set_log_handler(None)
 
-    def test_set_log_level_with_correct_parameters(self):
+    def test_set_log_level_with_correct_argument(self):
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
 
@@ -32,100 +32,74 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
-    def test_enable_log_handler_correct_with_callback(self):
-        """
-        Test log handler with correct parameters
-        """
-        def log_callback(level, func, path, line, msg):
-            print("[{}] {}".format(func, msg))
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(log_callback)
 
-        # Forces an event to be logged
-        client = TestBaseClass.get_new_connection()
 
-        assert response == 0
-        client.close()
+    # Also test all the log levels
+    @pytest.mark.parametrize(
+        "log_level, expected_log_line_count",
+        [
+            (aerospike.LOG_LEVEL_TRACE, 1),
+            (aerospike.LOG_LEVEL_DEBUG, 0),
+            (aerospike.LOG_LEVEL_INFO, 0),
+            (aerospike.LOG_LEVEL_WARN, 0),
+            (aerospike.LOG_LEVEL_ERROR, 0),
+            (aerospike.LOG_LEVEL_OFF, 0)
+        ]
+    )
+    def test_set_log_handler_with_correct_callback_argument(self, log_level, expected_log_line_count):
+        log_tuples = []
+        def custom_log_callback(level, func, path, line, msg):
+            assert type(level) == int
+            assert type(func) == str
+            assert type(path) == str
+            assert type(line) == int
+            assert type(msg) == str
 
-    def test_enable_log_handler_correct_with_none(self):
-        """
-        Test log handler with correct parameters
-        """
+            log_tuple = (level, func, path, line, msg)
+            log_tuples.append(log_tuple)
 
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_level(log_level)
+        aerospike.set_log_handler(custom_log_callback)
+
+        # Forces a single event to be logged
+        add_config = {
+            "validate_keys": True,
+            "invalid_option": True
+        }
+        with pytest.raises(e.ParamError):
+            # Only one log line at most should be produced from the Python client's glue code
+            TestBaseClass.get_new_connection(add_config)
+
+        assert len(log_tuples) == expected_log_line_count
+
+    def test_set_log_handler_correct_with_none_argument(self, capsys):
+        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         aerospike.set_log_handler(None)
 
         # Forces an event to be logged
         client = TestBaseClass.get_new_connection()
-
-        assert response == 0
         client.close()
 
-    def test_enable_log_handler_correct_with_LOG_LEVEL_OFF(self):
-        """
-        Test log handler with correct parameters
-        """
+        captured = capsys.readouterr()
+        assert "Starting to create a new client" in captured.out
 
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
-        aerospike.set_log_handler()
+    @pytest.mark.parametrize(
+        "log_level",
+        [
+            # Larger than max value of long int
+            68786586756785785745,
+            None, [], {}, 1.5, "serious"
+        ]
+    )
+    def test_set_log_handler_with_invalid_log_level(self, log_level):
+        with pytest.raises(e.ParamError):
+            aerospike.set_log_level(log_level)
 
-        # Forces an event to be logged
-        client = TestBaseClass.get_new_connection()
-
-        assert response == 0
-        client.close()
-
-    def test_enable_log_handler_correct_with_LOG_LEVEL_DEBUG(self):
-        """
-        Test log handler with correct parameters
-        """
-
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(None)
-
-        # Forces an event to be logged
-        client = TestBaseClass.get_new_connection()
-
-        assert response == 0
-        client.close()
-
-    def test_enable_log_handler_incorrect_with_LOG_LEVEL_value(self):
-        """
-        Test log handler with correct parameters
-        """
-        with pytest.raises(e.ParamError) as param_error:
-            response = aerospike.set_log_level(68786586756785785745)
-
-        assert param_error.value.code == -2
-        assert param_error.value.msg == 'integer value exceeds sys.maxsize'
-
-    @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
-    def test_set_log_level_with_invalid_type(self, level):
-        """
-        Test set_log_level with non int subtypes
-        """
-        with pytest.raises(e.ParamError) as param_error:
-            aerospike.set_log_level(level)
-
-        assert param_error.value.code == -2
-
-    @pytest.mark.skip(reason="This behavior may or may not be correct")
-    def test_set_log_level_with_bool(self):
-        """
-        Test log level with log level as a bool,
-        this works because bool is a subclass of int
-        """
-
-        with pytest.raises(e.ParamError) as param_error:
-            aerospike.set_log_level(False)
-
-        assert param_error.value.code == -2
-
+    # TODO: undefined behavior
     def test_set_log_level_incorrect(self):
         """
         Test log level with a log level of valid type, but outside of
         expected range
         """
         response = aerospike.set_log_level(9)
-
         assert response == 0

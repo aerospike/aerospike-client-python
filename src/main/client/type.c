@@ -571,6 +571,8 @@ internal_error:
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
+    as_log_trace("Starting to create a new client...");
+
     PyObject *py_config = NULL;
     int error_code = 0;
     as_error constructor_err;
@@ -1296,7 +1298,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         return -1;
     }
 
-    as_log_debug("Client successfully created");
     return 0;
 
 CONSTRUCTOR_ERROR:
