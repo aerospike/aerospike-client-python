@@ -310,12 +310,12 @@ The following example shows several different methods to configuring logging for
 
     :param optional callable callback: the function used as the logging handler.
 
-.. py:function:: set_log_level(log_level)
+.. py:function:: set_log_level(loglevel)
 
     Declare the logging level threshold for the log handler. If setting log level to :py:obj:`aerospike.LOG_LEVEL_OFF`,
     the current log handler does not get reset.
 
-    :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
+    :param int loglevel: one of the :ref:`aerospike_log_levels` constant values.
 
 Other
 -----
