@@ -24,7 +24,7 @@
  * Structure to hold user's log_callback object
  */
 typedef struct Aerospike_log_data {
-    PyObject *callback;
+    PyObject *py_callback;
     long level;
     bool logToConsole;
 } AerospikeLogData;

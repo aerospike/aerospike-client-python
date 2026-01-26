@@ -28,7 +28,7 @@
 #define LOG_LEVEL_OFF -1
 
 static AerospikeLogData user_callback = {
-    .callback = NULL, .level = AS_LOG_LEVEL_ERROR, .logToConsole = true};
+    .py_callback = NULL, .level = AS_LOG_LEVEL_ERROR, .logToConsole = true};
 
 #ifdef _WIN32
     #define __sync_fetch_and_add InterlockedExchangeAdd64
@@ -36,8 +36,8 @@ static AerospikeLogData user_callback = {
 
 volatile int log_counter = 0;
 
-bool console_log_cb(as_log_level level, const char *func, const char *file,
-                    uint32_t line, const char *fmt, ...)
+bool default_log_handler(as_log_level level, const char *func, const char *file,
+                         uint32_t line, const char *fmt, ...)
 {
 
     char msg[1024];
@@ -65,7 +65,7 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
     va_end(ap);
 
     // Extract pyhton user callback
-    PyObject *py_callback = user_callback.callback;
+    PyObject *py_callback = user_callback.py_callback;
     // User callback's argument list
     PyObject *py_arglist = NULL;
 
@@ -105,22 +105,20 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
     // Aerospike vaiables
-    as_error err;
     as_status status = AEROSPIKE_OK;
-
-    // Python Function Arguments
-    PyObject *py_log_level = NULL;
-    // Initialise error object.
-    as_error_init(&err);
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"loglevel", NULL};
 
     // Python Function Argument Parsing
+    PyObject *py_log_level = NULL;
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|:setLogLevel", kwlist,
                                     &py_log_level) == false) {
         return NULL;
     }
+
+    as_error err;
+    as_error_init(&err);
 
     // Type check for incoming parameters
     if (!PyLong_Check(py_log_level)) {
@@ -128,8 +126,8 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
         goto CLEANUP;
     }
 
-    long lLogLevel = PyLong_AsLong(py_log_level);
-    if (lLogLevel == -1 && PyErr_Occurred()) {
+    long log_level = PyLong_AsLong(py_log_level);
+    if (log_level == -1 && PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "integer value exceeds sys.maxsize");
@@ -137,21 +135,21 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
         }
     }
 
-    // Invoke C API to set log level
-    if (lLogLevel == LOG_LEVEL_OFF) {
+    if (log_level == LOG_LEVEL_OFF) {
         as_log_set_callback(NULL);
     }
     else {
-        as_log_set_level((as_log_level)lLogLevel);
-        if (user_callback.callback != NULL) {
+        as_log_set_level((as_log_level)log_level);
+
+        if (user_callback.py_callback != NULL) {
             as_log_set_callback((as_log_callback)log_cb);
         }
         else if (user_callback.logToConsole == true) {
-            as_log_set_callback((as_log_callback)console_log_cb);
+            as_log_set_callback((as_log_callback)default_log_handler);
         }
     }
 
-    user_callback.level = lLogLevel;
+    user_callback.level = log_level;
 
 CLEANUP:
 
@@ -181,7 +179,7 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
     if (py_callback && PyCallable_Check(py_callback)) {
         // Store user callback
         Py_INCREF(py_callback);
-        user_callback.callback = py_callback;
+        user_callback.py_callback = py_callback;
         user_callback.logToConsole = false;
         // Check log level to ensure log is enabled
         if (user_callback.level != LOG_LEVEL_OFF) {
@@ -190,20 +188,20 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
         }
     }
     else if (py_callback == Py_None) {
-        Py_XDECREF(user_callback.callback);
-        user_callback.callback = NULL;
+        Py_XDECREF(user_callback.py_callback);
+        user_callback.py_callback = NULL;
         user_callback.logToConsole = false;
         as_log_set_callback(NULL);
     }
     else {
         // Register callback to C-SDK
-        Py_XDECREF(user_callback.callback);
-        user_callback.callback = NULL;
+        Py_XDECREF(user_callback.py_callback);
+        user_callback.py_callback = NULL;
 
         user_callback.logToConsole = true;
         // Check log level to ensure log is enabled
         if (user_callback.level != LOG_LEVEL_OFF) {
-            as_log_set_callback((as_log_callback)console_log_cb);
+            as_log_set_callback((as_log_callback)default_log_handler);
         }
     }
 
@@ -215,7 +213,7 @@ void Aerospike_Enable_Default_Logging()
     // Invoke C API to set log level
     as_log_set_level((as_log_level)AS_LOG_LEVEL_ERROR);
     // Register callback to C-SDK
-    as_log_set_callback((as_log_callback)console_log_cb);
+    as_log_set_callback((as_log_callback)default_log_handler);
 
     return;
 }
