@@ -281,6 +281,12 @@ If we read the data for each record using ``aql``, it outputs the following data
 
 Logging
 -------
+
+By default:
+- The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
+- The client's default log handler prints logs in this format: ``<process id>:<counter> <error message>``. For each log,
+    the counter starts at 1 and increments by 1.
+
 The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
 .. include:: examples/log.py
@@ -290,12 +296,11 @@ The following example shows several different methods to configuring logging for
 
     Set logging callback for the global client log.
 
-    When no argument is passed, the default log handler is used. TODO: needs documentation
+    When no argument is passed, the default log handler is used.
 
     When callback is :py:obj:`None`, the saved log handler is cleared and logging is disabled.
 
-    When a callable is passed, it must have these five parameters in this order: level, function, path, line, and
-        message.
+    When a callable is passed, it must have these five parameters in this order: level, function, path, line, and message.
 
     :param optional callable callback: the function used as the logging handler.
 
