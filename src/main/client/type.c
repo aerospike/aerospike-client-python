@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_log_macros.h>
 
 #include "pythoncapi_compat.h"
 #include "admin.h"
@@ -1295,6 +1296,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         return -1;
     }
 
+    as_log_debug("Client successfully created");
     return 0;
 
 CONSTRUCTOR_ERROR:

@@ -15,27 +15,21 @@ class TestLog(object):
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
         aerospike.set_log_handler(None)
 
-    def test_set_log_level_correct(self):
-        """
-        Test log level with correct parameters
-        """
-
+    def test_set_log_level_with_correct_parameters(self):
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-
         assert response == 0
 
     def test_enable_log_handler_correct_no_callback(self):
         """
         Test log handler with correct parameters
         """
-
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        assert response == 0
+
         aerospike.set_log_handler()
 
         # Forces an event to be logged
         client = TestBaseClass.get_new_connection()
-
-        assert response == 0
         client.close()
 
     def test_enable_log_handler_correct_with_callback(self):
