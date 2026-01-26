@@ -290,11 +290,14 @@ The following example shows several different methods to configuring logging for
 
     Set logging callback for the global client log.
 
-    When no argument is passed, the default log handler is used.
+    When no argument is passed, the default log handler is used. TODO: needs documentation
 
-    :param optional callable callback: the function used as the logging handler. When callback is :py:obj:`None`, the
-        saved log handler is cleared and logging is disabled. The callback function will receive these five parameters
-        in this order: (level, func, path, line, message).
+    When callback is :py:obj:`None`, the saved log handler is cleared and logging is disabled.
+
+    When a callable is passed, it must have these five parameters in this order: level, function, path, line, and
+        message.
+
+    :param optional callable callback: the function used as the logging handler.
 
 .. py:function:: set_log_level(log_level)
 
