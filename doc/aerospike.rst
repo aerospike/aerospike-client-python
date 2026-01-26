@@ -292,7 +292,7 @@ The following example shows several different methods to configuring logging for
 .. include:: examples/log.py
     :code: python
 
-.. py:function:: set_log_handler(callback: Callable[[int, str, str, int, str], None])
+.. py:function:: set_log_handler(callback: Optional[Callable[[int, str, str, int, str], None]])
 
     Set logging callback for the global client log.
 
