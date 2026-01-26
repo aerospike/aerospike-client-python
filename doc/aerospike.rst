@@ -300,7 +300,12 @@ The following example shows several different methods to configuring logging for
 
     When callback is :py:obj:`None`, the saved log handler is cleared and logging is disabled.
 
-    When a callable is passed, it must have these five parameters in this order: level, function, path, line, and message.
+    When a callable is passed, it must have these five parameters in this order:
+
+    .. code-block:: python
+
+        def callback(level: int, function: str, path: str, line: int, message: str):
+            pass
 
     :param optional callable callback: the function used as the logging handler.
 
