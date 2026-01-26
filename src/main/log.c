@@ -54,8 +54,9 @@ bool default_log_handler(as_log_level level, const char *func, const char *file,
     return true;
 }
 
-static bool log_cb(as_log_level level, const char *func, const char *file,
-                   uint32_t line, const char *fmt, ...)
+static bool call_custom_py_callback(as_log_level level, const char *func,
+                                    const char *file, uint32_t line,
+                                    const char *fmt, ...)
 {
 
     char msg[1024];
@@ -142,7 +143,7 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
         as_log_set_level((as_log_level)log_level);
 
         if (user_callback.py_callback != NULL) {
-            as_log_set_callback((as_log_callback)log_cb);
+            as_log_set_callback((as_log_callback)call_custom_py_callback);
         }
         else if (user_callback.logToConsole == true) {
             as_log_set_callback((as_log_callback)default_log_handler);
@@ -153,7 +154,6 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
 
 CLEANUP:
 
-    // Check error object and act accordingly
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
@@ -184,7 +184,7 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
         // Check log level to ensure log is enabled
         if (user_callback.level != LOG_LEVEL_OFF) {
             // Register callback to C-SDK
-            as_log_set_callback((as_log_callback)log_cb);
+            as_log_set_callback((as_log_callback)call_custom_py_callback);
         }
     }
     else if (py_callback == Py_None) {
