@@ -1,7 +1,6 @@
 # Enable the logging at application start, before connecting to the server.
 import aerospike
 
-
 ## SETTING THE LOG HANDLER ##
 
 # Set log handler to print to the data to the console
@@ -25,13 +24,11 @@ aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
 # Enables log handling and sets level to LOG_LEVEL_TRACE
 aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
 
-
-
 # Create a client and connect it to the cluster
-try:
 # This line will print use log_callback to print logs with a log level of TRACE
-    client = aerospike.client(config).connect()
-
-except ex.ClientError as e:
-    print("Error: {0} [{1}]".format(e.msg, e.code))
-    sys.exit(1)
+config = {
+    "hosts": [
+        ("127.0.0.1", 3000)
+    ]
+}
+client = aerospike.client(config)
