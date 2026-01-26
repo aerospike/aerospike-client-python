@@ -16,10 +16,10 @@ class TestLog(object):
         aerospike.set_log_handler(None)
 
     def test_set_log_level_with_correct_argument(self):
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        response = aerospike.set_log_level(loglevel=aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
 
-    def test_enable_log_handler_correct_no_callback(self):
+    def test_set_log_handler_with_no_args(self):
         """
         Test log handler with correct parameters
         """
@@ -59,7 +59,7 @@ class TestLog(object):
             log_tuples.append(log_tuple)
 
         aerospike.set_log_level(log_level)
-        aerospike.set_log_handler(custom_log_callback)
+        aerospike.set_log_handler(log_handler=custom_log_callback)
 
         # Forces a single event to be logged
         add_config = {
