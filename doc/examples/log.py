@@ -1,4 +1,5 @@
 # Enable the logging at application start, before connecting to the server.
+import aerospike
 
 
 ## SETTING THE LOG HANDLER ##
@@ -6,7 +7,7 @@
 # Set log handler to print to the data to the console
 aerospike.set_log_handler()
 
-# Clears saved log hanlder and disable logging
+# Clears saved log handler and disable logging
 aerospike.set_log_handler(None)
 
 def log_callback(level, func, path, line, msg):
