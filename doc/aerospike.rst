@@ -286,28 +286,20 @@ The following example shows several different methods to configuring logging for
 .. include:: examples/log.py
     :code: python
 
-.. py:function:: set_log_handler(callback)
+.. py:function:: set_log_handler(callback: Callable[[int, str, str, int, str], None])
 
-    Enables aerospike log handler
+    Set logging callback for the global client log.
 
-    :param optional callable callback: the function used as the logging handler. When callback is None, the saved log handler is cleared and logging is disabled.
+    When no argument is passed, the default log handler is used.
 
-    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
-
-        .. code-block:: python
-
-            import aerospike
-
-        from __future__ import print_function
-        import aerospike
-
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(callback)
-
+    :param optional callable callback: the function used as the logging handler. When callback is :py:obj:`None`, the
+        saved log handler is cleared and logging is disabled. The callback function will receive these five parameters
+        in this order: (level, func, path, line, message).
 
 .. py:function:: set_log_level(log_level)
 
-    Declare the logging level threshold for the log handler.
+    Declare the logging level threshold for the log handler. If setting log level to :py:obj:`aerospike.LOG_LEVEL_OFF`,
+    the current log handler does not get reset.
 
     :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
 
