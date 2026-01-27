@@ -950,6 +950,8 @@ Index Operations
 
     .. method:: index_string_create(ns, set, bin, name[, policy: dict])
 
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
 
@@ -960,9 +962,9 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
-
     .. method:: index_integer_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create an integer index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -974,9 +976,9 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
-
     .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create a blob index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -988,9 +990,9 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
-
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create a geospatial 2D spherical index with *name* on the *bin* \
         in the specified *ns*, *set*.
@@ -1014,9 +1016,9 @@ Index Operations
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
-
 .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: dict[, policy: dict])
+
+    .. deprecated:: 19.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
     Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
     numeric, string, or GeoJSON values (as defined by *index_datatype*)
@@ -1031,8 +1033,6 @@ Index Operations
     :param dict ctx: a dictionary containing the ``"ctx"`` key mapping to a list of contexts.
     :param dict policy: optional :ref:`aerospike_info_policies`.
     :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. deprecated:: 19.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
     .. index::
         single: Admin Operations
