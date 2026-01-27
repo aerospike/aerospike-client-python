@@ -129,15 +129,14 @@ class TestBatchWrite(TestBaseClass):
                                 "gen": aerospike.POLICY_GEN_IGNORE,
                                 "exists": aerospike.POLICY_EXISTS_UPDATE,
                                 "durable_delete": False,
-                                # This should filter out the record
-                                "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
+                                "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
                         )
                     ]
                 ),
                 {},
-                [27],
-                [None],
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"new": 10}],
             ),
             (
                 "simple-read",
@@ -381,6 +380,24 @@ class TestBatchWrite(TestBaseClass):
             # print("name:", name)
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
+
+    def test_batch_write_with_expr_filtering_out_record(self):
+        brs = br.BatchRecords(
+            [
+                br.Write(
+                    ("test", "demo", 1),
+                    [
+                        op.write("ilist_bin", [2, 6]),
+                    ],
+                    policy={
+                        "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
+                    }
+                ),
+            ]
+        )
+
+        res = self.as_connection.batch_write(brs)
+        assert res.batch_records[0].result == 27
 
     @pytest.mark.parametrize(
         "name, batch_records, policy, exp_res",
