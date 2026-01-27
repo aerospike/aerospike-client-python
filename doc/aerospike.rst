@@ -1583,26 +1583,6 @@ Bin Types
 
     (int): 24
 
-.. _aerospike_index_types:
-
-Index Types
------------
-
-.. data:: INDEX_TYPE_DEFAULT
-
-    Index a single scalar value.
-
-.. data:: INDEX_TYPE_LIST
-
-    Index all of a list's values.
-
-.. data:: INDEX_TYPE_MAPKEYS
-
-    Index all of a map's keys.
-
-.. data:: INDEX_TYPE_MAPVALUES
-
-    Index all of a map's values.
 
 .. _aerospike_index_datatypes:
 
@@ -1625,6 +1605,27 @@ Index data types
     An index whose values are of the aerospike GeoJSON data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
+
+.. _aerospike_index_types:
+
+Index Types
+-----------
+
+.. data:: INDEX_TYPE_DEFAULT
+
+    Index a single scalar value.
+
+.. data:: INDEX_TYPE_LIST
+
+    Index all of a list's values.
+
+.. data:: INDEX_TYPE_MAPKEYS
+
+    Index all of a map's keys.
+
+.. data:: INDEX_TYPE_MAPVALUES
+
+    Index all of a map's values.
 
 .. _aerospike_misc_constants:
 
