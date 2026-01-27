@@ -540,8 +540,8 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         }
 
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
