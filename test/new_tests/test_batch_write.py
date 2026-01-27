@@ -383,7 +383,7 @@ class TestBatchWrite(TestBaseClass):
 
 
     @pytest.mark.parametrize(
-        "br",
+        "batch_record",
         [
             br.Write(
                 ("test", "demo", 1),
