@@ -44,14 +44,12 @@
         PyObject *py___policy =                                                              \
             PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                \
         if (py___policy != Py_None) {                                                        \
-            as_exp *expr = NULL;                                                             \
-            as_exp *expr_p = expr;                                                           \
+            as_exp *expr_p = NULL;                                                           \
             if (py___policy != NULL) {                                                       \
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, expr,                                       \
-                                      &expr_p) != AEROSPIKE_OK) {                            \
+                                      &__policy, &expr_p) != AEROSPIKE_OK) {                 \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
@@ -135,7 +133,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     as_policy_batch batch_policy;
     as_policy_batch *batch_policy_p = NULL;
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     PyObject *py_batch_type = NULL;
@@ -171,7 +168,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         if (pyobject_to_policy_batch(self, err, py_policy, &batch_policy,
                                      &batch_policy_p,
                                      &self->as->config.policies.batch,
-                                     &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+                                     &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
     }
