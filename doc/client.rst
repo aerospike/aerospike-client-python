@@ -864,19 +864,6 @@ Index Operations
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
-
-        Create secondary index on an expression.
-
-        :param str ns: The namespace to be indexed.
-        :param str set: The set to be indexed.
-        :param index_type: See :ref:`aerospike_index_types` for possible values.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
         Create an index named *name* for numeric, string or GeoJSON values \
@@ -924,6 +911,19 @@ Index Operations
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
             client.close()
+
+    .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
+
+        Create secondary index on an expression.
+
+        :param str ns: The namespace to be indexed.
+        :param str set: The set to be indexed.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
+        :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
