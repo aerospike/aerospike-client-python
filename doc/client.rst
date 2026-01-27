@@ -960,7 +960,7 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
     .. method:: index_integer_create(ns, set, bin, name[, policy])
 
@@ -974,7 +974,21 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        Create a blob index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
 
@@ -1000,7 +1014,7 @@ Index Operations
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
-        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
 
 .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: dict[, policy: dict])
 
@@ -1018,7 +1032,7 @@ Index Operations
     :param dict policy: optional :ref:`aerospike_info_policies`.
     :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. deprecated:: 14.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+    .. deprecated:: 19.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
     .. index::
         single: Admin Operations
