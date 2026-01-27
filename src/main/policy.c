@@ -330,7 +330,9 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    POLICY_SET_EXPRESSIONS_FIELD();
+    if (exp_list) {
+        POLICY_SET_EXPRESSIONS_FIELD();
+    }
     return AEROSPIKE_OK;
 }
 
