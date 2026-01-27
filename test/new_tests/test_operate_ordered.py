@@ -40,6 +40,18 @@ class TestOperateOrdered(object):
 
         keys.append(key)
 
+        key = ("test", "demo", "byte_key")
+        rec = {"byte_bin": b"asd;as[d'as;d"}  # bytes literal
+        as_connection.put(key, rec)
+
+        keys.append(key)
+
+        key = ("test", "demo", "byteincr_key")
+        rec = {"byteincr_bin": bytearray([0])}
+        as_connection.put(key, rec)
+
+        keys.append(key)
+
         key = ("test", "demo", "list_key")
         rec = {"int_bin": [1, 2, 3, 4], "string_bin": ["a", "b", "c", "d"]}
         as_connection.put(key, rec)
@@ -115,6 +127,14 @@ class TestOperateOrdered(object):
                 [("bytearray_bin", bytearray("asd;as[d'as;dabc", "utf-8"))],
             ),
             (
+                ("test", "demo", "byte_key"),  # append_val byte
+                [
+                    {"op": aerospike.OPERATOR_APPEND, "bin": "byte_bin", "val": b"abc"},
+                    {"op": aerospike.OPERATOR_READ, "bin": "byte_bin"},
+                ],
+                [("byte_bin", b"asd;as[d'as;dabc")],
+            ),
+            (
                 ("test", "demo", "bytearray_new"),  # append bytearray_newrecord
                 [
                     {
@@ -133,6 +153,14 @@ class TestOperateOrdered(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 [("bytearray_bin", bytearray("abcasd;as[d'as;d", "utf-8"))],
+            ),
+            (
+                ("test", "demo", "byte_key"),  # prepend_valbyte
+                [
+                    {"op": aerospike.OPERATOR_PREPEND, "bin": "byte_bin", "val": b"abc"},
+                    {"op": aerospike.OPERATOR_READ, "bin": "byte_bin"},
+                ],
+                [("byte_bin", b"abcasd;as[d'as;d")],
             ),
             (
                 ("test", "demo", "bytearray_new"),  # prepend_valbytearray_newrecord
@@ -525,6 +553,7 @@ class TestOperateOrdered(object):
                 ],
                 [("name", "aerospike")],
             ),
+
         ],
     )
     def test_pos_operate_ordered_new_record(self, key, llist, expected):
@@ -540,6 +569,28 @@ class TestOperateOrdered(object):
 
         try:
             self.as_connection.remove(key)
+        except Exception:
+            pass
+
+    def test_pos_operate_ordered_new_record_with_bytes(self):
+        """
+        Invoke operate_ordered() with prepend command on a new record
+        """
+        llist = []
+        if not llist:
+            for x in range(2049):
+                llist.append({"op": aerospike.OPERATOR_APPEND, "bin": "byteincr_bin", "val": bytearray([1])})
+            llist.append({"op": aerospike.OPERATOR_READ, "bin": "byteincr_bin"})
+        try:
+            self.as_connection.remove(("test", "demo", "byteincr_key"))
+        except Exception:
+            pass
+        _, _, bins = TestOperateOrdered.client_no_typechecks.operate_ordered(("test", "demo", "byteincr_key"), llist)
+
+        assert len(bins[0][1]) == 2049
+
+        try:
+            self.as_connection.remove(("test", "demo", "byteincr_key"))
         except Exception:
             pass
 

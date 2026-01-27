@@ -151,51 +151,9 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-/**
- ******************************************************************************************************
- * Initialize and set the bytes for serialization
- *
- * @param bytes                 The as_bytes object to be set.
- * @param bytes_string          The string which is to be loaded into the
- *                              as_bytes object.
- * @param bytes_string_len      The length of bytes_string
- * @param bytes_type            The type of bytes: AS_BYTES_BLOB or
- *                              AS_BYTES_PYTHON.
- * @param error_p               The error object
- ******************************************************************************************************
- */
-void set_as_bytes(as_bytes **bytes, uint8_t *bytes_string,
-                  int32_t bytes_string_len, int32_t bytes_type,
-                  as_error *error_p)
-{
-    if ((!bytes) || (!bytes_string)) {
-        as_error_update(error_p, AEROSPIKE_ERR, "Unable to set as_bytes");
-        goto CLEANUP;
-    }
-
-    as_bytes_init(*bytes, bytes_string_len);
-
-    if (!as_bytes_set(*bytes, 0, bytes_string, bytes_string_len)) {
-        as_error_update(error_p, AEROSPIKE_ERR, "Unable to set as_bytes");
-    }
-    else {
-        as_bytes_set_type(*bytes, bytes_type);
-    }
-
-CLEANUP:
-
-    if (error_p->code != AEROSPIKE_OK) {
-        // TODO: when exception is detected in this method
-        // the parent method may also raise an exception
-        // is this intended behavior?
-        raise_exception(error_p);
-    }
-    return;
-}
-
 /*
  *******************************************************************************************************
- * If serialize_flag == true, executes the passed user_serializer_callback,
+ * If dynamic_pool != NULL, executes the passed user_serializer_callback,
  * by creating as_bytes (bytes) from the passed Py_Object (value).
  * Else executes the passed user_deserializer_callback,
  * by passing the as_bytes (bytes) to the deserializer and getting back
@@ -205,7 +163,7 @@ CLEANUP:
  *                                      callback to be executed.
  * @param bytes                         The as_bytes to be stored/retrieved.
  * @param value                         The value to be retrieved/stored.
- * @param serialize_flag                The flag which indicates
+ * @param dynamic_pool                The dynamic pool which indicates
  *                                      serialize/deserialize.
  * @param error_p                       The as_error to be populated by the
  *                                      function with encountered error if any.
@@ -213,13 +171,18 @@ CLEANUP:
  */
 void execute_user_callback(user_serializer_callback *user_callback_info,
                            as_bytes **bytes, PyObject **value,
-                           bool serialize_flag, as_error *error_p)
+                           as_dynamic_pool *dynamic_pool, as_error *error_p)
 {
     PyObject *py_return = NULL;
     PyObject *py_value = NULL;
     PyObject *py_arglist = PyTuple_New(1);
 
-    if (serialize_flag) {
+    bool serialize_data = false;
+    if (dynamic_pool) {
+        serialize_data = true;
+    }
+
+    if (serialize_data) {
         Py_XINCREF(*value);
         if (PyTuple_SetItem(py_arglist, 0, *value) != 0) {
             Py_DECREF(py_arglist);
@@ -243,19 +206,31 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     Py_DECREF(py_arglist);
 
     if (py_return) {
-        if (serialize_flag) {
+        if (serialize_data) {
             char *py_val;
             Py_ssize_t len;
+
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            set_as_bytes(bytes, (uint8_t *)py_val, len, AS_BYTES_BLOB, error_p);
-            Py_DECREF(py_return);
+            uint8_t *heap_b =
+                (uint8_t *)cf_calloc((uint32_t)len, sizeof(uint8_t));
+            memcpy(heap_b, py_val, (uint32_t)len);
+            *bytes = GET_BYTES_POOL(dynamic_pool, error_p);
+            if (error_p->code == AEROSPIKE_OK) {
+                as_bytes_init_wrap(*bytes, heap_b, (int32_t)len, true);
+                Py_DECREF(py_return);
+            }
+            else {
+                cf_free(heap_b);
+                Py_DECREF(py_return);
+                goto CLEANUP;
+            }
         }
         else {
             *value = py_return;
         }
     }
     else {
-        if (serialize_flag) {
+        if (serialize_data) {
             as_error_update(
                 error_p, AEROSPIKE_ERR,
                 "Unable to call user's registered serializer callback");
@@ -278,22 +253,21 @@ CLEANUP:
 /*
  *******************************************************************************************************
  * Checks serializer_policy.
- * Serializes Py_Object (value) into as_bytes using serialization logic
- * based on serializer_policy.
+ * Serializes Py_Object (value) into as_bytes using 
+ * serialization logic based on serializer_policy.
  *
  * @param serializer_policy         The serializer_policy to be used to handle
- *                                  the serialization.
+ *                                  the serialization. The serializer_policy will be ignored if 
+ *                                  user_serilizer_call_info has been set (unless is_client_put_serializer is set).
  * @param bytes                     The as_bytes to be set.
  * @param value                     The value to be serialized.
  * @param error_p                   The as_error to be populated by the function
  *                                  with encountered error if any.
  *******************************************************************************************************
  */
-extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
-                                                      int32_t serializer_policy,
-                                                      as_bytes **bytes,
-                                                      PyObject *value,
-                                                      as_error *error_p)
+extern as_status serialize_based_on_serializer_policy(
+    AerospikeClient *self, int32_t serializer_policy, as_bytes **bytes,
+    as_dynamic_pool *dynamic_pool, PyObject *value, as_error *error_p)
 {
     uint8_t use_client_serializer = true;
     PyObject *initresult = NULL;
@@ -314,30 +288,6 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
         as_error_update(error_p, AEROSPIKE_ERR_PARAM,
                         "Cannot serialize: SERIALIZER_NONE selected");
         goto CLEANUP;
-    case SERIALIZER_PYTHON: {
-        /*
-				 * Serialize bytearray as is and store them into database with
-				 * type AS_BYTES_BLOB, unlike other values in case of 
-				 * SERIALIZER_PYTHON.
-				 * This is a special case.
-				 * Refer: AER-3589 for more details.
-				 */
-        if (PyByteArray_Check(value)) {
-            uint8_t *bytes_array = (uint8_t *)PyByteArray_AsString(value);
-            uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
-            set_as_bytes(bytes, bytes_array, bytes_array_len, AS_BYTES_BLOB,
-                         error_p);
-        }
-        else if (PyBytes_Check(value)) {
-            uint8_t *my_bytes = (uint8_t *)PyBytes_AsString(value);
-            uint32_t my_bytes_len = (uint32_t)PyBytes_Size(value);
-            set_as_bytes(bytes, my_bytes, my_bytes_len, AS_BYTES_BLOB, error_p);
-        }
-        else {
-            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                            "Unable to serialize unknown Python native type.");
-        }
-    } break;
     case SERIALIZER_JSON:
         /*
 			 *   TODO:
@@ -351,7 +301,7 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
     case SERIALIZER_USER:
         if (use_client_serializer) {
             execute_user_callback(&self->user_serializer_call_info, bytes,
-                                  &value, true, error_p);
+                                  &value, dynamic_pool, error_p);
             if (AEROSPIKE_OK != (error_p->code)) {
                 goto CLEANUP;
             }
@@ -359,14 +309,7 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
         else {
             if (is_user_serializer_registered) {
                 execute_user_callback(&user_serializer_call_info, bytes, &value,
-                                      true, error_p);
-                if (AEROSPIKE_OK != (error_p->code)) {
-                    goto CLEANUP;
-                }
-            }
-            else if (self->user_serializer_call_info.callback) {
-                execute_user_callback(&self->user_serializer_call_info, bytes,
-                                      &value, true, error_p);
+                                      dynamic_pool, error_p);
                 if (AEROSPIKE_OK != (error_p->code)) {
                     goto CLEANUP;
                 }
@@ -432,7 +375,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
     case AS_BYTES_BLOB: {
         if (self->user_deserializer_call_info.callback) {
             execute_user_callback(&self->user_deserializer_call_info, &bytes,
-                                  retval, false, error_p);
+                                  retval, NULL, error_p);
             if (AEROSPIKE_OK != (error_p->code)) {
                 uint32_t bval_size = as_bytes_size(bytes);
                 PyObject *py_val = PyBytes_FromStringAndSize(
@@ -449,7 +392,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         else {
             if (is_user_deserializer_registered) {
                 execute_user_callback(&user_deserializer_call_info, &bytes,
-                                      retval, false, error_p);
+                                      retval, NULL, error_p);
                 if (AEROSPIKE_OK != (error_p->code)) {
                     uint32_t bval_size = as_bytes_size(bytes);
                     PyObject *py_val = PyBytes_FromStringAndSize(

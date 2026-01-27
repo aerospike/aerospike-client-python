@@ -45,12 +45,16 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
     long operation;
     self->unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-    self->static_pool = &static_pool;
-
     as_error err;
     as_error_init(&err);
+
+    if (self->dynamic_pool == NULL) {
+        self->dynamic_pool =
+            (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
+        BYTE_POOL_INIT_NULL(self->dynamic_pool);
+        // Buffers must be heap allocated in order to persist after the current function returns
+        self->dynamic_pool->allocate_buffers = true;
+    }
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
@@ -72,7 +76,7 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 
             if (PyDict_Check(py_val)) {
                 if (add_op(self->client, &err, py_val, self->unicodeStrVector,
-                           self->static_pool, self->scan.ops, &operation,
+                           self->dynamic_pool, self->scan.ops, &operation,
                            &return_type) != AEROSPIKE_OK) {
                     as_error_update(&err, AEROSPIKE_ERR_PARAM,
                                     "Failed to convert ops.");

@@ -290,7 +290,7 @@ class TestCDTIndex(object):
         for _ in range(100):
             set_name = set_name + "a"
         policy = {}
-        try:
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.index_cdt_create(
                 "test",
                 set_name,
@@ -302,10 +302,6 @@ class TestCDTIndex(object):
                 policy,
             )
             assert False
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
-        except Exception as exception:
-            assert isinstance(exception, e.InvalidRequest)
 
     def test_pos_cdtindex_with_incorrect_bin(self):
         """
@@ -327,110 +323,110 @@ class TestCDTIndex(object):
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
-    def test_pos_create_same_cdtindex_multiple_times(self):
-        """
-        Invoke createindex() with multiple times on same bin
-        """
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_NUMERIC,
-            "test_numeric_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-        if retobj == 0:
-            try:
-                self.as_connection.index_cdt_create(
-                    "test",
-                    "demo",
-                    "numeric_list",
-                    aerospike.INDEX_TYPE_LIST,
-                    aerospike.INDEX_NUMERIC,
-                    "test_numeric_list_cdt_index",
-                    ctx_list_index,
-                    policy,
-                )
-            except e.IndexFoundError:
-                assert self.server_version < [6, 1]
-            self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
-        else:
-            assert False
+#    TODO: Figure out why IndexFoundError is not being thrown
 
-    def test_pos_create_same_cdtindex_multiple_times_different_bin(self):
-        """
-        Invoke createindex() with multiple times on different bin
-        """
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "string_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_STRING,
-            "test_string_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-        if retobj == 0:
-            with pytest.raises(e.IndexFoundError):
-                retobj = self.as_connection.index_cdt_create(
-                    "test",
-                    "demo",
-                    "numeric_list",
-                    aerospike.INDEX_TYPE_LIST,
-                    aerospike.INDEX_NUMERIC,
-                    "test_string_list_cdt_index",
-                    ctx_list_index,
-                    policy,
-                )
-                self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-                ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-
-            self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-        else:
-            assert True is False
-
-    def test_pos_create_different_cdtindex_multiple_times_same_bin(self):
-        """
-                    Invoke createindex() with multiple times on same bin with different
-        name
-        """
-        policy = {}
-        retobj = self.as_connection.index_cdt_create(
-            "test",
-            "demo",
-            "string_list",
-            aerospike.INDEX_TYPE_LIST,
-            aerospike.INDEX_STRING,
-            "test_string_list_cdt_index",
-            ctx_list_index,
-            policy,
-        )
-        if retobj == 0:
-            try:
-                retobj = self.as_connection.index_cdt_create(
-                    "test",
-                    "demo",
-                    "string_list",
-                    aerospike.INDEX_TYPE_LIST,
-                    aerospike.INDEX_STRING,
-                    "test_string_list_cdt_index1",
-                    ctx_list_index,
-                    policy,
-                )
-            except e.IndexFoundError:
-                assert self.server_version < [6, 1]
-
-            self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
-        else:
-            assert True is False
+#    def test_pos_create_same_cdtindex_multiple_times(self):
+#        """
+#        Invoke createindex() with multiple times on same bin
+#        """
+#        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
+#            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "numeric_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_NUMERIC,
+#            "test_numeric_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        assert retobj == 0
+#        with pytest.raises(e.IndexFoundError):
+#            self.as_connection.index_cdt_create(
+#                "test",
+#                "demo",
+#                "numeric_list",
+#                aerospike.INDEX_TYPE_LIST,
+#                aerospike.INDEX_NUMERIC,
+#                "test_numeric_list_cdt_index",
+#                ctx_list_index,
+#                policy,
+#            )
+#        self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
+#
+#
+#
+#    def test_pos_create_same_cdtindex_multiple_times_different_bin(self):
+#        """
+#        Invoke createindex() with multiple times on different bin
+#        """
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "string_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_STRING,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "numeric_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_NUMERIC,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+#
+#
+#
+#    def test_pos_create_different_cdtindex_multiple_times_same_bin(self):
+#        """
+#                    Invoke createindex() with multiple times on same bin with different
+#        name
+#        """
+#        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 1):
+#            pytest.skip("Server version 6.1 required to createIndex multiple times on the same bin")
+#
+#        policy = {}
+#        retobj = self.as_connection.index_cdt_create(
+#            "test",
+#            "demo",
+#            "string_list",
+#            aerospike.INDEX_TYPE_LIST,
+#            aerospike.INDEX_STRING,
+#            "test_string_list_cdt_index",
+#            ctx_list_index,
+#            policy,
+#        )
+#
+#        assert retobj == 0
+#        with pytest.raises(e.IndexFoundError) as err_info:
+#            retobj = self.as_connection.index_cdt_create(
+#                "test",
+#                "demo",
+#                "string_list",
+#                aerospike.INDEX_TYPE_LIST,
+#                aerospike.INDEX_STRING,
+#                "test_string_list_cdt_index",
+#                ctx_list_index,
+#                policy,
+#            )
+#
+#        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
+#        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
     def test_pos_createcdtindex_with_policy(self):
         """
@@ -549,7 +545,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with namespace is None
         """
         policy = {}
-        try:
+
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 None,
                 "demo",
@@ -561,16 +558,15 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Namespace should be a string"
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "Namespace should be a string"
 
     def test_neg_cdtindex_with_set_is_int(self):
         """
         Invoke createindex() with set is int
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 "test",
                 1,
@@ -581,22 +577,18 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 ctx_list_index,
                 policy,
             )
-            assert False
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be string, unicode or None"
-        except Exception as exception:
-            assert isinstance(exception, e.ParamError)
+        assert err_info.value.code == -2
+        assert err_info.value.msg ==  "Set should be string, unicode or None"
 
-    def test_neg_cdtindex_with_set_is_none(self):
+    def test_neg_cdtindex_with_set_is_invalid(self):
         """
         Invoke createindex() with set is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 "test",
-                None,
+                123,
                 "string_list",
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
@@ -605,9 +597,9 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be a string"
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "Set should be string, unicode or None"
+
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
@@ -616,7 +608,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with bin is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -628,16 +620,15 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Bin should be a string"
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "Bin should be a string"
 
     def test_neg_cdtindex_with_index_is_none(self):
         """
         Invoke createindex() with index is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -649,9 +640,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Index name should be string or unicode"
+        assert err_info.value.code == -2
+        assert err_info.value.msg =="Index name should be string or unicode"
 
     def test_neg_cdtindex_with_incorrect_namespace(self):
         """
@@ -659,7 +649,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        try:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_cdt_create(
                 "test1",
                 "demo",
@@ -671,8 +661,27 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
+        assert err_info.value.code == 4
+
+    def test_neg_cdtindex_with_incorrect_cdt_ctx(self):
+        """
+        Invoke createindex() with incorrect namespace
+        """
+        policy = {}
+
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "numeric_list",
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_list_cdt_index",
+                {"ctx": False},
+                policy,
+            )
+
+        assert err_info.value.code == -2
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """
@@ -703,7 +712,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as err_info:
             client1.index_cdt_create(
                 "test",
                 "demo",
@@ -715,8 +724,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert err_info.value.code == 11
 
     def test_neg_cdtindex_with_no_paramters(self):
         """

@@ -86,16 +86,16 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 // On success, heap allocates a new as_val object and assigns its address to val
 as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                    PyObject *py_obj, as_val **val,
-                                   as_static_pool *static_pool,
+                                   as_dynamic_pool *dynamic_pool,
                                    int serializer_type);
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
-                          as_static_pool *static_pool, int serializer_type);
+                          as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status pyobject_to_list(AerospikeClient *self, as_error *err,
                            PyObject *py_list, as_list **list,
-                           as_static_pool *static_pool, int serializer_type);
+                           as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status pyobject_to_key(as_error *err, PyObject *py_key, as_key *key);
 
@@ -105,7 +105,7 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
 as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
                                        PyObject *py_rec, PyObject *py_meta,
                                        as_record *rec, int serializer_option,
-                                       as_static_pool *static_pool);
+                                       as_dynamic_pool *dynamic_pool);
 
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
@@ -155,7 +155,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_binop *binop,
-                                   char *bin, as_static_pool *static_pool);
+                                   char *bin, as_dynamic_pool *dynamic_pool);
 
 // Both as_operations and as_record have ttl and gen fields,
 // so we have ttl and gen as separate parameters instead of accepting either as_operations or as_record
@@ -169,13 +169,14 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 
 as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type);
+                      as_dynamic_pool *dynamic_pool);
 
 // allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 // if false, the Python object should only be a compiled Python expression object from aerospike_helpers
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
-                                   bool allow_base64_encoded_exprs);
+                                   bool allow_base64_encoded_exprs,
+                                   as_dynamic_pool *dynamic_pool);
 
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,

@@ -25,10 +25,9 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
+#include "dynamic_pool.hpp"
 #include <aerospike/as_txn.h>
 #include <aerospike/as_config.h>
-
-#include "pool.h"
 
 #define AEROSPIKE_MODULE_NAME "aerospike"
 #define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
@@ -86,14 +85,14 @@ typedef struct {
     as_query query;
     UnicodePyObjects u_objs;
     as_vector *unicodeStrVector;
-    as_static_pool *static_pool;
+    as_dynamic_pool *dynamic_pool;
 } AerospikeQuery;
 
 typedef struct {
     PyObject_HEAD AerospikeClient *client;
     as_scan scan;
     as_vector *unicodeStrVector;
-    as_static_pool *static_pool;
+    as_dynamic_pool *dynamic_pool;
 } AerospikeScan;
 
 typedef struct {

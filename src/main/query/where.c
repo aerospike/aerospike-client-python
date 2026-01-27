@@ -61,10 +61,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_error err;
     as_error_init(&err);
 
-    // TODO: does static pool go out of scope?
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
     // Used to pass ctx into get_cdt_ctx() helper
@@ -89,19 +85,26 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             goto CLEANUP_PY_CTX_DICT_ON_ERROR;
         }
 
+        if (self->dynamic_pool == NULL) {
+            self->dynamic_pool =
+                (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
+            BYTE_POOL_INIT_NULL(self->dynamic_pool);
+            // Buffers must be heap allocated in order to persist after the current function returns
+            self->dynamic_pool->allocate_buffers = true;
+        }
+
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+                        self->dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
     as_exp *exp_list = NULL;
     if (py_expr) {
-        as_status status = as_exp_new_from_pyobject(self->client, py_expr,
-                                                    &exp_list, &err, true);
+        as_status status = as_exp_new_from_pyobject(
+            self->client, py_expr, &exp_list, &err, true, self->dynamic_pool);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_AS_CTX_ON_ERROR;
         }

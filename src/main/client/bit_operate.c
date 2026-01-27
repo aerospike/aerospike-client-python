@@ -59,105 +59,71 @@ static as_status get_uint32t_from_pyargs(as_error *err, char *key,
 
 static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_operations *ops);
 
 static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
                                 PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type, long operation_code);
+                                long operation_code);
 
 static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_operations *ops);
 
 static as_status add_op_bit_count(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_operations *ops);
 
 static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type);
+                                PyObject *op_dict, as_operations *ops);
 
 static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type);
+                                PyObject *op_dict, as_operations *ops);
 
 static as_status add_op_bit_get(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type);
+                                PyObject *op_dict, as_operations *ops);
 
 static as_status add_op_bit_get_int(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
-                                    as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
+                                    as_operations *ops);
 
 static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_operations *ops);
 
 static as_status add_op_bit_lscan(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_operations *ops);
 
 static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_operations *ops);
 
 static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type);
+                                PyObject *op_dict, as_operations *ops);
 
 static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_operations *ops,
-                               as_static_pool *static_pool,
-                               int serializer_type);
+                               PyObject *op_dict, as_operations *ops);
 
 static as_status add_op_bit_rscan(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_operations *ops);
 
 static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_operations *ops);
 
 static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops,
-                                     as_static_pool *static_pool,
-                                     int serializer_type);
+                                     as_operations *ops);
 
 static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type);
+                                PyObject *op_dict, as_operations *ops);
 
 // End forwards
 as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
-                         as_static_pool *static_pool, as_operations *ops,
-                         long operation_code, long *ret_type,
-                         int serializer_type)
+                         as_operations *ops, long operation_code,
+                         long *ret_type)
 
 {
     char *bin = NULL;
@@ -168,57 +134,40 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
 
     switch (operation_code) {
     case OP_BIT_RESIZE:
-        return add_op_bit_resize(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_bit_resize(self, err, bin, op_dict, ops);
     case OP_BIT_SET:
     case OP_BIT_SET_INT:
-        return add_op_bit_set(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type, operation_code);
+        return add_op_bit_set(self, err, bin, op_dict, ops, operation_code);
     case OP_BIT_REMOVE:
-        return add_op_bit_remove(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_bit_remove(self, err, bin, op_dict, ops);
     case OP_BIT_COUNT:
-        return add_op_bit_count(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_bit_count(self, err, bin, op_dict, ops);
     case OP_BIT_ADD:
-        return add_op_bit_add(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type);
+        return add_op_bit_add(self, err, bin, op_dict, ops);
     case OP_BIT_AND:
-        return add_op_bit_and(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type);
+        return add_op_bit_and(self, err, bin, op_dict, ops);
     case OP_BIT_GET:
-        return add_op_bit_get(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type);
+        return add_op_bit_get(self, err, bin, op_dict, ops);
     case OP_BIT_GET_INT:
-        return add_op_bit_get_int(self, err, bin, op_dict, ops, static_pool,
-                                  serializer_type);
+        return add_op_bit_get_int(self, err, bin, op_dict, ops);
     case OP_BIT_INSERT:
-        return add_op_bit_insert(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_bit_insert(self, err, bin, op_dict, ops);
     case OP_BIT_LSCAN:
-        return add_op_bit_lscan(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_bit_lscan(self, err, bin, op_dict, ops);
     case OP_BIT_LSHIFT:
-        return add_op_bit_lshift(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_bit_lshift(self, err, bin, op_dict, ops);
     case OP_BIT_NOT:
-        return add_op_bit_not(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type);
+        return add_op_bit_not(self, err, bin, op_dict, ops);
     case OP_BIT_OR:
-        return add_op_bit_or(self, err, bin, op_dict, ops, static_pool,
-                             serializer_type);
+        return add_op_bit_or(self, err, bin, op_dict, ops);
     case OP_BIT_RSCAN:
-        return add_op_bit_rscan(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_bit_rscan(self, err, bin, op_dict, ops);
     case OP_BIT_RSHIFT:
-        return add_op_bit_rshift(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_bit_rshift(self, err, bin, op_dict, ops);
     case OP_BIT_SUBTRACT:
-        return add_op_bit_subtract(self, err, bin, op_dict, ops, static_pool,
-                                   serializer_type);
+        return add_op_bit_subtract(self, err, bin, op_dict, ops);
     case OP_BIT_XOR:
-        return add_op_bit_xor(self, err, bin, op_dict, ops, static_pool,
-                              serializer_type);
+        return add_op_bit_xor(self, err, bin, op_dict, ops);
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
@@ -230,9 +179,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_operations *ops)
 {
     as_bit_policy bit_policy;
     as_bit_resize_flags flags = AS_BIT_RESIZE_DEFAULT;
@@ -263,8 +210,7 @@ static as_status add_op_bit_resize(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
                                 PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type, long operation_code)
+                                long operation_code)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -325,9 +271,7 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
 
 static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t byte_offset = 0;
@@ -359,9 +303,7 @@ static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_count(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_operations *ops)
 {
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
@@ -385,9 +327,7 @@ static as_status add_op_bit_count(AerospikeClient *self, as_error *err,
 }
 
 static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type)
+                                PyObject *op_dict, as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -435,9 +375,7 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
 }
 
 static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type)
+                                PyObject *op_dict, as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -481,9 +419,7 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
 }
 
 static as_status add_op_bit_get(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type)
+                                PyObject *op_dict, as_operations *ops)
 {
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
@@ -508,9 +444,7 @@ static as_status add_op_bit_get(AerospikeClient *self, as_error *err, char *bin,
 
 static as_status add_op_bit_get_int(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
-                                    as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type)
+                                    as_operations *ops)
 {
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
@@ -541,9 +475,7 @@ static as_status add_op_bit_get_int(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t byte_offset = 0;
@@ -582,9 +514,7 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_lscan(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_operations *ops)
 {
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
@@ -614,9 +544,7 @@ static as_status add_op_bit_lscan(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -653,9 +581,7 @@ static as_status add_op_bit_lshift(AerospikeClient *self, as_error *err,
 }
 
 static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type)
+                                PyObject *op_dict, as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -686,8 +612,7 @@ static as_status add_op_bit_not(AerospikeClient *self, as_error *err, char *bin,
 }
 
 static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_operations *ops,
-                               as_static_pool *static_pool, int serializer_type)
+                               PyObject *op_dict, as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -732,9 +657,7 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
 
 static as_status add_op_bit_rscan(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
-                                  as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_operations *ops)
 {
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
@@ -764,9 +687,7 @@ static as_status add_op_bit_rscan(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
-                                   as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -804,9 +725,7 @@ static as_status add_op_bit_rshift(AerospikeClient *self, as_error *err,
 
 static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops,
-                                     as_static_pool *static_pool,
-                                     int serializer_type)
+                                     as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
@@ -854,9 +773,7 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
 }
 
 static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
-                                PyObject *op_dict, as_operations *ops,
-                                as_static_pool *static_pool,
-                                int serializer_type)
+                                PyObject *op_dict, as_operations *ops)
 {
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;

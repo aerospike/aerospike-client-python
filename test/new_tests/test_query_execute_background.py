@@ -231,6 +231,27 @@ class TestQueryApply(object):
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
+    def test_background_execute_with_ops_using_bytearray(self, clean_test_background):
+        """
+        Ensure that Query.execute_background() applies ops to all records
+        """
+        test_bin = "tops"
+        keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
+
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        # query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+
+
+        ops = [operations.write(test_bin, bytearray([1, 1, 0, 1, 1]))]
+
+        query.add_ops(ops)
+        query.execute_background()
+        # Give time for the query to finish
+        time.sleep(5)
+
+        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == bytearray([1, 1, 0, 1, 1]))
+
+
     def test_background_execute_with_ops_and_preds(self, clean_test_background):
         """
         Ensure that Query.execute_background() applies ops to records that match the predicate
