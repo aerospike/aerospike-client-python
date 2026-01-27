@@ -390,40 +390,32 @@ class TestBatchWrite(TestBaseClass):
                 [
                     op.write("ilist_bin", [2, 6]),
                 ],
-                policy={
-                    "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
-                }
             ),
             br.Read(
                 ("test", "demo", 1),
                 [
                     op.read("ilist_bin")
                 ],
-                policy={
-                    "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
-                }
             ),
             br.Apply(
                 key=("test", "demo", 1),
                 module="sample",
                 function="list_append",
                 args=["ilist_bin", 200],
-                policy={
-                    "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
-                }
             ),
             br.Remove(
                 key=("test", "demo", 1),
-                policy={
-                    "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
-                }
             ),
         ]
 
     )
-    def test_batch_write_with_expr_filtering_out_record(self, br):
+    def test_batch_write_with_expr_filtering_out_record(self, batch_record):
+        policy={
+            "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
+        }
+        batch_record.policy = policy
         brs = br.BatchRecords(
-            [br]
+            [batch_record]
         )
 
         res = self.as_connection.batch_write(brs)
