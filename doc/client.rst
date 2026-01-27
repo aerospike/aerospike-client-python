@@ -838,15 +838,15 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_single_value_create(ns: str, set: str, bin: str, value_type: int, policy: dict = None, ctx: list = None)
+    .. method:: index_single_value_create(ns: str, set: str, bin: str, value_type: int, name: str, policy: dict = None, ctx: list = None)
 
         Create a secondary index on a single value with a given type.
 
-        :param str index_name: the name of the index.
         :param str ns: the namespace containing the value.
         :param str set: the set containing the value.
         :param str bin: the name of the bin containing the value.
         :param str value_type: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
         :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
