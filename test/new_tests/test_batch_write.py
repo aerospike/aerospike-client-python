@@ -136,7 +136,7 @@ class TestBatchWrite(TestBaseClass):
                     ]
                 ),
                 {},
-                [AerospikeStatus.AEROSPIKE_OK],
+                [27],
                 [None],
             ),
             (
