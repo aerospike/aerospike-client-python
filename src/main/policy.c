@@ -98,33 +98,30 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
-        if (exp_list) {                                                        \
-            PyObject *py_field_name = PyUnicode_FromString("expressions");     \
-            if (py_field_name == NULL) {                                       \
-                PyErr_Clear();                                                 \
-                return as_error_update(                                        \
-                    err, AEROSPIKE_ERR_CLIENT,                                 \
-                    "Unable to create Python unicode object");                 \
-            }                                                                  \
-            PyObject *py_exp_list =                                            \
-                PyDict_GetItemWithError(py_policy, py_field_name);             \
-            if (py_exp_list == NULL && PyErr_Occurred()) {                     \
-                PyErr_Clear();                                                 \
-                Py_DECREF(py_field_name);                                      \
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,              \
-                                       "Unable to fetch expressions field "    \
-                                       "from policy dictionary");              \
-            }                                                                  \
+        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_exp_list =                                                \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_exp_list == NULL && PyErr_Occurred()) {                         \
+            PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
-            if (py_exp_list) {                                                 \
-                if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list,     \
-                                             err, false) == AEROSPIKE_OK) {    \
-                    policy->filter_exp = exp_list;                             \
-                    *exp_list_p = exp_list;                                    \
-                }                                                              \
-                else {                                                         \
-                    return err->code;                                          \
-                }                                                              \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to fetch expressions field "        \
+                                   "from policy dictionary");                  \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+        if (py_exp_list) {                                                     \
+            if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list, err,    \
+                                         false) == AEROSPIKE_OK) {             \
+                policy->filter_exp = exp_list;                                 \
+                *exp_list_p = exp_list;                                        \
+            }                                                                  \
+            else {                                                             \
+                return err->code;                                              \
             }                                                                  \
         }                                                                      \
     }
