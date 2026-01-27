@@ -129,14 +129,15 @@ class TestBatchWrite(TestBaseClass):
                                 "gen": aerospike.POLICY_GEN_IGNORE,
                                 "exists": aerospike.POLICY_EXISTS_UPDATE,
                                 "durable_delete": False,
-                                "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
+                                # This should filter out the record
+                                "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
                             },
                         )
                     ]
                 ),
                 {},
                 [AerospikeStatus.AEROSPIKE_OK],
-                [{"new": 10}],
+                [None],
             ),
             (
                 "simple-read",
