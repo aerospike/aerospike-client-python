@@ -40,7 +40,39 @@ on:
         required: true
 
 jobs:
+  build-c-client:
+    outputs:
+      c-client-sha: ${{ steps.get-c-client-sha.outputs.sha }}
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        sparse-checkout: |
+          aerospike-client-c
+
+    - id: get-c-client-sha
+      run: echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
+      working-directory: aerospike-client-c
+
+    - uses: actions/cache@v5
+      id: download-c-client
+      with:
+        key: c-client-${{ steps.get-c-client-sha.outputs.sha }}
+        path: ./libaerospike.a
+        lookup-only: true
+
+    - name: Install C client build dependencies
+      if: ${{ steps.download-c-client.outputs.cache-hit != 'true' }}
+      run: |
+        sudo apt-get update &&
+        sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev &&
+        make build &&
+        mv ./target/Linux-x86_64/lib/libaerospike.a ..
+      working-directory: aerospike-client-c
+
   build:
+    needs: build-c-client
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -64,6 +96,12 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    - uses: actions/cache/restore@v5
+      with:
+        key: c-client-${{ needs.build-c-client.outputs.c-client-sha }}
+        path: ./libaerospike.a
+        fail-on-cache-miss: true
+
     - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: ${{ matrix.py-version }}
@@ -83,6 +121,7 @@ jobs:
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
+        C_CLIENT_SHARED_PATH: ./libaerospike.a
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
