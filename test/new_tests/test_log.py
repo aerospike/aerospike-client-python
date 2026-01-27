@@ -19,9 +19,9 @@ class TestLog(object):
         response = aerospike.set_log_level(loglevel=aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
 
-    def test_set_log_handler_with_no_args(self):
+    def test_set_log_handler_with_no_args(self, capsys):
         """
-        Test log handler with correct parameters
+        Test default log handler
         """
         response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
@@ -32,7 +32,8 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
-
+        captured = capsys.readouterr()
+        assert "Starting to create a new client" in captured.out
 
     # Also test all the log levels
     @pytest.mark.parametrize(
@@ -73,6 +74,9 @@ class TestLog(object):
         assert len(log_tuples) == expected_log_line_count
 
     def test_set_log_handler_correct_with_none_argument(self, capsys):
+        """
+        Test that log handler was removed
+        """
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         aerospike.set_log_handler(None)
 
@@ -81,7 +85,7 @@ class TestLog(object):
         client.close()
 
         captured = capsys.readouterr()
-        assert "Starting to create a new client" in captured.out
+        assert captured.out == ""
 
     @pytest.mark.parametrize(
         "log_level",
