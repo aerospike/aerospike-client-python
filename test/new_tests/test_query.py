@@ -9,8 +9,8 @@ from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
-import warnings
 import time
+
 
 from aerospike_helpers.expressions.arithmetic import Add
 from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
@@ -124,7 +124,7 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+        if (int(TestBaseClass.major_ver), int(TestBaseClass.minor_ver)) >= (7, 0):
             # These indexes are only used for server 7.0+ tests
             try:
                 as_connection.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
@@ -1010,15 +1010,6 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    def test_creating_query_using_constructor_in_aerospike_module(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=DeprecationWarning)
-            query = aerospike.Query("test", "demo")
-            assert len(w) == 1
-
-        with pytest.raises(e.ClientError):
-            query.select("bin1")
-
     def test_query_with_correct_parameters_without_connection(self):
         """
         Invoke query() with correct arguments without connection
@@ -1091,6 +1082,7 @@ class TestQuery(TestBaseClass):
         Make sure that ctx is being cleaned up properly
         """
         query = self.as_connection.query("test", "demo")
+
         # Invalid bin
         with pytest.raises(e.ParamError):
             query.where(p.range(5, aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
@@ -1128,10 +1120,14 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
-    def test_query_with_invalid_ctx(self):
+    def test_query_with_invalid_list_cdt_ctx_dict(self):
+        """
+        Invoke query() with cdt_ctx containing incorrect arguments
+        """
         query = self.as_connection.query("test", "demo")
+
         with pytest.raises(e.ParamError):
-            query.where(p.equals("bin", 1), 1)
+            query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ['not a ctx list'])
 
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
@@ -1353,3 +1349,7 @@ class TestQuery(TestBaseClass):
             query2 = query2.where_with_expr(expr_base64_encoded, predicate)
             recs = query2.results()
             assert len(recs) == expected_rec_count
+
+    def test_creating_query_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Query("test", "demo")

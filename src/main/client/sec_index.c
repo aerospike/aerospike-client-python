@@ -191,6 +191,8 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
                                                 data_type, NULL, expr);
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 /**
  *******************************************************************************************************
  * Creates a cdt index for a bin in the Aerospike DB.
@@ -219,6 +221,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_indextype = NULL;
     PyObject *py_datatype = NULL;
     PyObject *py_name = NULL;
+
     PyObject *py_ctx = NULL;
     as_cdt_ctx ctx;
     PyObject *py_obj = NULL;
@@ -255,20 +258,20 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
+    // Even if this call fails, it will raise its own exception
+    // and the err object here will not be set. We don't raise an exception twice
     py_obj = createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         &ctx, NULL);
 
     as_cdt_ctx_destroy(&ctx);
 
-    return py_obj;
-
 CLEANUP:
-    if (py_obj == NULL) {
+
+    if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
-
     return py_obj;
 }
 

@@ -42,6 +42,8 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 // The rest of the PyObject parameters can be NULL and are optional.
 // 3 cases for these optional parameters:
@@ -58,6 +60,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 {
     as_error err;
     as_error_init(&err);
+
+    // TODO: does static pool go out of scope?
+    as_static_pool static_pool;
+    memset(&static_pool, 0, sizeof(static_pool));
+
     as_cdt_ctx *pctx = NULL;
 
     if (py_ctx) {
@@ -68,7 +75,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         pctx = as_cdt_ctx_create_from_pyobject(self->client, &err, py_ctx,
                                                &static_pool, SERIALIZER_PYTHON);
         if (err.code != AEROSPIKE_OK) {
-            goto CLEANUP_CTX_ON_ERROR;
+            goto error;
         }
     }
 
@@ -77,7 +84,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         as_status status = as_exp_new_from_pyobject(self->client, py_expr,
                                                     &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP_CTX_ON_ERROR;
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
@@ -285,13 +292,14 @@ CLEANUP_EXP_ON_ERROR:
         as_exp_destroy(exp_list);
     }
 
-CLEANUP_CTX_ON_ERROR:
+CLEANUP_AS_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
     if (pctx) {
         as_cdt_ctx_destroy(pctx);
         cf_free(pctx);
     }
 
+error:
     return 1;
 }
 
