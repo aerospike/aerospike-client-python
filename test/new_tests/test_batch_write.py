@@ -381,6 +381,46 @@ class TestBatchWrite(TestBaseClass):
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
 
+
+    @pytest.mark.parametrize(
+        "br",
+        [
+            br.Write(
+                ("test", "demo", 1),
+                [
+                    op.write("ilist_bin", [2, 6]),
+                ],
+            ),
+            br.Read(
+                ("test", "demo", 1),
+                [
+                    op.read("ilist_bin")
+                ],
+            ),
+            br.Apply(
+                key=("test", "demo", 1),
+                module="sample",
+                function="list_append",
+                args=["ilist_bin", 200],
+            ),
+            br.Remove(
+                key=("test", "demo", 1),
+            ),
+        ]
+
+    )
+    def test_batch_write_with_expr_filtering_out_record(self, batch_record):
+        policy={
+            "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
+        }
+        batch_record.policy = policy
+        brs = br.BatchRecords(
+            [batch_record]
+        )
+
+        res = self.as_connection.batch_write(brs)
+        assert res.batch_records[0].result == 27
+
     @pytest.mark.parametrize(
         "name, batch_records, policy, exp_res",
         [
