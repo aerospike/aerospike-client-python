@@ -9,12 +9,12 @@ Overview
 --------
 
 Aerospike expressions are a small domain specific language that allow for filtering
-records in transactions by manipulating and comparing bins and record metadata.
+records in commands by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 .. note::
-  See `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+  See `Expressions <https://aerospike.com/docs/develop/expressions>`_.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
@@ -28,8 +28,8 @@ Example::
     from aerospike_helpers import expressions as exp
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 
-By passing these compiled expressions to transactions via the "expressions" policy field,
-these transactions will filter the results.
+By passing a compiled expression to a command via the "expressions" policy field,
+the command will filter the results.
 
 Example:
 
@@ -37,12 +37,11 @@ Example:
   :code: python
 
 Currently, Aerospike expressions are supported for:
-- Record operations
-- Batch operations
-- Transactions
-- UDF apply methods (apply, scan apply, and query apply)
-- Query invoke methods (foreach, results, execute background)
-- Scan invoke methods (same as query invoke methods)
+  * Record commands
+  * Batched commands
+  * UDF apply methods (apply, scan apply, and query apply)
+  * Query invoke methods (foreach, results, execute background)
+  * Scan invoke methods (same as query invoke methods)
 
 Filter Behavior
 ---------------
@@ -50,19 +49,11 @@ Filter Behavior
 This section describes the behavior of methods when a record is filtered out by an expression.
 
 For:
-  * Record operations
+  * Record commands
   * Numeric operations
   * String operations
-  * Single record transactions
 
 An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
-
-For:
-  * :meth:`~aerospike.Client.get_many`
-  * :meth:`~aerospike.Client.exists_many`
-  * :meth:`~aerospike.Client.select_many`
-
-The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
 
 For:
 
@@ -74,11 +65,6 @@ The filtered out record's:
 
     * ``BatchRecord.record`` is set to :py:obj:`None`
     * ``BatchRecord.result`` is set to ``27``
-
-For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
-
-  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
-  * ``bins`` is set to :py:obj:`None`.
 
 Terminology
 -----------
@@ -181,6 +167,7 @@ aerospike\_helpers\.expressions\.base module
 .. automodule:: aerospike_helpers.expressions.base
     :members:
     :special-members:
+    :show-inheritance:
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------

@@ -102,6 +102,10 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
      select_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+    {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
+     where_doc},
+    {"where_with_index_name", (PyCFunction)AerospikeQuery_WhereWithIndexName,
+     METH_VARARGS, where_doc},
 
     {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
      METH_VARARGS | METH_KEYWORDS, execute_background_doc},
@@ -151,18 +155,18 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
-                                         PyObject *kwds)
+// A Query class instance has a hard dependency on a Client instance to function.
+AerospikeQuery *AerospikeQuery_Type_New(PyTypeObject *type,
+                                        AerospikeClient *py_client)
 {
-    AerospikeQuery *self = NULL;
-
-    self = (AerospikeQuery *)type->tp_alloc(type, 0);
-
-    if (self) {
-        self->client = NULL;
+    AerospikeQuery *self = (AerospikeQuery *)type->tp_alloc(type, 0);
+    if (!self) {
+        return NULL;
     }
 
-    return (PyObject *)self;
+    Py_INCREF((PyObject *)py_client);
+    self->client = py_client;
+    return self;
 }
 
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
@@ -244,10 +248,11 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-static PyTypeObject AerospikeQuery_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Query", // tp_name
-    sizeof(AerospikeQuery),                           // tp_basicsize
-    0,                                                // tp_itemsize
+PyTypeObject AerospikeQuery_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Query"), // tp_name
+    sizeof(AerospikeQuery),                 // tp_basicsize
+    0,                                      // tp_itemsize
     (destructor)AerospikeQuery_Type_Dealloc,
     // tp_dealloc
     0, // tp_print
@@ -286,7 +291,7 @@ static PyTypeObject AerospikeQuery_Type = {
     0,                                  // tp_dictoffset
     (initproc)AerospikeQuery_Type_Init, // tp_init
     0,                                  // tp_alloc
-    AerospikeQuery_Type_New,            // tp_new
+    NULL,                               // tp_new
     0,                                  // tp_free
     0,                                  // tp_is_gc
     0                                   // tp_bases
@@ -300,22 +305,6 @@ PyTypeObject *AerospikeQuery_Ready()
 {
     return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
                                                    : NULL;
-}
-
-AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
-                                   PyObject *kwds)
-{
-    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type.tp_new(
-        &AerospikeQuery_Type, args, kwds);
-    self->client = client;
-
-    if (AerospikeQuery_Type.tp_init((PyObject *)self, args, kwds) == 0) {
-        Py_INCREF(client);
-        return self;
-    }
-
-    AerospikeQuery_Type.tp_free(self);
-    return NULL;
 }
 
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)

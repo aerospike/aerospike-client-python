@@ -31,6 +31,108 @@
 #include "policy.h"
 #include "global_hosts.h"
 
+#define STR_CONVERSION_ERROR_MSG "%s should be a string"
+
+// If we are creating a PKI user, py_password can be NULL
+// If not creating a PKI user, py_password must be non-NULL
+// In both cases, the other pyobjects must be non-NULL
+static PyObject *admin_create_user_helper(AerospikeClient *self,
+                                          PyObject *py_user,
+                                          PyObject *py_password,
+                                          PyObject *py_roles,
+                                          PyObject *py_policy)
+{
+    as_error err;
+    as_error_init(&err);
+
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto RAISE_EXCEPTION;
+    }
+
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto RAISE_EXCEPTION;
+    }
+
+    // Convert python object to an array of roles
+    if (!PyList_Check(py_roles)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Roles should be a list");
+        goto RAISE_EXCEPTION;
+    }
+    int roles_size = PyList_Size(py_roles);
+    if (PyErr_Occurred()) {
+        goto RAISE_EXCEPTION;
+    }
+    char **roles = alloca(sizeof(char *) * roles_size);
+    for (int i = 0; i < roles_size; i++) {
+        roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+        memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
+    }
+
+    pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP_AND_RAISE_EXCEPTION;
+    }
+
+    // Convert python objects to username and password strings
+    const char *user = convert_pyobject_to_str(py_user);
+    if (!user) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
+                        "Username");
+        goto CLEANUP_AND_RAISE_EXCEPTION;
+    }
+
+    const char *password = NULL;
+    if (py_password) {
+        password = convert_pyobject_to_str(py_password);
+        if (!password) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
+                            "Password");
+            goto CLEANUP_AND_RAISE_EXCEPTION;
+        }
+    }
+
+    // Convert python object to policy_admin
+    as_policy_admin admin_policy;
+    as_policy_admin *admin_policy_p = NULL;
+    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
+                             &admin_policy_p, &self->as->config.policies.admin);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP_AND_RAISE_EXCEPTION;
+    }
+
+    // Invoke operation
+    Py_BEGIN_ALLOW_THREADS
+    if (password) {
+        aerospike_create_user(self->as, &err, admin_policy_p, user, password,
+                              (const char **)roles, roles_size);
+    }
+    else {
+        aerospike_create_pki_user(self->as, &err, admin_policy_p, user,
+                                  (const char **)roles, roles_size);
+    }
+    Py_END_ALLOW_THREADS
+
+CLEANUP_AND_RAISE_EXCEPTION:
+    for (int i = 0; i < roles_size; i++) {
+        if (roles[i])
+            cf_free(roles[i]);
+    }
+
+RAISE_EXCEPTION:
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
+
+    return PyLong_FromLong(0);
+}
+
 /**
  *******************************************************************************************************
  * Create a user in the Aerospike DB.
@@ -47,18 +149,11 @@
 PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
     // Python Function Arguments
     PyObject *py_policy = NULL;
     PyObject *py_user = NULL;
     PyObject *py_password = NULL;
     PyObject *py_roles = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"user", "password", "roles", "policy", NULL};
@@ -70,87 +165,29 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
         return NULL;
     }
 
-    // Aerospike Operation Arguments
-    int roles_size = 0;
-    char **roles = NULL;
-    const char *user, *password;
+    return admin_create_user_helper(self, py_user, py_password, py_roles,
+                                    py_policy);
+}
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
+PyObject *AerospikeClient_Admin_Create_PKI_User(AerospikeClient *self,
+                                                PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_user = NULL;
+    PyObject *py_roles = NULL;
+    PyObject *py_policy = NULL;
 
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"user", "roles", "policy", NULL};
 
-    // Convert python object to an array of roles
-    if (PyList_Check(py_roles)) {
-        roles_size = PyList_Size(py_roles);
-        roles = alloca(sizeof(char *) * roles_size);
-        for (int i = 0; i < roles_size; i++) {
-            roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
-            memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
-        }
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Roles should be a list");
-        goto CLEANUP;
-    }
-
-    pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Convert python objects to username and password strings
-    if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
-        goto CLEANUP;
-    }
-
-    user = PyUnicode_AsUTF8(py_user);
-
-    if (!PyUnicode_Check(py_password)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Password should be a string");
-        goto CLEANUP;
-    }
-
-    password = PyUnicode_AsUTF8(py_password);
-
-    // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_create_user(self->as, &err, admin_policy_p, user, password,
-                          (const char **)roles, roles_size);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-CLEANUP:
-    for (int i = 0; i < roles_size; i++) {
-        if (roles[i])
-            cf_free(roles[i]);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception(&err);
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_pki_user",
+                                    kwlist, &py_user, &py_roles,
+                                    &py_policy) == false) {
         return NULL;
     }
 
-    return PyLong_FromLong(0);
+    return admin_create_user_helper(self, py_user, NULL, py_roles, py_policy);
 }
 
 /**
@@ -235,11 +272,6 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
     }
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
-
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -331,10 +363,6 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
     Py_BEGIN_ALLOW_THREADS
     aerospike_set_password(self->as, &err, admin_policy_p, user, password);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -439,11 +467,6 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
 
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
@@ -544,10 +567,6 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
     aerospike_grant_roles(self->as, &err, admin_policy_p, user,
                           (const char **)roles, roles_size);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
     for (int i = 0; i < roles_size; i++) {
@@ -657,10 +676,6 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
     aerospike_revoke_roles(self->as, &err, admin_policy_p, user,
                            (const char **)roles, roles_size);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
     for (int i = 0; i < roles_size; i++) {
@@ -674,105 +689,6 @@ CLEANUP:
     }
 
     return PyLong_FromLong(0);
-}
-
-/**
- *******************************************************************************************************
- * Queries a user in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds)
-{
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_user_name = NULL;
-
-    // Python Function Result
-    PyObject *py_user = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"user", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:admin_query_user", kwlist,
-                                    &py_user_name, &py_policy) == false) {
-        return NULL;
-    }
-
-    // Aerospike Operation Arguments
-    const char *user_name;
-    as_user *user = NULL;
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
-    // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Convert python object to username string
-    if (!PyUnicode_Check(py_user_name)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
-        goto CLEANUP;
-    }
-
-    user_name = PyUnicode_AsUTF8(py_user_name);
-
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-    // Convert returned as_user struct to python object
-    as_user_to_pyobject(&err, user, &py_user);
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-CLEANUP:
-    if (user) {
-        as_user_destroy(user);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception(&err);
-        return NULL;
-    }
-
-    return py_user;
 }
 
 /**
@@ -851,7 +767,6 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
     aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -877,95 +792,6 @@ CLEANUP:
 
 /**
  *******************************************************************************************************
- * Queries all users in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds)
-{
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-
-    // Python Function Result
-    PyObject *py_users = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:admin_query_users", kwlist,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    // Aerospike Operation Arguments
-    int users_size = 0;
-    as_user **users = NULL;
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
-    // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-    // Convert returned array of as_user structs into python object;
-    as_user_array_to_pyobject(&err, users, &py_users, users_size);
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-CLEANUP:
-    if (users) {
-        as_users_destroy(users, users_size);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception(&err);
-        return NULL;
-    }
-
-    return py_users;
-}
-
-/**
- *******************************************************************************************************
  * Queries all users info in the Aerospike DB.
  *
  * @param self                  AerospikeClient object
@@ -973,7 +799,6 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns an integer status. 0(Zero) is success value.
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
@@ -1029,7 +854,6 @@ PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
     aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 

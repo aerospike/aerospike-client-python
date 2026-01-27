@@ -76,7 +76,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p);
+                             &exp_list, &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
@@ -104,52 +104,14 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    if (py_meta && PyDict_Check(py_meta)) {
-        PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-
-        if (py_ttl) {
-            if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
-                if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for ttl exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Ttl should be an int or long");
-                goto CLEANUP;
-            }
-        }
-
-        if (py_gen) {
-            if (PyLong_Check(py_gen)) {
-                rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
-                if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for gen exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Generation should be an int or long");
-                goto CLEANUP;
-            }
-        }
+    check_and_set_meta(py_meta, &rec.ttl, &rec.gen, err, self->validate_keys);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_key_put(self->as, err, write_policy_p, &key, &rec);
     Py_END_ALLOW_THREADS
-    if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -164,17 +126,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception_old(err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -200,7 +152,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
@@ -239,19 +190,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }

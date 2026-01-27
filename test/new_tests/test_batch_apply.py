@@ -6,6 +6,7 @@ import pytest
 import aerospike
 
 from aerospike_helpers import expressions as exp
+from aerospike_helpers.batch.records import BatchRecords
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
@@ -241,9 +242,12 @@ class TestBatchApply(TestBaseClass):
                 assert batch_rec.record[2] == {"SUCCESS": 0}  # checking bins
                 assert batch_rec.record[0][:3] == keys[i]  # checking key in record
 
-            res = self.as_connection.get_many(keys)
-            for i, rec in enumerate(res):
-                assert rec[2]["name"] == ["name" + str(i), 10]
+            brs: BatchRecords = self.as_connection.batch_read(keys)
+            # The server can return the records in any order, and the C and Python client does not sort the results
+            # Sort by user key
+            batch_records = sorted(brs.batch_records, key=lambda br: br.key[2])
+            for i, br in enumerate(batch_records):
+                assert br.record[2]["name"] == ["name" + str(i), 10]
 
         except Exception as ex:
             raise (ex)

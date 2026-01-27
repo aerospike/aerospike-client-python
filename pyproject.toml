@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools"]
+requires = [
+    "setuptools",
+    "versioningit==3.1.0",
+    # Used by our versioningit script that modifies the version
+    "parver==0.5"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,11 +20,12 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Database"
 ]
@@ -31,3 +37,20 @@ dynamic = ["version"]
 [tool.setuptools]
 zip-safe = false
 include-package-data = true
+
+[tool.versioningit]
+
+[tool.versioningit.vcs]
+method = {module = "custom-versionit-format", value="my_vcs"}
+
+# Use versioneer formatting
+[tool.versioningit.format]
+method = {module = "custom-versionit-format", value="my_format"}
+distance = "{base_version}+{distance}.{vcs}{rev}"
+# Example formatted version: 1.2.3+42.ge174a1f
+
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+# Example formatted version: 1.2.3+42.ge174a1f.dirty
+
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+# Example formatted version: 1.2.3+42.ge174a1f.dirty

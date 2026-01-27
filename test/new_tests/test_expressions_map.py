@@ -48,8 +48,11 @@ from aerospike_helpers.expressions import (
     MapSize,
     ResultType,
 )
+from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
+from aerospike import KeyOrderedDict
+from . import as_errors
 
 # Constants
 _NUM_RECORDS = 9
@@ -124,10 +127,11 @@ def add_ctx_op(ctx_type, value):
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -161,7 +165,7 @@ class TestExpressions(TestBaseClass):
     def setup(self, request, as_connection):
         self.test_ns = "test"
         self.test_set = "demo"
-
+        self.first_key = (self.test_ns, self.test_set, 0)
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
             rec = {
@@ -200,7 +204,7 @@ class TestExpressions(TestBaseClass):
                 "bymap_bin": {1: "b".encode("utf8"), 2: "d".encode("utf8"), 3: "f".encode("utf8")},
                 "bomap_bin": {1: False, 2: False, 3: True},
                 "nmap_bin": {1: None, 2: aerospike.null(), 3: aerospike.null()},
-                "fmap_bin": {1.0: 1.0, 2.0: 2.0, 6.0: 6.0},
+                "fmap_bin": {1: 1.0, 2: 2.0, 6: 6.0},
                 "gmap_bin": {1: GEO_POLY, 2: GEO_POLY1, 3: GEO_POLY2},
             }
             self.as_connection.put(key, rec)
@@ -411,7 +415,7 @@ class TestExpressions(TestBaseClass):
         "bin, bin_name, ctx, policy, key, value, expected",
         [
             ("imap_bin", "imap_bin", None, None, 3, 6, [12]),
-            ("fmap_bin", "fmap_bin", None, None, 6.0, 6.0, [12.0]),
+            ("fmap_bin", "fmap_bin", None, None, 6, 6.0, [12.0]),
             (ListBin("mlist_bin"), "mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6]),
         ],
     )
@@ -469,7 +473,7 @@ class TestExpressions(TestBaseClass):
                 "fmap_bin",
                 None,
                 {},
-                [8.0, 10.0, 1.0, 1.0, 6.0, 6.0],
+                [8, 10.0, 1, 1.0, 6, 6.0],
             ),
         ],
     )
@@ -594,3 +598,271 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "expr, expected_results",
+        [
+            pytest.param(
+                MapRemoveByKeyRange(ctx=None, begin=3, end=None, bin="imap_bin"),
+                {
+                    1: 1,
+                    2: 2
+                    # Key 3 removed
+                }
+            ),
+            pytest.param(
+                MapGetByValueRange(ctx=None, return_type=aerospike.MAP_RETURN_VALUE, value_begin=6, value_end=None, bin="imap_bin"),
+                [6]
+            )
+        ]
+    )
+    def test_setting_end_param_to_none(self, expr, expected_results):
+        ops = [
+            expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, list=ops)
+        assert bins["ilist_bin"] == expected_results
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            (
+                "smap_bin",
+                MapRemoveByKeyList(ctx=None, keys=["b", "f"], bin="smap_bin", inverted=True),
+                {"b": "b", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRange(ctx=None, begin="b", end="e", bin="smap_bin", inverted=True),
+                {"b": "b", "d": "d"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRangeToEnd(ctx=None, key="b", index=1, bin="smap_bin", inverted=True),
+                {"d": "d", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRange(ctx=None, key="b", index=1, count=1, bin="smap_bin", inverted=True),
+                {"d": "d"}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValue(ctx=None, value=False, bin="bomap_bin", inverted=True),
+                {1: False, 2: False}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValueList(ctx=None, values=[False, True], bin="bomap_bin", inverted=True),
+                {1: False, 2: False, 3: True}
+            ),
+            ("imap_bin", MapRemoveByValueRange(ctx=None, begin=1, end=3, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+            # Rel rank of value 1: 0
+            # Rel rank of value 2: 1
+            # Without inversion, this expression removes map entries with values 2 and higher
+            # With inversion, remove map entries with values less than 2
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRangeToEnd(ctx=None, value=1, rank=1, bin="imap_bin", inverted=True),
+                {2: 2, 3: 6}
+            ),
+            # Without inversion, this expression removes 1 map entry starting with values 2 and higher
+            # With inversion, remove all other entries except for that 1 map entry
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="imap_bin", inverted=True),
+                {2: 2}
+            ),
+            ("imap_bin", MapRemoveByIndexRangeToEnd(ctx=None, index=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByIndexRange(ctx=None, index=1, count=1, bin="imap_bin", inverted=True), {2: 2}),
+            # Without inversion, remove all values starting with 2nd lowest value
+            ("imap_bin", MapRemoveByRankRangeToEnd(ctx=None, rank=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByRankRange(ctx=None, rank=0, count=2, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+
+            # Get expressions
+
+            # Only select entry with key "f"
+            (
+                "smap_bin",
+                MapGetByKeyRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_COUNT,
+                    begin="b",
+                    end="e",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                1
+            ),
+            (
+                "smap_bin",
+                MapGetByKeyList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_COUNT,
+                    keys=["b", "d", "f"],
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                0
+            ),
+            # Select entries with key "d" and after in the map
+            # Inversion means select key "b" which comes before "d"
+            # Key "b" should have index 0 since it was declared first in the dict
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_INDEX,
+                    key="b",
+                    index=1,
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                [0]
+            ),
+            # Only select entry with key "d"
+            # Inversion is select entries with key "b" and "f"
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY,
+                    key="b",
+                    index=1,
+                    count=1,
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["b", "f"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValue(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY_VALUE,
+                    value="f",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["b", "b", "d", "d"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    value_begin="b",
+                    value_end="e",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["f"]
+            ),
+            (
+                "lmap_bin",
+                MapGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    value=[[1, 2], [1, 3]],
+                    bin="lmap_bin",
+                    inverted=True
+                ),
+                [[1, 4]]
+            ),
+            # Select entry with value [1, 4]
+            # Inverse is the entries with ranks 0 and 1
+            (
+                "lmap_bin",
+                MapGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_RANK,
+                    value=[1, 2],
+                    rank=2,
+                    bin="lmap_bin",
+                    inverted=True
+                ),
+                [0, 1]
+            ),
+            # Select {1: 4}
+            # Inverse is {1: 2} and {1: 3}
+            # Reverse indices for these values are 2 and 1 respectively
+            (
+                "mmap_bin",
+                MapGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_INDEX,
+                    value=KeyOrderedDict({1: 3}),
+                    rank=1,
+                    count=1,
+                    bin="mmap_bin",
+                    inverted=True
+                ),
+                [2, 1]
+            ),
+            # Get entries with keys 2 and 6
+            # Inverse is entry with key 1
+            # This has reverse rank 2
+            (
+                "fmap_bin",
+                MapGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_RANK,
+                    index=1,
+                    bin="fmap_bin",
+                    inverted=True
+                ),
+                [2]
+            ),
+            (
+                "bomap_bin",
+                MapGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    index=0,
+                    count=2,
+                    bin="bomap_bin",
+                    inverted=True
+                ),
+                [True]
+            ),
+            (
+                "nmap_bin",
+                MapGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    rank=0,
+                    bin="nmap_bin",
+                    inverted=True
+                ),
+                []
+            ),
+            (
+                "imap_bin",
+                MapGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    rank=0,
+                    count=1,
+                    bin="imap_bin",
+                    inverted=True
+                ),
+                [2, 6]
+            ),
+        ]
+    )
+    def test_map_expr_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
+
+        assert bins[bin_name] == expected
+
+    def test_map_get_nil_value_type(self):
+        bin_name = "nmap_bin"
+        exp = MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.NIL, 2, bin_name).compile()
+        ops = [
+            expr_ops.expression_read(bin_name, exp)
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
+        assert bins[bin_name] is None

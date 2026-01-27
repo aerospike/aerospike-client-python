@@ -1,5 +1,3 @@
 pytest==7.4.0
 # To generate coverage reports in the Github Actions pipeline
 pytest-cov==4.1.0
-# TODO: these should be removed since we are not using them
-psutil

@@ -74,6 +74,7 @@ class _ExprOp:  # TODO replace this with an enum
     META_SINCE_UPDATE_TIME = 71
     META_IS_TOMBSTONE = 72
     META_MEMORY_SIZE = 73
+    META_RECORD_SIZE = 74
 
     REC_KEY = 80
     BIN = 81
@@ -86,6 +87,7 @@ class _ExprOp:  # TODO replace this with an enum
     DEF = 126
 
     _AS_EXP_CODE_AS_VAL = 128
+
     # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
@@ -104,11 +106,20 @@ class _ExprOp:  # TODO replace this with an enum
     VAL = 200
 
 
+class ReturnType:
+    # Define here because we aren't including this constant in the Python client
+    # But it exists in the C client
+    LIST_RETURN_INVERTED = 0x10000
+    MAP_RETURN_INVERTED = 0x10000
+
+
+# These enum constants must match the values for C client's as_exp_type.
+# These are passed as arguments to ModifyByPath and SelectByPath expressions
 class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
@@ -159,7 +170,6 @@ class _BaseExpr(_AtomExpr):
 
     def compile(self) -> TypeExpression:
         expression = [self._get_op()]
-        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

@@ -28,6 +28,8 @@
 #include "exceptions.h"
 #include "geo.h"
 
+// C client predicates do not have a bin, but the Python client associates bins with predicates
+
 static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
 {
     PyObject *py_bin = NULL;
@@ -37,6 +39,7 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    // If we don't specify a 6th item (the index type), query.where() will assume it is AS_INDEX_TYPE_DEFAULT
     if (PyLong_Check(py_val)) {
         return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
                              py_bin, py_val);
@@ -44,6 +47,10 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
     else if (PyUnicode_Check(py_val)) {
         return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
                              py_bin, py_val);
+    }
+    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
+        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_BLOB, py_bin,
+                             py_val);
     }
 
     Py_INCREF(Py_None);
@@ -69,12 +76,17 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
         goto exit;
     }
 
+    // 5th element is None because the predicate doesn't use a 2nd value.
     if (PyLong_Check(py_val)) {
         return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
                              py_bin, py_val, Py_None, index_type);
     }
     else if (PyUnicode_Check(py_val)) {
         return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
+                             py_bin, py_val, Py_None, index_type);
+    }
+    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_BLOB,
                              py_bin, py_val, Py_None, index_type);
     }
 
@@ -188,7 +200,7 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
     PyDict_SetItemString(py_geo_object, "type", py_circle);
     Py_DECREF(py_circle);
 
-    if (PyUnicode_Check(py_bin) &&
+    if ((PyUnicode_Check(py_bin) || py_bin == Py_None) &&
         (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
         (PyFloat_Check(py_long) || PyLong_Check(py_long)) &&
         (PyFloat_Check(py_radius) || PyLong_Check(py_radius))) {
@@ -301,7 +313,7 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
     PyDict_SetItemString(py_geo_object, "type", py_point);
     Py_DECREF(py_point);
 
-    if (PyUnicode_Check(py_bin) &&
+    if ((PyUnicode_Check(py_bin) || py_bin == Py_None) &&
         (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
         (PyFloat_Check(py_long) || PyLong_Check(py_long))) {
         py_list = Py_BuildValue("[OO]", py_lat, py_long);

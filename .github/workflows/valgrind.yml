@@ -1,4 +1,5 @@
 name: Valgrind
+run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
 on:
   workflow_dispatch:
@@ -7,25 +8,155 @@ on:
         description: 'new_test/<test-file>'
         required: false
         default: ""
-      use-server-rc:
-        required: true
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        required: false
+        description: Server tag
+        default: latest
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
         default: false
 
+env:
+  PYTHON_TAG: cp310
+
 jobs:
-  valgrind:
-    runs-on: ubuntu-latest
+  look-for-wheel-in-jfrog:
+    outputs:
+      num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
+      # So we can pass the python tag to a reusable workflow
+      python-tag: ${{ env.PYTHON_TAG }}
+    runs-on: ubuntu-22.04
+    env:
+      JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Get shortened commit hash of this workflow run
+      # versioningit commit sha is always 8 chars long it seems
+      run: echo SHORT_GITHUB_SHA=$(echo ${{ github.sha }} | cut -c1-8) >> $GITHUB_ENV
+
+    - name: Look for wheel built with default settings in JFrog
+      # AQL has the option to exclude patterns from search results
+      # but it doesn't allow regex, so we can't filter out any type of label in a wheel name
+      # Example: we want to filter out "unoptimized" and "dsym" but in case we add more labels, we want to use regex
+      # to handle those new labels without updating the regex.
+      run: jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+
+    - name: Show unfiltered results
+      run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+
+    - name: Install sponge
+      run: sudo apt install -y moreutils
+
+    - name: Filter out wheels with labels in results
+      run: jq 'map(select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not))' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+      shell: bash
+
+    - name: Check if artifacts with labels were filtered out
+      run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+
+    - name: Count artifacts
+      id: count_num_artifacts_found
+      run: echo num_artifacts=$(jq length ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}) >> $GITHUB_OUTPUT
+
+    - name: Multiple artifacts found, not sure which one to use. Fail out
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
+      run: exit 1
+
+    - name: Found the exact artifact in JFrog. Get the artifact name
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      run: echo ARTIFACT_PATH=$(jq -r .[0].path ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}) >> $GITHUB_ENV
+
+    - name: Then download artifact from JFrog
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      run: jf rt download --flat --fail-no-op ${{ env.ARTIFACT_PATH }}
+
+    - name: Pass to valgrind job
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      with:
+        # Artifact name doesn't matter. Valgrind job downloads all artifacts to get the one wheel
+        if-no-files-found: error
+        path: './*.whl'
+
+  build-manylinux-wheel:
+    needs: look-for-wheel-in-jfrog
+    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+      platform-tag: manylinux_x86_64
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  upload-built-wheel-to-jfrog:
+    needs: build-manylinux-wheel
+    # TODO: this job should skip when this workflow is run on central branches
+    # We already have artifacts available for central branches in the PyPI-type JFrog repo
+    # The problem is we have to conditionally skip this job, but using the github context to get the branch name
+    # doesn't work for some reason. Just leave this alone for now.
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
+    secrets: inherit
+
+  valgrind:
+    env:
+      MASSIF_REPORT_FILE_NAME: massif.out
+    needs: [
+      look-for-wheel-in-jfrog,
+      build-manylinux-wheel
+    ]
+    # Case 1: Found artifact in JFrog
+    # Case 2: Did not find artifact in JFrog, had to build it in GHA
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
+        fetch-depth: 0
 
-    - uses: actions/setup-python@v2
+    - name: Convert Python tag to Python version
+      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
+      shell: bash
+
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
-        python-version: "3.7"
+        python-version: '${{ env.PYTHON_VERSION }}'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      with:
+        merge-multiple: true
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -33,13 +164,36 @@ jobs:
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
+        server-tag: ${{ inputs.server-tag }}
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y
-    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+
+    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
+      if: ${{ inputs.massif }}
+
+    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+      if: ${{ !inputs.massif }}
+
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
+
+    # TODO: upload report as artifact
+    - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
+      if: ${{ !cancelled() && inputs.massif }}
+      working-directory: test
+
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  delete-artifacts:
+    needs: [
+      # These jobs must have downloaded the artifact from Github before we can delete it
+      upload-built-wheel-to-jfrog,
+      valgrind
+    ]
+    # Workflow run must clean up after itself even if cancelled
+    if: ${{ always() }}
+    uses: ./.github/workflows/delete-artifacts.yml

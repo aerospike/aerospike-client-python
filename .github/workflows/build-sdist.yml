@@ -1,0 +1,65 @@
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+      sha_to_build:
+        type: string
+        required: true
+
+env:
+  STATUS_CHECK_MESSAGE: "Build source distribution"
+  COMMIT_SHA_TO_BUILD: ${{ inputs.is_workflow_call == true && inputs.sha_to_build || github.sha }}
+
+jobs:
+  build-sdist:
+    name: Build source distribution
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - name: Show job status for commit
+      # Commit status will already be shown by the calling workflow for push and pull request events, but not
+      # for any other event like workflow_dispatch. so we have to do it manually
+      # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
+      # The calling workflow can be triggered by push or pull request events, so there's that
+      # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        submodules: recursive
+        ref: ${{ env.COMMIT_SHA_TO_BUILD }}
+        fetch-depth: 0
+
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install -r requirements.txt
+
+    - name: Build source distribution
+      run: python3 -m build --sdist
+
+    - name: Upload source distribution to GitHub
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      with:
+        path: ./dist/*.tar.gz
+        name: sdist.build
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      # Always run even if job failed or is cancelled
+      # But we don't want to show anything if the calling workflow was triggered by these events
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}

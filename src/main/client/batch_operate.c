@@ -30,6 +30,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "operate.h"
 #include "exceptions.h"
 #include "policy.h"
 
@@ -108,11 +109,13 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
  * @param py_ops                    The list containing op dictionaries.
  * @param py_policy_batch      		Python dict used to populate policy_batch.
  * @param py_policy_batch_write     Python dict used to populate policy_batch_write.
+ * @param py_ttl                    TTL value to set for each record.
  *******************************************************************************************************
  */
 static PyObject *AerospikeClient_Batch_Operate_Invoke(
     AerospikeClient *self, as_error *err, PyObject *py_keys, PyObject *py_ops,
-    PyObject *py_policy_batch, PyObject *py_policy_batch_write)
+    PyObject *py_policy_batch, PyObject *py_policy_batch_write,
+    PyObject *py_ttl)
 {
     long operation;
     long return_type = -1;
@@ -220,26 +223,15 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
                 &batch_write_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
+    }
 
-        // The C client's batch write policy doesn't have a ttl option
-        // The correct way is to set the ttl inside the as_operations object
-        PyObject *py_ttl = PyDict_GetItemString(py_policy_batch_write, "ttl");
-        Py_XINCREF(py_ttl);
-        // Default ttl
-        if (py_ttl != NULL) {
-            if (PyLong_Check(py_ttl)) {
-                long ttl = PyLong_AsLong(py_ttl);
-                if (ttl > UINT32_MAX || ttl < 0) {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "ttl is out of range. It must be a 32 bit "
-                                    "unsigned integer.");
-                    Py_DECREF(py_ttl);
-                    goto CLEANUP;
-                }
-                ops.ttl = ttl;
-            }
-        }
-        Py_XDECREF(py_ttl);
+    if (py_ttl == NULL || py_ttl == Py_None) {
+        // If ttl in this transaction's batch write policy isn't set, use the client config's default batch write
+        // policy ttl
+        ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+    }
+    else {
+        ops.ttl = (uint32_t)PyLong_AsLong(py_ttl);
     }
 
     // import batch_records helper
@@ -355,15 +347,16 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
     PyObject *py_keys = NULL;
     PyObject *py_ops = NULL;
     PyObject *py_results = NULL;
+    PyObject *py_ttl = NULL;
 
     as_error_init(&err);
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"keys", "ops", "policy_batch",
-                             "policy_batch_write", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_Operate", kwlist,
+    static char *kwlist[] = {
+        "keys", "ops", "policy_batch", "policy_batch_write", "ttl", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:batch_Operate", kwlist,
                                     &py_keys, &py_ops, &py_policy_batch,
-                                    &py_policy_batch_write) == false) {
+                                    &py_policy_batch_write, &py_ttl) == false) {
         return NULL;
     }
 
@@ -371,22 +364,33 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_ops) || !PyList_Size(py_ops)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "ops should be a list of op dictionaries");
-        goto ERROR;
+        goto error;
     }
 
     // required arg so don't need to check for NULL
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
-        goto ERROR;
+        goto error;
+    }
+
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
+    }
+
+    if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ttl should be an integer");
+        goto error;
     }
 
     py_results = AerospikeClient_Batch_Operate_Invoke(
-        self, &err, py_keys, py_ops, py_policy_batch, py_policy_batch_write);
+        self, &err, py_keys, py_ops, py_policy_batch, py_policy_batch_write,
+        py_ttl);
 
     return py_results;
 
-ERROR:
+error:
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
