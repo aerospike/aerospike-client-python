@@ -866,9 +866,7 @@ Index Operations
 
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the keys of the map.
+        Create a secondary index on all of a map's keys, where all of the keys are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
@@ -883,9 +881,7 @@ Index Operations
 
     .. method:: index_map_values_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the values of the map.
+        Create a secondary index on all of a map's values, where all of the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
