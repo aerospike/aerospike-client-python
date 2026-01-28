@@ -6,8 +6,13 @@ from aerospike import exception as e
 
 import aerospike
 
+callback_called = False
 
 class TestLog(object):
+    def setup_class(cls):
+        global callback_called
+        callback_called = False
+
     def teardown_class(cls):
         """
         Set the class level logger to a no-op to ensure no problems later
@@ -87,16 +92,12 @@ class TestLog(object):
 
         # See comment in test_set_log_handler_with_no_args why we don't use capsys to check stdout
 
-    def test_overriding_log_handler_and_log_level(self):
-        aerospike.set_log_handler()
-        aerospike.set_log_handler(None)
+    def custom_log_callback(level, func, path, line, msg):
+        global callback_called
+        callback_called = True
 
-        callback_called = False
-        def custom_log_callback(level, func, path, line, msg):
-            nonlocal callback_called
-            callback_called = True
-
-        aerospike.set_log_handler(callback_called)
+    def test_changing_log_level_does_not_affect_log_handler(self):
+        aerospike.set_log_handler(self.custom_log_callback)
 
         aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
@@ -104,6 +105,19 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
+        global callback_called
+        assert callback_called
+
+    def test_removing_log_handler_does_not_change_log_level(self):
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+        aerospike.set_log_handler(None)
+        aerospike.set_log_handler(self.custom_log_callback)
+
+        client = TestBaseClass.get_new_connection()
+        client.close()
+
+        global callback_called
         assert callback_called
 
     @pytest.mark.parametrize(
