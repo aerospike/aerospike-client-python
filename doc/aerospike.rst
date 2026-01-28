@@ -299,7 +299,7 @@ The following example shows several different methods to configuring logging for
 
     When no argument is passed, the default log handler is used.
 
-    When callback is :py:obj:`None`, the saved log handler is cleared and logging is disabled.
+    When callback is :py:obj:`None`, the saved log handler is cleared.
 
     When a callable is passed, it must have these five parameters in this order:
 
