@@ -380,40 +380,12 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
-                                                    PyObject *args,
-                                                    PyObject *kwds)
-{
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_DEFAULT,
-                                        "index_single_value_create");
-}
-
-PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds)
-{
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_LIST,
-                                        "index_list_create");
-}
-
-PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
-                                                PyObject *args, PyObject *kwds)
-{
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_MAPKEYS,
-                                        "index_map_keys_create");
-}
-
-PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
-                                                  PyObject *args,
-                                                  PyObject *kwds)
-{
-    return AerospikeClient_Index_Create(
-        self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
-}
-
 // TODO: way to get method name dynamically for error message?
-PyObject *AerospikeClient_Index_Create(AerospikeClient *self, PyObject *args,
-                                       PyObject *kwds, as_index_type index_type,
-                                       const char *ml_name)
+static inline PyObject *AerospikeClient_Index_Create(AerospikeClient *self,
+                                                     PyObject *args,
+                                                     PyObject *kwds,
+                                                     as_index_type index_type,
+                                                     const char *ml_name)
 {
     // Initialize error
     as_error err;
@@ -442,6 +414,36 @@ PyObject *AerospikeClient_Index_Create(AerospikeClient *self, PyObject *args,
     return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
                                          py_name, py_datatype, index_type,
                                          py_ctx);
+}
+
+PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
+                                                    PyObject *args,
+                                                    PyObject *kwds)
+{
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_DEFAULT,
+                                        "index_single_value_create");
+}
+
+PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_LIST,
+                                        "index_list_create");
+}
+
+PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
+                                                PyObject *args, PyObject *kwds)
+{
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_MAPKEYS,
+                                        "index_map_keys_create");
+}
+
+PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
+                                                  PyObject *args,
+                                                  PyObject *kwds)
+{
+    return AerospikeClient_Index_Create(
+        self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
 }
 
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
