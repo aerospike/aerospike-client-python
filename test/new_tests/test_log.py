@@ -107,3 +107,11 @@ class TestLog(object):
         """
         response = aerospike.set_log_level(9)
         assert response == 0
+
+    def test_set_log_level_invalid_arg_count(self):
+        with pytest.raises(TypeError):
+            aerospike.set_log_level()
+
+    def test_set_log_handler_invalid_arg_count(self):
+        with pytest.raises(TypeError):
+            aerospike.set_log_handler(None, None)
