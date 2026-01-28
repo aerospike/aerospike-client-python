@@ -44,6 +44,9 @@ static PyObject *createIndexWithDataAndCollectionType(
     as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx,
     as_exp *exp);
 
+#define DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE                    \
+    "%s() is deprecated. Please use index_single_value_create() instead"
+
 /**
  *******************************************************************************************************
  * Creates an integer index for a bin in the Aerospike DB.
@@ -60,6 +63,10 @@ static PyObject *createIndexWithDataAndCollectionType(
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
                                                PyObject *args, PyObject *kwds)
 {
+    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
+                     "index_integer_create");
+
     // Initialize error
     as_error err;
     as_error_init(&err);
@@ -102,6 +109,10 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds)
 {
+    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
+                     "index_string_create");
+
     // Initialize error
     as_error err;
     as_error_init(&err);
@@ -131,6 +142,10 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
+    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
+                     "index_blob_create");
+
     // Python Function Arguments
     PyObject *py_policy = NULL;
     PyObject *py_ns = NULL;
@@ -209,6 +224,10 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                                            PyObject *args, PyObject *kwds)
 {
+    PyErr_WarnEx(PyExc_DeprecationWarning, 2,
+                 "index_cdt_create() is deprecated. Please use one of the "
+                 "other non-deprecated index_*_create() methods instead");
+
     // Initialize error
     as_error err;
     as_error_init(&err);
@@ -484,6 +503,10 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
+    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
+                     "index_geo2dsphere_create");
+
     // Initialize error
     as_error err;
     as_error_init(&err);
