@@ -183,6 +183,7 @@ as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
 // and returns the as_cdt_ctx* value to be passed to the C client API
 //
 // The cdt_ctx argument *must* point to an uninitialized as_cdt_ctx object in order to initialize it.
+// This method is only used for stack allocated as_cdt_ctx objects where the C client API only needs to use it once.
 // If this call succeeds and returns a non-NULL as_cdt_ctx reference, the user is responsible for destroying it.
 // Sets err on error.
 // The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
