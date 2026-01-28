@@ -87,6 +87,25 @@ class TestLog(object):
 
         # See comment in test_set_log_handler_with_no_args why we don't use capsys to check stdout
 
+    def test_overriding_log_handler_and_log_level(self):
+        aerospike.set_log_handler()
+        aerospike.set_log_handler(None)
+
+        callback_called = False
+        def custom_log_callback(level, func, path, line, msg):
+            nonlocal callback_called
+            callback_called = True
+
+        aerospike.set_log_handler(callback_called)
+
+        aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+        client = TestBaseClass.get_new_connection()
+        client.close()
+
+        assert callback_called
+
     @pytest.mark.parametrize(
         "log_level",
         [
