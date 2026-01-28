@@ -6,7 +6,10 @@ import glob
 import os
 import time
 from typing import Optional
-
+import re
+import aerospike
+from .test_base_class import TestBaseClass
+from importlib.metadata import version
 
 # Flags for testing callbacks
 enable_triggered = False
@@ -113,9 +116,20 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
-    def test_enable_metrics_with_invalid_arg(self):
+    @pytest.mark.parametrize(
+        "policy",
+        [
+            1,
+            # We're testing a negative code path in a helper function
+            # where the object's actual type belongs to aerospike_helpers but does not match the expected
+            # type from aerospike_helpers
+            # The actual type needs to be in the same submodule as the expected type (metrics in aerospike_helpers)
+            listeners
+        ]
+    )
+    def test_enable_metrics_with_invalid_arg(self, policy):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.enable_metrics(1)
+            self.as_connection.enable_metrics(policy)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
     def test_metrics_writer(self):
@@ -130,7 +144,37 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
-    def test_setting_metrics_policy_custom_settings(self):
+        # The client language and version should be correct
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Skip header
+                f.readline()
+                # Each line will show the client language and version
+                data = f.readline()
+            # Each line includes cluster[cluster_name,client_language,client_version,...
+            # cluster_name can be empty
+            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]*,([A-Za-z]+),([0-9.a-zA-Z+]+),", string=data)
+            client_language, client_version = regex.groups()
+
+            assert client_language == "python"
+            assert client_version == version("aerospike")
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+
+    @pytest.fixture(scope="function", params=[None, "my_app"])
+    def get_client_and_app_id(self, request):
+        config = TestBaseClass.get_connection_config()
+        config["app_id"] = request.param
+        client = aerospike.client(config)
+
+        yield request.param, client
+
+        client.close()
+
+    def test_setting_metrics_policy_custom_settings(self, get_client_and_app_id):
+        app_id, client = get_client_and_app_id
+
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -145,9 +189,9 @@ class TestMetrics:
             labels={"a": "b"},
         )
 
-        self.as_connection.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
         time.sleep(3)
-        self.as_connection.disable_metrics()
+        client.disable_metrics()
 
         # These callbacks should've been called
         assert enable_triggered is True
@@ -164,6 +208,14 @@ class TestMetrics:
             assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
+            if type(app_id) == str:
+                assert cluster.app_id == app_id
+            elif TestBaseClass.auth_in_use():
+                # Or username if the app_id is not set
+                assert cluster.app_id == TestBaseClass.user
+            else:
+                assert cluster.app_id == "not-set"
+
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node
@@ -175,6 +227,8 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
+                assert type(node.conns.recovered) == int
+                assert type(node.conns.aborted) == int
                 # Check NodeMetrics
                 assert type(node.metrics) == list
                 ns_metrics = node.metrics

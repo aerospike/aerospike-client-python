@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -88,7 +89,7 @@ class TestConnect(object):
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -145,18 +146,28 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    def test_connect_positive_cluster_name(self):
+    @pytest.mark.parametrize(
+        "cluster_name",
+        [
+            None,
+            # This test case is for code coverage purposes
+            "invalid-cluster-name"
+        ]
+    )
+    def test_connect_with_cluster_name(self, cluster_name):
         """
-        Invoke connect() giving a cluster name. This is just a usage test (doesn't care if the server's cluster name
-        matches or not)
+        Invoke connect() giving a cluster name
         """
         config = self.connection_config.copy()
-        config["cluster_name"] = "test-cluster"
+        config["cluster_name"] = cluster_name
 
-        try:
-            self.client = aerospike.client(config).connect()
-        except e.ClientError:
-            pass
+        if cluster_name is None:
+            cm = nullcontext()
+        else:
+            cm = pytest.raises(e.ClientError)
+
+        with cm:
+            self.client = aerospike.client(config)
 
     def test_connect_positive_reconnect(self):
         """
@@ -204,7 +215,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
         ],
         ids=[
             "config not dict",
@@ -215,7 +226,7 @@ class TestConnect(object):
             "hosts port is string",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 

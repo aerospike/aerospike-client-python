@@ -4,7 +4,7 @@ import pprint
 
 # Connect to database
 config = {"hosts": [("127.0.0.1", 3000)]}
-client = aerospike.client(config).connect()
+client = aerospike.client(config)
 
 # Write player records to database
 keys = [("test", "demo", i) for i in range(1, 5)]

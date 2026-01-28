@@ -8,7 +8,7 @@ container:
 build:
   - name: build
     environment:
-      PYTHONS: /opt/python/cp38-cp38/bin,/opt/python/cp39-cp39/bin,/opt/python/cp310-cp310/bin,/opt/python/cp311-cp311/bin,/opt/python/cp312-cp312/bin,/opt/python/cp313-cp313/bin
+      PYTHONS: /opt/python/cp310-cp310/bin,/opt/python/cp311-cp311/bin,/opt/python/cp312-cp312/bin,/opt/python/cp313-cp313/bin,/opt/python/cp314-cp314/bin
     script:
       - scripts/manylinux2_28_build.sh
     artifact:

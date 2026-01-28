@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -85,7 +85,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
       platform-tag:
         type: string
         required: true
@@ -153,6 +153,11 @@ jobs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - id: get-runner-os
       # Single source of truth for which runner OS to use for each platform tag
       # We use the larger runner for mac x86 because there is noise when using the regular runners
@@ -161,8 +166,8 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[macosx_x86_64]="macos-13-large"
-        hashmap[macosx_arm64]="macos-13-xlarge"
+        hashmap[macosx_x86_64]="macos-14-large"
+        hashmap[macosx_arm64]="macos-14"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
@@ -180,18 +185,23 @@ jobs:
       MACOS_OPENSSL_VERSION: 3
       CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -200,7 +210,7 @@ jobs:
 
     - name: 'Windows: Add msbuild to PATH'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
 
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -248,12 +258,12 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '91d097e7dbb5fa4a21c725fdac218ef72cc168685d931e559854883ce4747dee') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '8957f7f57f85c32bc2b513f1f29299041e721cd4ba763374c2da89d8837d49e9') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '051650a1f07e173b026f6564ce53554db9b9aafa22d9cade3a93df59303bd4a5') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ebd269b4ecc3e186eeb0d734d765dfe9c606017a1cd5a122e08018b86b126217') }} >> $GITHUB_ENV
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
         registry: ghcr.io
@@ -288,12 +298,14 @@ jobs:
         echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
       shell: bash
 
-    - if: ${{ inputs.platform-tag == 'macosx_x86_64' && matrix.python-tag == 'cp313' }}
+    - if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
+      # Just do it for all Python versions (even those that don't require more room) for futureproofing
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.21.3
+      uses: pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865 # v3.1.3
+      id: cibuildwheel
       env:
         # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
         CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/usr/local/lib64
@@ -333,20 +345,19 @@ jobs:
     - run: |
         # Checks that server started up properly
         docker logs aerospike
-        # Prints the actual logs from asd
-        docker exec aerospike cat /var/log/aerospike/aerospike.log
       if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       shell: bash
 
     - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       if: ${{ !cancelled() }}
       with:
         path: ./wheelhouse/*.whl
         name: ${{ env.BUILD_IDENTIFIER }}.build
+        if-no-files-found: error
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -365,18 +376,23 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
       - name: Create status check message
         run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
         shell: bash
 
       - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
@@ -395,7 +411,7 @@ jobs:
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
@@ -408,9 +424,10 @@ jobs:
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          allow-prereleases: true
 
       - name: Install wheel
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
@@ -426,7 +443,7 @@ jobs:
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           status: ${{ job.status }}

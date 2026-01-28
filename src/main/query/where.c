@@ -42,6 +42,8 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 // The rest of the PyObject parameters can be NULL and are optional.
 // 3 cases for these optional parameters:
@@ -58,27 +60,50 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 {
     as_error err;
     as_error_init(&err);
+
+    // TODO: does static pool go out of scope?
+    as_static_pool static_pool;
+    memset(&static_pool, 0, sizeof(static_pool));
+
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
+    // Used to pass ctx into get_cdt_ctx() helper
+    // Declared here to make cleanup logic simpler
+    PyObject *py_ctx_dict = NULL;
 
-    if (py_ctx) {
-        // TODO: does static pool go out of scope?
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
+    // Ctx is an optional parameter
+    if (py_ctx && !Py_IsNone(py_ctx)) {
+        // If user wanted to pass in an actual ctx
+
+        // Glue code to pass into get_cdt_ctx()
+        py_ctx_dict = PyDict_New();
+        if (!py_ctx_dict) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto error;
+        }
+        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        if (retval == -1) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP_PY_CTX_DICT_ON_ERROR;
+        }
+
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
+
+        if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            return err.code;
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
     as_exp *exp_list = NULL;
     if (py_expr) {
-        as_status status =
-            convert_exp_list(self->client, py_expr, &exp_list, &err);
+        as_status status = as_exp_new_from_pyobject(self->client, py_expr,
+                                                    &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP_CTX_ON_ERROR;
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
@@ -181,14 +206,21 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
-    as_query_where_init(&self->query, 1);
+    // Query object should still be safe to use if this fails
+    bool success = as_query_where_init(&self->query, 1);
+    if (!success) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.where() cannot be called more than once on the "
+                        "same instance.");
+        goto CLEANUP_VALUES_ON_ERROR;
+    }
 
     // We have 9 separate codepaths because we need to pass in either 1, 2, or 3 optional arguments to the C client call
     // and for each of those, we have to call one of the three as_query_where_with_{exp,index_name,ctx}()
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         if (py_expr) {
-            as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+            as_query_where_with_exp(&self->query, exp_list, predicate,
                                     index_type, AS_INDEX_BLOB, val1_bytes,
                                     bytes_size, true);
         }
@@ -209,7 +241,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                as_query_where_with_exp(&self->query, exp_list, predicate,
                                         index_type, in_datatype, val1_int,
                                         val2_int);
             }
@@ -226,7 +258,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                as_query_where_with_exp(&self->query, exp_list, predicate,
                                         index_type, in_datatype, val1);
             }
             else if (index_name) {
@@ -276,10 +308,10 @@ CLEANUP_VALUES_ON_ERROR:
 CLEANUP_EXP_ON_ERROR:
 
     if (exp_list) {
-        free(exp_list);
+        as_exp_destroy(exp_list);
     }
 
-CLEANUP_CTX_ON_ERROR:
+CLEANUP_AS_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
     if (ctx_in_use) {
         as_cdt_ctx_destroy(pctx);
@@ -288,6 +320,10 @@ CLEANUP_CTX_ON_ERROR:
         cf_free(pctx);
     }
 
+CLEANUP_PY_CTX_DICT_ON_ERROR:
+    Py_XDECREF(py_ctx_dict);
+
+error:
     return 1;
 }
 

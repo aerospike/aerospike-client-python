@@ -300,3 +300,29 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
+
+def cdt_ctx_all_children() -> _cdt_ctx:
+    """
+    At the current context, causes a query to return a list of all the children
+    of the current item. For a map, this will recurse into the map elements.
+    For a list, this will include all the children in the list.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP)
+
+def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
+    """
+    All children of the current level will be selected, and then the filter expression
+    is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
+    list of items returned in a query for this level.  Items that cause the expression to evaluate to false
+    will be filtered out.
+
+    Args:
+        expression: Compiled expression. This expression must return a boolean.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
