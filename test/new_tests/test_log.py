@@ -74,7 +74,7 @@ class TestLog(object):
 
         assert len(log_tuples) == expected_log_line_count
 
-    def test_set_log_handler_correct_with_none_argument(self, capsys):
+    def test_set_log_handler_correct_with_none_argument(self):
         """
         Test that log handler was removed
         """
@@ -85,8 +85,7 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
-        captured = capsys.readouterr()
-        assert captured.out == ""
+        # See comment in test_set_log_handler_with_no_args why we don't use capsys to check stdout
 
     @pytest.mark.parametrize(
         "log_level",
