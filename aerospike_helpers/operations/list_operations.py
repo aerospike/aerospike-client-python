@@ -23,7 +23,7 @@ List operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
 
 For list operations that take in an index parameter, you can use negative values for indexes.
-See this `page <https://aerospike.com/docs/server/guide/data-types/cdt-list#list-terminology>`_.
+See this `page <https://aerospike.com/docs/develop/data-types/collections/list#list-terminology>`_.
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 

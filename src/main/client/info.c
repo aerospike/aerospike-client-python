@@ -170,7 +170,8 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
 
     // Convert python policy object to as_policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

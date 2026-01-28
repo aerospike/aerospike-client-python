@@ -5,6 +5,7 @@ from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
+from contextlib import nullcontext
 
 random.seed(0)
 
@@ -21,6 +22,8 @@ class TestBitwiseOperations(object):
         self.zero_one_blob = bytearray([0] * 5 + [1] * 5)
         self.count_blob = bytearray([1] * 1 + [86] * 2 + [255] * 1 + [3] * 1)
         self.five_255_blob = bytearray([255] * 5)
+        # This is to match the C client test case
+        self.random_blob = bytearray([0x01, 0x42, 0x03, 0x04, 0x05])
 
         self.test_key = "test", "demo", "bitwise_op"
         self.test_bin_zeroes = "bitwise0"
@@ -28,6 +31,7 @@ class TestBitwiseOperations(object):
         self.zero_one_bin = "bitwise01"
         self.count_bin = "count"
         self.five_255_bin = "255"
+        self.random_blob_bin = "random_blob"
         self.as_connection.put(
             self.test_key,
             {
@@ -36,6 +40,7 @@ class TestBitwiseOperations(object):
                 self.zero_one_bin: self.zero_one_blob,
                 self.count_bin: self.count_blob,
                 self.five_255_bin: self.five_255_blob,
+                self.random_blob_bin: self.random_blob
             },
         )
         self.keys.append(self.test_key)
@@ -393,6 +398,45 @@ class TestBitwiseOperations(object):
         ops = [bitwise_operations.bit_set("bad_name", 0, 8, 1, value, None)]
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, value, expected_context, expected_result",
+        [
+            pytest.param(1, 8, 127, nullcontext(), bytes([0x3F, 0xC2, 0x03, 0x04, 0x05]), id="happy_path"),
+            # The bin is 40 bits long
+            pytest.param(41, 1, 1, pytest.raises(e.ServerError), None, id="bit_offset_too_large"),
+            pytest.param(0, 65, 1, pytest.raises(e.ServerError), None, id="bit_size_too_large"),
+            pytest.param(0, 1, 2**64, pytest.raises(e.ParamError), None, id="value_larger_than_signed_64bit_integer"),
+            # Bit mask is all 1's
+            pytest.param(0, 40, -1, nullcontext(), bytes([0xFF, 0xFF, 0xFF, 0xFF, 0xFF]), id="set_negative_value")
+        ]
+    )
+    def test_bit_set_int(self, bit_offset, bit_size, value, expected_context, expected_result):
+        """
+        Perform a bit_set_int op.
+        """
+        ops = [
+            bitwise_operations.bit_set_int(
+                bin_name=self.random_blob_bin,
+                bit_offset=bit_offset,
+                bit_size=bit_size,
+                # 127 = 0111 1111
+                value=value,
+                policy=None
+            )
+        ]
+        # Happy path explanation:
+        # 0000 0001 0100 0010 0000 0011 0000 0100 0000 0101
+        #  ^ offset 1
+        # Setting 127 (8 bits):
+        #  011 1111 1
+        # Result:
+        # 0011 1111 1100 0010 0000 0011 0000 0100 0000 0101
+        with expected_context:
+            self.as_connection.operate(self.test_key, ops)
+
+            _, _, bins = self.as_connection.get(self.test_key)
+            assert bins[self.random_blob_bin] == expected_result
 
     def test_bit_count_seven(self):
         """
