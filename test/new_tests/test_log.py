@@ -8,6 +8,10 @@ import aerospike
 
 callback_called = False
 
+def custom_log_callback(level, func, path, line, msg):
+    global callback_called
+    callback_called = True
+
 class TestLog(object):
     def setup_class(cls):
         global callback_called
@@ -92,12 +96,10 @@ class TestLog(object):
 
         # See comment in test_set_log_handler_with_no_args why we don't use capsys to check stdout
 
-    def custom_log_callback(level, func, path, line, msg):
-        global callback_called
-        callback_called = True
 
     def test_changing_log_level_does_not_affect_log_handler(self):
-        aerospike.set_log_handler(self.custom_log_callback)
+        global custom_log_callback
+        aerospike.set_log_handler(custom_log_callback)
 
         aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
@@ -112,7 +114,8 @@ class TestLog(object):
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
 
         aerospike.set_log_handler(None)
-        aerospike.set_log_handler(self.custom_log_callback)
+        global custom_log_callback
+        aerospike.set_log_handler(custom_log_callback)
 
         client = TestBaseClass.get_new_connection()
         client.close()
