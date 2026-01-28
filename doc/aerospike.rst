@@ -300,7 +300,7 @@ The following example shows several different methods to configuring logging for
 
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
-    Set logging callback for the global client log.
+    Set logging callback globally across all clients.
 
     When no argument is passed, the default log handler is used. See :ref:`logging_default_behavior` for more details.
 
