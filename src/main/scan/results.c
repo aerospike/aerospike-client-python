@@ -84,7 +84,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     static char *kwlist[] = {"policy", "nodename", NULL};
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -112,7 +111,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     // Convert python policy object to as_policy_scan
     pyobject_to_policy_scan(
         self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list, &exp_list_p, false);
+        &self->client->as->config.policies.scan, &exp_list_p, false);
     if (err.code != AEROSPIKE_OK) {
         as_error_update(&err, err.code, NULL);
         goto CLEANUP;
