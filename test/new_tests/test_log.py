@@ -23,7 +23,7 @@ class TestLog(object):
         """
         Test default log handler
         """
-        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         assert response == 0
 
         aerospike.set_log_handler()
