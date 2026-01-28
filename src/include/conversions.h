@@ -167,7 +167,9 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
                                          as_error *err);
 
-// Returns a reference to as_cdt_ctx to be passed to the C client API
+// This takes in a Python "list of contexts" argument from an API,
+// and returns the as_cdt_ctx* value to be passed to the C client API
+//
 // This assumes that the C client API's ctx parameter is optional and can accept a NULL value
 // Sets err on error.
 // The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
@@ -177,18 +179,26 @@ as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
                                             as_static_pool *static_pool,
                                             int serializer_type);
 
-// This returns the as_cdt_ctx* value to be passed to the C client API
+// This takes in a Python "list of contexts" argument from an API,
+// and returns the as_cdt_ctx* value to be passed to the C client API
 //
-// If the cdt_ctx argument is non-NULL, it should point to an uninitialized as_cdt_ctx object.
+// The cdt_ctx argument *must* point to an uninitialized as_cdt_ctx object in order to initialize it.
 // If this call succeeds and returns a non-NULL as_cdt_ctx reference, the user is responsible for destroying it.
 // Sets err on error.
 // The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
 as_cdt_ctx *as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
                                           as_cdt_ctx *cdt_ctx,
-                                          PyObject *py_cdt_ctx,
+                                          PyObject *py_ctx_list,
                                           as_static_pool *static_pool,
                                           int serializer_type);
 
+// This takes in a Python operations dictionary created from aerospike_helpers.operations,
+// and returns the as_cdt_ctx* value to be passed to the C client API that adds operations
+//
+// The cdt_ctx argument *must* point to an uninitialized as_cdt_ctx object in order to initialize it.
+// If this call succeeds and returns a non-NULL as_cdt_ctx reference, the user is responsible for destroying it.
+// Sets err on error.
+// The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
 as_cdt_ctx *get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
     AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     PyObject *py_op_dict, as_static_pool *static_pool, int serializer_type);
