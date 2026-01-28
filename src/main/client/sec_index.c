@@ -380,110 +380,41 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-// TODO: combine all 4 methods into one since they ahve the same signature
 PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
                                                     PyObject *args,
                                                     PyObject *kwds)
 {
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-    PyObject *py_datatype = NULL;
-    PyObject *py_ctx = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
-                             "name", "policy", "ctx", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds,
-                                    "OOOOO|O:index_single_value_create", kwlist,
-                                    &py_ns, &py_set, &py_bin, &py_datatype,
-                                    &py_name, &py_policy, &py_ctx) == false) {
-        return NULL;
-    }
-
-    return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-                                         py_name, py_datatype,
-                                         AS_INDEX_TYPE_DEFAULT, py_ctx);
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_DEFAULT,
+                                        "index_single_value_create");
 }
 
 PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-    PyObject *py_datatype = NULL;
-    PyObject *py_ctx = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
-                             "name", "policy", "ctx", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(
-            args, kwds, "OOOOO|O:index_list_create", kwlist, &py_ns, &py_set,
-            &py_bin, &py_datatype, &py_name, &py_policy, &py_ctx) == false) {
-        return NULL;
-    }
-
-    return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-                                         py_name, py_datatype,
-                                         AS_INDEX_TYPE_LIST, py_ctx);
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_LIST,
+                                        "index_list_create");
 }
 
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-    PyObject *py_datatype = NULL;
-    PyObject *py_ctx = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
-                             "name", "policy", "ctx", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOO|O:index_map_keys_create",
-                                    kwlist, &py_ns, &py_set, &py_bin,
-                                    &py_datatype, &py_name, &py_policy,
-                                    &py_ctx) == false) {
-        return NULL;
-    }
-
-    return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-                                         py_name, py_datatype,
-                                         AS_INDEX_TYPE_MAPKEYS, py_ctx);
+    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_MAPKEYS,
+                                        "index_map_keys_create");
 }
 
 PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
                                                   PyObject *args,
                                                   PyObject *kwds)
 {
+    return AerospikeClient_Index_Create(
+        self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
+}
+
+// TODO: way to get method name dynamically for error message?
+PyObject *AerospikeClient_Index_Create(AerospikeClient *self, PyObject *args,
+                                       PyObject *kwds, as_index_type index_type,
+                                       const char *ml_name)
+{
     // Initialize error
     as_error err;
     as_error_init(&err);
@@ -497,21 +428,20 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
     PyObject *py_datatype = NULL;
     PyObject *py_ctx = NULL;
 
-    // Python Function Keyword Arguments
     static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
                              "name", "policy", "ctx", NULL};
 
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds,
-                                    "OOOOO|O:index_map_values_create", kwlist,
-                                    &py_ns, &py_set, &py_bin, &py_datatype,
-                                    &py_name, &py_policy, &py_ctx) == false) {
+    const char format[256];
+    snprintf(format, 256, "OOOOO|O:%s", ml_name);
+    if (PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_ns, &py_set,
+                                    &py_bin, &py_datatype, &py_name, &py_policy,
+                                    &py_ctx) == false) {
         return NULL;
     }
 
     return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-                                         py_name, py_datatype,
-                                         AS_INDEX_TYPE_MAPVALUES, py_ctx);
+                                         py_name, py_datatype, index_type,
+                                         py_ctx);
 }
 
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
