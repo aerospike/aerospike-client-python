@@ -19,7 +19,7 @@ class TestLog(object):
         response = aerospike.set_log_level(loglevel=aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
 
-    def test_set_log_handler_with_no_args(self, capsys):
+    def test_set_log_handler_with_no_args(self, capfd):
         """
         Test default log handler
         """
@@ -32,7 +32,7 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
-        captured = capsys.readouterr()
+        captured = capfd.readouterr()
         assert "Starting to create a new client" in captured.out
 
     # Also test all the log levels
