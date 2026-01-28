@@ -331,10 +331,10 @@ Other
 
 .. py:function:: get_partition_id(digest) -> int
 
-    Calculate the partition id using a digest.
+    Calculate the partition ID using a digest.
 
     :param bytes-like object digest: a digest calculated by :py:meth:`aerospike.calc_digest`.
-    :return: the partition id for the digest
+    :return: the partition ID for the digest
     :rtype: :class:`int`
 
 .. _client_config:
