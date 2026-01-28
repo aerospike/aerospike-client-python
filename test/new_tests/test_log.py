@@ -19,7 +19,7 @@ class TestLog(object):
         response = aerospike.set_log_level(loglevel=aerospike.LOG_LEVEL_DEBUG)
         assert response == 0
 
-    def test_set_log_handler_with_no_args(self, capfd):
+    def test_set_log_handler_with_no_args(self):
         """
         Test default log handler
         """
@@ -32,8 +32,9 @@ class TestLog(object):
         client = TestBaseClass.get_new_connection()
         client.close()
 
-        captured = capfd.readouterr()
-        assert "Starting to create a new client" in captured.out
+        # We don't test for live stdout (via capsys) because Python can "block buffer" stdout by default
+        # instead of line buffering. This test will fail if "block buffering" is enabled since
+        # the logs will not be printed out until the end when the tests have finished.
 
     # Also test all the log levels
     @pytest.mark.parametrize(
