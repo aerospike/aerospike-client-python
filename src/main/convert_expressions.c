@@ -1836,7 +1836,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         py_ctx_list_p = PyDict_GetItemString(temp_expr.pydict, CTX_KEY);
         if (py_ctx_list_p != NULL) {
             temp_expr.ctx = as_cdt_ctx_create_from_pyobject(
-                self, err, temp_expr.pydict, &static_pool, SERIALIZER_PYTHON);
+                self, err, py_ctx_list_p, &static_pool, SERIALIZER_PYTHON);
             if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
