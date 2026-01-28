@@ -25,8 +25,6 @@
 #include "exceptions.h"
 #include "log.h"
 
-#define LOG_LEVEL_OFF -1
-
 bool is_current_log_level_off = true;
 PyObject *py_current_custom_callback = NULL;
 

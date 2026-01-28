@@ -34,3 +34,5 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
                                     PyObject *kwds);
 
 void Aerospike_Enable_Default_Logging();
+
+#define LOG_LEVEL_OFF -1
