@@ -282,6 +282,11 @@ If we read the data for each record using ``aql``, it outputs the following data
 Logging
 -------
 
+.. _logging_default_behavior:
+
+Default behavior
+^^^^^^^^^^^^^^^^
+
 By default:
 
 - The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
@@ -297,7 +302,7 @@ The following example shows several different methods to configuring logging for
 
     Set logging callback for the global client log.
 
-    When no argument is passed, the default log handler is used.
+    When no argument is passed, the default log handler is used. See :ref:`logging_default_behavior` for more details.
 
     When callback is :py:obj:`None`, the saved log handler is cleared.
 
