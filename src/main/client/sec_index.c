@@ -224,9 +224,10 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                                            PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnEx(PyExc_DeprecationWarning, 2,
+    PyErr_WarnEx(PyExc_DeprecationWarning,
                  "index_cdt_create() is deprecated. Please use one of the "
-                 "other non-deprecated index_*_create() methods instead");
+                 "other non-deprecated index_*_create() methods instead",
+                 2);
 
     // Initialize error
     as_error err;
