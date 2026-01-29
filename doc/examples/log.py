@@ -6,7 +6,7 @@ import aerospike
 # Clears saved log handler and disable logging
 aerospike.set_log_handler(None)
 
-# Set default log handler to print to the data to the console
+# Set default log handler to print to the console
 aerospike.set_log_handler()
 
 def log_callback(level, func, path, line, msg):
