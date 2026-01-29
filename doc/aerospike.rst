@@ -290,7 +290,7 @@ Default behavior
 By default:
 
 - The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
-- The client's default log handler prints logs in this format: ``<process id>:<counter> <error message>``.
+- The client's default log handler is set and prints logs in this format: ``<process id>:<counter> <error message>``.
   For each log, the counter starts at 1 and increments by 1.
 
 The following example shows several different methods to configuring logging for the Aerospike Python Client:
