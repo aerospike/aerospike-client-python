@@ -635,24 +635,30 @@ static PyObject *createIndexWithDataAndCollectionType(
     // which only parses a dictionary containing a ctx list
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
-    PyObject *py_ctx_dict = PyDict_New();
-    if (!py_ctx_dict) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
-        goto CLEANUP;
-    }
-    int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-    if (retval == -1) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
-        goto CLEANUP2;
+    PyObject *py_ctx_dict = NULL;
+    if (py_ctx) {
+        py_ctx_dict = PyDict_New();
+        if (!py_ctx_dict) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP;
+        }
+        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        if (retval == -1) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP2;
+        }
+
+        as_static_pool static_pool;
+        memset(&static_pool, 0, sizeof(static_pool));
+
+        if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
+                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            goto CLEANUP2;
+        }
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &static_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-        goto CLEANUP2;
-    }
     as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
     // Invoke operation
@@ -679,7 +685,7 @@ static PyObject *createIndexWithDataAndCollectionType(
     }
 
 CLEANUP2:
-    Py_DECREF(py_ctx_dict);
+    Py_XDECREF(py_ctx_dict);
 
 CLEANUP:
     if (py_ustr_set) {
