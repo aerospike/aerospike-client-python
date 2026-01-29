@@ -15,10 +15,16 @@
  ******************************************************************************/
 
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_log_macros.h>
+#include <aerospike/as_metrics.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "metrics.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "policy.h"
+
+// Extended metrics
 
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds)
@@ -35,54 +41,67 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     // Python Function Argument Parsing
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:enable_metrics", kwlist,
                                      &py_metrics_policy)) {
-        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        return NULL;
     }
 
+    // To be passed into C client
     as_metrics_policy *metrics_policy_ref;
+    // If enable_metrics() succeeds, our heap-allocated udata will be free'd later when metrics is disabled (like when client.close() is called)
+    bool free_udata_as_py_listener_data = false;
+
     if (py_metrics_policy == NULL || py_metrics_policy == Py_None) {
         // Use C client's config metrics policy
         metrics_policy_ref = NULL;
     }
     else {
+        // Set a transaction-level metrics policy
         as_metrics_policy_init(&metrics_policy);
-        as_status status = set_as_metrics_policy_using_pyobject(
-            &err, py_metrics_policy, &metrics_policy);
-        if (status != AEROSPIKE_OK) {
-            goto RAISE_EXCEPTION_USING_AS_ERROR;
-        }
         metrics_policy_ref = &metrics_policy;
+        int retval = set_as_metrics_policy_using_pyobject(
+            &err, py_metrics_policy, &metrics_policy);
+        if (retval != 0) {
+            goto CLEANUP_ON_ERROR;
+        }
     }
 
     // 2 scenarios:
-    // 1. If the user does not pass their own MetricsListeners object to client.enable_metrics(), udata is NULL
-    // 2. Otherwise, udata is non-NULL and set to heap-allocated PyListenerData
-    bool free_udata_as_py_listener_data =
+    // 1. If the user passes their own MetricsPolicy and MetricsListeners object to client.enable_metrics(), udata is NOT NULL and set to heap-allocated PyListenerData
+    // 2. Otherwise, udata is NULL.
+    free_udata_as_py_listener_data =
         metrics_policy_ref && metrics_policy.metrics_listeners.udata != NULL;
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_enable_metrics(self->as, &err, metrics_policy_ref);
     Py_END_ALLOW_THREADS
 
+CLEANUP_ON_ERROR:
+    if (metrics_policy_ref) {
+        // This means we initialized metrics_policy earlier
+        as_metrics_policy_destroy(metrics_policy_ref);
+    }
+
     if (err.code != AEROSPIKE_OK) {
-        // In the above scenario #1, when udata is NULL before aerospike_enable_metrics() is called:
-        // It is possible for aerospike_enable_metrics() -> as_cluster_enable_metrics() -> as_metrics_writer_create()
-        // to fail before it assigns a heap allocated value to metrics_policy.metrics_listeners.udata while setting up
-        // the metrics writer.
-        // In that case, we don't want to free udata where udata is NULL
+        if (err.code == AEROSPIKE_METRICS_CONFLICT) {
+            as_log_warn(err.message);
+            as_error_reset(&err);
+            // Even though we aren't raising an exception, the C client's enable_metrics() failed
+            // so we still have to clean up udata now (see below)
+        }
+
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
         }
-        goto RAISE_EXCEPTION_USING_AS_ERROR;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
-
-RAISE_EXCEPTION_USING_AS_ERROR:
-    raise_exception(&err);
-RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-    return NULL;
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+    else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 }
 
 PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
@@ -94,14 +113,43 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
     aerospike_disable_metrics(self->as, &err);
     Py_END_ALLOW_THREADS
 
-    if (err.code != AEROSPIKE_OK) {
-        goto error;
+    if (err.code == AEROSPIKE_METRICS_CONFLICT) {
+        as_log_warn(err.message);
+        as_error_reset(&err);
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+    else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+}
 
-error:
-    raise_exception(&err);
-    return NULL;
+// Regular metrics
+
+PyObject *AerospikeClient_GetStats(AerospikeClient *self)
+{
+    as_cluster_stats stats;
+
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_stats(self->as, &stats);
+    Py_END_ALLOW_THREADS
+
+    as_error err;
+    as_error_init(&err);
+    PyObject *py_cluster_stats =
+        create_py_cluster_stats_from_as_cluster_stats(&err, &stats);
+
+    aerospike_stats_destroy(&stats);
+
+    if (py_cluster_stats == NULL && err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    // A Python native exception can also be raised in this case.
+    return py_cluster_stats;
 }

@@ -126,6 +126,7 @@ class TestExpressions(TestBaseClass):
     def setup(self, request, as_connection):
         self.test_ns = "test"
         self.test_set = "demo"
+        self.first_key = (self.test_ns, self.test_set, 0)
 
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
@@ -357,7 +358,7 @@ class TestExpressions(TestBaseClass):
         keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
         with expected_context:
             brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
-            if expected_context == nullcontext():
+            if type(expected_context) == nullcontext:
                 assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
@@ -609,7 +610,7 @@ class TestExpressions(TestBaseClass):
                 "slist_bin",
                 None,
                 {},
-                ["h", ["e", "g"], "c", ["x", "y"], "b", "b", ["d", "f"], "b", None, "f", "d"],
+                ["h", ["e", "g"], "c", ["x", "y"], "b", "b", ["d", "f"], "b", aerospike.null(), "f", "d"],
                 [
                     ["b", "c", "d", "e", "f", "g", "h"],
                     [
@@ -758,6 +759,14 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    def test_setting_end_param_to_none(self):
+        expr = ListRemoveByValueRange(ctx=None, begin=6, end=None, bin="ilist_bin")
+        ops = [
+            expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, list=ops)
+        assert bins["ilist_bin"] == [1, 2]
 
     @pytest.mark.parametrize(
         "bin_name, expr, expected",

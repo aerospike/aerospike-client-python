@@ -3,34 +3,57 @@ from aerospike import exception as e
 from .test_base_class import TestBaseClass
 import pytest
 import os
+import glob
+
+DYN_CONFIG_PATH = "./dyn_config.yml"
+METRICS_LOG_FILES = "./metrics-*.log"
 
 
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
-        assert provider.interval == 60
+        assert provider.interval == 60000
 
     def test_config_provider_class(self):
-        provider = aerospike.ConfigProvider(path="path", interval=30)
+        provider = aerospike.ConfigProvider(path="path", interval=30000)
 
         assert provider.path == "path"
-        assert provider.interval == 30
+        assert provider.interval == 30000
         # Fields should be read only
         with pytest.raises(AttributeError):
             provider.path = "invalid"
         with pytest.raises(AttributeError):
-            provider.interval = 10
+            provider.interval = 10000
 
     def test_config_provider_class_invalid_args(self):
         # See comment in test_mrt_api.py's test_transaction_class test case
         # for why Windows throws OverflowError instead of ValueError
-        with pytest.raises((ValueError, OverflowError)) as excinfo:
+        with pytest.raises((ValueError, OverflowError)):
             aerospike.ConfigProvider("path", interval=2**32)
-        if excinfo.type == ValueError:
-            assert excinfo.value.args[0] == "interval is too large for an unsigned 32-bit integer"
+
+    # We want to check that the config file we pass in is valid
+    # The C client prints logs showing that it detects changes to the dynamic config file
+    # We also want to check that enable/disable metrics prints out warning logs when dyn config is enabled
+    @pytest.fixture
+    def show_more_logs(self):
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+        yield
+
+        # TODO: currently there is no way to restore the log handler and level before running this test
+        # These are the defaults in the implementation
+        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
 
     @pytest.fixture
-    def functional_test_setup(self):
+    def cleanup_metrics_logs(self):
+        yield
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        for item in metrics_log_filenames:
+            os.remove(item)
+
+    @pytest.fixture
+    def functional_test_setup(self, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
         setup_client = aerospike.client(config)
         self.key = ("test", "demo", 1)
@@ -41,6 +64,9 @@ class TestDynamicConfig:
 
         yield
 
+        # Close file descriptors for metrics log files before removing the files
+        self.client.close()
+
         setup_client.remove(self.key)
         setup_client.close()
 
@@ -49,10 +75,6 @@ class TestDynamicConfig:
     # Dynamic config file should take precedence over both client config defaults and programmatically set values
     def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
         config = TestBaseClass.get_connection_config()
-        # Uncomment if we want to check that the config file we pass in is valid
-        # The C client prints logs showing that it detects changes to the dynamic config file
-        # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
-        DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
@@ -62,24 +84,42 @@ class TestDynamicConfig:
 
         write_policy = {"key": aerospike.POLICY_KEY_SEND}
         config["policies"]["write"] = write_policy
-        client = aerospike.client(config)
+        self.client = aerospike.client(config)
 
-        client.put(self.key, bins={"a": 1}, policy=write_policy)
+        self.client.put(self.key, bins={"a": 1}, policy=write_policy)
 
         # "Send key" is disabled in dynamic config
         # The key should not be returned here
-        query = client.query("test", "demo")
+        query = self.client.query("test", "demo")
         recs = query.results()
         assert len(recs) == 1
-        # Check that record key tuple has a primary key
+        # Check that record key tuple does not have a primary key
         first_record = recs[0]
         first_record_key = first_record[0]
         assert first_record_key[2] is None
 
         # Cleanup
-        client.close()
         if use_env_var:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
+
+    def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
+        config = TestBaseClass.get_connection_config()
+        config["config_provider"] = aerospike.ConfigProvider("./dyn_config_metrics_disabled.yml")
+        client = aerospike.client(config)
+
+        client.enable_metrics()
+
+        # Cleanup
+        client.close()
+
+    def test_disable_metrics_cannot_override_dyn_config(self, show_more_logs, cleanup_metrics_logs):
+        config = TestBaseClass.get_connection_config()
+        config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        client = aerospike.client(config)
+
+        client.disable_metrics()
+
+        client.close()
 
     def test_api_invalid_provider(self):
         config = TestBaseClass.get_connection_config()

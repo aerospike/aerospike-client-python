@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -88,25 +89,39 @@ class TestConnect(object):
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
             assert client.shm_key() == 3
 
-    # TODO: this test doesn't actually check if min_conns_per_node works properly
+    # This test doesn't actually check if the options work properly
     # It just checks that the setting is configured in the Python client (basically a coverage test)
-    def test_connect_positive_min_conns_per_node(self):
+    @pytest.mark.parametrize(
+        "other_config",
+        [
+            {"min_conns_per_node": 0},
+            {"app_id": "app_name"}
+        ]
+    )
+    def test_connect_positive_config_options(self, other_config):
         """
         Invoke connect() with min_conns_per_node specified
         """
         config = self.connection_config.copy()
-        config["min_conns_per_node"] = 0
+        config.update(other_config)
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
+
+    def test_invalid_app_id(self):
+        config = self.connection_config.copy()
+        config["app_id"] = 1
+
+        with pytest.raises(TypeError):
+            aerospike.client(config)
 
     def test_connect_positive_shm_key_default(self):
         """
@@ -131,18 +146,28 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
-    def test_connect_positive_cluster_name(self):
+    @pytest.mark.parametrize(
+        "cluster_name",
+        [
+            None,
+            # This test case is for code coverage purposes
+            "invalid-cluster-name"
+        ]
+    )
+    def test_connect_with_cluster_name(self, cluster_name):
         """
         Invoke connect() giving a cluster name
         """
         config = self.connection_config.copy()
-        config["cluster_name"] = "test-cluster"
+        config["cluster_name"] = cluster_name
 
-        with pytest.raises(e.ClientError) as err_info:
-            self.client = aerospike.client(config).connect()
+        if cluster_name is None:
+            cm = nullcontext()
+        else:
+            cm = pytest.raises(e.ClientError)
 
-        assert err_info.value.code == -1
+        with cm:
+            self.client = aerospike.client(config)
 
     def test_connect_positive_reconnect(self):
         """
@@ -190,7 +215,7 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
         ],
         ids=[
             "config not dict",
@@ -201,7 +226,7 @@ class TestConnect(object):
             "hosts port is string",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 
