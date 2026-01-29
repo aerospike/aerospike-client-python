@@ -404,7 +404,7 @@ static inline PyObject *AerospikeClient_Index_Create(AerospikeClient *self,
                              "name", "policy", "ctx", NULL};
 
     char format[256];
-    snprintf(format, 256, "OOOOO|O:%s", ml_name);
+    snprintf(format, 256, "OOOOO|OO:%s", ml_name);
     if (PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_ns, &py_set,
                                     &py_bin, &py_datatype, &py_name, &py_policy,
                                     &py_ctx) == false) {
