@@ -47,6 +47,9 @@ static PyObject *createIndexWithDataAndCollectionType(
 #define DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE                    \
     "%s() is deprecated. Please use index_single_value_create() instead"
 
+// This allows people to see the function calling the Python client API that issues a warning
+#define STACK_LEVEL 2
+
 /**
  *******************************************************************************************************
  * Creates an integer index for a bin in the Aerospike DB.
@@ -63,7 +66,7 @@ static PyObject *createIndexWithDataAndCollectionType(
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
                                                PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
                      "index_integer_create");
 
@@ -109,7 +112,7 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
                      "index_string_create");
 
@@ -142,7 +145,7 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
                      "index_blob_create");
 
@@ -449,7 +452,7 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, 2,
+    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
                      "index_geo2dsphere_create");
 
