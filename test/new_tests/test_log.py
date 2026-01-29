@@ -60,7 +60,7 @@ class TestLog(object):
     )
     def test_set_log_handler_with_correct_callback_argument(self, log_level, expected_log_line_count):
         log_tuples = []
-        def custom_log_callback(level, func, path, line, msg):
+        def custom_log_callback_with_type_checking(level, func, path, line, msg):
             assert type(level) == int
             assert type(func) == str
             assert type(path) == str
@@ -71,7 +71,7 @@ class TestLog(object):
             log_tuples.append(log_tuple)
 
         aerospike.set_log_level(log_level)
-        aerospike.set_log_handler(log_handler=custom_log_callback)
+        aerospike.set_log_handler(log_handler=custom_log_callback_with_type_checking)
 
         # Forces a single event to be logged
         add_config = {
