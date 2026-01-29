@@ -13,7 +13,8 @@ def custom_log_callback(level, func, path, line, msg):
     callback_called = True
 
 class TestLog(object):
-    def setup_class(cls):
+    @pytest.mark.fixture(autouse=True)
+    def setup(self):
         global callback_called
         callback_called = False
 
@@ -96,7 +97,6 @@ class TestLog(object):
 
         # See comment in test_set_log_handler_with_no_args why we don't use capsys to check stdout
 
-
     def test_changing_log_level_does_not_affect_log_handler(self):
         global custom_log_callback
         aerospike.set_log_handler(custom_log_callback)
@@ -135,7 +135,7 @@ class TestLog(object):
         with pytest.raises(e.ParamError):
             aerospike.set_log_level(log_level)
 
-    # TODO: undefined behavior
+    # TODO: undefined behavior (we're casting a value into an enum outside of its range)
     def test_set_log_level_incorrect(self):
         """
         Test log level with a log level of valid type, but outside of
