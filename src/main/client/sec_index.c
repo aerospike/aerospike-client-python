@@ -33,7 +33,7 @@
 static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
                                 as_error *err);
 
-static PyObject *createIndexWithDataAndCollectionType(
+static PyObject *convert_python_args_to_c_and_create_index(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
     as_index_type index_type, as_index_datatype data_type, PyObject *py_ctx,
@@ -86,7 +86,7 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(
+    return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
         AS_INDEX_NUMERIC, NULL, NULL);
 }
@@ -132,7 +132,7 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(
+    return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
         AS_INDEX_STRING, NULL, NULL);
 }
@@ -161,7 +161,7 @@ PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(
+    return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
         AS_INDEX_BLOB, NULL, NULL);
 }
@@ -199,9 +199,9 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
-                                                NULL, py_name, index_type,
-                                                data_type, NULL, expr);
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, NULL, py_name, index_type, data_type,
+        NULL, expr);
 }
 
 #define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
@@ -267,9 +267,17 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
+    // convert_python_args_to_c_and_create_index, which is called by the new index create method API's,
+    // accepts an optional value of None for ctx
+    // This API call is the only exception where a list of ctx's is required
+    if (Py_IsNone(py_ctx)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ctx cannot be None");
+        goto CLEANUP;
+    }
+
     // Even if this call fails, it will raise its own exception
     // and the err object here will not be set. We don't raise an exception twice
-    py_obj = createIndexWithDataAndCollectionType(
+    py_obj = convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         py_ctx, NULL);
 
@@ -413,9 +421,9 @@ create_index_with_known_index_type(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
-                                                py_bin, py_name, index_type,
-                                                index_datatype, py_ctx, NULL);
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, py_bin, py_name, index_type,
+        index_datatype, py_ctx, NULL);
 }
 
 PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
@@ -476,7 +484,7 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithDataAndCollectionType(
+    return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
         AS_INDEX_GEO2DSPHERE, NULL, NULL);
 }
@@ -522,7 +530,8 @@ CLEANUP:
 
 // exp is optional and can be NULL.
 // If exp is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
-static PyObject *createIndexWithDataAndCollectionType(
+// This is permissive and allows py_ctx to be None or NULL
+static PyObject *convert_python_args_to_c_and_create_index(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
     as_index_type index_type, as_index_datatype data_type, PyObject *py_ctx,
@@ -615,7 +624,7 @@ static PyObject *createIndexWithDataAndCollectionType(
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
     PyObject *py_ctx_dict = NULL;
-    if (py_ctx) {
+    if (py_ctx && !Py_IsNone(py_ctx)) {
         py_ctx_dict = PyDict_New();
         if (!py_ctx_dict) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
