@@ -255,6 +255,8 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     as_cdt_ctx *ctx_ref = as_cdt_ctx_init_from_pyobject(
         self, &err, &ctx, py_ctx, &static_pool, SERIALIZER_PYTHON);
     if (ctx_ref == NULL) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "ctx is a required argument and must not be None");
         goto CLEANUP;
     }
 
