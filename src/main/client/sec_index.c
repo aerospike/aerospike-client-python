@@ -33,11 +33,6 @@
 static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
                                 as_error *err);
 
-static PyObject *createIndexWithCollectionType(
-    AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
-    PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-    PyObject *py_datatype, as_index_type index_type, PyObject *py_ctx);
-
 static PyObject *createIndexWithDataAndCollectionType(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
@@ -384,11 +379,10 @@ CLEANUP:
 }
 
 // TODO: way to get method name dynamically for error message?
-static inline PyObject *AerospikeClient_Index_Create(AerospikeClient *self,
-                                                     PyObject *args,
-                                                     PyObject *kwds,
-                                                     as_index_type index_type,
-                                                     const char *ml_name)
+static inline PyObject *
+create_index_with_known_index_type(AerospikeClient *self, PyObject *args,
+                                   PyObject *kwds, as_index_type index_type,
+                                   const char *ml_name)
 {
     // Initialize error
     as_error err;
@@ -414,38 +408,43 @@ static inline PyObject *AerospikeClient_Index_Create(AerospikeClient *self,
         return NULL;
     }
 
-    return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
-                                         py_name, py_datatype, index_type,
-                                         py_ctx);
+    as_index_datatype index_datatype = AS_INDEX_STRING;
+    if (!getTypeFromPyObject(py_datatype, (int *)&index_datatype, &err)) {
+        return NULL;
+    }
+
+    return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
+                                                py_bin, py_name, index_type,
+                                                index_datatype, py_ctx, NULL);
 }
 
 PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
                                                     PyObject *args,
                                                     PyObject *kwds)
 {
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_DEFAULT,
-                                        "index_single_value_create");
+    return create_index_with_known_index_type(
+        self, args, kwds, AS_INDEX_TYPE_DEFAULT, "index_single_value_create");
 }
 
 PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_LIST,
-                                        "index_list_create");
+    return create_index_with_known_index_type(
+        self, args, kwds, AS_INDEX_TYPE_LIST, "index_list_create");
 }
 
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    return AerospikeClient_Index_Create(self, args, kwds, AS_INDEX_TYPE_MAPKEYS,
-                                        "index_map_keys_create");
+    return create_index_with_known_index_type(
+        self, args, kwds, AS_INDEX_TYPE_MAPKEYS, "index_map_keys_create");
 }
 
 PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
                                                   PyObject *args,
                                                   PyObject *kwds)
 {
-    return AerospikeClient_Index_Create(
+    return create_index_with_known_index_type(
         self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
 }
 
@@ -514,29 +513,6 @@ CLEANUP:
         return false;
     }
     return true;
-}
-
-/*
- * Figure out the data_type from a PyObject and call createIndexWithDataAndCollectionType.
- */
-static PyObject *createIndexWithCollectionType(
-    AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
-    PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-    PyObject *py_datatype, as_index_type index_type, PyObject *py_ctx)
-{
-
-    as_index_datatype data_type = AS_INDEX_STRING;
-
-    as_error err;
-    as_error_init(&err);
-
-    if (!getTypeFromPyObject(py_datatype, (int *)&data_type, &err)) {
-        return NULL;
-    }
-
-    return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
-                                                py_bin, py_name, index_type,
-                                                data_type, py_ctx, NULL);
 }
 
 /*
