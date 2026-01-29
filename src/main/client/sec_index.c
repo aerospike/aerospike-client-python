@@ -403,7 +403,7 @@ static inline PyObject *AerospikeClient_Index_Create(AerospikeClient *self,
     static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
                              "name", "policy", "ctx", NULL};
 
-    const char format[256];
+    char format[256];
     snprintf(format, 256, "OOOOO|O:%s", ml_name);
     if (PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_ns, &py_set,
                                     &py_bin, &py_datatype, &py_name, &py_policy,
