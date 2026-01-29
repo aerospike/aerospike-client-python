@@ -167,9 +167,36 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
                                          as_error *err);
 
-as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-                      PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type);
+// This takes in a Python "list of contexts" argument from an API,
+// and returns the as_cdt_ctx* value to be passed to the C client API
+//
+// This assumes that the C client API's ctx parameter is optional and can accept a NULL value
+// If this call succeeds and returns a non-NULL as_cdt_ctx reference, the user is responsible for destroying it.
+// Sets err on error.
+// The API calls that take in a Python list of contexts doesn't check the parameter's type, so we check it here.
+as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
+                                            as_error *err,
+                                            PyObject *py_ctx_list,
+                                            as_static_pool *static_pool,
+                                            int serializer_type);
+
+// See docstring for as_cdt_ctx_create_from_pyobject
+//
+// The cdt_ctx argument *must* point to an uninitialized as_cdt_ctx object in order to initialize it.
+// This method is only used for stack allocated as_cdt_ctx objects where the C client API only needs to use it once.
+as_cdt_ctx *as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                          as_cdt_ctx *cdt_ctx,
+                                          PyObject *py_ctx_list,
+                                          as_static_pool *static_pool,
+                                          int serializer_type);
+
+// This takes in a Python operations dictionary created from aerospike_helpers.operations,
+// and returns the as_cdt_ctx* value to be passed to the C client API that adds operations
+//
+// See docstring for as_cdt_ctx_init_from_pyobject
+as_cdt_ctx *get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+    AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
+    PyObject *py_op_dict, as_static_pool *static_pool, int serializer_type);
 
 // allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 // if false, the Python object should only be a compiled Python expression object from aerospike_helpers
