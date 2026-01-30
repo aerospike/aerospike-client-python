@@ -224,9 +224,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     PyObject *py_ctx = NULL;
     as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    PyObject *py_ctx_dict = NULL;
-
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;
@@ -252,25 +249,14 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
-    // which only parses a dictionary containing a ctx list
-    py_ctx_dict = PyDict_New();
-    if (!py_ctx_dict) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
-        goto CLEANUP;
-    }
-    int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-    if (retval == -1) {
-        Py_DECREF(py_ctx_dict);
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, CTX_PARSE_ERROR_MESSAGE);
-        goto CLEANUP;
-    }
-
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &static_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+    as_cdt_ctx *ctx_ref = as_cdt_ctx_init_from_pyobject(
+        self, &err, &ctx, py_ctx, &static_pool, SERIALIZER_PYTHON);
+    if (ctx_ref == NULL) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "ctx is a required argument and must not be None");
         goto CLEANUP;
     }
 
@@ -283,7 +269,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     as_cdt_ctx_destroy(&ctx);
 
 CLEANUP:
-    Py_XDECREF(py_ctx_dict);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
