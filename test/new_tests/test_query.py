@@ -71,7 +71,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_string_create("test", "demo", "addr", "addr_index")
+            as_connection.index_string_create("test", "demo", "addr", aerospike.INDEX_STRING, "addr_index")
         except e.IndexFoundError:
             pass
 
@@ -1129,7 +1129,7 @@ class TestQuery(TestBaseClass):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
             pytest.skip("Blob indexes are only supported in server 7.0+")
 
-        self.as_connection.index_blob_create("test", "demo", "blob", "blob_index")
+        self.as_connection.index_single_value_create("test", "demo", "blob", aerospike.INDEX_BLOB, "blob_index")
 
         query = self.as_connection.query("test", "demo")
         blob_val = int.to_bytes(4, length=1, byteorder='big')

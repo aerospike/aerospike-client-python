@@ -215,7 +215,7 @@ class TestIndex(object):
         if self.server_version < [7, 0]:
             pytest.skip("Blob secondary indexes are only supported in server 7.0+")
 
-        self.as_connection.index_blob_create(ns="test", set="demo", bin="bytes", name="bytes_index", policy={})
+        self.as_connection.index_single_value_create(ns="test", set="demo", bin="bytes", index_datatype=aerospike.INDEX_BLOB, name="bytes_index", policy={})
 
         ensure_dropped_index(self.as_connection, "test", "bytes_index")
 
@@ -224,7 +224,7 @@ class TestIndex(object):
         Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         self.as_connection.index_remove("test", "name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "name_index")
@@ -237,7 +237,7 @@ class TestIndex(object):
         policy = {}
 
         with pytest.raises(e.InvalidRequest) as err_info:
-            self.as_connection.index_string_create("test", set_name, "name", "name_index", policy)
+            self.as_connection.index_string_create("test", set_name, "name", aerospike.INDEX_STRING, "name_index", policy)
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
@@ -247,7 +247,7 @@ class TestIndex(object):
         policy = {}
 
         with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
-            self.as_connection.index_string_create(ns_name, "demo", "name", "name_index", policy)
+            self.as_connection.index_string_create(ns_name, "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         err_code = err_info.value.code
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
@@ -262,7 +262,7 @@ class TestIndex(object):
         policy = {}
 
         with pytest.raises(e.NamespaceNotFound) as err_info:
-            self.as_connection.index_string_create("fake_namespace", "demo", "name", "name_index", policy)
+            self.as_connection.index_string_create("fake_namespace", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
@@ -272,7 +272,7 @@ class TestIndex(object):
         Invoke create string index() with incorrect set
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo1", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo1", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         self.as_connection.index_remove("test", "name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "name_index")
@@ -283,7 +283,7 @@ class TestIndex(object):
         Invoke create string index() with incorrect bin
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name1", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name1", aerospike.INDEX_STRING, "name_index", policy)
 
         self.as_connection.index_remove("test", "name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "name_index")
@@ -295,7 +295,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_string_create(None, "demo", "name", "name_index", policy)
+            self.as_connection.index_string_create(None, "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -303,7 +303,7 @@ class TestIndex(object):
     def test_create_string_index_with_set_is_none(self):
         # Invoke create string index() with set is None
         policy = {}
-        retobj = self.as_connection.index_string_create("test", None, "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", None, "name", aerospike.INDEX_STRING, "name_index", policy)
 
         self.as_connection.index_remove("test", "name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "name_index")
@@ -315,7 +315,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_string_create("test", "demo", None, "name_index", policy)
+            self.as_connection.index_string_create("test", "demo", None, aerospike.INDEX_STRING, "name_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -326,7 +326,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_string_create("test", "demo", "name", None, policy)
+            self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, None, policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -336,10 +336,10 @@ class TestIndex(object):
         Invoke create string index() with multiple times on same bin
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         try:
-            retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+            retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
 
@@ -351,11 +351,11 @@ class TestIndex(object):
         Invoke create string index() with multiple times on different bin
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
         with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_string_create("test", "demo", "addr", "name_index", policy)
+            retobj = self.as_connection.index_string_create("test", "demo", "addr", aerospike.INDEX_STRING, "name_index", policy)
             self.as_connection.index_remove("test", "name_index", policy)
             ensure_dropped_index(self.as_connection, "test", "name_index")
 
@@ -370,10 +370,10 @@ class TestIndex(object):
         bin with different name
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         try:
-            retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index1", policy)
+            retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index1", policy)
             self.as_connection.index_remove("test", "name_index1", policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
@@ -385,7 +385,7 @@ class TestIndex(object):
         Invoke create string index() with policy
         """
         policy = {"timeout": 180000}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "name_index", policy)
@@ -432,7 +432,7 @@ class TestIndex(object):
         Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_string_create("test", "demo", "name", "uni_name_index", policy)
+        retobj = self.as_connection.index_string_create("test", "demo", "name", aerospike.INDEX_STRING, "uni_name_index", policy)
 
         self.as_connection.index_remove("test", "uni_name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "uni_name_index")
