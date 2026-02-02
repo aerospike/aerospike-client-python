@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_log_macros.h>
 
 #include "pythoncapi_compat.h"
 #include "admin.h"
@@ -575,6 +576,8 @@ internal_error:
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
+    as_log_trace("Starting to create a new client...");
+
     PyObject *py_config = NULL;
     int error_code = 0;
     as_error constructor_err;

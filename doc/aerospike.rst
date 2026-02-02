@@ -282,30 +282,45 @@ If we read the data for each record using ``aql``, it outputs the following data
 Logging
 -------
 
-.. py:function:: set_log_handler(callback)
+.. _logging_default_behavior:
 
-    Enables aerospike log handler
+Default behavior
+^^^^^^^^^^^^^^^^
 
-    :param optional callable callback: the function used as the logging handler.
+By default:
 
-    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
+- The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
+- The client's default log handler is set and prints logs in this format: ``<process id>:<counter> <error message>``.
+  For each log, the counter starts at 1 and increments by 1.
 
-        .. code-block:: python
+The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-            import aerospike
+.. include:: examples/log.py
+    :code: python
 
-        from __future__ import print_function
-        import aerospike
+.. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(callback)
+    Set logging callback globally across all clients.
 
+    When no argument is passed, the default log handler is used. See :ref:`logging_default_behavior` for more details.
 
-.. py:function:: set_log_level(log_level)
+    When callback is :py:obj:`None`, the saved log handler is cleared.
 
-    Declare the logging level threshold for the log handler.
+    When a callable is passed, it must have these five parameters in this order:
 
-    :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
+    .. code-block:: python
+
+        def callback(level: int, function: str, path: str, line: int, message: str):
+            pass
+
+    :param optional callable log_handler: the function used as the logging handler.
+
+.. py:function:: set_log_level(loglevel)
+
+    Declare the logging level threshold for the log handler. If setting log level to :py:obj:`aerospike.LOG_LEVEL_OFF`,
+    the current log handler does not get reset.
+
+    :param int loglevel: one of the :ref:`aerospike_log_levels` constant values.
 
 Other
 -----
