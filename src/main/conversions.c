@@ -2706,11 +2706,38 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+long long convert_pyobject_to_signed_fixed_width_integer_type(
+    PyObject *pyobject, long long min_bound, long long max_bound)
+{
+    if (!PyLong_Check(pyobject)) {
+        PyErr_Format(PyExc_TypeError, "%S must be an integer", pyobject);
+        goto error;
+    }
+    long long value = PyLong_AsLongLong(pyobject);
+    if (PyErr_Occurred()) {
+        goto error;
+    }
+
+    if (value > max_bound) {
+        PyErr_Format(PyExc_ValueError, "%S exceeds %lli", pyobject, max_bound);
+        goto error;
+    }
+
+    if (value < min_bound) {
+        PyErr_Format(PyExc_ValueError, "%S exceeds %lli", pyobject, max_bound);
+        goto error;
+    }
+
+    return value;
+
+error:
+    return -1;
+}
+
 // TODO: There's a helper function in the Python client wrapper code called
 // get_uint32_value, but this can replace it.
-unsigned long long
-convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
-                                             unsigned long long max_bound)
+unsigned long long convert_pyobject_to_unsigned_fixed_width_integer_type(
+    PyObject *pyobject, unsigned long long max_bound)
 {
     if (!PyLong_Check(pyobject)) {
         PyErr_Format(PyExc_TypeError, "%S must be an integer", pyobject);
@@ -2957,28 +2984,34 @@ unsigned int convert_unsigned_long_into_enum(as_error *err, PyObject *py_long,
     return (unsigned int)long_value;
 }
 
+int64_t convert_pyobject_to_int64_t(PyObject *pyobject)
+{
+    return (int64_t)convert_pyobject_to_signed_fixed_width_integer_type(
+        pyobject, INT64_MIN, INT64_MAX);
+}
+
 uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject)
 {
-    return (uint8_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
-                                                                 UINT8_MAX);
+    return (uint8_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+        pyobject, UINT8_MAX);
 }
 
 uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject)
 {
-    return (uint16_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
-                                                                  UINT16_MAX);
+    return (uint16_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+        pyobject, UINT16_MAX);
 }
 
 uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject)
 {
-    return (uint32_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
-                                                                  UINT32_MAX);
+    return (uint32_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+        pyobject, UINT32_MAX);
 }
 
 uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
 {
-    return (uint64_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
-                                                                  UINT64_MAX);
+    return (uint64_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+        pyobject, UINT64_MAX);
 }
 
 const char *convert_pyobject_to_str(PyObject *py_obj)

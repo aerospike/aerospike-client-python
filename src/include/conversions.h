@@ -222,9 +222,8 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 // We return an unsigned long long because it should be able to fit all fixed-width int types up to uint64_t
 // Returns -1 on error. Error indicator can be checked to verify if error occurred
 // TODO: replace this with new API calls in Python 3.14
-unsigned long long
-convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
-                                             unsigned long long max_bound);
+unsigned long long convert_pyobject_to_unsigned_fixed_width_integer_type(
+    PyObject *pyobject, unsigned long long max_bound);
 
 uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
                                                   PyObject *pyobject,
@@ -251,6 +250,8 @@ uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *pyobject,
 
 int16_t convert_long_into_int16_t(as_error *err, PyObject *pyobject,
                                   const char *component);
+
+int64_t convert_pyobject_to_int64_t(PyObject *pyobject);
 
 uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
 
