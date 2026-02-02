@@ -39,11 +39,17 @@
 // exp is optional and can be NULL.
 // If exp is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
 // This is permissive and allows py_ctx to be None or NULL
+//
+// NOTE: data_type and index_type are integers because some index creation methods i.e index_expr_create
+// take in an C integer directly as an argument, but the rest of the index creation methods take in a PyObject
+// that needs to be converted to a C integer on our end.
+// To handle both cases, we just have each individual index creation method convert those parameters to C integers
+// if needed.
 static PyObject *convert_python_args_to_c_and_create_index(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
     as_index_type index_type, as_index_datatype data_type, PyObject *py_ctx,
-    as_exp *exp)
+    PyObject *py_expr)
 {
 
     // Initialize error
@@ -60,7 +66,6 @@ static PyObject *convert_python_args_to_c_and_create_index(
 
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        //raise_exception(&err, -2, "Invalid aerospike object");
         goto CLEANUP;
     }
 
@@ -157,12 +162,18 @@ static PyObject *convert_python_args_to_c_and_create_index(
 
     as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
+    as_exp *expr = NULL;
+    if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err,
+                                            false) != AEROSPIKE_OK) {
+        goto CLEANUP3;
+    }
+
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
     if (exp) {
         aerospike_index_create_exp(self->as, &err, &task, info_policy_p,
                                    namespace, set_ptr, name, index_type,
-                                   data_type, exp);
+                                   data_type, expr);
     }
     else {
         aerospike_index_create_ctx(self->as, &err, &task, info_policy_p,
@@ -176,6 +187,11 @@ static PyObject *convert_python_args_to_c_and_create_index(
         Py_END_ALLOW_THREADS
     }
 
+    if (expr) {
+        as_exp_destroy(expr);
+    }
+
+CLEANUP3:
     if (ctx_ref) {
         as_cdt_ctx_destroy(ctx_ref);
     }
@@ -192,9 +208,6 @@ CLEANUP:
     }
     if (py_ustr_name) {
         Py_DECREF(py_ustr_name);
-    }
-    if (exp) {
-        as_exp_destroy(exp);
     }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
@@ -213,7 +226,6 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
     PyObject *py_expr = NULL;
     as_index_type index_type;
     as_index_datatype data_type;
-    as_exp *expr = NULL;
     PyObject *py_name = NULL;
     PyObject *py_policy = NULL;
 
@@ -229,51 +241,9 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
         return NULL;
     }
 
-    as_error err;
-    as_error_init(&err);
-    if (as_exp_new_from_pyobject(self, py_expr, &expr, &err, false) !=
-        AEROSPIKE_OK) {
-        raise_exception(&err);
-        return NULL;
-    }
-
     return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, NULL, py_name, index_type, data_type,
-        NULL, expr);
-}
-
-/*
- * Convert a PyObject into an as_index_datatype, return False if the conversion fails for any reason.
- */
-static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
-                                as_error *err)
-{
-
-    long type = 0;
-    if (PyLong_Check(py_datatype)) {
-        type = PyLong_AsLong(py_datatype);
-        if (type == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "integer value exceeds sys.maxsize");
-                goto CLEANUP;
-            }
-        }
-    }
-    else {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Index type must be an integer");
-        goto CLEANUP;
-    }
-
-    *idx_datatype = type;
-
-CLEANUP:
-    if (err->code != AEROSPIKE_OK) {
-        raise_exception(err);
-        return false;
-    }
-    return true;
+        NULL, py_expr);
 }
 
 // This allows people to see the function calling the Python client API that issues a warning
@@ -315,7 +285,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     PyObject *py_ctx = NULL;
 
-    PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;
 
@@ -332,12 +301,14 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         return NULL;
     }
 
-    if (!getTypeFromPyObject(py_indextype, (int *)&index_type, &err)) {
-        goto CLEANUP;
+    if (!get_int_from_py_int(&err, py_indextype, (int *)&data_type,
+                             "index_datatype")) {
+        goto CLEANUP_ON_ERROR;
     }
 
-    if (!getTypeFromPyObject(py_datatype, (int *)&data_type, &err)) {
-        goto CLEANUP;
+    if (!get_int_from_py_int(&err, py_datatype, (int *)&index_type,
+                             "index_type")) {
+        goto CLEANUP_ON_ERROR;
     }
 
     // convert_python_args_to_c_and_create_index, which is called by the new index create method API's,
@@ -345,21 +316,18 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     // This API call is the only exception where a list of ctx's is required
     if (Py_IsNone(py_ctx)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "ctx cannot be None");
-        goto CLEANUP;
+        goto CLEANUP_ON_ERROR;
     }
 
     // Even if this call fails, it will raise its own exception
     // and the err object here will not be set. We don't raise an exception twice
-    py_obj = convert_python_args_to_c_and_create_index(
+    return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         py_ctx, NULL);
 
-CLEANUP:
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
-        return NULL;
-    }
-    return py_obj;
+CLEANUP_ON_ERROR:
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    return NULL;
 }
 
 // TODO: way to get method name dynamically for error message?
@@ -393,13 +361,18 @@ create_index_with_known_index_type(AerospikeClient *self, PyObject *args,
     }
 
     as_index_datatype index_datatype = AS_INDEX_STRING;
-    if (!getTypeFromPyObject(py_datatype, (int *)&index_datatype, &err)) {
-        return NULL;
+    if (!get_int_from_py_int(&err, py_datatype, (int *)&index_datatype,
+                             "index_datatype")) {
+        goto CLEANUP_ON_ERROR;
     }
 
     return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type,
         index_datatype, py_ctx, NULL);
+
+CLEANUP_ON_ERROR:
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    return NULL;
 }
 
 PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
