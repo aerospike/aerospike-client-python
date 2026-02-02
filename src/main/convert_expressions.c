@@ -489,12 +489,11 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
             tmp_entry; //TODO use as_exp_val((as_val *) bytes); here, might need a cast, not blocker
     }
     else if (PyLong_Check(py_obj)) {
-        int64_t l = (int64_t)PyLong_AsLongLong(py_obj);
-        if (l == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
-            }
+        int64_t l = convert_long_long_into_int64_t(err, py_obj,
+                                                   "get_exp_val_from_pyval");
+        if (err->code == AEROSPIKE_OK) {
+            as_exp_entry tmp_entry = as_exp_int(l);
+            *new_entry = tmp_entry;
         }
 
         as_exp_entry tmp_entry = as_exp_int(l);

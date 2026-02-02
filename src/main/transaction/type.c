@@ -111,8 +111,9 @@ static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
 static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
                                             PyObject *py_value, void *closure)
 {
-    uint32_t timeout = (uint32_t)convert_pyobject_to_fixed_width_integer_type(
-        py_value, UINT32_MAX);
+    uint32_t timeout =
+        (uint32_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+            py_value, UINT32_MAX);
     if (PyErr_Occurred()) {
         return -1;
     }

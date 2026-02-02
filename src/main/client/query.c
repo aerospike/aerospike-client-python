@@ -134,8 +134,11 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                                 "Bin must be a string or unicode");
                 return 1;
             }
-            int64_t val = pyobject_to_int64(py_val1);
-
+            int64_t val = convert_long_long_into_int64_t(err, py_val1,
+                                                         "query numeric index");
+            if (err->code != AEROSPIKE_OK) {
+                return 1;
+            }
             as_query_where_init(*query, 1);
             if (index_type == 0) {
                 as_query_where(*query, bin, as_equals(NUMERIC, val));
@@ -193,7 +196,11 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 return 1;
             }
             if (PyLong_Check(py_val1)) {
-                min = pyobject_to_int64(py_val1);
+                min = convert_unsigned_long_long_into_uint64_t(err, py_val1,
+                                                               "predicate max");
+                if (err->code != AEROSPIKE_OK) {
+                    return 1;
+                }
             }
             else {
                 Py_XDECREF(py_ubin);
@@ -203,7 +210,11 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
 
             if (PyLong_Check(py_val2)) {
-                max = pyobject_to_int64(py_val2);
+                max = convert_unsigned_long_long_into_uint64_t(err, py_val2,
+                                                               "predicate max");
+                if (err->code != AEROSPIKE_OK) {
+                    return 1;
+                }
             }
             else {
                 Py_XDECREF(py_ubin);
@@ -405,7 +416,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         }
 
         long op = PyLong_AsLong(py_op);
-        if (op == -1 && PyErr_Occurred()) {
+        if (PyErr_Occurred()) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "unknown predicate type");
             goto CLEANUP;
@@ -413,7 +424,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
-        if (op == -1 && PyErr_Occurred()) {
+        if (PyErr_Occurred()) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "unknown index data type");
             goto CLEANUP;

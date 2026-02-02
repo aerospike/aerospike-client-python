@@ -30,8 +30,9 @@
 #include "exceptions.h"
 #include "policy.h"
 
-static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
-                                as_error *err);
+static bool getTypeFromPyObject(PyObject *py_datatype,
+                                unsigned int *idx_datatype,
+                                unsigned int max_enum_value, as_error *err);
 
 static PyObject *createIndexWithCollectionType(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
@@ -244,11 +245,13 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         return NULL;
     }
 
-    if (!getTypeFromPyObject(py_indextype, (int *)&index_type, &err)) {
+    if (!getTypeFromPyObject(py_indextype, (unsigned int *)&index_type,
+                             AS_INDEX_TYPE_MAPVALUES, &err)) {
         goto CLEANUP;
     }
 
-    if (!getTypeFromPyObject(py_datatype, (int *)&data_type, &err)) {
+    if (!getTypeFromPyObject(py_datatype, (unsigned int *)&data_type,
+                             AS_INDEX_BLOB, &err)) {
         goto CLEANUP;
     }
 
@@ -513,19 +516,18 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 /*
  * Convert a PyObject into an as_index_datatype, return False if the conversion fails for any reason.
  */
-static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
-                                as_error *err)
+static bool getTypeFromPyObject(PyObject *py_datatype,
+                                unsigned int *idx_datatype,
+                                unsigned int max_enum_value, as_error *err)
 {
 
     long type = 0;
     if (PyLong_Check(py_datatype)) {
-        type = PyLong_AsLong(py_datatype);
-        if (type == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "integer value exceeds sys.maxsize");
-                goto CLEANUP;
-            }
+
+        *idx_datatype = convert_unsigned_long_into_enum(
+            err, py_datatype, max_enum_value, "for getTypeFromPyObject");
+        if (err->code != AEROSPIKE_OK) {
+            goto CLEANUP;
         }
     }
     else {
@@ -534,7 +536,7 @@ static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
         goto CLEANUP;
     }
 
-    *idx_datatype = type;
+    *idx_datatype = (unsigned int)type;
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
@@ -558,7 +560,8 @@ static PyObject *createIndexWithCollectionType(
     as_error err;
     as_error_init(&err);
 
-    if (!getTypeFromPyObject(py_datatype, (int *)&data_type, &err)) {
+    if (!getTypeFromPyObject(py_datatype, (unsigned int *)&data_type,
+                             (unsigned int)AS_INDEX_BLOB, &err)) {
         return NULL;
     }
 

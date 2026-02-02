@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "policy_config.h"
+#include "conversions.h"
 #include "types.h"
 #include "policy.h"
 
@@ -961,25 +962,16 @@ as_status set_base_policy(as_policy_base *base_policy, PyObject *py_policy)
 
 as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32)
 {
-    long long int uint32_max = 0xFFFFFFFF;
+    as_error err;
+    as_error_init(&err);
 
     if (!py_policy_val) {
         return AEROSPIKE_ERR_PARAM;
     }
     if (PyLong_Check(py_policy_val)) {
-        long int_value = PyLong_AsLong(py_policy_val);
-
-        if (int_value == -1 && PyErr_Occurred()) {
-            PyErr_Clear();
-            return AEROSPIKE_ERR_PARAM;
-        }
-
-        if (int_value < 0 || int_value > uint32_max) {
-            return AEROSPIKE_ERR_PARAM;
-        }
-
-        *return_uint32 = (uint32_t)int_value;
-        return AEROSPIKE_OK;
+        *return_uint32 = convert_unsigned_long_into_uint32_t(
+            &err, py_policy_val, "get_uint32_value");
+        return err.code;
     }
     return AEROSPIKE_ERR_PARAM;
 }
@@ -987,8 +979,10 @@ as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32)
 as_status set_optional_uint32_property(uint32_t *target_ptr,
                                        PyObject *py_policy, const char *name)
 {
+    as_error err;
+    as_error_init(&err);
+
     PyObject *py_policy_val = NULL;
-    long long int uint32_max = 0xFFFFFFFF;
     if (!py_policy || !PyDict_Check(py_policy)) {
         return AEROSPIKE_OK;
     }
@@ -998,22 +992,9 @@ as_status set_optional_uint32_property(uint32_t *target_ptr,
         return AEROSPIKE_OK;
     }
     if (PyLong_Check(py_policy_val)) {
-        long int_value = PyLong_AsLong(py_policy_val);
-
-        if (int_value == -1 && PyErr_Occurred()) {
-            // This wasn't a valid int, or was too large
-            // We are handling the error ourselves, so clear the overflow error
-            PyErr_Clear();
-            return AEROSPIKE_ERR_PARAM;
-
-            /* If the number was less than zero, or would not fit in a uint32, error */
-        }
-        if (int_value < 0 || int_value > uint32_max) {
-            return AEROSPIKE_ERR_PARAM;
-        }
-
-        *target_ptr = (uint32_t)int_value;
-        return AEROSPIKE_OK;
+        *target_ptr = convert_unsigned_long_into_uint32_t(&err, py_policy_val,
+                                                          "get_uint32_value");
+        return err.code;
     }
     return AEROSPIKE_ERR_PARAM;
 }
@@ -1021,6 +1002,8 @@ as_status set_optional_uint32_property(uint32_t *target_ptr,
 as_status set_optional_uint16_property(uint16_t *target_ptr,
                                        PyObject *py_policy, const char *name)
 {
+    as_error err;
+    as_error_init(&err);
     // Assume py_policy is a Python dictionary
     PyObject *py_policy_val = PyDict_GetItemString(py_policy, name);
     if (!py_policy_val) {
@@ -1033,21 +1016,9 @@ as_status set_optional_uint16_property(uint16_t *target_ptr,
         return AEROSPIKE_ERR_PARAM;
     }
 
-    long int_value = PyLong_AsLong(py_policy_val);
-    if (int_value == -1 && PyErr_Occurred()) {
-        // This wasn't a valid int, or was too large
-        // We are handling the error ourselves, so clear the overflow error
-        PyErr_Clear();
-        return AEROSPIKE_ERR_PARAM;
-
-        /* If the number was less than zero, or would not fit in a uint16, error */
-    }
-    if (int_value < 0 || int_value > UINT16_MAX) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    *target_ptr = (uint16_t)int_value;
-    return AEROSPIKE_OK;
+    *target_ptr = convert_unsigned_long_into_uint16_t(&err, py_policy_val,
+                                                      "get_uint32_value");
+    return err.code;
 }
 
 as_status set_optional_bool_property(bool *target_ptr, PyObject *py_policy,
@@ -1226,10 +1197,17 @@ as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
 as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
                                     const char *field_name)
 {
+    as_error err;
+    as_error_init(&err);
+
     PyObject *py_field = PyDict_GetItemString(py_policy, field_name);
     if (py_field) {
         if (PyLong_Check(py_field)) {
-            *property_ptr = (int)PyLong_AsLong(py_field);
+            *property_ptr = convert_long_into_int(&err, py_field,
+                                                  "set_optional_int_property");
+            if (err.code != AEROSPIKE_OK) {
+                return err.code;
+            }
         }
         else {
             return AEROSPIKE_ERR_PARAM;
