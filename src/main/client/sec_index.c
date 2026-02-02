@@ -301,13 +301,13 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         return NULL;
     }
 
-    if (!get_int_from_py_int(&err, py_indextype, (int *)&data_type,
-                             "index_datatype")) {
+    if (get_int_from_py_int(&err, py_indextype, (int *)&data_type,
+                            "index_datatype") != AEROSPIKE_OK) {
         goto CLEANUP_ON_ERROR;
     }
 
-    if (!get_int_from_py_int(&err, py_datatype, (int *)&index_type,
-                             "index_type")) {
+    if (get_int_from_py_int(&err, py_datatype, (int *)&index_type,
+                            "index_type") != AEROSPIKE_OK) {
         goto CLEANUP_ON_ERROR;
     }
 
@@ -361,8 +361,8 @@ create_index_with_known_index_type(AerospikeClient *self, PyObject *args,
     }
 
     as_index_datatype index_datatype = AS_INDEX_STRING;
-    if (!get_int_from_py_int(&err, py_datatype, (int *)&index_datatype,
-                             "index_datatype")) {
+    if (get_int_from_py_int(&err, py_datatype, (int *)&index_datatype,
+                            "index_datatype") != AEROSPIKE_OK) {
         goto CLEANUP_ON_ERROR;
     }
 
