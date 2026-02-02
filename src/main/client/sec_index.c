@@ -36,8 +36,8 @@
  * Create a complex index on the specified ns/set/bin with the given name and index and data_type. Return PyObject(0) on success
  * else return NULL with an error raised.
  */
-// exp is optional and can be NULL.
-// If exp is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
+// expr is optional and can be NULL.
+// If expr is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
 // This is permissive and allows py_ctx to be None or NULL
 //
 // NOTE: data_type and index_type are integers because some index creation methods i.e index_expr_create
@@ -170,7 +170,7 @@ static PyObject *convert_python_args_to_c_and_create_index(
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    if (exp) {
+    if (expr) {
         aerospike_index_create_exp(self->as, &err, &task, info_policy_p,
                                    namespace, set_ptr, name, index_type,
                                    data_type, expr);
