@@ -505,6 +505,39 @@ CLEANUP:
 #define DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE                    \
     "%s() is deprecated. Please use index_single_value_create() instead"
 
+static PyObject *
+deprecated_index_create_helper(AerospikeClient *self, PyObject *args,
+                               PyObject *kwds, const char *ml_name,
+                               as_index_datatype index_datatype)
+{
+    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
+                     ml_name);
+
+    as_error err;
+    as_error_init(&err);
+
+    // Python Function Arguments
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_bin = NULL;
+    PyObject *py_name = NULL;
+    PyObject *py_policy = NULL;
+
+    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_integer_create",
+                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
+        index_datatype, NULL, NULL);
+}
+
 /**
  *******************************************************************************************************
  * Creates an integer index for a bin in the Aerospike DB.
@@ -521,34 +554,8 @@ CLEANUP:
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
                                                PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
-                     "index_integer_create");
-
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_integer_create",
-                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    return convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_NUMERIC, NULL, NULL);
+    return deprecated_index_create_helper(
+        self, args, kwds, "index_integer_create", AS_INDEX_NUMERIC);
 }
 
 /**
@@ -567,94 +574,20 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
-                     "index_string_create");
-
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_string_create",
-                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    return convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_STRING, NULL, NULL);
+    return deprecated_index_create_helper(
+        self, args, kwds, "index_string_create", AS_INDEX_STRING);
 }
 
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
-                     "index_blob_create");
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_blob_create",
-                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    return convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_BLOB, NULL, NULL);
+    return deprecated_index_create_helper(self, args, kwds, "index_blob_create",
+                                          AS_INDEX_BLOB);
 }
 
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                     DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
-                     "index_geo2dsphere_create");
-
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_name = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(
-            args, kwds, "OOOO|O:index_geo2dsphere_create", kwlist, &py_ns,
-            &py_set, &py_bin, &py_name, &py_policy) == false) {
-        return NULL;
-    }
-
-    return convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_GEO2DSPHERE, NULL, NULL);
+    return deprecated_index_create_helper(
+        self, args, kwds, "index_geo2dsphere_create", AS_INDEX_GEO2DSPHERE);
 }
