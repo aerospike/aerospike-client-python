@@ -1283,14 +1283,12 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         }
     }
     else if (PyLong_Check(py_obj)) {
-        int64_t i = (int64_t)PyLong_AsLongLong(py_obj);
-        if (i == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
-            }
+        int64_t int_val = convert_long_long_into_int64_t(
+            err, py_obj, "as_val_new_from_pyobject");
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
         }
-        *val = (as_val *)as_integer_new(i);
+        *val = (as_val *)as_integer_new(int_val);
     }
     else if (PyUnicode_Check(py_obj)) {
         PyObject *py_ustr = PyUnicode_AsUTF8String(py_obj);
@@ -1556,14 +1554,12 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             Py_DECREF(py_ustr);
         }
         else if (PyLong_Check(py_key)) {
-            int64_t k = (int64_t)PyLong_AsLongLong(py_key);
-            if (-1 == k && PyErr_Occurred()) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "integer value for KEY exceeds sys.maxsize");
+            int64_t int_val =
+                convert_long_long_into_int64_t(err, py_key, "KEY");
+            if (err->code != AEROSPIKE_OK) {
+                return err->code;
             }
-            else {
-                returnResult = as_key_init_int64(key, ns, set, k);
-            }
+            returnResult = as_key_init_int64(key, ns, set, int_val);
         }
         else if (PyByteArray_Check(py_key)) {
             uint32_t sz = (uint32_t)PyByteArray_Size(py_key);
@@ -2220,8 +2216,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 
     as_bin *binop_bin = &binop->bin;
     if (PyLong_Check(py_value)) {
-        int val = PyLong_AsLong(py_value);
-        as_integer_init((as_integer *)&binop_bin->value, val);
+        int64_t int_val = convert_long_long_into_int64_t(
+            err, py_value, "initialize_bin_for_strictypes");
+        as_integer_init((as_integer *)&binop_bin->value, (int64_t)int_val);
         binop_bin->valuep = &binop_bin->value;
     }
     else if (PyUnicode_Check(py_value)) {
@@ -2324,23 +2321,19 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
 
         PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
         PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-        uint32_t ttl = 0;
-        uint16_t gen = 0;
         if (py_ttl) {
             if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsLong(py_ttl);
+                *ttl_ref =
+                    convert_unsigned_long_into_uint32_t(err, py_ttl, "Ttl");
+
+                if (err->code != AEROSPIKE_OK) {
+                    return err->code;
+                }
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Ttl should be an int or long");
             }
-
-            if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "integer value for ttl exceeds sys.maxsize");
-            }
-            *ttl_ref = ttl;
         }
         else {
             // Metadata dict was present, but ttl field did not exist
@@ -2349,20 +2342,16 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
-                // TODO: Needs to check value doesn't go past unsigned 16 bit limit
-                gen = (uint16_t)PyLong_AsLong(py_gen);
+                *gen_ref = convert_unsigned_long_into_uint16_t(err, py_gen,
+                                                               "Generation");
+                if (err->code != AEROSPIKE_OK) {
+                    return err->code;
+                }
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Generation should be an int or long");
             }
-
-            if ((uint16_t)-1 == gen && PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "integer value for gen exceeds sys.maxsize");
-            }
-            *gen_ref = gen;
         }
     }
     else if (py_meta && (py_meta != Py_None)) {
@@ -2381,10 +2370,11 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
 {
     if (PyLong_Check(py_value)) {
         *long_val = PyLong_AsLong(py_value);
-        if (*long_val == -1 && PyErr_Occurred() && self->strict_types) {
+        if (PyErr_Occurred() && self->strict_types) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
+                return as_error_update(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "integer value for pyobject_to_index exceeds LONG_MAX");
             }
         }
     }
@@ -2664,23 +2654,10 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s must be an integer.", py_object_name);
     }
 
-    int int_to_return = PyLong_AsLong(py_long);
-    if (PyErr_Occurred()) {
-        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "%s too large for C long.", py_object_name);
-        }
-
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Failed to convert %s.", py_object_name);
+    *int_pointer = convert_long_into_int(err, py_long, py_object_name);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
     }
-
-    if (int_to_return > INT_MAX || int_to_return < INT_MIN) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s too large for C int.", py_object_name);
-    }
-
-    *int_pointer = int_to_return;
 
     return AEROSPIKE_OK;
 }
@@ -2753,6 +2730,231 @@ convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
 
 error:
     return -1;
+}
+
+uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
+                                                  PyObject *py_long,
+                                                  const char *component)
+{
+    unsigned long long long_value = PyLong_AsUnsignedLongLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds ULLONG_MAX",
+                            component);
+        }
+        else {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Failed to convert integer value for %s to unsigned long long",
+                component)
+        }
+        return 0;
+    }
+    if (long_value > (unsigned long long)UINT64_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds UINT64_MAX", component);
+        return 0;
+    }
+
+    return (uint64_t)long_value;
+}
+
+int64_t convert_long_long_into_int64_t(as_error *err, PyObject *py_long,
+                                       const char *component)
+{
+    long long long_value = PyLong_AsLongLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LLONG_MAX",
+                            component);
+        }
+        else {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Failed to convert integer value for %s to long long",
+                component)
+        }
+        return 0;
+    }
+    if (long_value > (long long)INT64_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT64_MAX", component);
+        return 0;
+    }
+    else if (long_value < (long long)INT64_MIN) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT64_MIN", component);
+        return 0;
+    }
+    return (int64_t)long_value;
+}
+
+uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
+                                             const char *component)
+{
+    unsigned long long_value = PyLong_AsUnsignedLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds ULONG_MAX",
+                            component);
+        }
+        else {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Failed to convert integer value for %s to unsigned long",
+                component)
+        }
+        return 0;
+    }
+    if (long_value > (unsigned long)UINT32_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds UINT32_MAX", component);
+        return 0;
+    }
+    return (uint32_t)long_value;
+}
+
+int32_t convert_long_into_int32_t(as_error *err, PyObject *py_long,
+                                  const char *component)
+{
+    long long_value = PyLong_AsLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LONG_MAX", component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to long",
+                            component)
+        }
+        return 0;
+    }
+    if (long_value > (long)INT32_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT32_MAX", component);
+        return 0;
+    }
+    else if (long_value < (long)INT32_MIN) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT32_MIN", component);
+        return 0;
+    }
+    return (int32_t)long_value;
+}
+
+uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
+                                             const char *component)
+{
+    unsigned long long_value = PyLong_AsUnsignedLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LONG_MAX", component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to long",
+                            component)
+        }
+        return 0;
+    }
+    if (long_value > (unsigned long)UINT16_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds UINT16_MAX", component);
+        return 0;
+    }
+    return (uint16_t)long_value;
+}
+
+int16_t convert_long_into_int16_t(as_error *err, PyObject *py_long,
+                                  const char *component)
+{
+    long long_value = PyLong_AsLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LONG_MAX", component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to long",
+                            component)
+        }
+        return 0;
+    }
+    if (long_value > (long)INT16_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT16_MAX", component);
+        return 0;
+    }
+    else if (long_value < (long)INT16_MIN) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT16_MIN", component);
+        return 0;
+    }
+    return (int16_t)long_value;
+}
+
+int convert_long_into_int(as_error *err, PyObject *py_long,
+                          const char *component)
+{
+    // CHECK ALL CONVERSION TO LONG VALUE AND MAKE SURE FUNCTION SIGNATURE IS CORRECT
+    long long_value = PyLong_AsLong(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LONG_MAX", component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to long",
+                            component)
+        }
+        return 0;
+    }
+    if (long_value > (long)INT_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT_MAX", component);
+        return 0;
+    }
+    else if (long_value < (long)INT_MIN) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "integer value for %s exceeds INT_MIN", component);
+        return 0;
+    }
+    return (int)long_value;
+}
+
+unsigned int convert_unsigned_long_into_enum(as_error *err, PyObject *py_long,
+                                             unsigned int max_enum_value,
+                                             const char *component)
+{
+    unsigned long long_value = PyLong_AsUnsignedLong(py_long);
+
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "integer value for %s exceeds LONG_MAX", component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to long",
+                            component)
+        }
+        return 0;
+    }
+    if (long_value > (unsigned long)max_enum_value) {
+        as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "integer value for %s exceeds value for the enumeration",
+            component);
+        return 0;
+    }
+    return (unsigned int)long_value;
 }
 
 uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject)

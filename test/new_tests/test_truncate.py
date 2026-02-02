@@ -173,8 +173,12 @@ class TestTruncate(object):
     def test_nanos_argument_between_int64_and_uint64(self):
         # This may stop raising a client error in 2264
         # as the value will no longer be in the future then
-        with pytest.raises(e.InvalidRequest):
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.truncate("test", "truncate", 2**63 + 1)
+
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "integer value for truncate exceeds ULLONG_MAX"
+
 
     # TODO: this server's actual error message doesn't make sense to me
     def test_nanos_argument_between_int32_and_uint32(self):

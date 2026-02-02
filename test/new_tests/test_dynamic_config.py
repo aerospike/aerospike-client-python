@@ -12,7 +12,7 @@ METRICS_LOG_FILES = "./metrics-*.log"
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
-        assert provider.interval == 60000
+        assert provider.interval == 5000
 
     def test_config_provider_class(self):
         provider = aerospike.ConfigProvider(path="path", interval=30000)

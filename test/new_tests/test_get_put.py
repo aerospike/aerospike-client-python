@@ -824,15 +824,12 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         bins = {"no": 111111111111111111111111111111111111111111111}
-
-        try:
+        
+        with pytest.raises(e.ParamError) as err_info:
             assert 0 == self.as_connection.put(key, bins)
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "integer value exceeds sys.maxsize"
-        except SystemError:
-            pass
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "integer value for as_val_new_from_pyobject exceeds LLONG_MAX"
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):
         """
@@ -842,8 +839,11 @@ class TestGetPut:
 
         bins = {"no": 11}
 
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.ParamError)  as err_info:
             assert 0 == self.as_connection.put(key, bins)
+
+        assert err_info.value.code == -2
+        assert err_info.value.msg == "integer value for KEY exceeds LLONG_MAX"
 
     def test_unhashable_type_with_put_get(self):
         """

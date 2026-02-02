@@ -96,6 +96,158 @@
         }                                                                      \
     }
 
+#define POLICY_SET_FIELD_UINT_64T(__field)                                     \
+    {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
+            if (PyLong_Check(py_field)) {                                      \
+                uint64_t field_val = convert_unsigned_long_long_into_uint64_t( \
+                    err, py_field, "POLICY_SET_FIELD");                        \
+                if (err->code != AEROSPIKE_OK) {                               \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
+                }                                                              \
+                policy->__field = field_val;                                   \
+            }                                                                  \
+            else {                                                             \
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
+                                       "%s is invalid", #__field);             \
+            }                                                                  \
+        }                                                                      \
+    }
+
+#define POLICY_SET_FIELD_UINT_32T(__field)                                     \
+    {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
+            if (PyLong_Check(py_field)) {                                      \
+                uint32_t field_val = convert_unsigned_long_into_uint32_t(      \
+                    err, py_field, "POLICY_SET_FIELD");                        \
+                if (err->code != AEROSPIKE_OK) {                               \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
+                }                                                              \
+                policy->__field = field_val;                                   \
+            }                                                                  \
+            else {                                                             \
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
+                                       "%s is invalid", #__field);             \
+            }                                                                  \
+        }                                                                      \
+    }
+
+#define POLICY_SET_FIELD_UINT_16T(__field)                                     \
+    {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
+            if (PyLong_Check(py_field)) {                                      \
+                uint16_t field_val = convert_unsigned_long_into_uint16_t(      \
+                    err, py_field, "POLICY_SET_FIELD");                        \
+                if (err->code != AEROSPIKE_OK) {                               \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
+                }                                                              \
+                policy->__field = field_val;                                   \
+            }                                                                  \
+            else {                                                             \
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
+                                       "%s is invalid", #__field);             \
+            }                                                                  \
+        }                                                                      \
+    }
+
+#define POLICY_SET_FIELD_ENUM(__field, __max)                                  \
+    {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
+            if (PyLong_Check(py_field)) {                                      \
+                uint16_t field_val = convert_unsigned_long_into_enum(          \
+                    err, py_field, __max, "POLICY_SET_FIELD");                 \
+                if (err->code != AEROSPIKE_OK) {                               \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
+                }                                                              \
+                policy->__field = field_val;                                   \
+            }                                                                  \
+            else {                                                             \
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
+                                       "%s is invalid", #__field);             \
+            }                                                                  \
+        }                                                                      \
+    }
+
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString("expressions");         \
@@ -264,7 +416,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
         }
 
         // Set policy fields
-        POLICY_SET_FIELD(timeout, uint32_t);
+        POLICY_SET_FIELD_UINT_32T(timeout);
     }
     // Update the policy
     POLICY_UPDATE();
@@ -315,13 +467,13 @@ static inline as_status pyobject_to_policy_base(AerospikeClient *self,
                                                 as_policy_base *policy,
                                                 as_exp **exp_list_p)
 {
-    POLICY_SET_FIELD(total_timeout, uint32_t);
-    POLICY_SET_FIELD(socket_timeout, uint32_t);
-    POLICY_SET_FIELD(timeout_delay, uint32_t);
-    POLICY_SET_FIELD(max_retries, uint32_t);
-    POLICY_SET_FIELD(sleep_between_retries, uint32_t);
+    POLICY_SET_FIELD_UINT_32T(total_timeout);
+    POLICY_SET_FIELD_UINT_32T(socket_timeout);
+    POLICY_SET_FIELD_UINT_32T(timeout_delay);
+    POLICY_SET_FIELD_UINT_32T(max_retries);
+    POLICY_SET_FIELD_UINT_32T(sleep_between_retries);
     POLICY_SET_FIELD(compress, bool);
-    POLICY_SET_FIELD(connect_timeout, uint32_t);
+    POLICY_SET_FIELD_UINT_32T(connect_timeout);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
@@ -375,12 +527,12 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
         //POLICY_SET_FIELD(gen, as_policy_gen); removed
-        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
         POLICY_SET_FIELD(durable_delete, bool);
-        POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD_UINT_32T(ttl);
         POLICY_SET_FIELD(on_locking_only, bool);
     }
 
@@ -438,7 +590,7 @@ pyobject_to_policy_info(as_error *err, PyObject *py_policy,
         }
 
         // Set policy fields
-        POLICY_SET_FIELD(timeout, uint32_t);
+        POLICY_SET_FIELD_UINT_32T(timeout);
         // POLICY_SET_FIELD(timeout_delay, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
         POLICY_SET_FIELD(check_bounds, bool);
@@ -490,12 +642,13 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
             return retval;
         }
         POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
 
         // C client 6.0.0
         POLICY_SET_FIELD(short_query, bool);
 
-        POLICY_SET_FIELD(expected_duration, as_query_duration);
+        POLICY_SET_FIELD_ENUM(expected_duration,
+                              AS_QUERY_DURATION_LONG_RELAX_AP);
     }
 
     // Update the policy
@@ -546,14 +699,15 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+        POLICY_SET_FIELD_ENUM(read_mode_ap, AS_POLICY_READ_MODE_AP_ALL);
+        POLICY_SET_FIELD_ENUM(read_mode_sc,
+                              AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE);
     }
 
     // Update the policy
@@ -604,12 +758,12 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        POLICY_SET_FIELD(generation, uint16_t);
+        POLICY_SET_FIELD_UINT_16T(generation);
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(gen, as_policy_gen);
-        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+        POLICY_SET_FIELD_ENUM(gen, AS_POLICY_GEN_GT);
+        POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
         POLICY_SET_FIELD(durable_delete, bool);
     }
 
@@ -669,10 +823,10 @@ pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
         }
 
         POLICY_SET_FIELD(durable_delete, bool);
-        POLICY_SET_FIELD(records_per_second, uint32_t);
-        POLICY_SET_FIELD(max_records, uint64_t);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD_UINT_32T(records_per_second);
+        POLICY_SET_FIELD_UINT_64T(max_records);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
+        POLICY_SET_FIELD_UINT_32T(ttl);
     }
 
     // Update the policy
@@ -729,14 +883,14 @@ as_status pyobject_to_policy_write(
             return retval;
         }
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(gen, as_policy_gen);
-        POLICY_SET_FIELD(exists, as_policy_exists);
-        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+        POLICY_SET_FIELD_ENUM(gen, AS_POLICY_GEN_GT);
+        POLICY_SET_FIELD_ENUM(exists, AS_POLICY_EXISTS_CREATE_OR_REPLACE);
+        POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
         POLICY_SET_FIELD(durable_delete, bool);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        POLICY_SET_FIELD(ttl, uint32_t);
-        POLICY_SET_FIELD(compression_threshold, uint32_t);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
+        POLICY_SET_FIELD_UINT_32T(ttl);
+        POLICY_SET_FIELD_UINT_32T(compression_threshold);
         POLICY_SET_FIELD(on_locking_only, bool);
     }
 
@@ -787,20 +941,21 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(gen, as_policy_gen);
-        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+        POLICY_SET_FIELD_ENUM(gen, AS_POLICY_GEN_GT);
+        POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(exists, as_policy_exists);
+        POLICY_SET_FIELD_ENUM(exists, AS_POLICY_EXISTS_CREATE_OR_REPLACE);
         POLICY_SET_FIELD(read_touch_ttl_percent, int);
         POLICY_SET_FIELD(on_locking_only, bool);
-        POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD_UINT_32T(ttl);
 
         // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+        POLICY_SET_FIELD_ENUM(read_mode_ap, AS_POLICY_READ_MODE_AP_ALL);
+        POLICY_SET_FIELD_ENUM(read_mode_sc,
+                              AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE);
     }
 
     // Update the policy
@@ -852,12 +1007,13 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(concurrent, bool);
         POLICY_SET_FIELD(allow_inline, bool);
         POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD_ENUM(replica, AS_POLICY_REPLICA_RANDOM);
         POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+        POLICY_SET_FIELD_ENUM(read_mode_ap, AS_POLICY_READ_MODE_AP_ALL);
+        POLICY_SET_FIELD_ENUM(read_mode_sc,
+                              AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE);
 
         // C client 6.0.0 (batch writes)
         POLICY_SET_FIELD(allow_inline_ssd, bool);
@@ -894,13 +1050,13 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
     }
 
     // Set policy fields
-    POLICY_SET_FIELD(key, as_policy_key);
-    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-    POLICY_SET_FIELD(gen, as_policy_gen);
-    POLICY_SET_FIELD(exists, as_policy_exists);
+    POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+    POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
+    POLICY_SET_FIELD_ENUM(gen, AS_POLICY_GEN_GT);
+    POLICY_SET_FIELD_ENUM(exists, AS_POLICY_EXISTS_CREATE_OR_REPLACE);
     POLICY_SET_FIELD(durable_delete, bool);
     POLICY_SET_FIELD(on_locking_only, bool);
-    POLICY_SET_FIELD(ttl, uint32_t);
+    POLICY_SET_FIELD_UINT_32T(ttl);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -934,8 +1090,9 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
     }
 
     // Set policy fields
-    POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-    POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+    POLICY_SET_FIELD_ENUM(read_mode_ap, AS_POLICY_READ_MODE_AP_ALL);
+    POLICY_SET_FIELD_ENUM(read_mode_sc,
+                          AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE);
     POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
     // C client 5.0 new expressions
@@ -970,9 +1127,9 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
     }
 
     // Set policy fields
-    POLICY_SET_FIELD(key, as_policy_key);
-    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-    POLICY_SET_FIELD(ttl, uint32_t);
+    POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+    POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
+    POLICY_SET_FIELD_UINT_32T(ttl);
     POLICY_SET_FIELD(durable_delete, bool);
     POLICY_SET_FIELD(on_locking_only, bool);
 
@@ -1008,11 +1165,11 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
     }
 
     // Set policy fields
-    POLICY_SET_FIELD(key, as_policy_key);
-    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-    POLICY_SET_FIELD(gen, as_policy_gen);
+    POLICY_SET_FIELD_ENUM(key, AS_POLICY_KEY_SEND);
+    POLICY_SET_FIELD_ENUM(commit_level, AS_POLICY_COMMIT_LEVEL_MASTER);
+    POLICY_SET_FIELD_ENUM(gen, AS_POLICY_GEN_GT);
     POLICY_SET_FIELD(durable_delete, bool);
-    POLICY_SET_FIELD(generation, uint16_t);
+    POLICY_SET_FIELD_UINT_16T(generation);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();

@@ -544,7 +544,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
             goto CLEANUP;
         }
         if (PyLong_Check(py_index)) {
-            index = PyLong_AsLong(py_index);
+            index = convert_long_into_int(err, py_index, "py_index");
+            if (err->code != AEROSPIKE_OK) {
+                goto CLEANUP;
+            }
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -680,13 +683,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
-            offset = PyLong_AsLong(py_value);
-            if (offset == -1 && PyErr_Occurred() && self->strict_types) {
-                if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+            offset = convert_unsigned_long_long_into_uint64_t(
+                err, py_value, "AS_OPERATOR_INCR");
+            if (err->code != AEROSPIKE_OK) {
+                goto CLEANUP;
             }
             as_operations_add_incr(ops, bin, offset);
         }
