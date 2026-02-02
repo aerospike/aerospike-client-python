@@ -52,7 +52,7 @@ class TestMapKeysIndex(object):
         policy = {}
         with pytest.raises(TypeError):
             self.as_connection.index_map_keys_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, 1
+                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, None, 1
             )
 
     def test_mapkeysindex_with_correct_parameters(self):
