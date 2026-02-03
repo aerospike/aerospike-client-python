@@ -845,7 +845,7 @@ Index Operations
         :param str ns: the namespace containing the value.
         :param str set: the set containing the value.
         :param str bin: the name of the bin containing the value.
-        :param str index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
+        :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
@@ -858,7 +858,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
@@ -871,7 +871,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
@@ -886,7 +886,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
