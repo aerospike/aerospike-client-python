@@ -71,7 +71,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_string_create("test", "demo", "addr", aerospike.INDEX_STRING, "addr_index")
+            as_connection.index_single_value_create("test", "demo", "addr", aerospike.INDEX_STRING, "addr_index")
         except e.IndexFoundError:
             pass
 
