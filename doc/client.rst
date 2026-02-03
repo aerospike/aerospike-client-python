@@ -1012,7 +1012,7 @@ Index Operations
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
-.. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: dict[, policy: dict])
+.. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
 
     .. deprecated:: 20.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
@@ -1026,7 +1026,7 @@ Index Operations
     :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
     :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
     :param str index_name: the name of the index.
-    :param dict ctx: a dictionary containing the ``"ctx"`` key mapping to a list of contexts.
+    :param list ctx: list of contexts.
     :param dict policy: optional :ref:`aerospike_info_policies`.
     :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
