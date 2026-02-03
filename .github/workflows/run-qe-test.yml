@@ -19,6 +19,10 @@ on:
         type: string
         required: true
         description: "Test code revision"
+      qe-docker-revision:
+        type: string
+        required: true
+        description: "qe-docker revision containing image"
       feature:
         required: true
         description: "Client feature to test"
@@ -53,6 +57,10 @@ on:
         type: string
         required: true
         description: "Test code revision"
+      qe-docker-revision:
+        type: string
+        required: true
+        description: "qe-docker revision containing image"
       test-definition:
         type: string
         required: true
@@ -86,7 +94,7 @@ jobs:
       with:
         repository: citrusleaf/qe-docker
         path: qe-docker
-        ref: cicd-client-performance-regression-tests-requirements-txt
+        ref: ${{ inputs.qe-docker-revision }}
         token: ${{ secrets.CLIENT_BOT_PAT }}
 
     - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
