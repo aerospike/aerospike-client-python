@@ -1026,7 +1026,7 @@ Index Operations
     :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
     :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
     :param str index_name: the name of the index.
-    :param list ctx: list of contexts.
+    :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
     :param dict policy: optional :ref:`aerospike_info_policies`.
     :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
