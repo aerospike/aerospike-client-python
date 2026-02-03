@@ -946,7 +946,7 @@ Index Operations
 
     .. method:: index_string_create(ns, set, bin, name[, policy: dict])
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
@@ -960,7 +960,7 @@ Index Operations
 
     .. method:: index_integer_create(ns, set, bin, name[, policy])
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create an integer index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -974,7 +974,7 @@ Index Operations
 
     .. method:: index_blob_create(ns, set, bin, name[, policy])
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create a blob index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -988,7 +988,7 @@ Index Operations
 
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
 
-        .. deprecated:: 19.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
 
         Create a geospatial 2D spherical index with *name* on the *bin* \
         in the specified *ns*, *set*.
@@ -1014,7 +1014,7 @@ Index Operations
 
 .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: dict[, policy: dict])
 
-    .. deprecated:: 19.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+    .. deprecated:: 20.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
     Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
     numeric, string, or GeoJSON values (as defined by *index_datatype*)
