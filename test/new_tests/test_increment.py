@@ -71,7 +71,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.increment(key, "age", 5, {}, policy)
@@ -94,7 +94,7 @@ class TestIncrement(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "max_retries": 0}
         self.as_connection.increment(key, "age", 5, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -122,7 +122,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
@@ -146,7 +146,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -172,7 +172,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -200,7 +200,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -226,7 +226,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)

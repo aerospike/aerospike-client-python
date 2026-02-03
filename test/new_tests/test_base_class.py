@@ -178,9 +178,10 @@ class TestBaseClass(object):
                 if res is not None:
                     break
             res = res.split(".")
-            # major_ver = res[0]
-            # minor_ver = res[1]
-            # print("major_ver:", major_ver, "minor_ver:", minor_ver)
+            TestBaseClass.major_ver = res[0]
+            TestBaseClass.minor_ver = res[1]
+            # print("major_ver:", TestBaseClass.major_ver, "minor_ver:", TestBaseClass.minor_ver)
+
         return client
 
     @staticmethod
@@ -215,6 +216,15 @@ class TestBaseClass(object):
         config["policies"] = policies_conf
         config["user"] = TestBaseClass.user
         config["password"] = TestBaseClass.password
+
+        config_parser = configparser.ConfigParser()
+        config_parser.read("config.conf")
+        VALIDATE_KEYS_SECTION = "input-validation"
+        VALIDATE_KEYS_OPTION = "validate_keys"
+        if config_parser.has_section(VALIDATE_KEYS_SECTION) and config_parser.has_option(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION):
+            config[VALIDATE_KEYS_OPTION] = config_parser.getboolean(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION)
+        else:
+            config[VALIDATE_KEYS_OPTION] = False
 
         # Disable total_timeout and timeout
         # config["timeout"] = 0

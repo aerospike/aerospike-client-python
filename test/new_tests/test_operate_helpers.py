@@ -202,7 +202,7 @@ class TestOperate(object):
                 [operations.write("write_bin", False), operations.read("write_bin")],
                 {"write_bin": 0},
             ),
-        ],
+        ]
     )
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
@@ -213,6 +213,7 @@ class TestOperate(object):
 
         assert bins == expected
         self.as_connection.remove(key)
+
 
     @pytest.mark.parametrize(
         "key, llist, expected",
@@ -636,7 +637,7 @@ class TestOperate(object):
                         "int_bin",
                         7,
                         99,
-                        {"list_write": aerospike.LIST_WRITE_DEFAULT}
+                        {"write_flags": aerospike.LIST_WRITE_DEFAULT}
                     ),
                 ],
                 {"int_bin": 8},

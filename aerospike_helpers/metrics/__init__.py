@@ -37,7 +37,15 @@ class ConnectionStats:
             There can be multiple pools per node. This value is a summary of those pools on this node.
         opened (int): Total number of node connections opened since node creation.
         closed (int): Total number of node connections closed since node creation.
-    """
+        recovered (int): Total number of recovered connections since node creation. A recovered connection is a
+            connection that timed out on a socket read and then independently drained (read all incoming
+            data) so the connection can be put back into the connection pool. The recovery process is
+            attempted when the ``timeout_delay`` policy is greater than zero.
+        aborted (int): Total number of aborted connections since node creation. An aborted connection is a connection
+            that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
+            mostly likely due a downed node and results in the connection being closed. The recovery process
+            is attempted when the ``timeout_delay`` policy is greater than zero.
+        """
     pass
 
 
@@ -97,6 +105,8 @@ class Cluster:
 
     Attributes:
         cluster_name (Optional[str]): Expected cluster name for all nodes. May be :py:obj:`None`.
+        app_id (str): Application identifier. Will be set to the client's username if not set to a string in the client
+            config's ``app_id`` option. If the client does not have a username, this will be set to ``not-set``.
         invalid_node_count (int): Count of add node failures in the most recent cluster tend iteration.
         command_count (int): Command count. The value is cumulative and not reset per metrics interval.
         retry_count (int): Command retry count. There can be multiple retries for a single command.
@@ -152,10 +162,12 @@ class ClusterStats:
         retry_count: Count of command retries since cluster was started.
         thread_pool_queued_tasks: Count of sync batch/scan/query tasks awaiting execution.
             If the count is greater than zero, then all threads in the thread pool are active.
+        recover_queue_size: Count of sync sockets currently in timeout recovery.
     """
     nodes: list[NodeStats]
     retry_count: int
     thread_pool_queued_tasks: int
+    recover_queue_size: int
 
 
 class MetricsListeners:

@@ -58,7 +58,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     PyObject *py_ustr = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Get the bin list size;
@@ -76,7 +75,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p);
+                             &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
@@ -104,43 +103,9 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    if (py_meta && PyDict_Check(py_meta)) {
-        PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-
-        if (py_ttl) {
-            if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
-                if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for ttl exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Ttl should be an int or long");
-                goto CLEANUP;
-            }
-        }
-
-        if (py_gen) {
-            if (PyLong_Check(py_gen)) {
-                rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
-                if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for gen exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Generation should be an int or long");
-                goto CLEANUP;
-            }
-        }
+    check_and_set_meta(py_meta, &rec.ttl, &rec.gen, err, self->validate_keys);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     Py_BEGIN_ALLOW_THREADS
