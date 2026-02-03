@@ -62,7 +62,7 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            ns="test", set="demo", bin="string_map", index_datatype=aerospike.INDEX_STRING, name="test_string_map_index", policy=policy, ctx=None
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK

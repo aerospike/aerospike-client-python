@@ -57,7 +57,7 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            ns="test", set="demo", bin="string_map", index_datatype=aerospike.INDEX_STRING, name="test_string_map_index", policy=policy, ctx=None
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK

@@ -215,7 +215,7 @@ class TestIndex(object):
         if self.server_version < [7, 0]:
             pytest.skip("Blob secondary indexes are only supported in server 7.0+")
 
-        self.as_connection.index_single_value_create(ns="test", set="demo", bin="bytes", index_datatype=aerospike.INDEX_BLOB, name="bytes_index", policy={})
+        self.as_connection.index_single_value_create(ns="test", set="demo", bin="bytes", index_datatype=aerospike.INDEX_BLOB, name="bytes_index", policy={}, ctx=None)
 
         ensure_dropped_index(self.as_connection, "test", "bytes_index")
 

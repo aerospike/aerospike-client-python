@@ -47,7 +47,7 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            ns="test", set="demo", bin="string_list", index_datatype=aerospike.INDEX_STRING, name="test_string_list_index", policy=policy, ctx=None
         )
 
         self.as_connection.index_remove("test", "test_string_list_index", policy)
