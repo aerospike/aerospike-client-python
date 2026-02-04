@@ -324,19 +324,6 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
         self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
 }
 
-/**
- *******************************************************************************************************
- * Removes an index in the Aerospike database.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
 PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
                                        PyObject *kwds)
 {
