@@ -505,10 +505,9 @@ CLEANUP:
 #define DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE                    \
     "%s() is deprecated. Please use index_single_value_create() instead"
 
-static PyObject *
-deprecated_index_create_helper(AerospikeClient *self, PyObject *args,
-                               PyObject *kwds, const char *ml_name,
-                               as_index_datatype index_datatype)
+static PyObject *AerospikeClient_Index_Create_Deprecated_Helper(
+    AerospikeClient *self, PyObject *args, PyObject *kwds, const char *ml_name,
+    as_index_datatype index_datatype)
 {
     PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
@@ -554,7 +553,7 @@ deprecated_index_create_helper(AerospikeClient *self, PyObject *args,
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
                                                PyObject *args, PyObject *kwds)
 {
-    return deprecated_index_create_helper(
+    return AerospikeClient_Index_Create_Deprecated_Helper(
         self, args, kwds, "index_integer_create", AS_INDEX_NUMERIC);
 }
 
@@ -574,20 +573,20 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds)
 {
-    return deprecated_index_create_helper(
+    return AerospikeClient_Index_Create_Deprecated_Helper(
         self, args, kwds, "index_string_create", AS_INDEX_STRING);
 }
 
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    return deprecated_index_create_helper(self, args, kwds, "index_blob_create",
-                                          AS_INDEX_BLOB);
+    return AerospikeClient_Index_Create_Deprecated_Helper(
+        self, args, kwds, "index_blob_create", AS_INDEX_BLOB);
 }
 
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    return deprecated_index_create_helper(
+    return AerospikeClient_Index_Create_Deprecated_Helper(
         self, args, kwds, "index_geo2dsphere_create", AS_INDEX_GEO2DSPHERE);
 }
