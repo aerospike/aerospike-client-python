@@ -249,92 +249,11 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
 // This allows people to see the function calling the Python client API that issues a warning
 #define STACK_LEVEL 2
 
-/**
- *******************************************************************************************************
- * Creates a cdt index for a bin in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds)
-{
-    PyErr_WarnEx(PyExc_DeprecationWarning,
-                 "index_cdt_create() is deprecated. Please use one of the "
-                 "other non-deprecated index_*_create() methods instead",
-                 STACK_LEVEL);
-
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_ns = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_bin = NULL;
-    PyObject *py_indextype = NULL;
-    PyObject *py_datatype = NULL;
-    PyObject *py_name = NULL;
-
-    PyObject *py_ctx = NULL;
-
-    as_index_datatype data_type;
-    as_index_type index_type;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {
-        "ns",   "set", "bin",    "index_type", "index_datatype",
-        "name", "ctx", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO|O:index_list_create",
-                                    kwlist, &py_ns, &py_set, &py_bin,
-                                    &py_indextype, &py_datatype, &py_name,
-                                    &py_ctx, &py_policy) == false) {
-        return NULL;
-    }
-
-    if (get_int_from_py_int(&err, py_indextype, (int *)&index_type,
-                            "index_type") != AEROSPIKE_OK) {
-        goto CLEANUP_ON_ERROR;
-    }
-
-    if (get_int_from_py_int(&err, py_datatype, (int *)&data_type,
-                            "index_datatype") != AEROSPIKE_OK) {
-        goto CLEANUP_ON_ERROR;
-    }
-
-    // convert_python_args_to_c_and_create_index, which is called by the new index create method API's,
-    // accepts an optional value of None for ctx
-    // This API call is the only exception where a list of ctx's is required
-    if (Py_IsNone(py_ctx)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ctx cannot be None");
-        goto CLEANUP_ON_ERROR;
-    }
-
-    // Even if this call fails, it will raise its own exception
-    // and the err object here will not be set. We don't raise an exception twice
-    return convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
-        py_ctx, NULL);
-
-CLEANUP_ON_ERROR:
-    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
-    return NULL;
-}
-
 // TODO: way to get method name dynamically for error message?
 static inline PyObject *
-create_index_with_known_index_type(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds, as_index_type index_type,
-                                   const char *ml_name)
+AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
+                                    PyObject *kwds, as_index_type index_type,
+                                    const char *ml_name)
 {
     // Initialize error
     as_error err;
@@ -379,21 +298,21 @@ PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
                                                     PyObject *args,
                                                     PyObject *kwds)
 {
-    return create_index_with_known_index_type(
+    return AerospikeClient_Index_Create_Helper(
         self, args, kwds, AS_INDEX_TYPE_DEFAULT, "index_single_value_create");
 }
 
 PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds)
 {
-    return create_index_with_known_index_type(
+    return AerospikeClient_Index_Create_Helper(
         self, args, kwds, AS_INDEX_TYPE_LIST, "index_list_create");
 }
 
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
-    return create_index_with_known_index_type(
+    return AerospikeClient_Index_Create_Helper(
         self, args, kwds, AS_INDEX_TYPE_MAPKEYS, "index_map_keys_create");
 }
 
@@ -401,7 +320,7 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
                                                   PyObject *args,
                                                   PyObject *kwds)
 {
-    return create_index_with_known_index_type(
+    return AerospikeClient_Index_Create_Helper(
         self, args, kwds, AS_INDEX_TYPE_MAPVALUES, "index_map_values_create");
 }
 
@@ -537,19 +456,6 @@ static PyObject *AerospikeClient_Index_Create_Deprecated_Helper(
         index_datatype, NULL, NULL);
 }
 
-/**
- *******************************************************************************************************
- * Creates an integer index for a bin in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
                                                PyObject *args, PyObject *kwds)
 {
@@ -557,19 +463,6 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
         self, args, kwds, "index_integer_create", AS_INDEX_NUMERIC);
 }
 
-/**
- *******************************************************************************************************
- * Creates a string index for a bin in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds)
 {
@@ -589,4 +482,72 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 {
     return AerospikeClient_Index_Create_Deprecated_Helper(
         self, args, kwds, "index_geo2dsphere_create", AS_INDEX_GEO2DSPHERE);
+}
+
+PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
+                                           PyObject *args, PyObject *kwds)
+{
+    PyErr_WarnEx(PyExc_DeprecationWarning,
+                 "index_cdt_create() is deprecated. Please use one of the "
+                 "other non-deprecated index_*_create() methods instead",
+                 STACK_LEVEL);
+
+    // Initialize error
+    as_error err;
+    as_error_init(&err);
+
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_bin = NULL;
+    PyObject *py_indextype = NULL;
+    PyObject *py_datatype = NULL;
+    PyObject *py_name = NULL;
+
+    PyObject *py_ctx = NULL;
+
+    as_index_datatype data_type;
+    as_index_type index_type;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {
+        "ns",   "set", "bin",    "index_type", "index_datatype",
+        "name", "ctx", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO|O:index_list_create",
+                                    kwlist, &py_ns, &py_set, &py_bin,
+                                    &py_indextype, &py_datatype, &py_name,
+                                    &py_ctx, &py_policy) == false) {
+        return NULL;
+    }
+
+    if (get_int_from_py_int(&err, py_indextype, (int *)&index_type,
+                            "index_type") != AEROSPIKE_OK) {
+        goto CLEANUP_ON_ERROR;
+    }
+
+    if (get_int_from_py_int(&err, py_datatype, (int *)&data_type,
+                            "index_datatype") != AEROSPIKE_OK) {
+        goto CLEANUP_ON_ERROR;
+    }
+
+    // convert_python_args_to_c_and_create_index, which is called by the new index create method API's,
+    // accepts an optional value of None for ctx
+    // This API call is the only exception where a list of ctx's is required
+    if (Py_IsNone(py_ctx)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ctx cannot be None");
+        goto CLEANUP_ON_ERROR;
+    }
+
+    // Even if this call fails, it will raise its own exception
+    // and the err object here will not be set. We don't raise an exception twice
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
+        py_ctx, NULL);
+
+CLEANUP_ON_ERROR:
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    return NULL;
 }
