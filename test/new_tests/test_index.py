@@ -31,14 +31,9 @@ class TestIndex(object):
 
     def test_create_indexes_with_no_parameters(self):
         """
-        Invoke indexc_string_reate() without any
+        Invoke without any
         mandatory parameters.
         """
-        with pytest.raises(TypeError) as typeError:
-            self.as_connection.index_single_value_create()
-
-        assert "argument 'ns' (pos 1)" in str(typeError.value)
-
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_single_value_create()
 
