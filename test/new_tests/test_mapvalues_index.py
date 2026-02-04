@@ -350,7 +350,7 @@ qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_with_ctx(self):
-        response_code = self.as_connection.index_map_keys_create(
+        response_code = self.as_connection.index_map_values_create(
             ns="test",
             set="demo",
             bin="list_of_maps",
