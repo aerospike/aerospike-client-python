@@ -5,6 +5,7 @@ from .as_status_codes import AerospikeStatus
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
+from aerospike_helpers import cdt_ctx
 
 
 import aerospike
@@ -20,6 +21,11 @@ def add_map_keys(client):
             "string_map": {"sa": "a", "sb": "b", "sc": "c"},
             "age": i,
             "no": i,
+            "list_of_maps": [
+                {
+                    1: "a"
+                }
+            ]
         }
         client.put(key, rec)
 
@@ -348,3 +354,21 @@ class TestMapKeysIndex(object):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+
+    def test_with_ctx(self):
+        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
+        response_code = self.as_connection.index_map_keys_create(
+            ns="test",
+            set="demo",
+            bin="list_of_maps",
+            index_datatype=aerospike.INDEX_NUMERIC,
+            name="test_string_map_index",
+            policy=None,
+            ctx=[
+                cdt_ctx.cdt_ctx_list_index(0)
+            ]
+        )
+        assert response_code == AerospikeStatus.AEROSPIKE_OK
+
+        self.as_connection.index_remove("test", "test_string_map_index")
+        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
