@@ -848,7 +848,7 @@ Index Operations
         :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
-        :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
@@ -861,7 +861,7 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param list ctx: a list of contexts to specify the location of nested values in a collection data type. Defaults to :py:obj:`None`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
@@ -874,7 +874,7 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param list ctx: a list of contexts to specify the location of nested values in a collection data type. Defaults to :py:obj:`None`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
@@ -889,7 +889,7 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param list ctx: a list of contexts to specify the location of nested values in a collection data type. Defaults to :py:obj:`None`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
