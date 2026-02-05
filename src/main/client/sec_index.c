@@ -200,15 +200,10 @@ CLEANUP2:
     Py_XDECREF(py_ctx_dict);
 
 CLEANUP:
-    if (py_ustr_set) {
-        Py_DECREF(py_ustr_set);
-    }
-    if (py_ustr_bin) {
-        Py_DECREF(py_ustr_bin);
-    }
-    if (py_ustr_name) {
-        Py_DECREF(py_ustr_name);
-    }
+    Py_XDECREF(py_ustr_set);
+    Py_XDECREF(py_ustr_bin);
+    Py_XDECREF(py_ustr_name);
+
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
