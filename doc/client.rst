@@ -902,7 +902,7 @@ Index Operations
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
-            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
+            # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
