@@ -6,12 +6,14 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
 
 
 class TestQueryUsersInfo(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may not be secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may not be secured cluster.",
     )
 
     def setup_method(self, method):
@@ -20,11 +22,12 @@ class TestQueryUsersInfo(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUsersInfo.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(2)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -32,8 +35,7 @@ class TestQueryUsersInfo(TestBaseClass):
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(2)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -44,14 +46,13 @@ class TestQueryUsersInfo(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
+            admin_drop_user_and_poll(self.client, "example-test")
         except Exception:
             pass
         self.client.close()
 
     def test_query_users_info_with_proper_parameters(self):
 
-        time.sleep(2)
         user_details = self.client.admin_query_users_info()
 
         # Usage test; doesn't actually test if the server records user data
@@ -78,7 +79,11 @@ class TestQueryUsersInfo(TestBaseClass):
 
         user_details = self.client.admin_query_users_info(policy)
 
-        assert user_details.get("example-test").get("roles") == ["read", "read-write", "sys-admin"]
+        assert user_details.get("example-test").get("roles") == [
+            "read",
+            "read-write",
+            "sys-admin",
+        ]
 
     def test_query_users_info_with_no_roles(self):
 
@@ -100,7 +105,9 @@ class TestQueryUsersInfo(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_users_info(None, "")
 
-        assert "admin_query_users_info() takes at most 1 argument (2 given)" in str(typeError.value)
+        assert "admin_query_users_info() takes at most 1 argument (2 given)" in str(
+            typeError.value
+        )
 
     def test_query_users_info_with_policy_as_string(self):
         """
