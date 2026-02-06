@@ -13,12 +13,12 @@ import aerospike
 
 def add_indexes_to_client(client):
     try:
-        client.index_integer_create("test", "demo", "age", "test_demo_age_idx")
+        client.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "test_demo_age_idx")
     except e.IndexFoundError:
         pass
 
     try:
-        client.index_integer_create("test", None, "age", "test_null_age_idx")
+        client.index_single_value_create("test", None, "age", aerospike.INDEX_NUMERIC, "test_null_age_idx")
     except e.IndexFoundError:
         pass
 
