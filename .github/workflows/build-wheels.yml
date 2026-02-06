@@ -145,6 +145,20 @@ env:
   REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
+  get-server-build-from-qe-registry:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: 'citrusleaf/aerospike-server'
+        ssh-key: ${{ secrets.CITRUSLEAF_SERVER_PRIVATE_KEY }}
+        submodules: recursive
+    - run: ./bin/install-dependencies.sh
+    - name: Build server
+      run: make -j4
+    - name: Build debian package
+      run: make deb
+
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
   # but this should be ok based on the minutes usage data for the aerospike organization
