@@ -3,6 +3,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  publish-release-notes:
+    runs-on: ubuntu-22.04
+    steps:
+    - run: echo
+
   ff-master-to-stage:
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
