@@ -2,31 +2,27 @@ name: Build and upload wheels for QE
 run-name: Build and upload wheels for QE (disable-optimizations=${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }})
 
 on:
-  push:
-    branches-ignore:
-      - dev*
-      - stage*
-      - master*
   workflow_dispatch:
     inputs:
       disable-optimizations:
         description: 'Build unoptimized wheels?'
         default: false
         type: boolean
+        required: false
+      python-tags:
+        type: string
+        required: true
+      platform-tag:
+        type: string
         required: true
 
 jobs:
   build-artifacts:
-    strategy:
-      matrix:
-        platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64"
-        ]
     uses: ./.github/workflows/build-wheels.yml
     with:
-      platform-tag: ${{ matrix.platform-tag }}
-      unoptimized: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
+      python-tags: ${{ inputs.python-tags }}
+      platform-tag: ${{ inputs.platform-tag }}
+      unoptimized: ${{ inputs.disable-optimizations }}
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
