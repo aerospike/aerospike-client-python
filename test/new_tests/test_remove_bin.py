@@ -125,11 +125,9 @@ class TestRemovebin(object):
         policy = {}
         self.as_connection.remove_bin(key, ["name"], {}, policy)
 
-        try:
+        with pytest.raises(e.RecordNotFound) as exceptionInfo:
             _, _, bins = self.as_connection.get(key)
-            assert bins is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        assert exceptionInfo.value.code == 2
 
     def test_pos_remove_bin_no_bin(self, put_data):
         """
@@ -138,12 +136,9 @@ class TestRemovebin(object):
         key = ("test", "demo", 1)
         record = {"name": "jeff", "age": 45}
         put_data(self.as_connection, key, record)
-        try:
+        with pytest.raises(e.InvalidRequest) as exceptionInfo:
             self.as_connection.remove_bin(key, [])
-            (key, _, bins) = self.as_connection.get(key)
-            assert bins == record
-        except e.InvalidRequest:
-            pass
+        assert exceptionInfo.value.code == 4
 
     @pytest.mark.parametrize(
         "key, record, bins_for_removal",
@@ -160,11 +155,9 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, bins_for_removal)
 
-        try:
+        with pytest.raises(e.RecordNotFound) as exceptionInfo:
             (key, _, _) = self.as_connection.get(key)
-
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        assert exceptionInfo.value.code == 2
 
     @pytest.mark.parametrize(
         "key, record, policy, bin_for_removal",
@@ -235,12 +228,10 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with none
         """
-        try:
+        with pytest.raises(e.ParamError) as exceptionInfo:
             self.as_connection.remove_bin(None, bin_for_removal)
-
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        assert exceptionInfo.value.code == ex_code
+        assert exceptionInfo.value.msg == ex_msg
 
     def test_neg_remove_bin_with_correct_parameters_without_connection(self):
         """
@@ -251,12 +242,9 @@ class TestRemovebin(object):
         client1.close()
 
         key = ("test", "demo", 1)
-
-        try:
+        with pytest.raises(e.ClusterError) as exceptionInfo:
             client1.remove_bin(key, ["age"])
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert exceptionInfo.value.code == 11
 
     def test_neg_remove_bin_with_incorrect_meta(self):
         """
@@ -276,13 +264,9 @@ class TestRemovebin(object):
         Invoke remove_bin() with incorrect policy
         """
         key = ("test", "demo", 1)
-
         policy = {"time": 1001}
-        try:
+        with pytest.raises((e.ClientError, e.RecordNotFound)):
             self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-        except (e.ClientError, e.RecordNotFound):
-            pass
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
@@ -309,11 +293,10 @@ class TestRemovebin(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5, "ttl": 1000}
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
 
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert exceptionInfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -341,12 +324,9 @@ class TestRemovebin(object):
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen, "ttl": 1000}
-
-        try:
+        with pytest.raises(e.RecordGenerationError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert exceptionInfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -365,11 +345,9 @@ class TestRemovebin(object):
         key = ("test", "demo", 1)
 
         policy = {"total_timeout": 0.5}
-        try:
+        with pytest.raises(e.ClientError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-        except e.ClientError as exception:
-            assert exception.code == -1
+        assert exceptionInfo.value.code == -1
 
     @pytest.mark.parametrize(
         "key, bin_for_removal, ex_code",
@@ -382,11 +360,8 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with non-existent data
         """
-        try:
+        with pytest.raises(e.RecordNotFound):
             self.as_connection.remove_bin(key, bin_for_removal)
-
-        except e.RecordNotFound:
-            pass
 
     def test_neg_remove_bin_with_extra_parameter(self):
         """

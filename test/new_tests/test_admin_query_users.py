@@ -8,10 +8,11 @@ from aerospike import exception as e
 import aerospike
 
 
-class TestQueryUsersInfo(TestBaseClass):
+@pytest.mark.skip("client.admin_query_users() is deprecated")
+class TestQueryUsers(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may not be secured cluster."
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
     )
 
     def setup_method(self, method):
@@ -19,7 +20,7 @@ class TestQueryUsersInfo(TestBaseClass):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        TestQueryUsersInfo.Me = self
+        TestQueryUsers.Me = self
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
@@ -49,36 +50,33 @@ class TestQueryUsersInfo(TestBaseClass):
             pass
         self.client.close()
 
-    def test_query_users_info_with_proper_parameters(self):
+    def test_query_users_with_proper_parameters(self):
 
         time.sleep(2)
-        user_details = self.client.admin_query_users_info()
+        user_details = self.client.admin_query_users()
 
-        # Usage test; doesn't actually test if the server records user data
-        user_details = user_details.get("example-test")
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
-        assert user_details.get("read_info") == 0
-        assert user_details.get("write_info") == 0
-        assert user_details.get("conns_in_use") == 0
+        assert user_details["example-test"] == ["read", "read-write", "sys-admin"]
 
-    def test_query_users_info_with_invalid_timeout_policy_value(self):
+    def test_query_users_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
 
         with pytest.raises(e.ParamError) as excinfo:
-            self.client.admin_query_users_info(policy)
+            self.client.admin_query_users(policy)
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "timeout is invalid"
 
-    def test_query_users_info_with_proper_timeout_policy_value(self):
+    def test_query_users_with_proper_timeout_policy_value(self):
 
         policy = {"timeout": 180000}
 
-        user_details = self.client.admin_query_users_info(policy)
+        time.sleep(2)
+        user_details = self.client.admin_query_users(policy)
 
-        assert user_details.get("example-test").get("roles") == ["read", "read-write", "sys-admin"]
+        time.sleep(2)
+        assert user_details["example-test"] == ["read", "read-write", "sys-admin"]
 
-    def test_query_users_info_with_no_roles(self):
+    def test_query_users_with_no_roles(self):
 
         user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
@@ -87,25 +85,26 @@ class TestQueryUsersInfo(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_users_info()
+        user_details = self.client.admin_query_users()
 
-        assert user_details.get("example-test").get("roles") == []
+        time.sleep(2)
+        assert user_details["example-test"] == []
 
-    def test_query_users_info_with_extra_argument(self):
+    def test_query_users_with_extra_argument(self):
         """
         Invoke query_users() with extra argument.
         """
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_users_info(None, "")
+            self.client.admin_query_users(None, "")
 
-        assert "admin_query_users_info() takes at most 1 argument (2 given)" in str(typeError.value)
+        assert "admin_query_users() takes at most 1 argument (2 given)" in str(typeError.value)
 
-    def test_query_users_info_with_policy_as_string(self):
+    def test_query_users_with_policy_as_string(self):
         """
         Invoke query_users() with policy as string
         """
         policy = ""
         with pytest.raises(e.ParamError) as excinfo:
-            self.client.admin_query_users_info(policy)
+            self.client.admin_query_users(policy)
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "policy must be a dict"

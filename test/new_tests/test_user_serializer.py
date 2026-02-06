@@ -165,12 +165,10 @@ class TestUserSerializer(object):
         Invoke put() for float data record with user serializer.
         """
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             aerospike.set_serializer(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Parameter must be a callable"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Parameter must be a callable"
 
     def test_put_with_float_data_user_deserializer_none(self):
         """
@@ -192,12 +190,10 @@ class TestUserSerializer(object):
 
         self.delete_keys.append(key)
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             aerospike.set_deserializer(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Parameter must be a callable"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Parameter must be a callable"
 
     def test_put_with_mixed_data_user_serializer(self):
         pytest.xfail(reason="Need Python 2/3 compatible bytearray for strings")

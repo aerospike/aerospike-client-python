@@ -604,11 +604,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             key, meta, _ = self.as_connection.operate_ordered(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -635,11 +633,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             (key, meta, _) = self.as_connection.operate_ordered(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -664,11 +660,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             key, _, _ = client1.operate_ordered(key, llist)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_operate_ordered_prepend_set_to_aerospike_null(self):
         """
@@ -685,11 +679,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "no"},
         ]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate_ordered(key, llist)
-
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        assert excinfo.value.code == 4
         self.as_connection.remove(key)
 
     def test_neg_operate_ordered_with_command_invalid(self):
@@ -700,11 +692,9 @@ class TestOperateOrdered(object):
 
         llist = [{"op": 999, "bin": "age", "val": 3}, {"op": aerospike.OPERATOR_READ, "bin": "name"}]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             key, _, _ = self.as_connection.operate_ordered(key, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_ordered_with_bin_length_extra(self):
         """
@@ -721,23 +711,19 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.BinNameError) as excinfo:
             key, _, _ = self.as_connection.operate_ordered(key, llist)
-
-        except e.BinNameError as exception:
-            assert exception.code == 21
-            assert exception.msg == "A bin name should not exceed 15 characters limit"
+        assert excinfo.value.code == 21
+        assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_ordered_empty_string_key(self):
         """
         Invoke operate_ordered() with empty string key
         """
         llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered("", llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_ordered_with_extra_parameter(self):
         """
@@ -757,22 +743,18 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
         llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(key, llist, {}, "")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_ordered_key_is_none(self):
         """
         Invoke operate_ordered() with key is none
         """
         llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(None, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     @pytest.mark.parametrize(
         "key, policy, list, ex_code",
@@ -813,11 +795,9 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with append op and append val is not given
         """
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(key, list, {}, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == ex_code
+        assert excinfo.value.code == ex_code
 
     def test_neg_operate_ordered_append_value_integer(self):
         """
@@ -830,10 +810,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(key, llist)
-        except e.ParamError as exc:
-            assert exc.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_ordered_with_incorrect_policy(self):
         """
@@ -847,11 +826,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(key, llist, {}, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_ordered_list_operation_bin_notlist(self):
         """
@@ -860,11 +837,9 @@ class TestOperateOrdered(object):
         key = ("test", "demo", 1)
         list = [{"op": aerospike.OP_LIST_INSERT, "bin": "age", "index": 2, "val": 9}]
 
-        try:
+        with pytest.raises(e.BinIncompatibleType) as excinfo:
             (key, _, _) = self.as_connection.operate_ordered(key, list)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        assert excinfo.value.code == 12
 
     def test_neg_operate_ordered_append_items_not_a_list(self):
         """
@@ -876,11 +851,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OP_LIST_APPEND_ITEMS, "bin": "int_bin", "val": 7},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             key, _, bins = self.as_connection.operate_ordered(key, list)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     @pytest.mark.parametrize(
         "key, llist",
@@ -933,10 +906,8 @@ class TestOperateOrdered(object):
         """
         Invoke operate() with no typecheck on existing record
         """
-        try:
+        with pytest.raises(e.BinIncompatibleType) as excinfo:
             (key, _, _) = TestOperateOrdered.client_no_typechecks.operate_ordered(key, llist)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        assert excinfo.value.code == 12
 
         TestOperateOrdered.client_no_typechecks.remove(key)
