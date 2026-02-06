@@ -30,6 +30,7 @@
 #include "aerospike/as_job.h"
 #include <aerospike/as_metrics.h>
 #include <aerospike/as_cluster.h>
+#include "pythoncapi_compat.h"
 
 #include "conversions.h"
 #include "policy.h"
@@ -52,13 +53,6 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-// TODO: Python exceptions should be propagated up instead of being cleared
-// but the policy helper functions don't handle this case and they only populate
-// an as_error object and return a status code.
-// That will take too much time to refactor, so just clear the exception and
-// populate the as_error object instead. This currently makes it harder to
-// debug why a C-API call failed though, because we don't have the exact
-// exception that was thrown
 #define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString(#__field);              \
@@ -95,6 +89,42 @@
             }                                                                  \
         }                                                                      \
     }
+
+// TODO: Python exceptions should be propagated up instead of being cleared
+// but the policy helper functions don't handle this case and they only populate
+// an as_error object and return a status code.
+// That will take too much time to refactor, so just clear the exception and
+// populate the as_error object instead. This currently makes it harder to
+// debug why a C-API call failed though, because we don't have the exact
+// exception that was thrown
+static inline void override_uint32_t_field_using_py_policy_field(
+    as_error *err, PyObject *py_policy, const char *field_name,
+    uint32_t *field_value_ref)
+{
+    PyObject *py_field_val = NULL;
+    int retval = PyDict_GetItemStringRef(py_policy, field_name, &py_field_val);
+    if (retval == -1) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to fetch field from policy dictionary");
+        goto CLEANUP;
+    }
+    else if (retval == 0) {
+        goto CLEANUP;
+    }
+
+    uint32_t val = convert_pyobject_to_uint32_t(py_field_val);
+    if (PyErr_Occurred()) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to fetch long value from policy field");
+    }
+
+    *field_value_ref = val;
+
+CLEANUP:
+    Py_XDECREF(py_field_val);
+}
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
@@ -264,7 +294,11 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
         }
 
         // Set policy fields
-        POLICY_SET_FIELD(timeout, uint32_t);
+        override_uint32_t_field_using_py_policy_field(err, py_policy, "timeout",
+                                                      &policy->timeout);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
     }
     // Update the policy
     POLICY_UPDATE();
