@@ -23,7 +23,7 @@ repos:
     -   id: debug-statements
         # Only run on files specified in .flake8
         pass_filenames: false
-        files: "^(aerospike_helpers|test)/"
+        files: "^(aerospike_helpers|test|setup.py)/"
         types: ["file", "python"]
     -   id: end-of-file-fixer
 

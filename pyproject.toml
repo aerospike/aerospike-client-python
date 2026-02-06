@@ -14,10 +14,10 @@ authors = [
     {name = "Aerospike, Inc.", email = "info@aerospike.com"}
 ]
 readme = "README.rst"
-license = {text = "Apache Software License"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 keywords = ["aerospike", "nosql", "database"]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
@@ -35,8 +35,18 @@ dynamic = ["version"]
 "Homepage" = "https://aerospike.com"
 
 [tool.setuptools]
-zip-safe = false
 include-package-data = true
+packages = [
+    "aerospike_helpers",
+    "aerospike_helpers.operations",
+    "aerospike_helpers.batch",
+    "aerospike_helpers.expressions",
+    "aerospike_helpers.metrics",
+    "aerospike-stubs"
+]
+
+[tool.setuptools.dynamic]
+version = {file = ["VERSION"]}
 
 [tool.versioningit]
 
