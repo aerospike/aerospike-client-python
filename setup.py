@@ -29,6 +29,7 @@ import time
 import io
 import xml.etree.ElementTree as ET
 import glob
+from pathlib import Path
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -64,6 +65,7 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 ################################################################################
 
 include_dirs = ['src/include'] + \
+    [f'{AEROSPIKE_C_HOME}/src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
@@ -177,11 +179,23 @@ include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
 
 ]
+
+C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
+
 if not WINDOWS:
-    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
-    extra_objects = extra_objects + [
-        AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
-    ]
+    if C_CLIENT_SHARED_PATH:
+        # In this case, no headers will be installed in target directory.
+        include_dirs.append(AEROSPIKE_C_HOME + '/src/include')
+        extra_objects.append(C_CLIENT_SHARED_PATH)
+        # The C client isn't included in the sdist, so we need to explicitly tell linker to find it
+        # outside of the isolated build environment created by pypa/build
+        dir_containing_c_client_static_lib = os.path.dirname(os.path.abspath(C_CLIENT_SHARED_PATH))
+        library_dirs.append(dir_containing_c_client_static_lib)
+    else:
+        include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
+        extra_objects = extra_objects + [
+            AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
+        ]
 else:
     include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
@@ -249,7 +263,8 @@ class CClientBuild(build):
             print(cmd, library_dirs, libraries)
             call(cmd, cwd=CCLIENT_PATH)
 
-        self.execute(compile, [], 'Compiling core aerospike-client-c')
+        if not C_CLIENT_SHARED_PATH:
+            self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
         build.run(self)
 
