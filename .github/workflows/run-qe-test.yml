@@ -323,8 +323,36 @@ jobs:
         fi
       working-directory: aerospike-client-python/test/
 
-    - name: Print test logs in real time
-      run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
+    # - name: Print test logs in real time
+    #   run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
+
+    - name: Wait for test run to finish
+      id: poll-run-id
+      run: |
+        while true; do
+          # Color messes up the run_id's string
+          # Use xargs to trim whitespace from testctl's output
+          run_id=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+          if [[ -z "$run_id" ]]; then
+            echo "Test run has not finished yet..."
+            sleep 2
+          else
+            echo "Test run $run_id has finished."
+            break
+          fi
+        done
+        echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+    # Downloading builds doesn't work here, so we disable it
+    - run: ${{ env.TESTCTL_BINARY_NAME }} --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
+
+    - name: Print test run logs
+      run: |
+        cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
+        echo "stdout:"
+        cat stdout
+        echo "stderr:"
+        cat stderr
 
     - name: Set Github job status
       run: |
