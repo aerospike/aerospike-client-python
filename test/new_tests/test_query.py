@@ -169,6 +169,42 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
+        for i in range(5):
+            key = ("test", "demo", i)
+            # 5x5 box, then 10x10 box, ... until 25x25 box
+            box_coordinates = [[0, 0], [5 * (i + 1), 0], [5 * (i + 1), 5 * (i + 1)], [0, 5 * (i + 1)], [0, 0]]
+            rec = {
+                "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
+                "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
+                "name": "name%s" % (str(i)),
+                "addr": "name%s" % (str(i)),
+                "numeric_list": [i, i + 1, i + 2],
+                "string_list": ["str" + str(i), "str" + str(i + 1), "str" + str(i + 2)],
+                "numeric_map": {"a": i, "b": i + 1, "c": i + 2},
+                "string_map": {"a": "a" + str(i), "b": "b" + str(i + 1), "c": "c" + str(i + 2)},
+                "blob_list": [i.to_bytes(length=1, byteorder='big')],
+                "blob_map": {
+                    i.to_bytes(length=1, byteorder='big'): i.to_bytes(length=1, byteorder='big')
+                },
+                "test_age_none": 1,
+                "test_age": i,
+                "no": i,
+                "blob": i.to_bytes(length=1, byteorder='big')
+            }
+            as_connection.put(key, rec)
+        for i in range(5, 10):
+            key = ("test", "demo", i)
+            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
+            as_connection.put(key, rec)
+
+        key = ("test", "demo", 122)
+        llist = [{"op": aerospike.OPERATOR_WRITE, "bin": bytearray("sal\0kj", "utf-8"), "val": 80000}]
+        as_connection.operate(key, llist)
+
+        key = ("test", None, 145)
+        rec = {"test_age_none": 1}
+        as_connection.put(key, rec)
+
         yield
 
         policy = {}
@@ -248,63 +284,14 @@ class TestQuery(TestBaseClass):
             except e.IndexNotFound:
                 pass
 
-        as_connection.close()
-
-    @pytest.fixture(autouse=True)
-    def setup_method(self, request):
-        """
-        Setup method.
-        """
-        for i in range(5):
+        for i in range(10):
             key = ("test", "demo", i)
-            # 5x5 box, then 10x10 box, ... until 25x25 box
-            box_coordinates = [[0, 0], [5 * (i + 1), 0], [5 * (i + 1), 5 * (i + 1)], [0, 5 * (i + 1)], [0, 0]]
-            rec = {
-                "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
-                "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
-                "name": "name%s" % (str(i)),
-                "addr": "name%s" % (str(i)),
-                "numeric_list": [i, i + 1, i + 2],
-                "string_list": ["str" + str(i), "str" + str(i + 1), "str" + str(i + 2)],
-                "numeric_map": {"a": i, "b": i + 1, "c": i + 2},
-                "string_map": {"a": "a" + str(i), "b": "b" + str(i + 1), "c": "c" + str(i + 2)},
-                "blob_list": [i.to_bytes(length=1, byteorder='big')],
-                "blob_map": {
-                    i.to_bytes(length=1, byteorder='big'): i.to_bytes(length=1, byteorder='big')
-                },
-                "test_age_none": 1,
-                "test_age": i,
-                "no": i,
-                "blob": i.to_bytes(length=1, byteorder='big')
-            }
-            self.as_connection.put(key, rec)
-        for i in range(5, 10):
-            key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
-            self.as_connection.put(key, rec)
+            as_connection.remove(key)
 
         key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_WRITE, "bin": bytearray("sal\0kj", "utf-8"), "val": 80000}]
-        self.as_connection.operate(key, llist)
-
+        as_connection.remove(key)
         key = ("test", None, 145)
-        rec = {"test_age_none": 1}
-        self.as_connection.put(key, rec)
-
-        def teardown():
-            """
-            Teardown method.
-            """
-            for i in range(10):
-                key = ("test", "demo", i)
-                self.as_connection.remove(key)
-
-            key = ("test", "demo", 122)
-            self.as_connection.remove(key)
-            key = ("test", None, 145)
-            self.as_connection.remove(key)
-
-        request.addfinalizer(teardown)
+        as_connection.remove(key)
 
     def test_query_with_correct_parameters_hi(self):
         """
