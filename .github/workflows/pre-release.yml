@@ -1,0 +1,93 @@
+name: Prepare for release
+
+on:
+  workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  bump-version:
+    outputs:
+      new-version: ${{ steps.bump-version.outputs.new_version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+
+      - name: Get new version and build number
+        run: |
+          pip install python-semantic-release
+          latest_tag=$(cat VERSION)
+          echo "Bumping off of latest tag $latest_tag"
+          new_tag=$(pysemver nextver $latest_tag patch)
+          echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
+          echo "The new tag for this build is $new_tag"
+
+      # TODO: Create a reusable workflow for this
+      - name: Update version
+        run: |
+          sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
+          echo -e "${{ env.NEW_TAG }}" > VERSION
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: Bump version to ${{ env.NEW_TAG }}
+          branch: bump-to-${{ env.NEW_TAG }}
+          base: stage
+          add-paths: VERSION, src/main/aerospike.c
+          delete-branch: true
+          title: Bump version to ${{ env.NEW_TAG }}
+
+      - name: Build wheels for this release
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: build-wheels.yml
+          inputs: '{ "use-server-rc": ${{ inputs.use-server-rc }}, "skip-updating-version": true }'
+
+      - name: Run valgrind for this release
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: valgrind.yml
+          inputs: '{ "use-server-rc": ${{ inputs.use-server-rc }} }'
+
+      # - name: Create release notes
+      #   uses: release-drafter/release-drafter@v5
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create draft release in Github
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     draft: true
+
+      # - name: Login to Jira
+      #   uses: atlassian/gajira-login@master
+      #   env:
+      #     JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      #     JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+      #     JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      # - uses: atlassian/gajira-create@v3
+      #   with:
+      #     project: DOCS
+      #     issuetype: Task
+      #     summary: Python client ${{ env.NEW_VERSION }} release notes
+
+      # - name: Checkout docs.aerospike.com repo
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: ${{ secrets.AEROSPIKE_DOCS_REPO }}
+      #     path: docs.aerospike.com
+      # - name: Create pull request for docs.aerospike.com
+      #   uses: peter-evans/create-pull-request@v4
+      #   with:
+      #     title: Python client ${{ env.NEW_VERSION }} release notes
+      #     branch: ${{ env.BRANCH_NAME }}
+      #     commit-message: Bump version to ${{ env.NEW_VERSION }}
+      #     delete-branch: true
