@@ -416,7 +416,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 # "key_policy" is an invalid policy dictionary key
                 client.get(key, policy=policy)
 
-        * **hosts** (:class:`list`)
+        * .. _hosts:
+
+        **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
             The tuple is in this format: ``(address, port, [tls-name])``
