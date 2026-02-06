@@ -1198,6 +1198,7 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
     }
 }
 
+// ops must point to a stack-allocated as_operations variable
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
