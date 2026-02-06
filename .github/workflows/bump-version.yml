@@ -43,7 +43,7 @@ on:
 jobs:
   get-current-version:
     name: Get new version string
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     outputs:
       current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
@@ -63,7 +63,7 @@ jobs:
       run: echo current_version=$(cat VERSION) >> $GITHUB_OUTPUT
 
   get-new-version:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     needs: get-current-version
     outputs:
       new_version: ${{ steps.get-new-version.outputs.new_version }}
