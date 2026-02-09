@@ -7,14 +7,13 @@ from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
-from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
 import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl
+from .conftest import verify_record_ttl, wait_for_job_completion
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -173,6 +172,19 @@ def test_setting_rack_aware():
     config["policies"]["query"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
     aerospike.client(config)
 
+
+@pytest.mark.parametrize(
+    "compress, expected_cm",
+    [
+        (True, nullcontext()),
+        (0.2, pytest.raises(e.ParamError))
+    ]
+)
+def test_setting_compress(compress, expected_cm):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["read"]["compress"] = compress
+    with expected_cm:
+        aerospike.client(config)
 
 def test_setting_batch_remove_gen():
     config = copy.deepcopy(gconfig)
@@ -461,7 +473,7 @@ class TestConfigTTL:
         scan.add_ops(ops)
         job_id = scan.execute_background()
 
-        wait_for_job_completion(self.client, job_id)
+        wait_for_job_completion(self.client, job_id, job_module=aerospike.JOB_SCAN)
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 

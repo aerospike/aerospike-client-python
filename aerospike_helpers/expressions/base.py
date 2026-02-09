@@ -1120,11 +1120,6 @@ class LoopVarBool(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_BOOL
 
 
-# TODO: remove?
-# class LoopVarInfinity(LoopVar):
-#     _op = aerospike._AS_EXP_LOOPVAR_INF
-
-
 class LoopVarNil(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_NIL
 
@@ -1133,9 +1128,13 @@ class LoopVarGeoJson(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_GEOJSON
 
 
+class LoopVarHLL(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_HLL
+
+
 class ResultRemove(_BaseExpr):
     """
-    Indicates entry deletion for modify_by_path.
+    Indicates entry deletion for :py:class:`ModifyByPath`.
     """
     _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
 
@@ -1176,7 +1175,7 @@ class ModifyByPath(_BaseExpr):
     Constructs an apply by path operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 

@@ -156,7 +156,7 @@ def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     Create path expression modification operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
 
     Args:
         bin_name: Name of bin that this modify operation is performed against
