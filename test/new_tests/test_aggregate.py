@@ -16,7 +16,7 @@ def remove_stream_udf(client):
 
 
 def add_required_index(client):
-    client.index_integer_create("test", "demo", "test_age", "age_index")
+    client.index_single_value_create("test", "demo", "test_age", aerospike.INDEX_NUMERIC, "age_index")
 
 
 def remove_index(client):

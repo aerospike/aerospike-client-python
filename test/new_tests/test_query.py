@@ -66,17 +66,17 @@ class TestQuery(TestBaseClass):
     @pytest.fixture(autouse=True, scope="class")
     def setupClass(self, as_connection):
         try:
-            as_connection.index_integer_create("test", "demo", "test_age", "age_index")
+            as_connection.index_single_value_create("test", "demo", "test_age", aerospike.INDEX_NUMERIC, "age_index")
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_string_create("test", "demo", "addr", "addr_index")
+            as_connection.index_single_value_create("test", "demo", "addr", aerospike.INDEX_STRING, "addr_index")
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_integer_create("test", "demo", "age1", "age_index1")
+            as_connection.index_single_value_create("test", "demo", "age1", aerospike.INDEX_NUMERIC, "age_index1")
         except e.IndexFoundError:
             pass
 
@@ -115,12 +115,12 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_integer_create("test", None, "test_age_none", "age_index_none")
+            as_connection.index_single_value_create("test", None, "test_age_none", aerospike.INDEX_NUMERIC, "age_index_none")
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
+            as_connection.index_single_value_create("test", "demo", bytearray("sal\0kj", "utf-8"), aerospike.INDEX_NUMERIC, "sal_index")
         except e.IndexFoundError:
             pass
 
@@ -144,26 +144,26 @@ class TestQuery(TestBaseClass):
                 pass
 
         try:
-            as_connection.index_cdt_create(
+            as_connection.index_single_value_create(
                 "test",
                 "demo",
                 "numeric_list",
-                aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_list_cdt_index",
+                None,
                 ctx_list_index,
             )
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_cdt_create(
+            as_connection.index_single_value_create(
                 "test",
                 "demo",
                 "numeric_map",
-                aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_map_cdt_index",
+                None,
                 ctx_map_index,
             )
         except e.IndexFoundError:
@@ -1127,7 +1127,7 @@ class TestQuery(TestBaseClass):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
             pytest.skip("Blob indexes are only supported in server 7.0+")
 
-        self.as_connection.index_blob_create("test", "demo", "blob", "blob_index")
+        self.as_connection.index_single_value_create("test", "demo", "blob", aerospike.INDEX_BLOB, "blob_index")
 
         query = self.as_connection.query("test", "demo")
         blob_val = int.to_bytes(4, length=1, byteorder='big')

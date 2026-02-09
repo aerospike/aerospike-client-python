@@ -6,6 +6,7 @@ from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
 import aerospike
+from aerospike_helpers import cdt_ctx
 
 
 class TestListIndex(object):
@@ -22,6 +23,9 @@ class TestListIndex(object):
                 "geojson_list": [
                     aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
                     aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]}),
+                ],
+                "map_of_lists": [
+                    [1, 2, 3]
                 ],
                 "age": i,
                 "no": i,
@@ -47,7 +51,7 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            ns="test", set="demo", bin="string_list", index_datatype=aerospike.INDEX_STRING, name="test_string_list_index", policy=policy, ctx=None
         )
 
         self.as_connection.index_remove("test", "test_string_list_index", policy)
@@ -241,6 +245,24 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert retobj == 0
         self.as_connection.index_remove("test", "geo_index", policy)
         ensure_dropped_index(self.as_connection, "test", "geo_index")
+
+    def test_with_ctx(self):
+        retobj = self.as_connection.index_list_create(
+            ns="test",
+            set="demo",
+            bin="map_of_lists",
+            index_datatype=aerospike.INDEX_NUMERIC,
+            name="test_string_list_index",
+            policy=None,
+            ctx=[
+                cdt_ctx.cdt_ctx_list_index(0)
+            ]
+        )
+
+        self.as_connection.index_remove("test", "test_string_list_index")
+        ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
+
+        assert retobj == 0
 
     # Negative tests
     def test_neg_listindex_with_namespace_is_none(self):
