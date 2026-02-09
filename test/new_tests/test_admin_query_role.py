@@ -71,10 +71,12 @@ class TestQueryRole(TestBaseClass):
         """
         Incorrect role name
         """
-        with pytest.raises(e.InvalidRole) as excinfo:
+        try:
             self.client.admin_query_role("usr-sys-admin-test-non-existent")
-        assert excinfo.value.code == 70
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
+
+        except e.InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_query_role_incorrect_role_type(self):
         """

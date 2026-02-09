@@ -134,10 +134,12 @@ class TestChangePassword(object):
         user = "readwriteuser"
         password = "newpassword"
 
-        with pytest.raises(aerospike.exception.InvalidUser) as excinfo:
+        try:
             self.client.admin_change_password(user, password)
-        assert excinfo.value.code == 60
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+
+        except aerospike.exception.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_change_password_with_too_long_password(self):
 

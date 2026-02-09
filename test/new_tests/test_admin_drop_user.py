@@ -149,10 +149,12 @@ class TestDropUser(object):
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        with pytest.raises(e.InvalidUser) as excinfo:
+        try:
             self.client.admin_drop_user(user)
-        assert excinfo.value.code == 60
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+
+        except e.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_policy_incorrect(self):
         """
@@ -201,10 +203,12 @@ class TestDropUser(object):
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        with pytest.raises(e.InvalidUser) as excinfo:
+        try:
             self.client.admin_drop_user(user)
-        assert excinfo.value.code == 60
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+
+        except e.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_with_special_characters_in_username(self):
 

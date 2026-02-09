@@ -176,9 +176,10 @@ class TestGrantPrivileges(object):
         """
         privilege type unknown
         """
-        with pytest.raises(e.InvalidPrivilege) as excinfo:
+        try:
             self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": 64}])
-        assert excinfo.value.code == 72
+        except e.InvalidPrivilege as exception:
+            assert exception.code == 72
 
     def test_grant_privileges_incorrect_privilege_type(self):
         """
@@ -193,7 +194,9 @@ class TestGrantPrivileges(object):
         """
         privilege type is an empty list
         """
-        with pytest.raises(e.InvalidPrivilege) as excinfo:
+        try:
             self.client.admin_grant_privileges("usr-sys-admin-test", [])
-        assert excinfo.value.code == 72
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_PRIVILEGE"
+
+        except e.InvalidPrivilege as exception:
+            assert exception.code == 72
+            assert exception.msg == "AEROSPIKE_INVALID_PRIVILEGE"

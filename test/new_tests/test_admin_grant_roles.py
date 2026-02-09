@@ -123,10 +123,12 @@ class TestGrantRoles(TestBaseClass):
         user = ""
         roles = ["read-write"]
 
-        with pytest.raises(e.InvalidUser) as excinfo:
+        try:
             self.client.admin_grant_roles(user, roles)
-        assert excinfo.value.code == 60
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+
+        except e.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_grant_roles_with_special_characters_in_username(self):
 

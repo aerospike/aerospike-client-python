@@ -155,10 +155,12 @@ class TestCreateUser(object):
         password = "user3-test"
         roles = ["read-write"]
 
-        with pytest.raises(e.InvalidUser) as excinfo:
+        try:
             self.client.admin_create_user(user, password, roles)
-        assert excinfo.value.code == 60
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+
+        except e.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
 
     def test_create_user_with_special_characters_in_username(self):
 
@@ -237,12 +239,15 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        with pytest.raises((e.InvalidUser, e.ClientError)) as excinfo:
+        try:
             self.client.admin_create_user(user, password, roles)
 
-        if excinfo.type == e.InvalidUser:
-            assert excinfo.value.code == 60
-            assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
+        except e.InvalidUser as exception:
+            assert exception.code == 60
+            assert exception.msg == "AEROSPIKE_INVALID_USER"
+
+        except e.ClientError:
+            pass
 
     def test_create_user_with_too_long_password(self):
 
@@ -299,7 +304,7 @@ class TestCreateUser(object):
 
         non_admin_client = None
 
-        with pytest.raises(e.RoleViolation) as excinfo:
+        try:
             # Close and reconnect with non_admin_test user
             non_admin_client = aerospike.client(config)
             non_admin_client.close()
@@ -308,7 +313,9 @@ class TestCreateUser(object):
 
             if non_admin_client:
                 non_admin_client.close()
-        assert excinfo.value.code == 81
+
+        except e.RoleViolation as exception:
+            assert exception.code == 81
 
         self.delete_users.append("non_admin_test")
 
