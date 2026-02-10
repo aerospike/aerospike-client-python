@@ -569,8 +569,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with set is int
         """
         policy = {}
-        # This can raise a subclass of ParamError
-        # But pytest.raises() will not raise an exception if it is a subclass
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",

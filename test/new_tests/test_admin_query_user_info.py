@@ -142,7 +142,7 @@ class TestQueryUserInfo(TestBaseClass):
         Invoke query_user() with policy as string
         """
         policy = ""
-        with pytest.raises(e.AerospikeError) as excinfo:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_user_info("foo", policy)
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "policy must be a dict"
