@@ -183,14 +183,16 @@ class TestGetPut:
         Invoke get() with a key digest.
         """
         key = ("test", "demo", 1)
+        key, _ = self.as_connection.exists(key)
+
         with pytest.raises((e.ParamError, e.RecordNotFound)) as excinfo:
-            key, _ = self.as_connection.exists(key)
             key, _, _ = self.as_connection.get((key[0], key[1], None, key[2]))
-            if excinfo.value == e.ParamError:
-                assert excinfo.value.code == -2
-                assert excinfo.value.msg == "digest is invalid. expected a bytearray"
-            elif excinfo.value == e.RecordNotFound:
-                assert excinfo.value.code == 2
+
+        if excinfo.value == e.ParamError:
+            assert excinfo.value.code == -2
+            assert excinfo.value.msg == "digest is invalid. expected a bytearray"
+        elif excinfo.value == e.RecordNotFound:
+            assert excinfo.value.code == 2
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_get_with_none(self, key, ex_code, ex_msg):
