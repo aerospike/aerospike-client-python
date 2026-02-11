@@ -332,7 +332,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             self.as_connection.index_list_create(
                 "test1", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
             )
-        assert excinfo.code == 20
+        assert excinfo.value.code == 20
 
     def test_neg_listindex_with_incorrect_set(self):
         """
