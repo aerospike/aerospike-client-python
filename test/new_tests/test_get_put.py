@@ -732,10 +732,9 @@ class TestGetPut:
 
         bins = {"name": "John"}
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.put(key, bins)
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     @pytest.mark.parametrize(
         "key, record, meta, policy, ex_code, ex_msg",
