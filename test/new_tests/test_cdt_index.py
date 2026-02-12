@@ -290,7 +290,7 @@ class TestCDTIndex(object):
         for _ in range(100):
             set_name = set_name + "a"
         policy = {}
-        try:
+        with pytest.raises((e.InvalidRequest, Exception)) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 set_name,
@@ -302,10 +302,11 @@ class TestCDTIndex(object):
                 policy,
             )
             assert False
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
-        except Exception as exception:
-            assert isinstance(exception, e.InvalidRequest)
+
+        if type(excinfo.value) == e.InvalidRequest:
+            assert excinfo.value.code == 4
+        else:
+            assert isinstance(excinfo.value, e.InvalidRequest)
 
     def test_pos_cdtindex_with_incorrect_bin(self):
         """

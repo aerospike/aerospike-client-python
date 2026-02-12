@@ -368,11 +368,9 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             key, meta, _ = self.as_connection.operate(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -399,11 +397,9 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             (key, meta, _) = self.as_connection.operate(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -424,11 +420,9 @@ class TestOperate(object):
 
         llist = [{"op": aerospike.OPERATOR_TOUCH}]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             (key, meta, _) = self.as_connection.operate(key, llist, meta)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -530,11 +524,9 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             key, _, _ = client1.operate(key, llist)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_pos_operate_write_set_to_aerospike_null(self):
         """
