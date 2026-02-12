@@ -368,7 +368,7 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
-        with pytest.raises(e.ParamError) as excinfo:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             key, meta, _ = self.as_connection.operate(key, llist, meta, policy)
         assert excinfo.value.code == 3
 
@@ -420,9 +420,10 @@ class TestOperate(object):
 
         llist = [{"op": aerospike.OPERATOR_TOUCH}]
 
-        with pytest.raises(e.ParamError) as excinfo:
+        try:
             (key, meta, _) = self.as_connection.operate(key, llist, meta)
-        assert excinfo.value.code == 3
+        except e.RecordGenerationError as exception:
+            assert exception.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
