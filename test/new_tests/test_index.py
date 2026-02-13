@@ -391,8 +391,10 @@ class TestIndex(object):
         Invoke drop invalid index()
         """
         policy = {}
-        with pytest.raises(e.IndexNotFound):
+        try:
             self.as_connection.index_remove("test", "notarealindex", policy)
+        except e.IndexNotFound:
+            assert self.server_version <= [6, 0]
 
     def test_drop_valid_index(self):
         """
