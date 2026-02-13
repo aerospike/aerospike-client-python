@@ -187,11 +187,11 @@ class TestIndex(object):
         policy = {}
         retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-        try:
+
+        with pytest.raises(e.IndexFoundError):
             retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index1", policy)
-            self.as_connection.index_remove("test", "age_index1", policy)
-        except e.IndexFoundError:
-            assert self.server_version <= [6, 0]
+
+        self.as_connection.index_remove("test", "age_index1", policy)
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
 
@@ -332,10 +332,9 @@ class TestIndex(object):
         policy = {}
         retobj = self.as_connection.index_single_value_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
-        try:
+
+        with pytest.raises(e.IndexFoundError):
             retobj = self.as_connection.index_single_value_create("test", "demo", "name", aerospike.INDEX_STRING, "name_index", policy)
-        except e.IndexFoundError:
-            assert self.server_version <= [6, 0]
 
         self.as_connection.index_remove("test", "name_index", policy)
         ensure_dropped_index(self.as_connection, "test", "name_index")
