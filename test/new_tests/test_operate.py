@@ -725,11 +725,10 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "no"},
         ]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate(key, llist)
+        assert excinfo.value.code == 4
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
