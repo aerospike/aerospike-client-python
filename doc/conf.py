@@ -26,7 +26,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-sys.modules.update({"aerospike": Mock()})
+# sys.modules.update({"aerospike": Mock()})
 
 # sys.path.append(os.path.abspath('/usr/local/lib/python2.7/site-packages/aerospike-1.0.44-py2.7-macosx-10.9-x86_64.egg/'))
 
@@ -39,7 +39,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "sphinxcontrib.spelling"
+    "sphinxcontrib.spelling",
+    "sphinx.ext.autosummary"
 ]
 napoleon_google_docstring = True
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

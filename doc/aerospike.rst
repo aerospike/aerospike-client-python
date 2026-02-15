@@ -7,9 +7,7 @@
 Overview
 ========
 
-.. module:: aerospike
-    :platform: 64-bit Linux and OS X
-    :synopsis: Aerospike client for Python.
+.. automodule:: aerospike
 
 ``aerospike`` is a package which provides a Python client for Aerospike database clusters.
 
