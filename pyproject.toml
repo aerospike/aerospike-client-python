@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools",
-    "versioningit==3.1.0",
+    "versioningit==3.2.0",
     # Used by our versioningit script that modifies the version
     "parver==0.5"
 ]
