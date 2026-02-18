@@ -1,4 +1,4 @@
 parver==0.5
-crudini==0.9.4
+crudini==0.9.6
 delocate==0.10.4
 mypy==1.17.1
