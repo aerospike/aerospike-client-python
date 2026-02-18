@@ -593,7 +593,7 @@ as_status as_config_set_user_from_py_username_and_py_password(
                 "Password must be at most 63 characters long.")
         }
 
-        as_config_set_user(&config, username, password);
+        as_config_set_user(config, username, password);
     }
 
     return AEROSPIKE_OK;
