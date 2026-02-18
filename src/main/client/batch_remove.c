@@ -122,10 +122,8 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     as_batch_init(&batch, 0);
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
 
-    as_exp batch_remove_exp_list;
     as_exp *batch_remove_exp_list_p = NULL;
 
     PyObject *br_instance = NULL;
@@ -173,10 +171,10 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p,
+                                     &self->as->config.policies.batch,
+                                     &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -184,7 +182,7 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     if (py_policy_batch_remove) {
         if (pyobject_to_batch_remove_policy(
                 self, err, py_policy_batch_remove, &policy_batch_remove,
-                &policy_batch_remove_p, &batch_remove_exp_list,
+                &policy_batch_remove_p,
                 &batch_remove_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }

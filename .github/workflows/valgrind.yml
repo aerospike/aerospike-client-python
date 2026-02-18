@@ -29,7 +29,7 @@ on:
         default: false
 
 env:
-  PYTHON_TAG: cp39
+  PYTHON_TAG: cp310
 
 jobs:
   look-for-wheel-in-jfrog:
@@ -41,7 +41,12 @@ jobs:
     env:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
-    - uses: jfrog/setup-jfrog-cli@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      with:
+        egress-policy: audit
+
+    - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -88,7 +93,7 @@ jobs:
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         # Artifact name doesn't matter. Valgrind job downloads all artifacts to get the one wheel
         if-no-files-found: error
@@ -127,7 +132,12 @@ jobs:
     if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -136,12 +146,12 @@ jobs:
       run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
       shell: bash
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
         python-version: '${{ env.PYTHON_VERSION }}'
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         merge-multiple: true
 

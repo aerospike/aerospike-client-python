@@ -42,11 +42,25 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeQuery_Type;
+
 AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
-    return AerospikeQuery_New(self, args, kwds);
+    AerospikeQuery *query = AerospikeQuery_Type_New(&AerospikeQuery_Type, self);
+    if (!query) {
+        return NULL;
+    }
+
+    if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == -1) {
+        Py_DECREF(query);
+        return NULL;
+    }
+
+    return query;
 }
+
 static int query_where_add(as_query **query, as_predicate_type predicate,
                            as_index_datatype in_datatype, PyObject *py_bin,
                            PyObject *py_val1, PyObject *py_val2, int index_type,
@@ -277,7 +291,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     PyObject *py_ustr3 = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_static_pool static_pool;
@@ -329,7 +342,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_write(
             self, &err, py_policy, &write_policy, &write_policy_p,
-            &self->as->config.policies.write, &exp_list, &exp_list_p, true);
+            &self->as->config.policies.write, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;

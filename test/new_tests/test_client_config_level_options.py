@@ -7,13 +7,13 @@ from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
-from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
 import time
 import glob
 import re
 import os
+from .conftest import verify_record_ttl, wait_for_job_completion
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -172,6 +172,19 @@ def test_setting_rack_aware():
     config["policies"]["query"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
     aerospike.client(config)
 
+
+@pytest.mark.parametrize(
+    "compress, expected_cm",
+    [
+        (True, nullcontext()),
+        (0.2, pytest.raises(e.ParamError))
+    ]
+)
+def test_setting_compress(compress, expected_cm):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["read"]["compress"] = compress
+    with expected_cm:
+        aerospike.client(config)
 
 def test_setting_batch_remove_gen():
     config = copy.deepcopy(gconfig)
@@ -361,11 +374,6 @@ class TestConfigTTL:
 
         self.client.close()
 
-    def check_ttl(self):
-        _, meta = self.client.exists(KEY)
-        clock_skew_tolerance_secs = 50
-        assert meta["ttl"] in range(self.NEW_TTL - clock_skew_tolerance_secs, self.NEW_TTL + clock_skew_tolerance_secs)
-
     @pytest.mark.parametrize("policy_name", ["write"])
     @pytest.mark.parametrize(
         "meta",
@@ -378,7 +386,7 @@ class TestConfigTTL:
     ])
     def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
         api_method(self.client, **kwargs, meta=meta)
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["operate"])
     @pytest.mark.parametrize(
@@ -391,7 +399,7 @@ class TestConfigTTL:
             operations.write("a", 1)
         ]
         self.client.operate(KEY, ops, meta=meta)
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["apply"])
     def test_setting_apply_ttl(self, config_ttl_setup):
@@ -401,7 +409,7 @@ class TestConfigTTL:
         # Call without setting the ttl in the command's apply policy
         # Args: bin name, str
         self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
@@ -421,7 +429,7 @@ class TestConfigTTL:
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
@@ -438,7 +446,7 @@ class TestConfigTTL:
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["batch_apply"])
     def test_setting_batch_apply_ttl(self, config_ttl_setup):
@@ -450,7 +458,7 @@ class TestConfigTTL:
             KEY
         ]
         self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
     def test_setting_scan_ttl(self, config_ttl_setup):
@@ -466,9 +474,9 @@ class TestConfigTTL:
         scan.add_ops(ops)
         job_id = scan.execute_background()
 
-        wait_for_job_completion(self.client, job_id)
+        wait_for_job_completion(self.client, job_id, job_module=aerospike.JOB_SCAN)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
@@ -486,7 +494,7 @@ class TestConfigTTL:
 
         wait_for_job_completion(self.client, job_id)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize(
         "policy_name",

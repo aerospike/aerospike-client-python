@@ -558,8 +558,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
         goto CLEANUP;
     }
 
-    // For backwards compatibility, we set this to true
-    bool operation_succeeded = true;
     switch (operation) {
     case AS_OPERATOR_CDT_READ:
     case AS_OPERATOR_CDT_MODIFY: {
@@ -585,8 +583,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
 
         if (operation == AS_OPERATOR_CDT_READ) {
-            operation_succeeded =
-                as_operations_select_by_path(ops, bin, ctx_ref, flags);
+            as_operations_select_by_path(err, ops, bin, ctx_ref, flags);
         }
         else if (operation == AS_OPERATOR_CDT_MODIFY) {
             PyObject *py_expr = NULL;
@@ -609,8 +606,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 goto CLEANUP;
             }
 
-            operation_succeeded =
-                as_operations_modify_by_path(ops, bin, ctx_ref, mod_exp, flags);
+            as_operations_modify_by_path(err, ops, bin, ctx_ref, mod_exp,
+                                         flags);
         }
 
         break;
@@ -878,11 +875,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
     }
 
-    if (operation_succeeded == false) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to add an operation");
-    }
-
 CLEANUP:
     if (mod_exp) {
         as_exp_destroy(mod_exp);
@@ -923,7 +915,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate *operate_policy_p = NULL;
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     if (py_meta) {
@@ -938,10 +929,10 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, size);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1103,7 +1094,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_operations_inita(&ops, ops_list_size);
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     /* These are the values which will be returned in a 3 element list */
@@ -1114,10 +1104,10 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     CHECK_CONNECTED(err);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

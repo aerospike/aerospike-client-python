@@ -25,19 +25,24 @@ jobs:
 
     runs-on: ${{ matrix.arch-and-runner-os[1] }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         sparse-checkout: |
           .github/workflows
         path: aerospike-client-python
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: docker/metadata-action@v5
+    - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
       id: meta
       with:
         images: ${{ env.REGISTRY }}/aerospike/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
@@ -45,13 +50,13 @@ jobs:
         flavor: latest=false
 
     - name: Set up Docker Buildx so we can cache our Docker image layers
-      uses: docker/setup-buildx-action@v3
+      uses: step-security/setup-buildx-action@c60a792b446ef83310733d5cd9d0c8d6870d043f # v3.12.0
 
     - name: Get cibuildwheel version used to build wheels
       run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
       working-directory: aerospike-client-python/.github/workflows
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         repository: pypa/cibuildwheel
         ref: ${{ env.CIBW_VERSION }}
@@ -82,7 +87,7 @@ jobs:
       working-directory: cibuildwheel
 
     - name: Build and push
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: ${{ github.workspace }}/aerospike-client-python/.github/workflows

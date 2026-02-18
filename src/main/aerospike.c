@@ -525,7 +525,7 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_QUERY_DURATION_LONG_RELAX_AP},
     {"QUERY_DURATION_SHORT", .value.integer = AS_QUERY_DURATION_SHORT},
 
-    {"LOG_LEVEL_OFF", .value.integer = -1},
+    {"LOG_LEVEL_OFF", .value.integer = LOG_LEVEL_OFF},
     {"LOG_LEVEL_ERROR", .value.integer = AS_LOG_LEVEL_ERROR},
     {"LOG_LEVEL_WARN", .value.integer = AS_LOG_LEVEL_WARN},
     {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
@@ -553,7 +553,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
 
     /*
-        When doing a cdt select/apply operation, and applying an expression on each
+        When doing a path expression select/apply operation, and applying an expression on each
         iterated object, this lets us choose a specific value over each iterated
         object.
     */
@@ -561,15 +561,20 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_VALUE),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_INDEX),
 
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MATCHING_TREE),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_VALUES),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
-        CDT_SELECT_MAP_KEY_VALUES),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MAP_KEYS),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_NO_FAIL),
+        EXP_PATH_SELECT_MATCHING_TREE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_LIST_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_MAP_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_KEY_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_NO_FAIL),
 
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_NO_FAIL),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_DEFAULT),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_NO_FAIL),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_DEFAULT),
 
     // For aerospike_helpers to use. Not to be exposed in public API
     // TODO: move all internal constants used by aerospike_helpers to this loc
@@ -579,11 +584,17 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BLOB),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BOOL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_NIL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_GEOJSON),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_HLL),
 
     // C client uses the same expression code for these two expressions
     // so we define unique ones in the Python client code
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+    EXPOSE_MACRO(_AS_EXP_CODE_RESULT_REMOVE),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
