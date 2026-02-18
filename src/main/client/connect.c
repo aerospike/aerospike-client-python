@@ -144,8 +144,9 @@ CLEANUP:
     return 0;
 }
 
-extern void as_config_set_user_from_py_username_and_py_password(
-    as_config *config, PyObject *py_username, PyObject *py_password);
+extern as_status as_config_set_user_from_py_username_and_py_password(
+    as_error *err, as_config *config, PyObject *py_username,
+    PyObject *py_password);
 
 /**
  *******************************************************************************************************
@@ -179,8 +180,12 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    as_config_set_user_from_py_username_and_py_password(
-        &self->as->config, py_username, py_password);
+    if (as_config_set_user_from_py_username_and_py_password(
+            &err, &self->as->config, py_username, py_password) !=
+        AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
 
     if (AerospikeClientConnect(self) == -1) {
         return NULL;
