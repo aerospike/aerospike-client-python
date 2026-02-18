@@ -144,6 +144,9 @@ CLEANUP:
     return 0;
 }
 
+extern void as_config_set_user_from_py_username_and_py_password(
+    as_config *config, PyObject *py_username, PyObject *py_password);
+
 /**
  *******************************************************************************************************
  * Establishes a connection to the Aerospike DB instance.
@@ -176,12 +179,8 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    if (py_username && PyUnicode_Check(py_username) && py_password &&
-        PyUnicode_Check(py_password)) {
-        char *username = (char *)PyUnicode_AsUTF8(py_username);
-        char *password = (char *)PyUnicode_AsUTF8(py_password);
-        as_config_set_user(&self->as->config, username, password);
-    }
+    as_config_set_user_from_py_username_and_py_password(
+        &self->as->config, py_username, py_password);
 
     if (AerospikeClientConnect(self) == -1) {
         return NULL;

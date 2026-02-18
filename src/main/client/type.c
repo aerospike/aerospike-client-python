@@ -573,6 +573,18 @@ internal_error:
 
 #define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
 
+void as_config_set_user_from_py_username_and_py_password(as_config *config,
+                                                         PyObject *py_username,
+                                                         PyObject *py_password)
+{
+    if (py_username && PyUnicode_Check(py_username) && py_password &&
+        PyUnicode_Check(py_password)) {
+        char *username = (char *)PyUnicode_AsUTF8(py_username);
+        char *password = (char *)PyUnicode_AsUTF8(py_password);
+        as_config_set_user(&config, username, password);
+    }
+}
+
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -1290,12 +1302,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
     PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
-    if (py_user_name && PyUnicode_Check(py_user_name) && py_user_pwd &&
-        PyUnicode_Check(py_user_pwd)) {
-        char *username = (char *)PyUnicode_AsUTF8(py_user_name);
-        char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
-        as_config_set_user(&config, username, password);
-    }
+
+    as_config_set_user_from_py_username_and_py_password(&config, py_user_name,
+                                                        py_user_pwd);
 
     self->as = aerospike_new(&config);
 
