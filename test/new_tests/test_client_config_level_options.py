@@ -523,9 +523,35 @@ class TestConfigTTL:
                 },
                 # Tests that fail to connect should expect any of these exceptions
                 pytest.raises((e.ConnectionError, e.TimeoutError, e.ClientError))
-            )
+            ),
         ]
     )
     def test_client_class_constructor(self, config: dict, context):
         with context:
             aerospike.Client(config)
+
+    LONG_USERNAME = "a" * 63
+    LONG_PASSWORD = "a" * 63
+
+    @pytest.fixture
+    def setup_user_with_long_username_and_password(self):
+        self.as_connection.admin_create_user(self.LONG_USERNAME, self.LONG_PASSWORD, [])
+
+        yield
+
+        self.as_connection.admin_drop_user(self.LONG_USERNAME)
+
+    @pytest.mark.parametrize(
+        "username, password",
+        [
+            (LONG_USERNAME + "a", LONG_PASSWORD),
+            (LONG_USERNAME, LONG_PASSWORD + "a")
+        ]
+    )
+    def test_passing_credentials_too_long(self, setup_user_with_long_username_and_password, username, password):
+        config = copy.deepcopy(gconfig)
+        config["user"] = username
+        config["password"] = password
+
+        with pytest.raises(e.ParamError):
+            aerospike.client(config)
