@@ -167,7 +167,10 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    libraries.append("pthreadVC2")
+    if VS_PROJECT_CONFIGURATION == "Release":
+        libraries.append("pthreadVC2")
+    else:
+        libraries.append("pthreadVC2d")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
     include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
