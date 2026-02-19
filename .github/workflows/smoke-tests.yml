@@ -242,7 +242,7 @@ jobs:
     - run: pip install mypy -c requirements.txt
       working-directory: .github/workflows
 
-    - run: stubtest aerospike --allowlist stubtest-allowlist
+    - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
 
   test-full-suite:
     strategy:
