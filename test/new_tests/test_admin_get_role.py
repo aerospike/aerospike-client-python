@@ -92,9 +92,7 @@ class TestGetRole(TestBaseClass):
         """
         Incorrect role type
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_get_role(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"

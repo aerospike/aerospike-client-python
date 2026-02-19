@@ -250,11 +250,10 @@ class TestCreateRole(object):
         """
         role name not string
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_role(1, [{"code": aerospike.PRIV_USER_ADMIN}])
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert "Role name should be a string" in exception.msg
+        assert excinfo.value.code == -2
+        assert "Role name should be a string" in excinfo.value.msg
 
     def test_create_role_unknown_privilege_type(self):
         """
@@ -277,12 +276,10 @@ class TestCreateRole(object):
         """
         privilege type incorrect
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_role("usr-sys-admin-test", None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Privileges should be a list"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Privileges should be a list"
 
     def test_create_role_existing_role(self):
         """
@@ -303,7 +300,6 @@ class TestCreateRole(object):
             self.client.admin_create_role(
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
             )
-
         except e.RoleExistsError as exception:
             assert exception.code == 71
             assert exception.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"

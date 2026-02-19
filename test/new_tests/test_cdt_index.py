@@ -549,7 +549,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with namespace is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 None,
                 "demo",
@@ -561,16 +561,17 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Namespace should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Namespace should be a string"
 
     def test_neg_cdtindex_with_set_is_int(self):
         """
         Invoke createindex() with set is int
         """
         policy = {}
-        try:
+        # This can raise a subclass of ParamError
+        # But pytest.raises() will not raise an exception if it is a subclass
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 1,
@@ -582,32 +583,25 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
             assert False
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be string, unicode or None"
-        except Exception as exception:
-            assert isinstance(exception, e.ParamError)
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Set should be string, unicode or None"
 
-    def test_neg_cdtindex_with_set_is_none(self):
+    def test_cdtindex_with_set_is_none(self):
         """
         Invoke createindex() with set is None
         """
         policy = {}
-        try:
-            self.as_connection.index_cdt_create(
-                "test",
-                None,
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index",
-                ctx_list_index,
-                policy,
-            )
+        self.as_connection.index_cdt_create(
+            "test",
+            None,
+            "string_list",
+            aerospike.INDEX_TYPE_LIST,
+            aerospike.INDEX_STRING,
+            "test_string_list_cdt_index",
+            {"ctx": ctx_list_index},
+            policy,
+        )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be a string"
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
@@ -616,7 +610,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with bin is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -627,17 +621,15 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 ctx_list_index,
                 policy,
             )
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Bin should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Bin should be a string"
 
     def test_neg_cdtindex_with_index_is_none(self):
         """
         Invoke createindex() with index is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -648,10 +640,8 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 ctx_list_index,
                 policy,
             )
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Index name should be string or unicode"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Index name should be string or unicode"
 
     def test_neg_cdtindex_with_incorrect_namespace(self):
         """
@@ -659,7 +649,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        try:
+        with pytest.raises(e.NamespaceNotFound) as excinfo:
             self.as_connection.index_cdt_create(
                 "test1",
                 "demo",
@@ -671,8 +661,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
+        assert excinfo.value.code == 20
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """
@@ -703,7 +692,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.index_cdt_create(
                 "test",
                 "demo",
@@ -715,8 +704,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_cdtindex_with_no_paramters(self):
         """

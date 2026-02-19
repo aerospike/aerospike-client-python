@@ -403,12 +403,10 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             query.where(p.equals("test_age", None))
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "predicate is invalid."
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "predicate is invalid."
 
     def test_query_where_called_multiple_times(self):
         query = self.as_connection.query("test", "demo")

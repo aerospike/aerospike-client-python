@@ -167,12 +167,10 @@ class TestGrantPrivileges(object):
         """
         role name not string
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_privileges(1, [{"code": aerospike.PRIV_USER_ADMIN}])
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"
 
     def test_grant_privileges_unknown_privilege_type(self):
         """
@@ -187,12 +185,10 @@ class TestGrantPrivileges(object):
         """
         privilege type incorrect
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_privileges("usr-sys-admin-test", None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Privileges should be a list"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Privileges should be a list"
 
     def test_grant_privileges_empty_list_privileges(self):
         """

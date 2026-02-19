@@ -88,12 +88,10 @@ class TestGrantRoles(TestBaseClass):
         user = "example-test"
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_roles(user, roles, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_grant_roles_with_proper_timeout_policy_value(self):
 
@@ -115,12 +113,10 @@ class TestGrantRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_roles(user, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_grant_roles_with_empty_username(self):
 
