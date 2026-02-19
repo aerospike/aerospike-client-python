@@ -439,7 +439,7 @@ jobs:
 
       - if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
-          curl -O Procdump.zip https://download.sysinternals.com/files/Procdump.zip
+          curl -O https://download.sysinternals.com/files/Procdump.zip
           unzip Procdump.zip
           mkdir dumps
           ./procdump.exe -e -x ./dumps python3 -m pytest new_tests
