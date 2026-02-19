@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union, final, Literal, Optional, Final
+from typing import Any, Callable, Union, final, Literal, Optional, disjoint_base
 
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy, ClusterStats
@@ -347,6 +347,7 @@ class ConfigProvider:
     path: str
     interval: int
 
+@disjoint_base
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
     def admin_change_password(self, username: str, password: str, policy: dict = ...) -> None: ...
@@ -435,6 +436,7 @@ class Client:
     def commit(self, transaction: Transaction) -> int: ...
     def abort(self, transaction: Transaction) -> int: ...
 
+@disjoint_base
 class GeoJSON:
     geo_data: Any
     def __init__(self, geo_data: Union[str, dict] = ...) -> None: ...
@@ -446,6 +448,7 @@ class GeoJSON:
 class KeyOrderedDict(dict):
     def __init__(self, *args, **kwargs) -> None: ...
 
+@disjoint_base
 class Query:
     max_records: int
     records_per_second: int
@@ -466,6 +469,7 @@ class Query:
     def where_with_expr(self, expr, predicate: tuple) -> Query: ...
     def where_with_index_name(self, index_name: str, predicate: tuple) -> Query: ...
 
+@disjoint_base
 class Scan:
     ttl: int
     def __init__(self, *args, **kwargs) -> None: ...
