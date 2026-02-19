@@ -336,6 +336,7 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
+        VS_PROJECT_CONFIGURATION: debug
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}

@@ -40,6 +40,7 @@ AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
 
+VS_PROJECT_CONFIGURATION = os.getenv("VS_PROJECT_CONFIGURATION", "Release")
 AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
@@ -184,9 +185,9 @@ if not WINDOWS:
     ]
 else:
     include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
-    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/{VS_PROJECT_CONFIGURATION}")
     # Needed for linking the Python client with the C client
-    extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
+    extra_objects.append(AEROSPIKE_C_TARGET + f"/vs/x64/{VS_PROJECT_CONFIGURATION}/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
@@ -230,7 +231,7 @@ class CClientBuild(build):
             cmd = [
                 'msbuild',
                 'vs/aerospike.sln',
-                '/property:Configuration=Release'
+                f"/property:Configuration={VS_PROJECT_CONFIGURATION}"
             ]
         else:
             cmd = [
