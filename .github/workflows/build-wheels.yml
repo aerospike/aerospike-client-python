@@ -437,9 +437,18 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      - if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          wget https://download.sysinternals.com/files/Procdump.zip
+          unzip Procdump.zip
+          mkdir dumps
+          ./procdump.exe -e -x ./dumps python3 -m pytest new_tests
         working-directory: test
         shell: bash
+
+      # - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      #   working-directory: test
+      #   shell: bash
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
