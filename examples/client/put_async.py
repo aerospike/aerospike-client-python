@@ -115,9 +115,9 @@ try:
         meta = None
 
         print(f"IO async test count:{test_count}")
-        
+
         async def async_io(namespace, set, i):
-            futures = []        
+            futures = []
             key = (namespace, \
                     set, \
                     str(i), \

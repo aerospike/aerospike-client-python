@@ -87,21 +87,21 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         role = "example_foo"
         privileges = [{"code": aerospike.PRIV_READ}, {"code": aerospike.PRIV_USER_ADMIN}]
-    	
+
         client.admin_create_role(role, privileges, policy)
-        
+
         print("OK, 1 new role created")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

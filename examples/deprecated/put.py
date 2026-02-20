@@ -104,7 +104,7 @@ try:
   # policy = { 'gen': 0 }
   policy = None
   client.key(options.namespace, options.set, key).put(record, meta)
-  
+
   print(record)
   print("---")
   print("OK, 1 record written.")
