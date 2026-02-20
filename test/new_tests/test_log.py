@@ -22,7 +22,7 @@ class TestLog(object):
         """
         Set the class level logger to a no-op to ensure no problems later
         """
-        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         aerospike.set_log_handler(None)
 
     def test_set_log_level_with_correct_argument(self):
