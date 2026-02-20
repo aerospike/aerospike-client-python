@@ -452,7 +452,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           path: ./test/dumps/*
-          name: dump
+          name: dump-${{ matrix.python-tag }}
           if-no-files-found: error
 
       # - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
