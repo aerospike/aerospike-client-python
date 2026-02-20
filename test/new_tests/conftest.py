@@ -239,7 +239,7 @@ def invalid_key(request):
     yield request.param
 
 
-# aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
 
 def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):

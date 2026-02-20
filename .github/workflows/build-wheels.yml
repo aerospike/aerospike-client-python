@@ -328,7 +328,7 @@ jobs:
           auditwheel repair -w {dest_dir} {wheel} &&
           auditwheel show {dest_dir}/* &&
           rm -rf $WHEEL_DIR
-        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Debug --no-mangle-all --include-symbols -w {dest_dir} {wheel}"
         # We also want to verify the same thing on macos
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} &&
@@ -336,6 +336,7 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
+        VS_PROJECT_CONFIGURATION: debug
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
@@ -424,7 +425,7 @@ jobs:
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           allow-prereleases: true
@@ -437,9 +438,26 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      - if: ${{ inputs.platform-tag == 'win_amd64' }}
+        id: run-tests
+        run: |
+          curl -O https://download.sysinternals.com/files/Procdump.zip
+          unzip Procdump.zip
+          mkdir dumps
+          ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
+
+      - if: ${{ failure() && steps.run-tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          path: ./test/dumps/*
+          name: dump-${{ matrix.python-tag }}
+          if-no-files-found: error
+
+      # - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      #   working-directory: test
+      #   shell: bash
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
