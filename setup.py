@@ -120,8 +120,15 @@ if COVERAGE:
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
 
+data_files = []
+
 if UNOPTIMIZED:
-    extra_compile_args.append('-O0')
+    if WINDOWS:
+        extra_compile_args.append('/Zi')
+        extra_link_args.append('/DEBUG')
+        data_files.append("*.pdb")
+    else:
+        extra_compile_args.append('-O0')
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -328,5 +335,6 @@ setup(
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean
-    }
+    },
+    data_files=data_files
 )
