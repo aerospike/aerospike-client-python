@@ -83,17 +83,14 @@ class TestKV(object):
         assert status == 0, "wrong return code"
 
         # ensure not existent
-        try:
-            (key, meta) = self.as_connection.exists(key)
-            """
-            We are making the api backward compatible. In case of
-            RecordNotFound an exception will not be raised.
-            Instead Ok response is returned withe the
-            meta as None. This might change with further releases.
-            """
-            assert meta is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        (key, meta) = self.as_connection.exists(key)
+        """
+        We are making the api backward compatible. In case of
+        RecordNotFound an exception will not be raised.
+        Instead Ok response is returned withe the
+        meta as None. This might change with further releases.
+        """
+        assert meta is None
 
         # count records
         self.record_count = 0
@@ -168,15 +165,12 @@ class TestKV(object):
         assert status == 0, "wrong return code"
 
         # ensure not existent
-        try:
-            (key, meta) = self.as_connection.exists(get_key_with_digest_only(key))
-            # We are making the api backward compatible. In case of
-            # RecordNotFound an exception will not be raised.
-            # Instead Ok response is returned withe the
-            # meta as None. This might change with further releases.
-            assert meta is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        (key, meta) = self.as_connection.exists(get_key_with_digest_only(key))
+        # We are making the api backward compatible. In case of
+        # RecordNotFound an exception will not be raised.
+        # Instead Ok response is returned withe the
+        # meta as None. This might change with further releases.
+        assert meta is None
 
         # count records
         self.record_count = 0

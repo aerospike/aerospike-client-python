@@ -576,11 +576,9 @@ class TestOperate(object):
 
         llist = [operations.prepend("no", aerospike.null()), operations.read("no")]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate(key, llist)
-
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        assert excinfo.value.code == 4
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
@@ -1019,22 +1017,18 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_key_is_none(self):
         """
         Invoke operate() with key is none
         """
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_append_value_integer(self):
         """
@@ -1043,10 +1037,9 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         llist = [operations.append("name", 12)]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist)
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_with_incorrect_polic(self):
         """
