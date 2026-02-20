@@ -573,6 +573,32 @@ internal_error:
 
 #define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
 
+as_status as_config_set_user_from_py_username_and_py_password(
+    as_error *err, as_config *config, PyObject *py_username,
+    PyObject *py_password)
+{
+    if (py_username && PyUnicode_Check(py_username) && py_password &&
+        PyUnicode_Check(py_password)) {
+        char *username = (char *)PyUnicode_AsUTF8(py_username);
+        if (username && strlen(username) >= AS_USER_SIZE) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Username must be at most 63 characters long.")
+        }
+
+        char *password = (char *)PyUnicode_AsUTF8(py_password);
+        if (password && strlen(password) >= AS_PASSWORD_SIZE) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Password must be at most 63 characters long.")
+        }
+
+        as_config_set_user(config, username, password);
+    }
+
+    return AEROSPIKE_OK;
+}
+
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -1290,11 +1316,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
     PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
-    if (py_user_name && PyUnicode_Check(py_user_name) && py_user_pwd &&
-        PyUnicode_Check(py_user_pwd)) {
-        char *username = (char *)PyUnicode_AsUTF8(py_user_name);
-        char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
-        as_config_set_user(&config, username, password);
+
+    if (as_config_set_user_from_py_username_and_py_password(
+            &constructor_err, &config, py_user_name, py_user_pwd) !=
+        AEROSPIKE_OK) {
+        goto RAISE_EXCEPTION_WITH_AS_ERROR;
     }
 
     self->as = aerospike_new(&config);
