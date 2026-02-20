@@ -439,13 +439,21 @@ jobs:
         shell: bash
 
       - if: ${{ inputs.platform-tag == 'win_amd64' }}
+        id: run-tests
         run: |
           curl -O https://download.sysinternals.com/files/Procdump.zip
           unzip Procdump.zip
           mkdir dumps
-          ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest new_tests
+          ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
+
+      - if: ${{ steps.run-tests.outcome == 'failed' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          path: ./test/dumps/*
+          name: dump
+          if-no-files-found: error
 
       # - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
       #   working-directory: test
