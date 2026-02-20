@@ -535,11 +535,11 @@ class TestConfigTTL:
 
     @pytest.fixture
     def setup_user_with_long_username_and_password(self):
-        self.as_connection.admin_create_user(self.LONG_USERNAME, self.LONG_PASSWORD, [])
+        self.client.admin_create_user(self.LONG_USERNAME, self.LONG_PASSWORD, [])
 
         yield
 
-        self.as_connection.admin_drop_user(self.LONG_USERNAME)
+        self.client.admin_drop_user(self.LONG_USERNAME)
 
     @pytest.mark.parametrize(
         "username, password",
