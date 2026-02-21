@@ -391,6 +391,11 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
  */
 PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
                                        PyObject *kwds);
+
+PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
+                                                    PyObject *args,
+                                                    PyObject *kwds);
+
 /**
  * Create secondary list index
  *
