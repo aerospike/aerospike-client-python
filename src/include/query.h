@@ -138,7 +138,7 @@ PyObject *AerospikeQuery_Is_Done(AerospikeQuery *self);
 PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
 
 /**
- * Store the Unicode -> UTF8 string converted PyObject into 
+ * Store the Unicode -> UTF8 string converted PyObject into
  * a pool of PyObjects. So that, they will be decref'ed at later stages
  * without leaving memory trails behind.
  *		StoreUnicodePyObject(self, PyUnicode_AsUTF8String(py_bin));

@@ -109,7 +109,7 @@ try:
             # project specified bins
             partition_policy = {'partition_filter': {'begin': options.partition, 'count': 1}}
             print(f'partition_id: {options.partition}')
-    
+
         records = []
 
         # callback to be called for each record read
@@ -117,7 +117,7 @@ try:
             (_, _, record) = input_tuple
             records.append(record)
             print(record)
-        
+
         client.truncate('test', "demo", 0)
 
         # invoke the operations, and for each record invoke the callback
@@ -131,7 +131,7 @@ try:
             rec_partition = client.get_key_partition_id('test', 'demo', str(i))
 
             if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
-                
+
                 count = count + 1
                 rec = {
                     'i': i,
@@ -140,7 +140,7 @@ try:
                     'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
                 }
                 client.put(('test', 'demo', str(i)), rec)
-        
+
         records.clear()
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback, partition_policy)
@@ -148,7 +148,7 @@ try:
         print("---")
         print(f"{count} records are put into partition:{options.partition}.")
         print(f"{len(records)} records are found in partition:{options.partition}.")
- 
+
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         rc = 1

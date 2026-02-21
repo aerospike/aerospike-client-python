@@ -118,9 +118,9 @@ try:
                         'set':set, \
                         'key': str(i), \
                         'digest': aerospike.calc_digest(namespace, set, str(i))}
-                
+
                 policy = None
-                
+
                 client.remove(key)
 
 

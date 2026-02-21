@@ -88,13 +88,13 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         user = "foo-example"
         password = "foobar"
-        try:	
+        try:
             client_new = aerospike.client(config).connect(user, "bar")
         except ClientError:
             print("User might not be created or node may be down. In case of non-existent user run create_user.py first")
@@ -102,14 +102,14 @@ try:
             sys.exit()
     	status = client_new.admin_change_password(user, password)
         client_new.close()
-        
+
         print("Status of changing password is: %d" % status)
     	print("OK, password changed for 1 user")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
