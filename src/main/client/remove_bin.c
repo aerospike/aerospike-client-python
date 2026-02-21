@@ -167,6 +167,11 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    if (py_meta) {
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, 2);
+    }
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;

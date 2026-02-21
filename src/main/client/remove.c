@@ -169,6 +169,11 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    if (py_meta) {
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, 2);
+    }
+
     // Invoke Operation
     return AerospikeClient_Remove_Invoke(self, py_key, py_meta, py_policy);
 }

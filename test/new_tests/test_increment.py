@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+import warnings
 
 
 class TestIncrement(object):
@@ -127,7 +128,11 @@ class TestIncrement(object):
         }
 
         meta = {"gen": 10, "ttl": 1200}
-        self.as_connection.increment(key, "age", 5, meta, policy)
+        with warnings.catch_warnings(record=True) as warning_list:
+            self.as_connection.increment(key, "age", 5, meta, policy)
+
+        assert len(warning_list) == 1
+        assert warning_list[0].category == DeprecationWarning
 
         (key, meta, bins) = self.as_connection.get(key)
 

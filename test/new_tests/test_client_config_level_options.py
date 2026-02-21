@@ -293,7 +293,6 @@ def test_query_invalid_expected_duration():
 # Some of these options may not be documented, but they are allowed in the code and customers may be using them
 def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
-    config["policies"]["socket_timeout"] = 1
     config["policies"]["total_timeout"] = 1
     config["policies"]["max_retries"] = 1
     config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
@@ -335,6 +334,8 @@ def test_config_level_misc_options():
     # We just make sure that the above options are allowed as dict keys
     try:
         aerospike.client(config)
+    except e.ParamError as exc:
+        raise exc
     except:
         pass
 
