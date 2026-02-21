@@ -671,7 +671,7 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "txn_roll", "total_timeout", "auth_mode",
                          "login_timeout_ms", "key", "exists", "max_retries",
                          "replica", "commit_level", "metrics", "read_mode_ap",
-                         "max_threads", NULL)
+                         "max_threads", "thread_pool_size", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",
