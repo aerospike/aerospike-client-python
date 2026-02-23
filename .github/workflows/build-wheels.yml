@@ -443,11 +443,7 @@ jobs:
 
       - if: ${{ inputs.platform-tag == 'win_amd64' }}
         id: run-tests
-        run: |
-          curl -O https://download.sysinternals.com/files/Procdump.zip
-          unzip Procdump.zip
-          mkdir dumps
-          ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+        run: ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
