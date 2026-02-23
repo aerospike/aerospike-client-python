@@ -126,10 +126,8 @@ if UNOPTIMIZED:
         extra_compile_args.append('/Zi')
         extra_link_args.append('/DEBUG')
         data_files.append("*.pdb")
-        VS_PROJECT_CONFIGURATION = "Release"
     else:
         extra_compile_args.append('-O0')
-        VS_PROJECT_CONFIGURATION = "Debug"
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -149,6 +147,11 @@ elif os.path.exists("/usr/local/opt/openssl/lib") is False:
 ################################################################################
 
 if WINDOWS:
+    if UNOPTIMIZED:
+        VS_PROJECT_CONFIGURATION = "Debug"
+    else:
+        VS_PROJECT_CONFIGURATION = "Release"
+
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
     tree = ET.parse(f"{AEROSPIKE_C_TARGET}/vs/aerospike/packages.config")
     packages = tree.getroot()
@@ -175,7 +178,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    if VS_PROJECT_CONFIGURATION:
+    if UNOPTIMIZED:
         libraries.append("pthreadVC2")
     else:
         libraries.append("pthreadVC2d")
