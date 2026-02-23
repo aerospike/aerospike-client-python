@@ -250,6 +250,7 @@ jobs:
     - name: Set unoptimize flag
       if: ${{ inputs.unoptimized }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+      shell: bash
 
     - name: Set include dsym flag
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
