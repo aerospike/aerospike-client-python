@@ -248,7 +248,7 @@ jobs:
       shell: bash
 
     - name: Set unoptimize flag
-      if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
+      if: ${{ inputs.unoptimized }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Set include dsym flag
