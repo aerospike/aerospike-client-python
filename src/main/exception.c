@@ -48,10 +48,8 @@ struct exception_def {
 
 // Used to create instances of the above struct
 #define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
-    {                                                                          \
-        class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,  \
-            attrs                                                              \
-    }
+    {class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,     \
+     attrs}
 
 // Base exception names
 #define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
