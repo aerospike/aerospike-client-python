@@ -328,6 +328,10 @@ jobs:
           auditwheel repair -w {dest_dir} {wheel} &&
           auditwheel show {dest_dir}/* &&
           rm -rf $WHEEL_DIR
+        # --no-mangle-all to make sure .pdb files match the .dll files
+        # delvewheel mangles the .dll file names but not the .pdb file names
+        # --include-symbols to include the .pdb files in the wheel
+        # TODO: need to find way to add path properly here
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Debug --no-mangle-all --include-symbols -w {dest_dir} {wheel}"
         # We also want to verify the same thing on macos
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
@@ -336,7 +340,6 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
-        VS_PROJECT_CONFIGURATION: debug
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
