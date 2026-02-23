@@ -29,6 +29,9 @@
     "meta parameter is deprecated and will be removed in the "                 \
     "next client major release"
 
+// This allows people to see the function calling the Python client API that issues a warning
+#define STACK_LEVEL 2
+
 /*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/

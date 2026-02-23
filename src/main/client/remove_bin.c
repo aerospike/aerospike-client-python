@@ -169,7 +169,7 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
     if (py_meta) {
         PyErr_WarnEx(PyExc_DeprecationWarning,
-                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, 2);
+                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, STACK_LEVEL);
     }
 
     if (!self || !self->as) {

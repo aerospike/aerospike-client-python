@@ -241,9 +241,6 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
         NULL, py_expr);
 }
 
-// This allows people to see the function calling the Python client API that issues a warning
-#define STACK_LEVEL 2
-
 // TODO: way to get method name dynamically for error message?
 static inline PyObject *
 AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
