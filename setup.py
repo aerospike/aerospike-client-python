@@ -125,7 +125,7 @@ if UNOPTIMIZED:
     if WINDOWS:
         extra_compile_args.append('/Zi')
         extra_link_args.append('/DEBUG')
-        data_files.append("*.pdb")
+        # data_files.append("*.pdb")
     else:
         extra_compile_args.append('-O0')
 
