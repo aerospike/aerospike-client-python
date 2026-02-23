@@ -246,7 +246,9 @@ Record Commands
 
         Remove a record matching the *key* from the cluster.
 
-        .. include:: ./deprecate_meta.rst
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
