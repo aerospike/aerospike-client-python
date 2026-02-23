@@ -125,24 +125,21 @@ class TestSetQuotas(TestBaseClass):
         """
         Incorrect role name
         """
-        try:
+        with pytest.raises(e.InvalidRole) as excinfo:
             self.client.admin_set_quotas(
                 role="bad-role-name", read_quota=250, write_quota=300
             )
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_set_quota_incorrect_role_type(self):
         """
         Incorrect role type
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_quotas(role=None, read_quota=250, write_quota=300)
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string."
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string."
 
     def test_admin_set_quota_incorrect_quota(self):
         """
@@ -161,11 +158,9 @@ class TestSetQuotas(TestBaseClass):
         """
         Incorrect role type
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_quotas(
                 role="usr-sys-admin-test", read_quota=None, write_quota=300
             )
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "py_read_quota must be an integer."
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "py_read_quota must be an integer."
