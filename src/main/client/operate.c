@@ -323,6 +323,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
     char *bin = NULL;
     char *val = NULL;
     long offset = 0;
+    long long long_offset = 0;
     long ttl = 0;
     double double_offset = 0.0;
     int index = 0;
@@ -576,10 +577,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Internal error");
             goto CLEANUP;
         }
-
-        uint32_t flags = convert_pyobject_to_uint32_t(py_flags);
+        if (!PyLong_Check(py_flags)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "CDT operation's flags argument must be a long");
+            goto CLEANUP;
+        }
+        uint32_t flags =
+            convert_unsigned_long_into_uint32_t(err, py_flags, "path flags");
         Py_DECREF(py_flags);
-        if (PyErr_Occurred()) {
+        if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "CDT operation's flags argument is invalid");
             goto CLEANUP;
@@ -683,12 +689,12 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
-            offset = convert_unsigned_long_long_into_uint64_t(
-                err, py_value, "AS_OPERATOR_INCR");
+            long_offset = convert_long_long_into_int64_t(err, py_value,
+                                                         "AS_OPERATOR_INCR");
             if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
-            as_operations_add_incr(ops, bin, offset);
+            as_operations_add_incr(ops, bin, long_offset);
         }
         else if (PyFloat_Check(py_value)) {
             double_offset = PyFloat_AsDouble(py_value);

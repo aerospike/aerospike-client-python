@@ -829,7 +829,7 @@ class TestGetPut:
             assert 0 == self.as_connection.put(key, bins)
 
         assert err_info.value.code == -2
-        assert err_info.value.msg == "integer value for as_val_new_from_pyobject exceeds LLONG_MAX"
+        assert err_info.value.msg == "integer value for as_val_new_from_pyobject must be between INT64_MIN and INT64_MAX"
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):
         """
@@ -843,7 +843,7 @@ class TestGetPut:
             assert 0 == self.as_connection.put(key, bins)
 
         assert err_info.value.code == -2
-        assert err_info.value.msg == "integer value for KEY exceeds LLONG_MAX"
+        assert err_info.value.msg == "integer value for KEY must be between INT64_MIN and INT64_MAX"
 
     def test_unhashable_type_with_put_get(self):
         """

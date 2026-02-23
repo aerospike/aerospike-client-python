@@ -94,24 +94,20 @@ as_status convert_partition_filter(AerospikeClient *self,
 
     uint16_t tmp_begin = 0;
     if (begin && PyLong_Check(begin)) {
-        tmp_begin = convert_unsigned_long_into_uint16_t(
-            err, begin, "partition_filter.begin");
-        if (err->code) {
+        tmp_begin = (uint16_t)convert_unsigned_long_into_enum_value(
+            err, begin, CLUSTER_NPARTITIONS - 1, "partition_filter.begin");
+        if (err->code != AEROSPIKE_OK) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "invalid partition_filter policy begin, begin must "
+                            "be an int between 0 and %d inclusive",
+                            CLUSTER_NPARTITIONS - 1);
             goto ERROR_CLEANUP;
         }
     }
     else if (begin) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "invalid partition_filter policy begin, begin must \
-						be an int between 0 and %d inclusive",
-                        CLUSTER_NPARTITIONS - 1);
-        goto ERROR_CLEANUP;
-    }
-
-    if (tmp_begin >= (uint16_t)CLUSTER_NPARTITIONS || tmp_begin < (uint16_t)0) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "invalid partition_filter policy begin, begin must \
-					be an int between 0 and %d inclusive",
+                        "invalid partition_filter policy begin, begin must be "
+                        "an int between 0 and %d inclusive",
                         CLUSTER_NPARTITIONS - 1);
         goto ERROR_CLEANUP;
     }
@@ -120,32 +116,20 @@ as_status convert_partition_filter(AerospikeClient *self,
 
     uint16_t tmp_count = CLUSTER_NPARTITIONS;
     if (count && PyLong_Check(count)) {
-        tmp_count = convert_unsigned_long_into_uint16_t(
-            err, count, "partition_filter.count");
-        if (err->code) {
+        tmp_count = (uint16_t)convert_unsigned_long_into_enum_value(
+            err, count, CLUSTER_NPARTITIONS, "partition_filter.begin");
+        if (err->code != AEROSPIKE_OK || tmp_count == 0) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "invalid partition_filter policy count, count must "
+                            "be an int between 1 and %d inclusive",
+                            CLUSTER_NPARTITIONS);
             goto ERROR_CLEANUP;
         }
     }
     else if (count) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "invalid partition_filter policy count, count must \
-						be an int between 1 and %d inclusive",
-                        CLUSTER_NPARTITIONS);
-        goto ERROR_CLEANUP;
-    }
-
-    if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "invalid count for partition id: %d, \
-						count must fit in long",
-                        ps->part_id);
-        goto ERROR_CLEANUP;
-    }
-
-    if (tmp_count > CLUSTER_NPARTITIONS || tmp_count < 1) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "invalid partition_filter policy count, count must \
-						be an int between 1 and %d inclusive",
+                        "invalid partition_filter policy count, count must be "
+                        "an int between 1 and %d inclusive",
                         CLUSTER_NPARTITIONS);
         goto ERROR_CLEANUP;
     }

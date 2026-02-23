@@ -954,7 +954,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
         if (py_key_policy && PyLong_Check(py_key_policy)) {
             as_policy_key long_key_policy =
-                (as_policy_key)convert_unsigned_long_into_enum(
+                (as_policy_key)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_key_policy,
                     (unsigned int)AS_POLICY_KEY_SEND, "config.policy.key");
             if (constructor_err.code != AEROSPIKE_OK) {
@@ -1045,7 +1045,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
         if (py_exists && PyLong_Check(py_exists)) {
             as_policy_exists exists =
-                (as_policy_exists)convert_unsigned_long_into_enum(
+                (as_policy_exists)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_exists,
                     (unsigned int)AS_POLICY_EXISTS_CREATE_OR_REPLACE,
                     "config.policy.exists");
@@ -1058,7 +1058,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
         if (py_replica && PyLong_Check(py_replica)) {
             as_policy_exists replica =
-                (as_policy_exists)convert_unsigned_long_into_enum(
+                (as_policy_exists)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_replica,
                     (unsigned int)AS_POLICY_REPLICA_RANDOM,
                     "config.policy.replica");
@@ -1079,7 +1079,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             PyDict_GetItemString(py_policies, "read_mode_ap");
         if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
             as_policy_read_mode_ap ap_read_mode =
-                (as_policy_read_mode_ap)convert_unsigned_long_into_enum(
+                (as_policy_read_mode_ap)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_ap_read_mode,
                     (unsigned int)AS_POLICY_READ_MODE_AP_ALL,
                     "config.policy.read_mode_ap");
@@ -1095,7 +1095,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             PyDict_GetItemString(py_policies, "read_mode_sc");
         if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
             as_policy_read_mode_sc sc_read_mode =
-                (as_policy_read_mode_sc)convert_unsigned_long_into_enum(
+                (as_policy_read_mode_sc)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_sc_read_mode,
                     (unsigned int)AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE,
                     "config.policy.read_mode_sc");
@@ -1111,7 +1111,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             PyDict_GetItemString(py_policies, "commit_level");
         if (py_commit_level && PyLong_Check(py_commit_level)) {
             as_policy_commit_level commit_level =
-                (as_policy_commit_level)convert_unsigned_long_into_enum(
+                (as_policy_commit_level)convert_unsigned_long_into_enum_value(
                     &constructor_err, py_commit_level,
                     (unsigned int)AS_POLICY_COMMIT_LEVEL_MASTER,
                     "config.policy.commit_level");
@@ -1331,7 +1331,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
     if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
-        self->send_bool_as = (uint8_t)convert_unsigned_long_into_enum(
+        self->send_bool_as = (uint8_t)convert_unsigned_long_into_enum_value(
             &constructor_err, py_send_bool_as,
             (unsigned int)SEND_BOOL_AS_AS_BOOL, "config.policy.send_bool_as");
         if (constructor_err.code != AEROSPIKE_OK) {
@@ -1348,7 +1348,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 &constructor_err, py_compression_threshold,
                 "config.policy.write.compression_threshold");
         if (constructor_err.code != AEROSPIKE_OK) {
-            goto CONSTRUCTOR_ERROR;
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
     }
 
@@ -1563,6 +1563,9 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
                 return INIT_POLICY_PARAM_ERR;
             }
         }
+        else {
+            return INIT_POLICY_PARAM_ERR; // A non integer passed in.
+        }
     }
 
     PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
@@ -1591,7 +1594,7 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
 
         int rack_id =
-            convert_long_into_int(&err, py_config_value, "config.rack_id");
+            convert_long_into_int(&err, rack_id_pyobj, "config.rack_id");
         if (err.code != AEROSPIKE_OK) {
             // Error occurred
             Py_DECREF(rack_id_pyobj);

@@ -520,11 +520,9 @@ static bool getTypeFromPyObject(PyObject *py_datatype,
                                 unsigned int *idx_datatype,
                                 unsigned int max_enum_value, as_error *err)
 {
-
-    long type = 0;
     if (PyLong_Check(py_datatype)) {
 
-        *idx_datatype = convert_unsigned_long_into_enum(
+        *idx_datatype = convert_unsigned_long_into_enum_value(
             err, py_datatype, max_enum_value, "for getTypeFromPyObject");
         if (err->code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -535,8 +533,6 @@ static bool getTypeFromPyObject(PyObject *py_datatype,
                         "Index type must be an integer");
         goto CLEANUP;
     }
-
-    *idx_datatype = (unsigned int)type;
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {

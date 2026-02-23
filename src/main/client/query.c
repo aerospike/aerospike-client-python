@@ -196,8 +196,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 return 1;
             }
             if (PyLong_Check(py_val1)) {
-                min = convert_unsigned_long_long_into_uint64_t(err, py_val1,
-                                                               "predicate max");
+                min = convert_long_long_into_int64_t(err, py_val1,
+                                                     "predicate max");
                 if (err->code != AEROSPIKE_OK) {
                     return 1;
                 }
@@ -210,8 +210,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
 
             if (PyLong_Check(py_val2)) {
-                max = convert_unsigned_long_long_into_uint64_t(err, py_val2,
-                                                               "predicate max");
+                max = convert_long_long_into_int64_t(err, py_val2,
+                                                     "predicate max");
                 if (err->code != AEROSPIKE_OK) {
                     return 1;
                 }

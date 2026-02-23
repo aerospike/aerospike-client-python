@@ -1,5 +1,5 @@
 #include <Python.h>
-
+#include "pythoncapi_compat.h"
 #include "types.h"
 #include "conversions.h"
 
@@ -45,7 +45,13 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     as_txn *txn;
     uint32_t reads_capacity, writes_capacity;
     if (py_reads_capacity) {
-        reads_capacity = convert_pyobject_to_uint32_t(py_reads_capacity);
+        if (!PyLong_Check(py_reads_capacity)) {
+            PyErr_Format(PyExc_TypeError,
+                         "reads_capacity must be an uint32_t integer",
+                         reads_capacity);
+            goto error;
+        }
+        PyLong_AsUInt32(py_reads_capacity, &reads_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -55,7 +61,13 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     if (py_writes_capacity) {
-        writes_capacity = convert_pyobject_to_uint32_t(py_writes_capacity);
+        if (!PyLong_Check(py_writes_capacity)) {
+            PyErr_Format(PyExc_TypeError,
+                         "writes_capacity must be an uint32_t integer",
+                         writes_capacity);
+            goto error;
+        }
+        PyLong_AsUInt32(py_writes_capacity, &writes_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }

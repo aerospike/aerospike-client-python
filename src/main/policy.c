@@ -231,7 +231,7 @@
                                                                                \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                uint16_t field_val = convert_unsigned_long_into_enum(          \
+                uint16_t field_val = convert_unsigned_long_into_enum_value(    \
                     err, py_field, __max, "POLICY_SET_FIELD");                 \
                 if (err->code != AEROSPIKE_OK) {                               \
                     PyErr_Clear();                                             \
@@ -1693,11 +1693,15 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
                         report_size_limit_attr_name);
         goto error;
     }
-
-    uint64_t report_size_limit =
-        convert_pyobject_to_uint64_t(py_report_size_limit);
+    if (!PyLong_Check(py_report_size_limit)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        report_size_limit_attr_name, "unsigned 64-bit integer");
+        goto error;
+    }
+    uint64_t report_size_limit = convert_unsigned_long_long_into_uint64_t(
+        err, py_report_size_limit, "report_size_limit");
     Py_DECREF(py_report_size_limit);
-    if (PyErr_Occurred()) {
+    if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         report_size_limit_attr_name, "unsigned 64-bit integer");
         goto error;
@@ -1712,10 +1716,15 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
                         interval_field_name);
         goto error;
     }
-
-    uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
+    if (!PyLong_Check(py_interval)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        interval_field_name, "unsigned 32-bit integer");
+        goto error;
+    }
+    uint32_t interval =
+        convert_unsigned_long_into_uint32_t(err, py_interval, "interval");
     Py_DECREF(py_interval);
-    if (PyErr_Occurred()) {
+    if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
         goto error;
@@ -1734,10 +1743,16 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
                             uint8_field_names[i]);
             goto error;
         }
-
-        uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
+        if (!PyLong_Check(py_attr_value)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
+                            "unsigned 8-bit integer");
+            goto error;
+        }
+        uint8_t attr_value =
+            convert_unsigned_long_into_uint8_t(err, py_attr_value, "latency");
         Py_DECREF(py_attr_value);
-        if (PyErr_Occurred()) {
+        if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
                             "unsigned 8-bit integer");

@@ -241,9 +241,10 @@ int32_t convert_long_into_int32_t(as_error *err, PyObject *pyobject,
 int convert_long_into_int(as_error *err, PyObject *pyobject,
                           const char *component);
 
-unsigned int convert_unsigned_long_into_enum(as_error *err, PyObject *py_long,
-                                             unsigned int max_enum_value,
-                                             const char *component);
+unsigned int convert_unsigned_long_into_enum_value(as_error *err,
+                                                   PyObject *py_long,
+                                                   unsigned int max_enum_value,
+                                                   const char *component);
 
 uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *pyobject,
                                              const char *component);
@@ -251,15 +252,8 @@ uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *pyobject,
 int16_t convert_long_into_int16_t(as_error *err, PyObject *pyobject,
                                   const char *component);
 
-int64_t convert_pyobject_to_int64_t(PyObject *pyobject);
-
-uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
-
-uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
-
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
-
-uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
+uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *pyobject,
+                                           const char *component);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(PyObject *py_obj);

@@ -3,6 +3,7 @@ import pytest
 import random
 from aerospike import exception as e
 from aerospike_helpers.operations import operations as operation
+from .as_status_codes import AerospikeStatus
 from .test_base_class import TestBaseClass
 
 import aerospike
@@ -37,8 +38,6 @@ class TestBitwiseOperations(object):
         [
             (aerospike.INTEGER, 1, 0),
             (aerospike.AS_BOOL, True, False),
-            (100, True, False),
-            (-1, True, False),
         ],
     )
     def test_bool_read_write_pos(self, send_bool_as, expected_true, expected_false):
@@ -67,3 +66,41 @@ class TestBitwiseOperations(object):
         assert bins["cfg_false"] is expected_false
         assert bins[self.true_bin] is True
         assert bins[self.false_bin] is False
+
+    @pytest.mark.parametrize(
+        "send_bool_as, expected_true, expected_false",
+        [
+            (100, True, False),
+        ],
+    )
+    def test_bool_read_write_neg_fail_with_pos_integer(self, send_bool_as, expected_true, expected_false):
+        """
+        Write Python bools with different client configurations.
+        """
+        config = TestBaseClass.get_connection_config()
+        config["send_bool_as"] = send_bool_as
+
+        with pytest.raises(e.ParamError) as err_info:
+            test_client = aerospike.client(config).connect(config["user"], config["password"])
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_info.value.msg == "integer value for config.policy.send_bool_as exceeds value for the enumeration"
+
+    @pytest.mark.parametrize(
+        "send_bool_as, expected_true, expected_false",
+        [
+            (-1, True, False),
+        ],
+    )
+    def test_bool_read_write_neg_fail_with_neg_integer(self, send_bool_as, expected_true, expected_false):
+        """
+        Write Python bools with different client configurations.
+        """
+        config = TestBaseClass.get_connection_config()
+        config["send_bool_as"] = send_bool_as
+
+        with pytest.raises(e.ParamError) as err_info:
+            test_client = aerospike.client(config).connect(config["user"], config["password"])
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_info.value.msg == "integer value for config.policy.send_bool_as exceeds LONG_MAX"

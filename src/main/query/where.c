@@ -148,7 +148,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
 
-        if (PyLong_Check(py_val2)) {
+        if (PyLong_Check(py_val1)) {
             val1_int = convert_long_long_into_int64_t(
                 &err, py_val1, "query where numeric val1");
             if (err.code != AEROSPIKE_OK) {

@@ -127,7 +127,7 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     if (PyLong_Check(py_nanos)) {
         nanos = convert_unsigned_long_long_into_uint64_t(&err, py_nanos,
                                                          "truncate");
-        if (err.code) {
+        if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

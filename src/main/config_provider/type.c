@@ -1,6 +1,7 @@
 #include "types.h"
 #include "config_provider.h"
 #include "conversions.h"
+#include "pythoncapi_compat.h"
 
 static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
                                              PyObject *kwds)
@@ -26,7 +27,13 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
 
     uint32_t interval;
     if (py_interval) {
-        interval = convert_pyobject_to_uint32_t(py_interval);
+
+        if (!PyLong_Check(py_interval)) {
+            PyErr_Format(PyExc_TypeError,
+                         "interval must be an uint32_t integer", py_interval);
+            goto error;
+        }
+        PyLong_AsUInt32(py_interval, &interval);
         if (PyErr_Occurred()) {
             goto error;
         }

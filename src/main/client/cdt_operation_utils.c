@@ -135,14 +135,15 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     if (!py_val) {
         return AEROSPIKE_OK;
     }
-
-    *i64_valptr = convert_pyobject_to_int64_t(py_val);
-    if (err->code != AEROSPIKE_OK) {
+    if (!PyLong_Check(py_val)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Unable to convert Python object to int64_t");
+                        "Unable to convert Python object %s to int64_t", key);
         return err->code;
     }
-
+    *i64_valptr = convert_long_long_into_int64_t(err, py_val, key);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
     *found = true;
     return AEROSPIKE_OK;
 }

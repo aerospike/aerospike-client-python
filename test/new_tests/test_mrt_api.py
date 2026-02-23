@@ -51,7 +51,15 @@ class TestMRTAPI:
             # Just use kwargs to id the test case
             if kwargs == {"reads_capacity": 2**32, "writes_capacity": 256} and excinfo.type == OverflowError:
                 # Internal Python error thrown in Windows
-                assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
+                assert str(excinfo.value) == "Python int too large to convert to C uint32_t"
+            elif kwargs == {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1}:
+                assert str(excinfo.value) == "function takes at most 2 keyword arguments (3 given)"
+            elif kwargs == {"reads_capacity": '256', "writes_capacity": 256}:
+                assert str(excinfo.value) == "reads_capacity must be an uint32_t integer"
+            elif kwargs == {"reads_capacity": 256, "writes_capacity": '256'}:
+                assert str(excinfo.value) == "writes_capacity must be an uint32_t integer"
+
+
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):

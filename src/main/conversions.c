@@ -2763,18 +2763,18 @@ uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
                                                   PyObject *py_long,
                                                   const char *component)
 {
-    unsigned long long long_value = PyLong_AsUnsignedLongLong(py_long);
+    uint64_t long_value = 0;
+    PyLong_AsUInt64(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds ULLONG_MAX",
+                            "integer value for %s exceeds UINT64_MAX",
                             component);
         }
         else {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
-                "Failed to convert integer value for %s to unsigned long long",
-                component)
+                "Failed to convert integer value for %s to uint64_t", component)
         }
         return 0;
     }
@@ -2790,29 +2790,20 @@ uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
 int64_t convert_long_long_into_int64_t(as_error *err, PyObject *py_long,
                                        const char *component)
 {
-    long long long_value = PyLong_AsLongLong(py_long);
+    int64_t long_value = 0;
+    PyLong_AsInt64(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LLONG_MAX",
-                            component);
-        }
-        else {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
-                "Failed to convert integer value for %s to long long",
-                component)
+                "integer value for %s must be between INT64_MIN and INT64_MAX",
+                component);
         }
-        return 0;
-    }
-    if (long_value > (long long)INT64_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT64_MAX", component);
-        return 0;
-    }
-    else if (long_value < (long long)INT64_MIN) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT64_MIN", component);
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to int64_t",
+                            component)
+        }
         return 0;
     }
     return (int64_t)long_value;
@@ -2821,7 +2812,8 @@ int64_t convert_long_long_into_int64_t(as_error *err, PyObject *py_long,
 uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
                                              const char *component)
 {
-    unsigned long long_value = PyLong_AsUnsignedLong(py_long);
+    uint32_t long_value = 0;
+    PyLong_AsUInt32(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2831,46 +2823,33 @@ uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
         else {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
-                "Failed to convert integer value for %s to unsigned long",
-                component)
+                "Failed to convert integer value for %s to uint32_t", component)
         }
         return 0;
     }
-    if (long_value > (unsigned long)UINT32_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds UINT32_MAX", component);
-        return 0;
-    }
-    return (uint32_t)long_value;
+    return long_value;
 }
 
 int32_t convert_long_into_int32_t(as_error *err, PyObject *py_long,
                                   const char *component)
 {
-    long long_value = PyLong_AsLong(py_long);
+    int32_t long_value = 0;
+    PyLong_AsInt32(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LONG_MAX", component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between INT32_MIN and INT32_MAX",
+                component);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Failed to convert integer value for %s to long",
+                            "Failed to convert integer value for %s to int32_t",
                             component)
         }
         return 0;
     }
-    if (long_value > (long)INT32_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT32_MAX", component);
-        return 0;
-    }
-    else if (long_value < (long)INT32_MIN) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT32_MIN", component);
-        return 0;
-    }
-    return (int32_t)long_value;
+    return long_value;
 }
 
 uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
@@ -2880,12 +2859,13 @@ uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LONG_MAX", component);
+                            "integer value for %s exceeds UINT16_MAX",
+                            component);
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Failed to convert integer value for %s to long",
-                            component)
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Failed to convert integer value for %s to uint16_t", component)
         }
         return 0;
     }
@@ -2903,12 +2883,14 @@ int16_t convert_long_into_int16_t(as_error *err, PyObject *py_long,
     long long_value = PyLong_AsLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LONG_MAX", component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between INT16_MIN and INT16_MAX",
+                component);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Failed to convert integer value for %s to long",
+                            "Failed to convert integer value for %s to int16_t",
                             component)
         }
         return 0;
@@ -2926,39 +2908,57 @@ int16_t convert_long_into_int16_t(as_error *err, PyObject *py_long,
     return (int16_t)long_value;
 }
 
-int convert_long_into_int(as_error *err, PyObject *py_long,
-                          const char *component)
+uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *py_long,
+                                           const char *component)
 {
-    // CHECK ALL CONVERSION TO LONG VALUE AND MAKE SURE FUNCTION SIGNATURE IS CORRECT
-    long long_value = PyLong_AsLong(py_long);
+    unsigned long long_value = PyLong_AsUnsignedLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LONG_MAX", component);
+                            "integer value for %s exceeds UINT8_MAX",
+                            component);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Failed to convert integer value for %s to long",
+                            "Failed to convert integer value for %s to uint8_t",
                             component)
         }
         return 0;
     }
-    if (long_value > (long)INT_MAX) {
+    if (long_value > (unsigned long)UINT8_MAX) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT_MAX", component);
+                        "integer value for %s exceeds UINT8_MAX", component);
         return 0;
     }
-    else if (long_value < (long)INT_MIN) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds INT_MIN", component);
-        return 0;
-    }
-    return (int)long_value;
+    return (uint8_t)long_value;
 }
 
-unsigned int convert_unsigned_long_into_enum(as_error *err, PyObject *py_long,
-                                             unsigned int max_enum_value,
-                                             const char *component)
+int convert_long_into_int(as_error *err, PyObject *py_long,
+                          const char *component)
+{
+    // CHECK ALL CONVERSION TO LONG VALUE AND MAKE SURE FUNCTION SIGNATURE IS CORRECT
+    int long_value = PyLong_AsInt(py_long);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between INT_MIN and INT_MAX",
+                component);
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for %s to int",
+                            component)
+        }
+        return 0;
+    }
+    return long_value;
+}
+
+unsigned int convert_unsigned_long_into_enum_value(as_error *err,
+                                                   PyObject *py_long,
+                                                   unsigned int max_enum_value,
+                                                   const char *component)
 {
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
 
@@ -2982,36 +2982,6 @@ unsigned int convert_unsigned_long_into_enum(as_error *err, PyObject *py_long,
         return 0;
     }
     return (unsigned int)long_value;
-}
-
-int64_t convert_pyobject_to_int64_t(PyObject *pyobject)
-{
-    return (int64_t)convert_pyobject_to_signed_fixed_width_integer_type(
-        pyobject, INT64_MIN, INT64_MAX);
-}
-
-uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject)
-{
-    return (uint8_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
-        pyobject, UINT8_MAX);
-}
-
-uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject)
-{
-    return (uint16_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
-        pyobject, UINT16_MAX);
-}
-
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject)
-{
-    return (uint32_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
-        pyobject, UINT32_MAX);
-}
-
-uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
-{
-    return (uint64_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
-        pyobject, UINT64_MAX);
 }
 
 const char *convert_pyobject_to_str(PyObject *py_obj)

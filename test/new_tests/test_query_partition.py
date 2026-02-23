@@ -465,7 +465,7 @@ class TestQueryPartition(TestBaseClass):
             query_obj.foreach(callback, policy)
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-        assert "integer value for partition_filter.begin exceeds UINT16_MAX" in err_info.value.msg
+        assert "begin must be an int between 0 and 4095" in err_info.value.msg
 
     @pytest.mark.parametrize(
         "count",
@@ -487,7 +487,7 @@ class TestQueryPartition(TestBaseClass):
             query_obj.foreach(callback, policy)
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-        assert "integer value for partition_filter.count exceeds UINT16_MAX" in err_info.value.msg
+        assert "count must be an int between 1 and 4096" in err_info.value.msg
 
     @pytest.mark.parametrize(
         "begin, count",
