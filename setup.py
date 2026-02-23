@@ -40,7 +40,6 @@ AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
 
-VS_PROJECT_CONFIGURATION = os.getenv("VS_PROJECT_CONFIGURATION", "Release")
 AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
@@ -127,8 +126,10 @@ if UNOPTIMIZED:
         extra_compile_args.append('/Zi')
         extra_link_args.append('/DEBUG')
         data_files.append("*.pdb")
+        VS_PROJECT_CONFIGURATION = "Release"
     else:
         extra_compile_args.append('-O0')
+        VS_PROJECT_CONFIGURATION = "Debug"
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -174,7 +175,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    if VS_PROJECT_CONFIGURATION == "Release":
+    if VS_PROJECT_CONFIGURATION:
         libraries.append("pthreadVC2")
     else:
         libraries.append("pthreadVC2d")
