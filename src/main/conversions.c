@@ -2815,7 +2815,7 @@ uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds ULONG_MAX",
+                            "integer value for %s exceeds UINT32_MAX",
                             component);
         }
         else {
