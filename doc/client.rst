@@ -838,41 +838,75 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
+    .. method:: index_single_value_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create a string index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index on a single value with a given type.
+
+        :param str ns: the namespace containing the value.
+        :param str set: the set containing the value.
+        :param str bin: the name of the bin containing the value.
+        :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
+        :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
+
+        Create a secondary index for all of a list's values, where all the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_integer_create(ns, set, bin, name[, policy])
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an integer index with *name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index on all of a map's keys, where all of the keys are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_blob_create(ns, set, bin, name[, policy])
+        .. note:: Requires server version >= 3.8.0
 
-        Create an blob index with index name *name* on the *bin* in the specified \
-        *ns*, *set*.
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
+
+        Create a secondary index on all of a map's values, where all of the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
-        :param str bin: the name of the bin the secondary index is built on.
+        :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
+            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
 
     .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
 
@@ -886,137 +920,6 @@ Index Operations
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a list.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the keys of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the values of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-
-            # assume the bin fav_movies in the set test.demo bin should contain
-            # a dict { (str) _title_ : (int) _times_viewed_ }
-            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
-            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
-
-    .. method:: index_cdt_create(ns, set, bin, index_type, index_datatype, name, ctx[, policy: dict])
-
-        Create an index named *name* for a data type (as defined by *index_datatype*) on records of the specified *ns*,
-        *set*, *bin*, and *ctx*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_type: See :ref:`aerospike_index_types` for possible values.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 4.6.0
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers import cdt_ctx
-
-            client = aerospike.client(
-                {
-                    'hosts': [ ('127.0.0.1', 3000)]
-                }
-            )
-
-            # assume the bin fav_movies in the set test.demo bin should contain
-            # a dict { (str) _title_ : (int) _times_viewed_ }
-            ctx_map_rank = [
-                cdt_ctx.cdt_ctx_map_rank(-1)
-            ]
-            client.index_cdt_create(
-                ns="test",
-                set="demo",
-                bin="fav_movies",
-                index_type=aerospike.INDEX_TYPE_MAPKEYS,
-                index_datatype=aerospike.INDEX_STRING,
-                ctx=ctx_map_rank,
-                name="demo_fav_movies_titles_idx"
-            )
-            client.close()
-
-    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
-
-        Create a geospatial 2D spherical index with *name* on the *bin* \
-        in the specified *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
-
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
@@ -1041,6 +944,91 @@ Index Operations
 
         .. versionchanged:: 7.1.1
 
+    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a string index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_integer_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+
+        Create an integer index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a blob index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a geospatial 2D spherical index with *name* on the *bin* \
+        in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+            client.close()
+
+.. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
+
+    .. deprecated:: 20.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+
+    Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
+    numeric, string, or GeoJSON values (as defined by *index_datatype*)
+    on records of the specified *ns*, *set* whose bin is a list or map.
+
+    :param str ns: the namespace in the aerospike cluster.
+    :param str set: the set name.
+    :param str bin: the name of bin the secondary index is built on.
+    :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
+    :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
+    :param str index_name: the name of the index.
+    :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
+    :param dict policy: optional :ref:`aerospike_info_policies`.
+    :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. index::
         single: Admin Operations

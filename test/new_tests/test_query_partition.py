@@ -17,7 +17,7 @@ def add_sindex(client):
     Load the sindex used in the tests
     """
     try:
-        client.index_string_create("test", "demo", "s", "string")
+        client.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
     except e.IndexFoundError:
         pass
 
