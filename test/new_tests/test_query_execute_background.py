@@ -20,7 +20,7 @@ except NameError:
 
 def add_indexes_to_client(client):
     try:
-        client.index_integer_create(TEST_NS, TEST_SET, "number", "test_background_number_idx")
+        client.index_single_value_create(TEST_NS, TEST_SET, "number", aerospike.INDEX_NUMERIC, "test_background_number_idx")
     except exception.IndexFoundError:
         pass
 

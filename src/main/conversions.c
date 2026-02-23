@@ -2653,12 +2653,10 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be an integer.", py_object_name);
     }
-
     *int_pointer = convert_long_into_int(err, py_long, py_object_name);
     if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
-
     return AEROSPIKE_OK;
 }
 
