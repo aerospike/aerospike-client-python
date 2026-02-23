@@ -301,6 +301,7 @@ def test_config_level_misc_options():
     config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
     config["policies"]["max_threads"] = 16
     config["policies"]["thread_pool_size"] = 16
+    config["policies"]["socket_timeout"] = 0
     config["thread_pool_size"] = 16
     config["max_threads"] = 16
     config["max_conns_per_node"] = 16
