@@ -43,7 +43,8 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     as_txn *txn;
-    uint32_t reads_capacity, writes_capacity;
+    uint32_t reads_capacity = AS_TXN_READ_CAPACITY_DEFAULT;
+    uint32_t writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     if (py_reads_capacity) {
         if (!PyLong_Check(py_reads_capacity)) {
             PyErr_Format(PyExc_TypeError,
@@ -55,9 +56,6 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         if (PyErr_Occurred()) {
             goto error;
         }
-    }
-    else {
-        reads_capacity = AS_TXN_READ_CAPACITY_DEFAULT;
     }
 
     if (py_writes_capacity) {
@@ -71,9 +69,6 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         if (PyErr_Occurred()) {
             goto error;
         }
-    }
-    else {
-        writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     }
 
     txn = as_txn_create_capacity(reads_capacity, writes_capacity);
