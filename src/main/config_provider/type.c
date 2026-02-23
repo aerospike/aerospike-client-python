@@ -25,9 +25,8 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
         goto error;
     }
 
-    uint32_t interval;
+    uint32_t interval = AS_CONFIG_PROVIDER_INTERVAL_DEFAULT;
     if (py_interval) {
-
         if (!PyLong_Check(py_interval)) {
             PyErr_Format(PyExc_TypeError,
                          "interval must be an uint32_t integer", py_interval);
@@ -37,9 +36,6 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
         if (PyErr_Occurred()) {
             goto error;
         }
-    }
-    else {
-        interval = AS_CONFIG_PROVIDER_INTERVAL_DEFAULT;
     }
 
     self->path = strdup(path);
