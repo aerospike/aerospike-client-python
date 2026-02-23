@@ -113,7 +113,10 @@ class Write(BatchRecord):
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
-        .. include:: ./deprecate_meta.rst
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta`` parameter. Use the policy parameter in a
+                :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord instead.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
