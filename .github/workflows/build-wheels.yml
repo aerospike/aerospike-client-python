@@ -444,8 +444,8 @@ jobs:
 
       - if: ${{ inputs.platform-tag == 'win_amd64' }}
         id: run-tests
-        run: drmemory -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
-        # run: ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+        # run: drmemory -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+        run: ./procdump.exe -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
