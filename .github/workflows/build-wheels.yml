@@ -248,8 +248,9 @@ jobs:
       shell: bash
 
     - name: Set unoptimize flag
-      if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
+      if: ${{ inputs.unoptimized }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+      shell: bash
 
     - name: Set include dsym flag
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
@@ -328,7 +329,11 @@ jobs:
           auditwheel repair -w {dest_dir} {wheel} &&
           auditwheel show {dest_dir}/* &&
           rm -rf $WHEEL_DIR
-        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+        # --no-mangle-all to make sure .pdb files match the .dll files
+        # delvewheel mangles the .dll file names but not the .pdb file names
+        # --include-symbols to include the .pdb files in the wheel
+        # TODO: need to find way to add path properly here
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Debug --no-mangle-all --include-symbols -w {dest_dir} {wheel}"
         # We also want to verify the same thing on macos
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} &&
@@ -437,9 +442,31 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      - if: ${{ inputs.platform-tag == 'win_amd64' }}
+        id: run-tests
+        run: |
+          curl -O https://raw.githubusercontent.com/python/cpython/refs/heads/$PYTHON_VERSION/Misc/valgrind-python.supp
+          export _NT_SYMBOL_PATH=$(pip show aerospike | grep Location | cut -f 2- -d' ')
+          export PYTHONMALLOC=malloc
+          mkdir dumps
+          drmemory -light -suppress valgrind-python.supp -logdir dumps -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          # drmemory -callstack_max_frames 30 -lib_allowlist_frames 30 -lib_allowlist '**/*.pyd,**/aerospike.dll' -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+        # run: |
+        #   mkdir dumps
+        #   procdump -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
+
+      # - if: ${{ failure() && steps.run-tests.outcome == 'failure' }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          path: ./test/dumps/*
+          name: dump-${{ matrix.python-tag }}
+          if-no-files-found: error
+
+      # - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      #   working-directory: test
+      #   shell: bash
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}

@@ -42,7 +42,7 @@ class TestDynamicConfig:
 
         # TODO: currently there is no way to restore the log handler and level before running this test
         # These are the defaults in the implementation
-        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+        # aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
 
     @pytest.fixture
     def cleanup_metrics_logs(self):
