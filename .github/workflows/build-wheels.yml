@@ -445,9 +445,11 @@ jobs:
       - if: ${{ inputs.platform-tag == 'win_amd64' }}
         id: run-tests
         run: |
+          wget https://raw.githubusercontent.com/python/cpython/refs/heads/$PYTHON_VERSION/Misc/valgrind-python.supp
           export _NT_SYMBOL_PATH=$(pip show aerospike | grep Location | cut -f 2- -d' ')
           export PYTHONMALLOC=malloc
-          drmemory -callstack_max_frames 30 -lib_allowlist_frames 30 -lib_allowlist '**/*.pyd,**/aerospike.dll' -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          drmemory -suppress valgrind-python.supp -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          # drmemory -callstack_max_frames 30 -lib_allowlist_frames 30 -lib_allowlist '**/*.pyd,**/aerospike.dll' -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         # run: |
         #   mkdir dumps
         #   procdump -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
