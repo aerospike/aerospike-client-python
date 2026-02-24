@@ -446,7 +446,7 @@ jobs:
         id: run-tests
         run: |
           export _NT_SYMBOL_PATH=$(pip show aerospike | grep Location | cut -f 2- -d' ')
-          drmemory -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          drmemory -callstack_max_frames 100 -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         # run: |
         #   mkdir dumps
         #   procdump -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
