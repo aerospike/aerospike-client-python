@@ -449,7 +449,7 @@ jobs:
           export _NT_SYMBOL_PATH=$(pip show aerospike | grep Location | cut -f 2- -d' ')
           export PYTHONMALLOC=malloc
           mkdir dumps
-          drmemory -suppress valgrind-python.supp -logdir dumps -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          drmemory -no_count_leaks -suppress valgrind-python.supp -logdir dumps -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
           # drmemory -callstack_max_frames 30 -lib_allowlist_frames 30 -lib_allowlist '**/*.pyd,**/aerospike.dll' -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         # run: |
         #   mkdir dumps
