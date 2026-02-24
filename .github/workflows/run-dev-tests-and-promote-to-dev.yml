@@ -99,13 +99,13 @@ jobs:
       reupload-github-artifacts-as-one,
       run-dev-tests
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@489212b8911ea431131ed468599db705f0767274
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@CLIENT-3467-add-support-for-pypi-type-repos-in-jfrog
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
       jf-build-id: ${{ github.run_number }}
       jf-metadata-build-id: ${{ github.run_number }}-metadata
-      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
+      gh-workflows-ref: CLIENT-3467-add-support-for-pypi-type-repos-in-jfrog
       version: ${{ needs.run-dev-tests.outputs.build-version }}
       dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
