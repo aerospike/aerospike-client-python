@@ -448,7 +448,8 @@ jobs:
           curl -O https://raw.githubusercontent.com/python/cpython/refs/heads/$PYTHON_VERSION/Misc/valgrind-python.supp
           export _NT_SYMBOL_PATH=$(pip show aerospike | grep Location | cut -f 2- -d' ')
           export PYTHONMALLOC=malloc
-          drmemory -suppress valgrind-python.supp -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+          mkdir dumps
+          drmemory -light -suppress valgrind-python.supp -logdir dumps -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
           # drmemory -callstack_max_frames 30 -lib_allowlist_frames 30 -lib_allowlist '**/*.pyd,**/aerospike.dll' -- python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         # run: |
         #   mkdir dumps
@@ -456,8 +457,8 @@ jobs:
         working-directory: test
         shell: bash
 
-      - if: ${{ failure() && steps.run-tests.outcome == 'failure' }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      # - if: ${{ failure() && steps.run-tests.outcome == 'failure' }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           path: ./test/dumps/*
           name: dump-${{ matrix.python-tag }}
