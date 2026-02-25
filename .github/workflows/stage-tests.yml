@@ -83,7 +83,7 @@ jobs:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -199,7 +199,7 @@ jobs:
     runs-on: ${{ matrix.runner-os-and-arch[0] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
