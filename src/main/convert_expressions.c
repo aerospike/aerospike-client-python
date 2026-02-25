@@ -129,15 +129,13 @@ enum utiity_constants {
 #define EXP_SZ(_expr) sizeof((as_exp_entry[]){_expr})
 
 #define APPEND_ARRAY(_sub_values, ...)                                         \
-    {                                                                          \
-        {                                                                      \
-            as_exp_entry tmp_expr_array[] = {__VA_ARGS__};                     \
-            int expr_array_size =                                              \
-                sizeof(tmp_expr_array) / sizeof(as_exp_entry) - _sub_values;   \
-            memcpy(&((*expressions)[(*bottom)]), &tmp_expr_array,              \
-                   (expr_array_size * sizeof(as_exp_entry)));                  \
-            (*bottom) += expr_array_size;                                      \
-        }                                                                      \
+    {{as_exp_entry tmp_expr_array[] = {__VA_ARGS__};                           \
+    int expr_array_size =                                                      \
+        sizeof(tmp_expr_array) / sizeof(as_exp_entry) - _sub_values;           \
+    memcpy(&((*expressions)[(*bottom)]), &tmp_expr_array,                      \
+           (expr_array_size * sizeof(as_exp_entry)));                          \
+    (*bottom) += expr_array_size;                                              \
+    }                                                                          \
     }
 
 #define BIN_EXPR()                                                             \
@@ -148,9 +146,7 @@ enum utiity_constants {
     {.op = _AS_EXP_CODE_KEY, .count = 2}, as_exp_int(temp_expr->result_type)
 
 #define LIST_MOD_EXP()                                                         \
-    {                                                                          \
-        .op = temp_expr->op, .v.list_pol = temp_expr->list_policy              \
-    }
+    {.op = temp_expr->op, .v.list_pol = temp_expr->list_policy}
 
 // STRUCT DEFINITIONS
 typedef struct {
