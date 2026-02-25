@@ -103,4 +103,4 @@ class TestBitwiseOperations(object):
             test_client = aerospike.client(config).connect(config["user"], config["password"])
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-        assert err_info.value.msg == "integer value for config.policy.send_bool_as exceeds LONG_MAX"
+        assert err_info.value.msg == "integer value for config.policy.send_bool_as must be between LONG_MIN and LONG_MAX"

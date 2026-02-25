@@ -2374,7 +2374,7 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 return as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
-                    "integer value for pyobject_to_index exceeds LONG_MAX");
+                    "integer value for pyobject_to_index must be between LONG_MIN and LONG_MAX");
             }
         }
     }
