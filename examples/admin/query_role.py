@@ -87,14 +87,14 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         role = "example_foo"
-    	
+
         privileges = client.admin_query_role(role, policy)
-        
+
         print(privileges)
         print("---")
         print("OK, Privileges retrieved for one role")
@@ -103,7 +103,7 @@ try:
         print("error: {0}".format(e), file=sys.stderr)
         print("In case of invalid role, first create role using create_role.py")
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

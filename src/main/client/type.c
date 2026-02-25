@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_log_macros.h>
 
 #include "pythoncapi_compat.h"
 #include "admin.h"
@@ -473,6 +474,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
      METH_VARARGS | METH_KEYWORDS, index_remove_doc},
+
+    {"index_single_value_create",
+     (PyCFunction)AerospikeClient_Index_Single_Value_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
     {"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
      METH_VARARGS | METH_KEYWORDS, index_list_create_doc},
     {"index_map_keys_create",
@@ -481,6 +486,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"index_map_values_create",
      (PyCFunction)AerospikeClient_Index_Map_Values_Create,
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
+
     {"index_geo2dsphere_create",
      (PyCFunction)AerospikeClient_Index_2dsphere_Create,
      METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},
@@ -570,6 +576,8 @@ internal_error:
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
+    as_log_trace("Starting to create a new client...");
+
     PyObject *py_config = NULL;
     int error_code = 0;
     as_error constructor_err;
@@ -752,18 +760,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 if (PyUnicode_Check(py_addr)) {
                     addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
                 }
+
                 py_port = PyTuple_GetItem(py_host, 1);
                 if (PyLong_Check(py_port)) {
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
-                    PyErr_WarnEx(
-                        PyExc_FutureWarning,
-                        "In the next Python client major release, an exception "
-                        "will be raised if the port number is not an integer",
-                        2);
-                    port = 0;
+                    as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                                    "The host port must be an integer");
+                    free(addr);
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
+
                 // Set TLS Name if provided
                 if (PyTuple_Size(py_host) == 3) {
                     py_tls_name = PyTuple_GetItem(py_host, 2);
@@ -1219,7 +1228,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_app_id = NULL;
     retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
-    if (retval == 1) {
+    if (retval == 1 && !Py_IsNone(py_app_id)) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
             Py_DECREF(py_app_id);
@@ -1523,7 +1532,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeClient_Type = {
+PyTypeObject AerospikeClient_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
         FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
     sizeof(AerospikeClient),                  // tp_basicsize

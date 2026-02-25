@@ -26,7 +26,7 @@ jobs:
     runs-on: ${{ matrix.arch-and-runner-os[1] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
       with:
         egress-policy: audit
 
@@ -50,7 +50,7 @@ jobs:
         flavor: latest=false
 
     - name: Set up Docker Buildx so we can cache our Docker image layers
-      uses: step-security/setup-buildx-action@8c8aef2d414c0b66518fee2b7084e0986f82d7ac # v3.11.1
+      uses: step-security/setup-buildx-action@c60a792b446ef83310733d5cd9d0c8d6870d043f # v3.12.0
 
     - name: Get cibuildwheel version used to build wheels
       run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
@@ -87,7 +87,7 @@ jobs:
       working-directory: cibuildwheel
 
     - name: Build and push
-      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: ${{ github.workspace }}/aerospike-client-python/.github/workflows

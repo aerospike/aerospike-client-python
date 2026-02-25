@@ -42,11 +42,11 @@ jobs:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
       with:
         egress-policy: audit
 
-    - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+    - uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
       with:
         egress-policy: audit
 
@@ -146,7 +146,7 @@ jobs:
       run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
       shell: bash
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: '${{ env.PYTHON_VERSION }}'
         architecture: 'x64'
