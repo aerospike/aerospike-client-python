@@ -2327,6 +2327,11 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         uint32_t ttl = 0;
         uint16_t gen = 0;
         if (py_ttl) {
+            PyErr_WarnEx(PyExc_DeprecationWarning,
+                         "meta[\"ttl\"] is deprecated and will be removed in "
+                         "the next client major release.",
+                         STACK_LEVEL);
+
             if (PyLong_Check(py_ttl)) {
                 ttl = (uint32_t)PyLong_AsLong(py_ttl);
             }

@@ -4,7 +4,6 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-import warnings
 
 
 class TestPrepend:
@@ -99,13 +98,11 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
-        with warnings.catch_warnings(record=True) as warning_list:
-            self.as_connection.prepend(key, "name", "str", meta, policy)
-        assert len(warning_list) == 1
-        assert warning_list[0].category == DeprecationWarning
+        meta = {"gen": 10}
+        self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
 

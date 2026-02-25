@@ -4,7 +4,6 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-import warnings
 
 # @pytest.mark.usefixtures("as_connection")
 
@@ -114,14 +113,11 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
-        with warnings.catch_warnings(record=True) as warning_list:
-            self.as_connection.append(key, "name", "str", meta, policy)
-
-        assert len(warning_list) == 1
-        assert warning_list[0].category == DeprecationWarning
+        meta = {"gen": 10}
+        self.as_connection.append(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
 

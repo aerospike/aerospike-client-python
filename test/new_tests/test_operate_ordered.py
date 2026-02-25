@@ -209,8 +209,9 @@ class TestOperateOrdered(object):
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1200
                 },
-                {"gen": 10, "ttl": 1200},
+                {"gen": 10},
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
@@ -223,10 +224,7 @@ class TestOperateOrdered(object):
         """
         Invoke operate_ordered() with gen ignore.
         """
-        with warnings.catch_warnings(record=True) as warning_list:
-            key, meta, bins = self.as_connection.operate_ordered(key, llist, meta, policy)
-        assert len(warning_list) == 1
-        assert warning_list[0].category == DeprecationWarning
+        key, meta, bins = self.as_connection.operate_ordered(key, llist, meta, policy)
 
         assert bins == [("name", "name1aa")]
 

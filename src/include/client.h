@@ -25,10 +25,6 @@
 
 #define CLUSTER_NPARTITIONS (4096)
 
-#define DEPRECATE_META_PARAMETER_WARNING_MESSAGE                               \
-    "meta parameter is deprecated and will be removed in the "                 \
-    "next client major release"
-
 // This allows people to see the function calling the Python client API that issues a warning
 #define STACK_LEVEL 2
 

@@ -6,7 +6,6 @@ from .test_data import key_neg
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-import warnings
 
 
 @pytest.mark.usefixtures("as_connection")

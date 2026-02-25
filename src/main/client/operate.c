@@ -916,12 +916,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 
     // For expressions conversion.
     as_exp *exp_list_p = NULL;
-
-    if (py_meta) {
-        PyErr_WarnEx(PyExc_DeprecationWarning,
-                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, STACK_LEVEL);
-    }
-
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_operations ops;
@@ -1257,11 +1251,6 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
                                     &py_key, &py_list, &py_meta,
                                     &py_policy) == false) {
         return NULL;
-    }
-
-    if (py_meta) {
-        PyErr_WarnEx(PyExc_DeprecationWarning,
-                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, STACK_LEVEL);
     }
 
     CHECK_CONNECTED(&err);

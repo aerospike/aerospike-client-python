@@ -171,7 +171,9 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
 
     if (py_meta) {
         PyErr_WarnEx(PyExc_DeprecationWarning,
-                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, STACK_LEVEL);
+                     "meta parameter is deprecated and will be removed in the "
+                     "next client major release",
+                     STACK_LEVEL);
     }
 
     // Invoke Operation

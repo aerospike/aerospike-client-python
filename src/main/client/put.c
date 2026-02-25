@@ -167,11 +167,6 @@ PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    if (py_meta) {
-        PyErr_WarnEx(PyExc_DeprecationWarning,
-                     DEPRECATE_META_PARAMETER_WARNING_MESSAGE, STACK_LEVEL);
-    }
-
     if (py_serializer_option) {
         if (PyLong_Check(py_serializer_option)) {
             self->is_client_put_serializer = true;

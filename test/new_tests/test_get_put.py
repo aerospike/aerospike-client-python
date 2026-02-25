@@ -257,17 +257,15 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
 
-        with warnings.catch_warnings(record=True) as warning_list:
-            assert 0 == self.as_connection.put(key, rec, meta, policy)
-        assert len(warning_list) == 1
-        assert warning_list[0].category == DeprecationWarning
+        assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
         assert rec == bins
