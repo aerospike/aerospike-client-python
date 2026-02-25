@@ -149,7 +149,7 @@ jobs:
     # Need to be able to save Docker Hub credentials to keychain
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
       with:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
