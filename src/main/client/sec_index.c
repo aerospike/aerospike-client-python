@@ -135,32 +135,14 @@ static PyObject *convert_python_args_to_c_and_create_index(
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
     as_cdt_ctx ctx;
-    bool ctx_in_use = false;
-    PyObject *py_ctx_dict = NULL;
-    if (py_ctx && !Py_IsNone(py_ctx)) {
-        py_ctx_dict = PyDict_New();
-        if (!py_ctx_dict) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP;
-        }
-        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-        if (retval == -1) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP2;
-        }
+    as_static_pool static_pool;
+    memset(&static_pool, 0, sizeof(static_pool));
 
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
-
-        if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            goto CLEANUP2;
-        }
+    as_cdt_ctx *ctx_ref = as_cdt_ctx_init_from_pyobject(
+        self, &err, &ctx, py_ctx, &static_pool, SERIALIZER_PYTHON);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
-
-    as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
     as_exp *expr = NULL;
     if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err,
@@ -265,7 +247,6 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
     as_cdt_ctx ctx;
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
-    as_index_type index_type;
 
     static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
                              "name", "policy", "ctx", NULL};
@@ -296,12 +277,12 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
     if (ctx_ref == NULL) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "ctx is a required argument and must not be None");
-        goto CLEANUP;
+        goto CLEANUP_ON_ERROR;
     }
 
     // Even if this call fails, it will raise its own exception
     // and the err object here will not be set. We don't raise an exception twice
-    py_obj = createIndexWithDataAndCollectionType(
+    py_obj = convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
         &ctx, NULL);
 
