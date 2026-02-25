@@ -87,22 +87,22 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         user = "foo-example"
     	password = "bar"
-    	
+
     	client.admin_set_password(user, password, policy)
-        
+
     	print("OK, password set for 1 user")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         print("In case of invalid user first create user using create_user.py")
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
