@@ -133,7 +133,8 @@ jobs:
       create-jfrog-release-bundle,
       run-dev-tests
     ]
-    if: ${{ inputs.dry-run }}
+    # jf rbp doesn't have a dry run option
+    if: ${{ !inputs.dry-run }}
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
