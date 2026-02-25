@@ -31,17 +31,6 @@
 #undef TRACE
 #define TRACE()
 
-// TODO: replace with helper function from conversions.c
-int64_t pyobject_to_int64(PyObject *py_obj)
-{
-    if (PyLong_Check(py_obj)) {
-        return PyLong_AsLongLong(py_obj);
-    }
-    else {
-        return 0;
-    }
-}
-
 #define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
@@ -158,16 +147,21 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         val1 = (void *)val1_str;
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
-        val1_int = pyobject_to_int64(py_val1);
-        if (PyErr_Occurred()) {
-            PyErr_Clear();
-            val1_int = 0;
+
+        if (PyLong_Check(py_val1)) {
+            val1_int = convert_long_long_into_int64_t(
+                &err, py_val1, "query where numeric val1");
+            if (err.code != AEROSPIKE_OK) {
+                PyErr_Clear();
+                val1_int = 0;
+            }
         }
         val1 = (void *)val1_int;
 
         if (PyLong_Check(py_val2)) {
-            val2_int = pyobject_to_int64(py_val2);
-            if (PyErr_Occurred()) {
+            val2_int = convert_long_long_into_int64_t(
+                &err, py_val2, "query where numeric val2");
+            if (err.code != AEROSPIKE_OK) {
                 PyErr_Clear();
                 val2_int = 0;
             }

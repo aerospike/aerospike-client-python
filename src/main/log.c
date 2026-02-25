@@ -122,12 +122,18 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
     }
 
     long log_level = PyLong_AsLong(py_log_level);
-    if (log_level == -1 && PyErr_Occurred()) {
+    if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "integer value exceeds sys.maxsize");
-            goto CLEANUP;
+            as_error_update(
+                &err, AEROSPIKE_ERR_PARAM,
+                "integer value for Aerospike_Set_Log_Level exceeds ULLONG_MAX");
         }
+        else {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert integer value for "
+                            "Aerospike_Set_Log_Level to unsigned long long")
+        }
+        goto CLEANUP;
     }
 
     is_current_log_level_off = log_level == LOG_LEVEL_OFF;

@@ -1,5 +1,5 @@
 #include <Python.h>
-
+#include "pythoncapi_compat.h"
 #include "types.h"
 #include "conversions.h"
 
@@ -43,25 +43,32 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     as_txn *txn;
-    uint32_t reads_capacity, writes_capacity;
+    uint32_t reads_capacity = AS_TXN_READ_CAPACITY_DEFAULT;
+    uint32_t writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     if (py_reads_capacity) {
-        reads_capacity = convert_pyobject_to_uint32_t(py_reads_capacity);
+        if (!PyLong_Check(py_reads_capacity)) {
+            PyErr_Format(PyExc_TypeError,
+                         "reads_capacity must be an uint32_t integer",
+                         reads_capacity);
+            goto error;
+        }
+        PyLong_AsUInt32(py_reads_capacity, &reads_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
-    }
-    else {
-        reads_capacity = AS_TXN_READ_CAPACITY_DEFAULT;
     }
 
     if (py_writes_capacity) {
-        writes_capacity = convert_pyobject_to_uint32_t(py_writes_capacity);
+        if (!PyLong_Check(py_writes_capacity)) {
+            PyErr_Format(PyExc_TypeError,
+                         "writes_capacity must be an uint32_t integer",
+                         writes_capacity);
+            goto error;
+        }
+        PyLong_AsUInt32(py_writes_capacity, &writes_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
-    }
-    else {
-        writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     }
 
     txn = as_txn_create_capacity(reads_capacity, writes_capacity);
@@ -111,8 +118,9 @@ static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
 static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
                                             PyObject *py_value, void *closure)
 {
-    uint32_t timeout = (uint32_t)convert_pyobject_to_fixed_width_integer_type(
-        py_value, UINT32_MAX);
+    uint32_t timeout =
+        (uint32_t)convert_pyobject_to_unsigned_fixed_width_integer_type(
+            py_value, UINT32_MAX);
     if (PyErr_Occurred()) {
         return -1;
     }

@@ -222,16 +222,38 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 // We return an unsigned long long because it should be able to fit all fixed-width int types up to uint64_t
 // Returns -1 on error. Error indicator can be checked to verify if error occurred
 // TODO: replace this with new API calls in Python 3.14
-unsigned long long
-convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
-                                             unsigned long long max_bound);
-uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
+unsigned long long convert_pyobject_to_unsigned_fixed_width_integer_type(
+    PyObject *pyobject, unsigned long long max_bound);
 
-uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
+uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
+                                                  PyObject *pyobject,
+                                                  const char *component);
 
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
+int64_t convert_long_long_into_int64_t(as_error *err, PyObject *pyobject,
+                                       const char *component);
 
-uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
+uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *pyobject,
+                                             const char *component);
+
+int32_t convert_long_into_int32_t(as_error *err, PyObject *pyobject,
+                                  const char *component);
+
+int convert_long_into_int(as_error *err, PyObject *pyobject,
+                          const char *component);
+
+unsigned int convert_unsigned_long_into_enum_value(as_error *err,
+                                                   PyObject *py_long,
+                                                   unsigned int max_enum_value,
+                                                   const char *component);
+
+uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *pyobject,
+                                             const char *component);
+
+int16_t convert_long_into_int16_t(as_error *err, PyObject *pyobject,
+                                  const char *component);
+
+uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *pyobject,
+                                           const char *component);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(PyObject *py_obj);
