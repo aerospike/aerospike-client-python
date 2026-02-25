@@ -5,6 +5,7 @@ from aerospike_helpers.operations import list_operations, operations
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -317,7 +318,10 @@ class TestOperate(object):
         Invoke operate() with touch value with bin and value combination.
         """
 
-        self.as_connection.operate(key, llist)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter(action="always", category=DeprecationWarning)
+            self.as_connection.operate(key, llist)
+        assert len(w) == 2
 
         (key, meta) = self.as_connection.exists(key)
 

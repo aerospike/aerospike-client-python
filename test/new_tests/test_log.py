@@ -13,7 +13,7 @@ def custom_log_callback(level, func, path, line, msg):
     callback_called = True
 
 class TestLog(object):
-    @pytest.mark.fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def setup(self):
         global callback_called
         callback_called = False
