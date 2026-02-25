@@ -306,14 +306,22 @@ class TestQuery(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_with_correct_parameters_hi(self):
+    @pytest.mark.parametrize(
+        "extra_args",
+        [
+            # ctx
+            [],
+            [None]
+            # Empty context list raises an InvalidRequest exception
+        ]
+    )
+    def test_query_with_correct_parameters_hi(self, extra_args):
         """
         Invoke query() with correct arguments
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        # Here we explicitly test that ctx accepts None
-        query.where(p.equals("test_age", 1), None)
+        query.where(p.equals("test_age", 1), *extra_args)
 
         records = []
 

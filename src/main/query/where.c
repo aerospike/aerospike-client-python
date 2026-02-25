@@ -66,35 +66,16 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     memset(&static_pool, 0, sizeof(static_pool));
 
     as_cdt_ctx *pctx = NULL;
-    bool ctx_in_use = false;
-    // Used to pass ctx into get_cdt_ctx() helper
-    // Declared here to make cleanup logic simpler
-    PyObject *py_ctx_dict = NULL;
 
-    // Ctx is an optional parameter
-    if (py_ctx && !Py_IsNone(py_ctx)) {
-        // If user wanted to pass in an actual ctx
+    if (py_ctx) {
+        // TODO: does static pool go out of scope?
+        as_static_pool static_pool;
+        memset(&static_pool, 0, sizeof(static_pool));
 
-        // Glue code to pass into get_cdt_ctx()
-        py_ctx_dict = PyDict_New();
-        if (!py_ctx_dict) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
+        pctx = as_cdt_ctx_create_from_pyobject(self->client, &err, py_ctx,
+                                               &static_pool, SERIALIZER_PYTHON);
+        if (err.code != AEROSPIKE_OK) {
             goto error;
-        }
-        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-        if (retval == -1) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            CTX_PARSE_ERROR_MESSAGE);
-            goto CLEANUP_PY_CTX_DICT_ON_ERROR;
-        }
-
-        pctx = cf_malloc(sizeof(as_cdt_ctx));
-        memset(pctx, 0, sizeof(as_cdt_ctx));
-
-        if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
@@ -286,7 +267,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
-    if (ctx_in_use) {
+    if (pctx) {
         self->query.where.entries[0].ctx_free = true;
     }
     if (exp_list) {
@@ -313,15 +294,10 @@ CLEANUP_EXP_ON_ERROR:
 
 CLEANUP_AS_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
-    if (ctx_in_use) {
-        as_cdt_ctx_destroy(pctx);
-    }
     if (pctx) {
+        as_cdt_ctx_destroy(pctx);
         cf_free(pctx);
     }
-
-CLEANUP_PY_CTX_DICT_ON_ERROR:
-    Py_XDECREF(py_ctx_dict);
 
 error:
     return 1;

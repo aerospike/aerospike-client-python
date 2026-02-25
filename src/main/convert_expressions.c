@@ -1765,7 +1765,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     int processed_exp_count = 0;
     int size_to_alloc = 0;
-    bool ctx_in_use = false;
     PyObject *py_expr_tuple = NULL;
     PyObject *py_list_policy_p = NULL;
     PyObject *py_map_policy_p = NULL;
@@ -1786,7 +1785,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     for (int i = 0; i < size; ++i) {
         memset(&temp_expr, 0, sizeof(intermediate_expr));
-        ctx_in_use = false;
         // Reset flag for next temp expr being built
         is_ctx_initialized = false;
 
@@ -1833,20 +1831,12 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         //TODO Could it be moved somewhere else?
         py_ctx_list_p = PyDict_GetItemString(temp_expr.pydict, CTX_KEY);
         if (py_ctx_list_p != NULL) {
-            temp_expr.ctx = malloc(sizeof(as_cdt_ctx));
-            if (temp_expr.ctx == NULL) {
-                as_error_update(err, AEROSPIKE_ERR,
-                                "Could not malloc mem for temp_expr.ctx.");
-                goto CLEANUP;
-            }
-
-            if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
-                            &ctx_in_use, &static_pool,
-                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            temp_expr.ctx = as_cdt_ctx_create_from_pyobject(
+                self, err, py_ctx_list_p, &static_pool, SERIALIZER_PYTHON);
+            if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
-        is_ctx_initialized = true;
 
         py_list_policy_p =
             PyDict_GetItemString(temp_expr.pydict, AS_PY_LIST_POLICY);

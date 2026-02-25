@@ -107,8 +107,9 @@ static inline bool isExprOp(int op);
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
-    if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
-                    static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
+    ctx_ref = get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(           \
+        self, err, &ctx, py_operation_dict, static_pool, SERIALIZER_PYTHON);   \
+    if (err->code != AEROSPIKE_OK) {                                           \
         return err->code;                                                      \
     }
 
@@ -319,7 +320,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
     as_val *put_range = NULL;
     as_cdt_ctx ctx;
     as_cdt_ctx *ctx_ref = NULL;
-    bool ctx_in_use = false;
     char *bin = NULL;
     char *val = NULL;
     long offset = 0;
@@ -421,7 +421,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
             }
             else if (strcmp(name, "ctx") == 0) {
                 CONVERT_PY_CTX_TO_AS_CTX();
-                ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else if (strcmp(name, "map_order") == 0) {
                 py_map_order = value;
@@ -879,7 +878,7 @@ CLEANUP:
     if (mod_exp) {
         as_exp_destroy(mod_exp);
     }
-    if (ctx_in_use) {
+    if (ctx_ref) {
         as_cdt_ctx_destroy(&ctx);
     }
 

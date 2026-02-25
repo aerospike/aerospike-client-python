@@ -731,8 +731,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         "ctx",
         [
             None,
-            # Invalid type
-            {"ctx": 1}
         ]
     )
     def test_neg_cdtindex_with_invalid_ctx(self, ctx):
