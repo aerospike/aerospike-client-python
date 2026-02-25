@@ -107,7 +107,7 @@ jobs:
       jf-metadata-build-id: ${{ github.run_number }}-metadata
       gh-workflows-ref: CLIENT-3467-add-support-for-pypi-type-repos-in-jfrog
       version: ${{ needs.run-dev-tests.outputs.build-version }}
-      dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
+      dry-run: ${{ inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
@@ -124,7 +124,7 @@ jobs:
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
       gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
-      dry-run: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
+      dry-run: ${{ inputs.dry-run }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
@@ -133,7 +133,7 @@ jobs:
       create-jfrog-release-bundle,
       run-dev-tests
     ]
-    if: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
+    if: ${{ inputs.dry-run }}
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
