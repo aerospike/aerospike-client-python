@@ -172,7 +172,7 @@ class TestTruncate(object):
 
 
         assert err_info.value.code == -2
-        assert err_info.value.msg == "integer value for truncate exceeds UINT64_MAX"
+        assert err_info.value.msg == "integer value for truncate must be between 0 and UINT8_MAX"
 
     def test_nanos_argument_between_int64_and_uint64(self):
         # This may stop raising a client error in 2264

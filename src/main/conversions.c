@@ -2765,9 +2765,10 @@ uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
     PyLong_AsUInt64(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds UINT64_MAX",
-                            component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between 0 and UINT64_MAX",
+                component);
         }
         else {
             as_error_update(
@@ -2776,12 +2777,6 @@ uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
         }
         return 0;
     }
-    if (long_value > (unsigned long long)UINT64_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds UINT64_MAX", component);
-        return 0;
-    }
-
     return (uint64_t)long_value;
 }
 
@@ -2814,9 +2809,10 @@ uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
     PyLong_AsUInt32(py_long, &long_value);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds UINT32_MAX",
-                            component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between 0 and UINT32_MAX",
+                component);
         }
         else {
             as_error_update(
@@ -2856,9 +2852,10 @@ uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds UINT16_MAX",
-                            component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between 0 and UINT16_MAX",
+                component);
         }
         else {
             as_error_update(
@@ -2912,9 +2909,10 @@ uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *py_long,
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds UINT8_MAX",
-                            component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between 0 and UINT8_MAX",
+                component);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2925,7 +2923,8 @@ uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *py_long,
     }
     if (long_value > (unsigned long)UINT8_MAX) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "integer value for %s exceeds UINT8_MAX", component);
+                        "integer value for %s must be between 0 and UINT8_MAX",
+                        component);
         return 0;
     }
     return (uint8_t)long_value;
@@ -2962,8 +2961,10 @@ unsigned int convert_unsigned_long_into_enum_value(as_error *err,
 
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "integer value for %s exceeds LONG_MAX", component);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "integer value for %s must be between LONG_MIN and LONG_MAX",
+                component);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
