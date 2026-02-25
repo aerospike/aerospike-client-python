@@ -306,7 +306,7 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
       # libasan during the test run
-      run: python -m pytest ./new_tests -vvs
+      run: python -m pytest ./new_tests -vvs -W error
       working-directory: test
 
   test-ce:
@@ -369,7 +369,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python -m pytest ./new_tests -vv
       working-directory: test
 
   test-ee:
