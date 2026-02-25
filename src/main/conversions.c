@@ -2671,7 +2671,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s must be an integer.", py_object_name);
     }
 
-    int int_to_return = PyLong_AsLong(py_long);
+    long int_to_return = PyLong_AsLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2687,7 +2687,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s too large for C int.", py_object_name);
     }
 
-    *int_pointer = int_to_return;
+    *int_pointer = (int)int_to_return;
 
     return AEROSPIKE_OK;
 }

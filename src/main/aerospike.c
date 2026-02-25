@@ -104,28 +104,19 @@ struct module_constant_name_to_value {
 
 #define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
     macro_name_without_prefix)                                                 \
-    {                                                                          \
-        #macro_name_without_prefix,                                            \
-            .value.integer = AS_##macro_name_without_prefix                    \
-    }
+    {#macro_name_without_prefix,                                               \
+     .value.integer = AS_##macro_name_without_prefix}
 
 #define STRINGIFY(X) #X
 
 #define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
-    {                                                                          \
-        STRINGIFY(_##macro_name_without_prefix),                               \
-            .value.integer = macro_name_without_prefix                         \
-    }
+    {STRINGIFY(_##macro_name_without_prefix),                                  \
+     .value.integer = macro_name_without_prefix}
 
-#define EXPOSE_MACRO(macro_name)                                               \
-    {                                                                          \
-        #macro_name, .value.integer = macro_name                               \
-    }
+#define EXPOSE_MACRO(macro_name) {#macro_name, .value.integer = macro_name}
 
 #define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
-    {                                                                          \
-        #macro_name, .is_str_value = true, .value.string = macro_name          \
-    }
+    {#macro_name, .is_str_value = true, .value.string = macro_name}
 
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
@@ -525,7 +516,7 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_QUERY_DURATION_LONG_RELAX_AP},
     {"QUERY_DURATION_SHORT", .value.integer = AS_QUERY_DURATION_SHORT},
 
-    {"LOG_LEVEL_OFF", .value.integer = -1},
+    {"LOG_LEVEL_OFF", .value.integer = LOG_LEVEL_OFF},
     {"LOG_LEVEL_ERROR", .value.integer = AS_LOG_LEVEL_ERROR},
     {"LOG_LEVEL_WARN", .value.integer = AS_LOG_LEVEL_WARN},
     {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
@@ -800,10 +791,7 @@ struct py_set_name_to_str_list {
     const char **valid_keys;
 };
 
-#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
-    {                                                                          \
-        &py_##array_name, array_name                                           \
-    }
+#define PY_SET_NAME_TO_STR_LIST(array_name) {&py_##array_name, array_name}
 
 static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),
