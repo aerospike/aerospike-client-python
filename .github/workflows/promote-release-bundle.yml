@@ -10,6 +10,9 @@ on:
       new-environment:
         type: string
         required: true
+      jfrog-repo-name:
+        type: string
+        required: true
 
 jobs:
   promote-release-bundle-to-dev:
@@ -19,9 +22,9 @@ jobs:
       uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://artifact.aerospike.io
-        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        JF_PROJECT: ${{ vars.JFROG_PYPI_REPO_FOR_CLIENT_TEAM }}
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - run: jf rbp --signing-key=aerospike --include-repos ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-generic-dev-local ${{ inputs.release-bundle-name }} ${{ inputs.release-bundle-version }} ${{ inputs.new-environment }}
+    - run: jf rbp --signing-key=aerospike --include-repos ${{ inputs.jfrog-repo-name }} ${{ inputs.release-bundle-name }} ${{ inputs.release-bundle-version }} ${{ inputs.new-environment }}
