@@ -140,4 +140,5 @@ jobs:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
       new-environment: DEV
+      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jfrog-repo-name: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-pypi-dev-local

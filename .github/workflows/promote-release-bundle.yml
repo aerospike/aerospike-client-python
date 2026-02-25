@@ -10,6 +10,9 @@ on:
       new-environment:
         type: string
         required: true
+      jfrog-project:
+        type: string
+        required: true
       jfrog-repo-name:
         type: string
         required: true
@@ -22,7 +25,7 @@ jobs:
       uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://artifact.aerospike.io
-        JF_PROJECT: ${{ vars.JFROG_PYPI_REPO_FOR_CLIENT_TEAM }}
+        JF_PROJECT: ${{ inputs.jfrog-project }}
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
