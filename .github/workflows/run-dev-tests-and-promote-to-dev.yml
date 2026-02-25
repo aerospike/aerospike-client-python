@@ -133,6 +133,7 @@ jobs:
       create-jfrog-release-bundle,
       run-dev-tests
     ]
+    if: ${{ github.event_name == 'push' && endsWith(github.ref, '-test') || inputs.dry-run }}
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
