@@ -104,28 +104,19 @@ struct module_constant_name_to_value {
 
 #define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
     macro_name_without_prefix)                                                 \
-    {                                                                          \
-        #macro_name_without_prefix,                                            \
-            .value.integer = AS_##macro_name_without_prefix                    \
-    }
+    {#macro_name_without_prefix,                                               \
+     .value.integer = AS_##macro_name_without_prefix}
 
 #define STRINGIFY(X) #X
 
 #define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
-    {                                                                          \
-        STRINGIFY(_##macro_name_without_prefix),                               \
-            .value.integer = macro_name_without_prefix                         \
-    }
+    {STRINGIFY(_##macro_name_without_prefix),                                  \
+     .value.integer = macro_name_without_prefix}
 
-#define EXPOSE_MACRO(macro_name)                                               \
-    {                                                                          \
-        #macro_name, .value.integer = macro_name                               \
-    }
+#define EXPOSE_MACRO(macro_name) {#macro_name, .value.integer = macro_name}
 
 #define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
-    {                                                                          \
-        #macro_name, .is_str_value = true, .value.string = macro_name          \
-    }
+    {#macro_name, .is_str_value = true, .value.string = macro_name}
 
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
@@ -802,10 +793,7 @@ struct py_set_name_to_str_list {
     const char **valid_keys;
 };
 
-#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
-    {                                                                          \
-        &py_##array_name, array_name                                           \
-    }
+#define PY_SET_NAME_TO_STR_LIST(array_name) {&py_##array_name, array_name}
 
 static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),
