@@ -7,6 +7,7 @@ from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
 
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -53,6 +54,7 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
+@pytest.mark.filterwarnings("ignore:as_connection")
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
