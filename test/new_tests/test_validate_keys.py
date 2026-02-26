@@ -120,7 +120,7 @@ class TestValidateKeys:
         else:
             context = nullcontext()
 
-        meta = {"ttl": 30, INVALID_METADATA_KEY: 1}
+        meta = {INVALID_METADATA_KEY: 1}
         with context as excinfo:
             self.as_connection.put(key=KEY, bins={"a": 1}, meta=meta)
 

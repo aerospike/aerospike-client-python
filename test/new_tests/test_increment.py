@@ -149,11 +149,12 @@ class TestIncrement(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.increment(key, "age", 5, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -175,11 +176,12 @@ class TestIncrement(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
 
         #  Since the generations are not equal, this should raise an error
         #  And not increment.
@@ -203,11 +205,12 @@ class TestIncrement(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         #  since gen is equal to the server version, this should raise an error
         with pytest.raises(e.RecordGenerationError) as err_info:
             self.as_connection.increment(key, "age", 5, meta, policy)
@@ -229,11 +232,12 @@ class TestIncrement(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         self.as_connection.increment(key, "age", 5, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)

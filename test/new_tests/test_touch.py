@@ -102,9 +102,10 @@ class TestTouch(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.touch(key, 120, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -121,11 +122,12 @@ class TestTouch(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.touch(key, 120, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -142,8 +144,9 @@ class TestTouch(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
 
         with pytest.raises(e.RecordGenerationError) as err_info:
             self.as_connection.touch(key, 120, meta, policy)
@@ -165,11 +168,12 @@ class TestTouch(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         with pytest.raises(e.RecordGenerationError) as err_info:
             self.as_connection.touch(key, 120, meta, policy)
 
@@ -190,11 +194,12 @@ class TestTouch(object):
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         self.as_connection.touch(key, 120, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -278,9 +283,9 @@ class TestTouch(object):
         Invoke touch() with ttl value greater than (2^63-1)
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 10, "ttl": 2**64}
+        meta = {"gen": 10}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.touch(key, 120, meta, None)
+            self.as_connection.touch(key, 120, meta, {"ttl": 2**64})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM

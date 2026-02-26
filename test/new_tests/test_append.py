@@ -136,12 +136,13 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
 
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.append(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)

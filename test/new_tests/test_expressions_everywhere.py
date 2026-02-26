@@ -417,7 +417,7 @@ class TestPredEveryWhere(object):
 
         for i in range(5):
             key = "test", "pred_ttl", i
-            self.as_connection.put(key, {"time": "earlier"}, meta={"ttl": 100})
+            self.as_connection.put(key, {"time": "earlier"}, policy={"ttl": 100})
 
         # 150 second range for record TTLs should be enough, we are storing with
         # Current time + 100s and current time +5000s, so only one of the group should be found
@@ -426,7 +426,7 @@ class TestPredEveryWhere(object):
 
         for i in range(5, 10):
             key = "test", "pred_ttl", i
-            self.as_connection.put(key, {"time": "later"}, meta={"ttl": 1000})
+            self.as_connection.put(key, {"time": "later"}, policy={"ttl": 1000})
 
         results = []
 

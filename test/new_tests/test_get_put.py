@@ -271,12 +271,13 @@ class TestGetPut:
         assert rec == bins
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -291,12 +292,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -312,12 +314,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -327,12 +330,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 

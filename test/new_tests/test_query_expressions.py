@@ -328,7 +328,7 @@ class TestQueryExpressions(object):
         """
         for i in range(7):
             key = "test", "ttl", i
-            self.as_connection.put(key, {"time": "earlier"}, meta={"ttl": 100})
+            self.as_connection.put(key, {"time": "earlier"}, policy={"ttl": 100})
 
         # 150 second range for record TTLs should be enough, we are storing with
         # Current time + 100s and current time +5000s, so only one of the group should be found
@@ -338,7 +338,7 @@ class TestQueryExpressions(object):
         # Store 5 records after the cutoff
         for i in range(7, 12):
             key = "test", "ttl", i
-            self.as_connection.put(key, {"time": "later"}, meta={"ttl": 1000})
+            self.as_connection.put(key, {"time": "later"}, policy={"ttl": 1000})
 
         query = self.as_connection.query("test", "ttl")
 

@@ -383,7 +383,6 @@ class TestConfigTTL:
             {"meta": {"ttl": aerospike.TTL_CLIENT_DEFAULT, "gen": 10}},
             {"policy": None},
             {"policy": {}},
-            {"policy": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
         ]
     )
 
@@ -448,8 +447,8 @@ class TestConfigTTL:
         "kwargs",
         [
             {},
-            {"ttl": {"ttl": None}},
-            {"ttl": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
+            {"ttl": None},
+            {"ttl": aerospike.TTL_CLIENT_DEFAULT}
         ],
     )
     @pytest.mark.parametrize("policy_name", ["batch"])
@@ -470,7 +469,6 @@ class TestConfigTTL:
         [
             {},
             {"policy": {"ttl": None}},
-            {"policy": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
         ],
     )
     @pytest.mark.parametrize("api_method, kwargs, policy_name", [
@@ -515,7 +513,7 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
         # Setup
-        self.client.put(KEY, {"bin": "a"}, meta={"ttl": 90})
+        self.client.put(KEY, {"bin": "a"}, policy={"ttl": 90})
 
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")

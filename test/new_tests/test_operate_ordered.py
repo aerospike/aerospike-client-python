@@ -233,10 +233,10 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen GT positive.
         """
         key = ("test", "demo", 1)
-        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT, "ttl": 1200}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
 
         llist = [
             {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
@@ -596,11 +596,11 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen not equal.
         """
         key = ("test", "demo", 1)
-        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ, "ttl": 1200}
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         llist = [
             {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
@@ -626,10 +626,10 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen GT lesser.
         """
         key = ("test", "demo", 1)
-        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT, "ttl": 1200}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
 
         llist = [
             {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},

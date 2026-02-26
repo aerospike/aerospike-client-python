@@ -280,8 +280,9 @@ class TestOperate(object):
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1200
                 },
-                {"gen": 10, "ttl": 1200},
+                {"gen": 10},
                 [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
             ),
         ],
@@ -380,11 +381,11 @@ class TestOperate(object):
         Invoke operate() OPERATE_TOUCH using meta to pass in ttl.
         """
         key = ("test", "demo", 1)
-        meta = {"ttl": 1200}
+        policy = {"ttl": 1200}
 
         llist = [operations.touch()]
 
-        self.as_connection.operate(key, llist, meta)
+        self.as_connection.operate(key, llist, policy=policy)
 
         _, meta = self.as_connection.exists(key)
 

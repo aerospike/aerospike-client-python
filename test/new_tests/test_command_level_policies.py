@@ -59,7 +59,7 @@ class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
         ttl = 2
-        self.as_connection.put(KEY, bins={"a": 1}, meta={"ttl": ttl})
+        self.as_connection.put(KEY, bins={"a": 1}, policy={"ttl": ttl})
         self.policy = {
             "read_touch_ttl_percent": 50
         }
