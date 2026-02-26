@@ -352,7 +352,7 @@ class TestConfigTTL:
             "ttl": self.NEW_TTL
         }
         self.client = aerospike.client(config)
-        self.client.put(KEY, {"a": "a", "b": "b"})
+        self.client.put(KEY, {"a": "a", "b": "b", "c": 1})
 
         if "apply" in policy_name:
             self.client.udf_put("test_record_udf.lua")
@@ -375,55 +375,67 @@ class TestConfigTTL:
 
         self.client.close()
 
-    @pytest.mark.parametrize("policy_name", ["write"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
-        ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
-    )
-    @pytest.mark.parametrize("api_method, kwargs", [
-        (aerospike.Client.put, {"key": KEY, "bins": {"a": 1}}),
-        (aerospike.Client.remove_bin, {"key": KEY, "list": ["a"]}),
-    ])
-    def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
-        api_method(self.client, **kwargs, meta=meta)
-        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
-
-    @pytest.mark.parametrize("policy_name", ["operate"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
-        ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
-    )
-    def test_setting_operate_ttl(self, config_ttl_setup, meta):
-        ops = [
-            operations.write("a", 1)
+    ttl_param = pytest.mark.parametrize(
+        "kwargs_with_ttl",
+        [
+            {"meta": None},
+            {"meta": {"gen": 10}},
+            {"meta": {"ttl": aerospike.TTL_CLIENT_DEFAULT, "gen": 10}},
+            {"policy": None},
+            {"policy": {}},
+            {"policy": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
         ]
-        self.client.operate(KEY, ops, meta=meta)
-        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
-
-    @pytest.mark.parametrize("policy_name", ["apply"])
-    def test_setting_apply_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
-        # Call without setting the ttl in the command's apply policy
-        # Args: bin name, str
-        self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
-
-    @pytest.mark.parametrize("policy_name", ["batch_write"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}],
-        ids=["no metadata", "metadata with special ttl value"]
     )
-    def test_setting_batch_write_ttl_with_batch_write(self, config_ttl_setup, meta):
+
+    @ttl_param
+    @pytest.mark.parametrize("api_method, kwargs, policy_name", [
+        (
+            aerospike.Client.put,
+            {"key": KEY, "bins": {"a": 1}},
+            "write"
+        ),
+        (
+            aerospike.Client.remove_bin,
+            {"key": KEY, "list": ["a"]},
+            "write"
+        ),
+        (
+            aerospike.Client.operate,
+            {"key": KEY, "list": [operations.write("a", 1)]}, "operate"
+        ),
+        (
+            aerospike.Client.operate_ordered,
+            {"key": KEY, "list": [operations.write("a", 1)]}, "operate"
+        ),
+        (
+            aerospike.Client.increment,
+            {"key": KEY, "bin": "c", "offset": 1},
+            "operate"
+        ),
+        (
+            aerospike.Client.prepend,
+            {"key": KEY, "bin": "a", "val": "a"},
+            "operate"
+        ),
+        (
+            aerospike.Client.touch,
+            {"key": KEY},
+            "operate"
+        ),
+    ])
+    def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
+        kwargs |= kwargs_with_ttl
+        api_method(self.client, **kwargs)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    @ttl_param
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
+    def test_batch_write(self, config_ttl_setup, kwargs_with_ttl):
         ops = [
             operations.write("bin", 1)
         ]
         batch_records = BatchRecords([
-            Write(KEY, ops=ops, meta=meta)
+            Write(KEY, ops=ops, **kwargs_with_ttl)
         ])
         brs = self.client.batch_write(batch_records)
         # assert brs.result == 0
@@ -432,33 +444,54 @@ class TestConfigTTL:
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
-        "ttl",
-        [None, aerospike.TTL_CLIENT_DEFAULT],
+        "kwargs",
+        [
+            {},
+            {"ttl": {"ttl": None}},
+            {"ttl": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
+        ],
     )
-    def test_setting_batch_write_ttl_with_batch_operate(self, config_ttl_setup, ttl):
+    @pytest.mark.parametrize("policy_name", ["batch"])
+    def test_apis_with_ttl_parameter(self, config_ttl_setup, kwargs):
         ops = [
             operations.write("bin", 1)
         ]
         keys = [KEY]
-        brs = self.client.batch_operate(keys, ops, ttl=ttl)
+        brs = self.client.batch_operate(keys, ops, **kwargs)
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    @pytest.mark.parametrize("policy_name", ["batch_apply"])
-    def test_setting_batch_apply_ttl(self, config_ttl_setup):
+    @pytest.mark.parametrize(
+        "kwargs_with_ttl",
+        [
+            {},
+            {"policy": {"ttl": None}},
+            {"policy": {"ttl": aerospike.TTL_CLIENT_DEFAULT}}
+        ],
+    )
+    @pytest.mark.parametrize("api_method, kwargs, policy_name", [
+        (
+            aerospike.Client.apply,
+            {"key": KEY},
+            "apply"
+        ),
+        (
+            aerospike.Client.batch_apply,
+            {"keys": [KEY]},
+            "batch_apply"
+        ),
+    ])
+    def test_apis_with_policy_parameter(self, config_ttl_setup, api_method, kwargs, kwargs_with_ttl):
         # Setup
         self.client.put(KEY, {"bin": "a"})
 
-        # Call without setting the ttl in batch_apply()'s batch apply policy
-        keys = [
-            KEY
-        ]
-        self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
+        kwargs |= {"module": "test_record_udf", "function": "bin_udf_operation_string", "args": ["bin", "a"]}
+        kwargs |= kwargs_with_ttl
+        api_method(self.client, **kwargs)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
