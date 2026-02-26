@@ -916,6 +916,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 
     // For expressions conversion.
     as_exp *exp_list_p = NULL;
+
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_operations ops;
