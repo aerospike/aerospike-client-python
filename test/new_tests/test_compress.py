@@ -122,5 +122,9 @@ class TestCompress:
         """
         Invoke execute_background() for a scan with compression enabled.
         """
+
+        ops = [operations.touch()]
+
         scan_obj = self.as_connection.scan("test", "demo")
-        scan_obj.execute_background({"compress": True, "ttl": aerospike.TTL_NAMESPACE_DEFAULT})
+        scan_obj.add_ops(ops)
+        scan_obj.execute_background({"compress": True})
