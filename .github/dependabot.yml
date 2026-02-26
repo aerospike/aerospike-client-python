@@ -15,3 +15,28 @@ updates:
     schedule:
       interval: "daily"
     target-branch: "dev"
+
+  - package-ecosystem: pip
+    directory: /.github/workflows
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /doc
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /test
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /test/standalone
+    schedule:
+      interval: daily
