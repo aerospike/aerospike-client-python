@@ -201,7 +201,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: coverage-report
         path: ./coverage-report
@@ -232,7 +232,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -275,7 +275,7 @@ jobs:
     - if: ${{ matrix.type != 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
@@ -341,7 +341,7 @@ jobs:
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
@@ -390,7 +390,7 @@ jobs:
         python-version: "3.13"
         architecture: 'x64'
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: wheel-3.13
 
@@ -439,7 +439,7 @@ jobs:
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
@@ -470,7 +470,7 @@ jobs:
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
