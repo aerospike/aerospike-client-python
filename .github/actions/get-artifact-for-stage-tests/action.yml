@@ -70,7 +70,7 @@ runs:
   # End codepath that downloads artifacts from Github
   # Begin codepath that downloads from JFrog
 
-  - uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+  - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
     if: ${{ inputs.get_from_jfrog == 'true' }}
     env:
       JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
