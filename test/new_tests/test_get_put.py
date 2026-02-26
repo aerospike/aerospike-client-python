@@ -463,12 +463,12 @@ class TestGetPut:
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": True, "ttl": aerospike.TTL_NAMESPACE_DEFAULT},
+                {"gen": True}, {"ttl": aerospike.TTL_NAMESPACE_DEFAULT}
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": True, "ttl": aerospike.TTL_NEVER_EXPIRE},
+                {"gen": True}, {"ttl": aerospike.TTL_NEVER_EXPIRE}
             ),
         ],
     )
