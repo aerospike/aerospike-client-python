@@ -425,10 +425,11 @@ class TestConfigTTL:
             api_method(self.client, **kwargs)
         except e.ClientError as exc:
             # ClientError can be raised if the user runs Python with warnings treated as errors.
-            assert exc.msg != "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     def test_batch_write(self, config_ttl_setup, kwargs_with_ttl):
@@ -438,7 +439,11 @@ class TestConfigTTL:
         batch_records = BatchRecords([
             Write(KEY, ops=ops, **kwargs_with_ttl)
         ])
-        brs = self.client.batch_write(batch_records)
+        try:
+            brs = self.client.batch_write(batch_records)
+        except e.ClientError as exc:
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
+
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
