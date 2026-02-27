@@ -17,7 +17,7 @@ class CommandLevelTTL:
     NEW_TTL = 3000
     POLICY = {"ttl": NEW_TTL}
 
-    pytestmark = pytest.mark.parametrize(
+    meta_and_policy_params = pytest.mark.parametrize(
         "kwargs_with_ttl",
         [
             {"meta": POLICY},
@@ -25,10 +25,12 @@ class CommandLevelTTL:
         ]
     )
 
+    @meta_and_policy_params
     def test_write_policy(self, kwargs_with_ttl):
         self.as_connection.put(KEY, bins={"a": 1}, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
+    @meta_and_policy_params
     def test_operate_policy(self, kwargs_with_ttl):
         ops = [
             operations.write(bin_name="a", write_item=1)
