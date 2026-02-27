@@ -10,7 +10,17 @@ from aerospike import exception as e
 
 @pytest.mark.usefixtures("as_connection")
 class TestRemove:
-    def test_pos_remove_with_existing_record(self):
+    @pytest.fixture
+    def setup_for_pos_tests(self):
+        key = ("test", "demo", 1)
+        bins = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        self.as_connection.put(key, bins=bins)
+
+        yield
+
+        self.as_connection.remove(key)
+
+    def test_pos_remove_with_existing_record(self, setup_for_pos_tests):
         """
         Invoke remove() when records are present
         """
@@ -26,7 +36,7 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-    def test_pos_remove_with_policy(self):
+    def test_pos_remove_with_policy(self, setup_for_pos_tests):
         """
         Invoke remove() with policy
         """
@@ -45,11 +55,7 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-        key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
-        self.as_connection.put(key, rec)
-
-    def test_pos_remove_with_policy_all(self):
+    def test_pos_remove_with_policy_all(self, setup_for_pos_tests):
         """
         Invoke remove() with policy
         """
@@ -71,10 +77,6 @@ class TestRemove:
         (code, msg, _, _) = exception.value
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
-
-        key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
-        self.as_connection.put(key, rec)
 
     def test_pos_remove_with_policy_key_digest(self):
         """
@@ -99,7 +101,7 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-    def test_pos_remove_with_policy_gen_ignore(self):
+    def test_pos_remove_with_policy_gen_ignore(self, setup_for_pos_tests):
         """
         Invoke remove() with policy gen ignore
         """
@@ -122,11 +124,7 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-        key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
-        self.as_connection.put(key, rec)
-
-    def test_pos_remove_with_policy_gen_eq_positive(self):
+    def test_pos_remove_with_policy_gen_eq_positive(self, setup_for_pos_tests):
         """
         Invoke remove() with policy gen positive
         """
@@ -150,11 +148,7 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-        key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
-        self.as_connection.put(key, rec)
-
-    def test_pos_remove_with_policy_gen_GT_positive(self):
+    def test_pos_remove_with_policy_gen_GT_positive(self, setup_for_pos_tests):
         """
         Invoke remove() with policy gen GT positive
         """
@@ -178,10 +172,6 @@ class TestRemove:
         (code, msg, _, _) = exception.value
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
-
-        key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
-        self.as_connection.put(key, rec)
 
     # Negative Tests
     def test_neg_remove_with_policy_gen_eq_not_equal(self, put_data):
