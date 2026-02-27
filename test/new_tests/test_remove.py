@@ -49,8 +49,7 @@ class TestRemove:
         key = ("test", "demo", 1)
 
         if "meta" in kwargs:
-            cm = warnings.catch_warnings(record=True)
-            warnings.simplefilter(action="always", category=DeprecationWarning)
+            cm = pytest.warns(DeprecationWarning)
         else:
             cm = nullcontext()
 

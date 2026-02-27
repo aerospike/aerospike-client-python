@@ -321,12 +321,10 @@ class TestOperate(object):
         Invoke operate() with touch value with bin and value combination.
         """
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=DeprecationWarning)
+        with pytest.warns(DeprecationWarning):
             ops = [
                 operations.touch(4000)
             ]
-        assert len(w) == 1
         self.as_connection.operate(key, ops)
 
         (key, meta) = self.as_connection.exists(key)
