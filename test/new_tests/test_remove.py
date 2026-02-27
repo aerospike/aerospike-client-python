@@ -179,10 +179,10 @@ class TestRemove:
         }
 
         (key, meta) = self.as_connection.exists(key)
-        gen = meta["gen"] + 5  # Increment Generation by 5
+        policy["generation"] = meta["gen"] + 5  # Increment Generation by 5
 
         with pytest.raises(e.RecordGenerationError) as exception:
-            self.as_connection.remove(key, {"gen": gen}, policy)
+            self.as_connection.remove(key, None, policy)
             (code, msg, _, _, _) = exception.value.args
             assert code == 3
 
@@ -200,10 +200,10 @@ class TestRemove:
         }
 
         (key, meta) = self.as_connection.exists(key)
-        lesserGen = meta["gen"] - 1
+        policy["generation"] = meta["gen"] - 1
 
         with pytest.raises(e.RecordGenerationError) as exception:
-            self.as_connection.remove(key, ("gen", lesserGen), policy)
+            self.as_connection.remove(key, None, policy)
             (code, msg, _, _, _) = exception.value.args
             assert code == 3
 
@@ -218,9 +218,8 @@ class TestRemove:
         Invoke remove() with policy as string
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
         with pytest.raises(e.ParamError) as exception:
-            self.as_connection.remove(key, meta, "String_policy")
+            self.as_connection.remove(key, None, "String_policy")
             (code, msg, _, _, _) = exception.value.args
             assert code == -2
 
