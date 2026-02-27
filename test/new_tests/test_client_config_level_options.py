@@ -387,6 +387,8 @@ class TestConfigTTL:
         ]
     )
 
+    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # cause ClientError to be raised. It's too complicated to check both cases
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("api_method, kwargs, policy_name", [
@@ -434,6 +436,8 @@ class TestConfigTTL:
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
+    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # cause ClientError to be raised. It's too complicated to check both cases
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("policy_name", ["batch_write"])
