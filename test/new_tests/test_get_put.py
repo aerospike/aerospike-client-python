@@ -782,7 +782,7 @@ class TestGetPut:
             (
                 ("test", "demo", 1),
                 {"name": "john"},  # Policy as string
-                {"gen": 3, "ttl": 25000},
+                {"gen": 3},
                 "Policy",
                 -2,
                 "policy must be a dict",
