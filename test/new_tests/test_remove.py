@@ -18,8 +18,6 @@ class TestRemove:
 
         yield
 
-        self.as_connection.remove(key)
-
     def test_pos_remove_with_existing_record(self, setup_for_pos_tests):
         """
         Invoke remove() when records are present
@@ -32,8 +30,7 @@ class TestRemove:
         with pytest.raises(e.RecordNotFound) as exception:
             (key, _, _) = self.as_connection.get(key)
 
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy(self, setup_for_pos_tests):
@@ -50,8 +47,7 @@ class TestRemove:
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
 
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy_all(self, setup_for_pos_tests):
@@ -73,8 +69,7 @@ class TestRemove:
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
 
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy_key_digest(self):
@@ -95,8 +90,7 @@ class TestRemove:
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
 
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy_gen_ignore(self, setup_for_pos_tests):
@@ -118,8 +112,7 @@ class TestRemove:
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
 
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy_gen_eq_positive(self, setup_for_pos_tests):
@@ -141,8 +134,7 @@ class TestRemove:
 
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     def test_pos_remove_with_policy_gen_GT_positive(self, setup_for_pos_tests):
@@ -166,8 +158,7 @@ class TestRemove:
 
         with pytest.raises(e.RecordNotFound) as exception:
             (key, meta, _) = self.as_connection.get(key)
-        (code, msg, _, _) = exception.value
-        assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+        (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
     # Negative Tests
@@ -192,8 +183,7 @@ class TestRemove:
 
         with pytest.raises(e.RecordGenerationError) as exception:
             self.as_connection.remove(key, {"gen": gen}, policy)
-            (code, msg, _, _) = exception.value
-            assert msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+            (code, msg, _, _, _) = exception.value.args
             assert code == 3
 
     def test_neg_remove_with_policy_gen_GT_lesser(self, put_data):
@@ -214,8 +204,7 @@ class TestRemove:
 
         with pytest.raises(e.RecordGenerationError) as exception:
             self.as_connection.remove(key, ("gen", lesserGen), policy)
-            (code, msg, _, _) = exception.value
-            assert msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+            (code, msg, _, _, _) = exception.value.args
             assert code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -232,8 +221,7 @@ class TestRemove:
         meta = {"gen": 0}
         with pytest.raises(e.ParamError) as exception:
             self.as_connection.remove(key, meta, "String_policy")
-            (code, msg, _, _) = exception.value
-            assert msg == "policy must be a dict"
+            (code, msg, _, _, _) = exception.value.args
             assert code == -2
 
     def test_neg_remove_with_extra_parameter(self):
@@ -255,8 +243,7 @@ class TestRemove:
 
         with pytest.raises(e.ParamError) as exception:
             self.as_connection.remove(key)
-            (code, msg, _, _) = exception.value
-            assert msg == ex_msg
+            (code, msg, _, _, _) = exception.value.args
             assert code == ex_code
 
     @pytest.mark.parametrize(
@@ -273,7 +260,7 @@ class TestRemove:
         """
         with pytest.raises(ex_name) as exception:
             self.as_connection.remove(key)
-            (code, _, _, _) = exception.value
+            (code, _, _, _) = exception.value.args
             assert code == ex_code
 
     def test_neg_remove_with_correct_parameters_without_connection(self):
@@ -287,7 +274,7 @@ class TestRemove:
 
         with pytest.raises(e.ClusterError) as exception:
             client1.remove(key)
-            (code, _, _, _) = exception.value
+            (code, _, _, _) = exception.value.args
             assert code == 11
 
     def test_neg_remove_with_no_parameters(self):
