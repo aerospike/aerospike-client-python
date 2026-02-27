@@ -41,10 +41,9 @@ class TestRemove:
         Invoke remove() with policy
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
-        policy = {"total_timeout": 180000}
+        policy = {"total_timeout": 180000, "generation": 0}
 
-        retobj = self.as_connection.remove(key, meta, policy)
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
@@ -60,14 +59,14 @@ class TestRemove:
         Invoke remove() with policy
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
         policy = {
             "total_timeout": 180000,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "generation": 0
         }
-        retobj = self.as_connection.remove(key, meta, policy)
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
@@ -84,13 +83,12 @@ class TestRemove:
         """
 
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
-        meta = {"gen": 0}
-        policy = {"max_retries": 1, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"max_retries": 1, "key": aerospike.POLICY_KEY_DIGEST, "generation": 0}
         retobj = self.as_connection.put(key, policy)
 
         assert retobj == 0
 
-        retobj = self.as_connection.remove(key, meta, policy)
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
@@ -106,14 +104,14 @@ class TestRemove:
         Invoke remove() with policy gen ignore
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
         policy = {
             "max_retries": 1,
+            "generation": 0,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
-        retobj = self.as_connection.remove(key, meta, policy)
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
@@ -136,9 +134,8 @@ class TestRemove:
         }
 
         (key, meta) = self.as_connection.exists(key)
-        gen = meta["gen"]
-        meta = {"gen": gen}
-        retobj = self.as_connection.remove(key, meta, policy)
+        policy["generation"] = meta["gen"]
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
@@ -161,9 +158,9 @@ class TestRemove:
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"] + 5
-        metadata = {"gen": gen}
+        policy["generation"] = gen
 
-        retobj = self.as_connection.remove(key, metadata, policy)
+        retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0
 
