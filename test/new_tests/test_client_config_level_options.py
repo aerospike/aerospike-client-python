@@ -418,6 +418,11 @@ class TestConfigTTL:
             {"key": KEY, "bin": "a", "val": "a"},
             "operate"
         ),
+        (
+            aerospike.Client.append,
+            {"key": KEY, "bin": "a", "val": "a"},
+            "operate"
+        ),
     ])
     def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
         kwargs |= kwargs_with_ttl
