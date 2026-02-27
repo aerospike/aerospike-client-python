@@ -54,10 +54,10 @@ class TestScanApply(object):
             drop_test_udf(self.as_connection)
             keys = [(TEST_NS, TEST_SET, i) for i in range(50)]
             for i, key in enumerate(keys):
-                self.as_connection.remove(key, {"number": i})
+                self.as_connection.remove(key)
             keys = [(TEST_NS, TEST_SET2, i) for i in range(10)]
             for i, key in enumerate(keys):
-                self.as_connection.remove(key, {"number": i})
+                self.as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
