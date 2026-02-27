@@ -54,7 +54,7 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
-@pytest.mark.filterwarnings("ignore:as_connection")
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
