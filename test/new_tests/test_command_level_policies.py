@@ -17,15 +17,25 @@ class CommandLevelTTL:
     NEW_TTL = 3000
     POLICY = {"ttl": NEW_TTL}
 
-    def test_write_policy(self):
-        self.as_connection.put(KEY, bins={"a": 1}, policy=self.POLICY)
+    meta_and_policy_params = pytest.mark.parametrize(
+        "kwargs_with_ttl",
+        [
+            {"meta": POLICY},
+            {"policy": POLICY},
+        ]
+    )
+
+    @meta_and_policy_params
+    def test_write_policy(self, kwargs_with_ttl):
+        self.as_connection.put(KEY, bins={"a": 1}, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    def test_operate_policy(self):
+    @meta_and_policy_params
+    def test_operate_policy(self, kwargs_with_ttl):
         ops = [
             operations.write(bin_name="a", write_item=1)
         ]
-        self.as_connection.operate(KEY, list=ops, policy=self.POLICY)
+        self.as_connection.operate(KEY, list=ops, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     def test_batch_write_policy(self):
@@ -51,7 +61,7 @@ class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
         ttl = 2
-        self.as_connection.put(KEY, bins={"a": 1}, meta={"ttl": ttl})
+        self.as_connection.put(KEY, bins={"a": 1}, policy={"ttl": ttl})
         self.policy = {
             "read_touch_ttl_percent": 50
         }

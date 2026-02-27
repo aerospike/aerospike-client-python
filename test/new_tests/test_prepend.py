@@ -98,9 +98,10 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -122,11 +123,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -148,11 +150,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 2, "ttl": 1200}
+        meta = {"gen": gen + 2}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -297,11 +300,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
@@ -328,11 +332,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 

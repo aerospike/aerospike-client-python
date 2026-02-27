@@ -53,8 +53,9 @@ class TestRemovebin(object):
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1000
         }
-        meta = {"gen": 2, "ttl": 1000}
+        meta = {"gen": 2}
         self.as_connection.remove_bin(key, ["age"], meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -73,11 +74,12 @@ class TestRemovebin(object):
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1000
         }
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1000}
+        meta = {"gen": gen}
 
         self.as_connection.remove_bin(key, ["years"], meta, policy)
 
@@ -176,6 +178,7 @@ class TestRemovebin(object):
                     "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -186,6 +189,7 @@ class TestRemovebin(object):
                     "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -196,6 +200,7 @@ class TestRemovebin(object):
                     "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_GT,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -210,7 +215,7 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1000}
+        meta = {"gen": gen + 5}
 
         self.as_connection.remove_bin(key, [bin_for_removal], meta, policy)
 
@@ -304,10 +309,11 @@ class TestRemovebin(object):
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1000
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1000}
+        meta = {"gen": gen + 5}
 
         try:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
@@ -336,11 +342,12 @@ class TestRemovebin(object):
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1000
         }
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1000}
+        meta = {"gen": gen}
 
         try:
             self.as_connection.remove_bin(key, ["age"], meta, policy)

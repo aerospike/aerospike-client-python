@@ -100,6 +100,8 @@ Record Commands
 
         Create a new record, or remove / add bins to a record.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
         :param dict meta: record metadata to be set. see :ref:`metadata_dict`.
@@ -181,6 +183,8 @@ Record Commands
         (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. )
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -207,6 +211,8 @@ Record Commands
 
         Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -224,6 +230,10 @@ Record Commands
 
         Touch the given record, setting its time-to-live and incrementing its generation.
 
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta["ttl"]`` parameter. Use the ``val`` parameter instead.
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
         :param dict meta: record metadata to be set. see :ref:`metadata_dict`
@@ -238,6 +248,10 @@ Record Commands
 
         Remove a record matching the *key* from the cluster.
 
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
         :param dict policy: see :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
@@ -251,6 +265,8 @@ Record Commands
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
         setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -408,6 +424,8 @@ String Operations
 
         Append a string to the string value in bin.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
@@ -426,6 +444,8 @@ String Operations
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
         Prepend the string value in *bin* with the string *val*.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -455,6 +475,8 @@ Numeric Operations
     .. method:: increment(key, bin, offset[, meta: dict[, policy: dict]])
 
         Increment the integer value in *bin* by the integer *val*.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -946,7 +968,7 @@ Index Operations
 
     .. method:: index_string_create(ns, set, bin, name[, policy: dict])
 
-        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
 
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
@@ -960,7 +982,7 @@ Index Operations
 
     .. method:: index_integer_create(ns, set, bin, name[, policy])
 
-        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
 
         Create an integer index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -974,7 +996,7 @@ Index Operations
 
     .. method:: index_blob_create(ns, set, bin, name[, policy])
 
-        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
 
         Create a blob index with *name* on the *bin* in the specified \
         *ns*, *set*.
@@ -988,7 +1010,7 @@ Index Operations
 
     .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
 
-        .. deprecated:: 20.0.0 :meth:`index_single_value_create` should be used instead.
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
 
         Create a geospatial 2D spherical index with *name* on the *bin* \
         in the specified *ns*, *set*.
@@ -1012,23 +1034,23 @@ Index Operations
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
-.. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
+    .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
 
-    .. deprecated:: 20.0.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+        .. deprecated:: 19.1.0 Use the other non-deprecated index methods to create an index with a list of contexts.
 
-    Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
-    numeric, string, or GeoJSON values (as defined by *index_datatype*)
-    on records of the specified *ns*, *set* whose bin is a list or map.
+        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
+        numeric, string, or GeoJSON values (as defined by *index_datatype*)
+        on records of the specified *ns*, *set* whose bin is a list or map.
 
-    :param str ns: the namespace in the aerospike cluster.
-    :param str set: the set name.
-    :param str bin: the name of bin the secondary index is built on.
-    :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
-    :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
-    :param str index_name: the name of the index.
-    :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
-    :param dict policy: optional :ref:`aerospike_info_policies`.
-    :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
+        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
+        :param str index_name: the name of the index.
+        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. index::
         single: Admin Operations
