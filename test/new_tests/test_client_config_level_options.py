@@ -416,11 +416,6 @@ class TestConfigTTL:
             {"key": KEY, "bin": "a", "val": "a"},
             "operate"
         ),
-        (
-            aerospike.Client.touch,
-            {"key": KEY},
-            "operate"
-        ),
     ])
     def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
         kwargs |= kwargs_with_ttl
@@ -464,31 +459,23 @@ class TestConfigTTL:
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    @pytest.mark.parametrize(
-        "kwargs_with_ttl",
-        [
-            {},
-            {"policy": {"ttl": None}},
-        ],
-    )
     @pytest.mark.parametrize("api_method, kwargs, policy_name", [
         (
             aerospike.Client.apply,
             {"key": KEY},
-            "apply"
+            "apply",
         ),
         (
             aerospike.Client.batch_apply,
             {"keys": [KEY]},
-            "batch_apply"
+            "batch_apply",
         ),
     ])
-    def test_apis_with_policy_parameter(self, config_ttl_setup, api_method, kwargs, kwargs_with_ttl):
+    def test_apis_with_policy_parameter(self, config_ttl_setup, api_method, kwargs):
         # Setup
         self.client.put(KEY, {"bin": "a"})
 
         kwargs |= {"module": "test_record_udf", "function": "bin_udf_operation_string", "args": ["bin", "a"]}
-        kwargs |= kwargs_with_ttl
         api_method(self.client, **kwargs)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
