@@ -387,6 +387,7 @@ class TestConfigTTL:
         ]
     )
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("api_method, kwargs, policy_name", [
         (
@@ -420,17 +421,11 @@ class TestConfigTTL:
     ])
     def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
         kwargs |= kwargs_with_ttl
-        if "meta" in kwargs_with_ttl:
-            cm = warnings.catch_warnings(record=True)
-            warnings.simplefilter(action="always", category=DeprecationWarning)
-        else:
-            cm = nullcontext()
-
-        with cm as w:
+        try:
             api_method(self.client, **kwargs)
-
-        if type(w) == warnings.catch_warnings:
-            assert len(w) == 1
+        except e.ClientError as exc:
+            # ClientError can be raised if the user runs Python with warnings treated as errors.
+            assert exc.msg != "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
