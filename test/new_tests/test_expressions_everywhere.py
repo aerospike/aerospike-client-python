@@ -578,7 +578,7 @@ class TestPredEveryWhere(object):
         Call remove with expressions in policy.
         """
         expr = exp.Eq(exp.IntBin("account_id"), 1)
-        self.as_connection.remove(self.keys[0], {"expressions": expr.compile()})
+        self.as_connection.remove(self.keys[0], policy={"expressions": expr.compile()})
 
         rec = self.as_connection.exists(self.keys[0])
         assert rec[1] is None

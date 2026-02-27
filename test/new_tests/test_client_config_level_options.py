@@ -14,6 +14,7 @@ import glob
 import re
 import os
 from .conftest import verify_record_ttl, wait_for_job_completion
+import warnings
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -419,7 +420,18 @@ class TestConfigTTL:
     ])
     def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
         kwargs |= kwargs_with_ttl
-        api_method(self.client, **kwargs)
+        if "meta" in kwargs_with_ttl:
+            cm = warnings.catch_warnings(record=True)
+            warnings.simplefilter(action="always", category=DeprecationWarning)
+        else:
+            cm = nullcontext()
+
+        with cm as w:
+            api_method(self.client, **kwargs)
+
+        if type(w) == warnings.catch_warnings:
+            assert len(w) == 1
+
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @ttl_param
