@@ -78,6 +78,11 @@ runs:
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
-    # TODO: download latest build in dev repo somehow
-    run: jf rt dl --fail-no-op --bundle python-client-release/18.2.0rc1.dev15-26 'database-generic-dev-local/*.whl'
+    run: |
+      bundle_version=$(jf rbs --format json --order-by created --project database versions python-client-release | jq -r '.release_bundles[0].release_bundle_version')
+      # Currently no way to download specific artifacts from a release bundle
+      # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
+      build_number="${bundle_version##*-}"
+      artifact_path=$(jf rt s --project database --fail-no-op --build python-client/$build_number "database-pypi-dev-local/**/$ARTIFACT_FILE_NAME_PATTERN" | jq -r '.[0].path')
+      jf rt dl --project database --fail-no-op --flat $artifact_path
     shell: bash
