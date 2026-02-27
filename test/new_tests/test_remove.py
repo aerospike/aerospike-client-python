@@ -10,7 +10,6 @@ from aerospike import exception as e
 
 @pytest.mark.usefixtures("as_connection")
 class TestRemove:
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_existing_record(self):
         """
         Invoke remove() when records are present
@@ -27,7 +26,6 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_policy(self):
         """
         Invoke remove() with policy
@@ -51,7 +49,6 @@ class TestRemove:
         rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
         self.as_connection.put(key, rec)
 
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_policy_all(self):
         """
         Invoke remove() with policy
@@ -79,7 +76,6 @@ class TestRemove:
         rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
         self.as_connection.put(key, rec)
 
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_policy_key_digest(self):
         """
         Invoke remove() with policy_key_digest
@@ -103,7 +99,6 @@ class TestRemove:
         assert msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
         assert code == 2
 
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_policy_gen_ignore(self):
         """
         Invoke remove() with policy gen ignore
@@ -131,7 +126,6 @@ class TestRemove:
         rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
         self.as_connection.put(key, rec)
 
-    @pytest.mark.xfail(reason="Issue1 : open bug #client-533")
     def test_pos_remove_with_policy_gen_eq_positive(self):
         """
         Invoke remove() with policy gen positive
@@ -160,7 +154,6 @@ class TestRemove:
         rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
         self.as_connection.put(key, rec)
 
-    @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_policy_gen_GT_positive(self):
         """
         Invoke remove() with policy gen GT positive
