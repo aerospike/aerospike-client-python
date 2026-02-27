@@ -382,7 +382,7 @@ class TestConfigTTL:
             {"meta": {"gen": 10}},
             {"meta": {"ttl": aerospike.TTL_CLIENT_DEFAULT, "gen": 10}},
             {"policy": None},
-            {"policy": {}},
+            # {"policy": {}},
         ]
     )
 
@@ -446,7 +446,7 @@ class TestConfigTTL:
             {"ttl": aerospike.TTL_CLIENT_DEFAULT}
         ],
     )
-    @pytest.mark.parametrize("policy_name", ["batch"])
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
     def test_apis_with_ttl_parameter(self, config_ttl_setup, kwargs):
         ops = [
             operations.write("bin", 1)

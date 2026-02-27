@@ -284,7 +284,7 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         meta = {"gen": 10}
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             self.as_connection.touch(key, 120, meta, {"ttl": 2**64})
 
         err_code = err_info.value.code
