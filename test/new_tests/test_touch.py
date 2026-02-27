@@ -101,8 +101,7 @@ class TestTouch(object):
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
-            "gen": aerospike.POLICY_GEN_IGNORE,
-            "ttl": 1200
+            "gen": aerospike.POLICY_GEN_IGNORE
         }
 
         meta = {"gen": 10}

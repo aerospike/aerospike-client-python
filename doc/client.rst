@@ -230,7 +230,9 @@ Record Commands
 
         Touch the given record, setting its time-to-live and incrementing its generation.
 
-        .. include:: ./deprecate_meta_ttl.rst
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta["ttl"]`` parameter. Use the ``val`` parameter instead.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.

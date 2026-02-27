@@ -93,11 +93,12 @@ class TestRemove:
         """
 
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
-        policy = {"max_retries": 1, "key": aerospike.POLICY_KEY_DIGEST, "generation": 0}
+        policy = {"max_retries": 1, "key": aerospike.POLICY_KEY_DIGEST}
         retobj = self.as_connection.put(key, policy)
 
         assert retobj == 0
 
+        policy["generation"] = 0
         retobj = self.as_connection.remove(key, policy=policy)
 
         assert retobj == 0

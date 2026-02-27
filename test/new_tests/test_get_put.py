@@ -356,6 +356,7 @@ class TestGetPut:
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
