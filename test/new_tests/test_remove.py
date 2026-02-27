@@ -6,6 +6,8 @@ from .test_data import key_neg
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
+from contextlib import nullcontext
+import warnings
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -33,14 +35,27 @@ class TestRemove:
         (code, msg, _, _, _) = exception.value.args
         assert code == 2
 
-    def test_pos_remove_with_policy(self, setup_for_pos_tests):
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"meta": {"gen": 0}},
+            {"policy": {"generation": 0, "total_timeout": 180000}},
+        ]
+    )
+    def test_pos_remove_with_policy(self, setup_for_pos_tests, kwargs):
         """
         Invoke remove() with policy
         """
         key = ("test", "demo", 1)
-        policy = {"total_timeout": 180000, "generation": 0}
 
-        retobj = self.as_connection.remove(key, policy=policy)
+        if "meta" in kwargs:
+            cm = warnings.catch_warnings(record=True)
+            warnings.simplefilter(action="always", category=DeprecationWarning)
+        else:
+            cm = nullcontext()
+
+        with cm:
+            retobj = self.as_connection.remove(key, **kwargs)
 
         assert retobj == 0
 
