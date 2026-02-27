@@ -1,0 +1,144 @@
+name: Run dev tests and promote release bundle to DEV
+run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
+
+permissions:
+  # We are building the artifacts in build-artifacts.yml
+  contents: read
+  # For shared reusable workflows
+  # TODO: look into more
+  id-token: write
+  statuses: write
+  # For downloading docker images from ghcr.io
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      # These inputs are in case we need to test against a server RC
+      registry-name:
+        type: string
+        required: true
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: true
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag (e.g to test a client backport version)'
+      # For testing purposes
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: Don't create release bundle
+      run_tests:
+        required: false
+        default: false
+        type: boolean
+        description: Run dev tests
+      test-file:
+        required: false
+        type: string
+        description: For speeding up debugging
+
+jobs:
+  run-dev-tests:
+    uses: ./.github/workflows/build-artifacts.yml
+    secrets: inherit
+    with:
+      run_tests: ${{ inputs.run_tests }}
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
+      server-tag: ${{ inputs.server-tag }}
+      sha-to-build-and-test: ${{ github.sha }}
+      test-file: ${{ inputs.test-file }}
+
+  # valgrind:
+  #   needs: run-dev-tests
+  #   uses: ./.github/workflows/valgrind.yml
+  #   with:
+  #     massif: false
+  #     registry-name: ${{ inputs.registry-name }}
+  #     image-name: ${{ inputs.image-name }}
+  #     server-tag: ${{ inputs.server-tag }}
+  #     test-file: ${{ inputs.test-file }}
+  #   secrets: inherit
+
+  reupload-github-artifacts-as-one:
+    needs: run-dev-tests
+    name: Reupload Github artifacts as one artifact
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
+    - name: Download artifacts
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        pattern: '*.build'
+        merge-multiple: true
+        path: artifacts
+
+    - name: Reupload artifacts as one
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        # TODO: Not actually signed...
+        name: signed-artifacts
+        path: ./artifacts
+        if-no-files-found: error
+
+  upload-github-artifacts-as-jfrog-build:
+    needs: [
+      reupload-github-artifacts-as-one,
+      run-dev-tests
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@CLIENT-3467-add-support-for-pypi-type-repos-in-jfrog
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-build-id: ${{ github.run_number }}
+      jf-metadata-build-id: ${{ github.run_number }}-metadata
+      gh-workflows-ref: CLIENT-3467-add-support-for-pypi-type-repos-in-jfrog
+      version: ${{ needs.run-dev-tests.outputs.build-version }}
+      dry-run: ${{ inputs.dry-run }}
+      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+  create-jfrog-release-bundle:
+    needs: [
+      upload-github-artifacts-as-jfrog-build,
+      run-dev-tests
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@489212b8911ea431131ed468599db705f0767274
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      # <Build name>:<build id>
+      jf-build-names: ${{ format('{0}:{1}', vars.JFROG_BUILD_NAME, github.run_number) }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
+      gh-workflows-ref: 489212b8911ea431131ed468599db705f0767274
+      dry-run: ${{ inputs.dry-run }}
+      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+  promote-release-bundle-to-dev:
+    needs: [
+      create-jfrog-release-bundle,
+      run-dev-tests
+    ]
+    # jf rbp doesn't have a dry run option
+    if: ${{ !inputs.dry-run }}
+    uses: ./.github/workflows/promote-release-bundle.yml
+    with:
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ needs.run-dev-tests.outputs.build-version }}-${{ github.run_number }}
+      new-environment: DEV
+      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jfrog-repo-name: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-pypi-dev-local

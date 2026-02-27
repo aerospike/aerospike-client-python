@@ -89,6 +89,9 @@ on:
         required: false
         type: string
         default: ''
+    outputs:
+      build-version:
+        value: ${{ jobs.build-sdist.outputs.sdist-version }}
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true

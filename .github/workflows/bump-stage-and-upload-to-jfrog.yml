@@ -24,44 +24,12 @@ jobs:
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
-  promote-dev-build-to-rc:
-    name: Bump (promote) the dev version to an RC version in the stage branch
-    needs: ff-stage-to-dev-tag
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'promote-dev-build-to-rc'
-      ref: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
-
-  rebuild-artifacts-with-rc-version:
-    needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/build-artifacts.yml
-    with:
-      sha-to-build-and-test: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
-    secrets: inherit
-
-  upload-rc-artifacts-to-jfrog:
+  promote-release-bundle-to-dev:
     needs: [
-      rebuild-artifacts-with-rc-version,
-      # We need the new RC version to label the build in JFrog
-      promote-dev-build-to-rc
+      ff-stage-to-dev-tag,
     ]
-    name: Upload artifacts to JFrog
-    uses: ./.github/workflows/upload-to-jfrog.yml
+    uses: ./.github/workflows/promote-release-bundle.yml
     with:
-      version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
-    secrets: inherit
-
-  # See reason for deleting artifacts in dev-workflow-p2.yml
-  delete-artifacts:
-    needs: upload-rc-artifacts-to-jfrog
-    uses: ./.github/workflows/delete-artifacts.yml
-
-  ff-dev-to-stage:
-    name: Fast forward dev branch to stage branch to include the bump to RC commit
-    needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
-      base_branch: ${{ vars.DEV_BRANCH_NAME }}
-    secrets: inherit
+      release-bundle-name: python-client-release
+      release-bundle-version: ${{ inputs.passed-dev-tag }}
+      new-environment: TEST
