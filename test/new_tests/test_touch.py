@@ -288,4 +288,4 @@ class TestTouch(object):
             self.as_connection.touch(key, 120, meta, {"ttl": 2**64})
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
