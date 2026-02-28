@@ -34,6 +34,11 @@ on:
         required: false
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        default: ''
+        type: string
+        description: 'new_tests/<value>'
       test-macos-x86:
         required: false
         type: boolean
@@ -176,7 +181,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} pytest -c requirements.txt
 
     - name: Run tests
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/
+      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/${{ inputs.test-file }}
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
@@ -251,7 +256,7 @@ jobs:
 
     - name: Run tests
       if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
-      run: python3 -m pytest new_tests/
+      run: python3 -m pytest new_tests/${{ inputs.test-file }}
       working-directory: test
 
     - name: Run tests on macos 26

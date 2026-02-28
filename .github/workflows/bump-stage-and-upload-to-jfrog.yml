@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: "Don't tag or upload anything to JFrog"
       passed-dev-tag:
         type: string
         description: Dev tag to fast forward the stage branch to
@@ -31,6 +36,7 @@ jobs:
     with:
       change: 'promote-dev-build-to-rc'
       ref: ${{ vars.STAGE_BRANCH_NAME }}
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
 
   rebuild-artifacts-with-rc-version:
@@ -50,6 +56,7 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
+      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
