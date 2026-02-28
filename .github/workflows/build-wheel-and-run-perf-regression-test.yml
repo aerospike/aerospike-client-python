@@ -1,0 +1,29 @@
+permissions:
+  statuses: write
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      test-definition:
+        required: true
+        description: Test definition
+
+jobs:
+  build-wheel-for-feature-branch:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      # TODO: single source
+      platform-tag: manylinux_x86_64
+      python-tags: '["cp310"]'
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  run-qe-test:
+    needs: build-wheel-for-feature-branch
+    uses: ./.github/workflows/run-qe-test.yml
+    with:
+      get-wheel-from-jfrog: false
+      test-definition: ${{ inputs.test-definition }}
+    secrets: inherit

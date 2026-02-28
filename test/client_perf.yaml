@@ -1,0 +1,15 @@
+build:
+  repo: citrusleaf/aerospike-server
+  ref: 
+    - 8.0.0.8
+
+  script: enterprise
+  target:
+    - x86-ubuntu-22.04
+
+scenarios:
+  std:
+    - perfasd
+definitions:
+  std:
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered
