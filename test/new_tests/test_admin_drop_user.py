@@ -76,12 +76,10 @@ class TestDropUser(object):
         """
         Invoke drop_user() with policy none
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_drop_user(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_drop_user_positive(self):
         """
@@ -175,12 +173,10 @@ class TestDropUser(object):
 
         assert user_details["roles"] == ["read", "read-write", "sys-admin"]
         policy = {"timeout": 0.2}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             status = self.client.admin_drop_user(user, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
         status = self.client.admin_drop_user(user)
 

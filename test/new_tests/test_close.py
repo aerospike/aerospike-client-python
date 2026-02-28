@@ -32,9 +32,8 @@ class TestClose:
 
         try:
             self.closeobject = self.client.close()
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        except e.ClusterError as ex:
+            assert ex.code == 11
 
     def test_neg_close(self):
         """

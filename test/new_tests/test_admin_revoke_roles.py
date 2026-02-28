@@ -88,12 +88,10 @@ class TestRevokeRoles(TestBaseClass):
         user = "example-test"
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_revoke_roles(user, roles, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 
@@ -116,48 +114,40 @@ class TestRevokeRoles(TestBaseClass):
         user = None
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_revoke_roles(user, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_revoke_roles_with_empty_username(self):
 
         user = ""
         roles = ["read-write"]
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_revoke_roles(user, roles)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_empty_roles_list(self):
 
         user = "example-test"
         roles = []
 
-        try:
+        with pytest.raises(e.InvalidRole) as excinfo:
             self.client.admin_revoke_roles(user, roles)
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_revoke_roles_with_nonexistent_username(self):
 
         user = "non-existent"
         roles = ["read-write"]
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_revoke_roles(user, roles)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_revoke_roles_with_special_characters_in_username(self):
 

@@ -77,12 +77,10 @@ class TestChangePassword(object):
         user = "testchangepassworduser"
         password = "newpassword"
 
-        try:
+        with pytest.raises(aerospike.exception.ParamError) as excinfo:
             self.client.admin_change_password(user, password, policy)
-
-        except aerospike.exception.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     # NOTE: This will fail if auth_mode is PKI_AUTH (3).
     @pytest.mark.xfail(reason="Might fail depending on auth_mode.")
@@ -116,24 +114,20 @@ class TestChangePassword(object):
         user = None
         password = "newpassword"
 
-        try:
+        with pytest.raises(aerospike.exception.ParamError) as excinfo:
             self.client.admin_change_password(user, password)
-
-        except aerospike.exception.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_change_password_with_none_password(self):
 
         user = "testchangepassworduser"
         password = None
 
-        try:
+        with pytest.raises(aerospike.exception.ParamError) as excinfo:
             self.client.admin_change_password(user, password)
-
-        except aerospike.exception.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Password should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Password should be a string"
 
     def test_change_password_with_non_existent_user(self):
 

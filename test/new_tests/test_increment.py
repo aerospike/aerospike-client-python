@@ -355,13 +355,11 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         bins = {"age": 10}
         self.as_connection.put(key, bins)
-        try:
+        with pytest.raises((SystemError, Exception)) as excinfo:
             self.as_connection.increment(key, "age", 68786586756785785745)
-        # except SystemError:
-        #       pass
-        except Exception as exception:
-            assert exception.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-            assert exception.msg == "integer value exceeds sys.maxsize"
+        if excinfo.type == Exception:
+            assert excinfo.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+            assert excinfo.value.msg == "integer value exceeds sys.maxsize"
 
     def test_increment_with_string_value(self):
         """

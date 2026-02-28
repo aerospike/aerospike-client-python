@@ -108,12 +108,10 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+            assert excinfo.value.code == -2
+            assert excinfo.value.msg == "timeout is invalid"
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
@@ -146,12 +144,10 @@ class TestCreateUser(object):
         password = "user3-test"
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_create_user_with_empty_username(self):
 
@@ -190,12 +186,10 @@ class TestCreateUser(object):
         password = None
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Password should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Password should be a string"
 
     def test_create_user_with_empty_string_as_password(self):
 

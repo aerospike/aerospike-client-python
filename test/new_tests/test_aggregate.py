@@ -270,7 +270,7 @@ class TestAggregate(object):
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             query = client1.query("test", "demo")
             query.select("name", "test_age")
             query.where(p.between("test_age", 1, 5))
@@ -283,8 +283,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_aggregate_with_extra_parameter(self):
         """
@@ -309,19 +308,17 @@ class TestAggregate(object):
         """
         Invoke aggregate() without any mandatory parameters.
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             query = self.as_connection.query()
             query.select()
             query.where()
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_aggregate_no_sec_index(self):
         """
         Invoke aggregate() with no secondary index
         """
-        try:
+        with pytest.raises(e.IndexNotFound) as excinfo:
             query = self.as_connection.query("test", "demo")
             query.select("name", "no")
             query.where(p.between("no", 1, 5))
@@ -331,14 +328,13 @@ class TestAggregate(object):
                 _ = value
 
             query.foreach(user_callback)
-        except e.IndexNotFound as exception:
-            assert exception.code == 201
+        assert excinfo.value.code == 201
 
     def test_neg_aggregate_with_incorrect_ns_set(self):
         """
         Invoke aggregate() with incorrect ns and set
         """
-        try:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as excinfo:
             query = self.as_connection.query("test1", "demo1")
             query.select("name", "test_age")
             query.where(p.equals("test_age", 1))
@@ -349,10 +345,10 @@ class TestAggregate(object):
 
             query.foreach(user_callback)
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
+        if excinfo.type == e.InvalidRequest:
+            assert excinfo.value.code == 4
+        elif excinfo.type == e.NamespaceNotFound:
+            assert excinfo.value.code == 20
 
     def test_neg_aggregate_with_where_incorrect(self):
         """
@@ -376,7 +372,7 @@ class TestAggregate(object):
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             query.where(p.equals("test_age", None))
             query.apply("stream_example", "count")
 
@@ -384,9 +380,7 @@ class TestAggregate(object):
                 _ = value
 
             query.foreach(user_callback)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     # We can't use the inspect library to check the keyword args of a method defined using the C-API
     # It doesn't work, so just check that passing in an invalid arg fails

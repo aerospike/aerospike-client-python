@@ -183,14 +183,14 @@ class TestGetPut:
         Invoke get() with a key digest.
         """
         key = ("test", "demo", 1)
-        try:
+        with pytest.raises((e.ParamError, e.RecordNotFound)) as excinfo:
             key, _ = self.as_connection.exists(key)
             key, _, _ = self.as_connection.get((key[0], key[1], None, key[2]))
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "digest is invalid. expected a bytearray"
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+            if excinfo.value == e.ParamError:
+                assert excinfo.value.code == -2
+                assert excinfo.value.msg == "digest is invalid. expected a bytearray"
+            elif excinfo.value == e.RecordNotFound:
+                assert excinfo.value.code == 2
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_get_with_none(self, key, ex_code, ex_msg):
@@ -229,11 +229,9 @@ class TestGetPut:
         """
         put_data(self.as_connection, _input, _expected)
         self.as_connection.remove(_input)
-        try:
+        with pytest.raises(e.RecordNotFound) as excinfo:
             _, _, bins = self.as_connection.get(_input)
-            assert bins is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        assert excinfo.value.code == 2
 
     def test_neg_get_with_only_key_no_connection(self):
         """
@@ -688,12 +686,10 @@ class TestGetPut:
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
-        try:
+        with pytest.raises(e.RecordNotFound) as excinfo:
             assert 0 == self.as_connection.put(key, rec, meta, policy)
-
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
-            assert exception.msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
+            assert excinfo.value.code == 2
+            assert excinfo.value.msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
 
     def test_neg_put_with_policy_gen_GT_lesser(self):
         """
@@ -713,12 +709,10 @@ class TestGetPut:
         policy = {"gen": aerospike.POLICY_GEN_GT}
         meta = {"gen": gen}
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.put(key, rec, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+        assert excinfo.value.code == 3
+        assert excinfo.value.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
@@ -825,14 +819,11 @@ class TestGetPut:
 
         bins = {"no": 111111111111111111111111111111111111111111111}
 
-        try:
+        with pytest.raises((e.ParamError, SystemError)) as excinfo:
             assert 0 == self.as_connection.put(key, bins)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "integer value exceeds sys.maxsize"
-        except SystemError:
-            pass
+        if excinfo.type == e.ParamError:
+            assert excinfo.value.code == -2
+            assert excinfo.value.msg == "integer value exceeds sys.maxsize"
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):
         """
