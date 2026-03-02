@@ -136,6 +136,8 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
+    # -Werror: we need code coverage for code paths where warnings are treated as errors
+    # TODO: currently this doesn't seem to work though
     - run: python3 -m pytest -Werror --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
