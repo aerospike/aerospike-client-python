@@ -306,6 +306,8 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
+      # Here we also treat DeprecationWarnings as errors to make sure we're showing warnings as expected
+      # throughout the API
       run: python -m pytest ./new_tests -vvs -W error::DeprecationWarning
       working-directory: test
 
