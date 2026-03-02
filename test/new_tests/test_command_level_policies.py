@@ -38,11 +38,31 @@ class CommandLevelTTL:
         self.as_connection.operate(KEY, list=ops, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    def test_batch_write_policy(self):
+    OPS = [
+        operations.write(bin_name="a", write_item=1)
+    ]
+
+    def test_batch_operate(self):
         ops = [
             operations.write(bin_name="a", write_item=1)
         ]
-        self.as_connection.batch_operate(keys=[KEY], ops=ops, policy_batch_write=self.POLICY)
+        self.as_connection.batch_operate(keys=[KEY], ops=self.OPS, policy_batch_write=self.POLICY)
+
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # cause ClientError to be raised. It's too complicated to check both cases
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @meta_and_policy_params
+    def test_batch_write(self, kwargs_with_ttl):
+        batch_records = br.BatchRecords([
+            br.Write(KEY, ops=self.OPS, **kwargs_with_ttl)
+        ])
+        try:
+            self.as_connection.batch_write(batch_records)
+        except e.ClientError as exc:
+            # ClientError can be raised if the user runs Python with warnings treated as errors.
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
