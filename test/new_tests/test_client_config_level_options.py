@@ -5,7 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
 from contextlib import nullcontext
@@ -436,12 +436,13 @@ class TestConfigTTL:
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # For the batch_write tests: don't bother testing for DeprecationWarnings here since running Python with -W error flag can
     # cause ClientError to be raised. It's too complicated to check both cases
+
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("policy_name", ["batch_write"])
-    def test_batch_write(self, config_ttl_setup, kwargs_with_ttl):
+    def test_batch_write_with_write_br(self, config_ttl_setup, kwargs_with_ttl):
         ops = [
             operations.write("bin", 1)
         ]
@@ -458,6 +459,17 @@ class TestConfigTTL:
             assert br.result == 0
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    # This test case is more important when warnings are converted into errors
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    def test_batch_write_with_read_br_raises_deprecation_warning(self, config_ttl_setup):
+        batch_records = BatchRecords([
+            Read(KEY, meta={"ttl": 100})
+        ])
+        try:
+            self.client.batch_write(batch_records)
+        except e.ClientError as exc:
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
     @pytest.mark.parametrize(
         "kwargs",
