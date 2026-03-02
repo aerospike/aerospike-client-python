@@ -389,6 +389,7 @@ class TestConfigTTL:
 
     # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
     # cause ClientError to be raised. It's too complicated to check both cases
+
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
     @pytest.mark.parametrize("api_method, kwargs, policy_name", [
@@ -435,9 +436,6 @@ class TestConfigTTL:
             assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
-
-    # For the batch_write tests: don't bother testing for DeprecationWarnings here since running Python with -W error flag can
-    # cause ClientError to be raised. It's too complicated to check both cases
 
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     @ttl_param
@@ -494,18 +492,12 @@ class TestConfigTTL:
         ),
     ])
     def test_apis_with_policy_parameter(self, config_ttl_setup, api_method, kwargs):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
         kwargs |= {"module": "test_record_udf", "function": "bin_udf_operation_string", "args": ["bin", "a"]}
         api_method(self.client, **kwargs)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
     def test_setting_scan_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
         # Tell scan to use client config's scan policy ttl
         scan = self.client.scan("test", "demo")
         scan.ttl = aerospike.TTL_CLIENT_DEFAULT
@@ -521,9 +513,6 @@ class TestConfigTTL:
 
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"}, policy={"ttl": 90})
-
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")
         query.ttl = aerospike.TTL_CLIENT_DEFAULT
