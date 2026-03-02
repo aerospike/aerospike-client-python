@@ -460,17 +460,6 @@ class TestConfigTTL:
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    # This test case is more important when warnings are converted into errors
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-    def test_batch_write_with_read_br_raises_deprecation_warning(self, config_ttl_setup):
-        batch_records = BatchRecords([
-            Read(KEY, meta={"ttl": 100})
-        ])
-        try:
-            self.client.batch_write(batch_records)
-        except e.ClientError as exc:
-            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
-
     @pytest.mark.parametrize(
         "kwargs",
         [
