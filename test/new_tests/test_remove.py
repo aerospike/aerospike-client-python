@@ -177,6 +177,7 @@ class TestRemove:
         assert code == 2
 
     # Negative Tests
+
     def test_neg_remove_with_policy_gen_eq_not_equal(self, put_data):
         """
         Invoke remove() with policy gen not equal
