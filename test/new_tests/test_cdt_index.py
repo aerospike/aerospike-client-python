@@ -96,15 +96,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -141,15 +140,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_rank,
             policy,
+            ctx_list_rank
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -162,15 +160,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_value,
             policy,
+            ctx_list_value
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -183,15 +180,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_map_keys_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_MAPKEYS,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_map_index,
             policy,
+            ctx_map_index
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -204,15 +200,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_map_values_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_map_value,
             policy,
+            ctx_map_value
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -225,15 +220,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_map_values_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_map_rank,
             policy,
+            ctx_map_rank
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -247,15 +241,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_map_values_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_map_rank,
             policy,
+            ctx_map_rank
         )
 
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -268,15 +261,14 @@ class TestCDTIndex(object):
         Invoke index_cdt_create() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -291,15 +283,14 @@ class TestCDTIndex(object):
             set_name = set_name + "a"
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 "test",
                 set_name,
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
             assert False
         except e.InvalidRequest as exception:
@@ -312,15 +303,14 @@ class TestCDTIndex(object):
         Invoke createindex() with incorrect bin
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list1",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -332,27 +322,25 @@ class TestCDTIndex(object):
         Invoke createindex() with multiple times on same bin
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
         if retobj == 0:
             try:
-                self.as_connection.index_cdt_create(
+                self.as_connection.index_list_create(
                     "test",
                     "demo",
                     "numeric_list",
-                    aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_numeric_list_cdt_index",
-                    ctx_list_index,
                     policy,
+                    ctx_list_index
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
@@ -366,27 +354,25 @@ class TestCDTIndex(object):
         Invoke createindex() with multiple times on different bin
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
         if retobj == 0:
             with pytest.raises(e.IndexFoundError):
-                retobj = self.as_connection.index_cdt_create(
+                retobj = self.as_connection.index_list_create(
                     "test",
                     "demo",
                     "numeric_list",
-                    aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_string_list_cdt_index",
-                    ctx_list_index,
                     policy,
+                    ctx_list_index
                 )
                 self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
                 ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
@@ -402,27 +388,25 @@ class TestCDTIndex(object):
         name
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
         if retobj == 0:
             try:
-                retobj = self.as_connection.index_cdt_create(
+                retobj = self.as_connection.index_list_create(
                     "test",
                     "demo",
                     "string_list",
-                    aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_STRING,
                     "test_string_list_cdt_index1",
-                    ctx_list_index,
                     policy,
+                    ctx_list_index
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
@@ -437,15 +421,14 @@ class TestCDTIndex(object):
         Invoke createindex() with policy
         """
         policy = {"timeout": 10000}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "num_list_pol",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index_pol",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -457,15 +440,14 @@ class TestCDTIndex(object):
         Invoke createindex() with policy
         """
         policy = {"timeout": 10000}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -494,15 +476,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke create string index() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "string_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "uni_name_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -514,15 +495,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo",
             "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "uni_age_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -550,15 +530,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 None,
                 "demo",
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.ParamError as exception:
@@ -571,15 +550,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 "test",
                 1,
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
             assert False
         except e.ParamError as exception:
@@ -594,15 +572,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 "test",
                 None,
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.ParamError as exception:
@@ -617,15 +594,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 "test",
                 "demo",
                 None,
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.ParamError as exception:
@@ -638,15 +614,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_list_create(
                 "test",
                 "demo",
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 None,
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.ParamError as exception:
@@ -660,15 +635,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
 
         try:
-            self.as_connection.index_cdt_create(
+            self.as_connection.index_single_value_create(
                 "test1",
                 "demo",
                 "numeric_list",
-                aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.NamespaceNotFound as exception:
@@ -679,15 +653,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with incorrect set
         """
         policy = {}
-        retobj = self.as_connection.index_cdt_create(
+        retobj = self.as_connection.index_list_create(
             "test",
             "demo1",
             "numeric_list",
-            aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            ctx_list_index,
             policy,
+            ctx_list_index
         )
 
         assert retobj == 0
@@ -704,46 +677,15 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         client1.close()
 
         try:
-            client1.index_cdt_create(
+            client1.index_list_create(
                 "test",
                 "demo",
                 "string_list",
-                aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                ctx_list_index,
                 policy,
+                ctx_list_index
             )
 
         except e.ClusterError as exception:
             assert exception.code == 11
-
-    def test_neg_cdtindex_with_no_paramters(self):
-        """
-        Invoke index_cdt_create() without any mandatory parameters.
-        """
-        with pytest.raises(TypeError) as typeError:
-            self.as_connection.index_cdt_create()
-
-        assert "argument 'ns' (pos 1)" in str(typeError.value)
-
-    @pytest.mark.parametrize(
-        "ctx",
-        [
-            None,
-            # Invalid type
-            {"ctx": 1}
-        ]
-    )
-    def test_neg_cdtindex_with_invalid_ctx(self, ctx):
-        with pytest.raises(e.ParamError):
-            self.as_connection.index_cdt_create(
-                "test",
-                "demo",
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index",
-                # Ctx must be a list
-                ctx
-            )
