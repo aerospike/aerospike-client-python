@@ -427,8 +427,8 @@ static PyObject *AerospikeClient_Index_Create_Deprecated_Helper(
     static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_integer_create",
-                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O", kwlist, &py_ns,
+                                    &py_set, &py_bin, &py_name,
                                     &py_policy) == false) {
         return NULL;
     }
@@ -498,10 +498,10 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         "name", "ctx", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO|O:index_list_create",
-                                    kwlist, &py_ns, &py_set, &py_bin,
-                                    &py_indextype, &py_datatype, &py_name,
-                                    &py_ctx, &py_policy) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO|O", kwlist, &py_ns,
+                                    &py_set, &py_bin, &py_indextype,
+                                    &py_datatype, &py_name, &py_ctx,
+                                    &py_policy) == false) {
         return NULL;
     }
 
