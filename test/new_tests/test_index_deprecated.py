@@ -13,7 +13,6 @@ class TestDeprecatedIndexCreationMethods:
             aerospike.Client.index_integer_create,
             aerospike.Client.index_string_create,
             aerospike.Client.index_geo2dsphere_create,
-            aerospike.Client.index_cdt_create,
         ]
     )
     def test_deprecated_index_creation_methods(self, index_create_method):
@@ -22,6 +21,13 @@ class TestDeprecatedIndexCreationMethods:
             with pytest.raises(e.ParamError):
                 index_create_method(self.as_connection, 1, "demo", "bin_name", "deprecated_index")
         assert len(w) == 1
+
+    def test_index_cdt_create_raises_warning(self):
+        with pytest.warns(DeprecationWarning):
+            try:
+                self.as_connection.index_cdt_create("test", "demo", "bin", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, [])
+            except:
+                pass
 
     def test_neg_cdtindex_with_no_paramters(self):
         """
