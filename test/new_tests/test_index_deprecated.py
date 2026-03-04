@@ -22,14 +22,10 @@ class TestDeprecatedIndexCreationMethods:
                 index_create_method(self.as_connection, 1, "demo", "bin_name", "deprecated_index")
         assert len(w) == 1
 
-    def test_index_cdt_create_raises_warning(self):
-        with pytest.warns(DeprecationWarning):
-            with pytest.raises(e.ParamError):
-                self.as_connection.index_cdt_create("test", "demo", "bin", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, 2)
-
     def test_neg_cdtindex_with_no_paramters(self):
         """
         Invoke index_cdt_create() without any mandatory parameters.
+        Also test that this API call raises a warning.
         """
         with pytest.warns(DeprecationWarning):
             with pytest.raises(TypeError) as typeError:
