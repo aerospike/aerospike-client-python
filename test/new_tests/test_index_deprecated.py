@@ -33,8 +33,9 @@ class TestDeprecatedIndexCreationMethods:
         """
         Invoke index_cdt_create() without any mandatory parameters.
         """
-        with pytest.raises(TypeError) as typeError:
-            self.as_connection.index_cdt_create()
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(TypeError) as typeError:
+                self.as_connection.index_cdt_create()
 
         assert "argument 'ns' (pos 1)" in str(typeError.value)
 
@@ -47,14 +48,15 @@ class TestDeprecatedIndexCreationMethods:
         ]
     )
     def test_neg_cdtindex_with_invalid_ctx(self, ctx):
-        with pytest.raises(e.ParamError):
-            self.as_connection.index_cdt_create(
-                "test",
-                "demo",
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index",
-                # Ctx must be a list
-                ctx
-            )
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(e.ParamError):
+                self.as_connection.index_cdt_create(
+                    "test",
+                    "demo",
+                    "string_list",
+                    aerospike.INDEX_TYPE_LIST,
+                    aerospike.INDEX_STRING,
+                    "test_string_list_cdt_index",
+                    # Ctx must be a list
+                    ctx
+                )
