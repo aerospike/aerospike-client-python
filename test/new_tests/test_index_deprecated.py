@@ -24,10 +24,8 @@ class TestDeprecatedIndexCreationMethods:
 
     def test_index_cdt_create_raises_warning(self):
         with pytest.warns(DeprecationWarning):
-            try:
-                self.as_connection.index_cdt_create("test", "demo", "bin", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, [])
-            except:
-                pass
+            with pytest.raises(e.ParamError):
+                self.as_connection.index_cdt_create("test", "demo", "bin", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, 2)
 
     def test_neg_cdtindex_with_no_paramters(self):
         """
@@ -36,8 +34,7 @@ class TestDeprecatedIndexCreationMethods:
         with pytest.warns(DeprecationWarning):
             with pytest.raises(TypeError) as typeError:
                 self.as_connection.index_cdt_create()
-
-        assert "argument 'ns' (pos 1)" in str(typeError.value)
+            assert "argument 'ns' (pos 1)" in str(typeError.value)
 
     @pytest.mark.parametrize(
         "ctx",
