@@ -86,16 +86,19 @@ extra_link_args = []
 
 SANITIZER=os.getenv('SANITIZER')
 if SANITIZER:
-    sanitizer_c_and_ld_flags = [
-        '-fsanitize=address',
-        '-fno-omit-frame-pointer'
-    ]
-    sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
-    sanitizer_cflags.append('-fsanitize-recover=all')
-    extra_compile_args.extend(sanitizer_cflags)
+    if WINDOWS:
+        extra_compile_args.append("/fsanitize=address")
+    else:
+        sanitizer_c_and_ld_flags = [
+            '-fsanitize=address',
+            '-fno-omit-frame-pointer'
+        ]
+        sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
+        sanitizer_cflags.append('-fsanitize-recover=all')
+        extra_compile_args.extend(sanitizer_cflags)
 
-    sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
-    extra_link_args.extend(sanitizer_ldflags)
+        sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
+        extra_link_args.extend(sanitizer_ldflags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
