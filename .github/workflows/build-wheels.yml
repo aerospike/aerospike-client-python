@@ -143,6 +143,7 @@ env:
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
   REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
   REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  SANITIZER: 1
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
