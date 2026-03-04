@@ -329,7 +329,7 @@ jobs:
           auditwheel repair -w {dest_dir} {wheel} &&
           auditwheel show {dest_dir}/* &&
           rm -rf $WHEEL_DIR
-        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path '/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/17.14.37012.4/bin/Hostx64/x64' --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -vv --add-path '/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/17.14.37012.4/bin/Hostx64/x64;./aerospike-client-c/vs/x64/Release' -w {dest_dir} {wheel}"
         # We also want to verify the same thing on macos
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} &&
