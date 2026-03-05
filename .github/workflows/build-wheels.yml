@@ -307,7 +307,8 @@ jobs:
     - if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
         libasan_dll_path=$(find /c/Program\ Files/Microsoft\ Visual\ Studio/2022/Enterprise/VC/Tools/MSVC/*/bin/HostX64/x64 -type f -name '*asan*dll' | grep -v dbg)
-        echo "${libasan_dll_path%/*}" >> $GITHUB_PATH
+        libasan_dll_folder="${libasan_dll_path%/*}"
+        echo $(cygpath -w "$libasan_dll_folder") >> $GITHUB_PATH
       shell: bash
 
     - name: Build wheel
