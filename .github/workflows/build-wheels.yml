@@ -445,7 +445,9 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: ASAN_OPTIONS=help=1 python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      - run: |
+          mkdir dumps
+          ASAN_OPTIONS=help=1 procdump -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
