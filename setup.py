@@ -88,6 +88,7 @@ SANITIZER=os.getenv('SANITIZER')
 if SANITIZER:
     if WINDOWS:
         extra_compile_args.append("/fsanitize=address")
+        extra_link_args.append("/DEBUG")
     else:
         sanitizer_c_and_ld_flags = [
             '-fsanitize=address',
