@@ -143,6 +143,7 @@ env:
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
   REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
   REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  SANITIZER: 1
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
@@ -154,7 +155,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -186,7 +187,7 @@ jobs:
       CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -303,6 +304,13 @@ jobs:
       # Just do it for all Python versions (even those that don't require more room) for futureproofing
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
+    - if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        libasan_dll_path=$(find /c/Program\ Files/Microsoft\ Visual\ Studio/2022/Enterprise/VC/Tools/MSVC/*/bin/HostX64/x64 -type f -name '*asan*dll' | grep -v dbg)
+        libasan_dll_folder="${libasan_dll_path%/*}"
+        echo $(cygpath -w "$libasan_dll_folder") >> $GITHUB_PATH
+      shell: bash
+
     - name: Build wheel
       uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e # v3.3.1
       id: cibuildwheel
@@ -377,7 +385,7 @@ jobs:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
         with:
           egress-policy: audit
 
@@ -437,7 +445,9 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+      - run: |
+          mkdir dumps
+          ASAN_OPTIONS=help=1 procdump -accepteula -e -x ./dumps python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
