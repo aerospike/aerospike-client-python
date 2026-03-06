@@ -119,6 +119,7 @@ CLEANUP_AND_RAISE_EXCEPTION:
     for (int i = 0; i < roles_size; i++) {
         if (roles[i])
             cf_free(roles[i]);
+        cf_free(roles[i]);
     }
 
 RAISE_EXCEPTION:
