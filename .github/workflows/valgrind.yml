@@ -110,17 +110,17 @@ jobs:
   #     sha-to-build-and-test: ${{ github.sha }}
   #   secrets: inherit
 
-  upload-built-wheel-to-jfrog:
-    if: ${{ false }}
-    needs: build-manylinux-wheel
-    # TODO: this job should skip when this workflow is run on central branches
-    # We already have artifacts available for central branches in the PyPI-type JFrog repo
-    # The problem is we have to conditionally skip this job, but using the github context to get the branch name
-    # doesn't work for some reason. Just leave this alone for now.
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
-    secrets: inherit
+  # upload-built-wheel-to-jfrog:
+  #   if: ${{ false }}
+    # needs: build-manylinux-wheel
+    # # TODO: this job should skip when this workflow is run on central branches
+    # # We already have artifacts available for central branches in the PyPI-type JFrog repo
+    # # The problem is we have to conditionally skip this job, but using the github context to get the branch name
+    # # doesn't work for some reason. Just leave this alone for now.
+    # uses: ./.github/workflows/upload-to-jfrog.yml
+    # with:
+    #   jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
+    # secrets: inherit
 
   valgrind:
     env:
@@ -131,7 +131,7 @@ jobs:
     # ]
     # Case 1: Found artifact in JFrog
     # Case 2: Did not find artifact in JFrog, had to build it in GHA
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
+    # if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
