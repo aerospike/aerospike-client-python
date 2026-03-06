@@ -1,13 +1,50 @@
 import pytest
 from aerospike import exception as e
+import aerospike
 import time
 
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
 from aerospike_helpers.operations import operations
+from .conftest import verify_record_ttl
 
 SKIP_MSG = "read_touch_ttl_percent only supported on server 7.1 or higher"
 KEY = ("test", "demo", 1)
+
+
+@pytest.mark.usefixtures("as_connection")
+class CommandLevelTTL:
+    NEW_TTL = 3000
+    POLICY = {"ttl": NEW_TTL}
+
+    def test_write_policy(self):
+        self.as_connection.put(KEY, bins={"a": 1}, policy=self.POLICY)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    def test_operate_policy(self):
+        ops = [
+            operations.write(bin_name="a", write_item=1)
+        ]
+        self.as_connection.operate(KEY, list=ops, policy=self.POLICY)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    def test_batch_write_policy(self):
+        ops = [
+            operations.write(bin_name="a", write_item=1)
+        ]
+        self.as_connection.batch_operate(keys=[KEY], ops=ops, policy_batch_write=self.POLICY)
+
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    def test_scan_policy(self):
+        ops = [
+            operations.write(bin_name="a", write_item=1)
+        ]
+        scan = self.as_connection.scan("test", "demo")
+        scan.add_ops(ops)
+        scan.results(policy=self.POLICY)
+
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
 
 class TestReadTouchTTLPercent:
