@@ -149,12 +149,12 @@ jobs:
     #     python-version: '3.10'
     #     architecture: 'x64'
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        merge-multiple: true
+    # - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    #   with:
+    #     merge-multiple: true
 
     - name: Install client
-      run: python3-dbg -m pip install ./*.whl
+      run: python3-dbg -m pip install build -c requirements.txt && python3-dbg -m build
 
     - name: Install test dependencies
       run: python3-dbg -m pip install -r test/requirements.txt
