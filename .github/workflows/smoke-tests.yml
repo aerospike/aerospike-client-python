@@ -382,7 +382,7 @@ jobs:
         container-name: aerospike
 
     - if: ${{ matrix.py-version == '3.10d' }}
-      run: echo DEBUG_FLAGS="-X dev" >> $GITHUB_ENV
+      run: echo DEBUG_FLAGS="-X dev -X showrefcount" >> $GITHUB_ENV
 
     - name: Run tests
       run: python${{ matrix.py-version}} $DEBUG_FLAGS -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
