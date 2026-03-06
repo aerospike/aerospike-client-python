@@ -33,6 +33,7 @@ env:
 
 jobs:
   look-for-wheel-in-jfrog:
+    if: ${{ false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       # So we can pass the python tag to a reusable workflow
@@ -99,17 +100,18 @@ jobs:
         if-no-files-found: error
         path: './*.whl'
 
-  build-manylinux-wheel:
-    needs: look-for-wheel-in-jfrog
-    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
-      platform-tag: manylinux_x86_64
-      sha-to-build-and-test: ${{ github.sha }}
-    secrets: inherit
+  # build-manylinux-wheel:
+  #   needs: look-for-wheel-in-jfrog
+  #   if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+  #   uses: ./.github/workflows/build-wheels.yml
+  #   with:
+  #     python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+  #     platform-tag: manylinux_x86_64
+  #     sha-to-build-and-test: ${{ github.sha }}
+  #   secrets: inherit
 
   upload-built-wheel-to-jfrog:
+    if: ${{ false }}
     needs: build-manylinux-wheel
     # TODO: this job should skip when this workflow is run on central branches
     # We already have artifacts available for central branches in the PyPI-type JFrog repo
@@ -123,10 +125,10 @@ jobs:
   valgrind:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
-    needs: [
-      look-for-wheel-in-jfrog,
-      build-manylinux-wheel
-    ]
+    # needs: [
+    #   look-for-wheel-in-jfrog,
+    #   build-manylinux-wheel
+    # ]
     # Case 1: Found artifact in JFrog
     # Case 2: Did not find artifact in JFrog, had to build it in GHA
     if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
@@ -154,7 +156,7 @@ jobs:
     #     merge-multiple: true
 
     - name: Install client
-      run: python3-dbg -m pip install build -c requirements.txt && python3-dbg -m build
+      run: python3-dbg -m pip install build -c requirements.txt && python3-dbg -m build && python3-dbg -m pip install dist/*.whl
 
     - name: Install test dependencies
       run: python3-dbg -m pip install -r test/requirements.txt
