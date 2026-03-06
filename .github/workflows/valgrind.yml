@@ -188,12 +188,12 @@ jobs:
       working-directory: test
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
-  delete-artifacts:
-    needs: [
-      # These jobs must have downloaded the artifact from Github before we can delete it
-      upload-built-wheel-to-jfrog,
-      valgrind
-    ]
-    # Workflow run must clean up after itself even if cancelled
-    if: ${{ always() }}
-    uses: ./.github/workflows/delete-artifacts.yml
+  # delete-artifacts:
+    # needs: [
+    #   # These jobs must have downloaded the artifact from Github before we can delete it
+    #   upload-built-wheel-to-jfrog,
+    #   valgrind
+    # ]
+    # # Workflow run must clean up after itself even if cancelled
+    # if: ${{ always() }}
+    # uses: ./.github/workflows/delete-artifacts.yml
