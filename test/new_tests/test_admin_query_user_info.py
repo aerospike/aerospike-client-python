@@ -20,18 +20,18 @@ class TestQueryUserInfo(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUserInfo.Me = self
+        self.user = "example-test"
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_user("example-test")
+            self.client.admin_drop_user(self.user)
             time.sleep(1)
         except e.InvalidUser:
             pass
-        user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
+            self.client.admin_create_user(self.user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass
@@ -43,7 +43,7 @@ class TestQueryUserInfo(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
+            self.client.admin_drop_user(self.user)
             time.sleep(1)
         except e.InvalidUser:
             pass
@@ -57,10 +57,8 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_parameters(self):
 
-        user = "example-test"
-
         time.sleep(2)
-        user_details = self.client.admin_query_user_info(user)
+        user_details = self.client.admin_query_user_info(self.user)
         assert user_details.get("roles") == [
             "read",
             "read-write",
@@ -75,12 +73,9 @@ class TestQueryUserInfo(TestBaseClass):
         assert user_details.get("conns_in_use") == 0
 
     def test_query_user_info_with_invalid_timeout_policy_value(self):
-
         policy = {"timeout": 0.1}
-        user = "example-test"
-
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(self.user, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -89,10 +84,8 @@ class TestQueryUserInfo(TestBaseClass):
     def test_query_user_info_with_proper_timeout_policy_value(self):
 
         policy = {"timeout": 180000}
-        user = "example-test"
-
         time.sleep(2)
-        user_details = self.client.admin_query_user_info(user, policy)
+        user_details = self.client.admin_query_user_info(self.user, policy)
 
         assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
 
@@ -131,14 +124,13 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_no_roles(self):
 
-        user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(user, roles)
+        status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user_info(user)
+        user_details = self.client.admin_query_user_info(self.user)
 
         assert user_details.get("roles") == []
 

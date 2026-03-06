@@ -362,10 +362,13 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
 
+PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds);
+
 /**
  * Create secondary cdt index
  *
- *		client.index_cdt_create(namespace, set, bin, index_name, ctx, policy)
+ *		client.index_cdt_create(namespace, set, bin, index_type, index_datatype, index_name, ctx, policy)
  *
  */
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
@@ -388,6 +391,11 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
  */
 PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
                                        PyObject *kwds);
+
+PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
+                                                    PyObject *args,
+                                                    PyObject *kwds);
+
 /**
  * Create secondary list index
  *
@@ -445,24 +453,6 @@ PyObject *AerospikeClient_Set_Log_Handler(AerospikeClient *self, PyObject *args,
                                           PyObject *kwds);
 
 /**
- * Get records in a batch
- *
- *		client.get_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds);
-
-/**
- * Get records in a batch
- *
- *		client.batch_get_ops([keys], policies)
- *
- */
-PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-                                       PyObject *kwds);
-
-/**
  * Read/Write multiple records for specified batch keys in one batch call.
  * This method allows different sub-commands for each key in the batch.
  * The returned records are located in the same list.
@@ -511,24 +501,6 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Filter bins from records in a batch
- *
- *		client.select_many([keys], [bins], policies)
- *
- */
-PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Check existence of given keys
- *
- *		client.exists_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds);
 
 /**
@@ -601,3 +573,10 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op,
 
 PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
                                    PyObject *kwds);
+
+// MRT
+
+PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
+                                 PyObject *kwds);
+PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
+                                PyObject *kwds);

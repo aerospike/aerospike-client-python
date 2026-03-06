@@ -37,8 +37,15 @@ AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    if (!self || !self->client->as) {
+    if (!self || (self->client && !self->client->as)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    else if (!self->client) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "This scan object was created with aerospike.Scan() "
+                        "and is invalid. Use aerospike.Client.scan() instead "
+                        "to create the scan object.");
         goto CLEANUP;
     }
 

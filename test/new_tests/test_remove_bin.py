@@ -50,7 +50,7 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
@@ -70,7 +70,7 @@ class TestRemovebin(object):
         record = {"Company": "Apple", "years": 30, "address": "202, sillicon Vally"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -173,9 +173,9 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_all"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
                 },
                 "age",
             ),
@@ -183,9 +183,9 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_master"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 },
                 "age",
             ),
@@ -193,7 +193,7 @@ class TestRemovebin(object):
                 ("test", "demo", "p_gen_GT"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_GT,
                 },
@@ -264,15 +264,12 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
-        try:
-            self.as_connection.remove_bin(key, ["age"], policy)
-
-        except (e.ClusterError, e.RecordNotFound):
-            pass
+        with pytest.raises(e.ParamError):
+            self.as_connection.remove_bin(key, ["age"], meta=2, policy=policy)
 
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
@@ -304,7 +301,7 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -336,7 +333,7 @@ class TestRemovebin(object):
         record = {"Name": "John", "age": 30, "address": "202, washingtoon"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
         }
@@ -427,3 +424,11 @@ class TestRemovebin(object):
         meta = {"gen": 2**65, "ttl": 2}
         with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, ["age"], meta=meta)
+
+    # TODO: this does not fail as expected
+    # def test_remove_bin_with_bin_name_too_long(self, put_data):
+    #     key = ("test", "demo", 1)
+    #     record = {"Name": "Herry", "age": 60}
+    #     put_data(self.as_connection, key, record)
+    #     with pytest.raises(e.BinNameError):
+    #         self.as_connection.remove_bin(key, ["a" * 16])

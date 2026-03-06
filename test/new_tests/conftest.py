@@ -8,8 +8,7 @@ import pytest
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-
+import aerospike
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -72,8 +71,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 
 @pytest.fixture(scope="class")
-def as_connection(request):
+def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
+    # TODO: remove. this is a duplicate.
+    request.cls.config = config
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
@@ -89,6 +90,9 @@ def as_connection(request):
     else:
         as_client = aerospike.client(config).connect(config["user"], config["password"])
 
+    # Some tests need to get the client config
+    request.cls.config = config
+
     request.cls.skip_old_server = True
     request.cls.server_version = []
     versioninfo = as_client.info_all("build")
@@ -103,8 +107,36 @@ def as_connection(request):
                     request.cls.skip_old_server = False
                 TestBaseClass.major_ver = int(versionlist[0])
                 TestBaseClass.minor_ver = int(versionlist[1])
+                TestBaseClass.patch_ver = int(versionlist[2])
 
     request.cls.as_connection = as_client
+
+    # Check that strong consistency is enabled for all nodes
+    if TestBaseClass.enterprise_in_use():
+        ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+        are_all_nodes_sc_enabled = False
+        for i, (error, result) in enumerate(ns_info.values()):
+            if error:
+                # If we can't determine SC is enabled, just assume it isn't
+                # We don't want to break the tests if this code fails
+                print("Node returned error while getting config for namespace test")
+                break
+            ns_properties = result.split(";")
+            ns_properties = filter(lambda prop: "strong-consistency=" in prop, ns_properties)
+            ns_properties = list(ns_properties)
+            if len(ns_properties) == 0:
+                print("Strong consistency not found in node properties, so assuming it's disabled by default")
+                break
+            elif len(ns_properties) > 1:
+                print("Only one strong-consistency property should be present")
+                break
+            _, sc_enabled = ns_properties[0].split("=")
+            if sc_enabled == 'false':
+                print("One of the nodes is not SC enabled")
+                break
+            if i == len(ns_info) - 1:
+                are_all_nodes_sc_enabled = True
+    TestBaseClass.strong_consistency_enabled = TestBaseClass.enterprise_in_use() and are_all_nodes_sc_enabled
 
     def close_connection():
         as_client.close()
@@ -209,3 +241,19 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)
+
+def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < time_limit_secs:
+        response = as_connection.job_info(job_id, job_module)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            break
+        time.sleep(0.1)

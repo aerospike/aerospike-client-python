@@ -55,16 +55,11 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record rec;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
     bool key_initialised = false;
     bool record_initialised = false;
-
-    // Initialize record
-    as_record_init(&rec, 0);
-    record_initialised = true;
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
@@ -92,16 +87,18 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python bins and metadata objects to as_record
-    pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
-                       &static_pool);
+    as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
+                                 serializer_option, &static_pool);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
+    record_initialised = true;
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, &err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p);
+                             &exp_list_p, false);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -120,27 +117,15 @@ CLEANUP:
     }
 
     if (key_initialised == true) {
-        // Destroy the key if it is initialised.
         as_key_destroy(&key);
     }
     if (record_initialised == true) {
-        // Destroy the record if it is initialised.
         as_record_destroy(&rec);
     }
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", py_bins);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, py_bins, Py_None, Py_None, Py_None);
         return NULL;
     }
 

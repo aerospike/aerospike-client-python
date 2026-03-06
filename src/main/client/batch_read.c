@@ -9,6 +9,7 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "macros.h"
 
 // Struct for Python User-Data for the Callback
 typedef struct {
@@ -153,14 +154,13 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     as_policy_batch *policy_batch_p = NULL;
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, &err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(self, &err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p,
+                                     &self->as->config.policies.batch,
+                                     &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP3;
         }
     }
@@ -215,6 +215,11 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     const char **filter_bins = NULL;
 
     // Parse list of bins
+    if (py_bins == Py_None) {
+        // Treat as the same
+        py_bins = NULL;
+    }
+
     if (py_bins != NULL) {
         if (!PyList_Check(py_bins)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -295,6 +300,7 @@ CLEANUP2:
 CLEANUP1:
 
     if (err.code != AEROSPIKE_OK) {
+        Py_XDECREF(br_instance);
         raise_exception(&err);
         return NULL;
     }

@@ -75,7 +75,7 @@ class TestGetPut:
 
         policy = {"key": aerospike.POLICY_KEY_DIGEST}
 
-        put_data(self.as_connection, key, rec, policy)
+        put_data(self.as_connection, key, rec, _policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 
@@ -109,7 +109,7 @@ class TestGetPut:
 
         policy = {"key": aerospike.POLICY_KEY_SEND}
 
-        put_data(self.as_connection, key, rec, policy)
+        put_data(self.as_connection, key, rec, _policy=policy)
 
         key, _, bins = self.as_connection.get(key, policy)
 
@@ -272,7 +272,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -292,7 +292,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -313,7 +313,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -328,7 +328,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -347,7 +347,7 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -376,7 +376,7 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -623,7 +623,7 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -655,7 +655,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         with pytest.raises(e.RecordNotFound):
@@ -685,7 +685,7 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_UPDATE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
         }
         try:
@@ -881,3 +881,21 @@ class TestGetPut:
         assert 0 == self.as_connection.put(key, null_bin)
         with pytest.raises(e.RecordNotFound):
             res = self.as_connection.get(key)
+
+    def test_put_int_greater_than_32_bits(self):
+        # This tests the Python client implementation on Windows
+        # It makes sure that we can insert integers larger than 32 bits in Windows
+        key = ("test", "demo", 123)
+        self.as_connection.put(key, {"a": 2**32})
+        # and that we can also retrieve integers larger than 32 bits
+        _, _, bins = self.as_connection.get(key)
+        assert bins["a"] == 2**32
+
+        # Cleanup
+        self.as_connection.remove(key)
+
+    def test_put_invalid_type(self):
+        key = ("test", "demo", 123)
+        with pytest.raises(e.ClientError) as excinfo:
+            self.as_connection.put(key, {"a": aerospike.CDTInfinite()})
+        assert excinfo.value.msg == "Invalid value type: 14"

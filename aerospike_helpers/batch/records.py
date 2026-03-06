@@ -44,8 +44,8 @@ class BatchRecord:
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
@@ -58,18 +58,18 @@ class BatchRecord:
 
 
 class Write(BatchRecord):
-    """ Write is used for executing Batch write operations with batch_write and retrieving batch write results.
+    """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
+            key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for the operations in this BatchRecord
+            meta (dict): the metadata to set for this command
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
@@ -109,18 +109,18 @@ class Write(BatchRecord):
 
 
 class Read(BatchRecord):
-    """ Read is used for executing Batch read operations with batch_write and retrieving results.
+    """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
+            key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for the operations in this BatchRecord
+            meta (dict): the metadata to set for this command
             read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
@@ -165,7 +165,7 @@ class Read(BatchRecord):
 
 
 class Apply(BatchRecord):
-    """ BatchApply is used for executing Batch UDF (user defined function) apply operations with batch_write and
+    """ BatchApply is used for executing Batch UDF (user defined function) apply commands with batch_write and
         retrieving results.
 
         Attributes:
@@ -174,8 +174,8 @@ class Apply(BatchRecord):
             function (str): Name of the UDF to invoke.
             args (:obj:`list`): List of arguments to pass to the UDF.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             policy (:ref:`aerospike_batch_apply_policies`, optional): An optional dictionary of batch apply policy
@@ -219,13 +219,13 @@ class Apply(BatchRecord):
 
 
 class Remove(BatchRecord):
-    """ Remove is used for executing Batch remove operations with batch_write and retrieving results.
+    """ Remove is used for executing Batch remove commands with batch_write and retrieving results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
@@ -261,13 +261,13 @@ class BatchRecords:
 
         Attributes:
             batch_records (list): A list of BatchRecord subtype objects used to \
-            define batch operations and hold results. BatchRecord Types can be Remove, Write, \
+            define batched commands and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
             result (int): The status code of the last batch call that used this BatchRecords.
-                ``0`` if all batch subtransactions succeeded (or if the only failures were \
+                ``0`` if all batched commands succeeded (or if the only failures were \
                     ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
                 Not ``0`` if an error occurred. The most common error is ``-16`` \
-                    (One or more batch sub transactions failed).
+                    (One or more batched commands failed).
     """
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:

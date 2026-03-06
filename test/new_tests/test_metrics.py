@@ -1,12 +1,15 @@
 from aerospike import exception as e
-from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NodeMetrics
+from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NamespaceMetrics
 import pytest
 import shutil
 import glob
 import os
 import time
 from typing import Optional
-
+import re
+import aerospike
+from .test_base_class import TestBaseClass
+from importlib.metadata import version
 
 # Flags for testing callbacks
 enable_triggered = False
@@ -55,6 +58,14 @@ class MyMetricsListeners:
 
 
 class TestMetrics:
+    # Shared between some test cases
+    listeners = MetricsListeners(
+        enable_listener=MyMetricsListeners.enable,
+        disable_listener=MyMetricsListeners.disable,
+        node_close_listener=MyMetricsListeners.node_close,
+        snapshot_listener=MyMetricsListeners.snapshot
+    )
+
     @pytest.fixture(autouse=True)
     def setup(self, as_connection, request):
         # Clear results from previous tests
@@ -105,9 +116,20 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
-    def test_enable_metrics_with_invalid_arg(self):
+    @pytest.mark.parametrize(
+        "policy",
+        [
+            1,
+            # We're testing a negative code path in a helper function
+            # where the object's actual type belongs to aerospike_helpers but does not match the expected
+            # type from aerospike_helpers
+            # The actual type needs to be in the same submodule as the expected type (metrics in aerospike_helpers)
+            listeners
+        ]
+    )
+    def test_enable_metrics_with_invalid_arg(self, policy):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.enable_metrics(1)
+            self.as_connection.enable_metrics(policy)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
     def test_metrics_writer(self):
@@ -122,29 +144,54 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
-    def test_setting_metrics_policy_custom_settings(self):
+        # The client language and version should be correct
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Skip header
+                f.readline()
+                # Each line will show the client language and version
+                data = f.readline()
+            # Each line includes cluster[cluster_name,client_language,client_version,...
+            # cluster_name can be empty
+            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]*,([A-Za-z]+),([0-9.a-zA-Z+]+),", string=data)
+            client_language, client_version = regex.groups()
+
+            assert client_language == "python"
+            assert client_version == version("aerospike")
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+
+    @pytest.fixture(scope="function", params=[None, "my_app"])
+    def get_client_and_app_id(self, request):
+        config = TestBaseClass.get_connection_config()
+        config["app_id"] = request.param
+        client = aerospike.client(config)
+
+        yield request.param, client
+
+        client.close()
+
+    def test_setting_metrics_policy_custom_settings(self, get_client_and_app_id):
+        app_id, client = get_client_and_app_id
+
         self.metrics_log_folder = "./metrics-logs"
 
-        listeners = MetricsListeners(
-            enable_listener=MyMetricsListeners.enable,
-            disable_listener=MyMetricsListeners.disable,
-            node_close_listener=MyMetricsListeners.node_close,
-            snapshot_listener=MyMetricsListeners.snapshot
-        )
         # Save bucket count for testing later
         bucket_count = 5
         policy = MetricsPolicy(
-            metrics_listeners=listeners,
+            metrics_listeners=self.listeners,
             report_dir=self.metrics_log_folder,
             report_size_limit=1000,
             interval=2,
             latency_columns=bucket_count,
-            latency_shift=2
+            latency_shift=2,
+            labels={"a": "b"},
         )
 
-        self.as_connection.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
         time.sleep(3)
-        self.as_connection.disable_metrics()
+        client.disable_metrics()
 
         # These callbacks should've been called
         assert enable_triggered is True
@@ -158,9 +205,17 @@ class TestMetrics:
             assert type(cluster) == Cluster
             assert cluster.cluster_name is None or type(cluster.cluster_name) == str
             assert type(cluster.invalid_node_count) == int
-            assert type(cluster.tran_count) == int
+            assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
+            if type(app_id) == str:
+                assert cluster.app_id == app_id
+            elif TestBaseClass.auth_in_use():
+                # Or username if the app_id is not set
+                assert cluster.app_id == TestBaseClass.user
+            else:
+                assert cluster.app_id == "not-set"
+
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
             for node in cluster.nodes:
                 assert type(node) == Node
@@ -172,23 +227,31 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
-                assert type(node.error_count) == int
-                assert type(node.timeout_count) == int
+                assert type(node.conns.recovered) == int
+                assert type(node.conns.aborted) == int
                 # Check NodeMetrics
-                assert type(node.metrics) == NodeMetrics
-                metrics = node.metrics
-                latency_buckets = [
-                    metrics.conn_latency,
-                    metrics.write_latency,
-                    metrics.read_latency,
-                    metrics.batch_latency,
-                    metrics.query_latency
-                ]
-                for buckets in latency_buckets:
-                    assert type(buckets) == list
-                    assert len(buckets) == bucket_count
-                    for bucket in buckets:
-                        assert type(bucket) == int
+                assert type(node.metrics) == list
+                ns_metrics = node.metrics
+                for ns_metric in ns_metrics:
+                    assert type(ns_metric) == NamespaceMetrics
+                    assert type(ns_metric.ns) == str
+                    assert type(ns_metric.bytes_in) == int
+                    assert type(ns_metric.bytes_out) == int
+                    assert type(ns_metric.error_count) == int
+                    assert type(ns_metric.timeout_count) == int
+                    assert type(ns_metric.key_busy_count) == int
+                    latency_buckets = [
+                        ns_metric.conn_latency,
+                        ns_metric.write_latency,
+                        ns_metric.read_latency,
+                        ns_metric.batch_latency,
+                        ns_metric.query_latency
+                    ]
+                    for buckets in latency_buckets:
+                        assert type(buckets) == list
+                        assert len(buckets) == bucket_count
+                        for bucket in buckets:
+                            assert type(bucket) == int
 
     # Unable to test the case where an exception value could not be retrieved
     # Having the callback raise an Exception without a value does not trigger this
@@ -240,31 +303,47 @@ class TestMetrics:
                 "str"
             ),
             (
-                MetricsPolicy(report_size_limit=True),
+                MetricsPolicy(report_size_limit="1"),
                 "report_size_limit",
                 "unsigned 64-bit integer"
             ),
             (
-                MetricsPolicy(interval=True),
+                MetricsPolicy(interval="1"),
                 "interval",
                 "unsigned 32-bit integer"
             ),
             (
-                MetricsPolicy(latency_columns=True),
+                MetricsPolicy(latency_columns="1"),
                 "latency_columns",
-                "unsigned 32-bit integer"
+                "unsigned 8-bit integer"
             ),
             (
-                MetricsPolicy(latency_shift=True),
+                MetricsPolicy(latency_shift="1"),
                 "latency_shift",
-                "unsigned 32-bit integer"
+                "unsigned 8-bit integer"
             ),
-            # Pass in an integer larger than allowed for an unsigned 32-bit integer
+            # Pass in an integer larger than allowed for an unsigned 8-bit integer
             (
-                MetricsPolicy(latency_shift=2**32),
+                MetricsPolicy(latency_shift=2**8),
                 "latency_shift",
-                "unsigned 32-bit integer"
-            )
+                "unsigned 8-bit integer"
+            ),
+            # Invalid labels
+            (
+                MetricsPolicy(labels={1: "a"}),
+                "labels",
+                "dict[str, str]"
+            ),
+            (
+                MetricsPolicy(labels={"a": 1}),
+                "labels",
+                "dict[str, str]"
+            ),
+            (
+                MetricsPolicy(labels=[]),
+                "labels",
+                "dict[str, str]"
+            ),
         ]
     )
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
@@ -273,10 +352,23 @@ class TestMetrics:
         assert excinfo.value.msg == f"MetricsPolicy.{field_name} must be a {expected_field_type} type"
 
     def test_metrics_policy_report_dir_too_long(self):
-        policy = MetricsPolicy(report_dir=str('.' * 257))
+        policy = MetricsPolicy(
+            # We are testing that the Python client's udata for aerospike_enable_metrics() is freed properly on error
+            # because we never end up calling aerospike_enable_metrics()
+            # This is for code coverage purposes
+            metrics_listeners=self.listeners,
+            report_dir=str('.' * 257),
+        )
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
+
+    # Use default metrics writer implementation
+    # We are checking that enable_metrics() does not seg fault
+    def test_enable_metrics_with_invalid_report_size_limit(self):
+        policy = MetricsPolicy(report_size_limit=1)
+        with pytest.raises(e.ClientError):
+            self.as_connection.enable_metrics(policy=policy)
 
     def test_disable_metrics(self):
         retval = self.as_connection.disable_metrics()

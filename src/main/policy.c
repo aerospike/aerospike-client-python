@@ -98,43 +98,39 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
-        if (exp_list) {                                                        \
-            PyObject *py_field_name = PyUnicode_FromString("expressions");     \
-            if (py_field_name == NULL) {                                       \
-                PyErr_Clear();                                                 \
-                return as_error_update(                                        \
-                    err, AEROSPIKE_ERR_CLIENT,                                 \
-                    "Unable to create Python unicode object");                 \
-            }                                                                  \
-            PyObject *py_exp_list =                                            \
-                PyDict_GetItemWithError(py_policy, py_field_name);             \
-            if (py_exp_list == NULL && PyErr_Occurred()) {                     \
-                PyErr_Clear();                                                 \
-                Py_DECREF(py_field_name);                                      \
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,              \
-                                       "Unable to fetch expressions field "    \
-                                       "from policy dictionary");              \
-            }                                                                  \
+        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_exp_list =                                                \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_exp_list == NULL && PyErr_Occurred()) {                         \
+            PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
-            if (py_exp_list) {                                                 \
-                if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
-                    AEROSPIKE_OK) {                                            \
-                    policy->filter_exp = exp_list;                             \
-                    *exp_list_p = exp_list;                                    \
-                }                                                              \
-                else {                                                         \
-                    return err->code;                                          \
-                }                                                              \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to fetch expressions field "        \
+                                   "from policy dictionary");                  \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+        if (py_exp_list) {                                                     \
+            if (as_exp_new_from_pyobject(self, py_exp_list, exp_list_p, err,   \
+                                         false) == AEROSPIKE_OK) {             \
+                policy->filter_exp = *exp_list_p;                              \
+            }                                                                  \
+            else {                                                             \
+                return err->code;                                              \
             }                                                                  \
         }                                                                      \
     }
 
-#define MAP_POLICY_SET_FIELD(__field)                                          \
+#define MAP_POLICY_SET_FIELD(__field, method)                                  \
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                __field = PyLong_AsLong(py_field);                             \
+                __field = method(py_field);                                    \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -253,6 +249,20 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     as_policy_admin_copy(config_admin_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_admin_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
@@ -262,16 +272,63 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static inline as_status
-pyobject_to_policy_base(AerospikeClient *self, as_error *err,
-                        PyObject *py_policy, as_policy_base *policy,
-                        as_exp *exp_list, as_exp **exp_list_p)
+static inline void check_and_set_txn_field(as_error *err,
+                                           as_policy_base *policy_base,
+                                           PyObject *py_policy)
+{
+    PyObject *py_txn_field_name = PyUnicode_FromString("txn");
+    if (py_txn_field_name == NULL) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to create Python string \"txn\"");
+        return;
+    }
+    PyObject *py_obj_txn =
+        PyDict_GetItemWithError(py_policy, py_txn_field_name);
+    Py_DECREF(py_txn_field_name);
+    if (py_obj_txn == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Getting the transaction field from Python policy "
+                            "dictionary returned a non-KeyError exception");
+        }
+        // Whether or not a key error was raised
+        return;
+    }
+
+    PyTypeObject *py_expected_field_type = &AerospikeTransaction_Type;
+    if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
+        // TypeError should be set here,
+        // but there is no Aerospike exception to represent that error
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "txn is not of type %s",
+                        py_expected_field_type->tp_name);
+        return;
+    }
+
+    AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
+    policy_base->txn = py_txn->txn;
+}
+
+static inline as_status pyobject_to_policy_base(AerospikeClient *self,
+                                                as_error *err,
+                                                PyObject *py_policy,
+                                                as_policy_base *policy,
+                                                as_exp **exp_list_p)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(timeout_delay, uint32_t);
     POLICY_SET_FIELD(max_retries, uint32_t);
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
+    POLICY_SET_FIELD(connect_timeout, uint32_t);
+
+    // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
+    // so this is safe to call for a scan/query policy's base policy
+    check_and_set_txn_field(err, policy, py_policy);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
 
     POLICY_SET_EXPRESSIONS_FIELD();
     return AEROSPIKE_OK;
@@ -287,7 +344,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_apply *policy,
                                    as_policy_apply **policy_p,
                                    as_policy_apply *config_apply_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+                                   as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -297,9 +354,23 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
     as_policy_apply_copy(config_apply_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_apply_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -310,6 +381,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -324,10 +396,11 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
-                                  as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy)
+as_status
+pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                        as_policy_info *policy, as_policy_info **policy_p,
+                        as_policy_info *config_info_policy, bool validate_keys,
+                        as_policy_with_extra_keys_allowed other_policy)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -337,8 +410,36 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
     as_policy_info_copy(config_info_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (validate_keys) {
+            PyObject *py_policy_valid_keys = NULL;
+            switch (other_policy) {
+            case SECOND_AS_POLICY_WRITE:
+                py_policy_valid_keys = py_info_and_write_policy_valid_keys;
+                break;
+            case SECOND_AS_POLICY_SCAN:
+                py_policy_valid_keys = py_info_and_scan_policy_valid_keys;
+                break;
+            case SECOND_AS_POLICY_NONE:
+                py_policy_valid_keys = py_info_policy_valid_keys;
+                break;
+            }
+
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
+        // POLICY_SET_FIELD(timeout_delay, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
         POLICY_SET_FIELD(check_bounds, bool);
     }
@@ -359,7 +460,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_query *policy,
                                    as_policy_query **policy_p,
                                    as_policy_query *config_query_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+                                   as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -369,8 +470,22 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_query_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -399,7 +514,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                                   PyObject *py_policy, as_policy_read *policy,
                                   as_policy_read **policy_p,
                                   as_policy_read *config_read_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p)
+                                  as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -410,9 +525,23 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     as_policy_read_copy(config_read_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_read_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -444,7 +573,7 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     as_policy_remove *policy,
                                     as_policy_remove **policy_p,
                                     as_policy_remove *config_remove_policy,
-                                    as_exp *exp_list, as_exp **exp_list_p)
+                                    as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -454,9 +583,23 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
     as_policy_remove_copy(config_remove_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_remove_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -482,11 +625,12 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_scan *policy,
-                                  as_policy_scan **policy_p,
-                                  as_policy_scan *config_scan_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p)
+as_status
+pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
+                        PyObject *py_policy, as_policy_scan *policy,
+                        as_policy_scan **policy_p,
+                        as_policy_scan *config_scan_policy, as_exp **exp_list_p,
+                        bool py_policy_also_supports_info_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -496,9 +640,30 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
     as_policy_scan_copy(config_scan_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            PyObject *py_policy_valid_keys = NULL;
+            if (py_policy_also_supports_info_policy_fields) {
+                py_policy_valid_keys = py_info_and_scan_policy_valid_keys;
+            }
+            else {
+                py_policy_valid_keys = py_scan_policy_valid_keys;
+            }
+
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -507,6 +672,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(records_per_second, uint32_t);
         POLICY_SET_FIELD(max_records, uint64_t);
         POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(ttl, uint32_t);
     }
 
     // Update the policy
@@ -521,11 +687,11 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_write *policy,
-                                   as_policy_write **policy_p,
-                                   as_policy_write *config_write_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_write(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_exp **exp_list_p,
+    bool py_policy_also_supports_info_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -535,9 +701,30 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
     as_policy_write_copy(config_write_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            PyObject *py_policy_valid_keys = NULL;
+            if (py_policy_also_supports_info_policy_fields) {
+                py_policy_valid_keys = py_info_and_write_policy_valid_keys;
+            }
+            else {
+                py_policy_valid_keys = py_write_policy_valid_keys;
+            }
+
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -548,7 +735,9 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(ttl, uint32_t);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -568,7 +757,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      as_policy_operate *policy,
                                      as_policy_operate **policy_p,
                                      as_policy_operate *config_operate_policy,
-                                     as_exp *exp_list, as_exp **exp_list_p)
+                                     as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -578,9 +767,22 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
     as_policy_operate_copy(config_operate_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_operate_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -593,6 +795,8 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(exists, as_policy_exists);
         POLICY_SET_FIELD(read_touch_ttl_percent, int);
+        POLICY_SET_FIELD(on_locking_only, bool);
+        POLICY_SET_FIELD(ttl, uint32_t);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -615,7 +819,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_batch *policy,
                                    as_policy_batch **policy_p,
                                    as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+                                   as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -625,9 +829,22 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
     as_policy_batch_copy(config_batch_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_batch_policy_valid_keys,
+                POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return err->code;
+            }
+        }
+
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(self, err, py_policy,
+                                                   &policy->base, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -658,9 +875,23 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
-                                         as_exp *exp_list, as_exp **exp_list_p)
+                                         as_exp **exp_list_p)
 {
     POLICY_INIT(as_policy_batch_write);
+
+    if (self->validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_write_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            // This shouldn't happen, but if it did...
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -668,6 +899,8 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(gen, as_policy_gen);
     POLICY_SET_FIELD(exists, as_policy_exists);
     POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
+    POLICY_SET_FIELD(ttl, uint32_t);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -683,9 +916,22 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
-                                        as_exp *exp_list, as_exp **exp_list_p)
+                                        as_exp **exp_list_p)
 {
     POLICY_INIT(as_policy_batch_read);
+
+    if (self->validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_read_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Set policy fields
     POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -706,15 +952,29 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
-                                         as_exp *exp_list, as_exp **exp_list_p)
+                                         as_exp **exp_list_p)
 {
     POLICY_INIT(as_policy_batch_apply);
+
+    if (self->validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_apply_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
     POLICY_SET_FIELD(commit_level, as_policy_commit_level);
     POLICY_SET_FIELD(ttl, uint32_t);
     POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -730,9 +990,22 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
                                           as_policy_batch_remove **policy_p,
-                                          as_exp *exp_list, as_exp **exp_list_p)
+                                          as_exp **exp_list_p)
 {
     POLICY_INIT(as_policy_batch_remove);
+
+    if (self->validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_batch_remove_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -751,10 +1024,23 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 }
 
 as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
-                                 as_bit_policy *policy)
+                                 as_bit_policy *policy, bool validate_keys)
 {
     as_bit_policy_init(policy);
     POLICY_INIT(as_bit_policy);
+
+    if (validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_bit_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     PyObject *py_bit_flags =
         PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
@@ -775,18 +1061,31 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
     return err->code;
 }
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
-                                 as_map_policy *policy)
+                                 as_map_policy *policy, bool validate_keys)
 {
     // Initialize Policy
     POLICY_INIT(as_map_policy);
+
+    if (validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_map_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     // Defaults
     long map_order = AS_MAP_UNORDERED;
     uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
     bool persist_index = false;
 
-    MAP_POLICY_SET_FIELD(map_order);
-    MAP_POLICY_SET_FIELD(map_write_flags);
+    MAP_POLICY_SET_FIELD(map_order, PyLong_AsLong);
+    MAP_POLICY_SET_FIELD(map_write_flags, PyLong_AsUnsignedLong);
 
     PyObject *py_persist_index =
         PyDict_GetItemString(py_policy, "persist_index");
@@ -807,7 +1106,8 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
 }
 
 as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
-                                  as_list_policy *list_policy)
+                                  as_list_policy *list_policy,
+                                  bool validate_keys)
 {
     as_list_policy_init(list_policy);
     PyObject *py_val = NULL;
@@ -823,10 +1123,23 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
                                "List policy must be a dictionary.");
     }
 
+    if (validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_list_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
+
     py_val = PyDict_GetItemString(py_policy, "list_order");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            list_order = (int64_t)PyLong_AsLong(py_val);
+            list_order = PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert list_order");
@@ -841,7 +1154,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     py_val = PyDict_GetItemString(py_policy, "write_flags");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            flags = (int64_t)PyLong_AsLong(py_val);
+            flags = PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert write_flags");
@@ -860,7 +1173,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 }
 
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
-                                 as_hll_policy *hll_policy)
+                                 as_hll_policy *hll_policy, bool validate_keys)
 {
     int64_t flags = 0;
     as_hll_policy_init(hll_policy);
@@ -875,10 +1188,23 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
                                "Hll policy must be a dictionary.");
     }
 
+    if (validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_hll_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
+
     py_val = PyDict_GetItemString(py_policy, "flags");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            flags = (int64_t)PyLong_AsLong(py_val);
+            flags = (int64_t)PyLong_AsLongLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert flags.");
@@ -1089,7 +1415,7 @@ set_as_metrics_listeners_using_pyobject(as_error *err,
     }
 
     if (!is_pyobj_correct_as_helpers_type(py_metricslisteners, "metrics",
-                                          "MetricsListeners")) {
+                                          "MetricsListeners", false)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "metrics_listeners",
                         "aerospike_helpers.metrics.MetricsListeners");
@@ -1155,21 +1481,12 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-// metrics_policy must be declared already
-as_status
-init_and_set_as_metrics_policy_using_pyobject(as_error *err,
-                                              PyObject *py_metrics_policy,
-                                              as_metrics_policy *metrics_policy)
+int set_as_metrics_policy_using_pyobject(as_error *err,
+                                         PyObject *py_metrics_policy,
+                                         as_metrics_policy *metrics_policy)
 {
-    as_metrics_policy_init(metrics_policy);
-
-    if (!py_metrics_policy || py_metrics_policy == Py_None) {
-        // Use default metrics policy
-        return AEROSPIKE_OK;
-    }
-
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
-                                          "MetricsPolicy")) {
+                                          "MetricsPolicy", false)) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");
@@ -1197,96 +1514,125 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
         // Need to deallocate metrics listeners' udata
         goto error;
     }
-    if (!PyUnicode_Check(py_report_dir)) {
+    const char *report_dir = convert_pyobject_to_str(py_report_dir);
+    if (!report_dir) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "report_dir", "str");
         goto error;
     }
-    const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
     if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "MetricsPolicy.report_dir must be less than 256 chars");
         goto error;
     }
     strcpy(metrics_policy->report_dir, report_dir);
+    Py_DECREF(py_report_dir);
 
+    const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
-        PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
+        PyObject_GetAttrString(py_metrics_policy, report_size_limit_attr_name);
     if (!py_report_size_limit) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                        "report_size_limit");
-        goto error;
-    }
-    if (!PyLong_CheckExact(py_report_size_limit)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    unsigned long long report_size_limit =
-        PyLong_AsUnsignedLongLong(py_report_size_limit);
-    if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    if (report_size_limit > UINT64_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
+                        report_size_limit_attr_name);
         goto error;
     }
 
-    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
+    uint64_t report_size_limit =
+        convert_pyobject_to_uint64_t(py_report_size_limit);
+    Py_DECREF(py_report_size_limit);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        report_size_limit_attr_name, "unsigned 64-bit integer");
+        goto error;
+    }
+    metrics_policy->report_size_limit = report_size_limit;
 
-    const char *uint32_fields[] = {"interval", "latency_columns",
-                                   "latency_shift"};
-    uint32_t *uint32_ptrs[] = {&metrics_policy->interval,
-                               &metrics_policy->latency_columns,
-                               &metrics_policy->latency_shift};
+    const char *interval_field_name = "interval";
+    PyObject *py_interval =
+        PyObject_GetAttrString(py_metrics_policy, interval_field_name);
+    if (!py_interval) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        interval_field_name);
+        goto error;
+    }
+
+    uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
+    Py_DECREF(py_interval);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        interval_field_name, "unsigned 32-bit integer");
+        goto error;
+    }
+    metrics_policy->interval = interval;
+
+    const char *uint8_field_names[] = {"latency_columns", "latency_shift"};
+    uint8_t *field_refs[] = {&metrics_policy->latency_columns,
+                             &metrics_policy->latency_shift};
     for (unsigned long i = 0;
-         i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
-        PyObject *py_field_value =
-            PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
-        if (!py_field_value) {
+         i < sizeof(uint8_field_names) / sizeof(uint8_field_names[0]); i++) {
+        PyObject *py_attr_value =
+            PyObject_GetAttrString(py_metrics_policy, uint8_field_names[i]);
+        if (!py_attr_value) {
             as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                            uint32_fields[i]);
+                            uint8_field_names[i]);
             goto error;
         }
 
-        // There's a helper function in the Python client wrapper code called
-        // get_uint32_value
-        // But we don't use it because it doesn't set which exact line
-        // an error occurs. It only returns an error code when it happens
-        if (!PyLong_CheckExact(py_field_value)) {
+        uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
+                            "unsigned 8-bit integer");
             goto error;
         }
-
-        unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
-        if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
-            PyErr_Clear();
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        if (field_value > UINT32_MAX) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        *uint32_ptrs[i] = (uint32_t)field_value;
+        *field_refs[i] = attr_value;
     }
 
-    return AEROSPIKE_OK;
+    const char *labels_attr_name = "labels";
+    PyObject *py_labels =
+        PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
+    if (!py_labels) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        labels_attr_name);
+        goto error;
+    }
+    else if (PyDict_Check(py_labels)) {
+        PyObject *py_label_name, *py_label_value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
+            const char *label_name = convert_pyobject_to_str(py_label_name);
+            if (label_name == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
+                goto while_error;
+            }
+            const char *label_value = convert_pyobject_to_str(py_label_value);
+            if (label_value == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
+                goto while_error;
+            }
+
+            as_metrics_policy_add_label(metrics_policy, label_name,
+                                        label_value);
+            continue;
+
+        while_error:
+            Py_DECREF(py_labels);
+            goto error;
+        }
+        Py_DECREF(py_labels);
+    }
+    else {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        labels_attr_name, "dict[str, str]");
+        goto error;
+    }
+
+    return 0;
 
 error:
     // udata would've been allocated if MetricsListener was successfully converted to C code
@@ -1294,5 +1640,5 @@ error:
         free_py_listener_data(
             (PyListenerData *)metrics_policy->metrics_listeners.udata);
     }
-    return err->code;
+    return -1;
 }

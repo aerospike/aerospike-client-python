@@ -3,7 +3,7 @@ import aerospike
 config = {'hosts': [('127.0.0.1', 3000)],
             'lua': {'system_path':'/usr/local/aerospike/lua/',
                     'user_path':'./'}}
-client = aerospike.client(config).connect()
+client = aerospike.client(config)
 client.udf_put("example.lua")
 
 # Remove index if it already exists

@@ -446,6 +446,9 @@ class ListRemoveByValueRange(_BaseExpr):
             # Remove list of items with values >= 3 and < 7 from list bin "a".
             expr = exp.ListRemoveByValueRange(None, 3, 7, exp.ListBin("a")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (begin, end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE

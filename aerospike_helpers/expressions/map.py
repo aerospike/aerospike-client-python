@@ -281,6 +281,9 @@ class MapRemoveByKeyRange(_BaseExpr):
             # Remove elements at keys between 1 and 10 in map bin "b".
             expr = exp.MapRemoveByKeyRange(None, 1, 10, exp.MapBin("b")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (
             begin,
             end,
@@ -1103,6 +1106,9 @@ class MapGetByValueRange(_BaseExpr):
             # Get elements with values between 3 and 7 from map bin "b".
             expr = exp.MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, 3, 7, exp.MapBin("b")).compile()
         """
+        if value_end is None:
+            value_end = aerospike.CDTInfinite()
+
         self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
         if inverted:

@@ -78,7 +78,7 @@ static bool each_result(const as_val *val, void *udata)
     if (data->partition_scan) {
         // Build Python Function Arguments
         py_arglist = PyTuple_New(2);
-        PyTuple_SetItem(py_arglist, 0, PyLong_FromLong(part_id));
+        PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
         PyTuple_SetItem(py_arglist, 1, py_result);
     }
     else {
@@ -135,7 +135,6 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     as_policy_scan *scan_policy_p = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -175,7 +174,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_scan(
         self->client, &data.error, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list, &exp_list_p);
+        &self->client->as->config.policies.scan, &exp_list_p, false);
 
     if (data.error.code != AEROSPIKE_OK) {
         goto CLEANUP;

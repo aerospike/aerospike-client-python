@@ -705,7 +705,7 @@ class TestOperate(object):
 
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": 3, "bin": "age", "val": 3},
+            {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
@@ -1097,7 +1097,7 @@ class TestOperate(object):
 
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": 3, "bin": "age", "val": 3},
+            {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 

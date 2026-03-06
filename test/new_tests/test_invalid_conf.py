@@ -2,13 +2,20 @@ import pytest
 from aerospike import exception as e
 
 import aerospike
+from .test_base_class import TestBaseClass
 
+# This is for test_validate_keys
+# INVALID_OPTION_KEY cannot be read for the client-config policies test case as a class variable,
+# so these were made global
+INVALID_OPTION_KEY = "a"
 
 class TestInvalidClientConfig(object):
     def test_no_config(self):
         with pytest.raises(e.ParamError) as err:
             aerospike.client()
         assert "No config argument" in err.value.msg
+        # Test exception chaining
+        assert type(err.value.__context__) == TypeError
 
     def test_config_not_dict(self):
         with pytest.raises(e.ParamError) as err:
@@ -161,3 +168,57 @@ class TestInvalidClientConfig(object):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
             aerospike.client({"hosts": [("localhost", 3000)], "policies": {"remove": subpolicy}})
+
+    def test_validate_keys_invalid_value(self):
+        config = {
+            "validate_keys": "True",
+            "host": [("127.0.0.1", 3000)]
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
+
+    @pytest.mark.parametrize(
+        "invalid_config, is_policy",
+        [
+            ({INVALID_OPTION_KEY: 1}, False),
+            ({"lua": {INVALID_OPTION_KEY: 1}}, False),
+            ({"tls": {INVALID_OPTION_KEY: 1}}, False),
+            ({"shm": {INVALID_OPTION_KEY: 1}}, False),
+            ({"policies": {INVALID_OPTION_KEY: 1}}, False),
+            # Generate client configs for all types of policies
+            *[
+                ({"policies": {policy_name: {INVALID_OPTION_KEY: 1}}}, True)
+                for policy_name in
+                [
+                    "read",
+                    "write",
+                    "apply",
+                    "remove",
+                    "query",
+                    "scan",
+                    "operate",
+                    "info",
+                    "admin",
+                    "batch_apply",
+                    "batch_remove",
+                    "batch_write",
+                    "batch",
+                    "batch_parent_write",
+                    "txn_verify",
+                    "txn_roll"
+                ]
+            ]
+        ]
+    )
+    def test_validate_keys(self, invalid_config: dict, is_policy: bool):
+        config = TestBaseClass.get_connection_config()
+        config.update(invalid_config)
+        config["validate_keys"] = True
+
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+
+        adjective = "policy" if is_policy else "client config"
+        EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
+        assert excinfo.value.msg == EXPECTED_INVALID_KEY_ERR_MSG.format(INVALID_OPTION_KEY, adjective)
