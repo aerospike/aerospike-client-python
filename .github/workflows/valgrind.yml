@@ -179,7 +179,9 @@ jobs:
     - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
       if: ${{ !inputs.massif }}
 
-    - run: python3-dbg -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - run: |
+        ulimit -c unlimited
+        python3-dbg -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
 
     - name: Setup tmate session
