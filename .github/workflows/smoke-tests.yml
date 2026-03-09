@@ -281,7 +281,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y python3-dbg
-        echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
+        # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
 
     - if: ${{ matrix.type == 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
@@ -388,7 +388,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python${{ matrix.py-version}} $DEBUG_FLAGS -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python${{ matrix.py-version}} -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-ee:
