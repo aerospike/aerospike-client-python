@@ -257,6 +257,7 @@ jobs:
           - sanitizer
           - dont_validate_keys
           - lowest_supported_server_version
+          - debug-interpreter-build
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
@@ -275,21 +276,31 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
+    - if: ${{ matrix.type == 'debug-interpreter-build' }}
+      run: |
+        sudo apt update
+        sudo apt install -y python3.10-dbg
+
     - if: ${{ matrix.type == 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
 
-    - if: ${{ matrix.type != 'sanitizer' }}
+    - if: ${{ matrix.type == 'debug-interpreter-build' }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-dbg >> $GITHUB_ENV
+
+    - if: ${{ matrix.type == 'dont_validate_keys' || matrix.type == 'lowest_supported_server_version' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
+
+    - run: echo PYTHON_INTERPRETER=${{ matrix.type == 'debug-interpreter-build' && 'python3-dbg' || 'python' }} >> $GITHUB_ENV
 
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: pip install *.whl
+      run: $PYTHON_INTERPRETER -m pip install *.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: $PYTHON_INTERPRETER -m pip install -r test/requirements.txt
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
@@ -312,7 +323,7 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
-      run: python -m pytest ./new_tests -vvs
+      run: $PYTHON_INTERPRETER -m pytest ./new_tests -vvs
       working-directory: test
 
   test-ce:
@@ -322,7 +333,6 @@ jobs:
       matrix:
         py-version: [
           "3.10",
-          "3.10d",
           "3.11",
           "3.12",
           "3.13",
@@ -340,17 +350,11 @@ jobs:
       with:
         submodules: recursive
 
-    - if: ${{ matrix.py-version != '3.10d' }}
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
-
-    - if: ${{ matrix.py-version == '3.10d' }}
-      run: |
-        sudo apt update
-        sudo apt install -y python3.10-dbg
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
