@@ -411,11 +411,14 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
 #endif
 
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
+    if (!py_module_dict) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    bool found = false;
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
-    bool found = false;
-
     while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
         if (PyObject_HasAttrString(py_exc_class, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
