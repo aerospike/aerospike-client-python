@@ -172,11 +172,15 @@ jobs:
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y
+    - name: Fetch valgrind suppression file for Python
+      run: wget https://svn.python.org/projects/python/trunk/Misc/valgrind-python.supp
+      working-directory: test
 
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+      # Also print details of directly and indirectly reachable blocks
+    - run: echo VALGRIND_ARGS="--leak-check=full --show-leak-kinds=all --suppressions=valgrind-python.supp" >> $GITHUB_ENV
       if: ${{ !inputs.massif }}
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
