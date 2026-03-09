@@ -182,9 +182,9 @@ jobs:
     - run: python3-dbg -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
 
-    - name: Setup tmate session
-      if: ${{ !cancelled() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ !cancelled() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     # TODO: upload report as artifact
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
