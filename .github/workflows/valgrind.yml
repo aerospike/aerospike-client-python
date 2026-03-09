@@ -33,6 +33,7 @@ env:
 
 jobs:
   look-for-wheel-in-jfrog:
+    if: ${{ false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       # So we can pass the python tag to a reusable workflow
@@ -99,37 +100,38 @@ jobs:
         if-no-files-found: error
         path: './*.whl'
 
-  build-manylinux-wheel:
-    needs: look-for-wheel-in-jfrog
-    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
-      platform-tag: manylinux_x86_64
-      sha-to-build-and-test: ${{ github.sha }}
-    secrets: inherit
+  # build-manylinux-wheel:
+  #   needs: look-for-wheel-in-jfrog
+  #   if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+  #   uses: ./.github/workflows/build-wheels.yml
+  #   with:
+  #     python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+  #     platform-tag: manylinux_x86_64
+  #     sha-to-build-and-test: ${{ github.sha }}
+  #   secrets: inherit
 
-  upload-built-wheel-to-jfrog:
-    needs: build-manylinux-wheel
-    # TODO: this job should skip when this workflow is run on central branches
-    # We already have artifacts available for central branches in the PyPI-type JFrog repo
-    # The problem is we have to conditionally skip this job, but using the github context to get the branch name
-    # doesn't work for some reason. Just leave this alone for now.
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
-    secrets: inherit
+  # upload-built-wheel-to-jfrog:
+  #   if: ${{ false }}
+    # needs: build-manylinux-wheel
+    # # TODO: this job should skip when this workflow is run on central branches
+    # # We already have artifacts available for central branches in the PyPI-type JFrog repo
+    # # The problem is we have to conditionally skip this job, but using the github context to get the branch name
+    # # doesn't work for some reason. Just leave this alone for now.
+    # uses: ./.github/workflows/upload-to-jfrog.yml
+    # with:
+    #   jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
+    # secrets: inherit
 
   valgrind:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
-    needs: [
-      look-for-wheel-in-jfrog,
-      build-manylinux-wheel
-    ]
+    # needs: [
+    #   look-for-wheel-in-jfrog,
+    #   build-manylinux-wheel
+    # ]
     # Case 1: Found artifact in JFrog
     # Case 2: Did not find artifact in JFrog, had to build it in GHA
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
+    # if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -142,24 +144,22 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Convert Python tag to Python version
-      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
-      shell: bash
+    - run: sudo apt install -y python3-dbg
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '${{ env.PYTHON_VERSION }}'
-        architecture: 'x64'
+    # - uses: actions/setup-python@v2
+    #   with:
+    #     python-version: '3.10'
+    #     architecture: 'x64'
 
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        merge-multiple: true
+    # - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+    #   with:
+    #     merge-multiple: true
 
     - name: Install client
-      run: pip install ./*.whl
+      run: python3-dbg -m pip install build -c requirements.txt && python3-dbg -m build && python3-dbg -m pip install dist/*.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: python3-dbg -m pip install -r test/requirements.txt
 
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
@@ -176,11 +176,15 @@ jobs:
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
 
-    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+    - run: echo VALGRIND_ARGS="--leak-check=full --track-origins=yes" >> $GITHUB_ENV
       if: ${{ !inputs.massif }}
 
-    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3-dbg -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
+
+    - name: Setup tmate session
+      if: ${{ !cancelled() }}
+      uses: mxschmitt/action-tmate@v3
 
     # TODO: upload report as artifact
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
@@ -188,12 +192,12 @@ jobs:
       working-directory: test
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
-  delete-artifacts:
-    needs: [
-      # These jobs must have downloaded the artifact from Github before we can delete it
-      upload-built-wheel-to-jfrog,
-      valgrind
-    ]
-    # Workflow run must clean up after itself even if cancelled
-    if: ${{ always() }}
-    uses: ./.github/workflows/delete-artifacts.yml
+  # delete-artifacts:
+    # needs: [
+    #   # These jobs must have downloaded the artifact from Github before we can delete it
+    #   upload-built-wheel-to-jfrog,
+    #   valgrind
+    # ]
+    # # Workflow run must clean up after itself even if cancelled
+    # if: ${{ always() }}
+    # uses: ./.github/workflows/delete-artifacts.yml
