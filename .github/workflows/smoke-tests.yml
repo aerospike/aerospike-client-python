@@ -74,7 +74,7 @@ jobs:
     - if: ${{ matrix.py-version == '3.10d' }}
       run: |
         sudo apt update
-        sudo apt install -y python3.10-dbg
+        sudo apt install -y python3-dbg
 
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
@@ -280,7 +280,7 @@ jobs:
     - if: ${{ matrix.type == 'debug-interpreter-build' }}
       run: |
         sudo apt update
-        sudo apt install -y python3.10-dbg
+        sudo apt install -y python3-dbg
         echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
 
     - if: ${{ matrix.type == 'sanitizer' }}
@@ -292,7 +292,7 @@ jobs:
     - if: ${{ matrix.type != 'sanitizer' &&  matrix.type != 'debug-interpreter-build' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
-    - run: echo PYTHON_INTERPRETER=${{ matrix.type == 'debug-interpreter-build' && 'python3.10-dbg' || 'python' }} >> $GITHUB_ENV
+    - run: echo PYTHON_INTERPRETER=${{ matrix.type == 'debug-interpreter-build' && 'python3-dbg' || 'python' }} >> $GITHUB_ENV
 
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
