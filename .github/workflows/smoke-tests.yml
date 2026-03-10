@@ -64,23 +64,29 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+    # - if: ${{ matrix.py-version != '3.10d' }}
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
 
+    # - if: ${{ matrix.py-version == '3.10d' }}
+    #   run: |
+    #     sudo apt update
+    #     sudo apt install -y python3-dbg
+
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
       run: sudo apt install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
-      run: python3 -m pip install -r requirements.txt
+      run: python${{ matrix.py-version }} -m pip install -r requirements.txt
 
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
     - name: Build client
-      run: python3 -m build
+      run: python${{ matrix.py-version }} -m build
       env:
         CFLAGS: '-Werror'
 
@@ -94,6 +100,41 @@ jobs:
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
+
+  build-and-run-tests-with-debug-interpreter:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - run: |
+        # sudo apt update
+        sudo apt install -y python3-dbg
+        # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
+        python3-dbg -m pip install build -c requirements.txt
+        python3-dbg -m build
+        python3-dbg -m pip install dist/*.whl
+
+    - run: python3-dbg -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run Aerospike server
+      uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - run: python3-dbg -m pytest ./new_tests
+      working-directory: test
 
   generate-coverage-report:
     runs-on: ubuntu-22.04
@@ -275,15 +316,18 @@ jobs:
     - if: ${{ matrix.type != 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
+    - run: echo PYTHON_INTERPRETER=${{ matrix.type == 'debug-interpreter-build' && 'python3-dbg' || 'python' }} >> $GITHUB_ENV
+
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: pip install *.whl
+      if: ${{ matrix.type != 'debug-interpreter-build' }}
+      run: $PYTHON_INTERPRETER -m pip install *.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: $PYTHON_INTERPRETER -m pip install -r test/requirements.txt
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
@@ -306,7 +350,7 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
-      run: python -m pytest ./new_tests -vvs
+      run: $PYTHON_INTERPRETER $DEBUG_FLAGS -m pytest ./new_tests -vvs
       working-directory: test
 
   test-ce:
@@ -333,7 +377,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -346,10 +390,10 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: pip install *.whl
+      run: python${{ matrix.py-version}} -m pip install *.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: python${{ matrix.py-version}} -m pip install -r test/requirements.txt
 
     - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
@@ -369,7 +413,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python${{ matrix.py-version}} -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-ee:
