@@ -55,7 +55,7 @@ jobs:
 
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -64,15 +64,15 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
 
-    - run: sudo apt update
+    - run: sudo apt-get update
     - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
+      run: sudo apt-get install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
 
@@ -95,11 +95,11 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
 
-  generate-coverage-report:
+  build-and-run-tests-with-debug-interpreter:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -108,7 +108,42 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-dbg
+        # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
+        python3-dbg -m pip install build -c requirements.txt
+        python3-dbg -m build
+        python3-dbg -m pip install dist/*.whl
+
+    - run: python3-dbg -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run Aerospike server
+      uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - run: python3-dbg -m pytest ./new_tests
+      working-directory: test
+
+  generate-coverage-report:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -193,7 +228,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -219,7 +254,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -227,7 +262,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -242,7 +277,7 @@ jobs:
     - run: pip install mypy -c requirements.txt
       working-directory: .github/workflows
 
-    - run: stubtest aerospike --allowlist stubtest-allowlist
+    - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
 
   test-full-suite:
     strategy:
@@ -256,7 +291,7 @@ jobs:
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -264,7 +299,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -304,7 +339,7 @@ jobs:
       working-directory: test
 
     - name: Run tests
-      # We need to disable capturing output or else we cannot see memory errors reported by 
+      # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
       run: python -m pytest ./new_tests -vvs
       working-directory: test
@@ -325,7 +360,7 @@ jobs:
 
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -333,7 +368,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -377,7 +412,7 @@ jobs:
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -385,7 +420,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: "3.13"
         architecture: 'x64'
@@ -430,12 +465,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
@@ -461,12 +496,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'

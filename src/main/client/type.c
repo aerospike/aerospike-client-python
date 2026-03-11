@@ -474,6 +474,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
      METH_VARARGS | METH_KEYWORDS, index_remove_doc},
+
+    {"index_single_value_create",
+     (PyCFunction)AerospikeClient_Index_Single_Value_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
     {"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
      METH_VARARGS | METH_KEYWORDS, index_list_create_doc},
     {"index_map_keys_create",
@@ -482,6 +486,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"index_map_values_create",
      (PyCFunction)AerospikeClient_Index_Map_Values_Create,
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
+
     {"index_geo2dsphere_create",
      (PyCFunction)AerospikeClient_Index_2dsphere_Create,
      METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},

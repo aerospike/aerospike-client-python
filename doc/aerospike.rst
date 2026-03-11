@@ -1603,7 +1603,6 @@ Bin Types
 
 Index data types
 ----------------
-
 .. data:: INDEX_STRING
 
     An index whose values are of the aerospike string data type.
@@ -1624,24 +1623,24 @@ Index data types
 
 .. _aerospike_index_types:
 
-Index types
+Index Types
 -----------
 
 .. data:: INDEX_TYPE_DEFAULT
 
-    Index a bin that doesn't contain a complex data type.
+    Index a single scalar value.
 
 .. data:: INDEX_TYPE_LIST
 
-    Index a bin whose contents is an aerospike list.
+    Index all of a list's values.
 
 .. data:: INDEX_TYPE_MAPKEYS
 
-    Index the keys of a bin whose contents is an aerospike map.
+    Index all of a map's keys.
 
 .. data:: INDEX_TYPE_MAPVALUES
 
-    Index the values of a bin whose contents is an aerospike map.
+    Index all of a map's values.
 
 .. _aerospike_misc_constants:
 

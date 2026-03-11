@@ -24,5 +24,3 @@ void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name);
 void remove_exception(as_error *err);
-void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                  PyObject *py_tuple);
