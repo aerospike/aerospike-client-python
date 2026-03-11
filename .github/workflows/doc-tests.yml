@@ -34,7 +34,7 @@ jobs:
         builder-command:
         - 'spelling . spelling -W --keep-going'
         # -vv is too verbose and makes it hard to read logs
-        - 'linkcheck -v . links'
+        - 'linkcheck -vv . links'
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
