@@ -25,6 +25,7 @@
 #include "exceptions.h"
 #include "exception_types.h"
 #include "macros.h"
+#include "pythoncapi_compat.h"
 
 static PyObject *py_exc_module;
 
@@ -428,16 +429,9 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
-        // TODO: store this in a global so we don't have to look it up
-        PyObject *py_aerospike_error_name =
-            PyUnicode_FromString(AEROSPIKE_ERR_EXCEPTION_NAME);
-        if (py_aerospike_error_name == NULL) {
-            goto CHAIN_PREV_EXC_AND_RETURN;
-        }
-        PyObject *base_exception =
-            PyDict_GetItemWithError(py_module_dict, py_aerospike_error_name);
-        Py_DECREF(py_aerospike_error_name);
-        if (base_exception == NULL) {
+        PyObject *py_base_exception =
+            PyDict_GetItemString(py_module_dict, AEROSPIKE_ERR_EXCEPTION_NAME);
+        if (py_base_exception == NULL) {
             if (!PyErr_Occurred()) {
                 PyErr_SetString(
                     PyExc_Exception,
@@ -445,7 +439,8 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
             }
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
-        py_exc_class = base_exception;
+
+        py_exc_class = py_base_exception;
     }
 
     const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
@@ -454,35 +449,25 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                                   py_name};
     for (unsigned long i = 0;
          i < sizeof(py_extra_attrs) / sizeof(py_extra_attrs[0]); i++) {
-        PyObject *py_exc_extra_attr =
-            PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
-        if (py_exc_extra_attr) {
-            Py_DECREF(py_exc_extra_attr);
+        int retval =
+            PyObject_HasAttrStringWithError(py_exc_class, extra_attrs[i]);
+        if (retval == 1) {
             int retval = PyObject_SetAttrString(py_exc_class, extra_attrs[i],
                                                 py_extra_attrs[i]);
             if (retval == -1) {
                 goto CHAIN_PREV_EXC_AND_RETURN;
             }
         }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            // We are sure that we want to ignore this
-            PyErr_Clear();
-        }
-        else {
-            // This happens if the code that converts a C client error to a Python exception fails.
+        else if (retval == -1) {
             // The caller of this function should be returning because of an exception anyways
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
     }
 
-    // Convert borrowed reference of exception class to strong reference
-    Py_INCREF(py_exc_class);
-
     // Convert C error to Python exception
     PyObject *py_err_tuple = NULL;
     error_to_pyobject(err, &py_err_tuple);
-    if (!py_exc_class) {
-        Py_DECREF(py_exc_class);
+    if (!py_err_tuple) {
         goto CHAIN_PREV_EXC_AND_RETURN;
     }
 
@@ -492,20 +477,17 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         // Here, we are assuming the number of attrs is the same as the number of tuple members
         PyObject *py_arg = PyTuple_GetItem(py_err_tuple, i);
         if (py_arg == NULL) {
-            Py_DECREF(py_exc_class);
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
         int retval = PyObject_SetAttrString(py_exc_class,
                                             aerospike_err_attrs[i], py_arg);
         if (retval == -1) {
-            Py_DECREF(py_exc_class);
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
     }
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err_tuple);
-    Py_DECREF(py_exc_class);
     Py_DECREF(py_err_tuple);
 
 CHAIN_PREV_EXC_AND_RETURN:
