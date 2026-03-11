@@ -52,5 +52,9 @@ jobs:
       # TODO: find way to split up dependencies
       run: python -m pip install -r doc/requirements.txt
     - name: Run builder
+      id: builder
       run: sphinx-build -b ${{ matrix.builder-command }}
+      working-directory: doc
+    - if: ${{ steps.builder.outcome == 'failure' }}
+      run: sphinx-build --bug-report
       working-directory: doc
