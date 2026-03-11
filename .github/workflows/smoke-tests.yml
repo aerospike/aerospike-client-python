@@ -64,29 +64,23 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    # - if: ${{ matrix.py-version != '3.10d' }}
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
         allow-prereleases: true
 
-    # - if: ${{ matrix.py-version == '3.10d' }}
-    #   run: |
-    #     sudo apt update
-    #     sudo apt install -y python3-dbg
-
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
       run: sudo apt install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
-      run: python${{ matrix.py-version }} -m pip install -r requirements.txt
+      run: python3 -m pip install -r requirements.txt
 
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
     - name: Build client
-      run: python${{ matrix.py-version }} -m build
+      run: python3 -m build
       env:
         CFLAGS: '-Werror'
 
