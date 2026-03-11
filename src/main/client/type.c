@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_log_macros.h>
 
 #include "pythoncapi_compat.h"
 #include "admin.h"
@@ -473,6 +474,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
      METH_VARARGS | METH_KEYWORDS, index_remove_doc},
+
+    {"index_single_value_create",
+     (PyCFunction)AerospikeClient_Index_Single_Value_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
     {"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
      METH_VARARGS | METH_KEYWORDS, index_list_create_doc},
     {"index_map_keys_create",
@@ -481,6 +486,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"index_map_values_create",
      (PyCFunction)AerospikeClient_Index_Map_Values_Create,
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
+
     {"index_geo2dsphere_create",
      (PyCFunction)AerospikeClient_Index_2dsphere_Create,
      METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},
@@ -570,6 +576,8 @@ internal_error:
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
+    as_log_trace("Starting to create a new client...");
+
     PyObject *py_config = NULL;
     int error_code = 0;
     as_error constructor_err;

@@ -173,6 +173,19 @@ def test_setting_rack_aware():
     aerospike.client(config)
 
 
+@pytest.mark.parametrize(
+    "compress, expected_cm",
+    [
+        (True, nullcontext()),
+        (0.2, pytest.raises(e.ParamError))
+    ]
+)
+def test_setting_compress(compress, expected_cm):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["read"]["compress"] = compress
+    with expected_cm:
+        aerospike.client(config)
+
 def test_setting_batch_remove_gen():
     config = copy.deepcopy(gconfig)
     config["policies"]["batch_remove"] = {
