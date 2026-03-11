@@ -310,18 +310,15 @@ jobs:
     - if: ${{ matrix.type != 'sanitizer' }}
       run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
 
-    - run: echo PYTHON_INTERPRETER=${{ matrix.type == 'debug-interpreter-build' && 'python3-dbg' || 'python' }} >> $GITHUB_ENV
-
     - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
       with:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      if: ${{ matrix.type != 'debug-interpreter-build' }}
-      run: $PYTHON_INTERPRETER -m pip install *.whl
+      run: pip install *.whl
 
     - name: Install test dependencies
-      run: $PYTHON_INTERPRETER -m pip install -r test/requirements.txt
+      run: pip install -r test/requirements.txt
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
@@ -344,7 +341,7 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
-      run: $PYTHON_INTERPRETER $DEBUG_FLAGS -m pytest ./new_tests -vvs
+      run: python -m pytest ./new_tests -vvs
       working-directory: test
 
   test-ce:
@@ -371,7 +368,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -384,10 +381,10 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: python${{ matrix.py-version}} -m pip install *.whl
+      run: pip install *.whl
 
     - name: Install test dependencies
-      run: python${{ matrix.py-version}} -m pip install -r test/requirements.txt
+      run: pip install -r test/requirements.txt
 
     - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       with:
@@ -407,7 +404,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python${{ matrix.py-version}} -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-ee:
