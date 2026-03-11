@@ -109,7 +109,7 @@ jobs:
         fetch-depth: 0
 
     - run: |
-        # sudo apt update
+        sudo apt-get update
         sudo apt-get install -y python3-dbg
         # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
         python3-dbg -m pip install build -c requirements.txt
