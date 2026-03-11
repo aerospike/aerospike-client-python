@@ -70,9 +70,9 @@ jobs:
         architecture: 'x64'
         allow-prereleases: true
 
-    - run: sudo apt update
+    - run: sudo apt-get update
     - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
+      run: sudo apt-get install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
 
@@ -110,7 +110,7 @@ jobs:
 
     - run: |
         # sudo apt update
-        sudo apt install -y python3-dbg
+        sudo apt-get install -y python3-dbg
         # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
         python3-dbg -m pip install build -c requirements.txt
         python3-dbg -m build
