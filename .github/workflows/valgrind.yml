@@ -67,7 +67,7 @@ jobs:
       run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Install sponge
-      run: sudo apt install -y moreutils
+      run: sudo apt-get install -y moreutils
 
     - name: Filter out wheels with labels in results
       run: jq 'map(select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not))' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
@@ -170,8 +170,8 @@ jobs:
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
 
-    - run: sudo apt update
-    - run: sudo apt install valgrind -y
+    - run: sudo apt-get update
+    - run: sudo apt-get install valgrind -y
 
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
