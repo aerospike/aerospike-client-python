@@ -144,7 +144,9 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - run: sudo apt-get install -y python3-dbg
+    - run: |
+        sudo apt update
+        sudo apt-get install -y python3-dbg
 
     # - uses: actions/setup-python@v2
     #   with:
