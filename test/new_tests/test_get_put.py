@@ -824,7 +824,7 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         bins = {"no": 111111111111111111111111111111111111111111111}
-        
+
         with pytest.raises(e.ParamError) as err_info:
             assert 0 == self.as_connection.put(key, bins)
 
