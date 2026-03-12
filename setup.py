@@ -68,7 +68,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -168,6 +168,7 @@ elif LINUX:
 elif WINDOWS:
     libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
+    extra_compile_args.append("/O0")
     extra_compile_args.append("/RTC1")
     include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
