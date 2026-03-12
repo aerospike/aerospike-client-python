@@ -17,14 +17,11 @@ jobs:
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
 
-    - run: choco install --yes pyenv-win
-
-    - name: Finalize pyenv installation
-      run: |
-        [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-        [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-        [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-        [System.Environment]::SetEnvironmentVariable('path', $env:USERPROFILE + "\.pyenv\pyenv-win\bin;" + $env:USERPROFILE + "\.pyenv\pyenv-win\shims;" + [System.Environment]::GetEnvironmentVariable('path', "User"),"User")
+    - run: |
+        choco install --yes pyenv-win
+        echo 'export PATH="$HOME/.pyenv/pyenv-win/shims:$PATH"' >> "$GITHUB_PATH"
+        echo 'export PATH="$HOME/.pyenv/pyenv-win/bin:$PATH"' >> "$GITHUB_PATH"
+      shell: bash
 
     - run: |
         pyenv --version
