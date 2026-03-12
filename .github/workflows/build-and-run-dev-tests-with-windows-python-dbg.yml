@@ -1,0 +1,46 @@
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  windows-python-dbg:
+    runs-on: ["self-hosted", "Windows", "X64"]
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      with:
+        egress-policy: audit
+
+    - name: Get tests and Github action scripts
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+
+    - run: Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
+
+    - run: |
+        pyenv --version
+        pyenv install --debug 3.10
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
+        server-tag: ${{ inputs.server-tag }}
+        where-is-client-connecting-from: 'remote-connection'
+
+    - name: Install wheel
+      run: |
+        python3-dbg -m pip install build -c requirements.txt
+        python3-dbg -m pip -m build
+        python3-dbg -m pip install dist/*.whl
+
+    - name: Install test dependencies
+      run: python3-dbg -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run tests
+      run: python3-dbg -m pytest new_tests/
+      working-directory: test
