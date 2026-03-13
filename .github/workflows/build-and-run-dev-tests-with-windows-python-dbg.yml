@@ -36,14 +36,14 @@ jobs:
 
     - name: Install wheel
       run: |
-        python3-dbg -m pip install build -c requirements.txt
-        python3-dbg -m pip -m build
-        python3-dbg -m pip install dist/*.whl
+        python_d -m pip install build -c requirements.txt
+        python_d -m pip -m build
+        python_d -m pip install dist/*.whl
 
     - name: Install test dependencies
-      run: python3-dbg -m pip install pytest -c requirements.txt
+      run: python_d -m pip install pytest -c requirements.txt
       working-directory: test
 
     - name: Run tests
-      run: python3-dbg -m pytest new_tests/
+      run: python_d -m pytest new_tests/
       working-directory: test
