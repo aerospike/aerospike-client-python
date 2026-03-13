@@ -20,8 +20,9 @@ jobs:
     # I believe pyenv is more suited for user installations. Installing on Github Actions means installing as administrator
     # When doing so, pyenv could not be called automatically even after setting the PATH.
     - run: |
-        $installer = "python-3.10.19-amd64.exe"
-        Invoke-WebRequest https://www.python.org/ftp/python/3.13.12/$installer -OutFile $installer
+        $python_version = "3.10.11"
+        $installer = "python-$python_version-amd64.exe"
+        Invoke-WebRequest https://www.python.org/ftp/python/$python_version/$installer -OutFile $installer
         $install_dir = "C:\Python\Python310_Debug"
         Start-Process -FilePath $installer -ArgumentList "/quiet", "InstallAllUsers=0", "TargetDir=$install_dir", "PrependPath=1", "DownloadDebugBinaries=1" -Wait
 
