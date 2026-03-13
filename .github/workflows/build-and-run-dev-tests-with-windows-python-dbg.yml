@@ -17,15 +17,21 @@ jobs:
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
 
+    # I believe pyenv is more suited for user installations. Installing on Github Actions means installing as administrator
+    # When doing so, pyenv could not be called automatically even after setting the PATH.
     - run: |
-        choco install --yes pyenv-win
-        echo 'export PATH="$HOME/.pyenv/pyenv-win/shims:$PATH"' >> "$GITHUB_PATH"
-        echo 'export PATH="$HOME/.pyenv/pyenv-win/bin:$PATH"' >> "$GITHUB_PATH"
+        $installer = "python-3.10.19-amd64.exe"
+        $install_dir = "C:\Python\Python310_Debug"
+
+        Start-Process -FilePath $installer -ArgumentList "/quiet", "InstallAllUsers=0", "TargetDir=$install_dir", "PrependPath=1", "DownloadDebugBinaries=1" -Wait
+        # choco install --yes pyenv-win
+        # echo 'export PATH="$HOME/.pyenv/pyenv-win/shims:$PATH"' >> "$GITHUB_PATH"
+        # echo 'export PATH="$HOME/.pyenv/pyenv-win/bin:$PATH"' >> "$GITHUB_PATH"
       shell: bash
 
-    - run: |
-        pyenv --version
-        pyenv install --debug 3.10
+    # - run: |
+    #     pyenv --version
+    #     pyenv install --debug 3.10
 
     - uses: ./.github/actions/run-ee-server
       with:
