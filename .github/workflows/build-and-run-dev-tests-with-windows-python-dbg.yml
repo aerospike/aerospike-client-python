@@ -27,7 +27,6 @@ jobs:
         # choco install --yes pyenv-win
         # echo 'export PATH="$HOME/.pyenv/pyenv-win/shims:$PATH"' >> "$GITHUB_PATH"
         # echo 'export PATH="$HOME/.pyenv/pyenv-win/bin:$PATH"' >> "$GITHUB_PATH"
-      shell: bash
 
     # - run: |
     #     pyenv --version
