@@ -28,11 +28,11 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ inputs.registry-name }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        image-name: ${{ inputs.image-name }}
-        server-tag: ${{ inputs.server-tag }}
+        # registry-name: ${{ inputs.registry-name }}
+        # registry-username: ${{ env.REGISTRY_USERNAME }}
+        # registry-password: ${{ env.REGISTRY_PASSWORD }}
+        # image-name: ${{ inputs.image-name }}
+        # server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'remote-connection'
 
     - name: Install wheel
