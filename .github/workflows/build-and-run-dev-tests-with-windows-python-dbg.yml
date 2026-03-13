@@ -25,10 +25,7 @@ jobs:
         $installer = "python-$python_version-amd64.exe"
         Invoke-WebRequest https://www.python.org/ftp/python/$python_version/$installer -OutFile $installer
         Start-Process -FilePath $installer -ArgumentList "/log", "py-install.log", "/passive", "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_debug=1" -Wait
-
-    - if: ${{ steps.install.outcome == 'failure' }}
-      run: cat py-install.log
-      shell: bash
+        cat py-install.log
 
     - uses: ./.github/actions/run-ee-server
       with:
