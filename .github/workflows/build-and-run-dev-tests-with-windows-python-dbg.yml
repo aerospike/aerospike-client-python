@@ -21,14 +21,11 @@ jobs:
     # When doing so, pyenv could not be called automatically even after setting the PATH.
     - id: install
       run: |
-        $python_version = "3.10.11"
-        $installer = "python-$python_version-amd64.exe"
-        Invoke-WebRequest https://www.python.org/ftp/python/$python_version/$installer -OutFile $installer
-        $process = Start-Process -FilePath $installer -ArgumentList "/log", "py-install.log", "/passive", "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_debug=1" -Wait
-        if ($process.ExitCode -ne 0) {
-            cat py-install.log
-            exit 1
-        }
+        $installer = "python-manager-26.0.msix"
+        Invoke-WebRequest "https://www.python.org/ftp/python/pymanager/$installer" -OutFile $installer
+        Add-AppxPackage "./$installer"
+        Get-AppxPackage PythonSoftwareFoundation.PythonManager | Remove-AppxPackage
+        py install --configure
 
     - uses: ./.github/actions/run-ee-server
       with:
