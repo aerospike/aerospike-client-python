@@ -20,7 +20,7 @@ jobs:
     - id: install-pydebug-interpreter
       run: |
         git clone https://github.com/python/cpython --recurse-submodules
-        cd PCBuild/
+        cd cpython/PCBuild/
         ./build.bat -d
 
     - name: Get tests and Github action scripts
