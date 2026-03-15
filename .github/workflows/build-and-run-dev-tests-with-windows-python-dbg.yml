@@ -23,6 +23,8 @@ jobs:
         cd cpython/PCBuild/
         ./build.bat -d
 
+    - run: echo "cpython/PCbuild/amd64/" >> $GITHUB_PATH
+
     - name: Get tests and Github action scripts
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
