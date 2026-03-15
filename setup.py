@@ -87,7 +87,7 @@ extra_link_args = []
 SANITIZER=os.getenv('SANITIZER')
 if SANITIZER:
     if WINDOWS:
-        extra_compile_args.append("/fsanitize=address")
+        sanitizer_cflags = ["/fsanitize=address"]
         extra_link_args.append("/DEBUG")
     else:
         sanitizer_c_and_ld_flags = [
@@ -96,10 +96,11 @@ if SANITIZER:
         ]
         sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
         sanitizer_cflags.append('-fsanitize-recover=all')
-        extra_compile_args.extend(sanitizer_cflags)
 
         sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
         extra_link_args.extend(sanitizer_ldflags)
+
+    extra_compile_args.extend(sanitizer_cflags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
