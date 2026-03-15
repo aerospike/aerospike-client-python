@@ -87,7 +87,7 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
@@ -95,15 +95,15 @@ try:
         password = "bar"
         roles = ["read-write", "read"]
         roles_size = len(roles)
-    	
+
         client.admin_create_user(user, password, roles, policy)
-        
+
         print("OK, 1 new user created")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------
