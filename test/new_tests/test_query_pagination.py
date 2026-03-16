@@ -130,27 +130,28 @@ class TestQueryPagination(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, None)
         query_obj.paginate()
 
-        num_populated_partitions = 4
-        all_records = (
+        NUM_PARTITIONS = 4
+        num_records_from_part_1000_to_1003 = (
             self.partition_1000_count
             + self.partition_1001_count
             + self.partition_1002_count
             + self.partition_1003_count
         )
-        self.partition_1000_count / num_populated_partitions
-        query_obj.max_records = math.ceil(all_records / num_populated_partitions)
+        avg_rec_count_per_node = num_records_from_part_1000_to_1003 / NUM_PARTITIONS
+        query_obj.max_records = avg_rec_count_per_node
 
-        for i in range(num_populated_partitions):
+        NUM_ITERATIONS = NUM_PARTITIONS
+        for _ in range(NUM_ITERATIONS):
             query_obj.foreach(
                 callback,
                 {
-                    "partition_filter": {"begin": 1000, "count": num_populated_partitions},
+                    "partition_filter": {"begin": 1000, "count": NUM_PARTITIONS},
                 },
             )
 
         # Worst case scenario, all the records are in one node and in the same partition.
-        # In that case, the lowest number of records returned in each page is 1
-        assert num_populated_partitions <= len(records) <= all_records
+        # In that case, the min number of records returned in each page is 1
+        assert NUM_ITERATIONS <= len(records) <= num_records_from_part_1000_to_1003
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
