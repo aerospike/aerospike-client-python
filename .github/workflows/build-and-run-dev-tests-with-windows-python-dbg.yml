@@ -48,6 +48,8 @@ jobs:
 
     - name: Install wheel
       run: |
+        # pip isn't included by default here
+        python_d -m ensurepip --upgrade
         python_d -m pip install build -c requirements.txt
         python_d -m pip -m build
         python_d -m pip install dist/*.whl
