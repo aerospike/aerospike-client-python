@@ -148,7 +148,9 @@ class TestQueryPagination(TestBaseClass):
                 },
             )
 
-        assert len(records) == all_records
+        # Worst case scenario, all the records are in one node and in the same partition.
+        # In that case, the lowest number of records returned in each page is 1
+        assert num_populated_partitions <= len(records) <= all_records
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
