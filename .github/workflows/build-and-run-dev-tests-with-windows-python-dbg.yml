@@ -12,6 +12,12 @@ jobs:
       with:
         egress-policy: audit
 
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        repository: python/cpython
+        submodules: recursive
+        path: cpython
+
     # Why install from source:
     # 1. Not using pyenv, because I believe pyenv is more suited for user installations. Installing on Github Actions
     # means installing as administrator. When doing so, pyenv could not be called automatically even after setting the PATH.
@@ -19,20 +25,18 @@ jobs:
     # 3. The newer Python install manager doesn't have a Python debug build available for Windows
     - id: install-pydebug-interpreter
       run: |
-        git clone https://github.com/python/cpython --recurse-submodules
-        # cd cpython/PCBuild/
-        # ./build.bat -d
+        # Install globally
+        ./build.bat -d
+      working-directory: PCbuild
 
-    - run: |
-        echo "$(realpath cpython/PCbuild/amd64/)" >> $GITHUB_PATH
-        echo $PATH
-        cat $GITHUB_PATH
+    - run: echo "$(realpath PCbuild/amd64/)" >> $GITHUB_PATH
       shell: bash
 
     - name: Get tests and Github action scripts
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+        path: aerospike-client-python
 
     - uses: ./.github/actions/run-ee-server
       with:
