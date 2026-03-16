@@ -1054,6 +1054,24 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
         PyObject_SetAttrString(py_cluster, "cluster_name", Py_None);
     }
 
+    // App Id is optional (declared in client config)
+    PyObject *py_app_id = NULL;
+    if (cluster->app_id) {
+        py_app_id = PyUnicode_FromString(cluster->app_id);
+        if (!py_app_id) {
+            goto error;
+        }
+    }
+    else {
+        py_app_id = Py_NewRef(Py_None);
+    }
+
+    int retval = PyObject_SetAttrString(py_cluster, "app_id", py_app_id);
+    Py_DECREF(py_app_id);
+    if (retval == -1) {
+        goto error;
+    }
+
     PyObject *py_invalid_node_count =
         PyLong_FromUnsignedLong(cluster->invalid_node_count);
     PyObject_SetAttrString(py_cluster, "invalid_node_count",
@@ -2646,7 +2664,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s must be an integer.", py_object_name);
     }
 
-    int int_to_return = PyLong_AsLong(py_long);
+    long int_to_return = PyLong_AsLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2662,7 +2680,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s too large for C int.", py_object_name);
     }
 
-    *int_pointer = int_to_return;
+    *int_pointer = (int)int_to_return;
 
     return AEROSPIKE_OK;
 }
