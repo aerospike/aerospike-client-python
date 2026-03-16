@@ -26,7 +26,7 @@ jobs:
     - run: |
         echo "$(realpath cpython/PCbuild/amd64/)" >> $GITHUB_PATH
         echo $PATH
-        echo $GITHUB_PATH
+        cat $GITHUB_PATH
       shell: bash
 
     - name: Get tests and Github action scripts
