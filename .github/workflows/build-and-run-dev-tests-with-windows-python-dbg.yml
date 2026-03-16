@@ -51,7 +51,7 @@ jobs:
         # pip isn't included by default here
         python_d -m ensurepip --upgrade
         python_d -m pip install build -c requirements.txt
-        python_d -m pip -m build
+        UNOPTIMIZED=1 python_d -m build
         python_d -m pip install dist/*.whl
 
     - name: Install test dependencies
