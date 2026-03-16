@@ -17,13 +17,16 @@ jobs:
     # means installing as administrator. When doing so, pyenv could not be called automatically even after setting the PATH.
     # 2. Using the legacy Python install wizard to install in debug mode fails with error code 1 as well.
     # 3. The newer Python install manager doesn't have a Python debug build available for Windows
-    - id: install-pydebug-interpreter
-      run: |
-        git clone https://github.com/python/cpython --recurse-submodules
-        cd cpython/PCBuild/
-        ./build.bat -d
+    # - id: install-pydebug-interpreter
+    #   run: |
+        # git clone https://github.com/python/cpython --recurse-submodules
+        # cd cpython/PCBuild/
+        # ./build.bat -d
 
-    - run: echo "$(realpath cpython/PCbuild/amd64/)" >> $GITHUB_PATH
+    - run: |
+        echo "$(realpath cpython/PCbuild/amd64/)" >> $GITHUB_PATH
+        echo $PATH
+        echo $GITHUB_PATH
       shell: bash
 
     - name: Get tests and Github action scripts
