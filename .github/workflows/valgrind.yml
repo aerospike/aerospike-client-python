@@ -42,7 +42,7 @@ jobs:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -66,7 +66,7 @@ jobs:
       run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Install sponge
-      run: sudo apt install -y moreutils
+      run: sudo apt-get install -y moreutils
 
     - name: Filter out wheels with labels in results
       run: jq 'map(select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not))' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
       with:
         egress-policy: audit
 
@@ -170,8 +170,8 @@ jobs:
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
 
-    - run: sudo apt update
-    - run: sudo apt install valgrind -y
+    - run: sudo apt-get update
+    - run: sudo apt-get install valgrind -y
 
     - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
       if: ${{ inputs.massif }}
