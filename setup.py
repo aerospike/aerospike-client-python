@@ -124,8 +124,15 @@ if COVERAGE:
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
 
+data_files = []
+
 if UNOPTIMIZED:
-    extra_compile_args.append('-O0')
+    if WINDOWS:
+        extra_compile_args.append('/Zi')
+        extra_link_args.append('/DEBUG')
+        # data_files.append("*.pdb")
+    else:
+        extra_compile_args.append('-O0')
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -145,6 +152,11 @@ elif os.path.exists("/usr/local/opt/openssl/lib") is False:
 ################################################################################
 
 if WINDOWS:
+    if UNOPTIMIZED:
+        VS_PROJECT_CONFIGURATION = "Debug"
+    else:
+        VS_PROJECT_CONFIGURATION = "Release"
+
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
     tree = ET.parse(f"{AEROSPIKE_C_TARGET}/vs/aerospike/packages.config")
     packages = tree.getroot()
@@ -171,7 +183,10 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    libraries.append("pthreadVC2")
+    if UNOPTIMIZED:
+        libraries.append("pthreadVC2d")
+    else:
+        libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
     include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
@@ -189,9 +204,9 @@ if not WINDOWS:
     ]
 else:
     include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
-    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/{VS_PROJECT_CONFIGURATION}")
     # Needed for linking the Python client with the C client
-    extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
+    extra_objects.append(AEROSPIKE_C_TARGET + f"/vs/x64/{VS_PROJECT_CONFIGURATION}/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
@@ -235,7 +250,7 @@ class CClientBuild(build):
             cmd = [
                 'msbuild',
                 'vs/aerospike.sln',
-                '/property:Configuration=Release'
+                f"/property:Configuration={VS_PROJECT_CONFIGURATION}"
             ]
         else:
             cmd = [
@@ -329,5 +344,6 @@ setup(
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean
-    }
+    },
+    data_files=data_files
 )
