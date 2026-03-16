@@ -31,7 +31,9 @@ jobs:
     - run: ./build.bat -d
       working-directory: cpython/PCbuild
 
-    - run: echo "$(realpath PCbuild/amd64/)" >> $GITHUB_PATH
+    - run: |
+        pydebug_abs_path="$(realpath PCbuild/amd64/)"
+        echo $(cygpath -w "$pydebug_abs_path") >> $GITHUB_PATH
       shell: bash
       working-directory: cpython
 
