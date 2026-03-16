@@ -137,8 +137,8 @@ class TestQueryPagination(TestBaseClass):
             + self.partition_1002_count
             + self.partition_1003_count
         )
-        avg_rec_count_per_node = num_records_from_part_1000_to_1003 / NUM_PARTITIONS
-        query_obj.max_records = avg_rec_count_per_node
+        avg_records_per_partition = math.ceil(num_records_from_part_1000_to_1003 / NUM_PARTITIONS)
+        query_obj.max_records = avg_records_per_partition
 
         NUM_ITERATIONS = NUM_PARTITIONS
         for _ in range(NUM_ITERATIONS):
@@ -149,8 +149,8 @@ class TestQueryPagination(TestBaseClass):
                 },
             )
 
-        # Worst case scenario, all the records are in one node and in the same partition.
-        # In that case, the min number of records returned in each page is 1
+        # Worst case scenario, all the records are in one node
+        # Bset case scenario, we got all the records back
         assert NUM_ITERATIONS <= len(records) <= num_records_from_part_1000_to_1003
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
