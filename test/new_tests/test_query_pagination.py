@@ -150,7 +150,7 @@ class TestQueryPagination(TestBaseClass):
             )
 
         # Worst case scenario, all the records are in one node
-        # Bset case scenario, we got all the records back
+        # Best case scenario, we got all the records back
         assert NUM_ITERATIONS <= len(records) <= num_records_from_part_1000_to_1003
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
