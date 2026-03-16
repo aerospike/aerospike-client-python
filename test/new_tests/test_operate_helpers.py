@@ -5,6 +5,7 @@ from aerospike_helpers.operations import list_operations, operations
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -310,14 +311,22 @@ class TestOperate(object):
         assert bins == {"name": "name1aa"}
 
     @pytest.mark.parametrize(
-        "key, llist", [(("test", "demo", 1), [operations.touch(4000)]), (("test", "demo", 1), [operations.touch(4000)])]
+        "key", [
+            ("test", "demo", 1)
+        ]
     )
-    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key):
         """
         Invoke operate() with touch value with bin and value combination.
         """
 
-        self.as_connection.operate(key, llist)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter(action="always", category=DeprecationWarning)
+            ops = [
+                operations.touch(4000)
+            ]
+        assert len(w) == 1
+        self.as_connection.operate(key, ops)
 
         (key, meta) = self.as_connection.exists(key)
 
