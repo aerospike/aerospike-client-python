@@ -247,9 +247,12 @@ class CClientBuild(build):
 
         def compile():
             print(cmd, library_dirs, libraries)
-            call(cmd, cwd=CCLIENT_PATH)
+            return_code = call(cmd, cwd=CCLIENT_PATH)
+            if return_code != 0:
+                raise Exception("Failed to compile C client")
 
         self.execute(compile, [], 'Compiling core aerospike-client-c')
+
         # run original c-extension build code
         build.run(self)
 
