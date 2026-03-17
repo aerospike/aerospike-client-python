@@ -263,6 +263,7 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'dadc371c3647efe5a1f3a7c99edddea1d8db542e3d2ad48bf63fa81364fb63b6') }} >> $GITHUB_ENV
 
+    # TODO: would need way to pull this outside of shared workflow
     - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
