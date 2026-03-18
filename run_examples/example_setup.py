@@ -18,4 +18,3 @@ except ex.ClientError as e:
 
 # Record key tuple: (namespace, set, key)
 keyTuple = ('test', 'demo', 'key')
-

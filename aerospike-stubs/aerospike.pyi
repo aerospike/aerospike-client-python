@@ -639,7 +639,7 @@ class Client:
 
     Example:
         [MISSING_EXAMPLE]
-    
+
     Args:
         [MISSING_ARGS]
     Returns:
@@ -2395,10 +2395,10 @@ class GeoJSON:
 
     Args:
         [MISSING_ARGS]
-    
+
     Returns:
         [MISSING_RETURNS]
-    
+
     Raises:
         [MISSING_RAISES]
     See Also:
@@ -2522,10 +2522,10 @@ class KeyOrderedDict(dict):
 
     Args:
         [MISSING_ARGS]
-    
+
     Returns:
         [MISSING_RETURNS]
-    
+
     Raises:
         [MISSING_RAISES]
     See Also:
@@ -2865,10 +2865,10 @@ class Scan:
 
     Args:
         [MISSING_ARGS]
-    
+
     Returns:
         [MISSING_RETURNS]
-    
+
     Raises:
         [MISSING_RAISES]
     See Also:
@@ -3092,13 +3092,13 @@ class null:
 
     Example:
         [MISSING_EXAMPLE]
-    
+
     Args:
         [MISSING_ARGS]
-    
+
     Returns:
         [MISSING_RETURNS]
-    
+
     Raises:
         [MISSING_RAISES]
     See Also:

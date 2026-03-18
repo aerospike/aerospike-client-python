@@ -1,9 +1,9 @@
 
 	# Docstring Standards for Fluent Client SDK
 
-**Audience**: Engineering (Java and Python client teams)  
-**Purpose**: Define documentation requirements for public APIs to ensure quality auto-generated API reference  
-**Owner**: DevEd + Engineering Leads  
+**Audience**: Engineering (Java and Python client teams)
+**Purpose**: Define documentation requirements for public APIs to ensure quality auto-generated API reference
+**Owner**: DevEd + Engineering Leads
 **Created**: 2026-01-20
 
 ---
@@ -77,7 +77,7 @@ Every **public method, class, and constant** must have:
  * <pre>{@code
  * // Insert a new customer record
  * DataSet customers = DataSet.of("production", "customers");
- * 
+ *
  * session.insertInto(customers.id("cust-12345"))
  *     .bin("name", "Alice Smith")
  *     .bin("email", "alice@example.com")
@@ -129,7 +129,7 @@ public InsertBuilder insertInto(DataSet dataSet) {
  * <p><b>Example - Simple filter:</b>
  * <pre>{@code
  * DataSet users = DataSet.of("app", "users");
- * 
+ *
  * List<Record> activeUsers = session.query(users)
  *     .where("status == 'active'")
  *     .select("name", "email")
@@ -191,7 +191,7 @@ public QueryBuilder query(DataSet dataSet) {
  * <pre>{@code
  * // Create a session with low-latency read behavior
  * Session session = cluster.createSession(Behavior.LOW_LATENCY_READ);
- * 
+ *
  * // All reads through this session use the low-latency settings
  * Optional<Record> user = session.get(users.id("user-123")).execute();
  * }</pre>
@@ -269,7 +269,7 @@ def insert_into(self, dataset: DataSet) -> InsertBuilder:
     Example:
         >>> # Insert a new customer record
         >>> customers = DataSet.of("production", "customers")
-        >>> 
+        >>>
         >>> session.insert_into(customers.id("cust-12345")) \\
         ...     .bin("name", "Alice Smith") \\
         ...     .bin("email", "alice@example.com") \\
@@ -312,15 +312,15 @@ def query(self, dataset: DataSet) -> QueryBuilder:
     """Create a query builder for retrieving records that match filter criteria.
 
     Use the DSL expression syntax to define filters using familiar operators:
-    
+
     - ``==``, ``!=`` for equality
-    - ``<``, ``>``, ``<=``, ``>=`` for comparison  
+    - ``<``, ``>``, ``<=``, ``>=`` for comparison
     - ``and``, ``or``, ``not`` for logical operations
     - ``contains``, ``startswith`` for string operations
 
     Example - Simple filter:
         >>> users = DataSet.of("app", "users")
-        >>> 
+        >>>
         >>> active_users = session.query(users) \\
         ...     .where("status == 'active'") \\
         ...     .select("name", "email") \\
@@ -366,7 +366,7 @@ class Behavior:
     """Pre-configured policies optimized for low-latency reads.
 
     This behavior configures:
-    
+
     - Socket timeout: 50ms
     - Total timeout: 100ms
     - Max retries: 1
@@ -379,7 +379,7 @@ class Behavior:
     Example:
         >>> # Create a session with low-latency read behavior
         >>> session = cluster.create_session(Behavior.LOW_LATENCY_READ)
-        >>> 
+        >>>
         >>> # All reads through this session use the low-latency settings
         >>> user = session.get(users.id("user-123")).execute()
 
