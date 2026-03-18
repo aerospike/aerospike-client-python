@@ -432,7 +432,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             server configuration file, as well as the server's CA certificate.
 
         * **user** (:class:`str`)
-            (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
+            (Optional) A defined user with roles in the cluster. See :meth:`aerospike.Client.admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
         * **config_provider** (:class:`aerospike.ConfigProvider`)
@@ -1721,7 +1721,7 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used by the :class:`aerospike_operation_helpers.expressions.base.CmpRegex` Aerospike expression.
+Flags used by the :class:`aerospike_helpers.expressions.base.CmpRegex` Aerospike expression.
 See :ref:`aerospike_operation_helpers.expressions` for more information.
 
 .. data:: REGEX_NONE
@@ -1861,7 +1861,7 @@ Path Expression Select Flags
     This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
     source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
 
-.. data:: EXP_PATH_SELECT_MAP_KEYS
+.. data:: EXP_PATH_SELECT_MAP_KEY
 
     Return the list of map keys of the nodes finally selected by the context.
 
