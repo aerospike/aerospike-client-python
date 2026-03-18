@@ -250,7 +250,7 @@ Record Commands
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -1732,9 +1732,9 @@ Read Policies
             |
             | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1830,9 +1830,9 @@ Operate Policies
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1949,9 +1949,9 @@ Batch Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -2169,9 +2169,9 @@ Batch Read Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
         * **read_mode_sc**
             | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
@@ -2207,7 +2207,7 @@ Info Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.info_all`, :meth:`~aerospike.info_single_node`, :meth:`~aerospike.info_random_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
