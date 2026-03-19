@@ -505,7 +505,7 @@ Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: commit(transaction: aerospike.Transaction) -> int:
+    .. method:: commit(transaction: aerospike.Transaction) -> int
 
         Attempt to commit the given transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
@@ -517,7 +517,7 @@ Transactions
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
-    .. method:: abort(transaction: aerospike.Transaction) -> int:
+    .. method:: abort(transaction: aerospike.Transaction) -> int
 
         Abort and rollback the given transaction.
 
@@ -735,7 +735,7 @@ Info Operations
 
         .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
 
-    .. method:: info_all(command[, policy: dict]]) -> {}
+    .. method:: info_all(command[, policy: dict]]) -> dict
 
         Send an info command to all nodes in the cluster to which the client is connected.
 
@@ -816,12 +816,13 @@ Info Operations
 
         :param str namespace: The namespace to truncate.
         :param str set: The set to truncate. Pass in :py:obj:`None` to truncate a namespace instead.
-        :param long nanos:  A cutoff threshold where records last updated before the threshold will be removed.
+        :param int nanos:  A cutoff threshold where records last updated before the threshold will be removed.
             Units are in nanoseconds since the UNIX epoch ``(1970-01-01)``.
             A value of ``0`` indicates that all records in the set should be truncated regardless of update time.
             The value must not be in the future.
         :param dict policy: See :ref:`aerospike_info_policies`.
-        :rtype: Status indicating the success of the operation.
+        :return: Status indicating the success of the operation.
+        :rtype: int
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires Aerospike server version >= 3.12
@@ -1143,7 +1144,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy: dict]) -> {}
+    .. method:: admin_get_role(role[, policy: dict]) -> dict
 
         Get a :class:`dict` of privileges, whitelist, and quotas associated with a role.
 
@@ -1154,7 +1155,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_roles([policy: dict]) -> {}
+    .. method:: admin_get_roles([policy: dict]) -> dict
 
         Get the names of all roles and their attributes.
 
@@ -1164,7 +1165,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_role(role[, policy: dict]) -> []
+    .. method:: admin_query_role(role[, policy: dict]) -> list
 
         Get the :class:`list` of privileges associated with a role.
 
@@ -1175,7 +1176,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_roles([policy: dict]) -> {}
+    .. method:: admin_query_roles([policy: dict]) -> dict
 
         Get all named roles and their privileges.
 
