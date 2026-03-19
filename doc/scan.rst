@@ -18,7 +18,7 @@ The Scan object is used to return all the records in a specified set (which \
 can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
 
-The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
+The scan is invoked using :meth:`~aerospike.Scan.foreach`, :meth:`~aerospike.Scan.results`, or :meth:`~aerospike.Scan.execute_background`. The \
 bins returned can be filtered using :meth:`select`.
 
 .. seealso::

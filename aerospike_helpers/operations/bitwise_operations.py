@@ -158,7 +158,7 @@ ACTION_KEY = "action"
 
 
 def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
-    """Creates a bit_resize_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_resize_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
 
     Change the size of a bytes bin stored in a record on the Aerospike Server.
 
@@ -184,7 +184,7 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
 
 
 def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
-    """Creates a bit_remove_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_remove_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
 
     Remove bytes from bitmap at byte_offset for byte_size.
 
@@ -208,7 +208,7 @@ def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
 
 
 def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_set_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_set_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
 
     Set the value on a bitmap at bit_offset for bit_size in a record on the Aerospike Server.
 
@@ -236,7 +236,7 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
 
 
 def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, policy: dict = None):
-    """Creates a bit_set_int_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_set_int_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
 
     Set the value on a bitmap starting at bit_offset for bit_size in a record on the Aerospike Server.
 
@@ -262,7 +262,7 @@ def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, polic
 
 
 def bit_count(bin_name: str, bit_offset, bit_size):
-    """Creates a bit_count_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_count_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
 
     Server returns an integer count of all set bits starting at bit_offset for bit_size bits.
 
