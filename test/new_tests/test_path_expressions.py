@@ -5,7 +5,7 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, HLLBin
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, RemoveResult, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, HLLBin
 from aerospike_helpers.expressions.map import MapGetByKey, MapPut
 from aerospike_helpers.expressions.list import ListSize
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -567,7 +567,7 @@ class TestPathExprOperations:
                     cdt_ctx.cdt_ctx_all_children(),
                     cdt_ctx.cdt_ctx_all_children()
                 ],
-                expr=ResultRemove().compile(),
+                expr=RemoveResult().compile(),
                 flags=aerospike.EXP_PATH_MODIFY_DEFAULT
             )
         ]
