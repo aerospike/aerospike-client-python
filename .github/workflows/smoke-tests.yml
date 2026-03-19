@@ -171,7 +171,9 @@ jobs:
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
+    # -Werror: we need code coverage for code paths where warnings are treated as errors
+    # TODO: currently this doesn't seem to work though
+    - run: python3 -m pytest -Werror --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -341,7 +343,9 @@ jobs:
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
-      run: python -m pytest ./new_tests -vvs
+      # Here we also treat DeprecationWarnings as errors to make sure we're showing warnings as expected
+      # throughout the API
+      run: python -m pytest ./new_tests -vvs -W error::DeprecationWarning
       working-directory: test
 
   test-ce:
