@@ -297,7 +297,7 @@ Batched Commands
         This method allows different sub-commands for each key in the batch.
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
-        :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A :class:`~aerospike_helpers.batch.records.BatchRecords` object used to specify the operations to carry out.
         :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
@@ -2032,7 +2032,7 @@ Batch Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.Client.batch_write`, :meth:`~aerospike.Client.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2087,7 +2087,7 @@ Batch Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.Client.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2126,7 +2126,7 @@ Batch Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.Client.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1

@@ -19,7 +19,7 @@ can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all 
 records in the namespace.
 
 The scan is invoked using :meth:`~aerospike.Scan.foreach`, :meth:`~aerospike.Scan.results`, or :meth:`~aerospike.Scan.execute_background`. The \
-bins returned can be filtered using :meth:`select`.
+bins returned can be filtered using :meth:`~aerospike.Scan.select`.
 
 .. seealso::
     `Manage queries <https://aerospike.com/docs/database/manage/cluster/queries/>`_.
