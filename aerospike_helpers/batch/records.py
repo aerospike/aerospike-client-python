@@ -38,8 +38,9 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`, :meth:`~aerospike.Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+            :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+            containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
