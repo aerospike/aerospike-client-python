@@ -47,7 +47,7 @@ records streaming back from the query.
 Getting Results From Query
 --------------------------
 
-The returned bins can be filtered by using :meth:`select`.
+The returned bins can be filtered by using :meth:`~aerospike.Query.select`.
 
 Finally, the query is invoked using one of these methods:
 
@@ -148,7 +148,7 @@ Assume this boilerplate code is run before all examples below:
 
         You can only assign at most one predicate to the query.
 
-        :param index_name str: The name of the index.
+        :param str index_name: The name of the index.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
