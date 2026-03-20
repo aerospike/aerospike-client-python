@@ -1007,7 +1007,7 @@ class Let(_BaseExpr):
     def __init__(self, *exprs: _BaseExpr):
         """Args:
             `*exprs` (_BaseExpr): Variable number of :class:`~aerospike_helpers.expressions.base.Def` expressions
-            followed by a scoped expression.
+                followed by a scoped expression.
 
         :return: (result of scoped expression)
 
