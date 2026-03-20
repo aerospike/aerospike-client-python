@@ -129,8 +129,8 @@ class Read(BatchRecord):
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
             meta (dict): the metadata to set for this command
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
-            policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
+            read_all_bins (typing.Optional[bool]): An optional bool, if True, read all bins in the record.
+            policy (typing.Optional[dict]): An optional dictionary of :ref:`aerospike_batch_read_policies`.
     """
 
     def __init__(

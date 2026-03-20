@@ -35,7 +35,7 @@ Writing Using Query
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
-See available write operations at :mod:`aerospike_helpers.operations`.
+See available write operations at :ref:`aerospike_operation_helpers.operations`.
 
 Query Aggregations
 ------------------
