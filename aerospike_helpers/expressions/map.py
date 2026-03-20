@@ -233,7 +233,7 @@ class MapRemoveByKeyList(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_LIST
 
-    def __init__(self, ctx: TypeCTX, keys: List[TypeKey], bin: TypeBinName, inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", keys: List[TypeKey], bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
