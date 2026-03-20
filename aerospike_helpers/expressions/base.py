@@ -784,7 +784,7 @@ class CmpRegex(_BaseExpr):
 
     def __init__(self, options: int, regex_str: str, cmp_str: _BaseExpr | str):
         """Args:
-            options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
+            options (int) One of the aerospike regex constants, :ref:`regex_constants`.
             regex_str (str): POSIX regex string.
             cmp_str (_BaseExpr | str): String expression to compare against.
 
