@@ -144,16 +144,16 @@ TypeResultType = Optional[int]
 #: Test
 TypeFixedEle = Union[int, float, str, bytes, dict]
 #: Test
-TypeFixed = Optional[dict[str, TypeFixedEle]]
+TypeFixed = Optional[Dict[str, TypeFixedEle]]
 #: Test
-TypeCompiledOp = tuple[int, TypeResultType, TypeFixed, int]
+TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
 #: Test
-TypeExpression = list[TypeCompiledOp]
+TypeExpression = List[TypeCompiledOp]
 
 #: Test
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 #: Test
-TypeChildren = tuple[TypeChild, ...]
+TypeChildren = Tuple[TypeChild, ...]
 
 #: Test
 TypeAny = Union[_AtomExpr, Any]
