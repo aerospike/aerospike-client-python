@@ -786,7 +786,7 @@ class CmpRegex(_BaseExpr):
         """Args:
             options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
             regex_str (str): POSIX regex string.
-            cmp_str (Union[_BaseExpr, str]): String expression to compare against.
+            cmp_str (_BaseExpr | str): String expression to compare against.
 
         :return: (boolean value)
 
