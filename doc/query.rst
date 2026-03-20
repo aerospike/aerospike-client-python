@@ -196,7 +196,7 @@ Assume this boilerplate code is run before all examples below:
         The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
         as a normal callback.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 

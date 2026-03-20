@@ -208,7 +208,7 @@ Serialization
     Register a user-defined serializer available to all `Client`
     instances.
 
-    :param callable callback: the function to invoke for serialization.
+    :param typing.Callable callback: the function to invoke for serialization.
 
 
     .. seealso:: To use this function with :meth:`Client.put`, \
@@ -232,7 +232,7 @@ Serialization
     of type `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_
     through this deserializer.
 
-    :param callable callback: the function to invoke for deserialization.
+    :param typing.Callable callback: the function to invoke for deserialization.
 
 .. py:function:: unset_serializers()
 

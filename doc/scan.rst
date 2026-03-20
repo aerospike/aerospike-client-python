@@ -182,7 +182,7 @@ Methods
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :param str nodename: optional Node ID of node used to limit the scan to a single node.
