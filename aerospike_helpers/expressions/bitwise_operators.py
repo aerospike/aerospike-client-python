@@ -29,7 +29,9 @@ from aerospike_helpers.expressions.resources import _ExprOp
 # Bitwise Operator Expressions
 ##############################
 
+#: Test
 TypeInteger = Union[_BaseExpr, int]
+#: Test
 TypeBool = Union[_BaseExpr, bool]
 
 

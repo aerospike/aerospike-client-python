@@ -25,8 +25,11 @@ from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 
+#: Test
 TypeNumber = Union[_BaseExpr, int, float]
+#: Test
 TypeFloat = Union[_BaseExpr, float]
+#: Test
 TypeInteger = Union[_BaseExpr, int]
 
 

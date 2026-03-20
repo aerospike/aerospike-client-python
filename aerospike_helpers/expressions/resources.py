@@ -139,15 +139,23 @@ class _AtomExpr:
         raise NotImplementedError
 
 
+#: Test
 TypeResultType = Optional[int]
+#: Test
 TypeFixedEle = Union[int, float, str, bytes, dict]
+#: Test
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
+#: Test
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+#: Test
 TypeExpression = List[TypeCompiledOp]
 
+#: Test
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
+#: Test
 TypeChildren = Tuple[TypeChild, ...]
 
+#: Test
 TypeAny = Union[_AtomExpr, Any]
 
 
