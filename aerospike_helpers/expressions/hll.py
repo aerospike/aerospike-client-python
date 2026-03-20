@@ -19,7 +19,7 @@ Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_
 
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from typing import List, Union, Dict, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr

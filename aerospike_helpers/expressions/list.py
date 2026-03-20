@@ -19,7 +19,7 @@ these operations are from the standard :mod:`List API <aerospike_helpers.operati
 
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from typing import List, Union, Dict, Any
 import aerospike
 from aerospike_helpers import cdt_ctx
