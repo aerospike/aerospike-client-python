@@ -313,7 +313,7 @@ The following example shows several different methods to configuring logging for
         def callback(level: int, function: str, path: str, line: int, message: str):
             pass
 
-    :param optional callable log_handler: the function used as the logging handler.
+    :param typing.Callable | None log_handler: the function used as the logging handler.
 
 .. py:function:: set_log_level(loglevel)
 
