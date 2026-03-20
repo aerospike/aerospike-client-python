@@ -217,8 +217,7 @@ aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.resources
-      :private-members:
-
+    :private-members:
     .. autoclass:: ResultType
       :members:
       :undoc-members:
