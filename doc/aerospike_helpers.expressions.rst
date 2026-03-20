@@ -217,10 +217,6 @@ aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.resources
-    .. autoclass:: _BaseExpr
-      :members:
-      :undoc-members:
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+  :members:
+  :undoc-members:
+  :private-members:
