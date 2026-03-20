@@ -271,3 +271,5 @@ linkcheck_ignore = [
 ]
 
 linkcheck_timeout = 120
+
+autodoc_use_legacy_class_based = True
