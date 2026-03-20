@@ -1140,7 +1140,10 @@ class ResultRemove(_BaseExpr):
     _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
 
     def __init__(self):
-        warnings.warn("This expression will be renamed to RemoveResult in the next major client release", DeprecationWarning)
+        warnings.warn(
+            "This expression will be renamed to RemoveResult in the next major client release",
+            DeprecationWarning
+        )
 
         """
         :return: (result_remove)
