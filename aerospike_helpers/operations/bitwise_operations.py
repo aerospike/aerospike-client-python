@@ -505,7 +505,7 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to or.
         value_byte_size (int): Length of value in bytes.
-        value (bytes/byte array): Value to be used in or operation.
+        value (bytes | bytearray): Value to be used in or operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -622,7 +622,7 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to xor.
         value_byte_size (int): Length of value in bytes.
-        value (bytes/byte array): Value to be used in xor operation.
+        value (bytes | bytearray): Value to be used in xor operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:

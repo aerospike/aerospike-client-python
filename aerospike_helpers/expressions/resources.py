@@ -160,6 +160,9 @@ TypeAny = Union[_AtomExpr, Any]
 
 
 class _BaseExpr(_AtomExpr):
+    """
+    Base class for all expressions.
+    """
     _op: int = 0
     _rt: TypeResultType = None
     _fixed: TypeFixed = None
