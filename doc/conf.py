@@ -110,7 +110,7 @@ pygments_style = "sphinx"
 autodoc_typehints = "signature"
 autodoc_type_aliases = {
     "_BaseExpr": "AerospikeExpression",
-    "TypeCTX": "TypeCTX",
+    "TypeCTX": "aerospike_helpers.expressions.list.TypeCTX",
     "TypeRank": "TypeRank",
     "TypeCount": "TypeCount",
     "TypePolicy": "TypePolicy",
