@@ -782,7 +782,7 @@ class CmpRegex(_BaseExpr):
 
     _op = _ExprOp.CMP_REGEX
 
-    def __init__(self, options: int, regex_str: str, cmp_str: "_BaseExpr" | str):
+    def __init__(self, options: int, regex_str: str, cmp_str: _BaseExpr | str):
         """Args:
             options (int): One of the aerospike regex constants :ref:`regex_constants`.
             regex_str (str): POSIX regex string.
