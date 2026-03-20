@@ -1344,7 +1344,7 @@ User Dictionary
 
 The user dictionary has the following key-value pairs:
 
-    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+    * ``"read_info"`` (:py:class:`list[int]`): list of read statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
        * 0: read quota in records per second
