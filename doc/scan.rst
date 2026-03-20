@@ -29,7 +29,9 @@ Fields
 
 .. class:: Scan
 
-    ttl (:class:`int`)
+    .. py:attribute:: ttl
+        :type: int
+
         The time-to-live (expiration) of the record in seconds. Note that ttl
         is only used on background scan writes.
 

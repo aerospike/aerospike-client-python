@@ -625,7 +625,7 @@ class BitLeftScan(_BaseExpr):
         """Args:
             bit_offset (int): Bit index of where to start reading.
             bit_size (int): Number of bits to read.
-            value bool: Bit value to check for.
+            value (bool): Bit value to check for.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
@@ -675,7 +675,7 @@ class BitGetInt(_BaseExpr):
         """Args:
             bit_offset (int): Bit index of where to start reading.
             bit_size (int): Number of bits to get.
-            sign bool: True for signed, False for unsigned.
+            sign (bool): True for signed, False for unsigned.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Integer expression.
