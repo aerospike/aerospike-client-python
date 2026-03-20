@@ -20,7 +20,7 @@ these operations are from the standard :mod:`List API <aerospike_helpers.operati
 """
 
 from __future__ import annotations
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, TypeAlias
 import aerospike
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions.resources import _GenericExpr
@@ -36,7 +36,7 @@ from aerospike_helpers.expressions.base import ListBin
 TypeBinName = Union[_BaseExpr, str]
 TypeListValue = Union[_BaseExpr, List[Any]]
 TypeIndex = Union[_BaseExpr, int, aerospike.CDTInfinite]
-TypeCTX = Union[None, List[cdt_ctx._cdt_ctx]]
+TypeCTX: TypeAlias = Union[None, List[cdt_ctx._cdt_ctx]]
 TypeRank = Union[_BaseExpr, int, aerospike.CDTInfinite]
 TypeCount = Union[_BaseExpr, int, aerospike.CDTInfinite]
 TypeValue = Union[_BaseExpr, Any]
