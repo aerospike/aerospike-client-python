@@ -221,4 +221,5 @@ aerospike\_helpers\.expressions\.resources module
     .. autoclass:: ResultType
       :members:
       :undoc-members:
+      :private-members:
       :member-order: bysource
