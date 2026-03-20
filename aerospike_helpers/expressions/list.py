@@ -48,7 +48,7 @@ class ListAppend(_BaseExpr):
 
     _op = aerospike.OP_LIST_APPEND
 
-    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: TypeCTX, policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
