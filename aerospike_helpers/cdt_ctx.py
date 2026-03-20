@@ -102,6 +102,7 @@ Example::
     client.close()
 """
 import aerospike
+from typing import Any
 
 
 def index_type_string(index_type):
@@ -287,7 +288,7 @@ def cdt_ctx_map_value(value):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_VALUE, value=value)
 
 
-def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
+def cdt_ctx_map_key_create(key: Any, order: int = 0) -> _cdt_ctx:
     """
     Create a map with the given sort order at the given key.
 
