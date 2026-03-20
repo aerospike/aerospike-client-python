@@ -1344,35 +1344,35 @@ User Dictionary
 
 The user dictionary has the following key-value pairs:
 
-    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+    * ``"read_info"`` (:class:`list`): list of read statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: read quota in records per second
+       * 0: read quota in records per second (:class:`int`)
 
-       * 1: single record read command rate (TPS)
+       * 1: single record read command rate (TPS) (:class:`int`)
 
-       * 2: read scan/query record per second rate (RPS)
+       * 2: read scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless read scans/queries
+       * 3: number of limitless read scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
-    * ``"write_info"`` (:class:`list[int]`): list of write statistics.
+    * ``"write_info"`` (:class:`list`): list of write statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: write quota in records per second
+       * 0: write quota in records per second (:class:`int`)
 
-       * 1: single record write command rate (TPS)
+       * 1: single record write command rate (TPS) (:class:`int`)
 
-       * 2: write scan/query record per second rate (RPS)
+       * 2: write scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless write scans/queries
+       * 3: number of limitless write scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
-    * ``"roles"`` (:class:`list[str]`): list of assigned role names.
+    * ``"roles"`` (:class:`list`): list of assigned role names. Each role name is a :class:`str`.
 
 Tuples
 ======
