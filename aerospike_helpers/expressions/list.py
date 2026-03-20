@@ -50,7 +50,7 @@ class ListAppend(_BaseExpr):
 
     def __init__(self, ctx: TypeCTX, policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
         """Args:
-            ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            ctx (:py:type:`TypeCTX`): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             value (TypeValue): Value or value expression to append to list.
