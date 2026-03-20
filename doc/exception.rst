@@ -61,7 +61,7 @@ Base Class
     ``i`` is the index of the attribute in the order they appear above. \
     For example, run ``exc.args[4]`` to get the ``in_doubt`` flag.
 
-    Inherits from :py:exc:`exceptions.Exception`.
+    Inherits from :py:exc:`Exception`.
 
 Client Errors
 -------------
