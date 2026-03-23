@@ -40,11 +40,8 @@ from aerospike_helpers.expressions.base import BlobBin
 # Bit Modify Expressions
 ########################
 
-#: Test
 TypeBitValue = Union[bytes, bytearray]
-#: Test
 TypeBinName = Union[_BaseExpr, str]
-#: Test
 TypePolicy = Union[Dict[str, Any], None]
 
 

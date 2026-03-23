@@ -34,9 +34,7 @@ from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
 
-#: Test
 TypeComparisonArg = Union[_BaseExpr, Any]
-#: Test
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 
 
