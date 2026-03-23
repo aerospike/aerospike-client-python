@@ -41,8 +41,8 @@ class TestQueryBinProjection:
     @pytest.mark.parametrize(
         "api_method, args",
         [
-            Query.results, [],
-            Query.foreach, [noop_callback]
+            (Query.results, []),
+            (Query.foreach, [noop_callback])
         ]
     )
     def test_add_write_ops_to_foreground_query(self, query, api_method, args):
