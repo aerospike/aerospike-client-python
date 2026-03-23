@@ -237,7 +237,7 @@ class MapRemoveByKeyList(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            keys (list): List of key values or a list expression of keys to elements to remove. Each key is of type 
+            keys (list): List of key values or a list expression of keys to elements to remove. Each key is of type
                 :py:type:`TypeKey`.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
