@@ -40,9 +40,6 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
         return NULL;
     }
 
-    // TODO: potential memory leak
-    Py_INCREF(py_ops);
-
     // Aerospike API arguments.
     long return_type = -1;
     long operation;
