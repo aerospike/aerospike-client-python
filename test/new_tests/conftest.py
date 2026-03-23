@@ -271,6 +271,7 @@ def add_indexes_to_client(client):
 # Add records around the test
 @pytest.fixture(scope="function")
 def clean_test_background(as_connection):
+    # TODO: optimize by using batch instead
     keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
     for i, key in enumerate(keys):
         as_connection.put(key, {BIN_NAME: i})
