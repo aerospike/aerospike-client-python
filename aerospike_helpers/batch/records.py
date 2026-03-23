@@ -25,7 +25,6 @@ TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
 TypeBatchPolicyRemove = ty.Union[ty.Dict, None]
 #: Test
 TypeBatchPolicyApply = ty.Union[ty.Dict, None]
-#: Test
 TypeBatchPolicyRead = ty.Union[ty.Dict, None]
 #: Test
 TypeRecord = ty.Union[ty.Tuple, None]
