@@ -289,7 +289,7 @@ Assume this boilerplate code is run before all examples below:
 
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        :param ops: `list` A list of operations generated from :ref:`_aerospike_operation_helpers.operations`.
+        :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
         .. note::
             Requires server version >= 4.7.0.
