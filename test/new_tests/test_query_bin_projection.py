@@ -13,7 +13,7 @@ class TestQueryBinProjection:
         yield query
 
     READ_OPS = [
-        operations.read()
+        operations.read(BIN_NAME)
     ]
 
     def test_query_foreach(self, query):
