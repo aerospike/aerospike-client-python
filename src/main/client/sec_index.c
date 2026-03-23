@@ -87,7 +87,8 @@ static PyObject *convert_python_args_to_c_and_create_index(
     char *namespace = NULL;
     if (PyUnicode_Check(py_ns)) {
         namespace = (char *)PyUnicode_AsUTF8(py_ns);
-    } else if (!Py_IsNone(py_ns)) {
+    }
+    else if (!Py_IsNone(py_ns)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Namespace should be a string");
         goto CLEANUP;
