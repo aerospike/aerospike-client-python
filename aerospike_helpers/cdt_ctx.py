@@ -301,6 +301,8 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
 
+# Path expressions
+
 def cdt_ctx_all_children() -> _cdt_ctx:
     """
     At the current context, causes a query to return a list of all the children
@@ -326,3 +328,15 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
+
+def cdt_ctx_map_keys(keys: list):
+    """
+    The cdt_ctx object is initialized to lookup objects in a map by specific keys.
+
+    Args:
+        keys (list): The keys to look for in the map.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY, value=keys)

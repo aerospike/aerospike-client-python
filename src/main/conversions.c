@@ -2573,6 +2573,10 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             case AS_CDT_CTX_MAP_KEY:
                 as_cdt_ctx_add_map_key(cdt_ctx, val);
                 break;
+            // TODO: will fail to compile
+            case AS_CDT_CTX_MAP_KEYS:
+                as_cdt_ctx_add_map_keys(cdt_ctx, val);
+                break;
             case AS_CDT_CTX_MAP_VALUE:
                 as_cdt_ctx_add_map_value(cdt_ctx, val);
                 break;
