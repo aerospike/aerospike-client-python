@@ -103,7 +103,10 @@ Example::
 """
 import aerospike
 from typing import Any
-from aerospike_helpers.expressions.resources import TypeExpression
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from aerospike_helpers.expressions.resources import TypeExpression
 
 
 def index_type_string(index_type):
