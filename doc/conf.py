@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
     "sphinxcontrib.spelling"
 ]
 napoleon_google_docstring = True
@@ -107,7 +108,7 @@ pygments_style = "sphinx"
 # modindex_common_prefix = []
 
 # Alias/type hint configuration.
-autodoc_typehints = "signature"
+autodoc_typehints = "none"
 autodoc_type_aliases = {
     # "TypeCTX": "aerospike_helpers.expressions.list.TypeCTX",
     # "TypeRank": "TypeRank",
