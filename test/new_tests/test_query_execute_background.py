@@ -6,10 +6,8 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion
+from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET
 
-TEST_NS = "test"
-TEST_SET = "background_q_e"
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
 # Hack to get long to exist in Python 3
@@ -17,13 +15,6 @@ try:
     long
 except NameError:
     long = int
-
-def add_indexes_to_client(client):
-    try:
-        client.index_single_value_create(TEST_NS, TEST_SET, "number", aerospike.INDEX_NUMERIC, "test_background_number_idx")
-    except exception.IndexFoundError:
-        pass
-
 
 def add_test_udf(client):
     policy = {}
@@ -43,16 +34,6 @@ def validate_records(client, keys, validator):
         _, _, rec = client.get(key)
         assert validator(rec)
 
-
-# Add records around the test
-@pytest.fixture(scope="function")
-def clean_test_background(as_connection):
-    keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
-    for i, key in enumerate(keys):
-        as_connection.put(key, {"number": i})
-    yield
-    for i, key in enumerate(keys):
-        as_connection.remove(key)
 
 
 class TestQueryApply(object):

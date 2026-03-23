@@ -9,6 +9,7 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -257,3 +258,22 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+
+TEST_NS = "test"
+TEST_SET = "foreground_q_bp"
+BIN_NAME = "number"
+def add_indexes_to_client(client):
+    try:
+        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_NUMERIC, "test_background_number_idx")
+    except e.IndexFoundError:
+        pass
+
+# Add records around the test
+@pytest.fixture(scope="function")
+def clean_test_background(as_connection):
+    keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
+    for i, key in enumerate(keys):
+        as_connection.put(key, {BIN_NAME: i})
+    yield
+    for i, key in enumerate(keys):
+        as_connection.remove(key)
