@@ -48,7 +48,7 @@ class ListAppend(_BaseExpr):
 
     _op = aerospike.OP_LIST_APPEND
 
-    def __init__(self, ctx: TypeCTX, policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: TypeCTX, policy: TypePolicy, value: "TypeValue", bin: "TypeBinName"):
         """Args:
             ctx (:py:type:`TypeCTX`): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -86,7 +86,7 @@ class ListAppendItems(_BaseExpr):
 
     _op = aerospike.OP_LIST_APPEND_ITEMS
 
-    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", policy: TypePolicy, value: "TypeValue", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -127,7 +127,7 @@ class ListInsert(_BaseExpr):
     _op = aerospike.OP_LIST_INSERT
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self, ctx: "TypeCTX", policy: TypePolicy, index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -169,7 +169,7 @@ class ListInsertItems(_BaseExpr):
     _op = aerospike.OP_LIST_INSERT_ITEMS
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", values: "TypeListValue", bin: "TypeBinName"
+        self, ctx: "TypeCTX", policy: TypePolicy, index: "TypeIndex", values: "TypeListValue", bin: "TypeBinName"
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -211,7 +211,7 @@ class ListIncrement(_BaseExpr):
     _op = aerospike.OP_LIST_INCREMENT
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self, ctx: "TypeCTX", policy: TypePolicy, index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -260,7 +260,7 @@ class ListSet(_BaseExpr):
     _op = aerospike.OP_LIST_SET
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self, ctx: "TypeCTX", policy: TypePolicy, index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation

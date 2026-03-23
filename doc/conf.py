@@ -112,7 +112,7 @@ autodoc_type_aliases = {
     # "TypeCTX": "aerospike_helpers.expressions.list.TypeCTX",
     # "TypeRank": "TypeRank",
     # "TypeCount": "TypeCount",
-    # "TypePolicy": "TypePolicy",
+    # TypePolicy: TypePolicy,
     # "TypeValue": "TypeValue",
     # "TypeBinName": "TypeBinName",
     # "TypeListValue": "TypeListValue",
