@@ -53,6 +53,7 @@ class TestQueryBinProjection:
         with pytest.raises(e.ParamError):
             api_method(query, *args)
 
+    # TODO: this should be moved to a different test file.
     def test_execute_background(self, query):
         query.add_ops(self.READ_OPS)
 
