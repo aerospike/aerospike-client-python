@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+from __future__ import annotations
 """
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
@@ -103,7 +104,6 @@ Example::
 """
 import aerospike
 from typing import Any
-from __future__ import annotations
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
