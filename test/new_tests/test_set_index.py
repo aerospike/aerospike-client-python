@@ -21,6 +21,6 @@ class TestSetIndex:
             aerospike.Client.index_list_create,
         ]
     )
-    def test_create_set_index(self):
+    def test_create_set_index(self, index_create_method):
         # TODO: reuse code from other PR
-        self.as_connection.index_create_method(None, "demo", "number", aerospike.INDEX_NUMERIC, INDEX_NAME)
+        index_create_method(self.as_connection, None, "demo", "number", aerospike.INDEX_NUMERIC, INDEX_NAME)
