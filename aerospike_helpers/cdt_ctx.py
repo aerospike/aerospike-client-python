@@ -103,6 +103,7 @@ Example::
 """
 import aerospike
 from typing import Any
+from aerospike_helpers.expressions.resources import TypeExpression
 
 
 def index_type_string(index_type):
@@ -313,7 +314,7 @@ def cdt_ctx_all_children() -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP)
 
-def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
+def cdt_ctx_all_children_with_filter(expression: TypeExpression) -> _cdt_ctx:
     """
     All children of the current level will be selected, and then the filter expression
     is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
