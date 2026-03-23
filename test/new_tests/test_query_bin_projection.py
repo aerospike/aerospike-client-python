@@ -1,5 +1,5 @@
 import pytest
-from conftest import TEST_NS, TEST_SET, BIN_NAME, clean_test_background
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, clean_test_background
 from aerospike_helpers.operations import operations
 from aerospike import Query
 from aerospike import exception as e
