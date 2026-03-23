@@ -17,18 +17,12 @@
 import typing as ty
 from typing import Optional
 
-#: Test
 TypeOps = ty.List[ty.Dict]
-#: Test
 TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
-#: Test
 TypeBatchPolicyRemove = ty.Union[ty.Dict, None]
-#: Test
 TypeBatchPolicyApply = ty.Union[ty.Dict, None]
 TypeBatchPolicyRead = ty.Union[ty.Dict, None]
-#: Test
 TypeRecord = ty.Union[ty.Tuple, None]
-#: Test
 TypeUDFArgs = ty.List[ty.Any]
 
 
