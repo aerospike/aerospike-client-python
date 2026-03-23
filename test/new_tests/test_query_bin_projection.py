@@ -16,14 +16,14 @@ class TestQueryBinProjection:
     ]
 
     def test_query_foreach(self, query):
-        records = set()
+        bin_values = set()
         def callback(record):
-            records.add(record)
+            bin_values.add(record[2][BIN_NAME])
 
         query.add_ops(self.READ_OPS)
         query.foreach(callback)
-        for i in range(len(records)):
-            assert i in records
+        for i in range(len(bin_values)):
+            assert i in bin_values
 
     # TODO: scale down tests maybe
     def test_query_results(self, query):
