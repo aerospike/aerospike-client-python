@@ -5,7 +5,6 @@ from aerospike import Query
 from aerospike import exception as e
 
 
-@pytest.mark.usefixtures("as_connection")
 class TestQueryBinProjection:
     @pytest.fixture(autouse=True)
     def query(self, clean_test_background):
