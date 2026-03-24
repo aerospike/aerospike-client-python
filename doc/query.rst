@@ -22,7 +22,7 @@ A query without a secondary index filter will apply to all records in the namesp
 similar to a :class:`~aerospike.Scan`.
 
 Secondary Index Filters
-----------------------
+-----------------------
 
 The query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
 to filter out records using their bin values.
