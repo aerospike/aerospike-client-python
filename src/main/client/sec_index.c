@@ -84,15 +84,12 @@ static PyObject *convert_python_args_to_c_and_create_index(
     }
 
     // Convert python object into namespace string
-    char *namespace = NULL;
-    if (PyUnicode_Check(py_ns)) {
-        namespace = (char *)PyUnicode_AsUTF8(py_ns);
-    }
-    else if (!Py_IsNone(py_ns)) {
+    if (!PyUnicode_Check(py_ns)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Namespace should be a string");
         goto CLEANUP;
     }
+    char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
 
     // Convert python object into set string
     char *set_ptr = NULL;
@@ -410,7 +407,6 @@ static PyObject *AerospikeClient_Index_Create_Deprecated_Helper(
     AerospikeClient *self, PyObject *args, PyObject *kwds, const char *ml_name,
     as_index_datatype index_datatype)
 {
-    // TODO: wait until we decide whether next release is a major version or not
     PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                      DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE,
                      ml_name);
