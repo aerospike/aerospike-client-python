@@ -1,5 +1,5 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS
 from aerospike_helpers.operations import operations
 from aerospike import Query
 from aerospike import exception as e
@@ -11,23 +11,19 @@ class TestQueryBinProjection:
         query = self.as_connection.query(TEST_NS, TEST_SET)
         yield query
 
-    READ_OPS = [
-        operations.read(BIN_NAME)
-    ]
-
     def test_query_foreach(self, query):
         bin_values = set()
         def callback(record):
             bin_values.add(record[2][BIN_NAME])
 
-        query.add_ops(self.READ_OPS)
+        query.add_ops(READ_OPS)
         query.foreach(callback)
         for i in range(len(bin_values)):
             assert i in bin_values
 
     # TODO: scale down tests maybe
     def test_query_results(self, query):
-        query.add_ops(self.READ_OPS)
+        query.add_ops(READ_OPS)
         # TODO: records are not necessarily in order
         records = query.results()
         for record in records:
@@ -55,19 +51,12 @@ class TestQueryBinProjection:
         with pytest.raises(e.ParamError):
             api_method(query, *args)
 
-    # TODO: this should be moved to a different test file.
-    def test_execute_background(self, query):
-        query.add_ops(self.READ_OPS)
-
-        with pytest.raises(e.ParamError):
-            query.execute_background(self.READ_OPS)
-
     def test_select_bins_and_then_bin_projection(self, query):
         query.select(BIN_NAME)
         with pytest.raises(e.ParamError):
-            query.add_ops(self.READ_OPS)
+            query.add_ops(READ_OPS)
 
     def test_bin_projection_and_then_select_bins(self, query):
-        query.add_ops(self.READ_OPS)
+        query.add_ops(READ_OPS)
         with pytest.raises(e.ParamError):
             query.select(BIN_NAME)

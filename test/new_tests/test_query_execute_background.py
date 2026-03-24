@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET
+from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS
 
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
@@ -326,3 +326,9 @@ class TestQueryApply(object):
         # Policy needs to be a dict. Not a string
         with pytest.raises(exception.ParamError):
             query.execute_background("Honesty is the best Policy")
+
+    def test_adding_read_operations(self, query):
+        query.add_ops(READ_OPS)
+
+        with pytest.raises(exception.ParamError):
+            query.execute_background(READ_OPS)

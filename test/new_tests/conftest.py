@@ -10,6 +10,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -278,3 +279,7 @@ def clean_test_background(as_connection):
     yield
     for i, key in enumerate(keys):
         as_connection.remove(key)
+
+READ_OPS = [
+    operations.read(BIN_NAME)
+]
