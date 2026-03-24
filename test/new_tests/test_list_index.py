@@ -65,7 +65,7 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
         )
 
         assert retobj == 0
@@ -108,12 +108,12 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
         )
         if retobj == 0:
             try:
                 self.as_connection.index_list_create(
-                    "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                    "test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
@@ -133,7 +133,7 @@ class TestListIndex(object):
         if retobj == 0:
             with pytest.raises(e.IndexFoundError):
                 retobj = self.as_connection.index_list_create(
-                    "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_string_list_index", policy
+                    "test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "test_string_list_index", policy
                 )
                 self.as_connection.index_remove("test", "test_string_list_index", policy)
                 ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
@@ -171,7 +171,7 @@ class TestListIndex(object):
         """
         policy = {"timeout": 180000}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "num_list_pol", aerospike.INDEX_NUMERIC, "test_numeric_list_index_pol", policy
+            "test", "demo", "num_list_pol", aerospike.INDEX_INTEGER, "test_numeric_list_index_pol", policy
         )
 
         assert retobj == 0
@@ -227,7 +227,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "uni_age_index", policy
+            "test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "uni_age_index", policy
         )
 
         assert retobj == 0
@@ -252,7 +252,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             ns="test",
             set="demo",
             bin="map_of_lists",
-            index_datatype=aerospike.INDEX_NUMERIC,
+            index_datatype=aerospike.INDEX_INTEGER,
             name="test_string_list_index",
             policy=None,
             ctx=[
@@ -319,7 +319,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
         try:
             self.as_connection.index_list_create(
-                "test", "demo", None, aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                "test", "demo", None, aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
             )
 
         except e.ParamError as exception:
@@ -346,7 +346,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         try:
             self.as_connection.index_list_create(
-                "test1", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                "test1", "demo", "numeric_list", aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
             )
 
         except e.NamespaceNotFound as exception:
@@ -358,7 +358,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo1", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test", "demo1", "numeric_list", aerospike.INDEX_INTEGER, "test_numeric_list_index", policy
         )
 
         assert retobj == 0

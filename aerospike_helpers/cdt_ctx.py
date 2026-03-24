@@ -136,7 +136,7 @@ def index_datatype_string(index_datatype):
     Returns:
         (string) - must be one of must be one of 'numeric', 'string', 'geo2dsphere'
     """
-    if index_datatype == aerospike.INDEX_NUMERIC:
+    if index_datatype == aerospike.INDEX_INTEGER:
         return "numeric"
     if index_datatype == aerospike.INDEX_STRING:
         return "string"
