@@ -283,3 +283,8 @@ def clean_test_background(as_connection):
 READ_OPS = [
     operations.read(BIN_NAME)
 ]
+
+READ_AND_WRITE_OPS = [
+    operations.read(BIN_NAME),
+    operations.write(BIN_NAME, 1)
+]

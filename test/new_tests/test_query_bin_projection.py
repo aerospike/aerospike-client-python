@@ -1,5 +1,5 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS
 from aerospike_helpers.operations import operations
 from aerospike import Query
 from aerospike import exception as e
@@ -29,12 +29,14 @@ class TestQueryBinProjection:
         for record in records:
             assert type(record[2][BIN_NAME]) == int
 
-    # TODO: Missing test cases for path expression projection
-
     # Negative tests
 
     def noop_callback(record):
         pass
+
+    WRITE_OPS = [
+        operations.write(BIN_NAME, 3)
+    ]
 
     @pytest.mark.parametrize(
         "api_method, args",
@@ -43,13 +45,19 @@ class TestQueryBinProjection:
             (Query.foreach, [noop_callback])
         ]
     )
-    def test_add_write_ops_to_foreground_query(self, query, api_method, args):
-        ops = [
-            operations.write(BIN_NAME, 3)
+    @pytest.mark.parametrize(
+        "ops",
+        [
+            READ_AND_WRITE_OPS,
+            WRITE_OPS
         ]
+    )
+    def test_add_write_ops(self, query, api_method, args, ops):
         query.add_ops(ops)
         with pytest.raises(e.ParamError):
             api_method(query, *args)
+
+    # TODO: need to decide whether breaking change should be made in this case.
 
     def test_select_bins_and_then_bin_projection(self, query):
         query.select(BIN_NAME)
