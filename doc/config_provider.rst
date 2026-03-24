@@ -21,7 +21,7 @@ Methods
     :type path: str
 
     :param interval: Interval in milliseconds between dynamic configuration check for file modifications.
-        The value must be greater than or equal to the tend interval. Defaults to ``60000``.
+        The value must be greater than or equal to the tend interval. Defaults to ``5000``.
     :type interval: int, optional
 
     .. py:attribute:: path
