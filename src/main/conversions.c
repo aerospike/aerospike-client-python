@@ -2574,6 +2574,9 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 as_cdt_ctx_add_map_key(cdt_ctx, val);
                 break;
             case AS_CDT_CTX_MAP_KEYS_IN:
+                if (val->type != AS_LIST) {
+                    goto CLEANUP1;
+                }
                 as_cdt_ctx_add_map_keys_in(cdt_ctx, val);
                 break;
             case AS_CDT_CTX_MAP_VALUE:
