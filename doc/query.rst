@@ -36,7 +36,7 @@ These secondary index filters are applied to the query using :meth:`~aerospike.Q
 Filtering Bins
 --------------
 
-The returned bins can be filtered by using :meth:`select`.
+The returned bins can be filtered by using :meth:`~aerospike.Query.select`.
 
 Background Queries
 ------------------
