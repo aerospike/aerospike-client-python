@@ -334,7 +334,8 @@ class TestQueryApply(object):
             READ_AND_WRITE_OPS
         ]
     )
-    def test_add_read_ops(self, query, ops):
+    def test_add_read_ops(self, ops):
+        query = self.as_connection.query(TEST_NS, TEST_SET)
         query.add_ops(ops)
 
         with pytest.raises(exception.ParamError):
