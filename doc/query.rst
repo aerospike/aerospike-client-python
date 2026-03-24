@@ -285,7 +285,7 @@ Assume this boilerplate code is run before all examples below:
         For background queries, only write operations are allowed. To perform a background query, call :meth:`Query.execute_background`.
 
         For foreground queries, only read operations are allowed. Read operations act as bin projections, limiting which
-            bins are returned. You may use any :class:`Query` method that returns results synchronously.
+        bins are returned. You may use any :class:`Query` method that returns results synchronously.
 
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
