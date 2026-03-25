@@ -251,6 +251,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_GET_BY_INDEX] =
             EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, NIL, NIL)),
         [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, NIL)),
+        [_AS_EXP_CODE_IN_LIST] = EXP_SZ(as_exp_in_list(NIL, NIL)),
         [OP_LIST_GET_BY_VALUE] =
             EXP_SZ(as_exp_list_get_by_value(NULL, 0, NIL, NIL)),
         [OP_LIST_GET_BY_VALUE_RANGE] =
@@ -842,6 +843,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case OP_LIST_SIZE:
             APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, NIL));
+            break;
+        case _AS_EXP_CODE_IN_LIST:
+            APPEND_ARRAY(2, as_exp_in_list(NIL, NULL));
             break;
         case OP_LIST_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,

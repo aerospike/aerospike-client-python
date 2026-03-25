@@ -941,6 +941,27 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
             self._fixed[_Keys.CTX_KEY] = ctx
 
 
+class InList(_BaseExpr):
+    """
+    Return :py:obj:`True` if value is contained in list.
+    """
+
+    _op = aerospike._AS_EXP_CODE_IN_LIST
+
+    def __init__(
+        self,
+        value: "TypeValue",
+        bin: "TypeBinName",
+    ):
+        """Args:
+            value (TypeValue): Value or value expression to look for.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or bin name.
+
+        :return: Expression.
+        """
+        self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+
+
 class ListGetByValueRelRankRange(_BaseExpr):
     """Create an expression that selects list items nearest to value and greater by relative rank with a
     count limit and returns selected data specified by return_type.
