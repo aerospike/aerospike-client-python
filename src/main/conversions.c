@@ -2566,7 +2566,12 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
 
     case AS_CDT_CTX_EXP:
-        as_cdt_ctx_add_all_children_with_filter(cdt_ctx, expr);
+        if (expr) {
+            as_cdt_ctx_add_all_children_with_filter(cdt_ctx, expr);
+        }
+        else {
+            as_cdt_ctx_add_all_children(cdt_ctx);
+        }
     case AS_CDT_CTX_EXP | AS_CDT_CTX_AND:
         as_cdt_ctx_add_and_filter(cdt_ctx, expr);
     default:
