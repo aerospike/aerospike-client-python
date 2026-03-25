@@ -57,14 +57,14 @@ class TestQueryBinProjection:
         with pytest.raises(e.ParamError):
             api_method(query, *args)
 
-    # TODO: need to decide whether breaking change should be made in this case.
+    # TODO: need to test that select() will cause ops to be ignored.
 
     def test_select_bins_and_then_bin_projection(self, query):
         query.select(BIN_NAME)
-        with pytest.raises(e.ParamError):
+        with pytest.warns(DeprecationWarning):
             query.add_ops(READ_OPS)
 
     def test_bin_projection_and_then_select_bins(self, query):
         query.add_ops(READ_OPS)
-        with pytest.raises(e.ParamError):
+        with pytest.warns(DeprecationWarning):
             query.select(BIN_NAME)

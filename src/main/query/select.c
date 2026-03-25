@@ -28,6 +28,10 @@
 #undef TRACE
 #define TRACE()
 
+#define SELECT_AND_ADD_OPS_MESSAGE                                             \
+    "add_ops() was already called on this Query object, so no bins will be selected. \
+    This will raise a ParamError exception in the next major client release."
+
 AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
                                       PyObject *kwds)
 {
@@ -38,6 +42,19 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
     PyObject *py_ubin = NULL;
     as_error err;
     as_error_init(&err);
+
+    if (self->query.ops->binops.size) {
+        // If add_ops() was called on this Query object before.
+
+        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        if (retval == -1) {
+            // This handles the codepath where warnings are converted into errors from pytest/python cli
+            // TODO: this does NOT handle the codepath where the warning mechanism itself fails
+            as_error_update(&err, AEROSPIKE_ERR, SELECT_AND_ADD_OPS_MESSAGE);
+            goto CLEANUP;
+        }
+    }
 
     if (!self || (self->client && !self->client->as)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");

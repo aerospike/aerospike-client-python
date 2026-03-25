@@ -28,6 +28,11 @@
 #include "policy.h"
 #include "operate.h"
 
+// TODO: spacing looks wrong in preview
+#define SELECT_AND_ADD_OPS_MESSAGE                                             \
+    "select() was already called on this Query object, so no operations will be added. \
+    This will raise a ParamError exception in the next major client release."
+
 AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)
 {
@@ -51,6 +56,19 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
 
     as_error err;
     as_error_init(&err);
+
+    if (self->query.select.size) {
+        // If select() was called on this Query object before.
+
+        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        if (retval == -1) {
+            // This handles the codepath where warnings are converted into errors from pytest/python cli
+            // TODO: this does NOT handle the codepath where the warning mechanism itself fails
+            as_error_update(&err, AEROSPIKE_ERR, SELECT_AND_ADD_OPS_MESSAGE);
+            goto CLEANUP;
+        }
+    }
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
