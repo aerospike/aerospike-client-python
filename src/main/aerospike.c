@@ -447,6 +447,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_INDEX", .value.integer = AS_CDT_CTX_MAP_INDEX},
     {"CDT_CTX_MAP_RANK", .value.integer = AS_CDT_CTX_MAP_RANK},
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_MAP_KEYS_IN),
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
     EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),

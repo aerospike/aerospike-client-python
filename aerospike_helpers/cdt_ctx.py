@@ -354,4 +354,4 @@ def cdt_ctx_map_keys(keys: list):
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY, value=keys)
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_MAP_KEYS_IN, value=keys)
