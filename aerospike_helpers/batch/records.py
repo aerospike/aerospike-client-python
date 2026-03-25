@@ -60,6 +60,8 @@ class BatchRecord:
 class Write(BatchRecord):
     """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -110,6 +112,9 @@ class Write(BatchRecord):
 
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
+
+        .. deprecated:: 19.1.0 Deprecated the ``"ttl"`` option in the ``meta`` parameter. Use the policy parameter in a
+            :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.

@@ -5,6 +5,7 @@ from aerospike_helpers.operations import list_operations, operations
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -279,8 +280,9 @@ class TestOperate(object):
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1200
                 },
-                {"gen": 10, "ttl": 1200},
+                {"gen": 10},
                 [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
             ),
         ],
@@ -310,14 +312,20 @@ class TestOperate(object):
         assert bins == {"name": "name1aa"}
 
     @pytest.mark.parametrize(
-        "key, llist", [(("test", "demo", 1), [operations.touch(4000)]), (("test", "demo", 1), [operations.touch(4000)])]
+        "key", [
+            ("test", "demo", 1)
+        ]
     )
-    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key):
         """
         Invoke operate() with touch value with bin and value combination.
         """
 
-        self.as_connection.operate(key, llist)
+        with pytest.warns(DeprecationWarning):
+            ops = [
+                operations.touch(4000)
+            ]
+        self.as_connection.operate(key, ops)
 
         (key, meta) = self.as_connection.exists(key)
 
@@ -371,11 +379,11 @@ class TestOperate(object):
         Invoke operate() OPERATE_TOUCH using meta to pass in ttl.
         """
         key = ("test", "demo", 1)
-        meta = {"ttl": 1200}
+        policy = {"ttl": 1200}
 
         llist = [operations.touch()]
 
-        self.as_connection.operate(key, llist, meta)
+        self.as_connection.operate(key, llist, policy=policy)
 
         _, meta = self.as_connection.exists(key)
 

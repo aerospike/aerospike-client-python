@@ -92,7 +92,7 @@ try:
     try:
 
         policy = {}
- 
+
         roles = client.admin_query_user_info(options.username, policy)
 
         print(roles)
