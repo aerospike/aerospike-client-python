@@ -2427,17 +2427,13 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
 }
 
-
-as_status as_cdt_ctx_add_from_pyobject(
-    AerospikeClient *self,
-    as_error *err,
-    as_cdt_ctx* cdt_ctx,
-    PyObject *py_cdt_ctx,
-    as_static_pool *static_pool,
-    int serializer_type
-)
+as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                       as_cdt_ctx *cdt_ctx,
+                                       PyObject *py_cdt_ctx,
+                                       as_static_pool *static_pool,
+                                       int serializer_type)
 {
-    // TODO: for now we return a status so we don't have pointer accesses down the line to the error object
+    // TODO: for now we return a status so we have less pointer accesses down the line to the error object
     // in order to maintain performance. But we need to benchmark that pointer accesses don't cause slowdown
     // Assigning to "status" comes at the cost of setting an extra variable every time there's an error.
     as_status status = AEROSPIKE_OK;
@@ -2445,22 +2441,22 @@ as_status as_cdt_ctx_add_from_pyobject(
     PyObject *py_cdt_ctx_code = PyObject_GetAttrString(py_cdt_ctx, "id");
     if (PyErr_Occurred()) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "Failed to convert %s, id", CTX_KEY);
+                                 "Failed to convert %s, id", CTX_KEY);
         goto RETURN;
     }
     uint64_t as_cdt_ctx_code = PyLong_AsUnsignedLongLong(py_cdt_ctx_code);
     if (PyErr_Occurred()) {
-        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "Failed to convert %s, id to uint64_t",
-                                    CTX_KEY);
-        goto CLEANUP1;
+        status =
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Failed to convert %s, id to uint64_t", CTX_KEY);
+        goto CLEANUP_PY_CODE;
     }
 
     PyObject *py_value = PyObject_GetAttrString(py_cdt_ctx, "value");
     if (PyErr_Occurred()) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "Failed to convert %s, value", CTX_KEY);
-        goto CLEANUP1;
+                                 "Failed to convert %s, value", CTX_KEY);
+        goto CLEANUP_PY_CODE;
     }
 
     // Convert py_val
@@ -2474,10 +2470,10 @@ as_status as_cdt_ctx_add_from_pyobject(
     case CDT_CTX_LIST_INDEX_CREATE:
         int_val = PyLong_AsLong(py_value);
         if (PyErr_Occurred()) {
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                        "Failed to convert %s, value to long",
-                                        CTX_KEY);
-            goto CLEANUP2;
+            status =
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "Failed to convert %s, value to long", CTX_KEY);
+            goto CLEANUP_PY_VALUE;
         }
     }
 
@@ -2488,22 +2484,24 @@ as_status as_cdt_ctx_add_from_pyobject(
     case AS_CDT_CTX_MAP_KEYS_IN:
     case AS_CDT_CTX_MAP_VALUE:
     case CDT_CTX_MAP_KEY_CREATE:
-        status = as_val_new_from_pyobject(self, err, py_value, &val, static_pool, serializer_type);
+        status = as_val_new_from_pyobject(self, err, py_value, &val,
+                                          static_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP2;
+            goto CLEANUP_PY_VALUE;
         }
 
         if (AS_CDT_CTX_MAP_KEYS_IN && val->type != AS_LIST) {
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM, "map_keys_in must take in a list of keys");
-            goto CLEANUP2;
+            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                     "map_keys_in must take in a list of keys");
+            goto CLEANUP_AS_VAL;
         }
     }
 
     PyObject *py_extra_args = PyObject_GetAttrString(py_cdt_ctx, "extra_args");
     if (PyErr_Occurred()) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "Failed to convert %s", CTX_KEY);
-        goto CLEANUP2;
+                                 "Failed to convert %s", CTX_KEY);
+        goto CLEANUP_AS_VAL;
     }
 
     as_exp *expr = NULL;
@@ -2514,14 +2512,14 @@ as_status as_cdt_ctx_add_from_pyobject(
             py_extra_args, _CDT_CTX_FILTER_EXPR_KEY, &py_expr);
         if (retval != 1) {
             status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "Invalid cdt_ctx_exp");
-            goto CLEANUP3;
+                                     "Invalid cdt_ctx_exp");
+            goto CLEANUP_PY_EXTRA_ARGS;
         }
 
         status = as_exp_new_from_pyobject(self, py_expr, &expr, err, false);
         Py_DECREF(py_expr);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP3;
+            goto CLEANUP_PY_EXTRA_ARGS;
         }
     }
 
@@ -2541,8 +2539,7 @@ as_status as_cdt_ctx_add_from_pyobject(
         break;
     case CDT_CTX_MAP_KEY_CREATE:;
         int map_order = 0;
-        get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                                &map_order);
+        get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args, &map_order);
         as_cdt_ctx_add_map_key_create(cdt_ctx, val, map_order);
         break;
 
@@ -2563,10 +2560,9 @@ as_status as_cdt_ctx_add_from_pyobject(
         int list_order = 0;
         int pad = 0;
         get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                            &list_order);
+                             &list_order);
         get_int_from_py_dict(err, CDT_CTX_PAD_KEY, py_extra_args, &pad);
-        as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order,
-                                        pad);
+        as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order, pad);
         break;
 
     case AS_CDT_CTX_EXP:
@@ -2574,25 +2570,28 @@ as_status as_cdt_ctx_add_from_pyobject(
     case AS_CDT_CTX_EXP | AS_CDT_CTX_AND:
         as_cdt_ctx_add_and_filter(cdt_ctx, expr);
     default:
-        status = as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "Failed to convert, unknown ctx operation %s", CTX_KEY);
-        goto CLEANUP3;
+        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                 "Failed to convert, unknown ctx operation %s",
+                                 CTX_KEY);
+        goto CLEANUP_PY_EXTRA_ARGS;
     }
 
     // The C client never takes ownership of expr
     as_exp_destroy(expr);
 
-CLEANUP3:
+CLEANUP_PY_EXTRA_ARGS:
     Py_DECREF(py_extra_args);
 
-CLEANUP2:
+CLEANUP_AS_VAL:
     if (status != AEROSPIKE_OK) {
+        // as_cdt_ctx_add_*() takes ownership of the as_val* argument
         as_val_destroy(val);
     }
+
+CLEANUP_PY_VALUE:
     Py_DECREF(py_value);
 
-CLEANUP1:
+CLEANUP_PY_CODE:
     Py_DECREF(py_cdt_ctx_code);
 RETURN:
     return err->code;
@@ -2631,11 +2630,13 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     for (int i = 0; i < py_list_size; i++) {
         PyObject *py_cdt_ctx = PyList_GetItem(py_ctx_list, (Py_ssize_t)i);
         if (!py_cdt_ctx) {
-            status = as_error_update(err, AEROSPIKE_ERR, "Failed to get cdt_ctx");
+            status =
+                as_error_update(err, AEROSPIKE_ERR, "Failed to get cdt_ctx");
             goto CLEANUP;
         }
 
-        status = as_cdt_ctx_add_from_pyobject(self, err, cdt_ctx, py_cdt_ctx, static_pool, serializer_type);
+        status = as_cdt_ctx_add_from_pyobject(self, err, cdt_ctx, py_cdt_ctx,
+                                              static_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP;
         }
