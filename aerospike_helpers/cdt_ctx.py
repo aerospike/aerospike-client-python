@@ -329,6 +329,21 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
+def and_filter(expression: "TypeExpression") -> _cdt_ctx:
+    """
+    Add a boolean expression filter AND-combined with the current context.
+
+    Evaluation runs after prior context steps (e.g. map key-list selection); entries must satisfy both. Multiple
+    :meth:`and_filter()` calls may be chained.
+
+    Args:
+        expression: Compiled expression. This expression must return a boolean.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
+
 def cdt_ctx_map_keys(keys: list):
     """
     The cdt_ctx object is initialized to lookup objects in a map by specific keys.
