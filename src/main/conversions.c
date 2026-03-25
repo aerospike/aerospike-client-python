@@ -2506,7 +2506,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     as_exp *expr = NULL;
     if (AS_CDT_CTX_EXP && !Py_IsNone(py_extra_args)) {
-        // Either all_children_with_filter() or and_filter()
+        // Either all_children_with_filter() or and_filter() which take in an as_exp* argument
         PyObject *py_expr = NULL;
         int retval = PyDict_GetItemStringRef(
             py_extra_args, _CDT_CTX_FILTER_EXPR_KEY, &py_expr);
