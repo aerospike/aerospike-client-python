@@ -2639,21 +2639,23 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         if (!py_cdt_ctx) {
             status =
                 as_error_update(err, AEROSPIKE_ERR, "Failed to get cdt_ctx");
-            goto CLEANUP;
+            goto CLEANUP_ON_ERROR;
         }
 
         status = as_cdt_ctx_add_from_pyobject(self, err, cdt_ctx, py_cdt_ctx,
                                               static_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP;
+            goto CLEANUP_ON_ERROR;
         }
     }
 
     *ctx_in_use = true;
-    return AEROSPIKE_OK;
 
-CLEANUP:
-    as_cdt_ctx_destroy(cdt_ctx);
+CLEANUP_ON_ERROR:
+    if (status != AEROSPIKE_OK) {
+        as_cdt_ctx_destroy(cdt_ctx);
+    }
+
 RETURN:
     return status;
 }
