@@ -2532,7 +2532,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         as_cdt_ctx_add_map_key(cdt_ctx, val);
         break;
     case AS_CDT_CTX_MAP_KEYS_IN:
-        as_cdt_ctx_add_map_keys_in(cdt_ctx, val);
+        as_cdt_ctx_add_map_keys_in(cdt_ctx, (as_list *)val);
         break;
     case AS_CDT_CTX_MAP_VALUE:
         as_cdt_ctx_add_map_value(cdt_ctx, val);
