@@ -333,8 +333,8 @@ def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
     Add a boolean expression filter AND-combined with the current context.
 
-    Evaluation runs after prior context steps (e.g. map key-list selection); entries must satisfy both. Multiple
-    :meth:`and_filter()` calls may be chained.
+    Evaluation runs after prior context steps (e.g. :meth:`cdt_ctx_map_keys_in`); entries must satisfy both. Multiple
+    :meth:`and_filter` calls may be chained.
 
     Args:
         expression: Compiled expression. This expression must return a boolean.
@@ -347,6 +347,8 @@ def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
 def cdt_ctx_map_keys_in(keys: list):
     """
     The cdt_ctx object is initialized to lookup objects in a map by specific keys.
+
+    This can be followed by :meth:`cdt_ctx_map_keys_in` to filter out the remaining map entries.
 
     Args:
         keys (list): The keys to look for in the map.
