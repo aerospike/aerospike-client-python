@@ -2572,13 +2572,15 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         else {
             as_cdt_ctx_add_all_children(cdt_ctx);
         }
+        break;
     case AS_CDT_CTX_EXP | AS_CDT_CTX_AND:
         as_cdt_ctx_add_and_filter(cdt_ctx, expr);
+        break;
     default:
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert, unknown ctx operation %s",
                                  CTX_KEY);
-        goto CLEANUP_PY_EXTRA_ARGS;
+        break;
     }
 
     // The C client never takes ownership of expr
