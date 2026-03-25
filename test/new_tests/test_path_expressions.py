@@ -593,7 +593,7 @@ class TestPathExprOperations:
         "map_keys",
         [
             # Base case
-            []
+            [],
             ["a"],
             # Nonmatching key
             ["c"],
