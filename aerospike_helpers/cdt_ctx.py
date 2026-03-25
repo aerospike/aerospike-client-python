@@ -329,7 +329,7 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
-def and_filter(expression: "TypeExpression") -> _cdt_ctx:
+def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
     Add a boolean expression filter AND-combined with the current context.
 

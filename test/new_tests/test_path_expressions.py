@@ -5,9 +5,9 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, HLLBin
-from aerospike_helpers.expressions.map import MapGetByKey, MapPut
-from aerospike_helpers.expressions.list import ListSize
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL
+from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys
+from aerospike_helpers.expressions.list import ListSize, InList, ListGetByIndex
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
@@ -33,9 +33,12 @@ class TestPathExprOperations:
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     NESTED_LIST_BIN_NAME = "list_of_lists"
     MAP_WITH_GEOJSON_BIN_NAME = "map_w_geo_bin"
+    LIST_OF_INTS_BIN_NAME = "list_of_ints"
 
     GEOJSON_VALUE = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
+    # TODO: moving this and other test data to conftest may be helpful
     RECORD_BINS = {
+        LIST_OF_INTS_BIN_NAME: [1, 2, 3],
         MAP_BIN_NAME: {
             "a": 1,
             "ab": {
@@ -585,3 +588,57 @@ class TestPathExprOperations:
                 "Day3": {
                 }
             }
+
+    @pytest.mark.parametrize(
+        "map_keys",
+        [
+            # Base case
+            []
+            ["a"],
+            # Nonmatching key
+            ["c"],
+            ["a", "ab"]
+        ]
+    )
+    def test_cdt_ctx_map_get_keys(self, map_keys):
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys(map_keys)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        # Assuming that order of map entries returned doesn't matter
+        assert sorted(bins[self.MAP_BIN_NAME]) == sorted([self.RECORD_BINS[self.MAP_BIN_NAME][key] for key in map_keys])
+
+    def test_cdt_ctx_map_get_keys_and_filter(self):
+        filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys(["a", "b"]),
+                    cdt_ctx.cdt_ctx_and_filter(filter_expr)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        # Map key "a" should be filtered out
+        assert bins[self.MAP_BIN_NAME] == self.RECORD_BINS[self.MAP_BIN_NAME]["b"]
+
+    def test_expr_in_list(self):
+        expr = InList(
+            3,
+            self.LIST_OF_INTS_BIN_NAME
+        ).compile()
+        ctx = [
+            cdt_ctx.cdt_ctx_all_children_with_filter(expr)
+        ]
+        ops = [
+            operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
+        ]
+        self.as_connection.operate(self.key, ops)
