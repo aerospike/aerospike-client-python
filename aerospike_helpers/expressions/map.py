@@ -1492,37 +1492,37 @@ class MapGetByRankRange(_BaseExpr):
 
 class MapGetKeys(_BaseExpr):
     """
-    Return a list of keys from a map-valued subexpression. TODO: not sure what this means in the c client docstring
+    Return a list of keys from a map.
     """
 
     _op = aerospike._AS_EXP_CODE_MAP_KEYS
 
     def __init__(
         self,
-        bin
+        map_value
     ):
         """Args:
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`
+            map_value (TypeBinName): expression that returns a map, or bin name containing a map.
 
         :return: Expression.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else MapBin(bin))
+        self._children = (map_value if isinstance(map_value, _BaseExpr) else MapBin(map_value))
 
 
 class MapGetValues(_BaseExpr):
     """
-    Return a list of values from a map-valued subexpression. TODO: not sure what this means in the c client docstring
+    Return a list of values from a map.
     """
 
     _op = aerospike._AS_EXP_CODE_MAP_VALUES
 
     def __init__(
         self,
-        bin
+        map_value
     ):
         """Args:
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`
+            map_value (TypeBinName): expression that returns a map, or bin name containing a map.
 
         :return: Expression.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else MapBin(bin))
+        self._children = (map_value if isinstance(map_value, _BaseExpr) else MapBin(map_value))
