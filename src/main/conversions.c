@@ -2449,14 +2449,14 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         status =
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "Failed to convert %s, id to uint64_t", CTX_KEY);
-        goto CLEANUP_PY_CODE;
+        goto CLEANUP_PY_CDT_CTX_CODE;
     }
 
     PyObject *py_value = PyObject_GetAttrString(py_cdt_ctx, "value");
     if (PyErr_Occurred()) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert %s, value", CTX_KEY);
-        goto CLEANUP_PY_CODE;
+        goto CLEANUP_PY_CDT_CTX_CODE;
     }
 
     // Convert py_val
@@ -2591,7 +2591,7 @@ CLEANUP_AS_VAL:
 CLEANUP_PY_VALUE:
     Py_DECREF(py_value);
 
-CLEANUP_PY_CODE:
+CLEANUP_PY_CDT_CTX_CODE:
     Py_DECREF(py_cdt_ctx_code);
 RETURN:
     return err->code;
