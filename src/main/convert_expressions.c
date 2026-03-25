@@ -251,7 +251,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_GET_BY_INDEX] =
             EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, NIL, NIL)),
         [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, NIL)),
-        [_AS_EXP_CODE_IN_LIST] = EXP_SZ(as_exp_in_list(NIL, NIL)),
+        [_AS_EXP_CODE_IN_LIST] = EXP_SZ(as_exp_in_list(NIL, NULL)),
         [OP_LIST_GET_BY_VALUE] =
             EXP_SZ(as_exp_list_get_by_value(NULL, 0, NIL, NIL)),
         [OP_LIST_GET_BY_VALUE_RANGE] =
