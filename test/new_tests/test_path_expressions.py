@@ -605,7 +605,7 @@ class TestPathExprOperations:
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_map_keys(map_keys)
+                    cdt_ctx.cdt_ctx_map_keys_in(map_keys)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
@@ -620,7 +620,7 @@ class TestPathExprOperations:
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_map_keys(["a", "b"]),
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b"]),
                     cdt_ctx.cdt_ctx_and_filter(filter_expr)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
