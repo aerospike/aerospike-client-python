@@ -2490,7 +2490,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
             goto CLEANUP_PY_VALUE;
         }
 
-        if (AS_CDT_CTX_MAP_KEYS_IN && val->type != AS_LIST) {
+        if (as_cdt_ctx_code == AS_CDT_CTX_MAP_KEYS_IN && val->type != AS_LIST) {
             status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                      "map_keys_in must take in a list of keys");
             goto CLEANUP_AS_VAL;
