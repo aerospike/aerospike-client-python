@@ -943,7 +943,7 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
 class InList(_BaseExpr):
     """
-    Return :py:obj:`True` if value is contained in list.
+    Return :py:obj:`True` if value is contained in list. Otherwise return :py:obj:`False`.
     """
 
     _op = aerospike._AS_EXP_CODE_IN_LIST
