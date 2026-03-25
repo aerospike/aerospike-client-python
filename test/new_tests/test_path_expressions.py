@@ -6,7 +6,7 @@ from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL
-from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys
+from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList, ListGetByIndex
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers.expressions import hll
@@ -642,3 +642,19 @@ class TestPathExprOperations:
             operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
         ]
         self.as_connection.operate(self.key, ops)
+
+    def test_expr_map_get_keys(self):
+        expr = MapGetKeys(self.MAP_BIN_NAME).compile()
+        ops = [
+            expr_ops.expression_read(self.MAP_BIN_NAME, expr)
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
+
+    def test_expr_map_get_values(self):
+        expr = MapGetValues(self.MAP_BIN_NAME).compile()
+        ops = [
+            expr_ops.expression_read(self.MAP_BIN_NAME, expr)
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
