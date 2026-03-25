@@ -1488,3 +1488,41 @@ class MapGetByRankRange(_BaseExpr):
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class MapGetKeys(_BaseExpr):
+    """
+    Return a list of keys from a map-valued subexpression. TODO: not sure what this means in the c client docstring
+    """
+
+    _op = aerospike._AS_EXP_CODE_MAP_KEYS
+
+    def __init__(
+        self,
+        bin
+    ):
+        """Args:
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`
+
+        :return: Expression.
+        """
+        self._children = (bin if isinstance(bin, _BaseExpr) else MapBin(bin))
+
+
+class MapGetValues(_BaseExpr):
+    """
+    Return a list of values from a map-valued subexpression. TODO: not sure what this means in the c client docstring
+    """
+
+    _op = aerospike._AS_EXP_CODE_MAP_VALUES
+
+    def __init__(
+        self,
+        bin
+    ):
+        """Args:
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`
+
+        :return: Expression.
+        """
+        self._children = (bin if isinstance(bin, _BaseExpr) else MapBin(bin))
