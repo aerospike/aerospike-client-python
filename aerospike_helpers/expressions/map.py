@@ -1506,7 +1506,9 @@ class MapGetKeys(_BaseExpr):
 
         :return: Expression.
         """
-        self._children = (map_value if isinstance(map_value, _BaseExpr) else MapBin(map_value))
+        if not isinstance(map_value, _BaseExpr):
+            map_value = MapBin(map_value)
+        self._children = (map_value,)
 
 
 class MapGetValues(_BaseExpr):
@@ -1525,4 +1527,6 @@ class MapGetValues(_BaseExpr):
 
         :return: Expression.
         """
-        self._children = (map_value if isinstance(map_value, _BaseExpr) else MapBin(map_value))
+        if not isinstance(map_value, _BaseExpr):
+            map_value = MapBin(map_value)
+        self._children = (map_value,)
