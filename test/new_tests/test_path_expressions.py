@@ -18,16 +18,32 @@ from .test_base_class import TestBaseClass
 import copy
 
 
-@pytest.fixture(scope="class", autouse=True)
-def setup_class(as_connection, request):
-    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
-        request.cls.expected_context_for_pos_tests = nullcontext()
-    else:
-        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
-
 
 class TestPathExprOperations:
+    @pytest.fixture(scope="function")
+    def requires_server_version(as_connection, request, version):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= version:
+            request.cls.expected_context_for_pos_tests = nullcontext()
+        else:
+            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+            request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+
+    require_server_8_1_1 = pytest.mark.parametrize(
+        "requires_server_version",
+        [
+            (8, 1, 1)
+        ],
+        indirect=True
+    )
+
+    require_server_8_1_2 = pytest.mark.parametrize(
+        "requires_server_version",
+        [
+            (8, 1, 2)
+        ],
+        indirect=True
+    )
+
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
@@ -178,7 +194,8 @@ class TestPathExprOperations:
             )
         ]
     )
-    def test_select_by_path_operation(self, op, expected_bins):
+    @require_server_8_1_1
+    def test_select_by_path_operation(self, op, expected_bins, requires_server_version):
         ops = [
             op
         ]
@@ -191,6 +208,7 @@ class TestPathExprOperations:
         20.0
     ).compile()
 
+    @require_server_8_1_1
     def test_select_by_path_operation_with_filter(self):
         ops = [
             operations.select_by_path(
@@ -252,6 +270,7 @@ class TestPathExprOperations:
             )
         ]
     )
+    @require_server_8_1_1
     def test_exp_loopvar_types(self, filter_expr, expected_bin_value):
         ops = [
             operations.select_by_path(
@@ -266,6 +285,7 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.MAP_BIN_NAME] == expected_bin_value
 
+    @require_server_8_1_1
     def test_exp_loopvar_geojson(self):
         rectangle = aerospike.GeoJSON({'type': "Polygon",
                          'coordinates': [
@@ -292,6 +312,7 @@ class TestPathExprOperations:
 
     LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUE)), 2)
 
+    @require_server_8_1_1
     def test_exp_loopvar_list(self):
         ops = [
             operations.select_by_path(
@@ -332,6 +353,7 @@ class TestPathExprOperations:
 
         self.as_connection.remove_bin(self.key, list=[self.MAP_WITH_HLL_BIN_NAME])
 
+    @require_server_8_1_1
     def test_exp_loopvar_hll(self, setup_hll_bin):
         # HLL bin value should always be returned
         filter_expr = GE(hll.HLLGetCount(bin=LoopVarHLL(var_id=aerospike.EXP_LOOPVAR_VALUE)), 0).compile()
@@ -357,6 +379,7 @@ class TestPathExprOperations:
         aerospike.EXP_PATH_MODIFY_NO_FAIL,
         aerospike.EXP_PATH_MODIFY_DEFAULT,
     ])
+    @require_server_8_1_1
     def test_modify_by_path_operation(self, flags):
         ops = [
             operations.modify_by_path(
@@ -385,6 +408,7 @@ class TestPathExprOperations:
 
     # Test path expression select flags
 
+    @require_server_8_1_1
     def test_exp_path_flag_matching_tree(self):
         ops = [
             operations.select_by_path(
@@ -433,6 +457,7 @@ class TestPathExprOperations:
             )
         ]
     )
+    @require_server_8_1_1
     def test_exp_path_flag_map(self, flags, expected_bin_value):
         ops = [
             operations.select_by_path(
@@ -508,6 +533,7 @@ class TestPathExprOperations:
         with expected_context:
             self.as_connection.operate(self.key, ops)
 
+    @require_server_8_1_1
     def test_select_by_path_expression(self):
         ctx=[
             cdt_ctx.cdt_ctx_all_children(),
@@ -528,6 +554,7 @@ class TestPathExprOperations:
 
     MAP_KEY_FILTER_EXPR = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_KEY), "book").compile()
 
+    @require_server_8_1_1
     def test_loopvar_id_map_key(self):
         ops = [
             operations.select_by_path(
@@ -553,6 +580,7 @@ class TestPathExprOperations:
 
     LIST_INDEX_FILTER_EXPR = Eq(LoopVarInt(aerospike.EXP_LOOPVAR_INDEX), 0).compile()
 
+    @require_server_8_1_1
     def test_loopvar_id_list_index(self):
         ops = [
             operations.select_by_path(
@@ -569,6 +597,7 @@ class TestPathExprOperations:
             # Return the same list, but with all list elements except at index 0 removed
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
+    @require_server_8_1_1
     def test_expr_result_remove(self):
         with pytest.warns(DeprecationWarning):
             ops = [
@@ -609,6 +638,7 @@ class TestPathExprOperations:
             ["a", 1]
         ]
     )
+    @require_server_8_1_2
     def test_cdt_ctx_map_get_matching_keys(self, map_keys):
         ops = [
             operations.select_by_path(
@@ -619,10 +649,12 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        # Assuming that order of map entries returned doesn't matter
-        assert sorted(bins[self.MAP_BIN_NAME]) == sorted([self.RECORD_BINS[self.MAP_BIN_NAME][key] for key in map_keys])
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            # Assuming that order of map entries returned doesn't matter
+            assert sorted(bins[self.MAP_BIN_NAME]) == sorted([self.RECORD_BINS[self.MAP_BIN_NAME][key] for key in map_keys])
 
+    @require_server_8_1_2
     def test_cdt_ctx_map_get_matching_and_nonmatching_keys(self):
         ops = [
             operations.select_by_path(
@@ -633,8 +665,9 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["a"]]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["a"]]
 
     @pytest.mark.parametrize(
         "map_keys",
@@ -645,6 +678,7 @@ class TestPathExprOperations:
             ["z", "zz"],
         ]
     )
+    @require_server_8_1_2
     def test_cdt_ctx_map_get_only_nonmatching_keys(self, map_keys):
         ops = [
             operations.select_by_path(
@@ -655,9 +689,11 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_BIN_NAME] == []
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_BIN_NAME] == []
 
+    @require_server_8_1_2
     def test_cdt_ctx_map_get_keys_in_and_filter(self):
         filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         ops = [
@@ -670,10 +706,12 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        # Map key "a" should be filtered out
-        assert bins[self.MAP_BIN_NAME] == self.RECORD_BINS[self.MAP_BIN_NAME]["b"]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            # Map key "a" should be filtered out
+            assert bins[self.MAP_BIN_NAME] == self.RECORD_BINS[self.MAP_BIN_NAME]["b"]
 
+    @require_server_8_1_2
     def test_cdt_ctx_map_get_keys_in_and_filter_twice(self):
         GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
@@ -688,9 +726,10 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        # Map key "a" and "g" should be filtered out
-        assert bins[self.MAP_BIN_NAME] == [2, 3]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            # Map key "a" and "g" should be filtered out
+            assert bins[self.MAP_BIN_NAME] == [2, 3]
 
     def test_cdt_ctx_map_get_keys_in_nonlist(self):
         ops = [
@@ -705,6 +744,7 @@ class TestPathExprOperations:
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.key, ops)
 
+    # I believe this raises InvalidRequest for any server version
     def test_cdt_ctx_and_filter_taking_in_expr_evaluating_to_non_bool(self):
         non_bool_expr = MapBin(self.MAP_BIN_NAME).compile()
         ops = [
@@ -741,6 +781,7 @@ class TestPathExprOperations:
             ),
         ]
     )
+    @require_server_8_1_2
     def test_expr_in_list(self, filter_expr, expected_results):
         filter_expr = filter_expr.compile()
         ctx = [
@@ -749,8 +790,9 @@ class TestPathExprOperations:
         ops = [
             operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.LIST_OF_INTS_BIN_NAME] == expected_results
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.LIST_OF_INTS_BIN_NAME] == expected_results
 
     def test_expr_in_map_instead_of_list(self):
         filter_expr = InList(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), self.MAP_BIN_NAME)
@@ -763,21 +805,25 @@ class TestPathExprOperations:
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
 
+    @require_server_8_1_2
     def test_expr_map_get_keys(self):
         expr = MapGetKeys(self.MAP_BIN_NAME).compile()
         ops = [
             expr_ops.expression_read(self.MAP_BIN_NAME, expr)
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
 
+    @require_server_8_1_2
     def test_expr_map_get_values(self):
         expr = MapGetValues(self.MAP_BIN_NAME).compile()
         ops = [
             expr_ops.expression_read(self.MAP_BIN_NAME, expr)
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
 
     @pytest.mark.parametrize(
         "bin_name",
