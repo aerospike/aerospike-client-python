@@ -955,7 +955,7 @@ class InList(_BaseExpr):
     ):
         """Args:
             value (TypeValue): Value or value expression to look for.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or bin name.
+            bin (TypeBinName): list bin name or expression evaluating to a list.
 
         :return: Expression.
         """

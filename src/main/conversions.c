@@ -2505,7 +2505,13 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
 
     as_exp *expr = NULL;
-    if (as_cdt_ctx_code == AS_CDT_CTX_EXP && !Py_IsNone(py_extra_args)) {
+    switch (as_cdt_ctx_code) {
+    case AS_CDT_CTX_EXP:
+    case AS_CDT_CTX_EXP | AS_CDT_CTX_AND:
+        if (!Py_IsNone(py_extra_args)) {
+            break;
+        }
+
         // Either all_children_with_filter() or and_filter() which take in an as_exp* argument
         PyObject *py_expr = NULL;
         int retval = PyDict_GetItemStringRef(
@@ -2521,6 +2527,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
+        break;
     }
 
     switch (as_cdt_ctx_code) {

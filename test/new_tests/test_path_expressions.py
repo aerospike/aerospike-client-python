@@ -5,7 +5,7 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList, ListGetByIndex
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -33,12 +33,16 @@ class TestPathExprOperations:
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     NESTED_LIST_BIN_NAME = "list_of_lists"
     MAP_WITH_GEOJSON_BIN_NAME = "map_w_geo_bin"
+
+    # For testing InList
     LIST_OF_INTS_BIN_NAME = "list_of_ints"
+    SECOND_LIST_OF_INTS_BIN_NAME = "list_of_ints2"
 
     GEOJSON_VALUE = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
     # TODO: moving this and other test data to conftest may be helpful
     RECORD_BINS = {
         LIST_OF_INTS_BIN_NAME: [1, 2, 3],
+        SECOND_LIST_OF_INTS_BIN_NAME: [3],
         MAP_BIN_NAME: {
             "a": 1,
             "ab": {
@@ -48,6 +52,9 @@ class TestPathExprOperations:
             "c": True,
             "d": b'123',
             "e": None,
+            "f": 3,
+            "g": 4,
+            1: 5
         },
         MAP_WITH_GEOJSON_BIN_NAME: {
             "f": GEOJSON_VALUE
@@ -592,15 +599,17 @@ class TestPathExprOperations:
     @pytest.mark.parametrize(
         "map_keys",
         [
-            # Base case
+            # Base case: return nothing
             [],
+            # One key
             ["a"],
-            # Nonmatching key
-            ["c"],
-            ["a", "ab"]
+            # Multiple keys
+            ["a", "ab"],
+            # Keys with different types
+            ["a", 1]
         ]
     )
-    def test_cdt_ctx_map_get_keys(self, map_keys):
+    def test_cdt_ctx_map_get_matching_keys(self, map_keys):
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
@@ -614,7 +623,44 @@ class TestPathExprOperations:
         # Assuming that order of map entries returned doesn't matter
         assert sorted(bins[self.MAP_BIN_NAME]) == sorted([self.RECORD_BINS[self.MAP_BIN_NAME][key] for key in map_keys])
 
-    def test_cdt_ctx_map_get_keys_and_filter(self):
+    def test_cdt_ctx_map_get_matching_and_nonmatching_keys(self):
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "z"])
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        # Assuming that order of map entries returned doesn't matter
+        assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["a"]]
+
+    @pytest.mark.parametrize(
+        "map_keys",
+        [
+            # One key
+            ["z"],
+            # Multiple keys
+            ["z", "zz"],
+        ]
+    )
+    def test_cdt_ctx_map_get_only_nonmatching_keys(self, map_keys):
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys_in(map_keys)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        # Assuming that order of map entries returned doesn't matter
+        assert bins[self.MAP_BIN_NAME] == []
+
+    def test_cdt_ctx_map_get_keys_in_and_filter(self):
         filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         ops = [
             operations.select_by_path(
@@ -630,18 +676,96 @@ class TestPathExprOperations:
         # Map key "a" should be filtered out
         assert bins[self.MAP_BIN_NAME] == self.RECORD_BINS[self.MAP_BIN_NAME]["b"]
 
-    def test_expr_in_list(self):
-        expr = InList(
-            3,
-            self.LIST_OF_INTS_BIN_NAME
-        ).compile()
+    def test_cdt_ctx_map_get_keys_in_and_filter_twice(self):
+        GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+        LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b"]),
+                    cdt_ctx.cdt_ctx_and_filter(GE_expr),
+                    cdt_ctx.cdt_ctx_and_filter(LE_expr)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        # Map key "a" and "d" should be filtered out
+        assert bins[self.MAP_BIN_NAME] == [2, 3]
+
+    def test_cdt_ctx_map_get_keys_in_nonlist(self):
+        # GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+        # LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys_in(4),
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.key, ops)
+
+    def test_cdt_ctx_and_filter_taking_in_expr_evaluating_to_non_bool(self):
+        non_bool_expr = MapBin(self.MAP_BIN_NAME).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b"]),
+                    cdt_ctx.cdt_ctx_and_filter(non_bool_expr)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
+
+    @pytest.mark.parametrize(
+        "filter_expr, expected_results",
+        [
+            (
+                InList(
+                    LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
+                    [3]
+                ),
+                # Only the third list element is in [3]
+                [3]
+            ),
+            (
+                InList(
+                    LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
+                    SECOND_LIST_OF_INTS_BIN_NAME
+                ),
+                # Only the third list element is in SECOND_LIST_OF_INTS_BIN_NAME
+                [3]
+            ),
+        ]
+    )
+    def test_expr_in_list(self, filter_expr):
+        filter_expr = filter_expr.compile()
         ctx = [
-            cdt_ctx.cdt_ctx_all_children_with_filter(expr)
+            cdt_ctx.cdt_ctx_all_children_with_filter()
         ]
         ops = [
             operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
         ]
-        self.as_connection.operate(self.key, ops)
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins[self.LIST_OF_INTS_BIN_NAME] == 3
+
+    def test_expr_in_list_with_wrong_arg_type(self):
+        filter_expr = InList(4, self.MAP_BIN_NAME)
+        ctx = [
+            cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
+        ]
+        ops = [
+            operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
 
     def test_expr_map_get_keys(self):
         expr = MapGetKeys(self.MAP_BIN_NAME).compile()
@@ -658,3 +782,18 @@ class TestPathExprOperations:
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
+
+    @pytest.mark.parametrize(
+        "bin_name",
+        [
+            LIST_BIN_NAME,
+            MAP_BIN_NAME
+        ]
+    )
+    def test_expr_map_get_keys_or_values_on_non_map(self, bin_name):
+        expr = MapGetKeys(bin_name).compile()
+        ops = [
+            expr_ops.expression_read(self.LIST_BIN_NAME, expr)
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)

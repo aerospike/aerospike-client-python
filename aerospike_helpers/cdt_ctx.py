@@ -346,9 +346,16 @@ def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
 
 def cdt_ctx_map_keys_in(keys: list):
     """
-    The cdt_ctx object is initialized to lookup objects in a map by specific keys.
+    Restrict map context to the given list of keys, provided they exist.
 
-    This can be followed by :meth:`cdt_ctx_map_keys_in` to filter out the remaining map entries.
+    For example, if a map ``{"A": 1, "B": 2, "C": 3}`` exists, and you pass
+    keys ``["A", "C", "D"]`` in as the list of keys, the result will only
+    include ``{"A": 1, "C": 3}``, since element "D" does not exist in the map.
+    Observe that the values of the corresponding keys are not returned.
+
+    This can be followed by :meth:`cdt_ctx_and_filter` to filter out the remaining map entries.
+
+    This can only be used by path expressions.
 
     Args:
         keys (list): The keys to look for in the map.

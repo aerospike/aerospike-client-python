@@ -848,7 +848,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, NIL));
             break;
         case _AS_EXP_CODE_IN_LIST:
-            APPEND_ARRAY(2, as_exp_in_list(NIL, NULL));
+            APPEND_ARRAY(
+                2,
+                as_exp_in_list(NIL, NULL)); // - 2 for left value and list value
             break;
         case OP_LIST_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
