@@ -45,6 +45,7 @@ If a list of write operations is added to the query with :meth:`~aerospike.Query
 they will be applied to each record processed by the query. \
 See available write operations at :mod:`aerospike_helpers.operations`.
 
+.. Not sure if this is true
 .. note::
     If :meth:`~aerospike.Query.add_ops` is called with :meth:`~aerospike.Query.select`, the bins selected by the latter
     will be ignored.

@@ -10,6 +10,7 @@ from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
+from aerospike_helpers.operations import operations
 
 
 from aerospike_helpers.expressions.arithmetic import Add
@@ -927,6 +928,19 @@ class TestQuery(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_foreground_query_with_select_ignores_add_ops(self):
+        query = self.as_connection.query("test", "demo")
+        query.select("test_age")
+        ops = [
+            operations.increment("test_age", 1)
+        ]
+        query.add_ops(ops)
+        query.results()
+
+        key = ("test", "demo", 0)
+        _, _, bins = self.as_connection.get(key)
+        assert bins["test_age"] == 0
 
     def test_query_select_multiple_times(self):
         query: aerospike.Query = self.as_connection.query("test", "demo")
