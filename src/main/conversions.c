@@ -2508,11 +2508,13 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     switch (as_cdt_ctx_code) {
     case AS_CDT_CTX_EXP:
     case AS_CDT_CTX_EXP | AS_CDT_CTX_AND:
-        if (!Py_IsNone(py_extra_args)) {
+        if (Py_IsNone(py_extra_args)) {
+            // all_children() and all_children_with_filter() share the same as_cdt_ctx code.
+            // But all_children() doesn't take in an expression
             break;
         }
-
         // Either all_children_with_filter() or and_filter() which take in an as_exp* argument
+
         PyObject *py_expr = NULL;
         int retval = PyDict_GetItemStringRef(
             py_extra_args, _CDT_CTX_FILTER_EXPR_KEY, &py_expr);
