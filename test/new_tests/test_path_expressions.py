@@ -187,7 +187,7 @@ class TestPathExprOperations:
         ]
     )
     @require_server_8_1_1
-    def test_select_by_path_operation(self, op, expected_bins, requires_server_version):
+    def test_select_by_path_operation(self, op, expected_bins):
         ops = [
             op
         ]

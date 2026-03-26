@@ -262,7 +262,7 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
 
 @pytest.fixture(scope="function")
 def requires_server_version(as_connection, request):
-    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
         request.cls.expected_context_for_pos_tests = nullcontext()
     else:
         # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
