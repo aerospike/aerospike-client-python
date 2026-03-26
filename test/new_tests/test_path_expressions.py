@@ -20,14 +20,6 @@ import copy
 
 
 class TestPathExprOperations:
-    @pytest.fixture(scope="function")
-    def requires_server_version(as_connection, request, version):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= version:
-            request.cls.expected_context_for_pos_tests = nullcontext()
-        else:
-            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-            request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
-
     require_server_8_1_1 = pytest.mark.parametrize(
         "requires_server_version",
         [
@@ -114,7 +106,7 @@ class TestPathExprOperations:
         }
     }
     @pytest.fixture(autouse=True)
-    def insert_record(self):
+    def insert_record(self, requires_server_version):
         self.key = ("test", "demo", 1)
         self.as_connection.put(self.key, bins=self.RECORD_BINS)
         yield

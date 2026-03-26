@@ -9,6 +9,8 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
+from contextlib import nullcontext
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -257,3 +259,11 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+
+@pytest.fixture(scope="function")
+def requires_server_version(as_connection, request, version):
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= version:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
