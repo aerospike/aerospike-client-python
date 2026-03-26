@@ -634,7 +634,6 @@ class TestPathExprOperations:
             )
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        # Assuming that order of map entries returned doesn't matter
         assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["a"]]
 
     @pytest.mark.parametrize(
@@ -657,7 +656,6 @@ class TestPathExprOperations:
             )
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        # Assuming that order of map entries returned doesn't matter
         assert bins[self.MAP_BIN_NAME] == []
 
     def test_cdt_ctx_map_get_keys_in_and_filter(self):
@@ -683,7 +681,7 @@ class TestPathExprOperations:
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b"]),
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b", "f", "g"]),
                     cdt_ctx.cdt_ctx_and_filter(GE_expr),
                     cdt_ctx.cdt_ctx_and_filter(LE_expr)
                 ],
@@ -691,12 +689,10 @@ class TestPathExprOperations:
             )
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        # Map key "a" and "d" should be filtered out
+        # Map key "a" and "g" should be filtered out
         assert bins[self.MAP_BIN_NAME] == [2, 3]
 
     def test_cdt_ctx_map_get_keys_in_nonlist(self):
-        # GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
-        # LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
@@ -727,7 +723,7 @@ class TestPathExprOperations:
     @pytest.mark.parametrize(
         "filter_expr, expected_results",
         [
-            (
+            pytest.param(
                 InList(
                     LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
                     [3]
@@ -735,7 +731,7 @@ class TestPathExprOperations:
                 # Only the third list element is in [3]
                 [3]
             ),
-            (
+            pytest.param(
                 InList(
                     LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
                     SECOND_LIST_OF_INTS_BIN_NAME
@@ -745,19 +741,19 @@ class TestPathExprOperations:
             ),
         ]
     )
-    def test_expr_in_list(self, filter_expr):
+    def test_expr_in_list(self, filter_expr, expected_results):
         filter_expr = filter_expr.compile()
         ctx = [
-            cdt_ctx.cdt_ctx_all_children_with_filter()
+            cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
         ]
         ops = [
             operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.LIST_OF_INTS_BIN_NAME] == 3
+        assert bins[self.LIST_OF_INTS_BIN_NAME] == expected_results
 
-    def test_expr_in_list_with_wrong_arg_type(self):
-        filter_expr = InList(4, self.MAP_BIN_NAME)
+    def test_expr_in_map_instead_of_list(self):
+        filter_expr = InList(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), self.MAP_BIN_NAME)
         ctx = [
             cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
         ]
