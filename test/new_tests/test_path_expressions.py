@@ -789,7 +789,7 @@ class TestPathExprOperations:
             assert bins[self.LIST_OF_INTS_BIN_NAME] == expected_results
 
     def test_expr_in_map_instead_of_list(self):
-        filter_expr = InList(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), self.MAP_BIN_NAME)
+        filter_expr = InList(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), self.MAP_BIN_NAME).compile()
         ctx = [
             cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
         ]
