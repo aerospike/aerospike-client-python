@@ -2487,6 +2487,12 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         status = as_val_new_from_pyobject(self, err, py_value, &val,
                                           static_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
+            // as_val_new_from_pyobject can set a generic AEROSPIKE_ERR_CLIENT if we receive a Python type
+            // that doesn't map to a server type, so we just set ParamError here to ensure this exception
+            // is raised.
+            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                     "Failed to convert %s, value to as_val",
+                                     CTX_KEY);
             goto CLEANUP_PY_VALUE;
         }
 
