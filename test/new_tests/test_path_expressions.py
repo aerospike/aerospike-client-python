@@ -115,9 +115,10 @@ class TestPathExprOperations:
     EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_VALUE), "a").compile()
 
     @pytest.mark.parametrize(
-        "op,expected_bins",
+        "bin_name, op, expected_bin_value",
         [
             pytest.param(
+                LIST_BIN_NAME,
                 operations.select_by_path(
                     bin_name=LIST_BIN_NAME,
                     ctx=[
@@ -125,25 +126,11 @@ class TestPathExprOperations:
                     ],
                     flags=aerospike.EXP_PATH_SELECT_VALUE
                 ),
-                {
-                    LIST_BIN_NAME: RECORD_BINS[LIST_BIN_NAME]
-                },
+                RECORD_BINS[LIST_BIN_NAME],
                 id="select_all_children_once_in_list"
             ),
             pytest.param(
-                operations.select_by_path(
-                    bin_name=MAP_BIN_NAME,
-                    ctx=[
-                        cdt_ctx.cdt_ctx_all_children(),
-                    ],
-                    flags=aerospike.EXP_PATH_SELECT_VALUE
-                ),
-                {
-                    MAP_BIN_NAME: list(RECORD_BINS[MAP_BIN_NAME].values())
-                },
-                id="select_all_children_once_in_map"
-            ),
-            pytest.param(
+                LIST_BIN_NAME,
                 operations.select_by_path(
                     bin_name=LIST_BIN_NAME,
                     ctx=[
@@ -152,25 +139,50 @@ class TestPathExprOperations:
                     ],
                     flags=aerospike.EXP_PATH_SELECT_VALUE
                 ),
-                {
-                    LIST_BIN_NAME: [
-                        1,
-                        {
-                            "aa": 11,
-                            "ab": 13,
-                            "bb": 12
-                        },
-                        2,
-                        3,
-                        {
-                            "cc": 9
-                        },
-                        4
-                    ]
-                },
+                [
+                    1,
+                    {
+                        "aa": 11,
+                        "ab": 13,
+                        "bb": 12
+                    },
+                    2,
+                    3,
+                    {
+                        "cc": 9
+                    },
+                    4
+                ],
                 id="select_all_children_twice_in_list"
+            )
+        ]
+    )
+    @require_server_8_1_1
+    def test_select_by_path_operation_returning_list_values(self, bin_name, op, expected_bin_value: list):
+        ops = [
+            op
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins[bin_name] == expected_bin_value
+
+    @pytest.mark.parametrize(
+        "bin_name, op, expected_bin_value",
+        [
+            pytest.param(
+                MAP_BIN_NAME,
+                operations.select_by_path(
+                    bin_name=MAP_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all_children(),
+                    ],
+                    flags=aerospike.EXP_PATH_SELECT_VALUE
+                ),
+                list(RECORD_BINS[MAP_BIN_NAME].values()),
+                id="select_all_children_once_in_map"
             ),
             pytest.param(
+                MAP_BIN_NAME,
                 operations.select_by_path(
                     bin_name=MAP_BIN_NAME,
                     ctx=[
@@ -179,21 +191,20 @@ class TestPathExprOperations:
                     ],
                     flags=aerospike.EXP_PATH_SELECT_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
                 ),
-                {
-                    MAP_BIN_NAME: []
-                },
+                [],
                 id="exp_path_no_fail"
             )
         ]
     )
     @require_server_8_1_1
-    def test_select_by_path_operation(self, op, expected_bins):
+    def test_select_by_path_operation_returning_map_values(self, bin_name, op, expected_bin_value: list):
         ops = [
             op
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert sorted(bins) == sorted(expected_bins)
+            # Order of iterated map entries doesn't matter here
+            assert sorted(bins[bin_name]) == sorted(expected_bin_value)
 
     FILTER_EXPR = GE(
         LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
@@ -225,7 +236,7 @@ class TestPathExprOperations:
             pytest.param(
                 GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2),
                 # Should filter out 1
-                [2],
+                [value for value in RECORD_BINS[MAP_BIN_NAME] if type(value) == int and value >= 2],
                 # Without an id, it's harder to run this test case individually
                 # LoopVarInt isn't printed to stdout
                 id="LoopVarInt"
@@ -428,9 +439,12 @@ class TestPathExprOperations:
         "flags, expected_bin_value", [
             pytest.param(
                 aerospike.EXP_PATH_SELECT_MAP_KEY,
+                # TODO: this test shouldn't rely on the insertion order of the map entries
+                # in the test setup. But don't have time to fix this
                 ["book", "ferry", "food", "game", "plants", "stickers"]
             ),
             pytest.param(
+                # TODO: see TODO for above test case.
                 aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE,
                 [
                     "book",
@@ -542,7 +556,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == self.SECOND_LEVEL_INTEGERS_MINUS_FIVE
+            assert sorted(bins[self.MAP_OF_NESTED_MAPS_BIN_NAME]) == sorted(self.SECOND_LEVEL_INTEGERS_MINUS_FIVE)
 
     MAP_KEY_FILTER_EXPR = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_KEY), "book").compile()
 
@@ -608,8 +622,7 @@ class TestPathExprOperations:
             self.as_connection.operate(self.key, ops)
 
             _, _, bins = self.as_connection.get(self.key)
-            actual_results = sorted(bins[self.MAP_OF_NESTED_MAPS_BIN_NAME])
-            assert actual_results == {
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == {
                 "Day1": {
                 },
                 "Day2": {
@@ -703,10 +716,10 @@ class TestPathExprOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             # Map key "a" should be filtered out
-            assert bins[self.MAP_BIN_NAME] == self.RECORD_BINS[self.MAP_BIN_NAME]["b"]
+            assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["b"]]
 
     @require_server_8_1_2
-    def test_cdt_ctx_map_get_keys_in_and_filter_twice(self):
+    def test_cdt_ctx_map_get_keys_in_with_chained_and_filters(self):
         GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
         ops = [
