@@ -3,18 +3,15 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
-from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, Val
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
-from aerospike_helpers.expressions.list import ListSize, InList, ListGetByIndex
+from aerospike_helpers.expressions.list import ListSize, InList
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
-from contextlib import nullcontext
-from .test_base_class import TestBaseClass
 import copy
 
 
@@ -167,10 +164,9 @@ class TestPathExprOperations:
             assert bins[bin_name] == expected_bin_value
 
     @pytest.mark.parametrize(
-        "bin_name, op, expected_bin_value",
+        "op, expected_bin_value",
         [
             pytest.param(
-                MAP_BIN_NAME,
                 operations.select_by_path(
                     bin_name=MAP_BIN_NAME,
                     ctx=[
@@ -182,7 +178,6 @@ class TestPathExprOperations:
                 id="select_all_children_once_in_map"
             ),
             pytest.param(
-                MAP_BIN_NAME,
                 operations.select_by_path(
                     bin_name=MAP_BIN_NAME,
                     ctx=[
@@ -197,14 +192,22 @@ class TestPathExprOperations:
         ]
     )
     @require_server_8_1_1
-    def test_select_by_path_operation_returning_map_values(self, bin_name, op, expected_bin_value: list):
+    def test_select_by_path_operation_returning_map_values(self, op, expected_bin_value: list):
         ops = [
             op
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            # Order of iterated map entries doesn't matter here
-            assert sorted(bins[bin_name]) == sorted(expected_bin_value)
+
+            # Order of returned map entries doesn't matter.
+            # But sorting a list with a non-hashable type (i.e dict) will fail.
+            # One of the map values returned a dictionary which is not hashable,
+            # so we have to convert it to a frozenset to represent itself
+            bins[self.MAP_BIN_NAME] = frozenset(bins[self.MAP_BIN_NAME].items())
+            for i, list_elem in enumerate(expected_bin_value):
+                if isinstance(list_elem, dict):
+                    expected_bin_value[i] = frozenset(list_elem.items())
+            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(expected_bin_value)
 
     FILTER_EXPR = GE(
         LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
@@ -236,7 +239,7 @@ class TestPathExprOperations:
             pytest.param(
                 GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2),
                 # Should filter out 1
-                [value for value in RECORD_BINS[MAP_BIN_NAME] if type(value) == int and value >= 2],
+                [value for value in RECORD_BINS[MAP_BIN_NAME].values() if type(value) == int and value >= 2],
                 # Without an id, it's harder to run this test case individually
                 # LoopVarInt isn't printed to stdout
                 id="LoopVarInt"
