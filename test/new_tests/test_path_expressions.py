@@ -163,6 +163,11 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[bin_name] == expected_bin_value
 
+    def convert_dict_to_hashable_in_list(self, list):
+        for i, list_elem in enumerate(list):
+            if isinstance(list_elem, dict):
+                list[i] = frozenset(list_elem.items())
+
     @pytest.mark.parametrize(
         "op, expected_bin_value",
         [
@@ -203,10 +208,8 @@ class TestPathExprOperations:
             # But sorting a list with a non-hashable type (i.e dict) will fail.
             # One of the map values returned a dictionary which is not hashable,
             # so we have to convert it to a frozenset to represent itself
-            bins[self.MAP_BIN_NAME] = frozenset(bins[self.MAP_BIN_NAME].items())
-            for i, list_elem in enumerate(expected_bin_value):
-                if isinstance(list_elem, dict):
-                    expected_bin_value[i] = frozenset(list_elem.items())
+            self.convert_dict_to_hashable_in_list(bins[self.MAP_BIN_NAME])
+            self.convert_dict_to_hashable_in_list(expected_bin_value)
             assert sorted(bins[self.MAP_BIN_NAME]) == sorted(expected_bin_value)
 
     FILTER_EXPR = GE(
