@@ -5,7 +5,7 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, Val
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList, ListGetByIndex
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -760,7 +760,7 @@ class TestPathExprOperations:
             pytest.param(
                 InList(
                     LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
-                    [3]
+                    Val([1, 2, 3])
                 ),
                 # Only the third list element is in [3]
                 [3]
