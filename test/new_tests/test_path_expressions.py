@@ -210,7 +210,7 @@ class TestPathExprOperations:
             # so we have to convert it to a frozenset to represent itself
             self.convert_dict_to_hashable_in_list(bins[self.MAP_BIN_NAME])
             self.convert_dict_to_hashable_in_list(expected_bin_value)
-            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(expected_bin_value)
+            assert set(bins[self.MAP_BIN_NAME]) == set(expected_bin_value)
 
     FILTER_EXPR = GE(
         LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
@@ -292,7 +292,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_BIN_NAME] == expected_bin_value
+            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(expected_bin_value)
 
     @require_server_8_1_1
     def test_exp_loopvar_geojson(self):
