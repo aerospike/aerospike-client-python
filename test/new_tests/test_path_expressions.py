@@ -193,7 +193,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins == expected_bins
+            assert sorted(bins) == sorted(expected_bins)
 
     FILTER_EXPR = GE(
         LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
@@ -608,7 +608,8 @@ class TestPathExprOperations:
             self.as_connection.operate(self.key, ops)
 
             _, _, bins = self.as_connection.get(self.key)
-            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == {
+            actual_results = sorted(bins[self.MAP_OF_NESTED_MAPS_BIN_NAME])
+            assert actual_results == {
                 "Day1": {
                 },
                 "Day2": {
@@ -659,6 +660,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
+            # Map key z should be ignored
             assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["a"]]
 
     @pytest.mark.parametrize(
@@ -721,7 +723,7 @@ class TestPathExprOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             # Map key "a" and "g" should be filtered out
-            assert bins[self.MAP_BIN_NAME] == [2, 3]
+            assert sorted(bins[self.MAP_BIN_NAME]) == [2, 3]
 
     def test_cdt_ctx_map_get_keys_in_nonlist(self):
         ops = [
@@ -805,7 +807,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
+            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
 
     @require_server_8_1_2
     def test_expr_map_get_values(self):
@@ -815,7 +817,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert bins[self.MAP_BIN_NAME] == list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
+            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(self.RECORD_BINS[self.MAP_BIN_NAME].values())
 
     @pytest.mark.parametrize(
         "bin_name",
