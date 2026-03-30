@@ -269,15 +269,16 @@ def add_indexes_to_client(client):
     except e.IndexFoundError:
         pass
 
+KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
+
 # Add records around the test
 @pytest.fixture(scope="function")
 def clean_test_background(as_connection):
     # TODO: optimize by using batch instead
-    keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
-    for i, key in enumerate(keys):
+    for i, key in enumerate(KEYS):
         as_connection.put(key, {BIN_NAME: i})
     yield
-    for i, key in enumerate(keys):
+    for i, key in enumerate(KEYS):
         as_connection.remove(key)
 
 READ_OPS = [
