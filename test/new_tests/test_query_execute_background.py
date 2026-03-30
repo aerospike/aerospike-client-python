@@ -345,19 +345,23 @@ class TestQueryApply(object):
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
             query.add_ops(WRITE_OPS)
-        records = query.results()
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id)
 
-        # The only bin should still be returned
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        records = query.results()
         for _, _, bins in records:
-            assert BIN_NAME in bins
+            assert bins[WRITE_OPS] == 3
 
     def test_add_ops_then_select_bins_then_bg_query(self, query):
         query.add_ops(WRITE_OPS)
         # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
             query.select(NON_EXISTENT_BIN_NAME)
-        records = query.results()
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id)
 
-        # The only bin should still be returned
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        records = query.results()
         for _, _, bins in records:
-            assert BIN_NAME in bins
+            assert bins[WRITE_OPS] == 3
