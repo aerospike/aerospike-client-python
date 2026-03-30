@@ -36,6 +36,16 @@
 AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)
 {
+    if (self->query.select.size) {
+        // If select() was called on this Query object before.
+
+        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        if (retval == -1) {
+            return NULL;
+        }
+    }
+
     // Python function arguments.
     PyObject *py_ops = NULL;
     // Python function keyword arguments.
@@ -56,19 +66,6 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
 
     as_error err;
     as_error_init(&err);
-
-    if (self->query.select.size) {
-        // If select() was called on this Query object before.
-
-        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
-                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
-        if (retval == -1) {
-            // This handles the codepath where warnings are converted into errors from pytest/python cli
-            // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-            as_error_update(&err, AEROSPIKE_ERR, SELECT_AND_ADD_OPS_MESSAGE);
-            goto CLEANUP;
-        }
-    }
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");

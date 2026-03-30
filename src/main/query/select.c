@@ -37,24 +37,20 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 {
     TRACE();
 
+    // If add_ops() was called on this Query object before.
+    if (self->query.ops && self->query.ops->binops.size) {
+        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        if (retval == -1) {
+            return NULL;
+        }
+    }
+
     int nbins = (int)PyTuple_Size(args);
     char *bin = NULL;
     PyObject *py_ubin = NULL;
     as_error err;
     as_error_init(&err);
-
-    if (self->query.ops && self->query.ops->binops.size) {
-        // If add_ops() was called on this Query object before.
-
-        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
-                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
-        if (retval == -1) {
-            // This handles the codepath where warnings are converted into errors from pytest/python cli
-            // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-            as_error_update(&err, AEROSPIKE_ERR, SELECT_AND_ADD_OPS_MESSAGE);
-            goto CLEANUP;
-        }
-    }
 
     if (!self || (self->client && !self->client->as)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
