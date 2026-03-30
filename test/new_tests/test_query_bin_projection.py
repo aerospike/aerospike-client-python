@@ -1,16 +1,11 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query
 from aerospike_helpers.operations import operations
 from aerospike import Query
 from aerospike import exception as e
 
 
 class TestQueryBinProjection:
-    @pytest.fixture(autouse=True)
-    def query(self, clean_test_background):
-        query = self.as_connection.query(TEST_NS, TEST_SET)
-        yield query
-
     def test_query_foreach(self, query):
         bin_values = set()
         def callback(record):

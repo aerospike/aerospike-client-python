@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
+from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME, query
 
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
@@ -334,8 +334,7 @@ class TestQueryApply(object):
             READ_AND_WRITE_OPS
         ]
     )
-    def test_add_read_ops(self, ops):
-        query = self.as_connection.query(TEST_NS, TEST_SET)
+    def test_add_read_ops(self, ops, query):
         query.add_ops(ops)
 
         with pytest.raises(exception.ParamError):
