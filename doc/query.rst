@@ -300,10 +300,9 @@ Assume this boilerplate code is run before all examples below:
         For foreground queries, only read operations are allowed.
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        .. deprecated::
-
-            19.2.0 In the next major release, if read operations are passed to background queries or
-            write operations are passed to foreground queries, a :exc:`ParamError` will be raised.
+        .. deprecated:: 19.2.0
+            In the next major release, if bins are selected using `~Query.select` and this method is called,
+            an :exc:`ParamError` will be raised.
 
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
