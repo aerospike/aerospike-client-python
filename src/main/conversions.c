@@ -2554,7 +2554,11 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     case CDT_CTX_MAP_KEY_CREATE:;
         int map_order = 0;
-        get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args, &map_order);
+        status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
+                                      &map_order);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_PY_EXTRA_ARGS;
+        }
         as_cdt_ctx_add_map_key_create(cdt_ctx, val, map_order);
         break;
 
@@ -2574,9 +2578,16 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     case CDT_CTX_LIST_INDEX_CREATE:;
         int list_order = 0;
         int pad = 0;
-        get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                             &list_order);
-        get_int_from_py_dict(err, CDT_CTX_PAD_KEY, py_extra_args, &pad);
+        status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
+                                      &list_order);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_PY_EXTRA_ARGS;
+        }
+        status =
+            get_int_from_py_dict(err, CDT_CTX_PAD_KEY, py_extra_args, &pad);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_PY_EXTRA_ARGS;
+        }
         as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order, pad);
         break;
 
@@ -2616,7 +2627,7 @@ CLEANUP_PY_VALUE:
 CLEANUP_PY_CDT_CTX_CODE:
     Py_DECREF(py_cdt_ctx_code);
 RETURN:
-    return err->code;
+    return status;
 }
 
 // This function converts a list of cdt_ctx from aerospike_helpers.ctx to
