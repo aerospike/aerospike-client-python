@@ -351,7 +351,7 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         records = query.results()
         for _, _, bins in records:
-            assert bins[WRITE_OPS] == 3
+            assert bins[BIN_NAME] == 3
 
     def test_add_ops_then_select_bins_then_bg_query(self, query):
         query.add_ops(WRITE_OPS)
@@ -364,4 +364,4 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         records = query.results()
         for _, _, bins in records:
-            assert bins[WRITE_OPS] == 3
+            assert bins[BIN_NAME] == 3
