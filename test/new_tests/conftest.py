@@ -297,6 +297,6 @@ WRITE_OPS = [
 NON_EXISTENT_BIN_NAME = "asdf"
 
 @pytest.fixture()
-def query(self, clean_test_background):
-    query = self.as_connection.query(TEST_NS, TEST_SET)
+def query(clean_test_background, as_connection):
+    query = as_connection.query(TEST_NS, TEST_SET)
     yield query
