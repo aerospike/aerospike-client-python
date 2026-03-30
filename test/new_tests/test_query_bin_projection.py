@@ -1,5 +1,5 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS
 from aerospike_helpers.operations import operations
 from aerospike import Query
 from aerospike import exception as e
@@ -34,10 +34,6 @@ class TestQueryBinProjection:
     def noop_callback(record):
         pass
 
-    WRITE_OPS = [
-        operations.write(BIN_NAME, 3)
-    ]
-
     @pytest.mark.parametrize(
         "api_method, args",
         [
@@ -57,14 +53,24 @@ class TestQueryBinProjection:
         with pytest.raises(e.ParamError):
             api_method(query, *args)
 
-    # TODO: need to test that select() will cause ops to be ignored.
-
-    def test_select_bins_and_then_bin_projection(self, query):
-        query.select(BIN_NAME)
+    def test_select_bins_then_add_ops_then_foreground_query(self, query):
+        # Filter out the only bin in the record
+        query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
             query.add_ops(READ_OPS)
+        records = query.results()
 
-    def test_bin_projection_and_then_select_bins(self, query):
+        # The only bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins
+
+    def test_add_ops_then_select_bins_then_foreground_query(self, query):
         query.add_ops(READ_OPS)
+        # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
-            query.select(BIN_NAME)
+            query.select(NON_EXISTENT_BIN_NAME)
+        records = query.results()
+
+        # The only bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins

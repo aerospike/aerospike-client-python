@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS
+from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
@@ -340,3 +340,25 @@ class TestQueryApply(object):
 
         with pytest.raises(exception.ParamError):
             query.execute_background()
+
+    def test_select_bins_then_add_ops_then_bg_query(self, query):
+        # Filter out the only bin in the record
+        query.select(NON_EXISTENT_BIN_NAME)
+        with pytest.warns(DeprecationWarning):
+            query.add_ops(WRITE_OPS)
+        records = query.results()
+
+        # The only bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins
+
+    def test_add_ops_then_select_bins_then_bg_query(self, query):
+        query.add_ops(WRITE_OPS)
+        # Filter out the only bin in the record
+        with pytest.warns(DeprecationWarning):
+            query.select(NON_EXISTENT_BIN_NAME)
+        records = query.results()
+
+        # The only bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins

@@ -288,3 +288,9 @@ READ_AND_WRITE_OPS = [
     operations.read(BIN_NAME),
     operations.write(BIN_NAME, 1)
 ]
+
+WRITE_OPS = [
+    operations.write(BIN_NAME, 3)
+]
+
+NON_EXISTENT_BIN_NAME = "asdf"
