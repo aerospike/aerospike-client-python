@@ -29,7 +29,7 @@ class TestQueryBinProjection:
     def test_query_nested_results(self, query):
         query.add_ops(self.NESTED_READ_OP)
         records = query.results()
-        bin_values = [record[2][BIN_NAME] for record in records]
+        bin_values = [record[2][MAP_BIN_NAME] for record in records]
         assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
 
     # Negative tests
