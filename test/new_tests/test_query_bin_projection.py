@@ -20,7 +20,7 @@ class TestQueryBinProjection:
         query.add_ops(READ_OPS)
         records = query.results()
         bin_values = [record[2][BIN_NAME] for record in records]
-        assert len(bin_values) == set(bin_values) and set(bin_values) == expected_number_bin_values
+        assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
 
     NESTED_READ_OP = [
         map_operations.map_get_by_key(MAP_BIN_NAME, "a", aerospike.MAP_RETURN_VALUE)
@@ -30,7 +30,7 @@ class TestQueryBinProjection:
         query.add_ops(self.NESTED_READ_OP)
         records = query.results()
         bin_values = [record[2][BIN_NAME] for record in records]
-        assert len(bin_values) == set(bin_values) and set(bin_values) == expected_number_bin_values
+        assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
 
     # Negative tests
 
