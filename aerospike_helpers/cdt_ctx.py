@@ -100,6 +100,17 @@ Example::
     # Cleanup
     client.remove(key)
     client.close()
+
+.. _path_expressions_contexts:
+
+## Path Expressions Contexts
+
+These :py:class:`_cdt_ctx` subclasses are meant to be used with path expressions:
+
+- :py:meth:`cdt_ctx_all_children`
+- :py:meth:`cdt_ctx_all_children_with_filter`
+- :py:meth:`cdt_ctx_map_keys_in`
+- :py:meth:`cdt_ctx_and_filter`
 """
 import aerospike
 
