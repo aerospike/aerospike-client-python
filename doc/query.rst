@@ -114,7 +114,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
-        .. warning:: In the next major client release, calling this method after :meth:`Query.add_ops` was called on it will raise a :py:exc:`~aerospike.exception.ParamError` exception.
+        .. warning:: In the next major client release, calling this method after :meth:`Query.add_ops` was called on the same Query object will raise a :py:exc:`~aerospike.exception.ParamError` exception.
 
         Set a filter on the record bins resulting from :meth:`results` or :meth:`foreach`.
 
