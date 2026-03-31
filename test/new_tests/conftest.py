@@ -262,6 +262,8 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
 
 @pytest.fixture(scope="function")
 def requires_server_version(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
     if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
         request.cls.expected_context_for_pos_tests = nullcontext()
     else:
