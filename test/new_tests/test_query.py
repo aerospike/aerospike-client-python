@@ -10,7 +10,6 @@ from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
-from aerospike_helpers.operations import operations
 
 
 from aerospike_helpers.expressions.arithmetic import Add
