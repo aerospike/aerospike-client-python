@@ -28,7 +28,6 @@
 #include "policy.h"
 #include "operate.h"
 
-// TODO: spacing looks wrong in preview
 #define SELECT_AND_ADD_OPS_MESSAGE                                             \
     "select() was already called on this Query object, so no operations will be added. \
     This will raise a ParamError exception in the next major client release."
