@@ -204,9 +204,9 @@ class TestPathExprOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
 
-            # Order of returned map entries doesn't matter.
-            # But sorting a list with a non-hashable type (i.e dict) will fail.
-            # One of the map values returned a dictionary which is not hashable,
+            # Order of selected map entries doesn't matter.
+            # But sorting a list / creating a set containing a non-hashable type (i.e dict) will fail.
+            # One of the map values is a dictionary which is not hashable,
             # so we have to convert it to a frozenset to represent itself
             self.convert_dict_to_hashable_in_list(bins[self.MAP_BIN_NAME])
             self.convert_dict_to_hashable_in_list(expected_bin_value)
