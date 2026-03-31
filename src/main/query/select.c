@@ -38,7 +38,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
     TRACE();
 
     // If add_ops() was called on this Query object before.
-    if (self->query.ops && self->query.ops->binops.size) {
+    if (as_operations_defined(self->query.ops)) {
         int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
                                   SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
         if (retval == -1) {
