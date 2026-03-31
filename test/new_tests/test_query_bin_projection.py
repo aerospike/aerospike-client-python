@@ -26,7 +26,7 @@ class TestQueryBinProjection:
         map_operations.map_get_by_key(MAP_BIN_NAME, "a", aerospike.MAP_RETURN_VALUE)
     ]
 
-    def test_query_nested_results(self):
+    def test_query_nested_results(self, query):
         query.add_ops(self.NESTED_READ_OP)
         records = query.results()
         bin_values = [record[2][BIN_NAME] for record in records]
