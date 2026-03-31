@@ -45,11 +45,6 @@ If a list of write operations is added to the query with :meth:`~aerospike.Query
 they will be applied to each record processed by the query. \
 See available write operations at :mod:`aerospike_helpers.operations`.
 
-.. Not sure if this is true
-.. note::
-    If :meth:`~aerospike.Query.add_ops` is called with :meth:`~aerospike.Query.select`, the bins selected by the latter
-    will be ignored.
-
 Query Aggregations
 ------------------
 
@@ -119,12 +114,19 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
-        Set a filter on the record bins resulting from :meth:`results` or \
-        :meth:`foreach`.
+        .. deprecated:: 19.2.0
+
+            In the next major client release, calling this method after :meth:`Query.add_ops` was called on it will raise
+            a :py:exc:`~aerospike.exception.ParamError` exception.
+
+        Set a filter on the record bins resulting from :meth:`results` or :meth:`foreach`.
 
         If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
 
         If a selected bin does not exist in a record, it will not appear in the *bins* portion of that record tuple.
+
+        If this method is called after :meth:`Query.add_ops` was called on the same Query object, the selected bins in
+        this call will be ignored during the query.
 
     .. method:: where(predicate[, ctx])
 
@@ -294,15 +296,19 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: add_ops(ops)
 
+        .. deprecated:: 19.2.0
+
+            In the next major client release, if this is called after `~Query.select` was called on the same object,
+            an :exc:`ParamError` will be raised.
+
         Add a list of operations to the query.
 
         For background queries, only write operations are allowed.
         For foreground queries, only read operations are allowed.
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        .. deprecated:: 19.2.0
-            In the next major release, if bins are selected using `~Query.select` and this method is called,
-            an :exc:`ParamError` will be raised.
+        If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will now be ignored
+        during the query.
 
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
