@@ -1,6 +1,7 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query
-from aerospike_helpers.operations import operations
+from .conftest import BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query, MAP_BIN_NAME, expected_number_bin_values
+import aerospike
+from aerospike_helpers.operations import map_operations
 from aerospike import Query
 from aerospike import exception as e
 
@@ -13,16 +14,23 @@ class TestQueryBinProjection:
 
         query.add_ops(READ_OPS)
         query.foreach(callback)
-        for i in range(len(bin_values)):
-            assert i in bin_values
+        assert bin_values == expected_number_bin_values
 
-    # TODO: scale down tests maybe
     def test_query_results(self, query):
         query.add_ops(READ_OPS)
-        # TODO: records are not necessarily in order
         records = query.results()
-        for record in records:
-            assert type(record[2][BIN_NAME]) == int
+        bin_values = [record[2][BIN_NAME] for record in records]
+        assert len(bin_values) == set(bin_values) and set(bin_values) == expected_number_bin_values
+
+    NESTED_READ_OP = [
+        map_operations.map_get_by_key(MAP_BIN_NAME, "a", aerospike.MAP_RETURN_VALUE)
+    ]
+
+    def test_query_nested_results(self):
+        query.add_ops(self.NESTED_READ_OP)
+        records = query.results()
+        bin_values = [record[2][BIN_NAME] for record in records]
+        assert len(bin_values) == set(bin_values) and set(bin_values) == expected_number_bin_values
 
     # Negative tests
 
@@ -55,7 +63,7 @@ class TestQueryBinProjection:
             query.add_ops(READ_OPS)
         records = query.results()
 
-        # The only bin should still be returned
+        # The "filtered out" bin should still be returned
         for _, _, bins in records:
             assert BIN_NAME in bins
 
@@ -66,6 +74,6 @@ class TestQueryBinProjection:
             query.select(NON_EXISTENT_BIN_NAME)
         records = query.results()
 
-        # The only bin should still be returned
+        # The "filtered out" bin should still be returned
         for _, _, bins in records:
             assert BIN_NAME in bins

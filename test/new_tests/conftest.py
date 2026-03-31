@@ -266,8 +266,11 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
 TEST_NS = "test"
 TEST_SET = "foreground_q_bp"
 BIN_NAME = "number"
+MAP_BIN_NAME = "map"
 
+# TODO: scale down tests maybe
 KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
+expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
@@ -276,10 +279,12 @@ def clean_test_background(as_connection):
     brs = BatchRecords(batch_records=batch_records)
     for i, key in enumerate(KEYS):
         ops = [
-            operations.write(BIN_NAME, i)
+            operations.write(BIN_NAME, i),
+            operations.write(MAP_BIN_NAME, {"a": i})
         ]
         br = Write(key, ops=ops)
         batch_records.append(br)
+        expected_number_bin_values.add(i)
     as_connection.batch_write(brs)
     yield
     as_connection.batch_remove(KEYS)
