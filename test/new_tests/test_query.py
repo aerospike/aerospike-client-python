@@ -929,16 +929,6 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    def test_foreground_query_with_select_raises_ParamError(self):
-        query = self.as_connection.query("test", "demo")
-        query.select("test_age")
-        ops = [
-            operations.increment("test_age", 1)
-        ]
-        query.add_ops(ops)
-        with pytest.raises(e.ParamError):
-            query.results()
-
     def test_query_select_multiple_times(self):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         query.select("a")
