@@ -114,10 +114,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
-        .. deprecated:: 19.2.0
-
-            In the next major client release, calling this method after :meth:`Query.add_ops` was called on it will raise
-            a :py:exc:`~aerospike.exception.ParamError` exception.
+        .. deprecated:: 19.2.0 In the next major client release, calling this method after :meth:`Query.add_ops` was called on it will raise a :py:exc:`~aerospike.exception.ParamError` exception.
 
         Set a filter on the record bins resulting from :meth:`results` or :meth:`foreach`.
 
@@ -296,10 +293,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: add_ops(ops)
 
-        .. deprecated:: 19.2.0
-
-            In the next major client release, if this is called after `~Query.select` was called on the same object,
-            an :exc:`ParamError` will be raised.
+        .. deprecated:: 19.2.0 In the next major client release, if this is called after :meth:`~Query.select` was called on the same object, an :exc:`ParamError` will be raised.
 
         Add a list of operations to the query.
 
