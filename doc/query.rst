@@ -293,7 +293,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: add_ops(ops)
 
-        .. warning:: In the next major client release, if this is called after :meth:`~Query.select` was called on the same object, an :exc:`ParamError` will be raised.
+        .. warning:: In the next major client release, if this is called after :meth:`~Query.select` was called on the same object, an :exc:`~aerospike.exception.ParamError` will be raised.
 
         Add a list of operations to the query.
 
