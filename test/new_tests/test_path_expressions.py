@@ -826,7 +826,7 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
+            assert set(bins[self.MAP_BIN_NAME]) == set(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
 
     @require_server_8_1_2
     def test_expr_map_get_values(self):
@@ -836,19 +836,26 @@ class TestPathExprOperations:
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            assert sorted(bins[self.MAP_BIN_NAME]) == sorted(self.RECORD_BINS[self.MAP_BIN_NAME].values())
+
+            self.convert_dict_to_hashable_in_list(bins[self.MAP_BIN_NAME])
+
+            expected_bin_value = list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
+            self.convert_dict_to_hashable_in_list(expected_bin_value)
+
+            assert len(expected_bin_value) == len(set(expected_bin_value))
+            assert set(bins[self.MAP_BIN_NAME]) == set(expected_bin_value)
 
     @pytest.mark.parametrize(
-        "bin_name",
+        "map_expr_api",
         [
-            LIST_BIN_NAME,
-            MAP_BIN_NAME
+            MapGetKeys,
+            MapGetValues
         ]
     )
-    def test_expr_map_get_keys_or_values_on_non_map(self, bin_name):
-        expr = MapGetKeys(bin_name).compile()
+    def test_expr_map_get_keys_or_values_on_non_map(self, map_expr_api):
+        expr = map_expr_api(self.LIST_BIN_NAME).compile()
         ops = [
-            expr_ops.expression_read(self.LIST_BIN_NAME, expr)
+            expr_ops.expression_read(self.MAP_BIN_NAME, expr)
         ]
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
