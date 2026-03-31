@@ -103,7 +103,8 @@ Example::
 
 .. _path_expressions_contexts:
 
-## Path Expressions Contexts
+Path Expressions Contexts
+-------------------------
 
 These :py:class:`_cdt_ctx` subclasses are meant to be used with path expressions:
 
