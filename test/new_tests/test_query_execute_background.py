@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion, add_indexes_to_client, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME, query
+from .conftest import wait_for_job_completion, clean_test_background, TEST_NS, TEST_SET, READ_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME, query
 
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
@@ -24,6 +24,11 @@ def add_test_udf(client):
 def drop_test_udf(client):
     client.udf_remove("query_apply.lua")
 
+def add_indexes_to_client(client):
+    try:
+        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_NUMERIC, "test_background_number_idx")
+    except exception.IndexFoundError:
+        pass
 
 def remove_indexes_from_client(client):
     client.index_remove(TEST_NS, "test_background_number_idx")

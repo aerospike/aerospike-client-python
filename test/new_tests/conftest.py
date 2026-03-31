@@ -11,6 +11,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
+from aerospike_helpers.batch.records import BatchRecords, Write
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -260,26 +261,28 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
             break
         time.sleep(0.1)
 
+# Shared between bin projection and execute background tests
+
 TEST_NS = "test"
 TEST_SET = "foreground_q_bp"
 BIN_NAME = "number"
-def add_indexes_to_client(client):
-    try:
-        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_NUMERIC, "test_background_number_idx")
-    except e.IndexFoundError:
-        pass
 
 KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
 
 # Add records around the test
 @pytest.fixture(scope="function")
 def clean_test_background(as_connection):
-    # TODO: optimize by using batch instead
+    batch_records = []
+    brs = BatchRecords(batch_records=batch_records)
     for i, key in enumerate(KEYS):
-        as_connection.put(key, {BIN_NAME: i})
+        ops = [
+            operations.write(BIN_NAME, i)
+        ]
+        br = Write(key, ops=ops)
+        batch_records.append(br)
+    as_connection.batch_write(brs)
     yield
-    for i, key in enumerate(KEYS):
-        as_connection.remove(key)
+    as_connection.batch_remove(KEYS)
 
 READ_OPS = [
     operations.read(BIN_NAME)
