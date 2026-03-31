@@ -45,6 +45,12 @@ If a list of write operations is added to the query with :meth:`~aerospike.Query
 they will be applied to each record processed by the query. \
 See available write operations at :mod:`aerospike_helpers.operations`.
 
+
+Foreground Queries
+------------------
+
+Read operations can also be added in a foreground query using :meth:`~aerospike.Query.add_ops`.
+
 Query Aggregations
 ------------------
 
