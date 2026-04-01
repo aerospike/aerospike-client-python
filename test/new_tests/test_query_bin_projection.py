@@ -1,5 +1,5 @@
 import pytest
-from .conftest import BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query, MAP_BIN_NAME, expected_number_bin_values
+from .conftest import BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query, MAP_BIN_NAME, expected_number_bin_values, requires_server_version
 import aerospike
 from aerospike_helpers.operations import map_operations
 from aerospike import Query
