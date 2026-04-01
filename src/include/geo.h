@@ -45,12 +45,10 @@ void store_geodata(AerospikeGeospatial *self, as_error *err,
 
 PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err);
 
-PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err);
+PyObject *JSON_Loads(PyObject *py_geodata, as_error *err);
 
 AerospikeGeospatial *Aerospike_Set_Geo_Data(PyObject *parent, PyObject *args,
                                             PyObject *kwds);
 
 AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
                                             PyObject *kwds);
-
-PyObject *AerospikeGeospatial_New(as_error *err, PyObject *value);

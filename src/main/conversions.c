@@ -1622,6 +1622,8 @@ typedef struct {
     void *udata;
 } conversion_data;
 
+extern PyTypeObject AerospikeGeospatial_Type;
+
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_val)
 {
@@ -1723,15 +1725,12 @@ as_status val_to_pyobject(AerospikeClient *self, as_error *err,
     case AS_GEOJSON: {
         as_geojson *gp = as_geojson_fromval(val);
         char *locstr = as_geojson_get(gp);
-        PyObject *py_locstr = PyUnicode_FromString(locstr);
-        PyObject *py_loads = AerospikeGeospatial_DoLoads(py_locstr, err);
-        Py_DECREF(py_locstr);
-        if (err->code != AEROSPIKE_OK) {
-            break;
-        }
-        *py_val = AerospikeGeospatial_New(err, py_loads);
-        if (py_loads) {
-            Py_DECREF(py_loads);
+
+        *py_val = PyObject_CallFunction(&AerospikeGeospatial_Type, "s", locstr);
+        if (PyErr_Occurred()) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert as_geojson to aerospike.GeoJSON");
         }
         break;
     }

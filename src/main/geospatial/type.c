@@ -65,15 +65,8 @@ static PyMethodDef AerospikeGeospatial_Type_Methods[] = {
 void store_geodata(AerospikeGeospatial *self, as_error *err,
                    PyObject *py_geodata)
 {
-    if (PyDict_Check(py_geodata)) {
-        self->geo_data = py_geodata;
-        Py_INCREF(py_geodata);
-    }
-    else {
-        as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "Geospatial data should be a dictionary or raw GeoJSON string");
-    }
+    self->geo_data = py_geodata;
+    Py_INCREF(py_geodata);
 }
 
 static PyObject *AerospikeGeospatial_Type_New(PyTypeObject *type,
@@ -90,7 +83,6 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
                                          PyObject *args, PyObject *kwds)
 {
     PyObject *py_geodata = NULL;
-    PyObject *initresult = NULL;
 
     as_error err;
     as_error_init(&err);
@@ -105,17 +97,22 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
     }
 
     if (PyUnicode_Check(py_geodata)) {
-        initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
-        if (!initresult) {
+        py_geodata = JSON_Loads(py_geodata, &err);
+        if (!py_geodata) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "String is not GeoJSON serializable");
             goto CLEANUP;
         }
-        store_geodata(self, &err, initresult);
+        // Convert json.load()'s return value to a borrowed reference.
+        Py_DECREF(py_geodata);
     }
-    else {
-        store_geodata(self, &err, py_geodata);
+    else if (!PyDict_Check(py_geodata)) {
+        as_error_update(
+            &err, AEROSPIKE_ERR_CLIENT,
+            "Geospatial data should be a dictionary or raw GeoJSON string");
+        goto CLEANUP;
     }
+    store_geodata(self, &err, py_geodata);
 
 CLEANUP:
 
@@ -124,9 +121,6 @@ CLEANUP:
         return -1;
     }
 
-    if (initresult) {
-        Py_DECREF(initresult);
-    }
     return 0;
 }
 
@@ -215,7 +209,7 @@ static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial *self)
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
-static PyTypeObject AerospikeGeospatial_Type = {
+PyTypeObject AerospikeGeospatial_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
         FULLY_QUALIFIED_TYPE_NAME("Geospatial"), // tp_name
     sizeof(AerospikeGeospatial),                 // tp_basicsize
@@ -349,14 +343,4 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
         raise_exception(&err);
     }
     return NULL;
-}
-
-PyObject *AerospikeGeospatial_New(as_error *err, PyObject *value)
-{
-    AerospikeGeospatial *self =
-        (AerospikeGeospatial *)AerospikeGeospatial_Type.tp_new(
-            &AerospikeGeospatial_Type, Py_None, Py_None);
-    store_geodata(self, err, value);
-    Py_XINCREF(self->geo_data);
-    return (PyObject *)self;
 }

@@ -26,7 +26,7 @@
 #include "geo.h"
 #include "policy.h"
 
-PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
+PyObject *JSON_Loads(PyObject *py_geodata, as_error *err)
 {
     PyObject *sysmodules = PyImport_GetModuleDict();
     PyObject *json_module = NULL;
@@ -85,7 +85,7 @@ PyObject *AerospikeGeospatial_Loads(AerospikeGeospatial *self, PyObject *args,
 
     PyObject *initresult = NULL;
     if (PyUnicode_Check(py_geodata)) {
-        initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
+        initresult = JSON_Loads(py_geodata, &err);
         if (!initresult) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "String is not GeoJSON serializable");
