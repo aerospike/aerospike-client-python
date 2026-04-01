@@ -58,7 +58,7 @@ runs:
       password: ${{ inputs.registry-password }}
 
   - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-    if: ${{ contains(inputs.registry-name, "artifact.aerospike.io") }}
+    if: ${{ contains(inputs.registry-name, 'artifact.aerospike.io') }}
     env:
       JF_URL: https://artifact.aerospike.io
     with:
@@ -71,7 +71,7 @@ runs:
       echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
-  - if: ${{ contains(inputs.registry-name, "artifact.aerospike.io") }}
+  - if: ${{ contains(inputs.registry-name, 'artifact.aerospike.io') }}
     run: jf docker pull $BASE_IMAGE
     shell: bash
 
