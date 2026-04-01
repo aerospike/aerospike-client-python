@@ -11,13 +11,23 @@ class TestQueryBinProjection:
     def setup(self, requires_server_version):
         pass
 
-    pytestmark = pytest.mark.parametrize(
-        "requires_server_version",
-        [
-            (8, 1, 2)
-        ],
-        indirect=True
-    )
+    pytestmark = [
+        pytest.mark.parametrize(
+            "requires_server_version",
+            [
+                (8, 1, 2)
+            ],
+            indirect=True
+        ),
+        pytest.mark.parametrize(
+            "query",
+            [
+                aerospike.Client.scan,
+                aerospike.Client.query
+            ],
+            indirect=True
+        )
+    ]
 
     def test_query_foreach(self, query):
         bin_values = set()
@@ -57,8 +67,8 @@ class TestQueryBinProjection:
     @pytest.mark.parametrize(
         "api_method, args",
         [
-            (Query.results, []),
-            (Query.foreach, [noop_callback])
+            ("results", []),
+            ("foreach", [noop_callback])
         ]
     )
     @pytest.mark.parametrize(
@@ -71,7 +81,7 @@ class TestQueryBinProjection:
     def test_add_write_ops(self, query, api_method, args, ops):
         query.add_ops(ops)
         with pytest.raises(e.ParamError):
-            api_method(query, *args)
+            getattr(query, api_method)(*args)
 
     def test_select_bins_then_add_ops_then_foreground_query(self, query):
         # Filter out the only bin in the record
