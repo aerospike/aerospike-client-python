@@ -66,10 +66,8 @@ void store_geodata(AerospikeGeospatial *self, as_error *err,
                    PyObject *py_geodata)
 {
     if (PyDict_Check(py_geodata)) {
-        if (self->geo_data) {
-            Py_DECREF(self->geo_data);
-        }
         self->geo_data = py_geodata;
+        Py_INCREF(py_geodata);
     }
     else {
         as_error_update(
@@ -126,7 +124,6 @@ CLEANUP:
         return -1;
     }
 
-    Py_INCREF(self->geo_data);
     if (initresult) {
         Py_DECREF(initresult);
     }
