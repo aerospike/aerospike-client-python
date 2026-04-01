@@ -7,30 +7,48 @@ from aerospike import exception as e
 
 
 class TestQueryBinProjection:
+    require_server_8_1_2 = pytest.mark.parametrize(
+        "requires_server_version",
+        [
+            (8, 1, 2)
+        ],
+        indirect=True
+    )
+
+    @pytest.fixture(autouse=True)
+    def setup(self, requires_server_version):
+        pass
+
+    @require_server_8_1_2
     def test_query_foreach(self, query):
         bin_values = set()
         def callback(record):
             bin_values.add(record[2][BIN_NAME])
 
         query.add_ops(READ_OPS)
-        query.foreach(callback)
-        assert bin_values == expected_number_bin_values
+        with self.expected_context_for_pos_tests:
+            query.foreach(callback)
+            assert bin_values == expected_number_bin_values
 
+    @require_server_8_1_2
     def test_query_results(self, query):
         query.add_ops(READ_OPS)
-        records = query.results()
-        bin_values = [record[2][BIN_NAME] for record in records]
-        assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
+        with self.expected_context_for_pos_tests:
+            records = query.results()
+            bin_values = [record[2][BIN_NAME] for record in records]
+            assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
 
     NESTED_READ_OP = [
         map_operations.map_get_by_key(MAP_BIN_NAME, "a", aerospike.MAP_RETURN_VALUE)
     ]
 
+    @require_server_8_1_2
     def test_query_nested_results(self, query):
         query.add_ops(self.NESTED_READ_OP)
-        records = query.results()
-        bin_values = [record[2][MAP_BIN_NAME] for record in records]
-        assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
+        with self.expected_context_for_pos_tests:
+            records = query.results()
+            bin_values = [record[2][MAP_BIN_NAME] for record in records]
+            assert len(bin_values) == len(set(bin_values)) and set(bin_values) == expected_number_bin_values
 
     # Negative tests
 

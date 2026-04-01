@@ -12,6 +12,7 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import BatchRecords, Write
+from contextlib import nullcontext
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -308,3 +309,12 @@ NON_EXISTENT_BIN_NAME = "asdf"
 def query(clean_test_background, as_connection):
     query = as_connection.query(TEST_NS, TEST_SET)
     yield query
+
+def requires_server_version(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
