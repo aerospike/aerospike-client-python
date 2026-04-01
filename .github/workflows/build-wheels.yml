@@ -188,6 +188,8 @@ jobs:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    permissions:
+        id-token: write
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
