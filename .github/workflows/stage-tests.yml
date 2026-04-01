@@ -24,6 +24,10 @@ on:
         required: false
         description: Registry name
         default: 'docker.io'
+      log-into-registry:
+        type: boolean
+        required: false
+        default: false
       image-name:
         type: string
         required: false
@@ -118,6 +122,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
+        log-into-registry: ${{ inputs.log-into-registry }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
         image-name: ${{ inputs.image-name }}

@@ -21,7 +21,7 @@ on:
       log-into-registry:
         type: boolean
         required: false
-        default: true
+        default: false
       server-tag:
         required: false
         description: Server tag
