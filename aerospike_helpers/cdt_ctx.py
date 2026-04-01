@@ -106,7 +106,7 @@ Example::
 Path Expressions Contexts
 -------------------------
 
-These :py:class:`_cdt_ctx` subclasses are meant to be used with path expressions:
+These :py:class:`_cdt_ctx` methods are meant to be used with path expressions:
 
 - :py:meth:`cdt_ctx_all_children`
 - :py:meth:`cdt_ctx_all_children_with_filter`
