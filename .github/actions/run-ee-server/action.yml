@@ -20,6 +20,12 @@ inputs:
   registry-password:
     description: Required for using release candidates
     required: false
+  OIDC_PROVIDER_NAME:
+    description: _
+    required: true
+  OIDC_AUDIENCE:
+    description: _
+    required: true
   image-name:
     required: false
     description: aerospike/aerospike-server-enterprise
@@ -56,8 +62,8 @@ runs:
     env:
       JF_URL: https://artifact.aerospike.io
     with:
-      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+      oidc-provider-name: ${{ inputs.OIDC_PROVIDER_NAME }}
+      oidc-audience: ${{ inputs.OIDC_AUDIENCE }}
 
   - run: |
       echo BASE_IMAGE=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
