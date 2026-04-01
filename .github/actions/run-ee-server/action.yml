@@ -10,8 +10,8 @@ inputs:
     default: docker.io
   log-into-registry:
     description: "Does registry need credentials to read from"
-    default: "true"
-    required: true
+    default: "false"
+    required: false
   registry-username:
     description: Required for using release candidates
     required: false

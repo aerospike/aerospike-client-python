@@ -9,6 +9,10 @@ on:
         required: false
         description: Registry name
         default: 'docker.io'
+      log-into-registry:
+        type: boolean
+        required: false
+        default: false
       image-name:
         type: string
         required: false
@@ -59,6 +63,7 @@ jobs:
     with:
       use_jfrog_builds: false
       registry-name: ${{ inputs.registry-name }}
+      log-into-registry: ${{ inputs.log-into-registry }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
       test-macos-x86: ${{ inputs.test-macos-x86 }}
