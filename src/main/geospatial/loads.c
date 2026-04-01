@@ -26,7 +26,7 @@
 #include "geo.h"
 #include "policy.h"
 
-PyObject *JSON_Loads(PyObject *py_geodata, as_error *err)
+PyObject *JSON_Loads(PyObject *py_str, as_error *err)
 {
     PyObject *sysmodules = PyImport_GetModuleDict();
     PyObject *json_module = NULL;
@@ -47,8 +47,8 @@ PyObject *JSON_Loads(PyObject *py_geodata, as_error *err)
         PyObject *py_funcname = PyUnicode_FromString("loads");
         Py_INCREF(json_module);
 
-        initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
-                                                py_geodata, NULL);
+        initresult =
+            PyObject_CallMethodObjArgs(json_module, py_funcname, py_str, NULL);
         if (!initresult) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to load GeoJSON");

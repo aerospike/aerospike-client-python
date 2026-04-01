@@ -45,7 +45,7 @@ void store_geodata(AerospikeGeospatial *self, as_error *err,
 
 PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err);
 
-PyObject *JSON_Loads(PyObject *py_geodata, as_error *err);
+PyObject *JSON_Loads(PyObject *py_str, as_error *err);
 
 AerospikeGeospatial *Aerospike_Set_Geo_Data(PyObject *parent, PyObject *args,
                                             PyObject *kwds);
