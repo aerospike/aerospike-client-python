@@ -20,11 +20,11 @@ inputs:
   registry-password:
     description: Required for using release candidates
     required: false
-  OIDC_PROVIDER_NAME:
-    description: _
+  oidc-provider-name:
+    description: For pulling server images from JFrog
     required: true
-  OIDC_AUDIENCE:
-    description: _
+  oidc-audience:
+    description: For pulling server images from JFrog
     required: true
   image-name:
     required: false
@@ -62,8 +62,8 @@ runs:
     env:
       JF_URL: https://artifact.aerospike.io
     with:
-      oidc-provider-name: ${{ inputs.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ inputs.OIDC_AUDIENCE }}
+      oidc-provider-name: ${{ inputs.oidc-provider-name }}
+      oidc-audience: ${{ inputs.oidc-audience }}
 
   - run: |
       echo BASE_IMAGE=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
