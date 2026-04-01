@@ -8,15 +8,16 @@ from aerospike import exception as e
 
 class TestQueryBinProjection:
     @pytest.fixture(autouse=True)
-    @pytest.mark.parametrize(
+    def setup(self, requires_server_version):
+        pass
+
+    pytestmark = pytest.mark.parametrize(
         "requires_server_version",
         [
             (8, 1, 2)
         ],
         indirect=True
     )
-    def setup(self, requires_server_version):
-        pass
 
     def test_query_foreach(self, query):
         bin_values = set()
