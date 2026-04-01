@@ -310,6 +310,7 @@ def query(clean_test_background, as_connection):
     query = as_connection.query(TEST_NS, TEST_SET)
     yield query
 
+@pytest.fixture(scope="function")
 def requires_server_version(as_connection, request):
     # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
     # required server version, but every test case in that module depends on this fixture
