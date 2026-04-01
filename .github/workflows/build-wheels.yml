@@ -1,6 +1,10 @@
 name: 'Build wheels'
 run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
+permissions:
+    id-token: write
+    statuses: write
+
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
 on:
@@ -188,8 +192,6 @@ jobs:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    permissions:
-        id-token: write
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
