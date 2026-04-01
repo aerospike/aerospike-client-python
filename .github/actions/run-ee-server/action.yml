@@ -8,6 +8,10 @@ inputs:
     description: Registry name
     required: false
     default: docker.io
+  log-into-registry:
+    description: "Does registry need credentials to read from"
+    default: "true"
+    required: true
   registry-username:
     description: Required for using release candidates
     required: false
@@ -39,6 +43,7 @@ runs:
   # Start up server
 
   - name: Log into registry to get non-public server RCs
+    if: ${{ inputs.log-into-registry == 'true' }}
     # We can still pull public images while logged in, so just do this all the time to make things simple
     uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
     with:
