@@ -307,7 +307,10 @@ NON_EXISTENT_BIN_NAME = "asdf"
 
 @pytest.fixture()
 def query(request, clean_test_background, as_connection):
-    query = request.param(as_connection, TEST_NS, TEST_SET)
+    if not hasattr(request, "param"):
+        query = as_connection.query(TEST_NS, TEST_SET)
+    else:
+        query = request.param(as_connection, TEST_NS, TEST_SET)
     yield query
 
 @pytest.fixture(scope="function")
