@@ -1,6 +1,7 @@
 name: Smoke tests
 permissions:
   contents: read
+  id-token: write
 
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.10'
