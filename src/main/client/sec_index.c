@@ -241,9 +241,6 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
         NULL, py_expr);
 }
 
-// This allows people to see the function calling the Python client API that issues a warning
-#define STACK_LEVEL 2
-
 // TODO: way to get method name dynamically for error message?
 static inline PyObject *
 AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
@@ -469,10 +466,14 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                                            PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnEx(PyExc_DeprecationWarning,
-                 "index_cdt_create() is deprecated. Please use one of the "
-                 "other non-deprecated index_*_create() methods instead",
-                 STACK_LEVEL);
+    int retval =
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "index_cdt_create() is deprecated. Please use one of the "
+                     "other non-deprecated index_*_create() methods instead",
+                     STACK_LEVEL);
+    if (retval == -1) {
+        return NULL;
+    }
 
     // Initialize error
     as_error err;
