@@ -263,7 +263,7 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ce67ff5b237368f08cd352efdc3a0f2bde008384bb6c2e70b23ae20d70bfb0df') }} >> $GITHUB_ENV
 
-    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
         registry: ghcr.io
