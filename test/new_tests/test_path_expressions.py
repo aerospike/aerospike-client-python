@@ -645,7 +645,7 @@ class TestPathExprOperations:
             # One key
             ["a"],
             # Multiple keys
-            ["a", "ab"],
+            ["a", "b"],
             # Keys with different types
             ["a", 1]
         ]
