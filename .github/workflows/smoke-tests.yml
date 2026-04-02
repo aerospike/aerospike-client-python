@@ -47,7 +47,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
@@ -102,7 +102,7 @@ jobs:
         path: ./dist/*.whl
 
   build-and-run-tests-with-debug-interpreter:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -142,7 +142,7 @@ jobs:
       working-directory: test
 
   generate-coverage-report:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -238,7 +238,7 @@ jobs:
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -264,7 +264,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -300,7 +300,7 @@ jobs:
           - dont_validate_keys
           - lowest_supported_server_version
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -360,7 +360,7 @@ jobs:
       working-directory: test
 
   test-ce:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build
     strategy:
       matrix:
@@ -423,7 +423,7 @@ jobs:
       working-directory: test
 
   test-ee:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -477,7 +477,7 @@ jobs:
         - ext_metrics_node_close_listener
         - ext_metrics_cluster_name
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -508,7 +508,7 @@ jobs:
           - "false"
           - "true"
           - "true my_app_id"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
