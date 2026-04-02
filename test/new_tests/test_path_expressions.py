@@ -560,17 +560,18 @@ class TestPathExprOperations:
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
     def test_expr_result_remove(self):
-        ops = [
-            operations.modify_by_path(
-                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
-                ctx=[
-                    cdt_ctx.cdt_ctx_all_children(),
-                    cdt_ctx.cdt_ctx_all_children()
-                ],
-                expr=ResultRemove().compile(),
-                flags=aerospike.EXP_PATH_MODIFY_DEFAULT
-            )
-        ]
+        with pytest.warns(DeprecationWarning):
+            ops = [
+                operations.modify_by_path(
+                    bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all_children(),
+                        cdt_ctx.cdt_ctx_all_children()
+                    ],
+                    expr=ResultRemove().compile(),
+                    flags=aerospike.EXP_PATH_MODIFY_DEFAULT
+                )
+            ]
 
         with self.expected_context_for_pos_tests:
             self.as_connection.operate(self.key, ops)

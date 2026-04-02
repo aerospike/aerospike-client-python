@@ -17,24 +17,65 @@ class CommandLevelTTL:
     NEW_TTL = 3000
     POLICY = {"ttl": NEW_TTL}
 
-    def test_write_policy(self):
-        self.as_connection.put(KEY, bins={"a": 1}, policy=self.POLICY)
+    meta_and_policy_params = pytest.mark.parametrize(
+        "kwargs_with_ttl",
+        [
+            {"meta": POLICY},
+            {"policy": POLICY},
+        ]
+    )
+
+    @meta_and_policy_params
+    def test_write_policy(self, kwargs_with_ttl):
+        self.as_connection.put(KEY, bins={"a": 1}, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    def test_operate_policy(self):
+    @meta_and_policy_params
+    def test_operate_policy(self, kwargs_with_ttl):
         ops = [
             operations.write(bin_name="a", write_item=1)
         ]
-        self.as_connection.operate(KEY, list=ops, policy=self.POLICY)
+        self.as_connection.operate(KEY, list=ops, **kwargs_with_ttl)
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    def test_batch_write_policy(self):
+    OPS = [
+        operations.write(bin_name="a", write_item=1)
+    ]
+
+    def test_batch_operate(self):
         ops = [
             operations.write(bin_name="a", write_item=1)
         ]
-        self.as_connection.batch_operate(keys=[KEY], ops=ops, policy_batch_write=self.POLICY)
+        self.as_connection.batch_operate(keys=[KEY], ops=self.OPS, policy_batch_write=self.POLICY)
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # cause ClientError to be raised. It's too complicated to check both cases
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @meta_and_policy_params
+    def test_batch_write(self, kwargs_with_ttl):
+        batch_records = br.BatchRecords([
+            br.Write(KEY, ops=self.OPS, **kwargs_with_ttl)
+        ])
+        try:
+            self.as_connection.batch_write(batch_records)
+        except e.ClientError as exc:
+            # ClientError can be raised if the user runs Python with warnings treated as errors.
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
+
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    # This test case is more important when warnings are converted into errors
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    def test_batch_write_with_read_br_raises_deprecation_warning(self):
+        batch_records = br.BatchRecords([
+            br.Read(KEY, meta={"ttl": 100})
+        ])
+        try:
+            self.client.batch_write(batch_records)
+        except e.ClientError as exc:
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
 
     def test_scan_policy(self):
         ops = [
@@ -51,7 +92,7 @@ class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
         ttl = 2
-        self.as_connection.put(KEY, bins={"a": 1}, meta={"ttl": ttl})
+        self.as_connection.put(KEY, bins={"a": 1}, policy={"ttl": ttl})
         self.policy = {
             "read_touch_ttl_percent": 50
         }
