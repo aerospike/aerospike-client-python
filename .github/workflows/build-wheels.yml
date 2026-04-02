@@ -258,10 +258,10 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '3a0a2b728c620206aacefca606551666f1d885be23208ad6554655869e09c285') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'd9bad846bbcd954a2873408f274b62e0fe8d26cba31dd681db9d62e6133a13b2') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'dadc371c3647efe5a1f3a7c99edddea1d8db542e3d2ad48bf63fa81364fb63b6') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ce67ff5b237368f08cd352efdc3a0f2bde008384bb6c2e70b23ae20d70bfb0df') }} >> $GITHUB_ENV
 
     - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
