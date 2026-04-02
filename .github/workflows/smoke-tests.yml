@@ -38,6 +38,11 @@ on:
         type: string
         default: latest
         required: true
+      image-name:
+        description: Image name
+        type: string
+        default: aerospike/aerospike-server-enterprise
+        required: true
 
 jobs:
   build:
@@ -123,6 +128,7 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
