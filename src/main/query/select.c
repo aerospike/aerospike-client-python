@@ -28,10 +28,6 @@
 #undef TRACE
 #define TRACE()
 
-#define SELECT_AND_ADD_OPS_MESSAGE                                             \
-    "add_ops() was already called on this Query object, so no bins will be selected. \
-    This will raise a ParamError exception in the next major client release."
-
 AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
                                       PyObject *kwds)
 {
@@ -39,8 +35,10 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 
     // If add_ops() was called on this Query object before.
     if (as_operations_defined(self->query.ops)) {
-        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
-                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        int retval =
+            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                             SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE,
+                             "Query", "Query");
         if (retval == -1) {
             return NULL;
         }

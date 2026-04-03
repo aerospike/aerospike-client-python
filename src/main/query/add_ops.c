@@ -28,18 +28,16 @@
 #include "policy.h"
 #include "operate.h"
 
-#define SELECT_AND_ADD_OPS_MESSAGE                                             \
-    "select() was already called on this Query object, so no operations will be added. \
-    This will raise a ParamError exception in the next major client release."
-
 AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)
 {
     if (self->query.select.size) {
         // If select() was called on this Query object before.
 
-        int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
-                                  SELECT_AND_ADD_OPS_MESSAGE, STACK_LEVEL);
+        int retval =
+            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                             SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE,
+                             "Query", "Query");
         if (retval == -1) {
             return NULL;
         }
