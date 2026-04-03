@@ -261,7 +261,7 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         time.sleep(0.1)
 
 @pytest.fixture(scope="function")
-def requires_server_version(as_connection, request):
+def expect_earlier_than_server_version_to_fail(as_connection, request):
     # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
     # required server version, but every test case in that module depends on this fixture
     if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:

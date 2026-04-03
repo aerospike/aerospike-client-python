@@ -17,16 +17,16 @@ import copy
 
 
 class TestPathExprOperations:
-    require_server_8_1_1 = pytest.mark.parametrize(
-        "requires_server_version",
+    expect_server_version_earlier_than_8_1_1_to_fail = pytest.mark.parametrize(
+        "expect_earlier_than_server_version_to_fail",
         [
             (8, 1, 1)
         ],
         indirect=True
     )
 
-    require_server_8_1_2 = pytest.mark.parametrize(
-        "requires_server_version",
+    expect_server_version_earlier_than_8_1_2_to_fail = pytest.mark.parametrize(
+        "expect_earlier_than_server_version_to_fail",
         [
             (8, 1, 2)
         ],
@@ -103,7 +103,7 @@ class TestPathExprOperations:
         }
     }
     @pytest.fixture(autouse=True)
-    def insert_record(self, requires_server_version):
+    def insert_record(self, expect_earlier_than_server_version_to_fail):
         self.key = ("test", "demo", 1)
         self.as_connection.put(self.key, bins=self.RECORD_BINS)
         yield
@@ -154,7 +154,7 @@ class TestPathExprOperations:
             )
         ]
     )
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_select_by_path_operation_returning_list_values(self, bin_name, op, expected_bin_value: list):
         ops = [
             op
@@ -196,7 +196,7 @@ class TestPathExprOperations:
             )
         ]
     )
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_select_by_path_operation_returning_map_values(self, op, expected_bin_value: list):
         ops = [
             op
@@ -217,7 +217,7 @@ class TestPathExprOperations:
         20.0
     ).compile()
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_select_by_path_operation_with_filter(self):
         ops = [
             operations.select_by_path(
@@ -279,7 +279,7 @@ class TestPathExprOperations:
             )
         ]
     )
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_loopvar_types(self, filter_expr, expected_bin_value):
         ops = [
             operations.select_by_path(
@@ -294,7 +294,7 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert sorted(bins[self.MAP_BIN_NAME]) == sorted(expected_bin_value)
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_loopvar_geojson(self):
         rectangle = aerospike.GeoJSON({'type': "Polygon",
                          'coordinates': [
@@ -321,7 +321,7 @@ class TestPathExprOperations:
 
     LIST_SIZE_GE_TWO_EXPR = GE(ListSize(ctx=None, bin=LoopVarList(aerospike.EXP_PATH_SELECT_VALUE)), 2)
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_loopvar_list(self):
         ops = [
             operations.select_by_path(
@@ -362,7 +362,7 @@ class TestPathExprOperations:
 
         self.as_connection.remove_bin(self.key, list=[self.MAP_WITH_HLL_BIN_NAME])
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_loopvar_hll(self, setup_hll_bin):
         # HLL bin value should always be returned
         filter_expr = GE(hll.HLLGetCount(bin=LoopVarHLL(var_id=aerospike.EXP_LOOPVAR_VALUE)), 0).compile()
@@ -388,7 +388,7 @@ class TestPathExprOperations:
         aerospike.EXP_PATH_MODIFY_NO_FAIL,
         aerospike.EXP_PATH_MODIFY_DEFAULT,
     ])
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_modify_by_path_operation(self, flags):
         ops = [
             operations.modify_by_path(
@@ -417,7 +417,7 @@ class TestPathExprOperations:
 
     # Test path expression select flags
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_path_flag_matching_tree(self):
         ops = [
             operations.select_by_path(
@@ -469,7 +469,7 @@ class TestPathExprOperations:
             )
         ]
     )
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_exp_path_flag_map(self, flags, expected_bin_value):
         ops = [
             operations.select_by_path(
@@ -545,7 +545,7 @@ class TestPathExprOperations:
         with expected_context:
             self.as_connection.operate(self.key, ops)
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_select_by_path_expression(self):
         ctx=[
             cdt_ctx.cdt_ctx_all_children(),
@@ -566,7 +566,7 @@ class TestPathExprOperations:
 
     MAP_KEY_FILTER_EXPR = Eq(LoopVarStr(aerospike.EXP_LOOPVAR_KEY), "book").compile()
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_loopvar_id_map_key(self):
         ops = [
             operations.select_by_path(
@@ -592,7 +592,7 @@ class TestPathExprOperations:
 
     LIST_INDEX_FILTER_EXPR = Eq(LoopVarInt(aerospike.EXP_LOOPVAR_INDEX), 0).compile()
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_loopvar_id_list_index(self):
         ops = [
             operations.select_by_path(
@@ -609,7 +609,7 @@ class TestPathExprOperations:
             # Return the same list, but with all list elements except at index 0 removed
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
-    @require_server_8_1_1
+    @expect_server_version_earlier_than_8_1_1_to_fail
     def test_expr_result_remove(self):
         with pytest.warns(DeprecationWarning):
             ops = [
@@ -650,7 +650,7 @@ class TestPathExprOperations:
             ["a", 1]
         ]
     )
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_map_get_matching_keys(self, map_keys):
         ops = [
             operations.select_by_path(
@@ -666,7 +666,7 @@ class TestPathExprOperations:
             # Assuming that order of map entries returned doesn't matter
             assert sorted(bins[self.MAP_BIN_NAME]) == sorted([self.RECORD_BINS[self.MAP_BIN_NAME][key] for key in map_keys])
 
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_map_get_matching_and_nonmatching_keys(self):
         ops = [
             operations.select_by_path(
@@ -691,7 +691,7 @@ class TestPathExprOperations:
             ["z", "zz"],
         ]
     )
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_map_get_only_nonmatching_keys(self, map_keys):
         ops = [
             operations.select_by_path(
@@ -706,7 +706,7 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.MAP_BIN_NAME] == []
 
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_map_get_keys_in_and_filter(self):
         filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         ops = [
@@ -741,6 +741,7 @@ class TestPathExprOperations:
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
 
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_all_children_with_filter_then_and_filter(self):
         filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         ops = [
@@ -806,7 +807,7 @@ class TestPathExprOperations:
             ),
         ]
     )
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_expr_in_list(self, filter_expr, expected_results):
         filter_expr = filter_expr.compile()
         ctx = [
@@ -830,7 +831,7 @@ class TestPathExprOperations:
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
 
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_expr_map_get_keys(self):
         expr = MapGetKeys(self.MAP_BIN_NAME).compile()
         ops = [
@@ -840,7 +841,7 @@ class TestPathExprOperations:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert set(bins[self.MAP_BIN_NAME]) == set(self.RECORD_BINS[self.MAP_BIN_NAME].keys())
 
-    @require_server_8_1_2
+    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_expr_map_get_values(self):
         expr = MapGetValues(self.MAP_BIN_NAME).compile()
         ops = [
