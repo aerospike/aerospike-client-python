@@ -724,7 +724,6 @@ class TestPathExprOperations:
             # Map key "a" should be filtered out
             assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["b"]]
 
-    @require_server_8_1_2
     def test_cdt_ctx_map_get_keys_in_with_chained_and_filters(self):
         GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
@@ -739,10 +738,23 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(self.key, ops)
-            # Map key "a" and "g" should be filtered out
-            assert sorted(bins[self.MAP_BIN_NAME]) == [2, 3]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
+
+    def test_cdt_ctx_all_children_with_filter_then_and_filter(self):
+        filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr),
+                    cdt_ctx.cdt_ctx_and_filter(filter_expr)
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
+            )
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
 
     def test_cdt_ctx_map_get_keys_in_nonlist(self):
         ops = [

@@ -343,10 +343,10 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
 
 def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
-    Add a boolean expression filter AND-combined with the current context.
+    Add a boolean expression filter AND-combined with a previous :meth:`cdt_ctx_map_keys_in`.
 
-    Evaluation runs after prior context steps (e.g. :meth:`cdt_ctx_map_keys_in`); entries must satisfy both. Multiple
-    :meth:`and_filter` calls may be chained.
+    This applies the expression at the same level as the previous path context.
+    This cannot be chained after a previous :meth:`cdt_ctx_and_filter` or :meth:`cdt_ctx_all_children_with_filter`.
 
     Args:
         expression: Compiled expression. This expression must return a boolean.
