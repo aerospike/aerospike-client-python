@@ -12,15 +12,5 @@ class TestSetIndex:
         yield
         ensure_dropped_index(self.as_connection, None, INDEX_NAME)
 
-    @pytest.mark.parametrize(
-        "index_create_method",
-        [
-            aerospike.Client.index_single_value_create,
-            aerospike.Client.index_map_keys_create,
-            aerospike.Client.index_map_values_create,
-            aerospike.Client.index_list_create,
-        ]
-    )
-    def test_create_set_index(self, index_create_method):
-        # TODO: reuse code from other PR
-        index_create_method(self.as_connection, None, "demo", "number", aerospike.INDEX_NUMERIC, INDEX_NAME)
+    def test_create_set_index(self):
+        self.as_connection.index_set_create("test", "demo", INDEX_NAME)
