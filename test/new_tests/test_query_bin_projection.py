@@ -1,24 +1,25 @@
 import pytest
-from .conftest import BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query, MAP_BIN_NAME, expected_number_bin_values, requires_server_version
+from .conftest import BIN_NAME, READ_OPS, READ_AND_WRITE_OPS, NON_EXISTENT_BIN_NAME, WRITE_OPS, query, MAP_BIN_NAME, expected_number_bin_values
 import aerospike
 from aerospike_helpers.operations import map_operations
 from aerospike import Query
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
+from contextlib import nullcontext
 
 
 class TestQueryBinProjection:
-    @pytest.fixture(autouse=True)
-    def setup(self, requires_server_version):
-        pass
+    @pytest.fixture(autouse=True, scope="class")
+    def _requires_server_version(self, as_connection, request):
+        # For bin projection, the server can convert the read operations into a regular bin read
+        # Since the server doesn't fail, the client has to check the server version and raise an error on its end.
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 2):
+            request.cls.expected_context_for_pos_tests = nullcontext()
+        else:
+            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+            request.cls.expected_context_for_pos_tests = pytest.raises(e.ClientError)
 
     pytestmark = [
-        pytest.mark.parametrize(
-            "requires_server_version",
-            [
-                (8, 1, 2)
-            ],
-            indirect=True
-        ),
         pytest.mark.parametrize(
             "query",
             [
@@ -88,19 +89,23 @@ class TestQueryBinProjection:
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
             query.add_ops(READ_OPS)
-        records = query.results()
 
-        # The "filtered out" bin should still be returned
-        for _, _, bins in records:
-            assert BIN_NAME in bins
+        with self.expected_context_for_pos_tests:
+            records = query.results()
+
+            # The "filtered out" bin should still be returned
+            for _, _, bins in records:
+                assert BIN_NAME in bins
 
     def test_add_ops_then_select_bins_then_foreground_query(self, query):
         query.add_ops(READ_OPS)
         # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
             query.select(NON_EXISTENT_BIN_NAME)
-        records = query.results()
 
-        # The "filtered out" bin should still be returned
-        for _, _, bins in records:
-            assert BIN_NAME in bins
+        with self.expected_context_for_pos_tests:
+            records = query.results()
+
+            # The "filtered out" bin should still be returned
+            for _, _, bins in records:
+                assert BIN_NAME in bins
