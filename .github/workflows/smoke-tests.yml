@@ -398,7 +398,7 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - if: ${{ inputs.registry-name != 'docker.io' }}
+    - if: ${{ env.REGISTRY_NAME != 'docker.io' }}
       uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
@@ -525,7 +525,7 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - if: ${{ inputs.registry-name != 'docker.io' }}
+    - if: ${{ env.REGISTRY_NAME != 'docker.io' }}
       uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
