@@ -24,10 +24,6 @@ on:
         required: false
         description: Registry name
         default: 'docker.io'
-      log-into-registry:
-        type: boolean
-        required: false
-        default: false
       image-name:
         type: string
         required: false
@@ -45,8 +41,8 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 env:
-  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
 
 jobs:
   linux-distro-tests:
@@ -122,9 +118,10 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
-        log-into-registry: ${{ inputs.log-into-registry }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'separate-docker-container'
@@ -242,6 +239,8 @@ jobs:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'docker-host'

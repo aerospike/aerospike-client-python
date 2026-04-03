@@ -18,10 +18,6 @@ on:
         required: false
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
-      log-into-registry:
-        type: boolean
-        required: false
-        default: false
       server-tag:
         required: false
         description: Server tag
@@ -171,9 +167,10 @@ jobs:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        log-into-registry: ${{ inputs.log-into-registry }}
 
     - run: sudo apt-get update
     - run: sudo apt-get install valgrind -y
