@@ -1,12 +1,12 @@
 name: 'Build wheels'
 run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
-permissions:
-    id-token: write
-    statuses: write
-    packages: read
-
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
+
+permissions:
+  id-token: write
+  statuses: write
+  packages: read
 
 on:
   workflow_dispatch:
@@ -66,10 +66,6 @@ on:
         required: false
         description: Registry name
         default: 'docker.io'
-      log-into-registry:
-        type: boolean
-        required: false
-        default: false
       image-name:
         type: string
         required: false
@@ -118,10 +114,6 @@ on:
         type: string
         required: false
         default: 'docker.io'
-      log-into-registry:
-        type: boolean
-        required: false
-        default: false
       image-name:
         type: string
         required: false
@@ -136,11 +128,6 @@ on:
         type: string
         default: ''
     secrets:
-      # Just make all the secrets required to make things simpler...
-      DOCKER_HUB_BOT_USERNAME:
-        required: true
-      DOCKER_HUB_BOT_PW:
-        required: true
       QE_DOCKER_REGISTRY_USERNAME:
         required: true
       QE_DOCKER_REGISTRY_PASSWORD:
@@ -154,8 +141,8 @@ env:
   # Github mac m1 and windows runners don't support Docker / nested virtualization
   # so we need to use self-hosted runners to test wheels for these platforms
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
-  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
@@ -239,15 +226,13 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
-        log-into-registry: ${{ inputs.log-into-registry }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -423,6 +408,8 @@ jobs:
           registry-name: ${{ inputs.registry-name }}
           registry-username: ${{ env.REGISTRY_USERNAME }}
           registry-password: ${{ env.REGISTRY_PASSWORD }}
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+          oidc-audience: ${{ vars.OIDC_AUDIENCE }}
           image-name: ${{ inputs.image-name }}
           server-tag: ${{ inputs.server-tag }}
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}

@@ -1,13 +1,6 @@
 name: Smoke tests
 permissions:
   contents: read
-  id-token: write
-
-env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.10'
-  # pull_request event doesn't support inputs
-  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -39,15 +32,18 @@ on:
         type: string
         default: latest
         required: true
-      image-name:
-        description: Image name
-        type: string
-        default: aerospike/aerospike-server-enterprise
-        required: true
+
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.10'
+  # pull_request event doesn't support inputs
+  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
@@ -102,7 +98,7 @@ jobs:
         path: ./dist/*.whl
 
   build-and-run-tests-with-debug-interpreter:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -129,20 +125,17 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
-        image-name: ${{ inputs.image-name }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        # TODO: unhardcode.
-        log-into-registry: false
 
     - run: python3-dbg -m pytest ./new_tests
       working-directory: test
 
   generate-coverage-report:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -179,8 +172,10 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     # -Werror: we need code coverage for code paths where warnings are treated as errors
     # TODO: currently this doesn't seem to work though
@@ -238,7 +233,7 @@ jobs:
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -264,7 +259,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -300,7 +295,7 @@ jobs:
           - dont_validate_keys
           - lowest_supported_server_version
       fail-fast: false
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -344,8 +339,10 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
@@ -360,7 +357,7 @@ jobs:
       working-directory: test
 
   test-ce:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build
     strategy:
       matrix:
@@ -404,8 +401,8 @@ jobs:
     - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
 
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
@@ -423,7 +420,7 @@ jobs:
       working-directory: test
 
   test-ee:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -454,8 +451,10 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - name: Run tests
       # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
@@ -477,7 +476,7 @@ jobs:
         - ext_metrics_node_close_listener
         - ext_metrics_cluster_name
       fail-fast: false
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -508,7 +507,7 @@ jobs:
           - "false"
           - "true"
           - "true my_app_id"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
@@ -528,16 +527,18 @@ jobs:
     - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ startsWith(matrix.test-script-args, 'true') }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         # The user agent can also send the client's username if app-id is not set by the client
         env-vars: 'SECURITY=1'
 
