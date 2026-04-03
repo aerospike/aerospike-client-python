@@ -12,6 +12,7 @@ from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
 import copy
 
 
@@ -741,8 +742,11 @@ class TestPathExprOperations:
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
 
-    @expect_server_version_earlier_than_8_1_2_to_fail
     def test_cdt_ctx_all_children_with_filter_then_and_filter(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 2):
+            pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
+                        "We consider this undefined behavior")
+
         filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
         ops = [
             operations.select_by_path(
