@@ -128,6 +128,8 @@ on:
         type: string
         default: ''
     secrets:
+      QE_DOCKER_REGISTRY_URL:
+        required: true
       QE_DOCKER_REGISTRY_USERNAME:
         required: true
       QE_DOCKER_REGISTRY_PASSWORD:
