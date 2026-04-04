@@ -338,7 +338,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
+        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
