@@ -338,7 +338,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
+        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
@@ -398,7 +398,8 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - if: ${{ env.REGISTRY_NAME != 'docker.io' }}
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
         username: ${{ env.REGISTRY_USERNAME }}
@@ -524,7 +525,8 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - if: ${{ env.REGISTRY_NAME != 'docker.io' }}
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
         username: ${{ env.REGISTRY_USERNAME }}

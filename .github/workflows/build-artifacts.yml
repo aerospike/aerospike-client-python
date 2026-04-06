@@ -90,10 +90,6 @@ on:
         type: string
         default: ''
     secrets:
-      DOCKER_HUB_BOT_USERNAME:
-        required: true
-      DOCKER_HUB_BOT_PW:
-        required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
 
