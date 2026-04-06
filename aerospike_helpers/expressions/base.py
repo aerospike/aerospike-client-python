@@ -1137,7 +1137,7 @@ class ResultRemove(_BaseExpr):
     """
     Indicates entry deletion for :py:class:`ModifyByPath`.
     """
-    _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
+    _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
         warnings.warn(
