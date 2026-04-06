@@ -134,8 +134,8 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                                 "Bin must be a string or unicode");
                 return 1;
             }
-            int64_t val = convert_pyobject_to_int64_t(err, py_val1,
-                                                      "query numeric index");
+            int64_t val =
+                convert_pylong_to_int64_t(err, py_val1, "query numeric index");
             if (err->code != AEROSPIKE_OK) {
                 return 1;
             }
@@ -196,8 +196,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 return 1;
             }
             if (PyLong_Check(py_val1)) {
-                min =
-                    convert_pyobject_to_int64_t(err, py_val1, "predicate max");
+                min = convert_pylong_to_int64_t(err, py_val1, "predicate max");
                 if (err->code != AEROSPIKE_OK) {
                     return 1;
                 }
@@ -210,8 +209,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
 
             if (PyLong_Check(py_val2)) {
-                max =
-                    convert_pyobject_to_int64_t(err, py_val2, "predicate max");
+                max = convert_pylong_to_int64_t(err, py_val2, "predicate max");
                 if (err->code != AEROSPIKE_OK) {
                     return 1;
                 }
