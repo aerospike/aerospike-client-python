@@ -12,6 +12,7 @@ from aerospike_helpers.expressions import hll
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
+from collections import Counter
 from .test_base_class import TestBaseClass
 import copy
 
@@ -859,8 +860,7 @@ class TestPathExprOperations:
             expected_bin_value = list(self.RECORD_BINS[self.MAP_BIN_NAME].values())
             self.convert_dict_to_hashable_in_list(expected_bin_value)
 
-            assert len(expected_bin_value) == len(set(expected_bin_value))
-            assert set(bins[self.MAP_BIN_NAME]) == set(expected_bin_value)
+            assert Counter(bins[self.MAP_BIN_NAME]) == Counter(expected_bin_value)
 
     @pytest.mark.parametrize(
         "map_expr_api",
