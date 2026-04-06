@@ -5,6 +5,12 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ 
 # Optionally run tests on manylinux wheels
 # Then upload artifacts to Github
 
+permissions:
+  id-token: write
+  statuses: write
+  packages: read
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
