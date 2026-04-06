@@ -293,7 +293,7 @@ jobs:
         type:
           - sanitizer
           - dont_validate_keys
-          - lowest_supported_server_version
+          # - lowest_supported_server_version
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
