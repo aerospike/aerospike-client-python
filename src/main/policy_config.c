@@ -969,8 +969,8 @@ as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32)
         return AEROSPIKE_ERR_PARAM;
     }
     if (PyLong_Check(py_policy_val)) {
-        *return_uint32 = convert_unsigned_long_into_uint32_t(
-            &err, py_policy_val, "get_uint32_value");
+        *return_uint32 = convert_pylong_into_uint32_t(&err, py_policy_val,
+                                                      "get_uint32_value");
         return err.code;
     }
     return AEROSPIKE_ERR_PARAM;
@@ -992,8 +992,8 @@ as_status set_optional_uint32_property(uint32_t *target_ptr,
         return AEROSPIKE_OK;
     }
     if (PyLong_Check(py_policy_val)) {
-        *target_ptr = convert_unsigned_long_into_uint32_t(&err, py_policy_val,
-                                                          "get_uint32_value");
+        *target_ptr = convert_pylong_into_uint32_t(&err, py_policy_val,
+                                                   "get_uint32_value");
         return err.code;
     }
     return AEROSPIKE_ERR_PARAM;
@@ -1016,8 +1016,8 @@ as_status set_optional_uint16_property(uint16_t *target_ptr,
         return AEROSPIKE_ERR_PARAM;
     }
 
-    *target_ptr = convert_unsigned_long_into_uint16_t(&err, py_policy_val,
-                                                      "get_uint32_value");
+    *target_ptr =
+        convert_pylong_to_uint16_t(&err, py_policy_val, "get_uint32_value");
     return err.code;
 }
 
@@ -1203,7 +1203,7 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
     PyObject *py_field = PyDict_GetItemString(py_policy, field_name);
     if (py_field) {
         if (PyLong_Check(py_field)) {
-            *property_ptr = convert_long_into_int(&err, py_field,
+            *property_ptr = convert_pylong_to_int(&err, py_field,
                                                   "set_optional_int_property");
             if (err.code != AEROSPIKE_OK) {
                 return err.code;

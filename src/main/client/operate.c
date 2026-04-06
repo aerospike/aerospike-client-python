@@ -545,7 +545,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
             goto CLEANUP;
         }
         if (PyLong_Check(py_index)) {
-            index = convert_long_into_int(err, py_index, "py_index");
+            index = convert_pylong_to_int(err, py_index, "py_index");
             if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
@@ -583,7 +583,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
             goto CLEANUP;
         }
         uint32_t flags =
-            convert_unsigned_long_into_uint32_t(err, py_flags, "path flags");
+            convert_pylong_into_uint32_t(err, py_flags, "path flags");
         Py_DECREF(py_flags);
         if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -689,8 +689,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
-            long_offset = convert_long_long_into_int64_t(err, py_value,
-                                                         "AS_OPERATOR_INCR");
+            long_offset =
+                convert_pylong_to_int64_t(err, py_value, "AS_OPERATOR_INCR");
             if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP;
             }

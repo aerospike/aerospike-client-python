@@ -149,8 +149,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     else if (in_datatype == AS_INDEX_NUMERIC) {
 
         if (PyLong_Check(py_val1)) {
-            val1_int = convert_long_long_into_int64_t(
-                &err, py_val1, "query where numeric val1");
+            val1_int = convert_pylong_to_int64_t(&err, py_val1,
+                                                 "query where numeric val1");
             if (err.code != AEROSPIKE_OK) {
                 PyErr_Clear();
                 val1_int = 0;
@@ -159,8 +159,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         val1 = (void *)val1_int;
 
         if (PyLong_Check(py_val2)) {
-            val2_int = convert_long_long_into_int64_t(
-                &err, py_val2, "query where numeric val2");
+            val2_int = convert_pylong_to_int64_t(&err, py_val2,
+                                                 "query where numeric val2");
             if (err.code != AEROSPIKE_OK) {
                 PyErr_Clear();
                 val2_int = 0;

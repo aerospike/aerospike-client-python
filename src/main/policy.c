@@ -117,7 +117,7 @@
                                                                                \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                uint64_t field_val = convert_unsigned_long_long_into_uint64_t( \
+                uint64_t field_val = convert_pylong_to_uint64_t(               \
                     err, py_field, "POLICY_SET_FIELD");                        \
                 if (err->code != AEROSPIKE_OK) {                               \
                     PyErr_Clear();                                             \
@@ -155,7 +155,7 @@
                                                                                \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                uint32_t field_val = convert_unsigned_long_into_uint32_t(      \
+                uint32_t field_val = convert_pylong_into_uint32_t(             \
                     err, py_field, "POLICY_SET_FIELD");                        \
                 if (err->code != AEROSPIKE_OK) {                               \
                     PyErr_Clear();                                             \
@@ -193,7 +193,7 @@
                                                                                \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                uint16_t field_val = convert_unsigned_long_into_uint16_t(      \
+                uint16_t field_val = convert_pylong_to_uint16_t(               \
                     err, py_field, "POLICY_SET_FIELD");                        \
                 if (err->code != AEROSPIKE_OK) {                               \
                     PyErr_Clear();                                             \
@@ -231,7 +231,7 @@
                                                                                \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                uint16_t field_val = convert_unsigned_long_into_enum_value(    \
+                uint16_t field_val = convert_pylong_to_enum_value(             \
                     err, py_field, __max, "POLICY_SET_FIELD");                 \
                 if (err->code != AEROSPIKE_OK) {                               \
                     PyErr_Clear();                                             \
@@ -1698,7 +1698,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
                         report_size_limit_attr_name, "unsigned 64-bit integer");
         goto error;
     }
-    uint64_t report_size_limit = convert_unsigned_long_long_into_uint64_t(
+    uint64_t report_size_limit = convert_pylong_to_uint64_t(
         err, py_report_size_limit, "report_size_limit");
     Py_DECREF(py_report_size_limit);
     if (err->code != AEROSPIKE_OK) {
@@ -1722,7 +1722,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
     uint32_t interval =
-        convert_unsigned_long_into_uint32_t(err, py_interval, "interval");
+        convert_pylong_into_uint32_t(err, py_interval, "interval");
     Py_DECREF(py_interval);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
@@ -1750,7 +1750,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
             goto error;
         }
         uint8_t attr_value =
-            convert_unsigned_long_into_uint8_t(err, py_attr_value, "latency");
+            convert_pylong_to_uint8_t(err, py_attr_value, "latency");
         Py_DECREF(py_attr_value);
         if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,

@@ -94,7 +94,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 
     uint16_t tmp_begin = 0;
     if (begin && PyLong_Check(begin)) {
-        tmp_begin = (uint16_t)convert_unsigned_long_into_enum_value(
+        tmp_begin = (uint16_t)convert_pylong_to_enum_value(
             err, begin, CLUSTER_NPARTITIONS - 1, "partition_filter.begin");
         if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -116,7 +116,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 
     uint16_t tmp_count = CLUSTER_NPARTITIONS;
     if (count && PyLong_Check(count)) {
-        tmp_count = (uint16_t)convert_unsigned_long_into_enum_value(
+        tmp_count = (uint16_t)convert_pylong_to_enum_value(
             err, count, CLUSTER_NPARTITIONS, "partition_filter.begin");
         if (err->code != AEROSPIKE_OK || tmp_count == 0) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -258,8 +258,8 @@ as_status convert_partition_filter(AerospikeClient *self,
             }
 
             if (py_bval && PyLong_Check(py_bval)) {
-                ps->bval = convert_unsigned_long_long_into_uint64_t(
-                    err, py_bval, "partition_status.bval");
+                ps->bval = convert_pylong_to_uint64_t(err, py_bval,
+                                                      "partition_status.bval");
                 if (err->code != AEROSPIKE_OK) {
                     goto ERROR_CLEANUP;
                 }

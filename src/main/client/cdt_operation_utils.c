@@ -140,7 +140,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
                         "Unable to convert Python object %s to int64_t", key);
         return err->code;
     }
-    *i64_valptr = convert_long_long_into_int64_t(err, py_val, key);
+    *i64_valptr = convert_pylong_to_int64_t(err, py_val, key);
     if (err->code != AEROSPIKE_OK) {
         return err->code;
     }

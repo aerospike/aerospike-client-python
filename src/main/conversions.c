@@ -1283,8 +1283,8 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         }
     }
     else if (PyLong_Check(py_obj)) {
-        int64_t int_val = convert_long_long_into_int64_t(
-            err, py_obj, "as_val_new_from_pyobject");
+        int64_t int_val =
+            convert_pylong_to_int64_t(err, py_obj, "as_val_new_from_pyobject");
         if (err->code != AEROSPIKE_OK) {
             return err->code;
         }
@@ -1554,8 +1554,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             Py_DECREF(py_ustr);
         }
         else if (PyLong_Check(py_key)) {
-            int64_t int_val =
-                convert_long_long_into_int64_t(err, py_key, "KEY");
+            int64_t int_val = convert_pylong_to_int64_t(err, py_key, "KEY");
             if (err->code != AEROSPIKE_OK) {
                 return err->code;
             }
@@ -2216,7 +2215,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 
     as_bin *binop_bin = &binop->bin;
     if (PyLong_Check(py_value)) {
-        int64_t int_val = convert_long_long_into_int64_t(
+        int64_t int_val = convert_pylong_to_int64_t(
             err, py_value, "initialize_bin_for_strictypes");
         as_integer_init((as_integer *)&binop_bin->value, (int64_t)int_val);
         binop_bin->valuep = &binop_bin->value;
@@ -2337,8 +2336,7 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
             }
 
             if (PyLong_Check(py_ttl)) {
-                *ttl_ref =
-                    convert_unsigned_long_into_uint32_t(err, py_ttl, "Ttl");
+                *ttl_ref = convert_pylong_into_uint32_t(err, py_ttl, "Ttl");
 
                 if (err->code != AEROSPIKE_OK) {
                     return err->code;
@@ -2356,8 +2354,8 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
-                *gen_ref = convert_unsigned_long_into_uint16_t(err, py_gen,
-                                                               "Generation");
+                *gen_ref =
+                    convert_pylong_to_uint16_t(err, py_gen, "Generation");
                 if (err->code != AEROSPIKE_OK) {
                     return err->code;
                 }
@@ -2667,7 +2665,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be an integer.", py_object_name);
     }
-    *int_pointer = convert_long_into_int(err, py_long, py_object_name);
+    *int_pointer = convert_pylong_to_int(err, py_long, py_object_name);
     if (err->code != AEROSPIKE_OK) {
         return err->code;
     }
@@ -2771,9 +2769,8 @@ error:
     return -1;
 }
 
-uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
-                                                  PyObject *py_long,
-                                                  const char *component)
+uint64_t convert_pylong_to_uint64_t(as_error *err, PyObject *py_long,
+                                    const char *component)
 {
     uint64_t long_value = 0;
     PyLong_AsUInt64(py_long, &long_value);
@@ -2794,8 +2791,8 @@ uint64_t convert_unsigned_long_long_into_uint64_t(as_error *err,
     return (uint64_t)long_value;
 }
 
-int64_t convert_long_long_into_int64_t(as_error *err, PyObject *py_long,
-                                       const char *component)
+int64_t convert_pylong_to_int64_t(as_error *err, PyObject *py_long,
+                                  const char *component)
 {
     int64_t long_value = 0;
     PyLong_AsInt64(py_long, &long_value);
@@ -2816,8 +2813,8 @@ int64_t convert_long_long_into_int64_t(as_error *err, PyObject *py_long,
     return (int64_t)long_value;
 }
 
-uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
-                                             const char *component)
+uint32_t convert_pylong_into_uint32_t(as_error *err, PyObject *py_long,
+                                      const char *component)
 {
     uint32_t long_value = 0;
     PyLong_AsUInt32(py_long, &long_value);
@@ -2838,7 +2835,7 @@ uint32_t convert_unsigned_long_into_uint32_t(as_error *err, PyObject *py_long,
     return long_value;
 }
 
-int32_t convert_long_into_int32_t(as_error *err, PyObject *py_long,
+int32_t convert_pylong_to_int32_t(as_error *err, PyObject *py_long,
                                   const char *component)
 {
     int32_t long_value = 0;
@@ -2860,8 +2857,8 @@ int32_t convert_long_into_int32_t(as_error *err, PyObject *py_long,
     return long_value;
 }
 
-uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
-                                             const char *component)
+uint16_t convert_pylong_to_uint16_t(as_error *err, PyObject *py_long,
+                                    const char *component)
 {
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
     if (PyErr_Occurred()) {
@@ -2886,7 +2883,7 @@ uint16_t convert_unsigned_long_into_uint16_t(as_error *err, PyObject *py_long,
     return (uint16_t)long_value;
 }
 
-int16_t convert_long_into_int16_t(as_error *err, PyObject *py_long,
+int16_t convert_pylong_to_int16_t(as_error *err, PyObject *py_long,
                                   const char *component)
 {
     long long_value = PyLong_AsLong(py_long);
@@ -2917,8 +2914,8 @@ int16_t convert_long_into_int16_t(as_error *err, PyObject *py_long,
     return (int16_t)long_value;
 }
 
-uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *py_long,
-                                           const char *component)
+uint8_t convert_pylong_to_uint8_t(as_error *err, PyObject *py_long,
+                                  const char *component)
 {
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
     if (PyErr_Occurred()) {
@@ -2944,7 +2941,7 @@ uint8_t convert_unsigned_long_into_uint8_t(as_error *err, PyObject *py_long,
     return (uint8_t)long_value;
 }
 
-int convert_long_into_int(as_error *err, PyObject *py_long,
+int convert_pylong_to_int(as_error *err, PyObject *py_long,
                           const char *component)
 {
     // CHECK ALL CONVERSION TO LONG VALUE AND MAKE SURE FUNCTION SIGNATURE IS CORRECT
@@ -2966,10 +2963,9 @@ int convert_long_into_int(as_error *err, PyObject *py_long,
     return long_value;
 }
 
-unsigned int convert_unsigned_long_into_enum_value(as_error *err,
-                                                   PyObject *py_long,
-                                                   unsigned int max_enum_value,
-                                                   const char *component)
+unsigned int convert_pylong_to_enum_value(as_error *err, PyObject *py_long,
+                                          unsigned int max_enum_value,
+                                          const char *component)
 {
     unsigned long long_value = PyLong_AsUnsignedLong(py_long);
 

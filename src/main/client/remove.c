@@ -93,8 +93,8 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
                 if (py_gen) {
                     if (PyLong_Check(py_gen)) {
                         remove_policy_p->generation =
-                            convert_unsigned_long_into_uint16_t(&err, py_gen,
-                                                                "generation");
+                            convert_pylong_to_uint16_t(&err, py_gen,
+                                                       "generation");
                         if (err.code != AEROSPIKE_OK) {
                             goto CLEANUP;
                         }
