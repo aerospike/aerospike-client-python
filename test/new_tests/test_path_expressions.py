@@ -796,7 +796,7 @@ class TestPathExprOperations:
             pytest.param(
                 InList(
                     LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
-                    Val([1, 2, 3])
+                    Val([3])
                 ),
                 # Only the third list element is in [3]
                 [3]
