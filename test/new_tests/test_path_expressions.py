@@ -874,5 +874,5 @@ class TestPathExprOperations:
         ops = [
             expr_ops.expression_read(self.MAP_BIN_NAME, expr)
         ]
-        with pytest.raises(e.InvalidRequest):
+        with pytest.raises(e.ServerError):
             self.as_connection.operate(self.key, ops)
