@@ -1942,6 +1942,10 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     }
 
     *exp_list = as_exp_compile(c_expr_entries, bottom);
+    if (*exp_list == NULL) {
+        as_error_update(err, AEROSPIKE_ERR, "as_exp_compile failed.");
+        goto CLEANUP;
+    }
 
 CLEANUP:
     if (is_building_temp_expr) {
