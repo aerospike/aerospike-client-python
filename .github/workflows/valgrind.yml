@@ -4,6 +4,7 @@ run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ in
 permissions:
   contents: read
   id-token: write
+  statuses: write
 
 on:
   workflow_dispatch:
