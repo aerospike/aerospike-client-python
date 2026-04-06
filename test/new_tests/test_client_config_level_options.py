@@ -5,15 +5,16 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
-from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
 import time
 import glob
 import re
 import os
+from .conftest import verify_record_ttl, wait_for_job_completion
+import warnings
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -173,6 +174,19 @@ def test_setting_rack_aware():
     aerospike.client(config)
 
 
+@pytest.mark.parametrize(
+    "compress, expected_cm",
+    [
+        (True, nullcontext()),
+        (0.2, pytest.raises(e.ParamError))
+    ]
+)
+def test_setting_compress(compress, expected_cm):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["read"]["compress"] = compress
+    with expected_cm:
+        aerospike.client(config)
+
 def test_setting_batch_remove_gen():
     config = copy.deepcopy(gconfig)
     config["policies"]["batch_remove"] = {
@@ -280,7 +294,6 @@ def test_query_invalid_expected_duration():
 # Some of these options may not be documented, but they are allowed in the code and customers may be using them
 def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
-    config["policies"]["socket_timeout"] = 1
     config["policies"]["total_timeout"] = 1
     config["policies"]["max_retries"] = 1
     config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
@@ -289,6 +302,7 @@ def test_config_level_misc_options():
     config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
     config["policies"]["max_threads"] = 16
     config["policies"]["thread_pool_size"] = 16
+    config["policies"]["socket_timeout"] = 0
     config["thread_pool_size"] = 16
     config["max_threads"] = 16
     config["max_conns_per_node"] = 16
@@ -322,6 +336,8 @@ def test_config_level_misc_options():
     # We just make sure that the above options are allowed as dict keys
     try:
         aerospike.client(config)
+    except e.ParamError as exc:
+        raise exc
     except:
         pass
 
@@ -337,7 +353,7 @@ class TestConfigTTL:
             "ttl": self.NEW_TTL
         }
         self.client = aerospike.client(config)
-        self.client.put(KEY, {"a": "a", "b": "b"})
+        self.client.put(KEY, {"a": "a", "b": "b", "c": 1})
 
         if "apply" in policy_name:
             self.client.udf_put("test_record_udf.lua")
@@ -360,102 +376,128 @@ class TestConfigTTL:
 
         self.client.close()
 
-    def check_ttl(self):
-        _, meta = self.client.exists(KEY)
-        clock_skew_tolerance_secs = 50
-        assert meta["ttl"] in range(self.NEW_TTL - clock_skew_tolerance_secs, self.NEW_TTL + clock_skew_tolerance_secs)
-
-    @pytest.mark.parametrize("policy_name", ["write"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
-        ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
-    )
-    @pytest.mark.parametrize("api_method, kwargs", [
-        (aerospike.Client.put, {"key": KEY, "bins": {"a": 1}}),
-        (aerospike.Client.remove_bin, {"key": KEY, "list": ["a"]}),
-    ])
-    def test_setting_write_ttl(self, config_ttl_setup, meta, api_method, kwargs):
-        api_method(self.client, **kwargs, meta=meta)
-        self.check_ttl()
-
-    @pytest.mark.parametrize("policy_name", ["operate"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
-        ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
-    )
-    def test_setting_operate_ttl(self, config_ttl_setup, meta):
-        ops = [
-            operations.write("a", 1)
+    ttl_param = pytest.mark.parametrize(
+        "kwargs_with_ttl",
+        [
+            {"meta": None},
+            {"meta": {"gen": 10}},
+            {"meta": {"ttl": aerospike.TTL_CLIENT_DEFAULT, "gen": 10}},
+            {"policy": None},
+            # {"policy": {}},
         ]
-        self.client.operate(KEY, ops, meta=meta)
-        self.check_ttl()
-
-    @pytest.mark.parametrize("policy_name", ["apply"])
-    def test_setting_apply_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
-        # Call without setting the ttl in the command's apply policy
-        # Args: bin name, str
-        self.client.apply(KEY, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
-
-    @pytest.mark.parametrize("policy_name", ["batch_write"])
-    @pytest.mark.parametrize(
-        "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}],
-        ids=["no metadata", "metadata with special ttl value"]
     )
-    def test_setting_batch_write_ttl_with_batch_write(self, config_ttl_setup, meta):
+
+    # Don't bother testing for DeprecationWarnings here since running Python with -W error flag can
+    # cause ClientError to be raised. It's too complicated to check both cases
+
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @ttl_param
+    @pytest.mark.parametrize("api_method, kwargs, policy_name", [
+        (
+            aerospike.Client.put,
+            {"key": KEY, "bins": {"a": 1}},
+            "write"
+        ),
+        (
+            aerospike.Client.remove_bin,
+            {"key": KEY, "list": ["a"]},
+            "write"
+        ),
+        (
+            aerospike.Client.operate,
+            {"key": KEY, "list": [operations.write("a", 1)]}, "operate"
+        ),
+        (
+            aerospike.Client.operate_ordered,
+            {"key": KEY, "list": [operations.write("a", 1)]}, "operate"
+        ),
+        (
+            aerospike.Client.increment,
+            {"key": KEY, "bin": "c", "offset": 1},
+            "operate"
+        ),
+        (
+            aerospike.Client.prepend,
+            {"key": KEY, "bin": "a", "val": "a"},
+            "operate"
+        ),
+        (
+            aerospike.Client.append,
+            {"key": KEY, "bin": "a", "val": "a"},
+            "operate"
+        ),
+    ])
+    def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
+        kwargs |= kwargs_with_ttl
+        try:
+            api_method(self.client, **kwargs)
+        except e.ClientError as exc:
+            # ClientError can be raised if the user runs Python with warnings treated as errors.
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
+
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
+
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @ttl_param
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
+    def test_batch_write_with_write_br(self, config_ttl_setup, kwargs_with_ttl):
         ops = [
             operations.write("bin", 1)
         ]
         batch_records = BatchRecords([
-            Write(KEY, ops=ops, meta=meta)
+            Write(KEY, ops=ops, **kwargs_with_ttl)
         ])
-        brs = self.client.batch_write(batch_records)
+        try:
+            brs = self.client.batch_write(batch_records)
+        except e.ClientError as exc:
+            assert exc.msg == "meta[\"ttl\"] is deprecated and will be removed in the next client major release"
+
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    @pytest.mark.parametrize("policy_name", ["batch_write"])
     @pytest.mark.parametrize(
-        "ttl",
-        [None, aerospike.TTL_CLIENT_DEFAULT],
+        "kwargs",
+        [
+            {},
+            {"ttl": None},
+            {"ttl": aerospike.TTL_CLIENT_DEFAULT}
+        ],
     )
-    def test_setting_batch_write_ttl_with_batch_operate(self, config_ttl_setup, ttl):
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
+    def test_apis_with_ttl_parameter(self, config_ttl_setup, kwargs):
         ops = [
             operations.write("bin", 1)
         ]
         keys = [KEY]
-        brs = self.client.batch_operate(keys, ops, ttl=ttl)
+        brs = self.client.batch_operate(keys, ops, **kwargs)
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
-    @pytest.mark.parametrize("policy_name", ["batch_apply"])
-    def test_setting_batch_apply_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
-        # Call without setting the ttl in batch_apply()'s batch apply policy
-        keys = [
-            KEY
-        ]
-        self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
-        self.check_ttl()
+    @pytest.mark.parametrize("api_method, kwargs, policy_name", [
+        (
+            aerospike.Client.apply,
+            {"key": KEY},
+            "apply",
+        ),
+        (
+            aerospike.Client.batch_apply,
+            {"keys": [KEY]},
+            "batch_apply",
+        ),
+    ])
+    def test_apis_with_policy_parameter(self, config_ttl_setup, api_method, kwargs):
+        kwargs |= {"module": "test_record_udf", "function": "bin_udf_operation_string", "args": ["bin", "a"]}
+        api_method(self.client, **kwargs)
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
     def test_setting_scan_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"})
-
         # Tell scan to use client config's scan policy ttl
         scan = self.client.scan("test", "demo")
         scan.ttl = aerospike.TTL_CLIENT_DEFAULT
@@ -465,15 +507,12 @@ class TestConfigTTL:
         scan.add_ops(ops)
         job_id = scan.execute_background()
 
-        wait_for_job_completion(self.client, job_id)
+        wait_for_job_completion(self.client, job_id, job_module=aerospike.JOB_SCAN)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["write"])
     def test_query_client_default_ttl(self, config_ttl_setup):
-        # Setup
-        self.client.put(KEY, {"bin": "a"}, meta={"ttl": 90})
-
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")
         query.ttl = aerospike.TTL_CLIENT_DEFAULT
@@ -485,7 +524,7 @@ class TestConfigTTL:
 
         wait_for_job_completion(self.client, job_id)
 
-        self.check_ttl()
+        verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize(
         "policy_name",

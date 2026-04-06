@@ -83,6 +83,7 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
             as_log_error(
                 "as_batch_result_to_BatchRecord failed at results index: %d",
                 i);
+            Py_DECREF(py_batch_record);
             success = false;
             break;
         }

@@ -9,6 +9,7 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "macros.h"
 
 // Struct for Python User-Data for the Callback
 typedef struct {

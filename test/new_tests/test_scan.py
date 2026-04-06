@@ -7,7 +7,7 @@ from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
 
 import aerospike
-import warnings
+
 
 class TestScan(TestBaseClass):
     @pytest.fixture(autouse=True)
@@ -468,11 +468,6 @@ class TestScan(TestBaseClass):
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
 
-    def test_creating_scan_using_constructor_in_aerospike_module(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=DeprecationWarning)
-            scan = aerospike.Scan("test", "demo")
-            assert len(w) == 1
-
-        with pytest.raises(e.ClientError):
-            scan.select("bin1")
+    def test_creating_scan_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Scan("test", "demo")

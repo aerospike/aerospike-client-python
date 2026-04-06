@@ -758,6 +758,12 @@ as_status set_base_policy(as_policy_base *base_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_bool_property((bool *)&base_policy->compress,
+                                        py_policy, "compress");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     return AEROSPIKE_OK;
 }
 

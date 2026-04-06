@@ -1,11 +1,1 @@
 aerospike.aerospike
-aerospike.CDT_SELECT_MATCHING_TREE
-aerospike.CDT_SELECT_VALUES
-aerospike.CDT_SELECT_MAP_KEY_VALUES
-aerospike.CDT_SELECT_MAP_KEYS
-aerospike.CDT_SELECT_NO_FAIL
-aerospike.CDT_MODIFY_DEFAULT
-aerospike.CDT_MODIFY_NO_FAIL
-aerospike.EXP_LOOPVAR_KEY
-aerospike.EXP_LOOPVAR_VALUE
-aerospike.EXP_LOOPVAR_INDEX

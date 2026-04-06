@@ -14,6 +14,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 
 @contextmanager
@@ -239,24 +240,27 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
+
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
         assert rec == bins
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -271,12 +275,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -292,12 +297,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -307,12 +313,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -327,11 +334,12 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -340,8 +348,8 @@ class TestGetPut:
         assert rec == bins
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
+        meta = {"gen": 2}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE, "ttl": 25000}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -356,11 +364,12 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -369,8 +378,8 @@ class TestGetPut:
         assert rec == bins
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {"exists": aerospike.POLICY_EXISTS_UPDATE}
+        meta = {"gen": 2}
+        policy = {"exists": aerospike.POLICY_EXISTS_UPDATE, "ttl": 25000}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -384,8 +393,8 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {}
+        meta = {"gen": 2}
+        policy = {"ttl": 25000}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -410,8 +419,8 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {}
+        meta = {"gen": 2}
+        policy = {"ttl": 25000}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -430,28 +439,28 @@ class TestGetPut:
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
-        "key, record, meta",
+        "key, record, meta, policy",
         [
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True}, {"ttl": 25000}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": 3}, {"ttl": True}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True}, {"ttl": True}),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": True, "ttl": aerospike.TTL_NAMESPACE_DEFAULT},
+                {"gen": True}, {"ttl": aerospike.TTL_NAMESPACE_DEFAULT}
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": True, "ttl": aerospike.TTL_NEVER_EXPIRE},
+                {"gen": True}, {"ttl": aerospike.TTL_NEVER_EXPIRE}
             ),
         ],
     )
-    def test_pos_put_with_metadata_bool(self, key, record, meta, put_data):
+    def test_pos_put_with_metadata_bool(self, key, record, meta, policy, put_data):
         """
         Invoke put() for a record with generation as boolean.
         """
-        put_data(self.as_connection, key, record, meta)
+        put_data(self.as_connection, key, record, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == record
@@ -552,8 +561,8 @@ class TestGetPut:
         key = ("test", "demo", "policy_gen_EQ_key")
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {}
+        meta = {"gen": 2}
+        policy = {"ttl": 25000}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -578,8 +587,8 @@ class TestGetPut:
         key = ("test", "demo", "policy_gen_EQ_more_key")
 
         rec = {"name": "John"}
-        meta = {"gen": 10, "ttl": 25000}
-        assert 0 == self.as_connection.put(key, rec, meta)
+        meta = {"gen": 10}
+        assert 0 == self.as_connection.put(key, rec, meta, policy={"ttl": 25000})
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -603,11 +612,12 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
@@ -634,12 +644,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         with pytest.raises(e.RecordNotFound):
             assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -651,8 +662,8 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "Smith"}
-        meta = {"gen": 2, "ttl": 25000}
-        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
+        meta = {"gen": 2}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE, "ttl": 25000}
 
         with pytest.raises(e.RecordNotFound):
             self.as_connection.put(key, rec, meta, policy)
@@ -664,12 +675,13 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
+        meta = {"gen": 2}
         policy = {
             "exists": aerospike.POLICY_EXISTS_UPDATE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
+            "ttl": 25000
         }
         try:
             assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -685,8 +697,8 @@ class TestGetPut:
         key = ("test", "demo", 1)
 
         rec = {"name": "John"}
-        meta = {"gen": 2, "ttl": 25000}
-        assert 0 == self.as_connection.put(key, rec, meta)
+        meta = {"gen": 2}
+        assert 0 == self.as_connection.put(key, rec, meta, policy={"ttl": 25000})
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -730,7 +742,7 @@ class TestGetPut:
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": "wrong", "ttl": 25000},
+                {"gen": "wrong"},
                 None,
                 -2,
                 "Generation should be an int or long",
@@ -738,23 +750,23 @@ class TestGetPut:
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": 3, "ttl": "25000"},
-                None,
+                {"gen": 3},
+                {"ttl": "25000"},
                 -2,
                 "TTL should be an int or long",
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
-                {"gen": 3, "ttl": 25000},
-                {"total_timeout": 0.5},
+                {"gen": 3},
+                {"total_timeout": 0.5, "ttl": 25000},
                 -2,
                 "timeout is invalid",
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},  # Policy as string
-                {"gen": 3, "ttl": 25000},
+                {"gen": 3},
                 "Policy",
                 -2,
                 "policy must be a dict",
