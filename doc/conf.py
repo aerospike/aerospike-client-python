@@ -48,6 +48,8 @@ napoleon_google_docstring = True
 napoleon_use_rtype = False
 typehints_use_rtype = False
 
+always_use_bars_union = True
+
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Add any paths that contain templates here, relative to this directory.
