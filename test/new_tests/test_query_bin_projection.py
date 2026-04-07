@@ -108,3 +108,7 @@ class TestQueryBinProjection:
         # The "filtered out" bin should still be returned
         for _, _, bins in records:
             assert BIN_NAME in bins
+
+    def test_add_ops_invalid_args(self, query):
+        with pytest.raises(TypeError):
+            query.add_ops(tuple())
