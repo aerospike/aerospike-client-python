@@ -61,6 +61,7 @@ runs:
     with:
       oidc-provider-name: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}
+      version: 2.98.0
 
   - run: echo BASE_IMAGE=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash

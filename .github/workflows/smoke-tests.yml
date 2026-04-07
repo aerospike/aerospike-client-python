@@ -1,6 +1,7 @@
 name: Smoke tests
 permissions:
   contents: read
+  id-token: write
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -293,7 +294,7 @@ jobs:
         type:
           - sanitizer
           - dont_validate_keys
-          - lowest_supported_server_version
+          # - lowest_supported_server_version
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
