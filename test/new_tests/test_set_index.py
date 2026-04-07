@@ -26,6 +26,9 @@ class TestSetIndex:
         yield aerospike.client(config)
 
         ensure_dropped_index(self.as_connection, None, INDEX_NAME)
+        self.as_connection.admin_drop_user(
+            user=USERNAME_AND_PASSWORD,
+        )
 
     def test_create_set_index(self, client_as_sindex_admin_user):
         client_as_sindex_admin_user.index_set_create("test", "demo", INDEX_NAME)
