@@ -111,4 +111,4 @@ class TestQueryBinProjection:
 
     def test_add_ops_invalid_args(self, query):
         with pytest.raises(TypeError):
-            query.add_ops(tuple())
+            query.add_ops()
