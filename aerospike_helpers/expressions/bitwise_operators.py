@@ -227,7 +227,7 @@ class IntLeftScan(_BaseExpr):
 
     _op = _ExprOp.INT_LSCAN
 
-    def __init__(self, value: "TypeInteger", search: "TypeBool"):
+    def __init__(self, value: "TypeInteger", search: TypeBool):
         """Args:
             `value` (TypeInteger): An integer value or expression to be scanned.
             `search` (TypeBool): A bool expression or value to scan for.
@@ -255,7 +255,7 @@ class IntRightScan(_BaseExpr):
 
     _op = _ExprOp.INT_RSCAN
 
-    def __init__(self, value: "TypeInteger", search: "TypeBool"):
+    def __init__(self, value: "TypeInteger", search: TypeBool):
         """Args:
             `value` (TypeInteger): An integer value or expression to be scanned.
             `search` (TypeBool): A bool expression or value to scan for.
