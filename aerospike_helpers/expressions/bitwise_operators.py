@@ -230,7 +230,7 @@ class IntLeftScan(_BaseExpr):
     def __init__(self, value: "TypeInteger", search: TypeBool):
         """Args:
             `value` (TypeInteger): An integer value or expression to be scanned.
-            `search` (TypeBool): A bool expression or value to scan for.
+            `search`: A bool expression or value to scan for.
 
         :return: (integer value)
 
