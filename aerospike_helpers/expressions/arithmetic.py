@@ -25,7 +25,7 @@ from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 
-TypeNumber = Union[_BaseExpr, int, float]
+TypeNumber = _BaseExpr | int | float
 TypeFloat = Union[_BaseExpr, float]
 TypeInteger = Union[_BaseExpr, int]
 
@@ -47,7 +47,7 @@ class Add(_BaseExpr):
 
     _op = _ExprOp.ADD
 
-    def __init__(self, *args: "TypeNumber"):
+    def __init__(self, *args: TypeNumber):
         """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
 

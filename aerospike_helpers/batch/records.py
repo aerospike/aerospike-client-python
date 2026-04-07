@@ -14,16 +14,15 @@
 # limitations under the License.
 ##########################################################################
 
-import typing as ty
-from typing import Optional
+from typing import Optional, Union, Any
 
-TypeOps = ty.List[ty.Dict]
-TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
-TypeBatchPolicyRemove = ty.Union[ty.Dict, None]
-TypeBatchPolicyApply = ty.Union[ty.Dict, None]
-TypeBatchPolicyRead = ty.Union[ty.Dict, None]
-TypeRecord = ty.Union[ty.Tuple, None]
-TypeUDFArgs = ty.List[ty.Any]
+TypeOps = list[dict]
+TypeBatchPolicyWrite = Union[dict, None]
+TypeBatchPolicyRemove = Union[dict, None]
+TypeBatchPolicyApply = Union[dict, None]
+TypeBatchPolicyRead = Union[dict, None]
+TypeRecord = Union[tuple, None]
+TypeUDFArgs = list[Any]
 
 
 class _Types:
@@ -134,7 +133,7 @@ class Read(BatchRecord):
     def __init__(
         self,
         key: tuple,
-        ops: ty.Union[TypeOps, None],
+        ops: Union[TypeOps, None],
         read_all_bins: bool = False,
         meta: Optional[dict] = None,
         policy: "TypeBatchPolicyRead" = None,
@@ -259,7 +258,7 @@ class Remove(BatchRecord):
         self.policy = policy
 
 
-TypeBatchRecordList = ty.List[BatchRecord]
+TypeBatchRecordList = list[BatchRecord]
 
 
 class BatchRecords:
