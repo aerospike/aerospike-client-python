@@ -142,7 +142,6 @@ autodoc_type_aliases = {
     # "TypeFixed": "TypeFixed",
 }
 nitpicky = True
-typehints_use_signature = True
 
 # -- Options for HTML output ---------------------------------------------------
 
