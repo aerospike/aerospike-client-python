@@ -211,6 +211,7 @@ aerospike\_helpers\.expressions\.bitwise_operators module
 .. automodule:: aerospike_helpers.expressions.bitwise_operators
     :members:
     :special-members:
+    :undoc-members:
 
 
 aerospike\_helpers\.expressions\.resources module
