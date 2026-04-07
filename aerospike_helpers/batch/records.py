@@ -17,11 +17,11 @@
 from typing import Optional, Union, Any
 
 TypeOps = list[dict]
-TypeBatchPolicyWrite = Union[dict, None]
-TypeBatchPolicyRemove = Union[dict, None]
-TypeBatchPolicyApply = Union[dict, None]
-TypeBatchPolicyRead = Union[dict, None]
-TypeRecord = Union[tuple, None]
+TypeBatchPolicyWrite = dict | None
+TypeBatchPolicyRemove = dict | None
+TypeBatchPolicyApply = dict | None
+TypeBatchPolicyRead = dict | None
+TypeRecord = tuple | None
 TypeUDFArgs = list[Any]
 
 
