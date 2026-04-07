@@ -12,6 +12,7 @@ INDEX_NAME = "index_name"
 class TestSetIndex:
     @pytest.fixture
     def client_as_sindex_admin_user(self):
+        USERNAME_AND_PASSWORD = "user_with_sindex_admin"
         try:
             self.as_connection.admin_drop_user(
                 user=USERNAME_AND_PASSWORD,
@@ -20,7 +21,6 @@ class TestSetIndex:
         except e.InvalidUser:
             pass
 
-        USERNAME_AND_PASSWORD = "user_with_sindex_admin"
         self.as_connection.admin_create_user(
             user=USERNAME_AND_PASSWORD,
             password=USERNAME_AND_PASSWORD,
