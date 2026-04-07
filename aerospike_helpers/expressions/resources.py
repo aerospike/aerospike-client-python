@@ -132,8 +132,8 @@ class ResultType:
 
 
 class _AtomExpr:
-    def _op(self):
-        raise NotImplementedError
+    # def _op(self):
+    #     raise NotImplementedError
 
     def compile(self):
         raise NotImplementedError
