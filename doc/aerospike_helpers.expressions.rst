@@ -222,4 +222,4 @@ aerospike\_helpers\.expressions\.resources module
   :members: ResultType
 
 .. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
-  :member: compile, __init__
+  :members: compile, __init__
