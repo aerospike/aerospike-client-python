@@ -126,7 +126,7 @@ Assume this boilerplate code is run before all examples below:
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
 
-    .. method:: where_with_expr(expr, predicate)
+    .. method:: where_with_expr(expr: TypeExpression | str, predicate)
 
         Add an expression *predicate* to the query.
 
@@ -134,7 +134,7 @@ Assume this boilerplate code is run before all examples below:
 
         You can only assign at most one predicate to the query.
 
-        :param :py:type:`TypeExpression` | str expr:
+        :param expr:
             Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
             Alternatively, you can pass in a base64 encoded string of an expression returned from asinfo when printing
             a list of secondary indexes based on expressions in the server.
