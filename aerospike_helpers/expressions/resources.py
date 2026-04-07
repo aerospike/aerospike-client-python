@@ -4,7 +4,7 @@ Resources used by all expressions.
 
 from __future__ import annotations
 from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import List, Optional, Tuple, Union, Dict, Any, TypeAlias
 
 
 class _Keys:
@@ -143,7 +143,7 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-TypeExpression = List[TypeCompiledOp]
+TypeExpression: TypeAlias = List[TypeCompiledOp]
 
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
