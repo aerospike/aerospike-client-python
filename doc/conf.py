@@ -127,7 +127,7 @@ autodoc_type_aliases = {
     # "TypeIndex": "TypeIndex",
     # "TypeChild": "TypeChild",
     # "TypeCompiledOp": "TypeCompiledOp",
-    # "TypeExpression": "TypeExpression",
+    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
     # "TypeGeo": "TypeGeo",
     # "TypeKey": "aerospike_helpers.expressions.map.TypeKey",
     # "TypeKeyList": "TypeKeyList",
