@@ -46,14 +46,14 @@ class TestQueryBinProjection:
         # For bin projection, the server can convert complex (e.g map) read operations into a regular bin read
         # Since the server doesn't fail, the client has to check the server version and raise an error on its end.
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 2):
-            request.cls.expected_context_for_pos_tests = nullcontext()
+            yield nullcontext()
         else:
             # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-            request.cls.expected_context_for_pos_tests = pytest.raises(e.ParamError)
+            yield pytest.raises(e.ParamError)
 
     def test_query_nested_results(self, query, client_should_fail_if_server_version_less_than_8_1_2):
         query.add_ops(self.MAP_GET_BY_KEY_OP)
-        with self.expected_context_for_pos_tests:
+        with client_should_fail_if_server_version_less_than_8_1_2:
             records = query.results()
 
             bin_values = [record[2][MAP_BIN_NAME] for record in records]
@@ -87,24 +87,24 @@ class TestQueryBinProjection:
         # Filter out the only bin in the record
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
+            # Should work for any server version besides 8.1.2
             query.add_ops(BASIC_READ_BIN_OPS)
 
-        with self.expected_context_for_pos_tests:
-            records = query.results()
+        records = query.results()
 
-            # The "filtered out" bin should still be returned
-            for _, _, bins in records:
-                assert BIN_NAME in bins
+        # The "filtered out" bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins
 
     def test_add_ops_then_select_bins_then_foreground_query(self, query):
         query.add_ops(BASIC_READ_BIN_OPS)
         # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
+            # Should work for any server version besides 8.1.2
             query.select(NON_EXISTENT_BIN_NAME)
 
-        with self.expected_context_for_pos_tests:
-            records = query.results()
+        records = query.results()
 
-            # The "filtered out" bin should still be returned
-            for _, _, bins in records:
-                assert BIN_NAME in bins
+        # The "filtered out" bin should still be returned
+        for _, _, bins in records:
+            assert BIN_NAME in bins
