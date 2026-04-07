@@ -12,7 +12,7 @@ class TestSetIndex:
     def client_as_sindex_admin_user(self):
         USERNAME_AND_PASSWORD = "user_with_sindex_admin"
         self.as_connection.admin_create_user(
-            username=USERNAME_AND_PASSWORD,
+            user=USERNAME_AND_PASSWORD,
             password=USERNAME_AND_PASSWORD,
             roles=[
                 "sindex-admin"
