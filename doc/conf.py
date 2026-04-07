@@ -2,14 +2,14 @@
 
 import sys, os
 
-# try:
-#     from unittest.mock import MagicMock
-# except ImportError:
-#     try:
-#         from mock import Mock as MagicMock
-#     except ImportError as e:
-#         print("mock is missing: pip install mock")
-#         raise e
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    try:
+        from mock import Mock as MagicMock
+    except ImportError as e:
+        print("mock is missing: pip install mock")
+        raise e
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -20,14 +20,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__name__), "..")))
 # see https://docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 
 
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#         return MagicMock()
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
 
 
-# sys.modules.update({"aerospike": Mock()})
-autodoc_mock_imports = ["aerospike"]
+sys.modules.update({"aerospike": Mock()})
 
 # sys.path.append(os.path.abspath('/usr/local/lib/python2.7/site-packages/aerospike-1.0.44-py2.7-macosx-10.9-x86_64.egg/'))
 
@@ -40,16 +39,9 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",
     "sphinxcontrib.spelling"
 ]
-
 napoleon_google_docstring = True
-napoleon_use_rtype = False
-typehints_use_rtype = False
-
-always_use_bars_union = True
-
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Add any paths that contain templates here, relative to this directory.
@@ -115,34 +107,35 @@ pygments_style = "sphinx"
 # modindex_common_prefix = []
 
 # Alias/type hint configuration.
-autodoc_typehints = "none"
+autodoc_typehints = "signature"
 autodoc_type_aliases = {
-    # "TypeCTX": "aerospike_helpers.expressions.list.TypeCTX",
-    # "TypeRank": "TypeRank",
-    # "TypeCount": "TypeCount",
-    # TypePolicy: TypePolicy,
-    # "TypeValue": "TypeValue",
-    # "TypeBinName": "TypeBinName",
-    # "TypeListValue": "TypeListValue",
-    # "TypeIndex": "TypeIndex",
-    # "TypeChild": "TypeChild",
-    # "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
-    # "TypeGeo": "TypeGeo",
-    # "TypeKey": "aerospike_helpers.expressions.map.TypeKey",
-    # "TypeKeyList": "TypeKeyList",
-    # "TypeBitValue": "TypeBitValue",
-    # "TypeNumber": "TypeNumber",
-    # "TypeFloat": "TypeFloat",
-    # "TypeInteger": "TypeInteger",
-    # "TypeBool": "TypeBool",
-    # "TypeComparisonArg": "TypeComparisonArg",
-    # "TypeResultType": "TypeResultType",
-    # "TypeFixedEle": "TypeFixedEle",
-    # "TypeFixed": "TypeFixed",
+    "_BaseExpr": "AerospikeExpression",
+    "TypeCTX": "TypeCTX",
+    "TypeRank": "TypeRank",
+    "TypeCount": "TypeCount",
+    "TypePolicy": "TypePolicy",
+    "TypeValue": "TypeValue",
+    "TypeBinName": "TypeBinName",
+    "TypeListValue": "TypeListValue",
+    "TypeIndex": "TypeIndex",
+    "TypeChild": "TypeChild",
+    "TypeCompiledOp": "TypeCompiledOp",
+    "TypeExpression": "TypeExpression",
+    "TypeGeo": "TypeGeo",
+    "TypeKey": "TypeKey",
+    "TypeKeyList": "TypeKeyList",
+    "TypeBitValue": "TypeBitValue",
+    "TypeNumber": "TypeNumber",
+    "TypeFloat": "TypeFloat",
+    "TypeInteger": "TypeInteger",
+    "TypeBool": "TypeBool",
+    "TypeComparisonArg": "TypeComparisonArg",
+    "TypeResultType": "TypeResultType",
+    "TypeFixedEle": "TypeFixedEle",
+    "TypeFixed": "TypeFixed",
 }
 nitpicky = True
-typehints_use_signature = True
+# typehints_use_signature = True
 
 # -- Options for HTML output ---------------------------------------------------
 
