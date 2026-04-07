@@ -12,6 +12,9 @@ INDEX_NAME = "index_name"
 class TestSetIndex:
     @pytest.fixture
     def client_as_sindex_admin_user(self):
+        if (not TestBaseClass.auth_in_use()):
+            pytest.skip("Security required to create a user with the sindex-admin role")
+
         USERNAME_AND_PASSWORD = "user_with_sindex_admin"
         try:
             self.as_connection.admin_drop_user(
