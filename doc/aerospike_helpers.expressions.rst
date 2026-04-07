@@ -20,7 +20,8 @@ In the Python client, Aerospike expressions are built using a series of classes 
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
 such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
-while passing them other expressions and constants as arguments, and finally calling the :meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
+while passing them other expressions and constants as arguments, and finally calling the
+:meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
 
 Example::
 
