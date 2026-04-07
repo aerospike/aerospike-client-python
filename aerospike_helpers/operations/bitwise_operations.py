@@ -158,7 +158,8 @@ ACTION_KEY = "action"
 
 
 def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
-    """Creates a bit_resize_operation to be used with :meth:`aerospike.Client.operate` or :meth:`aerospike.Client.operate_ordered`.
+    """Creates a bit_resize_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
 
     Change the size of a bytes bin stored in a record on the Aerospike Server.
 
