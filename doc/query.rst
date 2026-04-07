@@ -126,7 +126,7 @@ Assume this boilerplate code is run before all examples below:
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
 
-    .. method:: where_with_expr(expr: TypeExpression | str, predicate)
+    .. method:: where_with_expr(expr: :py:type:`TypeExpression` | str, predicate)
 
         Add an expression *predicate* to the query.
 
