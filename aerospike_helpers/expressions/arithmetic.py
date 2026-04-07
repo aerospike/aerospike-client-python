@@ -400,7 +400,7 @@ class Min(_BaseExpr):
     def __init__(self, *args: "TypeNumber"):
         """Args:
             `*args`: Variable amount of float or integer expressions or values from which to find the
-            minimum value.
+                minimum value.
 
         :return: (integer or float value).
 
@@ -424,7 +424,7 @@ class Max(_BaseExpr):
     def __init__(self, *args: "TypeNumber"):
         """Args:
             `*args`: Variable amount of float or integer expressions or values from which to find the
-            maximum value.
+                maximum value.
 
         :return: (integer or float value).
 
