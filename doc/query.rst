@@ -305,6 +305,10 @@ Assume this boilerplate code is run before all examples below:
 
         For background queries, only write operations are allowed.
         For foreground queries, only read operations are allowed.
+
+        For server versions < 8.1.2, basic read operations are allowed in foreground queries. Otherwise with this
+        server version, using a non-basic read operation will raise a :exc:`~aerospike.exception.ParamError`.
+
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
         If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will now be ignored

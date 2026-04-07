@@ -290,7 +290,7 @@ def clean_test_background(as_connection):
     yield
     as_connection.batch_remove(KEYS)
 
-READ_OPS = [
+BASIC_READ_BIN_OPS = [
     operations.read(BIN_NAME)
 ]
 
