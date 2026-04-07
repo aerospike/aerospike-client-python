@@ -49,7 +49,7 @@ class Add(_BaseExpr):
 
     def __init__(self, *args: TypeNumber):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
+            `*args`: Variable amount of float or integer expressions or values to be added together.
 
         :return: (integer or float value).
 
@@ -82,7 +82,7 @@ class Sub(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be subtracted.
+            `*args`: Variable amount of float or integer expressions or values to be subtracted.
 
         :return: (integer or float value)
 
@@ -113,7 +113,7 @@ class Mul(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be multiplied.
+            `*args`: Variable amount of float or integer expressions or values to be multiplied.
 
         :return: (integer or float value)
 
@@ -146,7 +146,7 @@ class Div(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be divided.
+            `*args`: Variable amount of float or integer expressions or values to be divided.
 
         :return: (integer or float value)
 
@@ -235,8 +235,8 @@ class Mod(_BaseExpr):
 
     def __init__(self, numerator: "TypeInteger", denominator: "TypeInteger"):
         """Args:
-            numerator (TypeInteger): Integer expression or value numerator.
-            denominator (TypeInteger): Integer expression or value denominator.
+            numerator: Integer expression or value numerator.
+            denominator: Integer expression or value denominator.
 
         :return: (integer value)
 
@@ -266,7 +266,7 @@ class Abs(_BaseExpr):
 
     def __init__(self, value: "TypeNumber"):
         """Args:
-            value (TypeNumber): Float or integer expression or value to take absolute value of.
+            value: Float or integer expression or value to take absolute value of.
 
         :return: (number value)
 
@@ -375,7 +375,7 @@ class ToFloat(_BaseExpr):
 
     def __init__(self, value: "TypeInteger"):
         """Args:
-            value (TypeInteger): Integer expression or value to convert to float.
+            value: Integer expression or value to convert to float.
 
         :return: (float value)
 
@@ -399,8 +399,8 @@ class Min(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
-                minimum value.
+            `*args`: Variable amount of float or integer expressions or values from which to find the
+            minimum value.
 
         :return: (integer or float value).
 
@@ -423,8 +423,8 @@ class Max(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
-                maximum value.
+            `*args`: Variable amount of float or integer expressions or values from which to find the
+            maximum value.
 
         :return: (integer or float value).
 
