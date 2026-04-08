@@ -38,8 +38,7 @@ class TestSetIndex:
 
         yield aerospike.client(config)
 
-        ensure_dropped_index(self.as_connection, None, INDEX_NAME)
-        # TODO: clean up steps should also be run here?
+        ensure_dropped_index(self.as_connection, "test", INDEX_NAME)
 
     def test_create_set_index(self, client_as_sindex_admin_user):
         client_as_sindex_admin_user.index_set_create("test", "demo", INDEX_NAME)
