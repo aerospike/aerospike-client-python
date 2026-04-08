@@ -585,8 +585,6 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
                                 PyObject *kwds);
 
 #define SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE                      \
-    "Selecting bin names and adding operations are mutually exclusive for "    \
-    "the "                                                                     \
-    "same %s object."                                                          \
+    "Operations and bin names are mutually exclusive."                         \
     "In the next major client release, when this %s object is executed, a "    \
     "ParamError will be raised."

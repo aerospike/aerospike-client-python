@@ -342,14 +342,17 @@ class TestQueryApply(object):
     def test_add_read_ops(self, ops, query):
         query.add_ops(ops)
 
-        with pytest.raises(exception.ParamError):
+        with pytest.raises(exception.ParamError) as excinfo:
             query.execute_background()
+        assert excinfo.value.msg == "Background query operations must be write-only. Use query for read-only operations."
 
     def test_select_bins_then_add_ops_then_bg_query(self, query):
         # Filter out the only bin in the record
         query.select(NON_EXISTENT_BIN_NAME)
-        with pytest.warns(DeprecationWarning):
+        with pytest.warns(DeprecationWarning) as record:
             query.add_ops(WRITE_OPS)
+        assert "Operations and bin names are mutually exclusive" in record[0].message
+
         job_id = query.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
 
@@ -361,8 +364,10 @@ class TestQueryApply(object):
     def test_add_ops_then_select_bins_then_bg_query(self, query):
         query.add_ops(WRITE_OPS)
         # Filter out the only bin in the record
-        with pytest.warns(DeprecationWarning):
+        with pytest.warns(DeprecationWarning) as record:
             query.select(NON_EXISTENT_BIN_NAME)
+        assert "Operations and bin names are mutually exclusive" in record[0].message
+
         job_id = query.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
 
