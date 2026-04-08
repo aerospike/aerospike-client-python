@@ -218,8 +218,6 @@ aerospike\_helpers\.expressions\.bitwise_operators module
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
-.. automodule:: aerospike_helpers.expressions.resources
-  :members: ResultType
+.. autoclass:: aerospike_helpers.expressions.resources.ResultType
 
-.. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
-  :members: compile, __init__
+.. automethod:: aerospike_helpers.expressions.resources._BaseExpr.compile
