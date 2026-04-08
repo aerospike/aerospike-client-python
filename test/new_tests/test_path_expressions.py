@@ -4,7 +4,7 @@ import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, Val
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -726,16 +726,17 @@ class TestPathExprOperations:
             # Map key "a" should be filtered out
             assert bins[self.MAP_BIN_NAME] == [self.RECORD_BINS[self.MAP_BIN_NAME]["b"]]
 
+    GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2)
+    LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3)
+
     def test_cdt_ctx_map_get_keys_in_with_chained_and_filters(self):
-        GE_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
-        LE_expr = LE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 3).compile()
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_map_keys_in(["a", "b", "f", "g"]),
-                    cdt_ctx.cdt_ctx_and_filter(GE_expr),
-                    cdt_ctx.cdt_ctx_and_filter(LE_expr)
+                    cdt_ctx.cdt_ctx_and_filter(self.GE_expr.compile()),
+                    cdt_ctx.cdt_ctx_and_filter(self.LE_expr.compile())
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
@@ -743,18 +744,55 @@ class TestPathExprOperations:
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.key, ops)
 
-    def test_cdt_ctx_all_children_with_filter_then_and_filter(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 2):
-            pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
-                        "We consider this undefined behavior")
-
-        filter_expr = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+    @expect_server_version_earlier_than_8_1_2_to_fail
+    def test_cdt_ctx_and_filter_with_and_expr(self):
+        and_filter_expr = And(self.GE_expr, self.LE_expr).compile()
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr),
-                    cdt_ctx.cdt_ctx_and_filter(filter_expr)
+                    cdt_ctx.cdt_ctx_map_keys_in(["a", "b", "f", "g"]),
+                    cdt_ctx.cdt_ctx_and_filter(and_filter_expr),
+                ],
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert set(bins[self.MAP_BIN_NAME]) == set(2, 3)
+
+    FILTER_EXPR = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+
+    @pytest.mark.parametrize(
+        "all_children_ctx",
+        [
+            cdt_ctx.cdt_ctx_all_children(),
+            cdt_ctx.cdt_ctx_all_children_with_filter(FILTER_EXPR),
+        ]
+    )
+    def test_cdt_ctx_all_children_then_and_filter(self, all_children_ctx):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 2):
+            pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
+                        "We consider this undefined behavior")
+
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx = [all_children_ctx]
+                ctx.append(
+                    cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
+                )
+                flags=aerospike.EXP_PATH_SELECT_MAP_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
+            )
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
+
+    def test_cdt_ctx_only_and_filter(self):
+        ops = [
+            operations.select_by_path(
+                bin_name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
             )

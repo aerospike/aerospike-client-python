@@ -346,7 +346,17 @@ def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
     Add a boolean expression filter AND-combined with a previous :meth:`cdt_ctx_map_keys_in`.
 
     This applies the expression at the same level as the previous path context.
-    This cannot be chained after a previous :meth:`cdt_ctx_and_filter` or :meth:`cdt_ctx_all_children_with_filter`.
+
+    Restrictions:
+
+    Only one :meth:`cdt_ctx_and_filter` is allowed per context level. Multiple :meth:`cdt_ctx_and_filter`
+    calls cannot be chained. To combine multiple conditions, use :class:`~aerospike_helpers.expressions.base.And` within
+    a single :meth:`cdt_ctx_and_filter`.
+
+    The preceding context entry must not be an expression type (i.e. :meth:`cdt_ctx_and_filter`
+    cannot follow :meth:`cdt_ctx_all_children_with_filter` or :meth:`cdt_ctx_all_children`).
+
+    :meth:`cdt_ctx_and_filter` cannot be the first entry in the context chain.
 
     Args:
         expression: Compiled expression. This expression must return a boolean.
