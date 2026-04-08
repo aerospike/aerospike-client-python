@@ -5,7 +5,6 @@ Resources used by all expressions.
 # from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
-from enum import Enum
 
 
 class _Keys:
@@ -20,7 +19,7 @@ class _Keys:
     REGEX_OPTIONS_KEY = "regex_options"
 
 
-class _ExprOp(Enum):  # TODO replace this with an enum
+class _ExprOp:  # TODO replace this with an enum
     UNKNOWN = 0
 
     EQ = 1
