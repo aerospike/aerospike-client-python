@@ -84,11 +84,12 @@ class TestQueryBinProjection:
         cls_name: str = query.__class__.__name__
         assert excinfo.value.msg == f"{cls_name} operations must be read-only. Use background {cls_name.lower()} for write-only operations."
 
+    # The following 2 test cases should work for any server version. Not just 8.1.2
+
     def test_select_bins_then_add_ops_then_foreground_query(self, query):
         # Filter out the only bin in the record
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
-            # Should work for any server version besides 8.1.2
             query.add_ops(BASIC_READ_BIN_OPS)
 
         records = query.results()
@@ -101,7 +102,6 @@ class TestQueryBinProjection:
         query.add_ops(BASIC_READ_BIN_OPS)
         # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
-            # Should work for any server version besides 8.1.2
             query.select(NON_EXISTENT_BIN_NAME)
 
         records = query.results()

@@ -6,7 +6,7 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
-from .conftest import wait_for_job_completion, clean_test_background, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME, query
+from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
