@@ -75,9 +75,10 @@ class TestQueryApply(object):
             operations.increment(bin_name, 1)
         ]
         query.add_ops(ops)
-        status = query.execute_background()
+        job_id = query.execute_background()
+        print(job_id)
 
-        wait_for_job_completion(self.as_connection, status)
+        wait_for_job_completion(self.as_connection, job_id)
 
         key = (TEST_NS, TEST_SET, 4)
         _, meta = self.as_connection.exists(key)

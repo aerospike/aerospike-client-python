@@ -418,7 +418,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python -m pytest ./new_tests -svv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed
