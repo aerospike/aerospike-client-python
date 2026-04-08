@@ -351,7 +351,7 @@ class TestQueryApply(object):
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning) as record:
             query.add_ops(WRITE_OPS)
-        assert "Operations and bin names are mutually exclusive" in record[0].message
+        assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
         job_id = query.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
@@ -366,7 +366,7 @@ class TestQueryApply(object):
         # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning) as record:
             query.select(NON_EXISTENT_BIN_NAME)
-        assert "Operations and bin names are mutually exclusive" in record[0].message
+        assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
         job_id = query.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
