@@ -420,7 +420,7 @@ PyObject *AerospikeClient_Index_Set_Create(AerospikeClient *self,
 
     return convert_python_args_to_c_and_create_index(
         self, py_policy, py_ns, py_set, NULL, py_name, AS_INDEX_TYPE_SET,
-        AS_INDEX_NONE, NULL, NULL);
+        AS_INDEX_DEFAULT, NULL, NULL);
 }
 
 // Deprecated API's
