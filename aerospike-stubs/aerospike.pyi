@@ -3,8 +3,6 @@ from typing import Any, Callable, Union, final, Literal, Optional, Final
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy, ClusterStats
 
-from aerospike_helpers.expressions.resources import TypeExpression
-
 AS_BOOL: Literal[1]
 AS_BYTES_BLOB: Literal[4]
 AS_BYTES_BOOL: Literal[17]
@@ -464,7 +462,8 @@ class Query:
     # TODO: this isn't an infinite list of bins
     def select(self, *args, **kwargs) -> None: ...
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
-    def where_with_expr(self, expr: TypeExpression | str, predicate: tuple) -> Query: ...
+    # We cannot use aerospike_helpers's TypeExpression type because mypy's stubtest will complain
+    def where_with_expr(self, expr, predicate: tuple) -> Query: ...
     def where_with_index_name(self, index_name: str, predicate: tuple) -> Query: ...
 
 class Scan:
