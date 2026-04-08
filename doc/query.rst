@@ -311,7 +311,7 @@ Assume this boilerplate code is run before all examples below:
 
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will now be ignored
+        If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
         during the query.
 
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
