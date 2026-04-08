@@ -265,7 +265,7 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
 # Shared between bin projection and execute background tests
 
 TEST_NS = "test"
-TEST_SET = "foreground_q_bp"
+TEST_SET = "demo"
 BIN_NAME = "number"
 MAP_BIN_NAME = "map"
 
