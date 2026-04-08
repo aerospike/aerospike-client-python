@@ -87,7 +87,6 @@ class TestQueryBinProjection:
     # The following 2 test cases should work for any server version. Not just 8.1.2
 
     def test_select_bins_then_add_ops_then_foreground_query(self, query):
-        # Filter out the only bin in the record
         query.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning):
             query.add_ops(BASIC_READ_BIN_OPS)
@@ -100,7 +99,6 @@ class TestQueryBinProjection:
 
     def test_add_ops_then_select_bins_then_foreground_query(self, query):
         query.add_ops(BASIC_READ_BIN_OPS)
-        # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning):
             query.select(NON_EXISTENT_BIN_NAME)
 

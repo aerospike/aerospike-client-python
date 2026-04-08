@@ -353,7 +353,6 @@ class TestScanApply(object):
         assert excinfo.value.msg == "Background scan operations must be write-only. Use scan for read-only operations."
 
     def test_select_bins_then_add_ops_then_bg_query(self, scan_obj):
-        # Filter out the only bin in the record
         scan_obj.select(NON_EXISTENT_BIN_NAME)
         with pytest.warns(DeprecationWarning) as record:
             scan_obj.add_ops(WRITE_OPS)
@@ -369,7 +368,6 @@ class TestScanApply(object):
 
     def test_add_ops_then_select_bins_then_bg_query(self, scan_obj):
         scan_obj.add_ops(WRITE_OPS)
-        # Filter out the only bin in the record
         with pytest.warns(DeprecationWarning) as record:
             scan_obj.select(NON_EXISTENT_BIN_NAME)
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
