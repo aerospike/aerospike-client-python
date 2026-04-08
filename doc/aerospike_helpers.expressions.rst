@@ -220,4 +220,6 @@ aerospike\_helpers\.expressions\.resources module
 
 .. autoclass:: aerospike_helpers.expressions.resources.ResultType
 
+.. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
+
 .. automethod:: aerospike_helpers.expressions.resources._BaseExpr.compile
