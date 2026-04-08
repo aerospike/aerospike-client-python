@@ -82,7 +82,8 @@ class TestQueryBinProjection:
         query.add_ops(ops)
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "Query operations must be read-only. Use background query for write-only operations"
+        cls_name: str = query.__name__
+        assert excinfo.value.msg == f"{cls_name} operations must be read-only. Use background {cls_name.lower()} for write-only operations."
 
     def test_select_bins_then_add_ops_then_foreground_query(self, query):
         # Filter out the only bin in the record
