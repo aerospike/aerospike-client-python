@@ -2,7 +2,7 @@
 Resources used by all expressions.
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any, TypeAlias
 from enum import Enum

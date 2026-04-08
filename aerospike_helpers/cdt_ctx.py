@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-from __future__ import annotations
+# from __future__ import annotations
 """
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
