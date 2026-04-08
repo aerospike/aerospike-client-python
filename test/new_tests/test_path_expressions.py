@@ -757,8 +757,9 @@ class TestPathExprOperations:
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert set(bins[self.MAP_BIN_NAME]) == set(2, 3)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert set(bins[self.MAP_BIN_NAME]) == set(2, 3)
 
     INT_GE_FILTER_EXPR = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
 
