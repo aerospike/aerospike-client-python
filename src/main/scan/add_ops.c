@@ -36,7 +36,7 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 
         int retval = PyErr_WarnFormat(
             PyExc_DeprecationWarning, STACK_LEVEL,
-            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Scan", "Scan");
+            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Scan");
         if (retval == -1) {
             return NULL;
         }

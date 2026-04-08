@@ -34,10 +34,9 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
     if (self->query.select.size) {
         // If select() was called on this Query object before.
 
-        int retval =
-            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                             SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE,
-                             "Query", "Query");
+        int retval = PyErr_WarnFormat(
+            PyExc_DeprecationWarning, STACK_LEVEL,
+            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Query");
         if (retval == -1) {
             return NULL;
         }
