@@ -790,6 +790,10 @@ class TestPathExprOperations:
             self.as_connection.operate(self.key, ops)
 
     def test_cdt_ctx_only_and_filter(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 2):
+            pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
+                        "We consider this undefined behavior")
+
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
