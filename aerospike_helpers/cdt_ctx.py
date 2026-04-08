@@ -103,10 +103,10 @@ Example::
     client.close()
 """
 import aerospike
-from typing import Any
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from typing import Any
     from aerospike_helpers.expressions.resources import TypeExpression
 
 
