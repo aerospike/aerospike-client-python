@@ -214,7 +214,7 @@ class TestPathExprOperations:
             self.convert_dict_to_hashable_in_list(expected_bin_value)
             assert set(bins[self.MAP_BIN_NAME]) == set(expected_bin_value)
 
-    FILTER_EXPR = GE(
+    FLOAT_GE_FILTER_EXPR = GE(
         LoopVarFloat(aerospike.EXP_LOOPVAR_VALUE),
         20.0
     ).compile()
@@ -226,7 +226,7 @@ class TestPathExprOperations:
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
-                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FLOAT_GE_FILTER_EXPR)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_VALUE
             )
@@ -426,7 +426,7 @@ class TestPathExprOperations:
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children(),
-                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FILTER_EXPR)
+                    cdt_ctx.cdt_ctx_all_children_with_filter(expression=self.FLOAT_GE_FILTER_EXPR)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MATCHING_TREE
             )
@@ -760,13 +760,13 @@ class TestPathExprOperations:
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert set(bins[self.MAP_BIN_NAME]) == set(2, 3)
 
-    FILTER_EXPR = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
+    INT_GE_FILTER_EXPR = GE(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), 2).compile()
 
     @pytest.mark.parametrize(
         "all_children_ctx",
         [
             cdt_ctx.cdt_ctx_all_children(),
-            cdt_ctx.cdt_ctx_all_children_with_filter(FILTER_EXPR),
+            cdt_ctx.cdt_ctx_all_children_with_filter(INT_GE_FILTER_EXPR),
         ]
     )
     def test_cdt_ctx_all_children_then_and_filter(self, all_children_ctx):
@@ -776,7 +776,7 @@ class TestPathExprOperations:
 
         ctx = [all_children_ctx]
         ctx.append(
-            cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
+            cdt_ctx.cdt_ctx_and_filter(self.INT_GE_FILTER_EXPR)
         )
         ops = [
             operations.select_by_path(
@@ -793,7 +793,7 @@ class TestPathExprOperations:
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
                 ctx=[
-                    cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
+                    cdt_ctx.cdt_ctx_and_filter(self.INT_GE_FILTER_EXPR)
                 ],
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
             )
