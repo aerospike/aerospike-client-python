@@ -421,6 +421,12 @@ jobs:
       run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
+    - name: Show logs if failed
+      if: ${{ failure() }}
+      run: |
+        docker container logs aerospike
+        cat ./configs/aerospike.conf
+
   test-ee:
     runs-on: ubuntu-22.04
     needs: build
