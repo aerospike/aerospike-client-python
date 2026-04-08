@@ -27,6 +27,7 @@ Example::
     expr = exp.BitCount(16, 8 * 3, exp.BlobBin("c")).compile()
 """
 
+from __future__ import annotations
 from typing import Union, Dict, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
