@@ -774,13 +774,14 @@ class TestPathExprOperations:
             pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
                         "We consider this undefined behavior")
 
+        ctx = [all_children_ctx]
+        ctx.append(
+            cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
+        )
         ops = [
             operations.select_by_path(
                 bin_name=self.MAP_BIN_NAME,
-                ctx = [all_children_ctx]
-                ctx.append(
-                    cdt_ctx.cdt_ctx_and_filter(self.FILTER_EXPR)
-                )
+                ctx=ctx,
                 flags=aerospike.EXP_PATH_SELECT_MAP_VALUE | aerospike.EXP_PATH_SELECT_NO_FAIL
             )
         ]
