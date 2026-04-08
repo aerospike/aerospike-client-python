@@ -6,7 +6,7 @@ import aerospike
 from aerospike import exception, predicates
 from aerospike_helpers.operations import operations, map_operations
 from aerospike_helpers import expressions as exp
-from .conftest import wait_for_job_completion
+from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
 TEST_NS = "test"
 TEST_SET = "background_scan1"
@@ -332,3 +332,51 @@ class TestScanApply(object):
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         with pytest.raises(exception.ClientError):
             scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, (1, 2, 3)])
+
+    @pytest.fixture()
+    def scan(as_connection):
+        yield as_connection.scan(TEST_NS, TEST_SET)
+
+    @pytest.mark.parametrize(
+        "ops",
+        [
+            BASIC_READ_BIN_OPS,
+            READ_AND_WRITE_OPS
+        ]
+    )
+    def test_add_read_ops(self, ops, scan):
+        scan.add_ops(ops)
+
+        with pytest.raises(exception.ParamError) as excinfo:
+            scan.execute_background()
+        assert excinfo.value.msg == "Background scan operations must be write-only. Use scan for read-only operations."
+
+    def test_select_bins_then_add_ops_then_bg_query(self, scan):
+        # Filter out the only bin in the record
+        scan.select(NON_EXISTENT_BIN_NAME)
+        with pytest.warns(DeprecationWarning) as record:
+            scan.add_ops(WRITE_OPS)
+        assert "Operations and bin names are mutually exclusive" in record[0].message
+
+        job_id = scan.execute_background()
+        wait_for_job_completion(self.as_connection, job_id)
+
+        scan = self.as_connection.query(TEST_NS, TEST_SET)
+        records = scan.results()
+        for _, _, bins in records:
+            assert bins[BIN_NAME] == 3
+
+    def test_add_ops_then_select_bins_then_bg_query(self, scan):
+        scan.add_ops(WRITE_OPS)
+        # Filter out the only bin in the record
+        with pytest.warns(DeprecationWarning) as record:
+            scan.select(NON_EXISTENT_BIN_NAME)
+        assert "Operations and bin names are mutually exclusive" in record[0].message
+
+        job_id = scan.execute_background()
+        wait_for_job_completion(self.as_connection, job_id)
+
+        scan = self.as_connection.query(TEST_NS, TEST_SET)
+        records = scan.results()
+        for _, _, bins in records:
+            assert bins[BIN_NAME] == 3
