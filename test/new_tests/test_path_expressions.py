@@ -4,7 +4,7 @@ import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And, Val
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList
 from aerospike_helpers.expressions.arithmetic import Sub
