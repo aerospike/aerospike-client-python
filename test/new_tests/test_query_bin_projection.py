@@ -48,7 +48,6 @@ class TestQueryBinProjection:
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 2):
             yield nullcontext()
         else:
-            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
             yield pytest.raises(e.ParamError)
 
     def test_query_nested_results(self, query, client_should_fail_if_server_version_less_than_8_1_2):
