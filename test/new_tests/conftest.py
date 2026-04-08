@@ -312,13 +312,3 @@ def query(request, clean_test_background, as_connection):
     else:
         query = request.param(as_connection, TEST_NS, TEST_SET)
     yield query
-
-@pytest.fixture(scope="function")
-def requires_server_version(as_connection, request):
-    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
-    # required server version, but every test case in that module depends on this fixture
-    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
-        request.cls.expected_context_for_pos_tests = nullcontext()
-    else:
-        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
