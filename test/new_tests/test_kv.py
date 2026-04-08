@@ -201,7 +201,7 @@ class TestKV(object):
             rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
             self.as_connection.put(key, rec)
 
-        self.as_connection.index_single_value_create("test", "unittest", "age", aerospike.INDEX_NUMERIC, "age_index", {})
+        self.as_connection.index_single_value_create("test", "unittest", "age", aerospike.INDEX_INTEGER, "age_index", {})
 
         query = self.as_connection.query("test", "unittest")
 

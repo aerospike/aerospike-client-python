@@ -268,7 +268,7 @@ Map and List Predicates
         # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
         client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
         # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
-        client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+        client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_INTEGER, 'demo_fav_movies_views_idx')
 
         client.put(('test','demo','Dr. Doom'), {'age':43, 'fav_movies': {'12 Monkeys': 1, 'Brasil': 2}})
         client.put(('test','demo','The Hulk'), {'age':38, 'fav_movies': {'Blindness': 1, 'Eternal Sunshine': 2}})
@@ -301,7 +301,7 @@ Map and List Predicates
         client = aerospike.client(config)
 
         # create a secondary index for numeric values of test.demo records whose 'age' bin is a list
-        client.index_list_create('test', 'demo', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
+        client.index_list_create('test', 'demo', 'age', aerospike.INDEX_INTEGER, 'demo_age_nidx')
 
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
         query = client.query('test', 'demo')

@@ -66,7 +66,7 @@ class TestQuery(TestBaseClass):
     @pytest.fixture(autouse=True, scope="class")
     def setupClass(self, as_connection):
         try:
-            as_connection.index_single_value_create("test", "demo", "test_age", aerospike.INDEX_NUMERIC, "age_index")
+            as_connection.index_single_value_create("test", "demo", "test_age", aerospike.INDEX_INTEGER, "age_index")
         except e.IndexFoundError:
             pass
 
@@ -76,12 +76,12 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_single_value_create("test", "demo", "age1", aerospike.INDEX_NUMERIC, "age_index1")
+            as_connection.index_single_value_create("test", "demo", "age1", aerospike.INDEX_INTEGER, "age_index1")
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
+            as_connection.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "numeric_list_index")
         except e.IndexFoundError:
             pass
 
@@ -91,7 +91,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
+            as_connection.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_INTEGER, "numeric_map_index")
         except e.IndexFoundError:
             pass
 
@@ -102,7 +102,7 @@ class TestQuery(TestBaseClass):
 
         try:
             as_connection.index_map_values_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_values_index"
+                "test", "demo", "numeric_map", aerospike.INDEX_INTEGER, "numeric_map_values_index"
             )
         except e.IndexFoundError:
             pass
@@ -115,12 +115,12 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            as_connection.index_single_value_create("test", None, "test_age_none", aerospike.INDEX_NUMERIC, "age_index_none")
+            as_connection.index_single_value_create("test", None, "test_age_none", aerospike.INDEX_INTEGER, "age_index_none")
         except e.IndexFoundError:
             pass
 
         try:
-            as_connection.index_single_value_create("test", "demo", bytearray("sal\0kj", "utf-8"), aerospike.INDEX_NUMERIC, "sal_index")
+            as_connection.index_single_value_create("test", "demo", bytearray("sal\0kj", "utf-8"), aerospike.INDEX_INTEGER, "sal_index")
         except e.IndexFoundError:
             pass
 
@@ -148,7 +148,7 @@ class TestQuery(TestBaseClass):
                 "test",
                 "demo",
                 "numeric_list",
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 "numeric_list_cdt_index",
                 None,
                 ctx_list_index,
@@ -161,7 +161,7 @@ class TestQuery(TestBaseClass):
                 "test",
                 "demo",
                 "numeric_map",
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 "numeric_map_cdt_index",
                 None,
                 ctx_map_index,
@@ -741,7 +741,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
-            query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+            query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER, 1, 3)
 
     def test_removed_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
         """
@@ -1028,14 +1028,14 @@ class TestQuery(TestBaseClass):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC)
+        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER)
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_one_end_args(self):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1)
+        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER, 1)
 
     def test_query_with_list_cdt_ctx(self):
         """
@@ -1243,9 +1243,9 @@ class TestQuery(TestBaseClass):
             # Test every predicate to make sure it accepts a bin name of None
 
             # Only the first record
-            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_INTEGER, p.equals(None, 2), 1),
             # The first two records
-            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_INTEGER, p.between(None, 0, 2), 2),
             (
                 GEO_POLYGON_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
@@ -1281,7 +1281,7 @@ class TestQuery(TestBaseClass):
             (
                 LIST_EXPR,
                 aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 p.contains(None, aerospike.INDEX_TYPE_LIST, 0),
                 # Only the first record
                 1
@@ -1289,7 +1289,7 @@ class TestQuery(TestBaseClass):
             (
                 LIST_EXPR,
                 aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
                 # Only the first two records
                 2

@@ -1609,6 +1609,10 @@ Index data types
 
 .. data:: INDEX_NUMERIC
 
+    .. deprecated:: 19.2.0 Deprecated in favor of :data:`aerospike.INDEX_INTEGER`.
+
+.. data:: INDEX_INTEGER
+
     An index whose values are of the aerospike integer data type.
 
 .. data:: INDEX_BLOB
