@@ -809,7 +809,6 @@ class TestPathExprOperations:
                 ),
                 # Only the third list element is in SECOND_LIST_OF_INTS_BIN_NAME
                 [3]
-                # marks=pytest.mark.xfail(reason="Server returns InvalidRequest error")
             ),
         ]
     )
