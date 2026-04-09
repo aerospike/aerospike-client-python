@@ -516,7 +516,7 @@ jobs:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        server-tag: ${{ env.SERVER_TAG }}
+        server-tag: "8.0"
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
