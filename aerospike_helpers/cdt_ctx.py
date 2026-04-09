@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-# from __future__ import annotations
+from __future__ import annotations
 """
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
@@ -106,10 +106,7 @@ import aerospike
 
 # Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
 # NameError when using Any
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from aerospike_helpers.expressions.resources import TypeExpression
+from typing import Any
 
 
 def index_type_string(index_type):
