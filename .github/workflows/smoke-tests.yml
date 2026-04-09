@@ -509,6 +509,14 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
+    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@708ad9e1db6333410437864cd46e184403de1628
+      with:
+        enable-security: "true"
+        num-nodes: 1
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ inputs.server-tag }}
+
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
