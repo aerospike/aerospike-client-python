@@ -513,7 +513,7 @@ jobs:
       with:
         enable-security: "true"
         num-nodes: 1
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ inputs.server-tag }}
 
