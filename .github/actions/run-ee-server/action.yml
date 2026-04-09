@@ -62,9 +62,9 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
-      crudini --set config.conf tls cafile ../${{ steps.setup-as-server.outputs.tls-cert-dir }}/ca.crt
-      crudini --set config.conf tls keyfile ../${{ steps.setup-as-server.outputs.tls-cert-dir }}/client.key
-      crudini --set config.conf tls certfile ../${{ steps.setup-as-server.outputs.tls-cert-dir }}/client.crt
+      crudini --set config.conf tls cafile ${{ steps.setup-as-server.outputs.tls-cert-dir }}/ca.crt
+      crudini --set config.conf tls keyfile ${{ steps.setup-as-server.outputs.tls-cert-dir }}/client.key
+      crudini --set config.conf tls certfile ${{ steps.setup-as-server.outputs.tls-cert-dir }}/client.crt
     working-directory: test
     shell: bash
 
