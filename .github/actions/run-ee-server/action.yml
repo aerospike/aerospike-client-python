@@ -45,6 +45,7 @@ runs:
       docker exec --network host aerospike/aerospike-tools asadm --enable --execute "manage acl \
           create user $SUPERUSER_NAME_AND_PASSWORD password $SUPERUSER_NAME_AND_PASSWORD \
           roles read-write-udf, sys-admin, user-admin, data-admin"
+    shell: bash
 
   - name: Install crudini to manipulate config.conf
     run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
