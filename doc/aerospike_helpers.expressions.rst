@@ -169,7 +169,7 @@ aerospike\_helpers\.expressions\.base module
     :members:
     :special-members:
     :show-inheritance:
-    :private-members:
+    :private-members: _Key
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------
