@@ -531,5 +531,5 @@ jobs:
       run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
       working-directory: test/standalone
 
-    - if: ${{ !cancelled() }}
-      run: docker logs aerospike
+    # - if: ${{ !cancelled() }}
+    #   run: docker logs aerospike
