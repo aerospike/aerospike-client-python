@@ -93,68 +93,6 @@ this means that the data type returned may vary (usually depending on the ``retu
 
     Only comparisons between **key ordered** map values and map expressions are supported.
 
-Expression Type Aliases
------------------------
-
-The following documentation uses type aliases that map to standard Python types.
-
-.. list-table:: Aliases to Standard Python Types
-    :widths: 25 75
-    :header-rows: 1
-
-    * - Alias
-      - Type
-    * - AerospikeExpression
-      - _BaseExpr
-    * - TypeResultType
-      - Optional[int]
-    * - TypeFixedEle
-      - Union[int, float, str, bytes, dict]
-    * - TypeFixed
-      - Optional[Dict[str, TypeFixedEle]]
-    * - TypeCompiledOp
-      - Tuple[int, TypeResultType, TypeFixed, int]
-    * - TypeExpression
-      - List[TypeCompiledOp]
-    * - TypeChild
-      - Union[int, float, str, bytes, _AtomExpr]
-    * - TypeChildren
-      - Tuple[TypeChild, ...]
-    * - TypeBinName
-      - Union[_BaseExpr, str]
-    * - TypeListValue
-      - Union[_BaseExpr, List[Any]]
-    * - TypeIndex
-      - Union[_BaseExpr, int, aerospike.CDTInfinite]
-    * - TypeCTX
-      - Union[None, List[cdt_ctx._cdt_ctx]]
-    * - TypeRank
-      - Union[_BaseExpr, int, aerospike.CDTInfinite]
-    * - TypeCount
-      - Union[_BaseExpr, int, aerospike.CDTInfinite]
-    * - TypeValue
-      - Union[_BaseExpr, Any]
-    * - TypePolicy
-      - Union[Dict[str, Any], None]
-    * - TypeComparisonArg
-      - Union[_BaseExpr, int, str, list, dict, aerospike.CDTInfinite]
-    * - TypeGeo
-      - Union[_BaseExpr, aerospike.GeoJSON]
-    * - TypeKey
-      - Union[_BaseExpr, Any]
-    * - TypeKeyList
-      - Union[_BaseExpr, List[Any]]
-    * - TypeBitValue
-      - Union[bytes, bytearray]
-    * - TypeNumber
-      - Union[_BaseExpr, int, float]
-    * - TypeFloat
-      - Union[_BaseExpr, float]
-    * - TypeInteger
-      - Union[_BaseExpr, int]
-    * - TypeBool
-      - Union[_BaseExpr, bool]
-
 .. note:: Requires server version >= 5.2.0
 
 Assume all in-line examples run this code beforehand::
