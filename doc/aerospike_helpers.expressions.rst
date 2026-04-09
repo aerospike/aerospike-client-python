@@ -167,7 +167,6 @@ aerospike\_helpers\.expressions\.base module
 
 .. automodule:: aerospike_helpers.expressions.base
     :members:
-    :special-members:
     :show-inheritance:
     :private-members: _Key
 
@@ -176,42 +175,36 @@ aerospike\_helpers\.expressions\.list module
 
 .. automodule:: aerospike_helpers.expressions.list
     :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.map module
 -------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.map
     :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.bit module
 -------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.bitwise
     :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.hll module
 --------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.hll
     :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.arithmetic module
 ---------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.arithmetic
     :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.bitwise_operators module
 ----------------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.bitwise_operators
     :members:
-    :special-members:
 
 
 aerospike\_helpers\.expressions\.resources module
