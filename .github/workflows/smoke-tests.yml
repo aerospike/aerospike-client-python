@@ -31,7 +31,8 @@ on:
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.10'
   # pull_request event doesn't support inputs
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
+  # Our JFrog docker repo doesn't automatically update the latest tag, so we can't use it (it currently points to an old nightly build)
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1' }}
 
 jobs:
   build:
