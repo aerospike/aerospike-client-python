@@ -12,3 +12,4 @@ Classes for the use with client batch APIs :meth:`~aerospike.Client.batch_write`
 .. automodule:: aerospike_helpers.batch.records
     :members:
     :show-inheritance:
+    :special-members:
