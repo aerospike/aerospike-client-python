@@ -104,9 +104,11 @@ Example::
 """
 import aerospike
 
-from typing import TYPE_CHECKING
+# Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
+# NameError when using Any
+from typing import TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
-    from typing import Any
     from aerospike_helpers.expressions.resources import TypeExpression
 
 
