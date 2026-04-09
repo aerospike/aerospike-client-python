@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-from __future__ import annotations
 """
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
@@ -317,7 +316,7 @@ def cdt_ctx_all_children() -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP)
 
-def cdt_ctx_all_children_with_filter(expression: TypeExpression) -> _cdt_ctx:
+def cdt_ctx_all_children_with_filter(expression) -> _cdt_ctx:
     """
     All children of the current level will be selected, and then the filter expression
     is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
