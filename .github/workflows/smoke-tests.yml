@@ -22,12 +22,6 @@ on:
       - benchmarks/**/*
   workflow_dispatch:
     inputs:
-      # Used to test server RCs
-      registry-name:
-        description: Registry name
-        type: string
-        default: docker.io
-        required: true
       server-tag:
         description: Server tag
         type: string
@@ -37,10 +31,7 @@ on:
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.10'
   # pull_request event doesn't support inputs
-  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
   SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
-  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
 
 jobs:
   build:
@@ -125,12 +116,9 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ env.SERVER_TAG }}
 
     - run: python3-dbg -m pytest ./new_tests
       working-directory: test
@@ -171,12 +159,9 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ env.SERVER_TAG }}
 
     # -Werror: we need code coverage for code paths where warnings are treated as errors
     # TODO: currently this doesn't seem to work though
@@ -336,14 +321,12 @@ jobs:
         echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
-    - uses: ./.github/actions/run-ee-server
+    - name: Run Aerospike server
+      uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ env.SERVER_TAG }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
@@ -457,12 +440,9 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ env.SERVER_TAG }}
 
     - name: Run tests
       # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
@@ -539,17 +519,13 @@ jobs:
         username: ${{ env.REGISTRY_USERNAME }}
         password: ${{ env.REGISTRY_PASSWORD }}
 
-    - uses: ./.github/actions/run-ee-server
-      if: ${{ startsWith(matrix.test-script-args, 'true') }}
+    - uses: ./.github/actions/setup-aerospike-server
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
+        enable-security: "true"
+        num-nodes: 1
+        oidc-provider: ${{ inputs.oidc-provider-name }}
+        oidc-audience: ${{ inputs.oidc-audience }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        # The user agent can also send the client's username if app-id is not set by the client
-        env-vars: 'SECURITY=1'
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
