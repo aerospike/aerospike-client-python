@@ -100,6 +100,6 @@ runs:
   - name: Set EE server's IP address and TLS name for test config
     run: |
       cluster_name=$(docker run --rm --network host aerospike/aerospike-tools asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2)
-      crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ steps.setup-as-server.outputs.tls-base-port }}|${cluster_name}"
+      crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ steps.setup-as-server.outputs.tls-service-ports }}|${cluster_name}"
     working-directory: test
     shell: bash
