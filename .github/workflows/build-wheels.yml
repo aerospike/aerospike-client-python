@@ -226,6 +226,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
@@ -402,6 +403,7 @@ jobs:
         with:
           oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
           oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+          features-content: ${{ secrets.FEATURES_CONTENT }}
           server-tag: ${{ inputs.server-tag }}
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 

@@ -10,6 +10,9 @@ inputs:
   oidc-audience:
     description: For pulling server images from JFrog
     required: true
+  features-content:
+    description: For enabling strong consistency
+    required: true
   server-tag:
     required: true
     description: Specify Docker tag
@@ -29,6 +32,7 @@ runs:
       enable-security: "true"
       enable-tls: "true"
       enable-strong-consistency: "true"
+      features-content: ${{ inputs.features-content }}
       num-nodes: 1
       oidc-provider: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}

@@ -118,6 +118,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
     - run: python3-dbg -m pytest ./new_tests
@@ -161,6 +162,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
     # -Werror: we need code coverage for code paths where warnings are treated as errors
@@ -326,6 +328,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
@@ -442,6 +445,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
     - name: Run tests

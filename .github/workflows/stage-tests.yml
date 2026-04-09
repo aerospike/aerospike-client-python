@@ -123,6 +123,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'separate-docker-container'
 
@@ -238,6 +239,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'docker-host'
 
