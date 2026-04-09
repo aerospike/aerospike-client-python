@@ -26,7 +26,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@a9678fc705ae4df9704da5e8e0e6fe314fab0cbd
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@ffcb982e2f3323762bdc26af635fa46ebebf6d93
     id: setup-as-server
     with:
       enable-security: "true"
