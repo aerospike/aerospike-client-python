@@ -509,7 +509,7 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@708ad9e1db6333410437864cd46e184403de1628
+    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@a9678fc705ae4df9704da5e8e0e6fe314fab0cbd
       with:
         enable-security: "true"
         num-nodes: 1
