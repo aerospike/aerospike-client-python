@@ -32,8 +32,6 @@ extensions = [
 napoleon_google_docstring = True
 napoleon_use_rtype = False
 typehints_use_rtype = False
-# always_document_param_types = True
-
 always_use_bars_union = True
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
@@ -113,7 +111,7 @@ autodoc_type_aliases = {
     # "TypeIndex": "TypeIndex",
     # "TypeChild": "TypeChild",
     # "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
+    # "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
     # "TypeGeo": "TypeGeo",
     # "TypeKey": "aerospike_helpers.expressions.map.TypeKey",
     # "TypeKeyList": "TypeKeyList",
