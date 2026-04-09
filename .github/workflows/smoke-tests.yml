@@ -509,7 +509,8 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@662d835b0e34c33cc12a8252b5548732725d0772
+    - if: ${{ startsWith(matrix.test-script-args, 'true') }}
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@662d835b0e34c33cc12a8252b5548732725d0772
       with:
         enable-security: "true"
         num-nodes: 1
