@@ -211,6 +211,7 @@ aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
 .. autoclass:: aerospike_helpers.expressions.resources.ResultType
+  :members:
 
 .. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
 
