@@ -47,6 +47,7 @@ extensions = [
 napoleon_google_docstring = True
 napoleon_use_rtype = False
 typehints_use_rtype = False
+always_document_param_types = True
 
 always_use_bars_union = True
 
