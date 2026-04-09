@@ -9,4 +9,4 @@ aerospike\_helpers\.cdt_ctx module
     :members:
     :undoc-members:
     :show-inheritance:
-    :private-members:
+    :private-members: _cdt_ctx
