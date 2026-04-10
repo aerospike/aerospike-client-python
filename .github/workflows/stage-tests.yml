@@ -133,7 +133,7 @@ jobs:
 
     - name: Run distro container
       # Run distro container on host network to access the Aerospike server using localhost (without having to change config.conf)
-      run: docker run --detach --network host --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
+      run: docker run --detach --network host -v /:/host:ro --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
 
     - name: Copy repo (and artifact) to container
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
