@@ -32,6 +32,7 @@ extensions = [
 napoleon_google_docstring = True
 napoleon_use_rtype = False
 typehints_use_rtype = False
+typehints_use_signature = True
 always_use_bars_union = True
 
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
