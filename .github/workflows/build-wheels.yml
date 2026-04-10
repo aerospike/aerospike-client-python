@@ -119,7 +119,7 @@ on:
         required: false
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
-        required: true
+        required: false
         type: string
         description: 'Server docker image tag'
       test-file:
