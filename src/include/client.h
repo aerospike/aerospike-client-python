@@ -425,6 +425,9 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
                                                   PyObject *args,
                                                   PyObject *kwds);
 
+PyObject *AerospikeClient_Index_Set_Create(AerospikeClient *self,
+                                           PyObject *args, PyObject *kwds);
+
 /**
 * Get the base64 representation of an aerospike CDT ctx.
 *
