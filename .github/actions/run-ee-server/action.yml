@@ -32,7 +32,6 @@ runs:
       enable-tls: "true"
       enable-strong-consistency: "true"
       features-content: ${{ inputs.features-content }}
-      network-name: bridge
       num-nodes: 1
       oidc-provider: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}
