@@ -42,7 +42,7 @@ jobs:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -93,7 +93,7 @@ jobs:
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         # Artifact name doesn't matter. Valgrind job downloads all artifacts to get the one wheel
         if-no-files-found: error
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
