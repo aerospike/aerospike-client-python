@@ -42,8 +42,7 @@ on:
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
-        required: true
-        default: 'latest'
+        required: false
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
         required: false
@@ -90,7 +89,6 @@ on:
       server-tag:
         type: string
         required: false
-        default: 'latest'
       test-file:
         required: false
         type: string

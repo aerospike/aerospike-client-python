@@ -25,9 +25,8 @@ on:
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
-        required: false
+        required: true
         description: Server tag
-        default: latest
       massif:
         type: boolean
         description: 'Use massif for testing memory usage'

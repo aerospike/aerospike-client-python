@@ -25,7 +25,6 @@ on:
       server-tag:
         description: Server tag
         type: string
-        default: latest
         required: true
 
 env:

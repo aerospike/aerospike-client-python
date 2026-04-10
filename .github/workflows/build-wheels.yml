@@ -73,8 +73,7 @@ on:
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
-        required: true
-        default: 'latest'
+        required: false
         description: 'Server docker image tag'
       test-file:
         required: false
@@ -120,9 +119,8 @@ on:
         required: false
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
-        required: false
+        required: true
         type: string
-        default: 'latest'
         description: 'Server docker image tag'
       test-file:
         required: false
