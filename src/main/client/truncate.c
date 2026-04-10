@@ -125,8 +125,7 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
 
     // Start conversion of the nanosecond parameter
     if (PyLong_Check(py_nanos)) {
-        nanos = convert_unsigned_long_long_into_uint64_t(&err, py_nanos,
-                                                         "truncate");
+        nanos = convert_pylong_to_uint64_t(&err, py_nanos, "truncate");
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
