@@ -435,6 +435,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
@@ -450,7 +451,7 @@ jobs:
     - name: Show logs if failed
       if: ${{ failure() }}
       run: |
-        docker container logs aerospike
+        docker container logs ${{ steps.run-ee-server.outputs.container-name }}
         cat ./configs/aerospike.conf
 
   test-metrics:
