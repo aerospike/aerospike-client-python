@@ -1,12 +1,6 @@
 name: Build artifacts and run stage tests
 run-name: Build artifacts and run stage tests (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
 
-permissions:
-  contents: read
-  id-token: write
-  statuses: write
-  packages: read
-
 on:
   workflow_dispatch:
     inputs:

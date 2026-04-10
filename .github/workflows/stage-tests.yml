@@ -5,10 +5,6 @@ name: Stage tests
 # The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
 # and QE doesn't have enough disk space for more Linux distros, so we have some tests here in Github Actions
 
-permissions:
-  contents: read
-  id-token: write
-
 on:
   workflow_call:
     inputs:
@@ -45,8 +41,8 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 env:
-  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
   linux-distro-tests:
@@ -87,7 +83,7 @@ jobs:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -124,8 +120,6 @@ jobs:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'separate-docker-container'
@@ -205,7 +199,7 @@ jobs:
     runs-on: ${{ matrix.runner-os-and-arch[0] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -243,8 +237,6 @@ jobs:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ env.REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'docker-host'
