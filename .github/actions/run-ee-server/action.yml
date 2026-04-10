@@ -99,7 +99,7 @@ runs:
     run: |
       server_container_network_name=${{ steps.setup-as-server.outputs.network-name }}
       # Go templating doesn't support selecting names with hyphens
-      echo SERVER_IP=$(docker container inspect -f json ${{ steps.setup-as-server.outputs.container-names }} | jq ".[].NetworkSettings.Networks.${server_container_network_name}.IPAddress") >> $GITHUB_ENV
+      echo SERVER_IP=$(docker container inspect -f json ${{ steps.setup-as-server.outputs.container-names }} | jq ".[].NetworkSettings.Networks.[\"${server_container_network_name}\"].IPAddress") >> $GITHUB_ENV
     shell: bash
 
   - name: Invalid input
