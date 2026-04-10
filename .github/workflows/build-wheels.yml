@@ -300,6 +300,11 @@ jobs:
       # Just do it for all Python versions (even those that don't require more room) for futureproofing
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
+    - if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      run: |
+        echo CIBW_CONTAINER_ENGINE="docker;create_args: --network ${{ steps.run-ee-server.outputs.container-network }}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Build wheel
       uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e # v3.3.1
       id: cibuildwheel
@@ -333,7 +338,6 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
-        CIBW_CONTAINER_ENGINE: "docker;create_args: --network ${{ steps.run-ee-server.outputs.container-network }}"
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
