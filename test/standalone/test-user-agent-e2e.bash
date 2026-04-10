@@ -21,7 +21,7 @@ python3 "$python_background_script_name" "$@" &
 use_security_credentials="$1"
 
 if [[ "$use_security_credentials" == "true" ]]; then
-    CREDENTIALS="-U admin -P admin"
+    CREDENTIALS="-U superuser -P superuser"
 fi
 
 server_version=$(docker run --network host aerospike/aerospike-tools asinfo $CREDENTIALS -v "build")
@@ -57,7 +57,7 @@ if [[ $# -eq 2 ]]; then
     # app_id was explicitly set in client config
     expected_app_id="$2"
 elif [[ "$use_security_credentials" == "true" ]]; then
-    expected_app_id="admin"
+    expected_app_id="superuser"
 else
     expected_app_id="not-set"
 fi
