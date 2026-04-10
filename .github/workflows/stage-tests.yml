@@ -5,10 +5,6 @@ name: Stage tests
 # The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
 # and QE doesn't have enough disk space for more Linux distros, so we have some tests here in Github Actions
 
-permissions:
-  contents: read
-  id-token: write
-
 on:
   workflow_call:
     inputs:
@@ -35,13 +31,9 @@ on:
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
-        required: true
-        description: 'Server docker image tag'
-      test-file:
         required: false
-        default: ''
-        type: string
-        description: 'new_tests/<value>'
+        default: 'latest'
+        description: 'Server docker image tag'
       test-macos-x86:
         required: false
         type: boolean
@@ -49,8 +41,8 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 env:
-  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
   linux-distro-tests:
@@ -91,7 +83,7 @@ jobs:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -125,15 +117,16 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        features-content: ${{ secrets.FEATURES_CONTENT }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
       # Run distro container on host network to access the Aerospike server using localhost (without having to change config.conf)
-      run: docker run --detach --network host -v /:/host:ro --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
+      run: docker run --detach --network host --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
 
     - name: Copy repo (and artifact) to container
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
@@ -183,7 +176,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} pytest -c requirements.txt
 
     - name: Run tests
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/${{ inputs.test-file }}
+      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
@@ -206,7 +199,7 @@ jobs:
     runs-on: ${{ matrix.runner-os-and-arch[0] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -241,9 +234,10 @@ jobs:
     - if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
       uses: ./.github/actions/run-ee-server
       with:
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        features-content: ${{ secrets.FEATURES_CONTENT }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: 'docker-host'
 
@@ -257,7 +251,7 @@ jobs:
 
     - name: Run tests
       if: ${{ matrix.runner-os-and-arch[1] == 'x86_64' }}
-      run: python3 -m pytest new_tests/${{ inputs.test-file }}
+      run: python3 -m pytest new_tests/
       working-directory: test
 
     - name: Run tests on macos 26

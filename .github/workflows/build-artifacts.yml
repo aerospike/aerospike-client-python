@@ -5,12 +5,6 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ 
 # Optionally run tests on manylinux wheels
 # Then upload artifacts to Github
 
-permissions:
-  id-token: write
-  statuses: write
-  packages: read
-  contents: read
-
 on:
   workflow_dispatch:
     inputs:
@@ -42,7 +36,8 @@ on:
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
-        required: false
+        required: true
+        default: 'latest'
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
         required: false
@@ -89,11 +84,16 @@ on:
       server-tag:
         type: string
         required: false
+        default: 'latest'
       test-file:
         required: false
         type: string
         default: ''
     secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
 
