@@ -48,7 +48,7 @@ class HLLInit(_BaseExpr):
 
     def __init__(
         self,
-        policy: TypePolicy,
+        policy: "TypePolicy",
         index_bit_count: Union[int, None],
         mh_bit_count: Union[int, None],
         bin: "TypeBinName",
@@ -81,7 +81,7 @@ class HLLAdd(_BaseExpr):
 
     def __init__(
         self,
-        policy: TypePolicy,
+        policy: "TypePolicy",
         list: "TypeListValue",
         index_bit_count: Union[int, None],
         mh_bit_count: Union[int, None],

@@ -50,7 +50,7 @@ class MapPut(_BaseExpr):
 
     _op = aerospike.OP_MAP_PUT
 
-    def __init__(self, ctx: "TypeCTX", policy: TypePolicy, key: "TypeKey", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", key: "TypeKey", value: "TypeValue", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -89,7 +89,7 @@ class MapPutItems(_BaseExpr):
 
     _op = aerospike.OP_MAP_PUT_ITEMS
 
-    def __init__(self, ctx: "TypeCTX", policy: TypePolicy, map: map, bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", map: map, bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -128,7 +128,7 @@ class MapIncrement(_BaseExpr):
 
     _op = aerospike.OP_MAP_INCREMENT
 
-    def __init__(self, ctx: "TypeCTX", policy: TypePolicy, key: "TypeKey", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", key: "TypeKey", value: "TypeValue", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.

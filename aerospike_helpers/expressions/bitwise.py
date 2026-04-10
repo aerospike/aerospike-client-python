@@ -50,7 +50,7 @@ class BitResize(_BaseExpr):
 
     _op = aerospike.OP_BIT_RESIZE
 
-    def __init__(self, policy: TypePolicy, byte_size: int, flags: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", byte_size: int, flags: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_size (int): Number of bytes the resulting blob should occupy.
@@ -87,7 +87,7 @@ class BitInsert(_BaseExpr):
 
     _op = aerospike.OP_BIT_INSERT
 
-    def __init__(self, policy: TypePolicy, byte_offset: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", byte_offset: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_offset (int): Integer byte index of where to insert the value.
@@ -121,7 +121,7 @@ class BitRemove(_BaseExpr):
 
     _op = aerospike.OP_BIT_REMOVE
 
-    def __init__(self, policy: TypePolicy, byte_offset: int, byte_size: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", byte_offset: int, byte_size: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_offset (int): Byte index of where to start removing from.
@@ -159,7 +159,7 @@ class BitSet(_BaseExpr):
 
     _op = aerospike.OP_BIT_SET
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start overwriting.
@@ -195,7 +195,7 @@ class BitOr(_BaseExpr):
 
     _op = aerospike.OP_BIT_OR
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -238,7 +238,7 @@ class BitXor(_BaseExpr):
 
     _op = aerospike.OP_BIT_XOR
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -274,7 +274,7 @@ class BitAnd(_BaseExpr):
 
     _op = aerospike.OP_BIT_AND
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -318,7 +318,7 @@ class BitNot(_BaseExpr):
 
     _op = aerospike.OP_BIT_NOT
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -352,7 +352,7 @@ class BitLeftShift(_BaseExpr):
 
     _op = aerospike.OP_BIT_LSHIFT
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -388,7 +388,7 @@ class BitRightShift(_BaseExpr):
 
     _op = aerospike.OP_BIT_RSHIFT
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -433,7 +433,7 @@ class BitAdd(_BaseExpr):
     _op = aerospike.OP_BIT_ADD
 
     def __init__(
-        self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
+        self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
     ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
@@ -485,7 +485,7 @@ class BitSubtract(_BaseExpr):
     _op = aerospike.OP_BIT_SUBTRACT
 
     def __init__(
-        self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
+        self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
     ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
@@ -529,7 +529,7 @@ class BitSetInt(_BaseExpr):
 
     _op = aerospike.OP_BIT_SET_INT
 
-    def __init__(self, policy: TypePolicy, bit_offset: int, bit_size: int, value: int, bin: "TypeBinName"):
+    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, bin: "TypeBinName"):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start writing.

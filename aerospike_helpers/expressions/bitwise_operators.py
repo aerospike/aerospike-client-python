@@ -42,7 +42,7 @@ class IntAnd(_BaseExpr):
 
     _op = _ExprOp.INT_AND
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: "TypeInteger"):
         """Args:
             `*exprs`: A variable amount of integer expressions or values to be bitwise ANDed.
 
@@ -65,7 +65,7 @@ class IntOr(_BaseExpr):
 
     _op = _ExprOp.INT_OR
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: "TypeInteger"):
         """Args:
             `*exprs`: A variable amount of integer expressions or values to be bitwise ORed.
 
@@ -88,7 +88,7 @@ class IntXOr(_BaseExpr):
 
     _op = _ExprOp.INT_XOR
 
-    def __init__(self, *exprs: TypeInteger):
+    def __init__(self, *exprs: "TypeInteger"):
         """Args:
             `*exprs`: A variable amount of integer expressions or values to be bitwise XORed.
 
@@ -110,7 +110,7 @@ class IntNot(_BaseExpr):
 
     _op = _ExprOp.INT_NOT
 
-    def __init__(self, expr: TypeInteger):
+    def __init__(self, expr: "TypeInteger"):
         """Args:
             `expr`: An integer value or expression to be bitwise negated.
 
@@ -132,7 +132,7 @@ class IntLeftShift(_BaseExpr):
 
     _op = _ExprOp.INT_LSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
             `value`: An integer value or expression to be left shifted.
             `shift`: An integer value or expression for number of bits to left shift `value` by.
@@ -155,7 +155,7 @@ class IntRightShift(_BaseExpr):
 
     _op = _ExprOp.INT_RSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
             `value`: An integer value or expression to be right shifted.
             `shift`: An integer value or expression for number of bits to right shift `value` by.
@@ -178,7 +178,7 @@ class IntArithmeticRightShift(_BaseExpr):
 
     _op = _ExprOp.INT_ARSHIFT
 
-    def __init__(self, value: TypeInteger, shift: TypeInteger):
+    def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
             `value`: An integer value or expression to be right shifted.
             `shift`: An integer value or expression for number of bits to right shift `value` by.
@@ -201,7 +201,7 @@ class IntCount(_BaseExpr):
 
     _op = _ExprOp.INT_COUNT
 
-    def __init__(self, value: TypeInteger):
+    def __init__(self, value: "TypeInteger"):
         """Args:
             `value`: An integer value or expression to have bits counted.
 
@@ -227,7 +227,7 @@ class IntLeftScan(_BaseExpr):
 
     _op = _ExprOp.INT_LSCAN
 
-    def __init__(self, value: TypeInteger, search: TypeBool):
+    def __init__(self, value: "TypeInteger", search: "TypeBool"):
         """Args:
             `value`: An integer value or expression to be scanned.
             `search`: A bool expression or value to scan for.
@@ -255,7 +255,7 @@ class IntRightScan(_BaseExpr):
 
     _op = _ExprOp.INT_RSCAN
 
-    def __init__(self, value: TypeInteger, search: TypeBool):
+    def __init__(self, value: "TypeInteger", search: "TypeBool"):
         """Args:
             `value`: An integer value or expression to be scanned.
             `search`: A bool expression or value to scan for.
