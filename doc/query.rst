@@ -12,30 +12,44 @@ Overview
 Constructing A Query
 --------------------
 
-.. warning:: :meth:`aerospike.Query` should not be called directly to create a :class:`~aerospike.Query` object.
-
 The query object is used for executing queries over a secondary index of a specified set.
-It can be created by calling :meth:`aerospike.Client.query`.
+It can be created by calling :meth:`aerospike.Client.query`. If the set is initialized to :py:obj:`None`,
+then the query will only apply to records without a set.
+
+.. warning:: :meth:`aerospike.Query` should not be called directly to create a :class:`~aerospike.Query` object.
 
 A query without a secondary index filter will apply to all records in the namespace,
 similar to a :class:`~aerospike.Scan`.
 
-Otherwise, the query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
+Secondary Index Filters
+-----------------------
+
+The query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
 to filter out records using their bin values.
 These secondary index filters are applied to the query using :meth:`~aerospike.Query.where`.
-In this case, if the set is initialized to :py:obj:`None`, then the query will only apply to records without a set.
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
     the deprecated `predicate expressions`.
     For more details, read this `guide <https://aerospike.com/docs/develop/learn/queries/secondary-index>`_.
 
-Writing Using Query
--------------------
+Filtering Bins
+--------------
+
+The returned bins can be filtered by using :meth:`~aerospike.Query.select`.
+
+Background Queries
+------------------
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
 See available write operations at :ref:`aerospike_operation_helpers.operations`.
+
+
+Foreground Queries
+------------------
+
+Read operations can also be added in a foreground query using :meth:`~aerospike.Query.add_ops`.
 
 Query Aggregations
 ------------------
@@ -47,13 +61,12 @@ records streaming back from the query.
 Getting Results From Query
 --------------------------
 
-The returned bins can be filtered by using :meth:`~aerospike.Query.select`.
+For performing write operations or applying record UDF's, :meth:`~aerospike.Query.execute_background` must be used.
 
-Finally, the query is invoked using one of these methods:
+Otherwise, the query is invoked using one of these synchronous methods:
 
 - :meth:`~aerospike.Query.foreach`
 - :meth:`~aerospike.Query.results`
-- :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
     `Queries <https://aerospike.com/docs/develop/learn/queries/>`_ and \
@@ -107,12 +120,16 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
-        Set a filter on the record bins resulting from :meth:`results` or \
-        :meth:`foreach`.
+        .. warning:: In the next major client release, calling this method after :meth:`Query.add_ops` was called on the same Query object will raise a :py:exc:`~aerospike.exception.ParamError` exception.
+
+        Set a filter on the record bins resulting from :meth:`results` or :meth:`foreach`.
 
         If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
 
-        If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
+        If a selected bin does not exist in a record, it will not appear in the *bins* portion of that record tuple.
+
+        If this method is called after :meth:`Query.add_ops` was called on the same Query object, the selected bins in
+        this call will be ignored during the query.
 
     .. method:: where(predicate[, ctx])
 
@@ -251,6 +268,8 @@ Assume this boilerplate code is run before all examples below:
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
 
+        This function can also be used to apply a record UDF.
+
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/client/python/data-types/>`_.
@@ -281,11 +300,22 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: add_ops(ops)
 
-        Add a list of write ops to the query.
-        When used with :meth:`Query.execute_background` the query will perform the write ops on any records found.
+        .. warning:: In the next major client release, if this is called after :meth:`~Query.select` was called on the same object, an :exc:`~aerospike.exception.ParamError` will be raised.
+
+        Add a list of operations to the query.
+
+        For background queries, only write operations are allowed.
+        For foreground queries, only read operations are allowed.
+
+        For server versions < 8.1.2, basic read operations are allowed in foreground queries. Otherwise with this
+        server version, using a non-basic read operation will raise a :exc:`~aerospike.exception.ParamError`.
+
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        :param ops: `list` A list of write operations generated by the aerospike_helpers e.g. list_operations, map_operations, etc.
+        If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
+        during the query.
+
+        :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
         .. note::
             Requires server version >= 4.7.0.
