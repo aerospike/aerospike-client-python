@@ -2,6 +2,10 @@ name: 'Run EE Server in a Docker container'
 description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
+outputs:
+  container-network:
+    description: Forwards the container's network name from setup-as-server
+    value: ${{ steps.setup-as-server.outputs.network-name }}
 inputs:
   # All inputs in composite actions are strings
   oidc-provider-name:

@@ -221,6 +221,7 @@ jobs:
     - name: 'Run Aerospike server in Docker container and configure tests accordingly'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
@@ -332,6 +333,7 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
+        CIBW_CONTAINER_ENGINE: "docker;create_args: --network ${{ steps.run-ee-server.outputs.container-network }}"
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
