@@ -9,6 +9,8 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
+from contextlib import nullcontext
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -257,3 +259,13 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+
+@pytest.fixture(scope="function")
+def expect_earlier_than_server_version_to_fail(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)

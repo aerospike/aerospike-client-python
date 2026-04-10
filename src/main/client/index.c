@@ -33,11 +33,12 @@
 #define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
 
 /*
- * Create a complex index on the specified ns/set/bin with the given name and index and data_type. Return PyObject(0) on success
+ * Create an index on the specified ns/set/bin with the given name and index and data_type. Return PyObject(0) on success
  * else return NULL with an error raised.
  */
 // expr is optional and can be NULL.
 // If expr is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
+// If py_bin is NULL, we are indexing a set.
 // This is permissive and allows py_ctx to be None or NULL
 //
 // NOTE: data_type and index_type are integers because some index creation methods i.e index_expr_create
@@ -396,6 +397,30 @@ CLEANUP:
     }
 
     return PyLong_FromLong(0);
+}
+
+PyObject *AerospikeClient_Index_Set_Create(AerospikeClient *self,
+                                           PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_name = NULL;
+    PyObject *py_policy = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"ns", "set", "name", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:index_set_create",
+                                    kwlist, &py_ns, &py_set, &py_name,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, NULL, py_name, AS_INDEX_TYPE_SET,
+        AS_INDEX_DEFAULT, NULL, NULL);
 }
 
 // Deprecated API's
