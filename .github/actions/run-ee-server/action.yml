@@ -98,8 +98,8 @@ runs:
     if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
     run: |
       server_container_network_name=${{ steps.setup-as-server.outputs.network-name }}
-      docker_query="{{ .NetworkSettings.Networks.$server_container_network_name.IPAddress }}"
-      echo SERVER_IP=$(docker container inspect -f "$docker_query" ${{ steps.setup-as-server.outputs.container-names }}) >> $GITHUB_ENV
+      # Go templating doesn't support selecting names with hyphens
+      echo SERVER_IP=$(docker container inspect -f json ${{ steps.setup-as-server.outputs.container-names }} | jq ".[].NetworkSettings.Networks.${server_container_network_name}.IPAddress") >> $GITHUB_ENV
     shell: bash
 
   - name: Invalid input
