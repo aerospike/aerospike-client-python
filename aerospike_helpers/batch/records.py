@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################################################################
 
-from typing import Optional, Union, Any
+from typing import Optional, Any
 
 TypeOps = list[dict]
 TypeBatchPolicyWrite = dict | None
@@ -133,7 +133,7 @@ class Read(BatchRecord):
     def __init__(
         self,
         key: tuple,
-        ops: Union[TypeOps, None],
+        ops: TypeOps | None,
         read_all_bins: bool = False,
         meta: Optional[dict] = None,
         policy: "TypeBatchPolicyRead" = None,
