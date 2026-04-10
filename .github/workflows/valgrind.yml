@@ -1,12 +1,6 @@
 name: Valgrind
 run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
-permissions:
-  contents: read
-  id-token: write
-  statuses: write
-  packages: read
-
 on:
   workflow_dispatch:
     inputs:
@@ -171,10 +165,8 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
-        registry-username: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-        registry-password: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
 

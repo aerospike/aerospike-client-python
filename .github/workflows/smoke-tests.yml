@@ -1,7 +1,12 @@
 name: Smoke tests
 permissions:
   contents: read
-  id-token: write
+
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.10'
+  # pull_request event doesn't support inputs
+  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -33,14 +38,6 @@ on:
         type: string
         default: latest
         required: true
-
-env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.10'
-  # pull_request event doesn't support inputs
-  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
-  REGISTRY_USERNAME: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == secrets.QE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
 
 jobs:
   build:
@@ -127,10 +124,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - run: python3-dbg -m pytest ./new_tests
       working-directory: test
@@ -173,10 +168,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     # -Werror: we need code coverage for code paths where warnings are treated as errors
     # TODO: currently this doesn't seem to work though
@@ -294,7 +287,7 @@ jobs:
         type:
           - sanitizer
           - dont_validate_keys
-          # - lowest_supported_server_version
+          - lowest_supported_server_version
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
@@ -340,10 +333,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
@@ -399,12 +390,11 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - if: ${{ env.REGISTRY_USERNAME != '' && env.REGISTRY_PASSWORD != '' }}
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_PASSWORD }}
+        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
@@ -418,14 +408,8 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -svv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
-
-    - name: Show logs if failed
-      if: ${{ failure() }}
-      run: |
-        docker container logs aerospike
-        cat ./configs/aerospike.conf
 
   test-ee:
     runs-on: ubuntu-22.04
@@ -459,10 +443,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run tests
       # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
@@ -532,22 +514,19 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    - if: ${{ env.REGISTRY_USERNAME != '' && env.REGISTRY_PASSWORD != '' }}
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_PASSWORD }}
+        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ startsWith(matrix.test-script-args, 'true') }}
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         # The user agent can also send the client's username if app-id is not set by the client
         env-vars: 'SECURITY=1'
 
