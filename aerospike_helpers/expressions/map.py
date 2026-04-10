@@ -1499,10 +1499,10 @@ class MapGetKeys(_BaseExpr):
 
     def __init__(
         self,
-        map_value
+        map_value: TypeBinName
     ):
         """Args:
-            map_value (TypeBinName): expression that returns a map, or bin name containing a map.
+            map_value: expression that returns a map, or bin name containing a map.
 
         :return: Expression.
         """
