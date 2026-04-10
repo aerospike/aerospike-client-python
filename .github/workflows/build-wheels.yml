@@ -340,10 +340,9 @@ jobs:
     #   uses: mxschmitt/action-tmate@v3
 
     # For debugging
-    - run: |
-        # Checks that server started up properly
-        docker logs aerospike
-      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+    # Checks that server started up properly
+    - if: ${{ !cancelled() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      run: docker logs ${{ steps.run-ee-server.outputs.container-name }}
       shell: bash
 
     - name: Upload wheels to GitHub

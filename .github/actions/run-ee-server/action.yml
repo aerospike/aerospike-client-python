@@ -6,6 +6,9 @@ outputs:
   container-network:
     description: Forwards the container's network name from setup-as-server
     value: ${{ steps.setup-as-server.outputs.network-name }}
+  container-name:
+    description: Forwards the container name from setup-as-server
+    value: ${{ steps.setup-as-server.outputs.container-names }}
 inputs:
   # All inputs in composite actions are strings
   oidc-provider-name:
