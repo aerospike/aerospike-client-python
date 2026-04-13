@@ -217,6 +217,8 @@ aerospike\_helpers\.expressions\.bitwise_operators module
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
+.. autoattribute:: aerospike_helpers.expressions.resources.TypeExpression
+
 .. autoclass:: aerospike_helpers.expressions.resources.ResultType
   :members:
   :undoc-members:
