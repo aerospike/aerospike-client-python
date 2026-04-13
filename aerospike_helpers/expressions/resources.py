@@ -143,6 +143,7 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+
 #: Compiled expression that can be passed to the Python client API.
 TypeExpression = List[TypeCompiledOp]
 
