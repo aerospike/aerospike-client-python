@@ -50,9 +50,9 @@ class BatchRecord:
             to the server.
     """
     key: tuple
-    record: tuple
+    record: tuple | None
     result: int
-    in_doubt: True
+    in_doubt: bool
 
     def __init__(self, key: tuple) -> None:
         self.key = key
