@@ -725,7 +725,14 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
             }
             break;
         }
-        as_map_set(*map, key, val);
+        int retval = as_map_set(*map, key, val);
+        if (retval != 0) {
+            // TODO: message not specific enough
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to convert Python dictionary to a C client as_map.");
+            break;
+        }
     }
 
     if (err->code != AEROSPIKE_OK) {
