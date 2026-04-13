@@ -47,7 +47,7 @@ class Add(_BaseExpr):
 
     _op = _ExprOp.ADD
 
-    def __init__(self, *args: "TypeNumber"):
+    def __init__(self, *args: TypeNumber):
         """Args:
             `*args`: Variable amount of float or integer expressions or values to be added together.
 
