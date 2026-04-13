@@ -172,6 +172,9 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
+        """
+        Returns an expression object that can be passed to the Python client API.
+        """
         expression = [self._get_op()]
         work = chain(self._children)
 
