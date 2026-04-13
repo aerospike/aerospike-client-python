@@ -142,6 +142,7 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
     Args:
         bin_name: Name of bin where this select operation is performed against.
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+            See :ref:`path_expressions_contexts` for possible contexts.
         flags: See :ref:`exp_path_select_flags` for the set of valid flags for this function.
 
     Returns:
@@ -161,6 +162,7 @@ def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     Args:
         bin_name: Name of bin that this modify operation is performed against
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+            See :ref:`path_expressions_contexts` for possible contexts.
         expr: compiled modifying expression.
         flags: See :ref:`exp_path_modify_flags` for the set of valid flags for this function.
 

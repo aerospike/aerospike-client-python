@@ -1137,7 +1137,7 @@ class ResultRemove(_BaseExpr):
     """
     Indicates entry deletion for :py:class:`ModifyByPath`.
     """
-    _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
+    _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
         warnings.warn(
@@ -1161,7 +1161,8 @@ class SelectByPath(_BaseExpr):
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Return type specifier.
             flags: See :ref:`exp_path_select_flags` for possible values.
             bin: Bin expression to which this expression applies.
@@ -1188,7 +1189,8 @@ class ModifyByPath(_BaseExpr):
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Value type specifier.
             mod_exp: Compiled expression to apply.
             flags: See :ref:`exp_path_modify_flags` for possible values.
