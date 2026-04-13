@@ -208,7 +208,7 @@ Serialization
     Register a user-defined serializer available to all `Client`
     instances.
 
-    :param typing.Callable callback: the function to invoke for serialization.
+    :param Callable callback: the function to invoke for serialization.
 
 
     .. seealso:: To use this function with :meth:`Client.put`, \
