@@ -119,7 +119,6 @@ import aerospike
 # NameError when using Any
 from typing import Any
 
-
 def index_type_string(index_type):
     """
     Converts index_type enum value to string.

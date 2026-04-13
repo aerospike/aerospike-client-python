@@ -2,9 +2,9 @@
 Resources used by all expressions.
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any, TypeAlias
+from typing import List, Optional, Tuple, Union, Dict, Any
 
 
 class _Keys:
@@ -143,7 +143,9 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-TypeExpression: TypeAlias = List[TypeCompiledOp]
+
+#: Compiled expression that can be passed to the Python client API.
+TypeExpression = List[TypeCompiledOp]
 
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
@@ -172,6 +174,9 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
+        """
+        Returns an expression object that can be passed to the Python client API.
+        """
         expression = [self._get_op()]
         work = chain(self._children)
 
