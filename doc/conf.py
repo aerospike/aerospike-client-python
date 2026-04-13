@@ -136,7 +136,7 @@ autodoc_type_aliases = {
 }
 nitpicky = True
 nitpick_ignore_regex = {
-    ("*", "Type*")
+    ("py:class", "Type*")
 }
 
 # -- Options for HTML output ---------------------------------------------------
