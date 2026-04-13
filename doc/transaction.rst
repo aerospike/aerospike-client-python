@@ -17,9 +17,9 @@ Methods
     For both parameters, an unsigned 32-bit integer must be passed and the minimum value should be 16.
 
     :param reads_capacity: expected number of record reads in the transaction. Defaults to ``128``.
-    :type reads_capacity: int, optional
+    :type reads_capacity: typing.Optional[int]
     :param writes_capacity: expected number of record writes in the transaction. Defaults to ``128``.
-    :type writes_capacity: int, optional
+    :type writes_capacity: typing.Optional[int]
 
     .. py:attribute:: id
 

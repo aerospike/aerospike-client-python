@@ -134,6 +134,7 @@ autodoc_type_aliases = {
     "TypeFixedEle": "TypeFixedEle",
     "TypeFixed": "TypeFixed",
 }
+nitpicky = True
 
 # -- Options for HTML output ---------------------------------------------------
 

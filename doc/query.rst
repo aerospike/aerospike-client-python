@@ -43,7 +43,7 @@ Background Queries
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
-See available write operations at :mod:`aerospike_helpers.operations`.
+See available write operations at :ref:`aerospike_operation_helpers.operations`.
 
 
 Foreground Queries
@@ -151,10 +151,11 @@ Assume this boilerplate code is run before all examples below:
 
         You can only assign at most one predicate to the query.
 
-        :param aerospike_helpers.expressions.resources.TypeExpression | str expr:
+        :param expr:
             Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
             Alternatively, you can pass in a base64 encoded string of an expression returned from asinfo when printing
             a list of secondary indexes based on expressions in the server.
+
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: where_with_index_name(index_name, predicate)
@@ -165,7 +166,7 @@ Assume this boilerplate code is run before all examples below:
 
         You can only assign at most one predicate to the query.
 
-        :param index_name str: The name of the index.
+        :param str index_name: The name of the index.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
@@ -213,7 +214,7 @@ Assume this boilerplate code is run before all examples below:
         The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
         as a normal callback.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
