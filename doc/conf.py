@@ -135,6 +135,9 @@ autodoc_type_aliases = {
     "TypeFixed": "TypeFixed",
 }
 nitpicky = True
+nitpick_ignore_regex = {
+    ("*", "Type*")
+}
 
 # -- Options for HTML output ---------------------------------------------------
 
