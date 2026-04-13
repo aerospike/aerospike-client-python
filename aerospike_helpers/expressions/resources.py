@@ -143,7 +143,7 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-TypeExpression = List[TypeCompiledOp]
+_TypeExpression = List[TypeCompiledOp]
 
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
 TypeChildren = Tuple[TypeChild, ...]
@@ -171,7 +171,7 @@ class _BaseExpr(_AtomExpr):
             0,
         )
 
-    def compile(self) -> TypeExpression:
+    def compile(self) -> _TypeExpression:
         """
         Returns an expression object that can be passed to the Python client API.
         """
