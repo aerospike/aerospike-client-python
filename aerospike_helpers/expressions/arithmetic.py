@@ -390,7 +390,7 @@ class ToFloat(_BaseExpr):
 class Min(_BaseExpr):
     """
     Create expression that returns the minimum value in a variable number of expressions.
-        All arguments must be the same type (integer or float).
+    All arguments must be the same type (integer or float).
 
     Requires server version 5.6.0+.
     """
@@ -400,7 +400,7 @@ class Min(_BaseExpr):
     def __init__(self, *args: "TypeNumber"):
         """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
-            minimum value.
+                minimum value.
 
         :return: (integer or float value).
 
