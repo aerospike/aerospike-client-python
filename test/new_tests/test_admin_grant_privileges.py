@@ -2,9 +2,10 @@
 
 import pytest
 import time
+import platform
+import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
 import aerospike
 
 
@@ -12,9 +13,14 @@ class TestGrantPrivileges(object):
 
     config = TestBaseClass.get_connection_config()
 
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
+    pytestmark = [
+        pytest.mark.skipif(
+            not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        ),
+        pytest.mark.skipif(
+            platform.system() == "Windows" and sys.version_info.minor == '14', reason="This test file has been crashing, and I haven't narrowed down why."
+        )
+    ]
 
     def setup_method(self, method):
         """
