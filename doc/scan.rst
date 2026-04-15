@@ -18,8 +18,8 @@ The Scan object is used to return all the records in a specified set (which \
 can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
 
-The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
-bins returned can be filtered using :meth:`select`.
+The scan is invoked using :meth:`~aerospike.Scan.foreach`, :meth:`~aerospike.Scan.results`, or
+:meth:`~aerospike.Scan.execute_background`. The bins returned can be filtered using :meth:`~aerospike.Scan.select`.
 
 .. seealso::
     `Manage queries <https://aerospike.com/docs/database/manage/cluster/queries/>`_.
@@ -29,7 +29,9 @@ Fields
 
 .. class:: Scan
 
-    ttl (:class:`int`)
+    .. py:attribute:: ttl
+        :type: int
+
         The time-to-live (expiration) of the record in seconds. Note that ttl
         is only used on background scan writes.
 
@@ -182,7 +184,7 @@ Methods
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :param str nodename: optional Node ID of node used to limit the scan to a single node.
