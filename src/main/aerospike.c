@@ -447,9 +447,11 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_INDEX", .value.integer = AS_CDT_CTX_MAP_INDEX},
     {"CDT_CTX_MAP_RANK", .value.integer = AS_CDT_CTX_MAP_RANK},
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_MAP_KEYS_IN),
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
     EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_AND),
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
@@ -585,7 +587,11 @@ static struct module_constant_name_to_value module_constants[] = {
     // so we define unique ones in the Python client code
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
-    EXPOSE_MACRO(_AS_EXP_CODE_RESULT_REMOVE),
+
+    EXPOSE_MACRO(_AS_EXP_CODE_REMOVE_RESULT),
+    EXPOSE_MACRO(_AS_EXP_CODE_IN_LIST),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_KEYS),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_VALUES),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
@@ -661,7 +667,9 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "batch_parent_write", "info", "admin", "txn_verify",
                          "txn_roll", "total_timeout", "auth_mode",
                          "login_timeout_ms", "key", "exists", "max_retries",
-                         "replica", "commit_level", "metrics", NULL)
+                         "replica", "commit_level", "metrics", "read_mode_ap",
+                         "max_threads", "thread_pool_size", "socket_timeout",
+                         NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",

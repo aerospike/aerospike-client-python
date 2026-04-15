@@ -68,8 +68,8 @@ class TestExists:
     def test_neg_exists_with_record_expiry(self, put_data):
         key = ("test", "demo", 30)
         rec = {"name": "John"}
-        meta = {"gen": 3, "ttl": 1}
-        put_data(self.as_connection, key, rec, meta)
+        meta = {"gen": 3}
+        put_data(self.as_connection, key, rec, meta, {"ttl": 1})
         time.sleep(2)
 
         key, meta = self.as_connection.exists(key)
