@@ -486,6 +486,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"index_map_values_create",
      (PyCFunction)AerospikeClient_Index_Map_Values_Create,
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
+    {"index_set_create", (PyCFunction)AerospikeClient_Index_Set_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
 
     {"index_geo2dsphere_create",
      (PyCFunction)AerospikeClient_Index_2dsphere_Create,
