@@ -15,7 +15,7 @@ on:
 
 jobs:
   tag-new-commit-with-dev-number:
-    uses: ./.github/workflows/bump-version.yml
+    uses: ./.github/workflows/bump-dev-number-and-tag-commit.yml
     with:
       change: 'bump-dev-num'
       dry-run: ${{ inputs.dry-run }}

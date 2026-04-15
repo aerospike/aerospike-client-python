@@ -12,7 +12,7 @@ jobs:
 
   promote-rc-build-to-release:
     needs: ff-master-to-stage
-    uses: ./.github/workflows/bump-version.yml
+    uses: ./.github/workflows/bump-dev-number-and-tag-commit.yml
     with:
       change: promote-rc-build-to-release
       ref: ${{ vars.MASTER_BRANCH_NAME }}

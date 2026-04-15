@@ -11,8 +11,7 @@ on:
         required: true
         options:
         - bump-dev-num
-        - promote-dev-build-to-rc
-        - promote-rc-build-to-release
+        - promote-dev-version-to-release-version
       dry-run:
         required: false
         default: false
