@@ -24,7 +24,7 @@ The expressions base module provide expressions for:
 
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from typing import Union, Any, TYPE_CHECKING
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr

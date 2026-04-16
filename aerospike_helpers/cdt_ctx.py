@@ -113,6 +113,7 @@ These :py:class:`_cdt_ctx` methods are meant to be used with path expressions:
 - :py:meth:`cdt_ctx_map_keys_in`
 - :py:meth:`cdt_ctx_and_filter`
 """
+from __future__ import annotations
 import aerospike
 
 # Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
