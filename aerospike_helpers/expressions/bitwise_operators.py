@@ -30,8 +30,7 @@ from aerospike_helpers.expressions.resources import _ExprOp
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    TypeInteger = _BaseExpr | int
-    TypeBool = _BaseExpr | bool
+    from .resources import TypeInteger, TypeBool
 
 
 class IntAnd(_BaseExpr):

@@ -34,10 +34,9 @@ from aerospike_helpers.expressions.resources import _Keys
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from aerospike_helpers.cdt_ctx import _cdt_ctx
     from typing import Any
-    TypeComparisonArg = _BaseExpr | Any
-    TypeGeo = _BaseExpr | aerospike.GeoJSON
+    from aerospike_helpers.cdt_ctx import _cdt_ctx
+    from .resources import TypeComparisonArg, TypeGeo
 
 import warnings
 

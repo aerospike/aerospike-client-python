@@ -27,9 +27,7 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    TypeNumber = _BaseExpr | int | float
-    TypeFloat = _BaseExpr | float
-    TypeInteger = _BaseExpr | int
+    from .resources import TypeNumber, TypeFloat, TypeInteger
 
 
 ########################

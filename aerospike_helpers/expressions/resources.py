@@ -5,6 +5,7 @@ Resources used by all expressions.
 from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
+import aerospike
 
 
 class _Keys:
@@ -275,6 +276,28 @@ if TYPE_CHECKING:
     from typing import Any
     TypePolicy = dict[str, Any], None
     TypeBinName = _BaseExpr | str
+
+    # Type aliases shared across expression modules
+    TypeValue = _BaseExpr | Any
+    TypeKey = _BaseExpr | Any
+    TypeListValue = _BaseExpr | List[Any]
+    TypeKeyList = _BaseExpr | List[Any]
+    TypeIndex = _BaseExpr | int | aerospike.CDTInfinite
+    TypeRank = _BaseExpr | int | aerospike.CDTInfinite
+    TypeCount = _BaseExpr | int | aerospike.CDTInfinite
+
+    # Arithmetic/bitwise type aliases
+    TypeNumber = _BaseExpr | int | float
+    TypeFloat = _BaseExpr | float
+    TypeInteger = _BaseExpr | int
+    TypeBool = _BaseExpr | bool
+
+    # Bitwise-specific type aliases
+    TypeBitValue = bytes | bytearray
+
+    # Comparison/geo type aliases
+    TypeComparisonArg = _BaseExpr | Any
+    TypeGeo = _BaseExpr | aerospike.GeoJSON
 
 
 def _create_operator_expression(left_children: "TypeChildren", right_children: "TypeChildren", op_type: int):

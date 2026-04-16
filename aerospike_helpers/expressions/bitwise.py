@@ -41,8 +41,7 @@ from aerospike_helpers.expressions.base import BlobBin
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    TypeBitValue = bytes | bytearray
-    from .resources import TypePolicy, TypeBinName
+    from .resources import TypePolicy, TypeBinName, TypeBitValue
 
 
 class BitResize(_BaseExpr):

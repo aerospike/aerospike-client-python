@@ -30,10 +30,7 @@ from aerospike_helpers.expressions.base import HLLBin
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import List, Any
-    TypeListValue = _BaseExpr | List[Any]
-    TypeValue = _BaseExpr | Any
-    from .resources import TypePolicy, TypeBinName
+    from .resources import TypePolicy, TypeBinName, TypeListValue, TypeValue
 
 
 class HLLInit(_BaseExpr):
