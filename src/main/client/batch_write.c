@@ -314,8 +314,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP_ON_ERROR;
                 }
 
-                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
-                           ops, &operation, &return_type) != AEROSPIKE_OK) {
+                if (as_operations_add_from_pyobject(
+                        self, err, py_op, unicodeStrVector, &static_pool, ops,
+                        &operation, &return_type) != AEROSPIKE_OK) {
                     goto CLEANUP_ON_ERROR;
                 }
             }
