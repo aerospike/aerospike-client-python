@@ -611,6 +611,7 @@ def map_remove_by_rank_range(
 
     return op_dict
 
+
 def map_get_by_key(bin_name: str, key, return_type: int, ctx: Optional[list] = None):
     """Creates a map_get_by_key operation.
 
@@ -677,7 +678,13 @@ def map_get_by_key_range(
     return op_dict
 
 
-def map_get_by_key_list(bin_name: str, key_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None):
+def map_get_by_key_list(
+    bin_name: str,
+    key_list: list,
+    return_type: int,
+    inverted: bool = False,
+    ctx: Optional[list] = None
+):
     """Creates a map_get_by_key_list operation.
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
@@ -783,7 +790,13 @@ def map_get_by_value_range(
     return op_dict
 
 
-def map_get_by_value_list(bin_name: str, key_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None):
+def map_get_by_value_list(
+    bin_name: str,
+    key_list: list,
+    return_type: int,
+    inverted: bool = False,
+    ctx: Optional[list] = None
+):
     """Creates a map_get_by_value_list operation.
 
     The operation returns entries whose values are specified in the value_list.

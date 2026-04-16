@@ -127,9 +127,6 @@ autodoc_type_aliases = {
     "TypeFixed": "TypeFixed",
 }
 nitpicky = True
-nitpick_ignore_regex = {
-    ("py:class", "Type.*")
-}
 
 # -- Options for HTML output ---------------------------------------------------
 
