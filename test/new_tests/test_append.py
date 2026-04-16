@@ -329,6 +329,7 @@ class TestAppend(object):
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
+        meta = {"gen": gen + 5}
         with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.append(key, "name", "str", meta, policy)
         assert excinfo.value.code == 3
