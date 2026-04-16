@@ -479,7 +479,7 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] =
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        index (int): The index of the entry to remove.
+        index (int): The index of the entry to remove. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -515,7 +515,7 @@ def map_remove_by_index_range(
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        index_start (int): The index of the first entry to remove.
+        index_start (int): The index of the first entry to remove. (64-bit signed integer)
         remove_amt (int): The number of entries to remove from the map.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
@@ -823,7 +823,7 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = No
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        index (int): The index of the entry to return.
+        index (int): The index of the entry to return. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -854,7 +854,7 @@ def map_get_by_index_range(
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        index_start (int): The index of the first entry to return.
+        index_start (int): The index of the first entry to return. (64-bit signed integer)
         get_amt (int): The number of entries to return from the map.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
