@@ -152,6 +152,8 @@ if TYPE_CHECKING:
     TypeChildren = Tuple[TypeChild, ...]
 
     TypeAny = _AtomExpr | Any
+    from aerospike_helpers import cdt_ctx
+    TypeCTX = None | List[cdt_ctx._cdt_ctx]
 
 
 class _BaseExpr(_AtomExpr):
