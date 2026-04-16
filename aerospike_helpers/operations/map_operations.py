@@ -434,8 +434,8 @@ def map_remove_by_value_range(
     bin_name: str,
     value_start,
     value_end,
-    return_type,
-    inverted=False,
+    return_type: int,
+    inverted: bool = False,
     ctx: Optional[list] = None
 ):
     """Creates a map_remove_by_value_range operation.
@@ -444,14 +444,14 @@ def map_remove_by_value_range(
     value_end(exclusive) from the map
 
     Args:
-        bin_name (str): The name of the bin containing the map.
+        bin_name: The name of the bin containing the map.
         value_start: The start of the range of values to be removed. (Inclusive)
         value_end: The end of the range of values to be removed. (Exclusive)
-        return_type (int): Value specifying what should be returned from the operation.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, values outside of the specified range will be removed, and
+        inverted: If True, values outside of the specified range will be removed, and
             values inside of the range will be kept. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -472,17 +472,17 @@ def map_remove_by_value_range(
     return op_dict
 
 
-def map_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
+def map_remove_by_index(bin_name: str, index: int, return_type: int, ctx: Optional[list] = None):
     """Creates a map_remove_by_index operation.
 
     The operation removes the entry at index from the map.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        index (int): The index of the entry to remove.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        index: The index of the entry to remove.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -503,10 +503,10 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] =
 
 def map_remove_by_index_range(
     bin_name: str,
-    index_start,
-    remove_amt,
-    return_type,
-    inverted=False,
+    index_start: int,
+    remove_amt: int,
+    return_type: int,
+    inverted: bool = False,
     ctx: Optional[list] = None
 ):
     """Creates a map_remove_by_index_range operation.
@@ -514,14 +514,14 @@ def map_remove_by_index_range(
     The operation removes remove_amt entries starting at index_start from the map.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        index_start (int): The index of the first entry to remove.
-        remove_amt (int): The number of entries to remove from the map.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        index_start: The index of the first entry to remove.
+        remove_amt: The number of entries to remove from the map.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If true, entries in the specified index range should be kept, and all other
+        inverted: If true, entries in the specified index range should be kept, and all other
             entries removed. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -573,10 +573,10 @@ def map_remove_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = N
 
 def map_remove_by_rank_range(
     bin_name: str,
-    rank_start,
-    remove_amt,
-    return_type,
-    inverted=False,
+    rank_start: int,
+    remove_amt: int,
+    return_type: int,
+    inverted: bool = False,
     ctx: Optional[list] = None
 ):
     """Creates a map_remove_by_rank_range operation.
@@ -584,14 +584,14 @@ def map_remove_by_rank_range(
     The operation removes `remove_amt` items beginning with the item with the specified rank from the map.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        rank_start (int): The rank of the entry to remove.
-        remove_amt (int): The number of entries to remove.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        rank_start: The rank of the entry to remove.
+        remove_amt: The number of entries to remove.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, items with ranks inside the specified range should be kept,
+        inverted: If True, items with ranks inside the specified range should be kept,
             and all other entries removed. Default: False.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -611,18 +611,17 @@ def map_remove_by_rank_range(
 
     return op_dict
 
-
-def map_get_by_key(bin_name: str, key, return_type, ctx: Optional[list] = None):
+def map_get_by_key(bin_name: str, key, return_type: int, ctx: Optional[list] = None):
     """Creates a map_get_by_key operation.
 
     The operation returns an item, specified by the key from the map stored in the specified bin.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
+        bin_name: The name of the bin containing the map.
         key: The key of the item to be returned from the map
-        return_type (int): Value specifying what should be returned from the operation.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -640,8 +639,8 @@ def map_get_by_key_range(
     bin_name: str,
     key_range_start,
     key_range_end,
-    return_type,
-    inverted=False,
+    return_type: int,
+    inverted: bool = False,
     ctx: Optional[list] = None
 ):
     """Creates a map_get_by_key_range operation.
@@ -650,14 +649,14 @@ def map_get_by_key_range(
     key_range_end(exclusive) from the map
 
     Args:
-        bin_name (str): The name of the bin containing the map.
+        bin_name: The name of the bin containing the map.
         key_range_start: The start of the range of keys to be returned. (Inclusive)
         key_range_end: The end of the range of keys to be returned. (Exclusive)
-        return_type (int): Value specifying what should be returned from the operation.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, values outside of the specified range will be returned, and
+        inverted: If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -678,19 +677,19 @@ def map_get_by_key_range(
     return op_dict
 
 
-def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: Optional[list] = None):
+def map_get_by_key_list(bin_name: str, key_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None):
     """Creates a map_get_by_key_list operation.
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        key_list (list): A list of keys to be returned from the map.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        key_list: A list of keys to be returned from the map.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If true, keys with values not specified in the key_list will be returned,
+        inverted: If true, keys with values not specified in the key_list will be returned,
             and those keys specified in the key_list will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -710,19 +709,19 @@ def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ct
     return op_dict
 
 
-def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
+def map_get_by_value(bin_name: str, value, return_type: int, inverted: bool = False, ctx: Optional[list] = None):
     """Creates a map_get_by_value operation.
 
     The operation returns entries whose value matches the specified value.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
+        bin_name: The name of the bin containing the map.
         value: Entries with a value matching this argument will be returned from the map.
-        return_type (int): Value specifying what should be returned from the operation.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, entries with a value different than the specified value will be returned.
+        inverted: If True, entries with a value different than the specified value will be returned.
             Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -746,8 +745,8 @@ def map_get_by_value_range(
     bin_name: str,
     value_start,
     value_end,
-    return_type,
-    inverted=False,
+    return_type: int,
+    inverted: bool = False,
     ctx: Optional[list] = None
 ):
     """Creates a map_get_by_value_range operation.
@@ -756,14 +755,14 @@ def map_get_by_value_range(
     value_end(exclusive) from the map
 
     Args:
-        bin_name (str): The name of the bin containing the map.
+        bin_name: The name of the bin containing the map.
         value_start: The start of the range of values to be returned. (Inclusive)
         value_end: The end of the range of values to be returned. (Exclusive)
-        return_type (int): Value specifying what should be returned from the operation.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, values outside of the specified range will be returned, and
+        inverted: If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -784,19 +783,19 @@ def map_get_by_value_range(
     return op_dict
 
 
-def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: Optional[list] = None):
+def map_get_by_value_list(bin_name: str, key_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None):
     """Creates a map_get_by_value_list operation.
 
     The operation returns entries whose values are specified in the value_list.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        key_list (list): Entries with a value contained in this list will be returned from the map.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        key_list: Entries with a value contained in this list will be returned from the map.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
+        inverted: If True, entries with a value contained in value_list will be ignored, and all others
             will be returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -816,17 +815,17 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
     return op_dict
 
 
-def map_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
+def map_get_by_index(bin_name: str, index: int, return_type: int, ctx: Optional[list] = None):
     """Creates a map_get_by_index operation.
 
     The operation returns the entry at index from the map.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        index (int): The index of the entry to return.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        index: The index of the entry to return.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -842,9 +841,9 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = No
 
 def map_get_by_index_range(
     bin_name: str,
-    index_start,
-    get_amt,
-    return_type,
+    index_start: int,
+    get_amt: int,
+    return_type: int,
     inverted=False,
     ctx: Optional[list] = None
 ):
@@ -853,14 +852,14 @@ def map_get_by_index_range(
     The operation returns get_amt entries starting at index_start from the map.
 
     Args:
-        bin_name (str): The name of the bin containing the map.
-        index_start (int): The index of the first entry to return.
-        get_amt (int): The number of entries to return from the map.
-        return_type (int): Value specifying what should be returned from the operation.
+        bin_name: The name of the bin containing the map.
+        index_start: The index of the first entry to return.
+        get_amt: The number of entries to return from the map.
+        return_type: Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        inverted (bool): If true, entries in the specified index range should be ignored, and all other
+        inverted: If true, entries in the specified index range should be ignored, and all other
             entries returned. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+        ctx: An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
