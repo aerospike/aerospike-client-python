@@ -25,14 +25,15 @@ The expressions base module provide expressions for:
 """
 
 # from __future__ import annotations
-from typing import Union, Any
+from typing import Union, Any, TYPE_CHECKING
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
-from aerospike_helpers.cdt_ctx import _cdt_ctx
+if TYPE_CHECKING:
+    from aerospike_helpers.cdt_ctx import _cdt_ctx
 import warnings
 
 TypeComparisonArg = Union[_BaseExpr, Any]
