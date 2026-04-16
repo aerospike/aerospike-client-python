@@ -20,7 +20,6 @@ Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_
 """
 
 # from __future__ import annotations
-from typing import List, Union, Dict, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.base import HLLBin
@@ -29,10 +28,13 @@ from aerospike_helpers.expressions.base import HLLBin
 # HLL Modify Expressions
 ########################
 
-TypeBinName = Union[_BaseExpr, str]
-TypeListValue = Union[_BaseExpr, List[Any]]
-TypeValue = Union[_BaseExpr, Any]
-TypePolicy = Union[Dict[str, Any], None]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import List, Union, Dict, Any
+    TypeBinName = _BaseExpr | str
+    TypeListValue = Union[_BaseExpr, List[Any]]
+    TypeValue = Union[_BaseExpr, Any]
+    TypePolicy = Union[Dict[str, Any], None]
 
 
 class HLLInit(_BaseExpr):

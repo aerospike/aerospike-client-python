@@ -19,7 +19,6 @@ Bitwise operator expressions provide support for bitwise operators like `&` and 
 """
 
 # from __future__ import annotations
-from typing import Union
 
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
@@ -29,8 +28,10 @@ from aerospike_helpers.expressions.resources import _ExprOp
 # Bitwise Operator Expressions
 ##############################
 
-TypeInteger = Union[_BaseExpr, int]
-TypeBool = Union[_BaseExpr, bool]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    TypeInteger = _BaseExpr | int
+    TypeBool = _BaseExpr | bool
 
 
 class IntAnd(_BaseExpr):

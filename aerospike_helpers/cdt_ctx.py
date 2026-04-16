@@ -116,9 +116,8 @@ These :py:class:`_cdt_ctx` methods are meant to be used with path expressions:
 from __future__ import annotations
 import aerospike
 
-# Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
-# NameError when using Any
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Any
     from aerospike_helpers.expressions.resources import TypeExpression

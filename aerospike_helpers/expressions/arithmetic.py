@@ -19,15 +19,17 @@ Arithmetic expressions provide arithmetic operator support for Aerospike express
 """
 
 # from __future__ import annotations
-from typing import Union
 
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 
-TypeNumber = _BaseExpr | int | float
-TypeFloat = Union[_BaseExpr, float]
-TypeInteger = Union[_BaseExpr, int]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    TypeNumber = _BaseExpr | int | float
+    TypeFloat = _BaseExpr | float
+    TypeInteger = _BaseExpr | int
 
 
 ########################

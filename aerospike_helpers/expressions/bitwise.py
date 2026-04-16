@@ -28,7 +28,6 @@ Example::
 """
 
 # from __future__ import annotations
-from typing import Union, Dict, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
@@ -40,9 +39,12 @@ from aerospike_helpers.expressions.base import BlobBin
 # Bit Modify Expressions
 ########################
 
-TypeBitValue = Union[bytes, bytearray]
-TypeBinName = Union[_BaseExpr, str]
-TypePolicy = Union[Dict[str, Any], None]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    TypeBitValue = bytes | bytearray
+    TypeBinName = _BaseExpr | str
+    from typing import Any
+    TypePolicy = dict[str, Any], None
 
 
 class BitResize(_BaseExpr):

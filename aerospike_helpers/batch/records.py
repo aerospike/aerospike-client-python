@@ -14,15 +14,18 @@
 # limitations under the License.
 ##########################################################################
 
-from typing import Optional, Any
+from typing import TYPE_CHECKING
 
-TypeOps = list[dict]
-TypeBatchPolicyWrite = dict | None
-TypeBatchPolicyRemove = dict | None
-TypeBatchPolicyApply = dict | None
-TypeBatchPolicyRead = dict | None
-TypeRecord = tuple | None
-TypeUDFArgs = list[Any]
+if TYPE_CHECKING:
+    from typing import Optional, Any
+
+    TypeOps = list[dict]
+    TypeBatchPolicyWrite = dict | None
+    TypeBatchPolicyRemove = dict | None
+    TypeBatchPolicyApply = dict | None
+    TypeBatchPolicyRead = dict | None
+    TypeRecord = tuple | None
+    TypeUDFArgs = list[Any]
 
 
 class _Types:

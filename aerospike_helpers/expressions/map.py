@@ -33,16 +33,18 @@ from aerospike_helpers.expressions.base import MapBin
 # Map Modify Expressions
 ########################
 
-TypeKey = Union[_BaseExpr, Any]
-TypeKeyList = Union[_BaseExpr, List[Any]]
-TypeBinName = Union[_BaseExpr, str]
-TypeListValue = Union[_BaseExpr, List[Any]]
-TypeIndex = Union[_BaseExpr, int, aerospike.CDTInfinite]
-TypeCTX = Union[None, List[cdt_ctx._cdt_ctx]]
-TypeRank = Union[_BaseExpr, int, aerospike.CDTInfinite]
-TypeCount = Union[_BaseExpr, int, aerospike.CDTInfinite]
-TypeValue = Union[_BaseExpr, Any]
-TypePolicy = Union[Dict[str, Any], None]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    TypeKey = Union[_BaseExpr, Any]
+    TypeKeyList = Union[_BaseExpr, List[Any]]
+    TypeBinName = Union[_BaseExpr, str]
+    TypeListValue = Union[_BaseExpr, List[Any]]
+    TypeIndex = Union[_BaseExpr, int, aerospike.CDTInfinite]
+    TypeCTX = Union[None, List[cdt_ctx._cdt_ctx]]
+    TypeRank = Union[_BaseExpr, int, aerospike.CDTInfinite]
+    TypeCount = Union[_BaseExpr, int, aerospike.CDTInfinite]
+    TypeValue = Union[_BaseExpr, Any]
+    TypePolicy = Union[Dict[str, Any], None]
 
 
 class MapPut(_BaseExpr):

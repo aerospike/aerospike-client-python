@@ -25,19 +25,21 @@ The expressions base module provide expressions for:
 """
 
 from __future__ import annotations
-from typing import Union, Any, TYPE_CHECKING
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
+
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from aerospike_helpers.cdt_ctx import _cdt_ctx
-import warnings
+    from typing import Any
+    TypeComparisonArg = _BaseExpr | Any
+    TypeGeo = _BaseExpr | aerospike.GeoJSON
 
-TypeComparisonArg = Union[_BaseExpr, Any]
-TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
+import warnings
 
 
 ###################
