@@ -100,6 +100,9 @@ pygments_style = "sphinx"
 
 # Alias/type hint configuration.
 autodoc_typehints = "none"
+autodoc_type_aliases = {
+    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
+}
 nitpicky = True
 
 # -- Options for HTML output ---------------------------------------------------
