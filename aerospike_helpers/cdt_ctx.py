@@ -196,9 +196,6 @@ def cdt_ctx_list_rank(rank: int) -> _cdt_ctx:
 
     Args:
         rank: The rank to look for in the list.
-
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_RANK, value=rank)
 
@@ -210,8 +207,6 @@ def cdt_ctx_list_value(value: Any) -> _cdt_ctx:
     Args:
         value: The value to look for in the list.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_VALUE, value=value)
 
@@ -233,8 +228,6 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
             then the list will be created at the index with :py:obj:`None` elements inserted behind it.
             ``pad`` is only compatible with unordered lists.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(
         id=aerospike.CDT_CTX_LIST_INDEX_CREATE, value=index, extra_args={CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad}
@@ -252,8 +245,6 @@ def cdt_ctx_map_index(index: int) -> _cdt_ctx:
     Args:
         index: The index to look for in the map.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_INDEX, value=index)
 
@@ -267,8 +258,6 @@ def cdt_ctx_map_rank(rank: int) -> _cdt_ctx:
     Args:
         rank: The rank to look for in the map.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_RANK, value=rank)
 
@@ -280,8 +269,6 @@ def cdt_ctx_map_key(key: Any) -> _cdt_ctx:
     Args:
         key: The key to look for in the map.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY, value=key)
 
@@ -293,8 +280,6 @@ def cdt_ctx_map_value(value: Any) -> _cdt_ctx:
     Args:
         value: The value to look for in the map.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_VALUE, value=value)
 
@@ -308,8 +293,6 @@ def cdt_ctx_map_key_create(key: Any, order: int = 0) -> _cdt_ctx:
         order: The :ref:`sort order <aerospike_map_order>` to create the List with.
             (default: ``aerospike.MAP_UNORDERED``)
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
 
@@ -321,8 +304,6 @@ def cdt_ctx_all_children() -> _cdt_ctx:
     of the current item. For a map, this will recurse into the map elements.
     For a list, this will include all the children in the list.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP)
 
@@ -336,8 +317,6 @@ def cdt_ctx_all_children_with_filter(expression) -> _cdt_ctx:
     Args:
         expression: Compiled expression. This expression must return a boolean.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
@@ -361,8 +340,6 @@ def cdt_ctx_and_filter(expression) -> _cdt_ctx:
     Args:
         expression: Compiled expression. This expression must return a boolean.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP,
                     extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
@@ -382,7 +359,5 @@ def cdt_ctx_map_keys_in(keys: list) -> _cdt_ctx:
     Args:
         keys: The keys to look for in the map.
 
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_MAP_KEYS_IN, value=keys)
