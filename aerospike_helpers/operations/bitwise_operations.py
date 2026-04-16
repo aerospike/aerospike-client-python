@@ -138,7 +138,7 @@ Example::
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
-from typing import Optional, Union
+from typing import Optional
 
 BIN_KEY = "bin"
 BYTE_SIZE_KEY = "byte_size"
@@ -211,7 +211,7 @@ def bit_remove(bin_name: str, byte_offset: int, byte_size: int, policy: Optional
 
 
 def bit_set(bin_name: str, bit_offset: int, bit_size: int, value_byte_size: int,
-            value: Union[bytes, bytearray], policy: Optional[dict] = None) -> dict:
+            value: bytes | bytearray, policy: Optional[dict] = None) -> dict:
     """Creates a bit_set_operation to be used with :meth:`aerospike.Client.operate` or
         :meth:`aerospike.Client.operate_ordered`.
 
@@ -320,7 +320,7 @@ def bit_add(bin_name: str, bit_offset: int, bit_size: int, value: int,
 
 
 def bit_and(bin_name: str, bit_offset: int, bit_size: int, value_byte_size: int,
-            value: Union[bytes, bytearray], policy: Optional[dict] = None) -> dict:
+            value: bytes | bytearray, policy: Optional[dict] = None) -> dict:
     """Creates a bit_and_operation.
 
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
@@ -392,7 +392,7 @@ def bit_get_int(bin_name: str, bit_offset: int, bit_size: int, sign: bool) -> di
 
 
 def bit_insert(bin_name: str, byte_offset: int, value_byte_size: int,
-               value: Union[bytes, bytearray], policy: Optional[dict] = None) -> dict:
+               value: bytes | bytearray, policy: Optional[dict] = None) -> dict:
     """Creates a bit_insert_operation.
 
     Server inserts the bytes from value into the bitmap at byte_offset.
@@ -499,7 +499,7 @@ def bit_not(bin_name: str, bit_offset: int, bit_size: int, policy: Optional[dict
 
 
 def bit_or(bin_name: str, bit_offset: int, bit_size: int, value_byte_size: int,
-           value: Union[bytes, bytearray], policy: Optional[dict] = None) -> dict:
+           value: bytes | bytearray, policy: Optional[dict] = None) -> dict:
     """Creates a bit_or_operation.
 
     Creates a bit or operation. Server performs bitwise or with value and bitmap in bin
@@ -620,7 +620,7 @@ def bit_subtract(bin_name: str, bit_offset: int, bit_size: int, value: int,
 
 
 def bit_xor(bin_name: str, bit_offset: int, bit_size: int, value_byte_size: int,
-            value: Union[bytes, bytearray], policy: Optional[dict] = None) -> dict:
+            value: bytes | bytearray, policy: Optional[dict] = None) -> dict:
     """Creates a bit_xor_operation.
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin

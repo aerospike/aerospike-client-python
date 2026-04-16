@@ -4,7 +4,7 @@ Resources used by all expressions.
 
 from __future__ import annotations
 from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any, TYPE_CHECKING
+from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 
 class _Keys:
@@ -141,17 +141,17 @@ class _AtomExpr:
 
 if TYPE_CHECKING:
     TypeResultType = Optional[int]
-    TypeFixedEle = Union[int, float, str, bytes, dict]
+    TypeFixedEle = int | float | str | bytes | dict
     TypeFixed = Optional[Dict[str, TypeFixedEle]]
     TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
 
     #: Compiled expression that can be passed to the Python client API.
     TypeExpression = List[TypeCompiledOp]
 
-    TypeChild = Union[int, float, str, bytes, _AtomExpr]
+    TypeChild = int | float | str | bytes | _AtomExpr
     TypeChildren = Tuple[TypeChild, ...]
 
-    TypeAny = Union[_AtomExpr, Any]
+    TypeAny = _AtomExpr | Any
 
 
 class _BaseExpr(_AtomExpr):

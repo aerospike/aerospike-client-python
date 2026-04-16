@@ -30,11 +30,11 @@ from aerospike_helpers.expressions.base import HLLBin
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import List, Union, Dict, Any
+    from typing import List, Dict, Any
     TypeBinName = _BaseExpr | str
-    TypeListValue = Union[_BaseExpr, List[Any]]
-    TypeValue = Union[_BaseExpr, Any]
-    TypePolicy = Union[Dict[str, Any], None]
+    TypeListValue = _BaseExpr | List[Any]
+    TypeValue = _BaseExpr | Any
+    TypePolicy = Dict[str, Any] | None
 
 
 class HLLInit(_BaseExpr):
@@ -51,8 +51,8 @@ class HLLInit(_BaseExpr):
     def __init__(
         self,
         policy: "TypePolicy",
-        index_bit_count: Union[int, None],
-        mh_bit_count: Union[int, None],
+        index_bit_count: int | None,
+        mh_bit_count: int | None,
         bin: "TypeBinName",
     ):
         """Args:
@@ -85,8 +85,8 @@ class HLLAdd(_BaseExpr):
         self,
         policy: "TypePolicy",
         list: "TypeListValue",
-        index_bit_count: Union[int, None],
-        mh_bit_count: Union[int, None],
+        index_bit_count: int | None,
+        mh_bit_count: int | None,
         bin: "TypeBinName",
     ):
         """Args:

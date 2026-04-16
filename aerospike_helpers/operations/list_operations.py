@@ -29,7 +29,7 @@ See this `page <https://aerospike.com/docs/develop/data-types/collections/list#l
 
 """
 import aerospike
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 
 OP_KEY = "op"
@@ -200,7 +200,7 @@ def list_insert_items(bin_name: str, index: int, values: list,
     return op_dict
 
 
-def list_increment(bin_name: str, index: int, value: Union[int, float],
+def list_increment(bin_name: str, index: int, value: int | float,
                    policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """
     Creates a list increment operation.

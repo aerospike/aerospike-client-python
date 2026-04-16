@@ -22,7 +22,7 @@ Module with helper functions to create dictionaries used by:
 import warnings
 
 import aerospike
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from aerospike_helpers.cdt_ctx import _cdt_ctx
 
@@ -101,7 +101,7 @@ def prepend(bin_name: str, prepend_item: Any) -> dict:
     return {"op": aerospike.OPERATOR_PREPEND, "bin": bin_name, "val": prepend_item}
 
 
-def increment(bin_name: str, amount: Union[int, float]) -> dict:
+def increment(bin_name: str, amount: int | float) -> dict:
     """Create an increment operation dictionary.
 
     The increment operation increases a value in bin_name by the specified amount,

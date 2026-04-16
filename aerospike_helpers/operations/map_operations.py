@@ -31,7 +31,7 @@ deleted).
 """
 import aerospike
 import sys
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 OP_KEY = "op"
 BIN_KEY = "bin"
@@ -174,7 +174,7 @@ def map_put_items(bin_name: str, item_dict: dict,
     return op_dict
 
 
-def map_increment(bin_name: str, key: Any, amount: Union[int, float],
+def map_increment(bin_name: str, key: Any, amount: int | float,
                   map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """Creates a map_increment operation.
 
@@ -204,7 +204,7 @@ def map_increment(bin_name: str, key: Any, amount: Union[int, float],
     return op_dict
 
 
-def map_decrement(bin_name: str, key: Any, amount: Union[int, float],
+def map_decrement(bin_name: str, key: Any, amount: int | float,
                   map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """Creates a map_decrement operation.
 
