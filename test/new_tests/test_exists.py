@@ -92,16 +92,17 @@ class TestExists:
         """
         Invoke exists() for non-existent data.
         """
-        try:
+        if ex == e.NamespaceNotFound:
+            with pytest.raises(ex):
+                key, meta = self.as_connection.exists(key)
+        elif ex == e.RecordNotFound:
             key, meta = self.as_connection.exists(key)
             assert meta is None
-            """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
-            meta as None. This might change with further releases.
-            """
-        except ex as exception:
-            assert exception.code == ex_code
+        """
+        We are making the api backward compatible. In case of RecordNotFound an
+        exception will not be raised. Instead Ok response is returned withe the
+        meta as None. This might change with further releases.
+        """
 
     def test_neg_exists_with_only_key_without_connection(self):
         """
@@ -112,11 +113,9 @@ class TestExists:
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             key, _ = client1.exists(key)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     @pytest.mark.parametrize(
         "key, record, meta, policy",
