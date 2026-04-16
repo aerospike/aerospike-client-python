@@ -184,9 +184,6 @@ def cdt_ctx_list_index(index: int) -> _cdt_ctx:
 
     Args:
         index: The index to look for in the list.
-
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_INDEX, value=index)
 
