@@ -59,6 +59,8 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+            # Test that base policy's connect_timeout works
+            "connect_timeout": 0
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 
@@ -111,9 +113,10 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.append(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -133,12 +136,13 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
 
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.append(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -158,11 +162,12 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 2, "ttl": 1200}
+        meta = {"gen": gen + 2}
         self.as_connection.append(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -292,12 +297,13 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
 
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         try:
             self.as_connection.append(key, "name", "str", meta, policy)
         except e.RecordGenerationError as exception:
@@ -319,11 +325,12 @@ class TestAppend(object):
         key = ("test", "demo", 1)
         policy = {
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         try:
             self.as_connection.append(key, "name", "str", meta, policy)
 

@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 import aerospike
 from .as_status_codes import AerospikeStatus
+import math
 
 
 class TestQueryPagination(TestBaseClass):
@@ -129,25 +130,28 @@ class TestQueryPagination(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, None)
         query_obj.paginate()
 
-        num_populated_partitions = 4
-        all_records = (
+        NUM_PARTITIONS = 4
+        num_records_from_part_1000_to_1003 = (
             self.partition_1000_count
             + self.partition_1001_count
             + self.partition_1002_count
             + self.partition_1003_count
         )
-        self.partition_1000_count / num_populated_partitions
+        avg_records_per_partition = math.ceil(num_records_from_part_1000_to_1003 / NUM_PARTITIONS)
+        query_obj.max_records = avg_records_per_partition
 
-        for i in range(num_populated_partitions):
+        NUM_ITERATIONS = NUM_PARTITIONS
+        for _ in range(NUM_ITERATIONS):
             query_obj.foreach(
                 callback,
                 {
-                    "partition_filter": {"begin": 1000, "count": num_populated_partitions},
-                    "max_records": all_records / num_populated_partitions,
+                    "partition_filter": {"begin": 1000, "count": NUM_PARTITIONS},
                 },
             )
 
-        assert len(records) == all_records
+        # Worst case scenario, all the records are in one node
+        # Best case scenario, we got all the records back
+        assert NUM_ITERATIONS <= len(records) <= num_records_from_part_1000_to_1003
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
@@ -173,16 +177,21 @@ class TestQueryPagination(TestBaseClass):
         st = "demo"
         all_recs = 0
 
-        query_obj = self.as_connection.query(ns, st)
+        query_obj: aerospike.Query = self.as_connection.query(ns, st)
 
-        max_records = self.partition_1001_count / 2
+        query_obj.max_records = math.ceil(self.partition_1001_count / 2)
+
+        part_filter = {"begin": 1001, "count": 1}
 
         for i in range(2):
-            records = query_obj.results({"partition_filter": {"begin": 1001, "count": 1}, "max_records": max_records})
-
+            records = query_obj.results({"partition_filter": part_filter})
             all_recs += len(records)
 
         assert all_recs == self.partition_1001_count
+
+        # Even though the client has queried all the records,
+        # it doesn't know for sure it has read all the records until it queries one more time.
+        query_obj.results({"partition_filter": part_filter})
         assert query_obj.is_done()
 
     def test_query_pagination_with_multiple_foreach_on_same_query_object(self):

@@ -120,7 +120,7 @@ autodoc_type_aliases = {
     "TypeIndex": "TypeIndex",
     "TypeChild": "TypeChild",
     "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "TypeExpression",
+    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
     "TypeGeo": "TypeGeo",
     "TypeKey": "TypeKey",
     "TypeKeyList": "TypeKeyList",
@@ -133,6 +133,10 @@ autodoc_type_aliases = {
     "TypeResultType": "TypeResultType",
     "TypeFixedEle": "TypeFixedEle",
     "TypeFixed": "TypeFixed",
+}
+nitpicky = True
+nitpick_ignore_regex = {
+    ("py:class", "Type.*")
 }
 
 # -- Options for HTML output ---------------------------------------------------
@@ -268,3 +272,5 @@ linkcheck_anchors_ignore = [
 linkcheck_ignore = [
     "https://docs.aerospike.com/server/guide/security/index.html"
 ]
+
+linkcheck_timeout = 120

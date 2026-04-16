@@ -281,6 +281,9 @@ class MapRemoveByKeyRange(_BaseExpr):
             # Remove elements at keys between 1 and 10 in map bin "b".
             expr = exp.MapRemoveByKeyRange(None, 1, 10, exp.MapBin("b")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (
             begin,
             end,
@@ -1103,6 +1106,9 @@ class MapGetByValueRange(_BaseExpr):
             # Get elements with values between 3 and 7 from map bin "b".
             expr = exp.MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, 3, 7, exp.MapBin("b")).compile()
         """
+        if value_end is None:
+            value_end = aerospike.CDTInfinite()
+
         self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
         if inverted:
@@ -1482,3 +1488,45 @@ class MapGetByRankRange(_BaseExpr):
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class MapGetKeys(_BaseExpr):
+    """
+    Return a list of keys from a map.
+    """
+
+    _op = aerospike._AS_EXP_CODE_MAP_KEYS
+
+    def __init__(
+        self,
+        map_value
+    ):
+        """Args:
+            map_value (TypeBinName): expression that returns a map, or bin name containing a map.
+
+        :return: Expression.
+        """
+        if not isinstance(map_value, _BaseExpr):
+            map_value = MapBin(map_value)
+        self._children = (map_value,)
+
+
+class MapGetValues(_BaseExpr):
+    """
+    Return a list of values from a map.
+    """
+
+    _op = aerospike._AS_EXP_CODE_MAP_VALUES
+
+    def __init__(
+        self,
+        map_value
+    ):
+        """Args:
+            map_value (TypeBinName): expression that returns a map, or bin name containing a map.
+
+        :return: Expression.
+        """
+        if not isinstance(map_value, _BaseExpr):
+            map_value = MapBin(map_value)
+        self._children = (map_value,)

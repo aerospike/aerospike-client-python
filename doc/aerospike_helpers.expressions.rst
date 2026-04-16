@@ -14,13 +14,14 @@ Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 .. note::
-  See `Aerospike Expressions <https://aerospike.com/docs/server/guide/expressions/>`_.
+  See `Expressions <https://aerospike.com/docs/develop/expressions>`_.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
 such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
-while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
+while passing them other expressions and constants as arguments, and finally calling the
+:meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
 
 Example::
 
@@ -167,6 +168,8 @@ aerospike\_helpers\.expressions\.base module
 .. automodule:: aerospike_helpers.expressions.base
     :members:
     :special-members:
+    :show-inheritance:
+    :private-members: _Key
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------
@@ -214,9 +217,12 @@ aerospike\_helpers\.expressions\.bitwise_operators module
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
-.. automodule:: aerospike_helpers.expressions.resources
+.. autodata:: aerospike_helpers.expressions.resources.TypeExpression
 
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+.. autoclass:: aerospike_helpers.expressions.resources.ResultType
+  :members:
+  :undoc-members:
+
+.. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
+
+.. automethod:: aerospike_helpers.expressions.resources._BaseExpr.compile

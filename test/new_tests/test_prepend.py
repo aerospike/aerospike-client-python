@@ -74,7 +74,7 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.prepend(key, "name", "str", {}, policy)
@@ -96,11 +96,12 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -120,13 +121,14 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -146,13 +148,14 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 2, "ttl": 1200}
+        meta = {"gen": gen + 2}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -173,7 +176,7 @@ class TestPrepend:
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "max_retries": 0}
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -295,13 +298,14 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
@@ -326,13 +330,14 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         try:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 

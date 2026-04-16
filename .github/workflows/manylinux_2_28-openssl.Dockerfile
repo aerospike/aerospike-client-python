@@ -1,5 +1,6 @@
 ARG CPU_ARCH=x86_64
-FROM quay.io/pypa/manylinux_2_28_$CPU_ARCH
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 

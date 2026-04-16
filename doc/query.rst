@@ -13,49 +13,64 @@ Constructing A Query
 --------------------
 
 The query object is used for executing queries over a secondary index of a specified set.
-It can be created by calling :meth:`aerospike.Client.query`.
+It can be created by calling :meth:`aerospike.Client.query`. If the set is initialized to :py:obj:`None`,
+then the query will only apply to records without a set.
+
+.. warning:: :meth:`aerospike.Query` should not be called directly to create a :class:`~aerospike.Query` object.
 
 A query without a secondary index filter will apply to all records in the namespace,
 similar to a :class:`~aerospike.Scan`.
 
-Otherwise, the query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
+Secondary Index Filters
+-----------------------
+
+The query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
 to filter out records using their bin values.
 These secondary index filters are applied to the query using :meth:`~aerospike.Query.where`.
-In this case, if the set is initialized to :py:obj:`None`, then the query will only apply to records without a set.
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
-    the deprecated `predicate expressions <https://aerospike.com/docs/server/guide/predicate>`_.
-    For more details, read this `guide <https://aerospike.com/docs/server/guide/query>`_.
+    the deprecated `predicate expressions`.
+    For more details, read this `guide <https://aerospike.com/docs/develop/learn/queries/secondary-index>`_.
 
-Writing Using Query
--------------------
+Filtering Bins
+--------------
+
+The returned bins can be filtered by using :meth:`~aerospike.Query.select`.
+
+Background Queries
+------------------
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
-See available write operations at :mod:`aerospike_helpers.operations`.
+See available write operations at :ref:`aerospike_operation_helpers.operations`.
+
+
+Foreground Queries
+------------------
+
+Read operations can also be added in a foreground query using :meth:`~aerospike.Query.add_ops`.
 
 Query Aggregations
 ------------------
 
-A `stream UDF <https://aerospike.com/developer/udf/developing_stream_udfs>`_ \
+A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
 Getting Results From Query
 --------------------------
 
-The returned bins can be filtered by using :meth:`select`.
+For performing write operations or applying record UDF's, :meth:`~aerospike.Query.execute_background` must be used.
 
-Finally, the query is invoked using one of these methods:
+Otherwise, the query is invoked using one of these synchronous methods:
 
 - :meth:`~aerospike.Query.foreach`
 - :meth:`~aerospike.Query.results`
-- :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
-    `Queries <https://aerospike.com/docs/server/guide/query.html>`_ and \
-    `Managing Queries <https://aerospike.com/docs/server/operations/manage/queries/>`_.
+    `Queries <https://aerospike.com/docs/develop/learn/queries/>`_ and \
+    `Managing Queries <https://aerospike.com/docs/database/manage/cluster/queries>`_.
 
 Fields
 ======
@@ -105,20 +120,54 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
-        Set a filter on the record bins resulting from :meth:`results` or \
-        :meth:`foreach`.
+        .. warning:: In the next major client release, calling this method after :meth:`Query.add_ops` was called on the same Query object will raise a :py:exc:`~aerospike.exception.ParamError` exception.
 
-        If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
+        Set a filter on the record bins resulting from :meth:`results` or :meth:`foreach`.
+
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
+        If a selected bin does not exist in a record, it will not appear in the *bins* portion of that record tuple.
+
+        If this method is called after :meth:`Query.add_ops` was called on the same Query object, the selected bins in
+        this call will be ignored during the query.
 
     .. method:: where(predicate[, ctx])
 
         Set a where *predicate* for the query.
 
         You can only assign at most one predicate to the query.
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
         If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
+
+    .. method:: where_with_expr(expr, predicate)
+
+        Add an expression *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param TypeExpression | str expr:
+            Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
+            Alternatively, you can pass in a base64 encoded string of an expression returned from asinfo when printing
+            a list of secondary indexes based on expressions in the server.
+
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
+
+    .. method:: where_with_index_name(index_name, predicate)
+
+        Add an index name *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param str index_name: The name of the index.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
@@ -165,7 +214,7 @@ Assume this boilerplate code is run before all examples below:
         The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
         as a normal callback.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
@@ -215,16 +264,18 @@ Assume this boilerplate code is run before all examples below:
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
-        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_. If no \
+        `UDF <https://aerospike.com/docs/database/learn/architecture/udf/#stream-udfs>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
 
+        This function can also be used to apply a record UDF.
+
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/client/python/data-types/>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <https://aerospike.com/developer/udf/developing_stream_udfs>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:
@@ -249,11 +300,22 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: add_ops(ops)
 
-        Add a list of write ops to the query.
-        When used with :meth:`Query.execute_background` the query will perform the write ops on any records found.
+        .. warning:: In the next major client release, if this is called after :meth:`~Query.select` was called on the same object, an :exc:`~aerospike.exception.ParamError` will be raised.
+
+        Add a list of operations to the query.
+
+        For background queries, only write operations are allowed.
+        For foreground queries, only read operations are allowed.
+
+        For server versions < 8.1.2, basic read operations are allowed in foreground queries. Otherwise with this
+        server version, using a non-basic read operation will raise a :exc:`~aerospike.exception.ParamError`.
+
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
 
-        :param ops: `list` A list of write operations generated by the aerospike_helpers e.g. list_operations, map_operations, etc.
+        If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
+        during the query.
+
+        :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
         .. note::
             Requires server version >= 4.7.0.
@@ -422,54 +484,11 @@ Policies
 
     A :class:`dict` of optional query policies which are applicable to :meth:`Query.results` and :meth:`Query.foreach`. See :ref:`aerospike_policies`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will the last suberror that was received.
-            |
-            | Default: ``0``
-
-            .. warning:: : Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed \
-              multiple times if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes \
-              which sets max_retries = `0`;
-
-        * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** :class:`int`
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. \
-              If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to \
-             ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``.
-        * **total_timeout** :class:`int`
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. \
-             The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error \
-             ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``0``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **deserialize** :class:`bool`
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
@@ -499,13 +518,6 @@ Policies
             Mutually exclusive with records_per_second
 
             Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-
         * **partition_filter** :class:`dict`
             | A dictionary of partition information used by the client
             | to perform partiton queries. Useful for resuming terminated queries and

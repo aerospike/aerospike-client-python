@@ -7,6 +7,7 @@ from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
 
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -53,6 +54,7 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -103,7 +105,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -148,7 +150,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_rank},
+            ctx_list_rank,
             policy,
         )
 
@@ -169,7 +171,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_value},
+            ctx_list_value,
             policy,
         )
 
@@ -190,7 +192,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPKEYS,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_index},
+            ctx_map_index,
             policy,
         )
 
@@ -211,7 +213,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_value},
+            ctx_map_value,
             policy,
         )
 
@@ -232,7 +234,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_rank},
+            ctx_map_rank,
             policy,
         )
 
@@ -254,7 +256,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_rank},
+            ctx_map_rank,
             policy,
         )
 
@@ -275,7 +277,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -298,7 +300,7 @@ class TestCDTIndex(object):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
             assert False
@@ -319,7 +321,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -339,7 +341,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -351,7 +353,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_numeric_list_cdt_index",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
             except e.IndexFoundError:
@@ -373,7 +375,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -385,7 +387,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_string_list_cdt_index",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
                 self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -409,7 +411,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -421,7 +423,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_STRING,
                     "test_string_list_cdt_index1",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
             except e.IndexFoundError:
@@ -444,7 +446,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index_pol",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -464,7 +466,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -501,7 +503,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "uni_name_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -521,7 +523,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "uni_age_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -557,7 +559,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -578,7 +580,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
             assert False
@@ -601,7 +603,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -624,7 +626,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -645,7 +647,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 None,
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -667,12 +669,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.NamespaceNotFound as exception:
+            assert exception.code == 20
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """
@@ -686,7 +688,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -711,7 +713,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
@@ -726,3 +728,24 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             self.as_connection.index_cdt_create()
 
         assert "argument 'ns' (pos 1)" in str(typeError.value)
+
+    @pytest.mark.parametrize(
+        "ctx",
+        [
+            None,
+            # Invalid type
+            {"ctx": 1}
+        ]
+    )
+    def test_neg_cdtindex_with_invalid_ctx(self, ctx):
+        with pytest.raises(e.ParamError):
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_STRING,
+                "test_string_list_cdt_index",
+                # Ctx must be a list
+                ctx
+            )

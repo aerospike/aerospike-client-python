@@ -18,6 +18,8 @@ def test_node_is_populated(node: Node):
     assert type(node.conns.in_pool) == int
     assert type(node.conns.opened) == int
     assert type(node.conns.closed) == int
+    assert type(node.conns.recovered) == int
+    assert type(node.conns.aborted) == int
     assert type(node.error_count) == int
     assert type(node.timeout_count) == int
     # Check NodeMetrics

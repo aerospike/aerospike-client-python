@@ -42,44 +42,97 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+#define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
+
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
-int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
-                             PyObject *py_ctx, as_predicate_type predicate,
+// The rest of the PyObject parameters can be NULL and are optional.
+// 3 cases for these optional parameters:
+// 1. index_name is non-NULL because we are indexing using the index name
+// 2. py_expr is non-NULL because we are indexing using an expression
+// 3. Both index_name and py_expr are NULL, and py_bin is non-NULL because we are indexing on a bin.
+//    py_ctx may also be non-NULL in this case.
+int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
+                             as_predicate_type predicate,
                              as_index_datatype in_datatype, PyObject *py_bin,
                              PyObject *py_val1, PyObject *py_val2,
-                             int index_type, as_error *err)
+                             int index_type, PyObject *py_expr,
+                             const char *index_name)
 {
+    as_error err;
+    as_error_init(&err);
+
+    // TODO: does static pool go out of scope?
+    as_static_pool static_pool;
+    memset(&static_pool, 0, sizeof(static_pool));
+
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
+    // Used to pass ctx into get_cdt_ctx() helper
+    // Declared here to make cleanup logic simpler
+    PyObject *py_ctx_dict = NULL;
 
-    if (py_ctx) {
-        // TODO: does static pool go out of scope?
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
+    // Ctx is an optional parameter
+    if (py_ctx && !Py_IsNone(py_ctx)) {
+        // If user wanted to pass in an actual ctx
+
+        // Glue code to pass into get_cdt_ctx()
+        py_ctx_dict = PyDict_New();
+        if (!py_ctx_dict) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto error;
+        }
+        int retval = PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        if (retval == -1) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            CTX_PARSE_ERROR_MESSAGE);
+            goto CLEANUP_PY_CTX_DICT_ON_ERROR;
+        }
+
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(client, err, pctx, py_ctx, &ctx_in_use, &static_pool,
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            return err->code;
+
+        if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
+                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            goto CLEANUP_AS_CTX_ON_ERROR;
+        }
+    }
+
+    as_exp *exp_list = NULL;
+    if (py_expr) {
+        as_status status = as_exp_new_from_pyobject(self->client, py_expr,
+                                                    &exp_list, &err, true);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }
 
     const char *bin = NULL;
-    if (PyUnicode_Check(py_bin)) {
-        bin = PyUnicode_AsUTF8(py_bin);
-        if (!bin) {
-            goto CLEANUP_ON_ERROR1;
+    if (py_expr == NULL && index_name == NULL) {
+        // Bin is required in this case.
+        if (py_bin == Py_None) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
+            goto CLEANUP_EXP_ON_ERROR;
         }
-    }
-    else if (PyByteArray_Check(py_bin)) {
-        bin = PyByteArray_AsString(py_bin);
-        if (!bin) {
-            goto CLEANUP_ON_ERROR1;
+
+        // User provided a bin name
+        else if (PyUnicode_Check(py_bin)) {
+            bin = PyUnicode_AsUTF8(py_bin);
+            if (!bin) {
+                goto CLEANUP_EXP_ON_ERROR;
+            }
         }
-    }
-    else {
-        // Bins are required for all where() calls
-        goto CLEANUP_ON_ERROR1;
+        else if (PyByteArray_Check(py_bin)) {
+            bin = PyByteArray_AsString(py_bin);
+            if (!bin) {
+                goto CLEANUP_EXP_ON_ERROR;
+            }
+        }
+        else {
+            // Bin is not the right type
+            goto CLEANUP_EXP_ON_ERROR;
+        }
     }
 
     int64_t val1_int = 0;
@@ -95,11 +148,11 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
 
     if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (!PyUnicode_Check(py_val1)) {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
         const char *buffer = PyUnicode_AsUTF8(py_val1);
         if (!buffer) {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
         val1_str = strdup(buffer);
         val1 = (void *)val1_str;
@@ -125,25 +178,25 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
         if (PyBytes_Check(py_val1)) {
             bytes_buffer = PyBytes_AsString(py_val1);
             if (!bytes_buffer) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
             bytes_size = PyBytes_Size(py_val1);
             if (PyErr_Occurred()) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else if (PyByteArray_Check(py_val1)) {
             bytes_buffer = PyByteArray_AsString(py_val1);
             if (!bytes_buffer) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
             bytes_size = PyByteArray_Size(py_val1);
             if (PyErr_Occurred()) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
 
         uint8_t *val1_bytes_cpy =
@@ -153,47 +206,96 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
-    as_query_where_init(query, 1);
+    // Query object should still be safe to use if this fails
+    bool success = as_query_where_init(&self->query, 1);
+    if (!success) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.where() cannot be called more than once on the "
+                        "same instance.");
+        goto CLEANUP_VALUES_ON_ERROR;
+    }
 
+    // We have 9 separate codepaths because we need to pass in either 1, 2, or 3 optional arguments to the C client call
+    // and for each of those, we have to call one of the three as_query_where_with_{exp,index_name,ctx}()
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
-        as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
-                                AS_INDEX_BLOB, val1_bytes, bytes_size, true);
+        if (py_expr) {
+            as_query_where_with_exp(&self->query, exp_list, predicate,
+                                    index_type, AS_INDEX_BLOB, val1_bytes,
+                                    bytes_size, true);
+        }
+        else if (index_name) {
+            as_query_where_with_index_name(&self->query, index_name, predicate,
+                                           index_type, AS_INDEX_BLOB,
+                                           val1_bytes, bytes_size, true);
+        }
+        else {
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, AS_INDEX_BLOB, val1_bytes,
+                                    bytes_size, true);
+        }
     }
     else if (in_datatype == AS_INDEX_NUMERIC ||
              in_datatype == AS_INDEX_STRING ||
              in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
-            as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
-                                    in_datatype, val1_int, val2_int);
+            if (py_expr) {
+                as_query_where_with_exp(&self->query, exp_list, predicate,
+                                        index_type, in_datatype, val1_int,
+                                        val2_int);
+            }
+            else if (index_name) {
+                as_query_where_with_index_name(&self->query, index_name,
+                                               predicate, index_type,
+                                               in_datatype, val1_int, val2_int);
+            }
+            else {
+                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                        index_type, in_datatype, val1_int,
+                                        val2_int);
+            }
         }
         else {
-            as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
-                                    in_datatype, val1);
+            if (py_expr) {
+                as_query_where_with_exp(&self->query, exp_list, predicate,
+                                        index_type, in_datatype, val1);
+            }
+            else if (index_name) {
+                as_query_where_with_index_name(&self->query, index_name,
+                                               predicate, index_type,
+                                               in_datatype, val1);
+            }
+            else {
+                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                        index_type, in_datatype, val1);
+            }
         }
 
         if (in_datatype == AS_INDEX_STRING ||
             in_datatype == AS_INDEX_GEO2DSPHERE) {
-            query->where.entries[0].value.string_val._free = true;
+            self->query.where.entries[0].value.string_val._free = true;
         }
     }
     else {
         // If it ain't supported, raise and error
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
         PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
+        error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
-        goto CLEANUP_ON_ERROR2;
+        goto CLEANUP_VALUES_ON_ERROR;
     }
 
     if (ctx_in_use) {
-        query->where.entries[0].ctx_free = true;
+        self->query.where.entries[0].ctx_free = true;
+    }
+    if (exp_list) {
+        self->query.where.entries[0].exp_free = true;
     }
 
     return 0;
 
-CLEANUP_ON_ERROR2:
+CLEANUP_VALUES_ON_ERROR:
 
     // The values end up not being used by as_query
     if (val1_str) {
@@ -203,8 +305,13 @@ CLEANUP_ON_ERROR2:
         free(val1_bytes);
     }
 
-CLEANUP_ON_ERROR1:
+CLEANUP_EXP_ON_ERROR:
 
+    if (exp_list) {
+        as_exp_destroy(exp_list);
+    }
+
+CLEANUP_AS_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
     if (ctx_in_use) {
         as_cdt_ctx_destroy(pctx);
@@ -213,6 +320,10 @@ CLEANUP_ON_ERROR1:
         cf_free(pctx);
     }
 
+CLEANUP_PY_CTX_DICT_ON_ERROR:
+    Py_XDECREF(py_ctx_dict);
+
+error:
     return 1;
 }
 
@@ -234,11 +345,23 @@ enum {
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
-                                            PyObject *py_predicate)
+                                            PyObject *py_predicate,
+                                            PyObject *py_expr,
+                                            const char *index_name)
 {
 
     as_error err;
     as_error_init(&err);
+
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (!self->client->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
     // Parse predicate tuple
     // The tuple format is:
@@ -336,9 +459,9 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
         index_type = AS_INDEX_TYPE_DEFAULT;
     }
 
-    int rc = AerospikeQuery_Where_Add(self->client, &self->query, py_ctx,
-                                      predicate_type, index_datatype, py_bin,
-                                      py_val1, py_val2, index_type, &err);
+    int rc = AerospikeQuery_Where_Add(self, py_ctx, predicate_type,
+                                      index_datatype, py_bin, py_val1, py_val2,
+                                      index_type, py_expr, index_name);
     /* Failed to add the predicate for some reason */
     if (rc != 0) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
@@ -357,8 +480,6 @@ CLEANUP:
 
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 {
-    as_error err;
-
     PyObject *py_pred = NULL;
     PyObject *py_cdt_ctx = NULL;
 
@@ -366,22 +487,33 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
         return NULL;
     }
 
-    as_error_init(&err);
+    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL, NULL);
+}
 
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
+AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
+                                             PyObject *args)
+{
+    PyObject *py_pred = NULL;
+    PyObject *py_expr = NULL;
+
+    if (PyArg_ParseTuple(args, "OO:where_with_expr", &py_expr, &py_pred) ==
+        false) {
+        return NULL;
     }
 
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr, NULL);
+}
+
+AerospikeQuery *AerospikeQuery_WhereWithIndexName(AerospikeQuery *self,
+                                                  PyObject *args)
+{
+    const char *index_name = NULL;
+    PyObject *py_pred = NULL;
+
+    if (PyArg_ParseTuple(args, "sO:where_with_index_name", &index_name,
+                         &py_pred) == false) {
+        return NULL;
     }
 
-    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred);
-
-CLEANUP:
-    raise_exception(&err);
-    return NULL;
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, NULL, index_name);
 }
