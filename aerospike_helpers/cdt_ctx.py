@@ -119,15 +119,15 @@ import aerospike
 # NameError when using Any
 from typing import Any
 
-def index_type_string(index_type):
+def index_type_string(index_type: int) -> str:
     """
     Converts index_type enum value to string.
 
     Args:
-        index_type (int): The index_type to convert into equivalent string value.
+        index_type: The index_type to convert into equivalent string value.
 
     Returns:
-        (string) - must be one of 'default', 'list', 'mapkeys', 'mapvalues'
+        must be one of 'default', 'list', 'mapkeys', 'mapvalues'
 
     """
     if index_type == aerospike.INDEX_TYPE_DEFAULT:
@@ -141,15 +141,15 @@ def index_type_string(index_type):
     return "invalid"
 
 
-def index_datatype_string(index_datatype):
+def index_datatype_string(index_datatype: int) -> str:
     """
     Converts index_datatype enum value to string.
 
     Args:
-        index_datatype (int): The index_datatype to convert into equivalent string value.
+        index_datatype: The index_datatype to convert into equivalent string value.
 
     Returns:
-        (string) - must be one of must be one of 'numeric', 'string', 'geo2dsphere'
+        must be one of 'numeric', 'string', 'geo2dsphere'
     """
     if index_datatype == aerospike.INDEX_NUMERIC:
         return "numeric"
@@ -175,7 +175,7 @@ class _cdt_ctx:
         self.extra_args = extra_args
 
 
-def cdt_ctx_list_index(index):
+def cdt_ctx_list_index(index: int) -> _cdt_ctx:
     """
     Creates a nested cdt_ctx object to lookup an object in a list by index.
 
@@ -183,7 +183,7 @@ def cdt_ctx_list_index(index):
     If it is out of bounds, a parameter error will be returned.
 
     Args:
-        index (int): The index to look for in the list.
+        index: The index to look for in the list.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -191,14 +191,14 @@ def cdt_ctx_list_index(index):
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_INDEX, value=index)
 
 
-def cdt_ctx_list_rank(rank):
+def cdt_ctx_list_rank(rank: int) -> _cdt_ctx:
     """
     Creates a nested cdt_ctx object to lookup an object in a list by rank.
 
     If the rank is negative, the lookup starts backwards from the largest rank value.
 
     Args:
-        rank (int): The rank to look for in the list.
+        rank: The rank to look for in the list.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -206,12 +206,12 @@ def cdt_ctx_list_rank(rank):
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_RANK, value=rank)
 
 
-def cdt_ctx_list_value(value):
+def cdt_ctx_list_value(value: Any) -> _cdt_ctx:
     """
     Creates a nested cdt_ctx object to lookup an object in a list by value.
 
     Args:
-        value (object): The value to look for in the list.
+        value: The value to look for in the list.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -229,10 +229,10 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
     If a non-list element exists at the index, an :py:exc:`~aerospike.exception.InvalidRequest` will be thrown.
 
     Args:
-        index (int): The index to create the list at.
-        order (int): The :ref:`sort order <aerospike_list_order>` to create the List with.
+        index: The index to create the list at.
+        order: The :ref:`sort order <aerospike_list_order>` to create the List with.
             (default: ``aerospike.LIST_UNORDERED``)
-        pad (bool): If index is out of bounds and ``pad`` is :py:obj:`True`,
+        pad: If index is out of bounds and ``pad`` is :py:obj:`True`,
             then the list will be created at the index with :py:obj:`None` elements inserted behind it.
             ``pad`` is only compatible with unordered lists.
 
@@ -244,7 +244,7 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
     )
 
 
-def cdt_ctx_map_index(index):
+def cdt_ctx_map_index(index: int) -> _cdt_ctx:
     """
     The cdt_ctx object is initialized to lookup an object in a map by index.
 
@@ -253,7 +253,7 @@ def cdt_ctx_map_index(index):
     If it is out of bounds, a parameter error will be returned.
 
     Args:
-        index (int): The index to look for in the map.
+        index: The index to look for in the map.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -261,14 +261,14 @@ def cdt_ctx_map_index(index):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_INDEX, value=index)
 
 
-def cdt_ctx_map_rank(rank):
+def cdt_ctx_map_rank(rank: int) -> _cdt_ctx:
     """
     The cdt_ctx object is initialized to lookup an object in a map by index.
 
     If the rank is negative, the lookup starts backwards from the largest rank value.
 
     Args:
-        rank (int): The rank to look for in the map.
+        rank: The rank to look for in the map.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -276,12 +276,12 @@ def cdt_ctx_map_rank(rank):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_RANK, value=rank)
 
 
-def cdt_ctx_map_key(key):
+def cdt_ctx_map_key(key: Any) -> _cdt_ctx:
     """
     The cdt_ctx object is initialized to lookup an object in a map by key.
 
     Args:
-        key (object): The key to look for in the map.
+        key: The key to look for in the map.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -289,12 +289,12 @@ def cdt_ctx_map_key(key):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY, value=key)
 
 
-def cdt_ctx_map_value(value):
+def cdt_ctx_map_value(value: Any) -> _cdt_ctx:
     """
     The cdt_ctx object is initialized to lookup an object in a map by value.
 
     Args:
-        value (object): The value to look for in the map.
+        value: The value to look for in the map.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
@@ -307,8 +307,8 @@ def cdt_ctx_map_key_create(key: Any, order: int = 0) -> _cdt_ctx:
     Create a map with the given sort order at the given key.
 
     Args:
-        key (object): The key to create the map at.
-        order (int): The :ref:`sort order <aerospike_map_order>` to create the List with.
+        key: The key to create the map at.
+        order: The :ref:`sort order <aerospike_map_order>` to create the List with.
             (default: ``aerospike.MAP_UNORDERED``)
 
     Returns:
@@ -369,7 +369,7 @@ def cdt_ctx_and_filter(expression) -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
-def cdt_ctx_map_keys_in(keys: list):
+def cdt_ctx_map_keys_in(keys: list) -> _cdt_ctx:
     """
     Restrict map context to the given list of keys, provided they exist.
 
@@ -382,7 +382,7 @@ def cdt_ctx_map_keys_in(keys: list):
     This can only be used by path expressions.
 
     Args:
-        keys (list): The keys to look for in the map.
+        keys: The keys to look for in the map.
 
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`

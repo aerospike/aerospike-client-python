@@ -100,6 +100,7 @@ Example::
 """
 
 import aerospike
+from typing import Optional
 
 
 OP_KEY = "op"
@@ -110,7 +111,7 @@ MH_BIT_COUNT_KEY = "mh_bit_count"
 VALUE_LIST_KEY = "value_list"
 
 
-def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, policy=None):
+def hll_add(bin_name: str, values: list, index_bit_count: Optional[int] = None, mh_bit_count: Optional[int] = None, policy: Optional[dict] = None) -> dict:
     """Creates a hll_add operation.
 
     Server will add the values to the hll bin.
@@ -120,11 +121,11 @@ def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, poli
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
         values: The values to be added to the HLL set.
         index_bit_count: An optional number of index bits. Must be between 4 and 16 inclusive.
         mh_bit_count: An optional number of min hash bits. Must be between 4 and 58 inclusive.
-        policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
+        policy: An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_ADD,
@@ -140,7 +141,7 @@ def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, poli
     return op_dict
 
 
-def hll_describe(bin_name):
+def hll_describe(bin_name: str) -> dict:
     """Creates a hll_describe operation.
 
     Server returns index and minhash bit counts used to create HLL bin in a list of integers.
@@ -149,7 +150,7 @@ def hll_describe(bin_name):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_DESCRIBE,
@@ -159,7 +160,7 @@ def hll_describe(bin_name):
     return op_dict
 
 
-def hll_fold(bin_name: str, index_bit_count):
+def hll_fold(bin_name: str, index_bit_count: int) -> dict:
     """Creates a hll_fold operation.
 
     Servers folds index_bit_count to the specified value.
@@ -169,7 +170,7 @@ def hll_fold(bin_name: str, index_bit_count):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
         index_bit_count: number of index bits. Must be between 4 and 16 inclusive.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_FOLD, BIN_KEY: bin_name, INDEX_BIT_COUNT_KEY: index_bit_count}
@@ -177,7 +178,7 @@ def hll_fold(bin_name: str, index_bit_count):
     return op_dict
 
 
-def hll_get_count(bin_name):
+def hll_get_count(bin_name: str) -> dict:
     """Creates a hll_get_count operation.
 
     Server returns estimated count of elements in the HLL bin.
@@ -185,7 +186,7 @@ def hll_get_count(bin_name):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_GET_COUNT,
@@ -195,7 +196,7 @@ def hll_get_count(bin_name):
     return op_dict
 
 
-def hll_get_intersect_count(bin_name: str, hll_list):
+def hll_get_intersect_count(bin_name: str, hll_list: list) -> dict:
     """Creates a hll_get_intersect_count operation.
 
     Server returns estimate of elements that would be contained by the intersection of these HLL objects.
@@ -203,15 +204,15 @@ def hll_get_intersect_count(bin_name: str, hll_list):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
-        hll_list (list): The HLLs to be intersected.
+        bin_name: The name of the bin to be operated on.
+        hll_list: The HLLs to be intersected.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_GET_INTERSECT_COUNT, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
 
     return op_dict
 
 
-def hll_get_similarity(bin_name: str, hll_list):
+def hll_get_similarity(bin_name: str, hll_list: list) -> dict:
     """Creates a hll_get_similarity operation.
 
     Server returns estimated similarity of the HLL objects.
@@ -220,15 +221,15 @@ def hll_get_similarity(bin_name: str, hll_list):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
-        hll_list (list): The HLLs used for similarity estimation.
+        bin_name: The name of the bin to be operated on.
+        hll_list: The HLLs used for similarity estimation.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_GET_SIMILARITY, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
 
     return op_dict
 
 
-def hll_get_union(bin_name: str, hll_list):
+def hll_get_union(bin_name: str, hll_list: list) -> dict:
     """Creates a hll_get_union operation.
 
     Server returns an HLL object that is the union of all specified HLL objects
@@ -237,15 +238,15 @@ def hll_get_union(bin_name: str, hll_list):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
-        hll_list (list): The HLLs to be unioned.
+        bin_name: The name of the bin to be operated on.
+        hll_list: The HLLs to be unioned.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_GET_UNION, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
 
     return op_dict
 
 
-def hll_get_union_count(bin_name: str, hll_list):
+def hll_get_union_count(bin_name: str, hll_list: list) -> dict:
     """Creates a hll_get_union_count operation.
 
     Server returns the estimated count of elements that would be contained by the union of all specified HLL objects
@@ -254,15 +255,15 @@ def hll_get_union_count(bin_name: str, hll_list):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
-        hll_list (list): The HLLs to be unioned.
+        bin_name: The name of the bin to be operated on.
+        hll_list: The HLLs to be unioned.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_GET_UNION_COUNT, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
 
     return op_dict
 
 
-def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None):
+def hll_init(bin_name: str, index_bit_count: Optional[int] = None, mh_bit_count: Optional[int] = None, policy: Optional[dict] = None) -> dict:
     """Creates a hll_init operation.
 
     Server creates a new HLL or resets an existing HLL.
@@ -275,10 +276,10 @@ def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
         index_bit_count: An optional number of index bits. Must be between 4 and 16 inclusive.
         mh_bit_count: An optional number of min hash bits. Must be between 4 and 58 inclusive.
-        policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
+        policy: An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_INIT,
@@ -293,7 +294,7 @@ def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None
     return op_dict
 
 
-def hll_refresh_count(bin_name: str):
+def hll_refresh_count(bin_name: str) -> dict:
     """Creates a hll_refresh_count operation.
 
     Server updates the cached count if it is stale.
@@ -301,7 +302,7 @@ def hll_refresh_count(bin_name: str):
 
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
     Args:
-        bin_name (str): The name of the bin to be operated on.
+        bin_name: The name of the bin to be operated on.
     """
     op_dict = {
         OP_KEY: aerospike.OP_HLL_REFRESH_COUNT,
@@ -311,7 +312,7 @@ def hll_refresh_count(bin_name: str):
     return op_dict
 
 
-def hll_set_union(bin_name: str, hll_list, policy=None):
+def hll_set_union(bin_name: str, hll_list: list, policy: Optional[dict] = None) -> dict:
     """Creates a hll_set_union operation.
 
     Server sets the union of all specified HLL objects with the HLL bin.
@@ -320,9 +321,9 @@ def hll_set_union(bin_name: str, hll_list, policy=None):
     Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
-        bin_name (str): The name of the bin to be operated on.
-        hll_list (list): The HLLs who's union will be set.
-        policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
+        bin_name: The name of the bin to be operated on.
+        hll_list: The HLLs who's union will be set.
+        policy: An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_SET_UNION, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
 
