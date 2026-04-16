@@ -20,7 +20,7 @@ these operations are from the standard :mod:`Map API <aerospike_helpers.operatio
 """
 
 from __future__ import annotations
-from typing import List, Dict, Any
+from typing import List, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
@@ -36,14 +36,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     TypeKey = _BaseExpr | Any
     TypeKeyList = _BaseExpr | List[Any]
-    TypeBinName = _BaseExpr | str
     TypeListValue = _BaseExpr | List[Any]
     TypeIndex = _BaseExpr | int | aerospike.CDTInfinite
     TypeRank = _BaseExpr | int | aerospike.CDTInfinite
     TypeCount = _BaseExpr | int | aerospike.CDTInfinite
     TypeValue = _BaseExpr | Any
-    TypePolicy = Dict[str, Any] | None
     from .resources import TypeCTX
+    from .resources import TypePolicy, TypeBinName
 
 
 class MapPut(_BaseExpr):

@@ -18,7 +18,7 @@ Arithmetic expressions provide arithmetic operator support for Aerospike express
 
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr

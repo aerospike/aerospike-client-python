@@ -139,23 +139,6 @@ class _AtomExpr:
         raise NotImplementedError
 
 
-if TYPE_CHECKING:
-    TypeResultType = Optional[int]
-    TypeFixedEle = int | float | str | bytes | dict
-    TypeFixed = Optional[Dict[str, TypeFixedEle]]
-    TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-
-    #: Compiled expression that can be passed to the Python client API.
-    TypeExpression = List[TypeCompiledOp]
-
-    TypeChild = int | float | str | bytes | _AtomExpr
-    TypeChildren = Tuple[TypeChild, ...]
-
-    TypeAny = _AtomExpr | Any
-    from aerospike_helpers import cdt_ctx
-    TypeCTX = None | List[cdt_ctx._cdt_ctx]
-
-
 class _BaseExpr(_AtomExpr):
     """
     Base class for all expressions.
@@ -272,6 +255,26 @@ class _BaseExpr(_AtomExpr):
 
     def __mod__(self, right: "TypeAny"):
         return self._overload_op(right, _ExprOp.MOD)
+
+
+if TYPE_CHECKING:
+    TypeResultType = Optional[int]
+    TypeFixedEle = int | float | str | bytes | dict
+    TypeFixed = Optional[Dict[str, TypeFixedEle]]
+    TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+
+    #: Compiled expression that can be passed to the Python client API.
+    TypeExpression = List[TypeCompiledOp]
+
+    TypeChild = int | float | str | bytes | _AtomExpr
+    TypeChildren = Tuple[TypeChild, ...]
+
+    TypeAny = _AtomExpr | Any
+    from aerospike_helpers import cdt_ctx
+    TypeCTX = None | List[cdt_ctx._cdt_ctx]
+    from typing import Any
+    TypePolicy = dict[str, Any], None
+    TypeBinName = _BaseExpr | str
 
 
 def _create_operator_expression(left_children: "TypeChildren", right_children: "TypeChildren", op_type: int):

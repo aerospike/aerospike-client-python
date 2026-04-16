@@ -30,11 +30,10 @@ from aerospike_helpers.expressions.base import HLLBin
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import List, Dict, Any
-    TypeBinName = _BaseExpr | str
+    from typing import List, Any
     TypeListValue = _BaseExpr | List[Any]
     TypeValue = _BaseExpr | Any
-    TypePolicy = Dict[str, Any] | None
+    from .resources import TypePolicy, TypeBinName
 
 
 class HLLInit(_BaseExpr):
