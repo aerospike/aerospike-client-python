@@ -54,11 +54,11 @@ class BitResize(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", byte_size: int, flags: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            byte_size (int): Number of bytes the resulting blob should occupy.
-            flags (int): One or a combination of bit resize flags. See :ref:`aerospike_bitwise_resize_flag` for possible
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            byte_size: Number of bytes the resulting blob should occupy.
+            flags: One or a combination of bit resize flags. See :ref:`aerospike_bitwise_resize_flag` for possible
                 values.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Blob value expression of resized blob bin.
 
@@ -91,10 +91,10 @@ class BitInsert(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", byte_offset: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            byte_offset (int): Integer byte index of where to insert the value.
-            value (TypeBitValue): A bytes value or blob value expression to insert.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            byte_offset: Integer byte index of where to insert the value.
+            value: A bytes value or blob value expression to insert.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob containing the inserted bytes.
 
@@ -125,10 +125,10 @@ class BitRemove(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", byte_offset: int, byte_size: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            byte_offset (int): Byte index of where to start removing from.
-            byte_size (int): Number of bytes to remove.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            byte_offset: Byte index of where to start removing from.
+            byte_size: Number of bytes to remove.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob containing the remaining bytes.
 
@@ -163,11 +163,11 @@ class BitSet(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start overwriting.
-            bit_size (int): Number of bits to overwrite.
-            value (TypeBitValue): Bytes value or blob expression containing bytes to write.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start overwriting.
+            bit_size: Number of bits to overwrite.
+            value: Bytes value or blob expression containing bytes to write.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob expression with the bits overwritten.
 
@@ -199,11 +199,11 @@ class BitOr(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            value: Bytes value or blob expression containing bytes to use in operation.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -242,11 +242,11 @@ class BitXor(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            value: Bytes value or blob expression containing bytes to use in operation.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -278,11 +278,11 @@ class BitAnd(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            value (TypeBitValue): Bytes value or blob expression containing bytes to use in operation.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            value: Bytes value or blob expression containing bytes to use in operation.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -322,10 +322,10 @@ class BitNot(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -356,11 +356,11 @@ class BitLeftShift(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            shift (int): Number of bits to shift by.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            shift: Number of bits to shift by.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -392,11 +392,11 @@ class BitRightShift(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            shift (int): Number of bits to shift by.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            shift: Number of bits to shift by.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob with the bits operated on.
 
@@ -438,13 +438,13 @@ class BitAdd(_BaseExpr):
         self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
     ):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            value (int): Integer value or expression for value to add.
-            action (int): An aerospike bit overflow action. See
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            value: Integer value or expression for value to add.
+            action: An aerospike bit overflow action. See
                 :ref:`Bitwise overflow actions <aerospike_bitwise_overflow>`.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: resulting blob with the bits operated on.
 
@@ -490,13 +490,13 @@ class BitSubtract(_BaseExpr):
         self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
     ):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start operation.
-            bit_size (int): Number of bits to be operated on.
-            value (int): Integer value or expression for value to add.
-            action (int): An aerospike bit overflow action. See
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start operation.
+            bit_size: Number of bits to be operated on.
+            value: Integer value or expression for value to add.
+            action: An aerospike bit overflow action. See
                 :ref:`Bitwise overflow actions <aerospike_bitwise_overflow>`.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: resulting blob with the bits operated on.
 
@@ -533,11 +533,11 @@ class BitSetInt(_BaseExpr):
 
     def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, bin: "TypeBinName"):
         """Args:
-            policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
-            bit_offset (int): Bit index of where to start writing.
-            bit_size (int): Number of bits to overwrite.
-            value (int): Integer value or integer expression containing value to write.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            policy: Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
+            bit_offset: Bit index of where to start writing.
+            bit_size: Number of bits to overwrite.
+            value: Integer value or integer expression containing value to write.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Resulting blob expression with the bits overwritten.
 
@@ -574,9 +574,9 @@ class BitGet(_BaseExpr):
 
     def __init__(self, bit_offset: int, bit_size: int, bin: "TypeBinName"):
         """Args:
-            bit_offset (int): Bit index of where to start reading.
-            bit_size (int): Number of bits to get.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bit_offset: Bit index of where to start reading.
+            bit_size: Number of bits to get.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Blob, bit_size bits rounded up to the nearest byte size.
 
@@ -596,9 +596,9 @@ class BitCount(_BaseExpr):
 
     def __init__(self, bit_offset: int, bit_size: int, bin: "TypeBinName"):
         """Args:
-            bit_offset (int): Bit index of where to start reading.
-            bit_size (int): Number of bits to count.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bit_offset: Bit index of where to start reading.
+            bit_size: Number of bits to count.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Blob, bit_size bits rounded up to the nearest byte size.
 
@@ -622,10 +622,10 @@ class BitLeftScan(_BaseExpr):
 
     def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: "TypeBinName"):
         """Args:
-            bit_offset (int): Bit index of where to start reading.
-            bit_size (int): Number of bits to read.
-            value (bool): Bit value to check for.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bit_offset: Bit index of where to start reading.
+            bit_size: Number of bits to read.
+            value: Bit value to check for.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
 
@@ -645,10 +645,10 @@ class BitRightScan(_BaseExpr):
 
     def __init__(self, bit_offset: int, bit_size: int, value: bool, bin: "TypeBinName"):
         """Args:
-            bit_offset (int): Bit index of where to start reading.
-            bit_size (int): Number of bits to read.
-            value (bool): Bit value to check for.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bit_offset: Bit index of where to start reading.
+            bit_size: Number of bits to read.
+            value: Bit value to check for.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
 
@@ -672,10 +672,10 @@ class BitGetInt(_BaseExpr):
 
     def __init__(self, bit_offset: int, bit_size: int, sign: bool, bin: "TypeBinName"):
         """Args:
-            bit_offset (int): Bit index of where to start reading.
-            bit_size (int): Number of bits to get.
-            sign (bool): True for signed, False for unsigned.
-            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+            bit_offset: Bit index of where to start reading.
+            bit_size: Number of bits to get.
+            sign: True for signed, False for unsigned.
+            bin: A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Integer expression.
 

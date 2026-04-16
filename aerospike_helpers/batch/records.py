@@ -47,10 +47,10 @@ class BatchRecord:
         containing the batch request results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
-            record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
+            key: The aerospike key to operate on.
+            record: The record corresponding to the requested key.
+            result: The status code of the command.
+            in_doubt: Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
@@ -229,7 +229,7 @@ class Remove(BatchRecord):
     """ Remove is used for executing Batch remove commands with batch_write and retrieving results.
 
         Attributes:
-            policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
+            policy: An optional dictionary of batch remove policy
                 flags.
     """
     policy: TypeBatchPolicyRemove
@@ -262,10 +262,10 @@ class BatchRecords:
     """ BatchRecords is used as input and output for multiple batch APIs.
 
         Attributes:
-            batch_records (list): A list of BatchRecord subtype objects used to \
+            batch_records: A list of BatchRecord subtype objects used to \
             define batched commands and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
-            result (int): The status code of the last batch call that used this BatchRecords.
+            result: The status code of the last batch call that used this BatchRecords.
                 ``0`` if all batched commands succeeded (or if the only failures were \
                     ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
                 Not ``0`` if an error occurred. The most common error is ``-16`` \

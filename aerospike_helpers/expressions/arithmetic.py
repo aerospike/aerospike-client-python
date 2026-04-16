@@ -181,8 +181,8 @@ class Pow(_BaseExpr):
 
     def __init__(self, base: "TypeFloat", exponent: "TypeFloat"):
         """Args:
-            base (TypeFloat): Float expression or value base.
-            exponent (TypeFloat): Float expression or value exponent.
+            base: Float expression or value base.
+            exponent: Float expression or value exponent.
 
         :return: (float value)
 
@@ -209,8 +209,8 @@ class Log(_BaseExpr):
 
     def __init__(self, num: "TypeFloat", base: "TypeFloat"):
         """Args:
-            num (TypeFloat): Float expression or value number.
-            base (TypeFloat): Float expression or value base.
+            num: Float expression or value number.
+            base: Float expression or value base.
 
         :return: (float value)
 
@@ -298,7 +298,7 @@ class Floor(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to take floor of.
+            value: Float expression or value to take floor of.
 
         :return: (float value)
 
@@ -329,7 +329,7 @@ class Ceil(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to take ceiling of.
+            value: Float expression or value to take ceiling of.
 
         :return: (float value)
 
@@ -355,7 +355,7 @@ class ToInt(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to convert to int.
+            value: Float expression or value to convert to int.
 
         :return: (integer value)
 
