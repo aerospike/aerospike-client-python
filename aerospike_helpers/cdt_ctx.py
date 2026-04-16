@@ -117,7 +117,10 @@ import aerospike
 
 # Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
 # NameError when using Any
-from typing import Any
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any
+    from aerospike_helpers.expressions.resources import TypeExpression
 
 def index_type_string(index_type: int) -> str:
     """
@@ -307,7 +310,7 @@ def cdt_ctx_all_children() -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP)
 
-def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
+def cdt_ctx_all_children_with_filter(expression: TypeExpression) -> _cdt_ctx:
     """
     All children of the current level will be selected, and then the filter expression
     is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
@@ -320,7 +323,7 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
-def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
+def cdt_ctx_and_filter(expression: TypeExpression) -> _cdt_ctx:
     """
     Add a boolean expression filter AND-combined with a previous :meth:`cdt_ctx_map_keys_in`.
 
