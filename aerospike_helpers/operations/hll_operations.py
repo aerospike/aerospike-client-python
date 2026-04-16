@@ -111,7 +111,12 @@ MH_BIT_COUNT_KEY = "mh_bit_count"
 VALUE_LIST_KEY = "value_list"
 
 
-def hll_add(bin_name: str, values: list, index_bit_count: Optional[int] = None, mh_bit_count: Optional[int] = None, policy: Optional[dict] = None) -> dict:
+def hll_add(
+        bin_name: str,
+        values: list,
+        index_bit_count: Optional[int] = None,
+        mh_bit_count: Optional[int] = None,
+        policy: Optional[dict] = None) -> dict:
     """Creates a hll_add operation.
 
     Server will add the values to the hll bin.
@@ -263,7 +268,8 @@ def hll_get_union_count(bin_name: str, hll_list: list) -> dict:
     return op_dict
 
 
-def hll_init(bin_name: str, index_bit_count: Optional[int] = None, mh_bit_count: Optional[int] = None, policy: Optional[dict] = None) -> dict:
+def hll_init(bin_name: str, index_bit_count: Optional[int] = None,
+             mh_bit_count: Optional[int] = None, policy: Optional[dict] = None) -> dict:
     """Creates a hll_init operation.
 
     Server creates a new HLL or resets an existing HLL.

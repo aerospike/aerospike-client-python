@@ -138,7 +138,8 @@ def list_append_items(bin_name: str, values: list, policy: Optional[dict] = None
     return op_dict
 
 
-def list_insert(bin_name: str, index: int, value: Any, policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def list_insert(bin_name: str, index: int, value: Any,
+                policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """
     Creates a list insert operation.
 
@@ -168,7 +169,8 @@ def list_insert(bin_name: str, index: int, value: Any, policy: Optional[dict] = 
     return op_dict
 
 
-def list_insert_items(bin_name: str, index: int, values: list, policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def list_insert_items(bin_name: str, index: int, values: list,
+                      policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """
     Creates a list insert items operation.
 
@@ -198,7 +200,8 @@ def list_insert_items(bin_name: str, index: int, values: list, policy: Optional[
     return op_dict
 
 
-def list_increment(bin_name: str, index: int, value: Union[int, float], policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def list_increment(bin_name: str, index: int, value: Union[int, float],
+                   policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """
     Creates a list increment operation.
 
@@ -502,7 +505,8 @@ def list_get_by_index(bin_name: str, index: int, return_type: int, ctx: Optional
     return op_dict
 
 
-def list_get_by_index_range(bin_name: str, index: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_get_by_index_range(bin_name: str, index: int, return_type: int,
+                            count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list get index range operation.
 
     The list get by index range operation gets `count` items starting at `index` and returns a value
@@ -567,7 +571,8 @@ def list_get_by_rank(bin_name: str, rank: int, return_type: int, ctx: Optional[l
     return op_dict
 
 
-def list_get_by_rank_range(bin_name: str, rank: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_get_by_rank_range(bin_name: str, rank: int, return_type: int,
+                           count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list get by rank range operation.
 
     Server selects `count` items starting at the specified `rank` and returns selected data
@@ -606,7 +611,8 @@ def list_get_by_rank_range(bin_name: str, rank: int, return_type: int, count: Op
     return op_dict
 
 
-def list_get_by_value(bin_name: str, value: Any, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_get_by_value(bin_name: str, value: Any, return_type: int,
+                      inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list get by value operation.
 
     Server selects list items with a value equal to `value` and returns selected data specified by
@@ -639,7 +645,8 @@ def list_get_by_value(bin_name: str, value: Any, return_type: int, inverted: boo
     return op_dict
 
 
-def list_get_by_value_list(bin_name: str, value_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_get_by_value_list(bin_name: str, value_list: list, return_type: int,
+                           inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list get by value list operation.
 
     Server selects list items with a value contained in `value_list` and returns selected data
@@ -830,7 +837,8 @@ def list_remove_by_rank(bin_name: str, rank: int, return_type: int, ctx: Optiona
     return op_dict
 
 
-def list_remove_by_rank_range(bin_name: str, rank: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_remove_by_rank_range(bin_name: str, rank: int, return_type: int,
+                              count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list remove by rank range operation.
 
     Server removes `count` items starting at the specified `rank` and returns selected data
@@ -869,7 +877,8 @@ def list_remove_by_rank_range(bin_name: str, rank: int, return_type: int, count:
     return op_dict
 
 
-def list_remove_by_value(bin_name: str, value: Any, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_remove_by_value(bin_name: str, value: Any, return_type: int,
+                         inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list remove by value operation.
 
     Server removes list items with a value equal to `value` and returns selected data specified by
@@ -903,7 +912,8 @@ def list_remove_by_value(bin_name: str, value: Any, return_type: int, inverted: 
     return op_dict
 
 
-def list_remove_by_value_list(bin_name: str, value_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def list_remove_by_value_list(bin_name: str, value_list: list, return_type: int,
+                              inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Create a list remove by value list operation.
 
     Server removes list items with a value matching one contained in `value_list`
@@ -938,8 +948,12 @@ def list_remove_by_value_list(bin_name: str, value_list: list, return_type: int,
 
 
 def list_remove_by_value_range(
-    bin_name: str, return_type: int, value_begin: Any = None, value_end: Any = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        return_type: int,
+        value_begin: Any = None,
+        value_end: Any = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a list remove by value range operation.
 
     Server removes list items with a value greater than or equal to `value_begin`
@@ -1029,8 +1043,13 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: Optional[list] = None) ->
 
 
 def list_get_by_value_rank_range_relative(
-    bin_name: str, value: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        value: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a list get by value rank range relative operation
 
     Create list get by value relative to rank range operation.
@@ -1107,8 +1126,13 @@ def list_get_by_value_rank_range_relative(
 
 
 def list_remove_by_value_rank_range_relative(
-    bin_name: str, value: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        value: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a list get by value rank range relative operation
 
     Create list remove by value relative to rank range operation.

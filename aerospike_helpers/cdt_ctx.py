@@ -367,7 +367,8 @@ def cdt_ctx_and_filter(expression) -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP,
+                    extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
 
 def cdt_ctx_map_keys_in(keys: list) -> _cdt_ctx:
     """

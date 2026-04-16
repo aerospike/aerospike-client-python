@@ -130,7 +130,8 @@ def map_put(bin_name: str, key: Any, value: Any, map_policy: Optional[dict] = No
     return op_dict
 
 
-def map_put_items(bin_name: str, item_dict: dict, map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def map_put_items(bin_name: str, item_dict: dict,
+                  map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """Creates a map_put_items operation.
 
     The operation allows a user to add or update items in the map stored on the server.
@@ -173,7 +174,8 @@ def map_put_items(bin_name: str, item_dict: dict, map_policy: Optional[dict] = N
     return op_dict
 
 
-def map_increment(bin_name: str, key: Any, amount: Union[int, float], map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def map_increment(bin_name: str, key: Any, amount: Union[int, float],
+                  map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """Creates a map_increment operation.
 
     The operation allows a user to increment the value of a value stored in the map on the server.
@@ -202,7 +204,8 @@ def map_increment(bin_name: str, key: Any, amount: Union[int, float], map_policy
     return op_dict
 
 
-def map_decrement(bin_name: str, key: Any, amount: Union[int, float], map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
+def map_decrement(bin_name: str, key: Any, amount: Union[int, float],
+                  map_policy: Optional[dict] = None, ctx: Optional[list] = None) -> dict:
     """Creates a map_decrement operation.
 
     The operation allows a user to decrement the value of a value stored in the map on the server.
@@ -297,7 +300,8 @@ def map_remove_by_key(bin_name: str, key: Any, return_type: int, ctx: Optional[l
     return op_dict
 
 
-def map_remove_by_key_list(bin_name: str, key_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def map_remove_by_key_list(bin_name: str, key_list: list, return_type: int,
+                           inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Creates a map_remove_by_key operation.
 
     The operation removes items, specified by the keys in key_list from the map stored in the specified bin.
@@ -330,8 +334,12 @@ def map_remove_by_key_list(bin_name: str, key_list: list, return_type: int, inve
 
 
 def map_remove_by_key_range(
-    bin_name: str, key_range_start: Any, key_range_end: Any, return_type: int, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        key_range_start: Any,
+        key_range_end: Any,
+        return_type: int,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Creates a map_remove_by_key_range operation.
 
     The operation removes items, with keys between key_range_start(inclusive) and
@@ -366,7 +374,8 @@ def map_remove_by_key_range(
     return op_dict
 
 
-def map_remove_by_value(bin_name: str, value: Any, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def map_remove_by_value(bin_name: str, value: Any, return_type: int,
+                        inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Creates a map_remove_by_value operation.
 
     The operation removes key value pairs whose value matches the specified value.
@@ -398,7 +407,8 @@ def map_remove_by_value(bin_name: str, value: Any, return_type: int, inverted: b
     return op_dict
 
 
-def map_remove_by_value_list(bin_name: str, value_list: list, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def map_remove_by_value_list(bin_name: str, value_list: list, return_type: int,
+                             inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Creates a map_remove_by_value_list operation.
 
     The operation removes key value pairs whose values are specified in the value_list.
@@ -716,7 +726,8 @@ def map_get_by_key_list(
     return op_dict
 
 
-def map_get_by_value(bin_name: str, value: Any, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def map_get_by_value(bin_name: str, value: Any, return_type: int,
+                     inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Creates a map_get_by_value operation.
 
     The operation returns entries whose value matches the specified value.
@@ -917,7 +928,8 @@ def map_get_by_rank(bin_name: str, rank: int, return_type: int, ctx: Optional[li
     return op_dict
 
 
-def map_get_by_rank_range(bin_name: str, rank_start: int, get_amt: int, return_type: int, inverted: bool = False, ctx: Optional[list] = None) -> dict:
+def map_get_by_rank_range(bin_name: str, rank_start: int, get_amt: int, return_type: int,
+                          inverted: bool = False, ctx: Optional[list] = None) -> dict:
     """Creates a map_get_by_rank_range operation.
 
     The operation returns item within the specified rank range from the map.
@@ -952,8 +964,13 @@ def map_get_by_rank_range(bin_name: str, rank_start: int, get_amt: int, return_t
 
 
 def map_remove_by_value_rank_range_relative(
-    bin_name: str, value: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        value: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a map remove by value rank range relative operation
 
     Create map remove by value relative to rank range operation.
@@ -1025,8 +1042,13 @@ def map_remove_by_value_rank_range_relative(
 
 
 def map_get_by_value_rank_range_relative(
-    bin_name: str, value: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        value: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a map remove by value rank range relative operation
 
     Create list map get by value relative to rank range operation.
@@ -1084,8 +1106,13 @@ def map_get_by_value_rank_range_relative(
 
 
 def map_remove_by_key_index_range_relative(
-    bin_name: str, key: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        key: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a map get by value rank range relative operation
 
     Create map remove by key relative to index range operation.
@@ -1158,8 +1185,13 @@ def map_remove_by_key_index_range_relative(
 
 
 def map_get_by_key_index_range_relative(
-    bin_name: str, value: Any, offset: int, return_type: int, count: Optional[int] = None, inverted: bool = False, ctx: Optional[list] = None
-) -> dict:
+        bin_name: str,
+        value: Any,
+        offset: int,
+        return_type: int,
+        count: Optional[int] = None,
+        inverted: bool = False,
+        ctx: Optional[list] = None) -> dict:
     """Create a map get by value rank range relative operation
 
     Create map get by key relative to index range operation.
