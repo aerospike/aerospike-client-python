@@ -100,32 +100,6 @@ pygments_style = "sphinx"
 
 # Alias/type hint configuration.
 autodoc_typehints = "none"
-autodoc_type_aliases = {
-    "_BaseExpr": "AerospikeExpression",
-    "TypeCTX": "TypeCTX",
-    "TypeRank": "TypeRank",
-    "TypeCount": "TypeCount",
-    "TypePolicy": "TypePolicy",
-    "TypeValue": "TypeValue",
-    "TypeBinName": "TypeBinName",
-    "TypeListValue": "TypeListValue",
-    "TypeIndex": "TypeIndex",
-    "TypeChild": "TypeChild",
-    "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
-    "TypeGeo": "TypeGeo",
-    "TypeKey": "TypeKey",
-    "TypeKeyList": "TypeKeyList",
-    "TypeBitValue": "TypeBitValue",
-    "TypeNumber": "TypeNumber",
-    "TypeFloat": "TypeFloat",
-    "TypeInteger": "TypeInteger",
-    "TypeBool": "TypeBool",
-    "TypeComparisonArg": "TypeComparisonArg",
-    "TypeResultType": "TypeResultType",
-    "TypeFixedEle": "TypeFixedEle",
-    "TypeFixed": "TypeFixed",
-}
 nitpicky = True
 
 # -- Options for HTML output ---------------------------------------------------
