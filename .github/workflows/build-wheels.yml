@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
       with:
         egress-policy: audit
 
@@ -186,7 +186,7 @@ jobs:
       CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
       with:
         egress-policy: audit
 
@@ -210,7 +210,7 @@ jobs:
 
     - name: 'Windows: Add msbuild to PATH'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
-      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -258,12 +258,12 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '8957f7f57f85c32bc2b513f1f29299041e721cd4ba763374c2da89d8837d49e9') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'd9bad846bbcd954a2873408f274b62e0fe8d26cba31dd681db9d62e6133a13b2') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ebd269b4ecc3e186eeb0d734d765dfe9c606017a1cd5a122e08018b86b126217') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'ce67ff5b237368f08cd352efdc3a0f2bde008384bb6c2e70b23ae20d70bfb0df') }} >> $GITHUB_ENV
 
-    - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
         registry: ghcr.io
@@ -304,7 +304,7 @@ jobs:
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@352e01339f0a173aa2a3eb57f01492e341e83865 # v3.1.3
+      uses: pypa/cibuildwheel@298ed2fb2c105540f5ed055e8a6ad78d82dd3a7e # v3.3.1
       id: cibuildwheel
       env:
         # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
@@ -349,7 +349,7 @@ jobs:
       shell: bash
 
     - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: ${{ !cancelled() }}
       with:
         path: ./wheelhouse/*.whl
@@ -377,7 +377,7 @@ jobs:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
 
@@ -411,7 +411,7 @@ jobs:
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
@@ -424,7 +424,7 @@ jobs:
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           allow-prereleases: true

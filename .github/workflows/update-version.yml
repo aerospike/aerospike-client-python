@@ -42,7 +42,7 @@ jobs:
       bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
       with:
         egress-policy: audit
 

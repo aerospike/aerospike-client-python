@@ -178,9 +178,10 @@ class TestBaseClass(object):
                 if res is not None:
                     break
             res = res.split(".")
-            # major_ver = res[0]
-            # minor_ver = res[1]
-            # print("major_ver:", major_ver, "minor_ver:", minor_ver)
+            TestBaseClass.major_ver = res[0]
+            TestBaseClass.minor_ver = res[1]
+            # print("major_ver:", TestBaseClass.major_ver, "minor_ver:", TestBaseClass.minor_ver)
+
         return client
 
     @staticmethod

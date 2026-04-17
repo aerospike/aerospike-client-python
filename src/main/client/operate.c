@@ -915,7 +915,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate *operate_policy_p = NULL;
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -925,10 +924,10 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, size);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1090,7 +1089,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_operations_inita(&ops, ops_list_size);
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     /* These are the values which will be returned in a 3 element list */
@@ -1101,10 +1099,10 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     CHECK_CONNECTED(err);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
