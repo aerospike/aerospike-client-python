@@ -61,6 +61,14 @@ AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
     return query;
 }
 
+extern int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
+                                    PyObject *py_ctx,
+                                    as_predicate_type predicate,
+                                    as_index_datatype in_datatype,
+                                    PyObject *py_bin, PyObject *py_val1,
+                                    PyObject *py_val2, int index_type,
+                                    as_error *err);
+
 /**
  * Queries a set in the Aerospike DB and applies UDF on it.
  *
