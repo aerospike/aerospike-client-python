@@ -126,23 +126,19 @@ class TestDropRole(object):
         """
         Drop non-existent role
         """
-        try:
+        with pytest.raises(e.InvalidRole) as excinfo:
             admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_drop_role_rolename_None(self):
         """
         Drop role with role name None
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_drop_role(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"
 
     def test_drop_role_with_incorrect_policy(self):
         """
@@ -151,14 +147,13 @@ class TestDropRole(object):
         status = admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}]
         )
-
         assert status == 0
-        try:
-            admin_drop_role_and_poll(self.client, "usr-sys-admin-test", {"timeout": 0.2})
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        with pytest.raises(e.ParamError) as excinfo:
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test", {"timeout": 0.2})
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
+
         try:
             admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:

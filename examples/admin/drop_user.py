@@ -87,20 +87,20 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         user = "foo-example"
-    	
+
         client.admin_drop_user(user, policy)
-        
+
     	print("OK, 1 user dropped")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

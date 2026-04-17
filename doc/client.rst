@@ -77,7 +77,7 @@ Connection
 
         Tests the connections between the client and the nodes of the cluster.
         If the result is ``False``, the client will require another call to
-        :meth:`~aerospike.connect`.
+        :meth:`~aerospike.Client.connect`.
 
         :rtype: :class:`bool`
 
@@ -99,6 +99,8 @@ Record Commands
     .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_NONE]]])
 
         Create a new record, or remove / add bins to a record.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
@@ -181,6 +183,8 @@ Record Commands
         (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. )
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -207,6 +211,8 @@ Record Commands
 
         Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
@@ -224,6 +230,10 @@ Record Commands
 
         Touch the given record, setting its time-to-live and incrementing its generation.
 
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta["ttl"]`` parameter. Use the ``val`` parameter instead.
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
         :param dict meta: record metadata to be set. see :ref:`metadata_dict`
@@ -238,6 +248,10 @@ Record Commands
 
         Remove a record matching the *key* from the cluster.
 
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
         :param dict policy: see :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
@@ -250,7 +264,9 @@ Record Commands
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -297,7 +313,7 @@ Batched Commands
         This method allows different sub-commands for each key in the batch.
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
-        :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A :class:`~aerospike_helpers.batch.records.BatchRecords` object used to specify the operations to carry out.
         :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
@@ -408,6 +424,8 @@ String Operations
 
         Append a string to the string value in bin.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
@@ -426,6 +444,8 @@ String Operations
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
         Prepend the string value in *bin* with the string *val*.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -455,6 +475,8 @@ Numeric Operations
     .. method:: increment(key, bin, offset[, meta: dict[, policy: dict]])
 
         Increment the integer value in *bin* by the integer *val*.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -505,7 +527,7 @@ Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: commit(transaction: aerospike.Transaction) -> int:
+    .. method:: commit(transaction: aerospike.Transaction) -> int
 
         Attempt to commit the given transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
@@ -517,7 +539,7 @@ Transactions
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
-    .. method:: abort(transaction: aerospike.Transaction) -> int:
+    .. method:: abort(transaction: aerospike.Transaction) -> int
 
         Abort and rollback the given transaction.
 
@@ -541,6 +563,8 @@ User Defined Functions
     .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy: dict]])
 
         Register a UDF module with the cluster.
+
+        This waits for the UDF to be added to all nodes in the server before returning.
 
         :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
@@ -566,7 +590,9 @@ User Defined Functions
 
     .. method:: udf_remove(module[, policy: dict])
 
-        Remove a  previously registered UDF module from the cluster.
+        Remove a previously registered UDF module from the cluster.
+
+        This waits for the UDF to be removed from the server completely before returning.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
@@ -731,7 +757,7 @@ Info Operations
 
         .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
 
-    .. method:: info_all(command[, policy: dict]]) -> {}
+    .. method:: info_all(command[, policy: dict]]) -> dict
 
         Send an info command to all nodes in the cluster to which the client is connected.
 
@@ -769,7 +795,7 @@ Info Operations
 
         :param str data_center: The data center to apply the filter to.
         :param str namespace: The namespace to apply the filter to.
-        :param AerospikeExpression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
+        :param TypeExpression expression_filter: The compiled expression filter to set. See expressions at :py:mod:`aerospike_helpers`.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -785,7 +811,7 @@ Info Operations
 
         See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
 
-        :param AerospikeExpression expression: the compiled expression.
+        :param TypeExpression expression: the compiled expression. See expressions at :py:mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/get_expression_base64.py
@@ -812,12 +838,13 @@ Info Operations
 
         :param str namespace: The namespace to truncate.
         :param str set: The set to truncate. Pass in :py:obj:`None` to truncate a namespace instead.
-        :param long nanos:  A cutoff threshold where records last updated before the threshold will be removed.
+        :param int nanos:  A cutoff threshold where records last updated before the threshold will be removed.
             Units are in nanoseconds since the UNIX epoch ``(1970-01-01)``.
             A value of ``0`` indicates that all records in the set should be truncated regardless of update time.
             The value must not be in the future.
         :param dict policy: See :ref:`aerospike_info_policies`.
-        :rtype: Status indicating the success of the operation.
+        :return: Status indicating the success of the operation.
+        :rtype: int
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires Aerospike server version >= 3.12
@@ -834,41 +861,75 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
+    .. method:: index_single_value_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create a string index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index on a single value with a given type.
+
+        :param str ns: the namespace containing the value.
+        :param str set: the set containing the value.
+        :param str bin: the name of the bin containing the value.
+        :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
+        :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
+
+        Create a secondary index for all of a list's values, where all the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_integer_create(ns, set, bin, name[, policy])
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an integer index with *name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index on all of a map's keys, where all of the keys are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_blob_create(ns, set, bin, name[, policy])
+        .. note:: Requires server version >= 3.8.0
 
-        Create an blob index with index name *name* on the *bin* in the specified \
-        *ns*, *set*.
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
+
+        Create a secondary index on all of a map's values, where all of the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
-        :param str bin: the name of the bin the secondary index is built on.
+        :param str bin: the name of bin the secondary index is built on.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 3.8.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+
+            # assume the bin fav_movies in the set test.demo bin should contain
+            # a dict { (str) _title_ : (int) _times_viewed_ }
+            # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
+            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
+            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
+            client.close()
 
     .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
 
@@ -882,93 +943,6 @@ Index Operations
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a list.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the keys of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, name[, policy: dict])
-
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the values of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-
-            # assume the bin fav_movies in the set test.demo bin should contain
-            # a dict { (str) _title_ : (int) _times_viewed_ }
-            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
-            # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
-            client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
-
-    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
-
-        Create a geospatial 2D spherical index with *name* on the *bin* \
-        in the specified *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
-
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
@@ -993,6 +967,91 @@ Index Operations
 
         .. versionchanged:: 7.1.1
 
+    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a string index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_integer_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create an integer index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a blob index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a geospatial 2D spherical index with *name* on the *bin* \
+        in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. code-block:: python
+
+            import aerospike
+
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
+            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+            client.close()
+
+    .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
+
+        .. deprecated:: 19.1.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+
+        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
+        numeric, string, or GeoJSON values (as defined by *index_datatype*)
+        on records of the specified *ns*, *set* whose bin is a list or map.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
+        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
+        :param str index_name: the name of the index.
+        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. index::
         single: Admin Operations
@@ -1107,7 +1166,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy: dict]) -> {}
+    .. method:: admin_get_role(role[, policy: dict]) -> dict
 
         Get a :class:`dict` of privileges, whitelist, and quotas associated with a role.
 
@@ -1118,7 +1177,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_roles([policy: dict]) -> {}
+    .. method:: admin_get_roles([policy: dict]) -> dict
 
         Get the names of all roles and their attributes.
 
@@ -1128,7 +1187,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_role(role[, policy: dict]) -> []
+    .. method:: admin_query_role(role[, policy: dict]) -> list
 
         Get the :class:`list` of privileges associated with a role.
 
@@ -1139,7 +1198,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_roles([policy: dict]) -> {}
+    .. method:: admin_query_roles([policy: dict]) -> dict
 
         Get all named roles and their privileges.
 
@@ -1307,35 +1366,35 @@ User Dictionary
 
 The user dictionary has the following key-value pairs:
 
-    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+    * ``"read_info"`` (:class:`list`): list of read statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: read quota in records per second
+       * 0: read quota in records per second (:class:`int`)
 
-       * 1: single record read command rate (TPS)
+       * 1: single record read command rate (TPS) (:class:`int`)
 
-       * 2: read scan/query record per second rate (RPS)
+       * 2: read scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless read scans/queries
+       * 3: number of limitless read scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
-    * ``"write_info"`` (:class:`list[int]`): list of write statistics.
+    * ``"write_info"`` (:class:`list`): list of write statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: write quota in records per second
+       * 0: write quota in records per second (:class:`int`)
 
-       * 1: single record write command rate (TPS)
+       * 1: single record write command rate (TPS) (:class:`int`)
 
-       * 2: write scan/query record per second rate (RPS)
+       * 2: write scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless write scans/queries
+       * 3: number of limitless write scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
-    * ``"roles"`` (:class:`list[str]`): list of assigned role names.
+    * ``"roles"`` (:class:`list`): list of assigned role names. Each role name is a :class:`str`.
 
 Tuples
 ======
@@ -1696,9 +1755,9 @@ Read Policies
             |
             | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1794,9 +1853,9 @@ Operate Policies
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1913,9 +1972,9 @@ Batch Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1996,7 +2055,7 @@ Batch Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.Client.batch_write`, :meth:`~aerospike.Client.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2051,7 +2110,7 @@ Batch Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.Client.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2090,7 +2149,7 @@ Batch Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.Client.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2133,9 +2192,9 @@ Batch Read Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
         * **read_mode_sc**
             | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
@@ -2171,7 +2230,7 @@ Info Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.info_all`, :meth:`~aerospike.info_single_node`, :meth:`~aerospike.info_random_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
