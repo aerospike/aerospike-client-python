@@ -944,6 +944,17 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_set_create(ns, set, name, policy: dict = None)
+
+        Create a set index.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str name: the name of the index.
+        :param dict | None policy: optional :ref:`aerospike_info_policies`.
+
+        .. note:: Requires server version >= 18.2.0
+
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
         Remove the index with *name* from the namespace.
