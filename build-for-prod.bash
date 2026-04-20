@@ -1,5 +1,7 @@
 set -e
 
+# Install
+
 # On macOS and Windows, this is expected to run on bare metal
 # On Linux, this is expected to run in a container from the manylinux image
 os=$(uname -s)
