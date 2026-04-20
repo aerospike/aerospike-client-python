@@ -32,7 +32,8 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@48edf9ff59ab4da5f15915b22d8895f19ce7fd55
+  # TODO: using temporary commit. needs to be moved to a central branch commit
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@42aa60fdc5dc4d7fb103c8d55b62b5e4641b7bac
     id: setup-as-server
     with:
       enable-security: "true"
