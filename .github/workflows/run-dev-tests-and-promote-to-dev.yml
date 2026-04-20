@@ -45,19 +45,48 @@ on:
         required: false
         type: string
         description: For speeding up debugging
-
+      build-type:
+        required: false
+        default: 'release'
+        type: string
+        description: Build metadata
 jobs:
-  build-test-and-publish-artifacts-as-release-bundle:
-    uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
+  build-test-and-publish-artifacts-as-jfrog-build:
+    strategy:
+      matrix:
+    uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
     with:
-      gh-workflows-ref: 8a4e717507bc3394c4defac0abe4ffd73b4f4e14
       gh-artifact-directory: dist
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-      # TODO: need to get from repo somehow.
-      # version: ${{ needs.run-dev-tests.outputs.build-version }}
-      # TODO
-      # build-script-path:
+      version: ${{ github.ref_name }}
+      build-script-path: ./build-python-client.sh
+      dry-run: ${{ inputs.dry-run }}
+      build-type: ${{ inputs.build-type }}
+      # TODO: maybe don't need platform tag anymore if we build from a script instead of
+      # cibuildwheel
+      matrix-json: |
+        {"include":[
+          {"runs-on":"ubuntu-22.04","platform-tag":"manylinux_x86_64"},
+          {"runs-on":"ubuntu-22.04-arm","platform-tag":"manylinux_aarch64"},
+          {"runs-on":"macos-14-large","platform-tag":"macosx_x86_64"},
+          {"runs-on":"macos-14","platform-tag":"macosx_arm64"},
+          {"runs-on":"windows-2022","platform-tag":"win_amd64"},
+        ]}
+      setup-python: true
+
     secrets: inherit
+
+  create-release-bundle-and-promote-to-dev:
+    if: ${{ inputs.dry-run }}
+    needs: build-test-and-publish-artifacts-as-jfrog-build
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@7f563f650178064e0c0cedde00277226bfb131de
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-names: ${{ vars.JFROG_BUILD_NAME }}
+      jf-bundle-name: ${{ vars.JFROG_BUILD_NAME }}
+      version: ${{ github.ref_name }}
+      gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de # Should match the version in your 'uses:' line
