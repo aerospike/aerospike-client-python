@@ -45,6 +45,10 @@ if [[ $os =~ Darwin* ]]; then
           LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix "$library")/lib"
         done
         export LIBRARY_PATH="$LIBRARY_PATH"
+
+        # By default on Github Actions, a universal wheel will be built.
+        # Here, we try to override that behavior
+        export ARCHFLAGS="-arch $arch"
     else
         # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
         # Just do it for all Python versions (even those that don't require more room) for futureproofing
