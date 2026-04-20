@@ -266,6 +266,21 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Convert Python tag to Python version
+      # Don't use sed because we want this command to work on both mac and windows
+      # The command used in GNU sed is different than in macOS sed
+      id: get-python-version
+      run: |
+        PYTHON_TAG=${{ matrix.python-tag }}
+        PYTHON_VERSION="${PYTHON_TAG/cp/}"
+        echo python_version="${PYTHON_VERSION/3/3.}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: ${{ steps.get-python-version.outputs.python_version }}
+        allow-prereleases: true
+
     - run: ./build-for-prod.bash
 
     # - name: Setup tmate session
