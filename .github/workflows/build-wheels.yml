@@ -281,7 +281,7 @@ jobs:
         python-version: ${{ steps.get-python-version.outputs.python_version }}
         allow-prereleases: true
 
-    - run: ./build-for-prod.bash
+    - run: ./build-prod-wheel.bash
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
