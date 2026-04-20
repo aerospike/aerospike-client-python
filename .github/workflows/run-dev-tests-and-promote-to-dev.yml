@@ -62,6 +62,7 @@ jobs:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+      # TODO: maybe this should be the actions run #?
       version: ${{ github.ref_name }}
       build-script-path: ./build-python-client.sh
       dry-run: ${{ inputs.dry-run }}
