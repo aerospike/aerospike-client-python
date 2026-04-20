@@ -1,6 +1,5 @@
 set -e
-
-# Install
+set -x
 
 # On macOS and Windows, this is expected to run on bare metal
 # On Linux, this is expected to run in a container from the manylinux image
