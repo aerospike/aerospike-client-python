@@ -266,7 +266,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - run: ./build-python-client.bash
+    - run: ./build-for-prod.bash
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
