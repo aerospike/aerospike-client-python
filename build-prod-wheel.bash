@@ -87,6 +87,7 @@ if [[ $os =~ Linux* ]]; then
     fi
 
 elif [[ $os =~ Darwin* ]]; then
+    pip install delocate -c requirements.txt
     delocate-wheel --require-archs "$arch" -w "$REPAIRED_WHEEL_DIR" -v "$unrepaired_wheel_path"
     if [[ "$VERIFY_REPAIR" != "" ]]; then
         # Do the same verification step like with Linux
