@@ -6,6 +6,7 @@ on:
 
 jobs:
   # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
+  # TODO: update whitelisted changes
   compare-latest-dev-tag-and-stage:
     outputs:
       # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
@@ -59,7 +60,7 @@ jobs:
       compare-latest-dev-tag-and-stage
     ]
     if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests-on-jfrog-artifacts.result == 'success' || needs.run-stage-tests-on-jfrog-artifacts.result == 'skipped') }}
-    uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
+    uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
     secrets: inherit

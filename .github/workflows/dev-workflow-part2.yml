@@ -18,33 +18,5 @@ jobs:
     uses: ./.github/workflows/bump-dev-number-and-tag-commit.yml
     with:
       change: 'bump-dev-num'
-      dry-run: ${{ inputs.dry-run }}
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}
     secrets: inherit
-
-  rebuild-artifacts-with-new-dev-num:
-    needs: tag-new-commit-with-dev-number
-    name: Rebuild artifacts with new dev number
-    uses: ./.github/workflows/build-artifacts.yml
-    with:
-      # On pull_request_target, the bump version commit will be ignored
-      # So we must pass it manually to the workflow
-      sha-to-build-and-test: ${{ github.sha }}
-      # override-version: ${{ needs.tag-new-commit-with-dev-number.outputs.new_version }}
-    secrets: inherit
-
-  upload-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      tag-new-commit-with-dev-number,
-      rebuild-artifacts-with-new-dev-num
-    ]
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
-      dry-run: ${{ inputs.dry-run }}
-    secrets: inherit
-
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: upload-to-jfrog
-    uses: ./.github/workflows/delete-artifacts.yml

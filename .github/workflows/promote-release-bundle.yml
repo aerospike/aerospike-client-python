@@ -31,8 +31,6 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    # - run: jf rbp --signing-key=aerospike --include-repos ${{ inputs.jfrog-repo-name }} ${{ inputs.release-bundle-name }} ${{ inputs.release-bundle-version }} ${{ inputs.new-environment }}
-
     - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
       with:
         bundle-name: ${{ inputs.release-bundle-name }}

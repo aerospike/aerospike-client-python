@@ -9,9 +9,6 @@ on:
       sha_to_build:
         type: string
         required: true
-    outputs:
-      sdist-version:
-        value: ${{ jobs.build-sdist.outputs.sdist-version }}
 
 env:
   STATUS_CHECK_MESSAGE: "Build source distribution"
@@ -19,8 +16,6 @@ env:
 
 jobs:
   build-sdist:
-    outputs:
-      sdist-version: ${{ steps.get-sdist-version.outputs.version }}
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
@@ -52,9 +47,6 @@ jobs:
 
     - name: Build source distribution
       run: python3 -m build --sdist
-
-    - id: get-sdist-version
-      run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
     - name: Upload source distribution to GitHub
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
