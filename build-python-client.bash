@@ -62,7 +62,7 @@ REPAIRED_WHEEL_DIR=wheelhouse
 
 unrepaired_wheel_path=$(find dist/ -type f -name '*.whl' | head -n 1)
 if [[ $os =~ Linux* ]]; then
-    if [[ "$DEBUG" != "" ]]; then
+    if [[ "$VERIFY_REPAIR" != "" ]]; then
         # We want to check that our wheel links to the new openssl 3 install, not the system default
         # This assumes that ldd prints out the "soname" for the libraries
         # We can also manually verify the repair worked by checking the repaired wheel's compatibility tag
@@ -75,14 +75,14 @@ if [[ $os =~ Linux* ]]; then
 
     auditwheel repair -w "$REPAIRED_WHEEL_DIR" "$unrepaired_wheel_path"
 
-    if [[ "$DEBUG" != "" ]]; then
+    if [[ "$VERIFY_REPAIR" != "" ]]; then
         auditwheel show "$REPAIRED_WHEEL_DIR/*"
         rm -rf "$WHEEL_DIR"
     fi
 
 elif [[ $os =~ Darwin* ]]; then
     delocate-wheel --require-archs "$arch" -w "$REPAIRED_WHEEL_DIR" -v "$unrepaired_wheel_path"
-    if [[ "$DEBUG" != "" ]]; then
+    if [[ "$VERIFY_REPAIR" != "" ]]; then
         # Do the same verification step like with Linux
         delocate-listdeps "$REPAIRED_WHEEL_DIR/*.whl" | grep libcrypto.3.dylib
         delocate-listdeps "$REPAIRED_WHEEL_DIR/*.whl" | grep libssl.3.dylib
