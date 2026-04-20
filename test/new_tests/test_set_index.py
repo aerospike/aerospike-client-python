@@ -49,7 +49,7 @@ class TestSetIndex:
     )
     def test_create_set_index(self, client_as_sindex_admin_user, expect_earlier_than_server_version_to_fail):
         with self.expected_context_for_pos_tests:
-            client_as_sindex_admin_user.index_set_create("test", "demo", INDEX_NAME)
+            client_as_sindex_admin_user.index_set_create(ns="test", set="demo", name=INDEX_NAME, policy=None)
 
     def test_create_set_index_with_invalid_args(self):
         with pytest.raises(TypeError):
