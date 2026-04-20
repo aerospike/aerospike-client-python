@@ -282,6 +282,7 @@ jobs:
         allow-prereleases: true
 
     - run: ./build-prod-wheel.bash
+      shell: bash
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
