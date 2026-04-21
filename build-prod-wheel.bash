@@ -64,7 +64,7 @@ elif [[ $os =~ Linux* && $arch == "x86_64" ]]; then
     export LD_LIBRARY_PATH=/usr/local/lib64
 fi
 
-if [ "$#" -eq 2 ]; then
+if [ "$#" -eq 1 ]; then
     python_version=$1
 else
     python_version="3"
