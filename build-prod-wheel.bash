@@ -39,6 +39,13 @@ if [[ $os =~ Darwin* ]]; then
     export MACOSX_DEPLOYMENT_TARGET
     MACOSX_DEPLOYMENT_TARGET="$(sw_vers -productVersion | cut -d"." -f 1).0"
 
+    # By default on Github Actions, a universal wheel will be built.
+    # (I believe because Github Actions uses universal versions of Python)
+    # Here, we try to override that behavior
+    # https://github.com/pypa/packaging/issues/882#issuecomment-2752417594
+    export _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-arm64"
+    export ARCHFLAGS="-arch $arch"
+
     if [[ $arch == "arm64" ]]; then
         # Ensure that linker can find brew packages
         # On mac m1, packages installed via brew are not in the linker's default library path
@@ -47,13 +54,6 @@ if [[ $os =~ Darwin* ]]; then
           LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix "$library")/lib"
         done
         export LIBRARY_PATH="$LIBRARY_PATH"
-
-        # By default on Github Actions, a universal wheel will be built.
-        # (I believe because Github Actions uses universal versions of Python)
-        # Here, we try to override that behavior
-        # https://github.com/pypa/packaging/issues/882#issuecomment-2752417594
-        export _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-arm64"
-        export ARCHFLAGS="-arch $arch"
     else
         # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
         # Just do it for all Python versions (even those that don't require more room) for futureproofing
