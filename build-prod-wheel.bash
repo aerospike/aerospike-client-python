@@ -71,7 +71,7 @@ else
 fi
 
 "python${python_version}" -m pip install build -c requirements.txt
-"python${python_version}" -m build
+"python${python_version}" -m build --wheel
 
 REPAIRED_WHEEL_DIR=wheelhouse
 
