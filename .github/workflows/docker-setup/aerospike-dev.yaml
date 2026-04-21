@@ -13,13 +13,9 @@ namespaces:
     name: test
     nsup-period: 120
     replication-factor: 1
-    # TODO: consider moving to memory storage to reduce time taken to run tests
     storage-engine:
-      files:
-        - /opt/aerospike/data/test.dat
-      filesize: 4294967296
-      read-page-cache: true
-      type: device
+      type: memory
+      data-size: 1G
     strong-consistency: "true"
     strong-consistency-allow-expunge: "true"
 network:
