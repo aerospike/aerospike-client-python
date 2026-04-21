@@ -6,10 +6,12 @@ set -x
 # On macOS and Windows, this is expected to run on bare metal
 # On Linux, this is expected to run in a container from the manylinux image
 os=$(uname -s)
+set +e
 [[ "$os" =~ CYGWIN* || "$os" =~ MINGW* ]]
 # Known issue: https://github.com/koalaman/shellcheck/issues/2937
 # shellcheck disable=SC2319
 running_on_windows=$?
+set -e
 if [[ $running_on_windows -eq 0 ]]; then
     cd aerospike-client-c/vs
     nuget restore
