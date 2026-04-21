@@ -282,12 +282,7 @@ jobs:
         allow-prereleases: true
 
     - name: Build wheel
-      run: |
-        if [[ "$(uname -s)" =~ Linux* ]]; then
-          ./build-manylinux-wheel.bash "$CUSTOM_IMAGE_NAME" "${{ steps.get-python-version.outputs.python_version }}"
-        else
-          ./build-prod-wheel.bash
-        fi
+      run: ./build-prod-wheel.bash
       shell: bash
 
     # - name: Setup tmate session
