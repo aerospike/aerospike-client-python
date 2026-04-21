@@ -5,13 +5,16 @@ set -x
 
 # On macOS and Windows, this is expected to run on bare metal
 # On Linux, this is expected to run in a container from the manylinux image
+
 os=$(uname -s)
+
 set +e
 [[ "$os" =~ CYGWIN* || "$os" =~ MINGW* ]]
 # Known issue: https://github.com/koalaman/shellcheck/issues/2937
 # shellcheck disable=SC2319
 running_on_windows=$?
 set -e
+
 if [[ $running_on_windows -eq 0 ]]; then
     cd aerospike-client-c/vs
     nuget restore
@@ -48,7 +51,7 @@ if [[ $os =~ Darwin* ]]; then
 
     if [[ $arch == "arm64" ]]; then
         # Ensure that linker can find brew packages
-        # On mac m1, packages installed via brew are not in the linker's default library path
+        # On mac arm64, packages installed via brew are not in the linker's default library path
         libraries=('libyaml' 'openssl')
         for library in "${libraries[@]}"; do
           LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix "$library")/lib"
@@ -70,13 +73,11 @@ else
     python_version="3"
 fi
 
-"python${python_version}" -m pip install build -c requirements.txt
+REQUIREMENTS_TXT=requirements.txt
+"python${python_version}" -m pip install build -c "$REQUIREMENTS_TXT"
 "python${python_version}" -m build --wheel
 
 REPAIRED_WHEEL_DIR=wheelhouse
-
-# TODO - macOS python versions / repair dependencies need to be installed without cibuildwheel
-# Same with windows, probably.
 
 unrepaired_wheel_path=$(find dist/ -type f -name '*.whl' | head -n 1)
 if [[ $os =~ Linux* ]]; then
@@ -99,14 +100,15 @@ if [[ $os =~ Linux* ]]; then
     fi
 
 elif [[ $os =~ Darwin* ]]; then
-    pip install delocate -c requirements.txt
+    pip install delocate -c "$REQUIREMENTS_TXT"
     delocate-wheel --require-archs "$arch" -w "$REPAIRED_WHEEL_DIR" -v "$unrepaired_wheel_path"
+
     if [[ "$VERIFY_REPAIR" != "" ]]; then
         # Do the same verification step like with Linux
         delocate-listdeps "$REPAIRED_WHEEL_DIR/*.whl" | grep libcrypto.3.dylib
         delocate-listdeps "$REPAIRED_WHEEL_DIR/*.whl" | grep libssl.3.dylib
     fi
 elif [[ $running_on_windows ]]; then
-    pip install delvewheel -c requirements.txt
-    delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w wheelhouse "$unrepaired_wheel_path"
+    pip install delvewheel -c "$REQUIREMENTS_TXT"
+    delvewheel repair -vv --add-path ./aerospike-client-c/vs/x64/Release -w "$REPAIRED_WHEEL_DIR" "$unrepaired_wheel_path"
 fi
