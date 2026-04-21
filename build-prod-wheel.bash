@@ -47,7 +47,10 @@ if [[ $os =~ Darwin* ]]; then
         export LIBRARY_PATH="$LIBRARY_PATH"
 
         # By default on Github Actions, a universal wheel will be built.
+        # (I believe because Github Actions uses universal versions of Python)
         # Here, we try to override that behavior
+        # https://github.com/pypa/packaging/issues/882#issuecomment-2752417594
+        export _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-arm64"
         export ARCHFLAGS="-arch $arch"
     else
         # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
