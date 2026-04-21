@@ -20,10 +20,7 @@ cleanup() {
         docker stop "$CONTAINER_NAME"
     fi
 }
-# TODO: Also stop container when sigkill/sigint is received
-trap 'on_failure' ERR
+trap 'cleanup' EXIT SIGINT SIGTERM ERR
 
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
 docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./build-prod-wheel.bash "$python_version"
-
-cleanup
