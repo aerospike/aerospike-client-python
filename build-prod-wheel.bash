@@ -10,6 +10,7 @@ keep_container=$3
 if [[ -z "$manylinux_image_name" ]]; then
     # Build wheel natively
     ./_build-prod-wheel.bash
+    exit 0
 fi
 
 # Use UUID to minimize chance of colliding with another container
