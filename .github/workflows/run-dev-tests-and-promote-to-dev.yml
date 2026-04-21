@@ -76,8 +76,10 @@ jobs:
           {"runs-on":"windows-2022","platform-tag":"win_amd64"},
         ]}
       setup-python: true
-
-    secrets: inherit
+    secrets:
+      gpg-private-key: ''
+      gpg-public-key: ''
+      gpg-key-pass: ''
 
   create-release-bundle-and-promote-to-dev:
     if: ${{ inputs.dry-run }}
