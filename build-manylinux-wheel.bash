@@ -15,8 +15,6 @@ MOUNTED_REPO_DIR=/repo
 docker run -d -v "${dir_containing_this_file}:${MOUNTED_REPO_DIR}/" --rm --name "$CONTAINER_NAME" "$image_name" tail -f /dev/null
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
 docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./build-prod-wheel.bash "$python_version"
-mkdir wheelhouse
-docker cp "${CONTAINER_NAME}:${MOUNTED_REPO_DIR}/wheelhouse/*.whl" wheelhouse/
 
 # TODO: Also stop container when sigkill/sigint is received
 docker stop "$CONTAINER_NAME"
