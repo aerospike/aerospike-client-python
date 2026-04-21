@@ -10,9 +10,11 @@ keep_container=$3
 this_file_abs_path=$(realpath "${BASH_SOURCE[0]}")
 dir_containing_this_file=$(dirname "$this_file_abs_path")
 
+helper_script=_build-prod-wheel-natively.bash
+
 if [[ -z "$manylinux_image_name" ]]; then
     # Build wheel natively
-    "$dir_containing_this_file"/_build-prod-wheel.bash
+    "$dir_containing_this_file/${helper_script}"
     exit 0
 fi
 
@@ -30,4 +32,4 @@ cleanup() {
 trap 'cleanup' EXIT SIGINT SIGTERM ERR
 
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
-docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./_build-prod-wheel.bash "$python_version"
+docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./${helper_script} "$python_version"
