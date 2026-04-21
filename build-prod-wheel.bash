@@ -43,7 +43,7 @@ if [[ $os =~ Darwin* ]]; then
     # (I believe because Github Actions uses universal versions of Python)
     # Here, we try to override that behavior
     # https://github.com/pypa/packaging/issues/882#issuecomment-2752417594
-    export _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-arm64"
+    export _PYTHON_HOST_PLATFORM="macosx-${MACOSX_DEPLOYMENT_TARGET}-${arch}"
     export ARCHFLAGS="-arch $arch"
 
     if [[ $arch == "arm64" ]]; then
