@@ -282,8 +282,11 @@ jobs:
         allow-prereleases: true
 
     - name: Build wheel
-      run: ./build-prod-wheel.bash
+      run: KEEP_CONTAINER=1 ./build-prod-wheel.bash
       shell: bash
+      env:
+        MANYLINUX_IMAGE_NAME: ${{ env.CUSTOM_IMAGE_NAME }}
+        PYTHON_VERSION: ${{ steps.get-python-version.outputs.python_version }}
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}

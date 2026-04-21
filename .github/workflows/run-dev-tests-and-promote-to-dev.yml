@@ -76,6 +76,7 @@ jobs:
           {"runs-on":"windows-2022","platform-tag":"win_amd64"},
         ]}
       setup-python: true
+      build-env: MANYLINUX_IMAGE_NAME=ghcr.io/aerospike/manylinux_2_28_x86_64@sha256:a3440f5f201789718cff4da8f0e1251f186016e36a1b2cfd739fc4d597f7b20c;PYTHON_VERSION=3
     secrets:
       gpg-private-key: ''
       gpg-public-key: ''
