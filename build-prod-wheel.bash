@@ -59,12 +59,9 @@ if [[ $os =~ Darwin* ]]; then
         # Just do it for all Python versions (even those that don't require more room) for futureproofing
         export LDFLAGS='-headerpad_max_install_names'
     fi
-elif [[ $os =~ Linux* ]]; then
-    yum install libyaml-devel -y
-    if [[ $arch == "x86_64" ]]; then
-        # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
-        export LD_LIBRARY_PATH=/usr/local/lib64
-    fi
+elif [[ $os =~ Linux* && $arch == "x86_64" ]]; then
+    # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
+    export LD_LIBRARY_PATH=/usr/local/lib64
 fi
 
 python3 -m pip install build -c requirements.txt
