@@ -284,7 +284,7 @@ jobs:
     - name: Build wheel
       run: |
         if [[ "$(uname -s)" =~ Linux* ]]; then
-          ./build-manylinux-wheel.bash "$CUSTOM_IMAGE_NAME"
+          ./build-manylinux-wheel.bash "$CUSTOM_IMAGE_NAME" "${{ steps.get-python-version.outputs.python_version }}"
         else
           ./build-prod-wheel.bash
         fi
