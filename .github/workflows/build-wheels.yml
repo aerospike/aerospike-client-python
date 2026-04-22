@@ -188,7 +188,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ${{ vars.JF_INTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_{0}@sha256:{1}
+      CUSTOM_IMAGE_NAME: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_{0}@sha256:{1}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -280,7 +280,7 @@ jobs:
 
     - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
-        registry: ${{ vars.JF_INTERNAL_URL }}
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
         username: ${{ steps.setup-jf.outputs.oidc-user }}
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
