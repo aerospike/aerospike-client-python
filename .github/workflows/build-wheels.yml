@@ -258,10 +258,10 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'a3440f5f201789718cff4da8f0e1251f186016e36a1b2cfd739fc4d597f7b20c') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'c31153ffa4a797a2ead9cb35ad1c08a2ddfdd93de730414a65a73003e7b410fa') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '6c75a63f18d06e7cc739d825dd0df8b5fee4ce8433f893535f0ee248f34723ea') }} >> $GITHUB_ENV
 
     - name: Setup JFrog CLI
       id: setup-jf
