@@ -1,3 +1,7 @@
+permissions:
+  contents: read
+  id-token: write
+
 name: Build manylinux openssl image
 run-name: 'Build manylinux openssl image (openssl-version=${{ inputs.openssl-version }})'
 
