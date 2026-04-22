@@ -183,7 +183,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
+      CUSTOM_IMAGE_NAME: aerospike.artifact.io/database-docker-prod-internal-local/manylinux_2_28_{0}@sha256:{1}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -263,12 +263,21 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120') }} >> $GITHUB_ENV
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+    - name: Setup JFrog CLI
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://artifact.aerospike.io
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        version: '2.92.0'
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      with:
+        registry: aerospike.jfrog.io
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     # It is not documented in Github that openssl 3 / libyaml is installed in their macos images
     # so we install it here to be safe
