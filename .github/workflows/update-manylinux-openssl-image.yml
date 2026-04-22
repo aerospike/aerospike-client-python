@@ -53,7 +53,7 @@ jobs:
     - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
       id: meta
       with:
-        images: aerospike.jfrog.io/database-docker-prod-internal-local/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
+        images: aerospike.jfrog.io/database-docker-dev-local/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
         # These images aren't used by customers, anyway.
         flavor: latest=false
 
