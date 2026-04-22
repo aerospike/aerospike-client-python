@@ -44,7 +44,7 @@ jobs:
       id: setup-jf
       uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
       env:
-        JF_URL: ${{ vars.JF_EXTERNAL_URL }}
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
       with:
         version: '2.92.0'
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
