@@ -12,7 +12,7 @@ helper_script=_build-prod-wheel-natively.bash
 
 os=$(uname -s)
 
-if [[ "$os" !~ Linux* ]]; then
+if [[ ! "$os" =~ Linux* ]]; then
     # Build wheel natively
     "$dir_containing_this_file/${helper_script}"
     exit 0
