@@ -10,7 +10,9 @@ dir_containing_this_file=$(dirname "$this_file_abs_path")
 
 helper_script=_build-prod-wheel-natively.bash
 
-if [[ -z "$MANYLINUX_IMAGE_NAME" ]]; then
+os=$(uname -s)
+
+if [[ "$os" =~ Linux* ]]; then
     # Build wheel natively
     "$dir_containing_this_file/${helper_script}"
     exit 0
