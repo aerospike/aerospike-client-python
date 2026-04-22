@@ -36,16 +36,20 @@ jobs:
           .github/workflows
         path: aerospike-client-python
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - name: Setup JFrog CLI
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://artifact.aerospike.io
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        version: '2.92.0'
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
       id: meta
       with:
-        images: ${{ env.REGISTRY }}/aerospike/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
+        images: ${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
         # These images aren't used by customers, anyway.
         flavor: latest=false
 
@@ -85,6 +89,12 @@ jobs:
           f.write(f"manylinux_base_image={BASE_IMAGE}\n")
       shell: python
       working-directory: cibuildwheel
+
+    - name: Log into internal JFrog registry
+      uses: docker/login-action@v4
+      with:
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - name: Build and push
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
