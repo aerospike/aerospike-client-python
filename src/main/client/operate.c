@@ -368,8 +368,8 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
 
     as_val *put_val = NULL;
     if (op_requires_value[op_code]) {
-        if (pyobject_to_val(self, err, py_value, &put_val, static_pool,
-                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+        if (as_val_new_from_pyobject(self, err, py_value, &put_val, static_pool,
+                                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err->code;
         }
     }
