@@ -294,8 +294,8 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
                                                   return_type);
         break;
     case OP_LIST_GET_BY_VALUE_LIST:
-        success = as_operations_list_get_by_value_list(ops, bin, ctx_ref,
-                                                       value_list, return_type);
+        success = as_operations_list_get_by_value_list(
+            ops, bin, ctx_ref, (as_list *)val1, return_type);
         break;
     case OP_LIST_GET_BY_VALUE_RANGE:
         success = as_operations_list_get_by_value_range(ops, bin, ctx_ref, val1,
@@ -339,7 +339,7 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
         break;
     case OP_LIST_REMOVE_BY_VALUE_LIST:
         success = as_operations_list_remove_by_value_list(
-            ops, bin, ctx_ref, value_list, return_type);
+            ops, bin, ctx_ref, (as_list *)val1, return_type);
         break;
     case OP_LIST_REMOVE_BY_VALUE_RANGE:
         success = as_operations_list_remove_by_value_range(
@@ -392,8 +392,8 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
             as_operations_list_append(ops, bin, ctx_ref, list_policy_ref, val1);
         break;
     case OP_LIST_APPEND_ITEMS:
-        success = as_operations_list_append_items(ops, bin, ctx_ref,
-                                                  list_policy_ref, value_list);
+        success = as_operations_list_append_items(
+            ops, bin, ctx_ref, list_policy_ref, (as_list *)val1);
         break;
     case OP_LIST_INSERT:
         success = as_operations_list_insert(ops, bin, ctx_ref, list_policy_ref,
@@ -401,7 +401,7 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
         break;
     case OP_LIST_INSERT_ITEMS:
         success = as_operations_list_insert_items(
-            ops, bin, ctx_ref, list_policy_ref, index, value_list);
+            ops, bin, ctx_ref, list_policy_ref, index, (as_list *)val1);
         break;
     case OP_LIST_INCREMENT:
         success = as_operations_list_increment(ops, bin, ctx_ref,
