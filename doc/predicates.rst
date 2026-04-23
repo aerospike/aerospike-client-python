@@ -65,7 +65,7 @@ GeoJSON Predicates
 
     Predicate for finding any point in bin which is within the given shape.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -114,7 +114,7 @@ GeoJSON Predicates
     Predicate helper builds an AeroCircle GeoJSON shape, and returns a
     'within GeoJSON region' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -153,7 +153,7 @@ GeoJSON Predicates
 
     Predicate for finding any regions in the bin which contain the given point.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -199,7 +199,7 @@ GeoJSON Predicates
     Predicate helper builds a GeoJSON point, and returns a
     'contains GeoJSON point' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.

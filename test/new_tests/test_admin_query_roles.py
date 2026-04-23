@@ -65,9 +65,7 @@ class TestQueryRoles(TestBaseClass):
         """
         Query roles incorrect policy
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_roles({"timeout": 0.2})
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
