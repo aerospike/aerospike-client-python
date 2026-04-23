@@ -268,7 +268,8 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb') }} >> $GITHUB_ENV
 
-    - name: Setup JFrog CLI
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      name: Setup JFrog CLI
       id: setup-jf
       uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
       env:
@@ -278,7 +279,8 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       with:
         registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
         username: ${{ steps.setup-jf.outputs.oidc-user }}
