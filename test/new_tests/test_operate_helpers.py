@@ -1059,3 +1059,17 @@ class TestOperate(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_insert_items("a", 0, "nonlist")
+        ]
+    )
+    def test_list_operations_with_nonlist_parameters(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+
+        self.as_connection.operate(key, ops)
