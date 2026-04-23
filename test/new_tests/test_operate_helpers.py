@@ -1071,5 +1071,5 @@ class TestOperate(object):
         ops = [
             op
         ]
-
-        self.as_connection.operate(key, ops)
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
