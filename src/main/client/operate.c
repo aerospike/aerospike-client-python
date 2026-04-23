@@ -43,8 +43,8 @@
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_nil.h>
 
-static void get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
-                                        long *op_code_ref);
+static as_status get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
+                                             long *op_code_ref);
 
 static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
