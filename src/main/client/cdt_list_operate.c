@@ -41,11 +41,10 @@ op_code_to_name op_code_to_names[] = {
 #undef X
 };
 
-as_status add_new_list_op(AerospikeClient *self, as_error *err,
-                          PyObject *op_dict, as_vector *unicodeStrVector,
-                          as_static_pool *static_pool, as_operations *ops,
-                          long operation_code, long *ret_type,
-                          int serializer_type)
+as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                      as_vector *unicodeStrVector, as_static_pool *static_pool,
+                      as_operations *ops, long operation_code, long *ret_type,
+                      int serializer_type)
 
 {
     // as_operations_add_* API methods can take ownership of heap allocated as_val
