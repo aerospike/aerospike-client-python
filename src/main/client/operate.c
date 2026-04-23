@@ -415,7 +415,6 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
         as_operations_add_delete(ops);
         break;
     case AS_OPERATOR_WRITE:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_add_write(ops, bin_name, (as_bin_value *)put_val);
         break;
     }
@@ -723,24 +722,20 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                                      persist_index);
         break;
     case OP_MAP_PUT:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_KEY_TO_AS_VAL();
         as_operations_map_put(ops, bin_name, ctx_ref, &map_policy, put_key,
                               put_val);
         break;
     case OP_MAP_PUT_ITEMS:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_put_items(ops, bin_name, ctx_ref, &map_policy,
                                     (as_map *)put_val);
         break;
     case OP_MAP_INCREMENT:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_KEY_TO_AS_VAL();
         as_operations_map_increment(ops, bin_name, ctx_ref, &map_policy,
                                     put_key, put_val);
         break;
     case OP_MAP_DECREMENT:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_KEY_TO_AS_VAL();
         as_operations_map_decrement(ops, bin_name, ctx_ref, &map_policy,
                                     put_key, put_val);
@@ -757,28 +752,23 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                                         return_type);
         break;
     case OP_MAP_REMOVE_BY_KEY_LIST:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_remove_by_key_list(ops, bin_name, ctx_ref,
                                              (as_list *)put_val, return_type);
         break;
     case OP_MAP_REMOVE_BY_KEY_RANGE:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_KEY_TO_AS_VAL();
         as_operations_map_remove_by_key_range(ops, bin_name, ctx_ref, put_key,
                                               put_val, return_type);
         break;
     case OP_MAP_REMOVE_BY_VALUE:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_remove_by_value(ops, bin_name, ctx_ref, put_val,
                                           return_type);
         break;
     case OP_MAP_REMOVE_BY_VALUE_LIST:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_remove_by_value_list(ops, bin_name, ctx_ref,
                                                (as_list *)put_val, return_type);
         break;
     case OP_MAP_REMOVE_BY_VALUE_RANGE:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_RANGE_TO_AS_VAL();
         as_operations_map_remove_by_value_range(ops, bin_name, ctx_ref, put_val,
                                                 put_range, return_type);
@@ -817,23 +807,19 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                                            put_range, return_type);
         break;
     case OP_MAP_GET_BY_KEY_LIST:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_get_by_key_list(ops, bin_name, ctx_ref,
                                           (as_list *)put_val, return_type);
         break;
     case OP_MAP_GET_BY_VALUE:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_get_by_value(ops, bin_name, ctx_ref, put_val,
                                        return_type);
         break;
     case OP_MAP_GET_BY_VALUE_RANGE:
-        CONVERT_VAL_TO_AS_VAL();
         CONVERT_RANGE_TO_AS_VAL();
         as_operations_map_get_by_value_range(ops, bin_name, ctx_ref, put_val,
                                              put_range, return_type);
         break;
     case OP_MAP_GET_BY_VALUE_LIST:
-        CONVERT_VAL_TO_AS_VAL();
         as_operations_map_get_by_value_list(ops, bin_name, ctx_ref,
                                             (as_list *)put_val, return_type);
         break;
