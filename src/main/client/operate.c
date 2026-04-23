@@ -309,10 +309,12 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-as_status add_op(AerospikeClient *self, as_error *err,
-                 PyObject *py_operation_dict, as_vector *unicodeStrVector,
-                 as_static_pool *static_pool, as_operations *ops, long *op,
-                 long *ret_type)
+as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                          PyObject *py_operation_dict,
+                                          as_vector *unicodeStrVector,
+                                          as_static_pool *static_pool,
+                                          as_operations *ops, long *op,
+                                          long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -323,9 +325,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
     char *bin = NULL;
     char *val = NULL;
     long offset = 0;
+    long long long_offset = 0;
     long ttl = 0;
     double double_offset = 0.0;
-    int index = 0;
+    int64_t index_or_rank = 0;
     long operation = 0;
     uint64_t return_type = AS_MAP_RETURN_NONE;
     PyObject *py_ustr = NULL;
@@ -544,7 +547,11 @@ as_status add_op(AerospikeClient *self, as_error *err,
             goto CLEANUP;
         }
         if (PyLong_Check(py_index)) {
-            index = PyLong_AsLong(py_index);
+            index_or_rank =
+                convert_pylong_to_int64_t(err, py_index, "py_index");
+            if (err->code != AEROSPIKE_OK) {
+                goto CLEANUP;
+            }
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -573,10 +580,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Internal error");
             goto CLEANUP;
         }
-
-        uint32_t flags = convert_pyobject_to_uint32_t(py_flags);
+        if (!PyLong_Check(py_flags)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "CDT operation's flags argument must be a long");
+            goto CLEANUP;
+        }
+        uint32_t flags =
+            convert_pylong_into_uint32_t(err, py_flags, "path flags");
         Py_DECREF(py_flags);
-        if (PyErr_Occurred()) {
+        if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "CDT operation's flags argument is invalid");
             goto CLEANUP;
@@ -680,15 +692,12 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
-            offset = PyLong_AsLong(py_value);
-            if (offset == -1 && PyErr_Occurred() && self->strict_types) {
-                if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
+            long_offset =
+                convert_pylong_to_int64_t(err, py_value, "AS_OPERATOR_INCR");
+            if (err->code != AEROSPIKE_OK) {
+                goto CLEANUP;
             }
-            as_operations_add_incr(ops, bin, offset);
+            as_operations_add_incr(ops, bin, long_offset);
         }
         else if (PyFloat_Check(py_value)) {
             double_offset = PyFloat_AsDouble(py_value);
@@ -796,25 +805,26 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                                 put_range, return_type);
         break;
     case OP_MAP_REMOVE_BY_INDEX:
-        as_operations_map_remove_by_index(ops, bin, ctx_ref, index,
+        as_operations_map_remove_by_index(ops, bin, ctx_ref, index_or_rank,
                                           return_type);
         break;
     case OP_MAP_REMOVE_BY_INDEX_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        as_operations_map_remove_by_index_range(ops, bin, ctx_ref, index,
-                                                offset, return_type);
+        as_operations_map_remove_by_index_range(
+            ops, bin, ctx_ref, index_or_rank, offset, return_type);
         break;
     case OP_MAP_REMOVE_BY_RANK:
-        as_operations_map_remove_by_rank(ops, bin, ctx_ref, index, return_type);
+        as_operations_map_remove_by_rank(ops, bin, ctx_ref, index_or_rank,
+                                         return_type);
         break;
     case OP_MAP_REMOVE_BY_RANK_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        as_operations_map_remove_by_rank_range(ops, bin, ctx_ref, index, offset,
-                                               return_type);
+        as_operations_map_remove_by_rank_range(ops, bin, ctx_ref, index_or_rank,
+                                               offset, return_type);
         break;
     case OP_MAP_GET_BY_KEY:
         CONVERT_KEY_TO_AS_VAL();
@@ -847,24 +857,26 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                             (as_list *)put_val, return_type);
         break;
     case OP_MAP_GET_BY_INDEX:
-        as_operations_map_get_by_index(ops, bin, ctx_ref, index, return_type);
+        as_operations_map_get_by_index(ops, bin, ctx_ref, index_or_rank,
+                                       return_type);
         break;
     case OP_MAP_GET_BY_INDEX_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        as_operations_map_get_by_index_range(ops, bin, ctx_ref, index, offset,
-                                             return_type);
+        as_operations_map_get_by_index_range(ops, bin, ctx_ref, index_or_rank,
+                                             offset, return_type);
         break;
     case OP_MAP_GET_BY_RANK:
-        as_operations_map_get_by_rank(ops, bin, ctx_ref, index, return_type);
+        as_operations_map_get_by_rank(ops, bin, ctx_ref, index_or_rank,
+                                      return_type);
         break;
     case OP_MAP_GET_BY_RANK_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        as_operations_map_get_by_rank_range(ops, bin, ctx_ref, index, offset,
-                                            return_type);
+        as_operations_map_get_by_rank_range(ops, bin, ctx_ref, index_or_rank,
+                                            offset, return_type);
         break;
 
     default:
@@ -945,8 +957,9 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
         PyObject *py_val = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_val)) {
-            if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
-                       &operation, &return_type) != AEROSPIKE_OK) {
+            if (as_operations_add_from_pyobject(
+                    self, err, py_val, unicodeStrVector, &static_pool, &ops,
+                    &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1118,8 +1131,9 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         py_current_op = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_current_op)) {
-            if (add_op(self, err, py_current_op, unicodeStrVector, &static_pool,
-                       &ops, &operation, &return_type) != AEROSPIKE_OK) {
+            if (as_operations_add_from_pyobject(
+                    self, err, py_current_op, unicodeStrVector, &static_pool,
+                    &ops, &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
