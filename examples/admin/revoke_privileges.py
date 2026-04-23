@@ -87,22 +87,22 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         role = "example_foo"
         privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
-    	
+
     	client.admin_revoke_privileges(role, privileges, policy)
-        
+
     	print("OK, privileges revoked from 1 role")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         print("In case of invalid role first create roles using create_role.py")
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

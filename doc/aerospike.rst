@@ -208,7 +208,7 @@ Serialization
     Register a user-defined serializer available to all `Client`
     instances.
 
-    :param callable callback: the function to invoke for serialization.
+    :param typing.Callable callback: the function to invoke for serialization.
 
 
     .. seealso:: To use this function with :meth:`Client.put`, \
@@ -232,7 +232,7 @@ Serialization
     of type `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_
     through this deserializer.
 
-    :param callable callback: the function to invoke for deserialization.
+    :param typing.Callable callback: the function to invoke for deserialization.
 
 .. py:function:: unset_serializers()
 
@@ -282,30 +282,45 @@ If we read the data for each record using ``aql``, it outputs the following data
 Logging
 -------
 
-.. py:function:: set_log_handler(callback)
+.. _logging_default_behavior:
 
-    Enables aerospike log handler
+Default behavior
+^^^^^^^^^^^^^^^^
 
-    :param optional callable callback: the function used as the logging handler.
+By default:
 
-    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
+- The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
+- The client's default log handler is set and prints logs in this format: ``<process id>:<counter> <error message>``.
+  For each log, the counter starts at 1 and increments by 1.
 
-        .. code-block:: python
+The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-            import aerospike
+.. include:: examples/log.py
+    :code: python
 
-        from __future__ import print_function
-        import aerospike
+.. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(callback)
+    Set logging callback globally across all clients.
 
+    When no argument is passed, the default log handler is used. See :ref:`logging_default_behavior` for more details.
 
-.. py:function:: set_log_level(log_level)
+    When callback is :py:obj:`None`, the saved log handler is cleared.
 
-    Declare the logging level threshold for the log handler.
+    When a callable is passed, it must have these five parameters in this order:
 
-    :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
+    .. code-block:: python
+
+        def callback(level: int, function: str, path: str, line: int, message: str):
+            pass
+
+    :param typing.Callable | None log_handler: the function used as the logging handler.
+
+.. py:function:: set_log_level(loglevel)
+
+    Declare the logging level threshold for the log handler. If setting log level to :py:obj:`aerospike.LOG_LEVEL_OFF`,
+    the current log handler does not get reset.
+
+    :param int loglevel: one of the :ref:`aerospike_log_levels` constant values.
 
 Other
 -----
@@ -417,7 +432,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             server configuration file, as well as the server's CA certificate.
 
         * **user** (:class:`str`)
-            (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
+            (Optional) A defined user with roles in the cluster. See :meth:`aerospike.Client.admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
         * **config_provider** (:class:`aerospike.ConfigProvider`)
@@ -767,14 +782,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`Optional[str]`)
+        * **cluster_name** (:class:`str` | :class:`None`)
             Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
             in the service section in each server configuration. This ensures that the specified
             seed nodes belong to the expected cluster on startup. If not, the client will refuse
             to add the node to the client's view of the cluster.
 
             Default: :py:obj:`None`
-        * **app_id** (:class:`Optional[str]`)
+        * **app_id** (:class:`str` | :class:`None`)
             Application identifier.
 
             If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
@@ -1588,7 +1603,6 @@ Bin Types
 
 Index data types
 ----------------
-
 .. data:: INDEX_STRING
 
     An index whose values are of the aerospike string data type.
@@ -1609,24 +1623,24 @@ Index data types
 
 .. _aerospike_index_types:
 
-Index types
+Index Types
 -----------
 
 .. data:: INDEX_TYPE_DEFAULT
 
-    Index a bin that doesn't contain a complex data type.
+    Index a single scalar value.
 
 .. data:: INDEX_TYPE_LIST
 
-    Index a bin whose contents is an aerospike list.
+    Index all of a list's values.
 
 .. data:: INDEX_TYPE_MAPKEYS
 
-    Index the keys of a bin whose contents is an aerospike map.
+    Index all of a map's keys.
 
 .. data:: INDEX_TYPE_MAPVALUES
 
-    Index the values of a bin whose contents is an aerospike map.
+    Index all of a map's values.
 
 .. _aerospike_misc_constants:
 
@@ -1707,7 +1721,7 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used by the :class:`aerospike_operation_helpers.expressions.base.CmpRegex` Aerospike expression.
+Flags used by the :class:`aerospike_helpers.expressions.base.CmpRegex` Aerospike expression.
 See :ref:`aerospike_operation_helpers.expressions` for more information.
 
 .. data:: REGEX_NONE
@@ -1847,7 +1861,7 @@ Path Expression Select Flags
     This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
     source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
 
-.. data:: EXP_PATH_SELECT_MAP_KEYS
+.. data:: EXP_PATH_SELECT_MAP_KEY
 
     Return the list of map keys of the nodes finally selected by the context.
 
