@@ -33,11 +33,12 @@
 #define CTX_PARSE_ERROR_MESSAGE "Unable to parse ctx"
 
 /*
- * Create a complex index on the specified ns/set/bin with the given name and index and data_type. Return PyObject(0) on success
+ * Create an index on the specified ns/set/bin with the given name and index and data_type. Return PyObject(0) on success
  * else return NULL with an error raised.
  */
 // expr is optional and can be NULL.
 // If expr is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
+// If py_bin is NULL, we are indexing a set.
 // This is permissive and allows py_ctx to be None or NULL
 //
 // NOTE: data_type and index_type are integers because some index creation methods i.e index_expr_create
@@ -241,9 +242,6 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
         NULL, py_expr);
 }
 
-// This allows people to see the function calling the Python client API that issues a warning
-#define STACK_LEVEL 2
-
 // TODO: way to get method name dynamically for error message?
 static inline PyObject *
 AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
@@ -401,6 +399,30 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
+PyObject *AerospikeClient_Index_Set_Create(AerospikeClient *self,
+                                           PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_name = NULL;
+    PyObject *py_policy = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"ns", "set", "name", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:index_set_create",
+                                    kwlist, &py_ns, &py_set, &py_name,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return convert_python_args_to_c_and_create_index(
+        self, py_policy, py_ns, py_set, NULL, py_name, AS_INDEX_TYPE_SET,
+        AS_INDEX_DEFAULT, NULL, NULL);
+}
+
 // Deprecated API's
 
 #define DEPRECATION_NOTICE_TO_USE_INDEX_SINGLE_VALUE_CREATE                    \
@@ -469,10 +491,14 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
                                            PyObject *args, PyObject *kwds)
 {
-    PyErr_WarnEx(PyExc_DeprecationWarning,
-                 "index_cdt_create() is deprecated. Please use one of the "
-                 "other non-deprecated index_*_create() methods instead",
-                 STACK_LEVEL);
+    int retval =
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "index_cdt_create() is deprecated. Please use one of the "
+                     "other non-deprecated index_*_create() methods instead",
+                     STACK_LEVEL);
+    if (retval == -1) {
+        return NULL;
+    }
 
     // Initialize error
     as_error err;
