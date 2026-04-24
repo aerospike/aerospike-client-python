@@ -82,9 +82,10 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
             PyObject *py_val = PyList_GetItem(py_ops, (Py_ssize_t)i);
 
             if (PyDict_Check(py_val)) {
-                if (add_op(self->client, &err, py_val, self->unicodeStrVector,
-                           self->static_pool, self->scan.ops, &operation,
-                           &return_type) != AEROSPIKE_OK) {
+                if (as_operations_add_from_pyobject(
+                        self->client, &err, py_val, self->unicodeStrVector,
+                        self->static_pool, self->scan.ops, &operation,
+                        &return_type) != AEROSPIKE_OK) {
                     as_error_update(&err, AEROSPIKE_ERR_PARAM,
                                     "Failed to convert ops.");
                     goto CLEANUP;

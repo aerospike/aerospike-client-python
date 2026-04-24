@@ -293,9 +293,12 @@ static bool op_requires_value[] = {[AS_OPERATOR_WRITE] = true,
                                    // TODO
                                    [AS_OPERATOR_HLL_MODIFY] = false};
 
-as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
-                 as_vector *unicodeStrVector, as_static_pool *static_pool,
-                 as_operations *ops, long *op, long *ret_type)
+as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                          PyObject *py_op_dict,
+                                          as_vector *unicodeStrVector,
+                                          as_static_pool *static_pool,
+                                          as_operations *ops, long *op,
+                                          long *ret_type)
 {
     as_val *put_key = NULL;
     as_val *put_range = NULL;
@@ -929,8 +932,9 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
             goto CLEANUP;
         }
 
-        if (add_op(self, err, py_op_dict, unicodeStrVector, &static_pool, &ops,
-                   &operation, &return_type) != AEROSPIKE_OK) {
+        if (as_operations_add_from_pyobject(
+                self, err, py_op_dict, unicodeStrVector, &static_pool, &ops,
+                &operation, &return_type) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1100,8 +1104,9 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         py_current_op = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_current_op)) {
-            if (add_op(self, err, py_current_op, unicodeStrVector, &static_pool,
-                       &ops, &operation, &return_type) != AEROSPIKE_OK) {
+            if (as_operations_add_from_pyobject(
+                    self, err, py_current_op, unicodeStrVector, &static_pool,
+                    &ops, &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
