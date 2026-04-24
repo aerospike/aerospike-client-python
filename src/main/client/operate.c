@@ -1286,7 +1286,7 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     PyObject *py_append_str = NULL;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"key", "bin_name", "val", "meta", "policy", NULL};
+    static char *kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:append", kwlist,
                                     &py_key, &py_bin, &py_append_str, &py_meta,
                                     &py_policy) == false) {
@@ -1333,7 +1333,7 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     PyObject *py_prepend_str = NULL;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"key", "bin_name", "val", "meta", "policy", NULL};
+    static char *kwlist[] = {"key", "bin", "val", "meta", "policy", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:prepend", kwlist,
                                     &py_key, &py_bin, &py_prepend_str, &py_meta,
                                     &py_policy) == false) {
@@ -1381,8 +1381,7 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
     PyObject *py_offset_value = 0;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"key",  "bin_name", "offset",
-                             "meta", "policy",   NULL};
+    static char *kwlist[] = {"key", "bin", "offset", "meta", "policy", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|OO:increment", kwlist,
                                     &py_key, &py_bin, &py_offset_value,
                                     &py_meta, &py_policy) == false) {
