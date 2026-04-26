@@ -70,4 +70,4 @@ jobs:
         python-version: 3.12
 
     - name: Run doctest
-      run: python3 aerospike_helpers/__init__.py
+      run: python3 -m doctest doc/*.rst
