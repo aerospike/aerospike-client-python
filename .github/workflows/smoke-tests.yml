@@ -288,7 +288,6 @@ jobs:
           - sanitizer
           - dont_validate_keys
           - lowest_supported_server_version
-          - doctest
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
@@ -321,7 +320,6 @@ jobs:
       run: pip install *.whl
 
     - name: Install test dependencies
-      if: ${{ matrix.type != 'doctest' }}
       run: pip install -r test/requirements.txt
 
     # We can already detect leaks using valgrind
@@ -342,12 +340,7 @@ jobs:
       run: crudini --existing=param --set config.conf input-validation validate_keys false
       working-directory: test
 
-    - if: ${{ matrix.type == 'doctest' }}
-      name: Run doctest
-      run: python3 -m doctest -v doc/aerospike.rst
-
     - name: Run tests
-      if: ${{ matrix.type != 'doctest' }}
       # We need to disable capturing output or else we cannot see memory errors reported by
       # libasan during the test run
       # Here we also treat DeprecationWarnings as errors to make sure we're showing warnings as expected
@@ -367,6 +360,14 @@ jobs:
           "3.13",
           "3.14"
         ]
+        type: [
+          regular,
+          doc-test
+        ]
+        include:
+          - type: regular
+          - type: doc-test
+            py-version: '3.10'
       fail-fast: false
 
     steps:
@@ -395,6 +396,7 @@ jobs:
       run: pip install *.whl
 
     - name: Install test dependencies
+      if: ${{ matrix.type != 'doctest' }}
       run: pip install -r test/requirements.txt
 
     - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
@@ -407,6 +409,7 @@ jobs:
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - name: Create config.conf
+      if: ${{ matrix.type != 'doctest' }}
       run: cp config.conf.template config.conf
       working-directory: test
 
@@ -415,8 +418,13 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
+      if: ${{ matrix.type != 'doctest' }}
       run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
+
+    - if: ${{ matrix.type == 'doctest' }}
+      name: Run doctest
+      run: python3 -m doctest -v doc/aerospike.rst
 
   test-ee:
     runs-on: ubuntu-22.04
