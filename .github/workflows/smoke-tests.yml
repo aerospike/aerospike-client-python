@@ -364,7 +364,7 @@ jobs:
           regular
         ]
         include:
-          - type: doc-test
+          - type: doctest
             py-version: '3.10'
       fail-fast: false
 
