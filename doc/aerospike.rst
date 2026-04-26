@@ -64,8 +64,6 @@ Client
         import aerospike
         import sys
 
-        # NOTE: Use of TLS requires Aerospike Enterprise version >= 3.11
-        # and client version 2.1.0 or greater
         tls_name = "some-server-tls-name"
         tls_ip = "127.0.0.1"
         tls_port = 4333
@@ -102,15 +100,12 @@ Geospatial
     :param dict geo_data: a :class:`dict` representing the geospatial data.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    >> import aerospike
 
-        import aerospike
-
-        # Create GeoJSON point using WGS84 coordinates.
-        latitude = 45.920278
-        longitude = 63.342222
-        loc = aerospike.geodata({'type': 'Point',
-                                 'coordinates': [longitude, latitude]})
+    >> # Create GeoJSON point using WGS84 coordinates.
+    >> latitude = 45.920278
+    >> longitude = 63.342222
+    >> loc = aerospike.geodata({'type': 'Point', 'coordinates': [longitude, latitude]})
 
     .. versionadded:: 1.0.54
 
@@ -122,12 +117,10 @@ Geospatial
     :param dict geojson_str: a :class:`str` of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    >> import aerospike
 
-        import aerospike
-
-        # Create GeoJSON point using WGS84 coordinates.
-        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
+    >> # Create GeoJSON point using WGS84 coordinates.
+    >> loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
 
     .. versionadded:: 1.0.54
 
@@ -151,19 +144,17 @@ Types
 
     :return: a type representing a wildcard value.
 
-    .. code-block:: python
+    >> import aerospike
+    >> from aerospike_helpers.operations import list_operations as list_ops
 
-        import aerospike
-        from aerospike_helpers.operations import list_operations as list_ops
+    >> client = aerospike.client({'hosts': [('localhost', 3000)]})
+    >> key = 'test', 'demo', 1
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]})
-        key = 'test', 'demo', 1
-
-        #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
-        operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
-        _, _, bins = client.operate(key, operations)
+    >> #  get all values of the form [1, ...] from a list of lists.
+    >> #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+    >> #  [1, 2, 3] and [1, 'a']
+    >> operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
+    >> _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -175,19 +166,17 @@ Types
 
     :return: a type representing an infinite value.
 
-    .. code-block:: python
+    >> import aerospike
+    >> from aerospike_helpers.operations import list_operations as list_ops
 
-        import aerospike
-        from aerospike_helpers.operations import list_operations as list_ops
+    >> client = aerospike.client({'hosts': [('localhost', 3000)]})
+    >> key = 'test', 'demo', 1
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]})
-        key = 'test', 'demo', 1
-
-        #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
-        operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
-        _, _, bins = client.operate(key, operations)
+    >> #  get all values of the form [1, ...] from a list of lists.
+    >> #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+    >> #  [1, 2, 3] and [1, 'a']
+    >> operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
+    >> _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -213,12 +202,10 @@ Serialization
     .. seealso:: To use this function with :meth:`Client.put`, \
         the argument to the serializer parameter should be :const:`aerospike.SERIALIZER_USER`.
 
-    .. code-block:: python
+    >> def my_serializer(val):
+    ...    return json.dumps(val)
 
-        def my_serializer(val):
-            return json.dumps(val)
-
-        aerospike.set_serializer(my_serializer)
+    >> aerospike.set_serializer(my_serializer)
 
     .. versionadded:: 1.0.39
 
@@ -335,13 +322,11 @@ Other
     :return: a RIPEMD-160 digest of the input tuple.
     :rtype: :class:`bytearray`
 
-    .. code-block:: python
+    >> import aerospike
+    >> import pprint
 
-        import aerospike
-        import pprint
-
-        digest = aerospike.calc_digest("test", "demo", 1 )
-        pp.pprint(digest)
+    >> digest = aerospike.calc_digest("test", "demo", 1 )
+    >> pp.pprint(digest)
 
 .. _client_config:
 
@@ -373,47 +358,43 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Invalid client config example:
 
-            .. code-block:: python
+            >> import aerospike
 
-                import aerospike
-
-                config = {
-                    "validate_keys": True,
-                    "hosts": [
-                        ("127.0.0.1", 3000)
-                    ],
-                    # The correct key is "user", but "username" may be used by accident
-                    "username": "user",
-                    "password": "password"
-                }
-                # This call will raise a ParamError from aerospike.exception
-                # Exception message should be:
-                # "username" is an invalid client config dictionary key
-                client = aerospike.client(config)
+            >> config = {
+            ...    "validate_keys": True,
+            ...    "hosts": [
+            ...       ("127.0.0.1", 3000)
+            ...    ],
+            ...    # The correct key is "user", but "username" may be used by accident
+            ...    "username": "user",
+            ...    "password": "password"
+            ... }
+            >> # This call will raise a ParamError from aerospike.exception
+            >> # Exception message should be:
+            >> # "username" is an invalid client config dictionary key
+            >> client = aerospike.client(config)
 
             Invalid policy example:
 
-            .. code-block:: python
+            >> import aerospike
 
-                import aerospike
+            >> config = {
+            ...    "validate_keys": True,
+            ...    "hosts": [
+            ...        ("127.0.0.1", 3000)
+            ...    ],
+            ... }
+            >> client = aerospike.client(config)
 
-                config = {
-                    "validate_keys": True,
-                    "hosts": [
-                        ("127.0.0.1", 3000)
-                    ],
-                }
-                client = aerospike.client(config)
-
-                key = ("test", "demo", 1)
-                # "key_policy" is used instead of the correct key named "key"
-                policy = {
-                    "key_policy": aerospike.POLICY_KEY_SEND
-                }
-                # This call will raise a ParamError from aerospike.exception
-                # Exception message should be:
-                # "key_policy" is an invalid policy dictionary key
-                client.get(key, policy=policy)
+            >> key = ("test", "demo", 1)
+            >> # "key_policy" is used instead of the correct key named "key"
+            >> policy = {
+            ...    "key_policy": aerospike.POLICY_KEY_SEND
+            ... }
+            >> # This call will raise a ParamError from aerospike.exception
+            >> # Exception message should be:
+            >> # "key_policy" is an invalid policy dictionary key
+            >> client.get(key, policy=policy)
 
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
