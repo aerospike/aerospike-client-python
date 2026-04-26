@@ -95,6 +95,31 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
 
+  doctest:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Run doctest
+      run: python3 -m doctest -v doc/aerospike.rst
+
   build-and-run-tests-with-debug-interpreter:
     runs-on: ubuntu-22.04
     steps:
