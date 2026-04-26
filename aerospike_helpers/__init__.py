@@ -35,3 +35,7 @@ class HyperLogLog(bytes):
 
     def __str__(self) -> str:
         return self.__repr__()
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
