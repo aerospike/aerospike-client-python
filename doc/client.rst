@@ -483,7 +483,9 @@ Numeric Operations
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
+        .. Does this still apply?
+
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python

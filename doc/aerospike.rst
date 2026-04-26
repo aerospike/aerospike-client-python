@@ -11,7 +11,7 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters.
+:py:mod:`aerospike` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
@@ -139,6 +139,8 @@ Types
 
     A type for distinguishing a server-side null from a Python :py:obj:`None`.
     Replaces the constant ``aerospike.null``.
+
+    .. Needs cross reference to server docs
 
     :return: a type representing the server-side type ``as_null``.
 
