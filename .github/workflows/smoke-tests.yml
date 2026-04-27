@@ -422,7 +422,7 @@ jobs:
 
     - if: ${{ matrix.type == 'doctest' }}
       name: Run doctest
-      run: python3 -m doctest -v doctest.py
+      run: python3 -m doctest -v check-code-examples-in-docs.py
       working-directory: doc
 
   test-ee:
