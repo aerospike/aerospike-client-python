@@ -483,7 +483,7 @@ String Operations
         .. testcode::
 
             client.put(keyTuple, {'bin1': 'Freeman'})
-            client.prepend(keyTuple, 'bin1', ' Gordon ')
+            client.prepend(keyTuple, 'bin1', 'Gordon ')
             (_, _, bins) = client.get(keyTuple)
             print(bins)
 
