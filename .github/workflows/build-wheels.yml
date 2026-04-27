@@ -258,7 +258,7 @@ jobs:
     # OpenSSL locked version for this git revision: 3.0.15
     # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') && endsWith(inputs.platform-tag, 'x86_64') }}
-      run: echo CUSTOM_IMAGE_NAME=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'a3440f5f201789718cff4da8f0e1251f186016e36a1b2cfd739fc4d597f7b20c') }} >> $GITHUB_ENV
+      run: echo CUSTOM_IMAGE_NAME=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') && endsWith(inputs.platform-tag, 'aarch64') }}
       run: echo CUSTOM_IMAGE_NAME=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120') }} >> $GITHUB_ENV
