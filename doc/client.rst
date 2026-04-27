@@ -459,9 +459,12 @@ String Operations
         .. doctest::
 
             >>> client.put(keyTuple, {'bin1': 'Martin Luther King'})
+            0
             >>> client.append(keyTuple, 'bin1', ' jr.')
+            0
             >>> (_, _, bins) = client.get(keyTuple)
-            >>> print(bins) # Martin Luther King jr.
+            >>> print(bins)
+            {'bin1': 'Martin Luther King jr.'}
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
