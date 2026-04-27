@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__name__), "..")))
 #         return MagicMock()
 
 
-# sys.modules.update({"aerospike": Mock()})
+autodoc_mock_imports = ["aerospike"]
 
 # sys.path.append(os.path.abspath('/usr/local/lib/python2.7/site-packages/aerospike-1.0.44-py2.7-macosx-10.9-x86_64.egg/'))
 
