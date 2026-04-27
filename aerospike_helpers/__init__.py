@@ -20,7 +20,8 @@ class HyperLogLog(bytes):
 
     The constructor takes in any argument that the :class:`bytes` constructor takes in.
 
-    >>> h = HyperLogLog([1, 2, 3])
+    >>> import aerospike
+    >>> h = aerospike.HyperLogLog([1, 2, 3])
     >>> client.put(key, {"hyperloglog": h})
     """
     def __new__(cls, o) -> "HyperLogLog":
