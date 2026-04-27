@@ -4,7 +4,6 @@ set -e
 set -x
 
 KEEP_CONTAINER=$1
-MANYLINUX_REGISTRY_NAME=$2
 
 this_file_abs_path=$(realpath "${BASH_SOURCE[0]}")
 dir_containing_this_file=$(dirname "$this_file_abs_path")
