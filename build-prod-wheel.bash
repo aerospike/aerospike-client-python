@@ -4,6 +4,7 @@ set -e
 set -x
 
 KEEP_CONTAINER=$1
+MANYLINUX_REGISTRY_NAME=$2
 
 this_file_abs_path=$(realpath "${BASH_SOURCE[0]}")
 dir_containing_this_file=$(dirname "$this_file_abs_path")
@@ -17,6 +18,15 @@ if [[ ! "$os" =~ Linux* ]]; then
     "$dir_containing_this_file/${helper_script}"
     exit 0
 fi
+
+arch=$(uname -m)
+if [[ "$arch" == "aarch64" ]]; then
+    MANYLINUX_IMAGE_DIGEST="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
+else
+    MANYLINUX_IMAGE_DIGEST="22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120"
+fi
+
+MANYLINUX_IMAGE_NAME="$MANYLINUX_REGISTRY_NAME/manylinux_2_28_${arch}:$MANYLINUX_IMAGE_DIGEST"
 
 # Use UUID to minimize chance of colliding with another container
 CONTAINER_NAME=manylinux-$(uuidgen)
