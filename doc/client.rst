@@ -480,12 +480,16 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             client.put(keyTuple, {'bin1': 'Freeman'})
             client.prepend(keyTuple, 'bin1', ' Gordon ')
             (_, _, bins) = client.get(keyTuple)
-            print(bins) # Gordon Freeman
+            print(bins)
+
+        .. testoutput::
+
+            {"bin1": "Gordon Freeman"}
 
     .. index::
         single: Numeric Operations
