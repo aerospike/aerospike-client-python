@@ -31,8 +31,29 @@ Assume every in-line example runs this code beforehand:
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
-.. include:: examples/boilerplate.py
-    :code: python
+
+.. testsetup::
+
+    # Imports
+    import aerospike
+    from aerospike import exception as ex
+    import sys
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Record key tuple: (namespace, set, key)
+    keyTuple = ('test', 'demo', 'key')
 
 Basic example:
 
@@ -434,10 +455,13 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        >>> client.put(keyTuple, {'bin1': 'Martin Luther King'})
-        >>> client.append(keyTuple, 'bin1', ' jr.')
-        >>> (_, _, bins) = client.get(keyTuple)
-        >>> print(bins) # Martin Luther King jr.
+
+        .. doctest::
+
+            >>> client.put(keyTuple, {'bin1': 'Martin Luther King'})
+            >>> client.append(keyTuple, 'bin1', ' jr.')
+            >>> (_, _, bins) = client.get(keyTuple)
+            >>> print(bins) # Martin Luther King jr.
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
