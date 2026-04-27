@@ -1076,6 +1076,7 @@ class TestOperate(object):
 
     TOO_LONG_BIN_NAME = "a" * 16
 
+    # We are testing the entire range of list operation codes here
     @pytest.mark.parametrize(
         "op",
         [
