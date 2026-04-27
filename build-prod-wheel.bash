@@ -25,7 +25,7 @@ else
     MANYLINUX_IMAGE_DIGEST="22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120"
 fi
 
-MANYLINUX_IMAGE_NAME="$MANYLINUX_REGISTRY_NAME/manylinux_2_28_${arch}:$MANYLINUX_IMAGE_DIGEST"
+MANYLINUX_IMAGE_NAME="$MANYLINUX_REGISTRY_NAME/manylinux_2_28_${arch}@sha256:$MANYLINUX_IMAGE_DIGEST"
 
 # Use UUID to minimize chance of colliding with another container
 CONTAINER_NAME=manylinux-$(uuidgen)
