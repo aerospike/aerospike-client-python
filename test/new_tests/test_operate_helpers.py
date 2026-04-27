@@ -1073,3 +1073,11 @@ class TestOperate(object):
         ]
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, ops)
+
+    def test_list_operations_with_bin_name_too_long(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            list_operations.list_insert_items("a" * 16, 0, "nonlist")
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
