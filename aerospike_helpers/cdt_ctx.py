@@ -17,7 +17,7 @@
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
 
-Example::
+.. testcode::
 
     import aerospike
     from aerospike import exception as ex
