@@ -434,12 +434,10 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            client.put(keyTuple, {'bin1': 'Martin Luther King'})
-            client.append(keyTuple, 'bin1', ' jr.')
-            (_, _, bins) = client.get(keyTuple)
-            print(bins) # Martin Luther King jr.
+        >>> client.put(keyTuple, {'bin1': 'Martin Luther King'})
+        >>> client.append(keyTuple, 'bin1', ' jr.')
+        >>> (_, _, bins) = client.get(keyTuple)
+        >>> print(bins) # Martin Luther King jr.
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 

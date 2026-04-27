@@ -422,7 +422,8 @@ jobs:
 
     - if: ${{ matrix.type == 'doctest' }}
       name: Run doctest
-      run: python3 -m doctest -v doc/aerospike.rst
+      run: python3 -m doctest -v doctest.py
+      working-directory: doc
 
   test-ee:
     runs-on: ubuntu-22.04
