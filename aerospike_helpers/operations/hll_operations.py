@@ -29,7 +29,9 @@ in space and speed in dealing with extremely large datasets.
     .. seealso:: `HyperLogLog (Data Type) more info. \
         <https://docs.aerospike.com/server/guide/data-types/hll#operations>`_.
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import hll_operations as hll_ops

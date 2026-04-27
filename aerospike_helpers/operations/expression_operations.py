@@ -47,7 +47,9 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
-    Example::
+    Example:
+
+    .. testcode::
 
         # Read the value of int bin "balance".
         # Let 'client' be a connected aerospike client.
@@ -89,7 +91,9 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
-    Example::
+    Example:
+
+    .. testcode::
 
         # Write the value of int bin "balance" + 50 back to "balance".
         # Let 'client' be a connected aerospike client.

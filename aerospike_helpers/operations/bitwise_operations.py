@@ -30,7 +30,9 @@ Offset examples:
     * -1: rightmost bit in the map
     * -4: 3 bits from rightmost
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import bitwise_operations
@@ -77,7 +79,9 @@ Example::
     client.remove(key)
     client.close()
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as e

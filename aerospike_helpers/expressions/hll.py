@@ -61,7 +61,9 @@ class HLLInit(_BaseExpr):
 
         :return: Returns the resulting hll.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create an HLL with 12 index bits and 24 min hash bits.
             expr = exp.HLLInit(None, 12, 24, exp.HLLBin("my_hll"))
@@ -96,7 +98,9 @@ class HLLAdd(_BaseExpr):
 
         :return: Returns the resulting hll bin after adding elements from list.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
             # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5',
@@ -128,7 +132,9 @@ class HLLGetCount(_BaseExpr):
 
         :return: Integer bin, the estimated number of unique elements in an HLL.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get count from HLL bin "d".
             expr = exp.HLLGetCount(exp.HLLBin("d")).compile()
@@ -148,7 +154,9 @@ class HLLGetUnion(_BaseExpr):
 
         :return: HLL bin representing the set union.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing HLL objects retrieved from the aerospike database.
@@ -173,7 +181,9 @@ class HLLGetUnionCount(_BaseExpr):
 
         :return: Integer bin, estimated number of elements in the set union.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
@@ -198,7 +208,9 @@ class HLLGetIntersectCount(_BaseExpr):
 
         :return: Integer bin, estimated number of elements in the set intersection.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
@@ -223,7 +235,9 @@ class HLLGetSimilarity(_BaseExpr):
 
         :return: Float bin, estimated similarity between 0.0 and 1.0.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
@@ -248,7 +262,9 @@ class HLLDescribe(_BaseExpr):
 
         :return: List bin, a list containing the index_bit_count and minhash_bit_count.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get description of HLL bin "d".
             expr = exp.HLLDescribe(exp.HLLBin("d")).compile()
@@ -274,7 +290,9 @@ class HLLMayContain(_BaseExpr):
 
         :return: 1 if bin may contain any key in list, 0 otherwise.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if HLL bin "d" may contain any of the keys in `list`.
             expr = exp.HLLMayContain(["key1", "key2", "key3"], exp.HLLBin("d")).compile()

@@ -81,7 +81,9 @@ class Write(BatchRecord):
         self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
             import aerospike
@@ -140,7 +142,9 @@ class Read(BatchRecord):
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Read to read bin "a" from the record.
             import aerospike
@@ -192,7 +196,9 @@ class Apply(BatchRecord):
         self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
             # Assume that "test_func" takes a bin name string as an argument.
@@ -240,7 +246,9 @@ class Remove(BatchRecord):
 
     def __init__(self, key: tuple, policy: "TypeBatchPolicyRemove" = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Remove to remove the record.
             import aerospike_helpers.operations as op
@@ -278,7 +286,9 @@ class BatchRecords:
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             import aerospike
             import aerospike_helpers.operations.operations as op
