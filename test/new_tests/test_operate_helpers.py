@@ -1074,10 +1074,19 @@ class TestOperate(object):
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, ops)
 
+    TOO_LONG_BIN_NAME = "a" * 16
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_append(TOO_LONG_BIN_NAME, 0),
+            list_operations.list_create(TOO_LONG_BIN_NAME, aerospike.LIST_ORDERED, False, False)
+        ]
+    )
     def test_list_operations_with_bin_name_too_long(self, op):
         key = ("test", "demo", 1)
         ops = [
-            list_operations.list_insert_items("a" * 16, 0, "nonlist")
+            op
         ]
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.ClientError):
             self.as_connection.operate(key, ops)
