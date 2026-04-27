@@ -420,9 +420,13 @@ jobs:
       run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
+    - name: Install test dependencies
+      if: ${{ matrix.type == 'doctest' }}
+      run: pip install -r doc/requirements.txt
+
     - if: ${{ matrix.type == 'doctest' }}
       name: Run doctest
-      run: python3 check-code-examples-in-docs.py
+      run: sphinx-build -b doctest
       working-directory: doc
 
   test-ee:
