@@ -426,7 +426,7 @@ jobs:
 
     - if: ${{ matrix.type == 'doctest' }}
       name: Run doctest
-      run: sphinx-build -b doctest
+      run: sphinx-build -b doctest . doctest
       working-directory: doc
 
   test-ee:
