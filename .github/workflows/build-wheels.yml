@@ -3,6 +3,11 @@ run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
+permissions:
+  id-token: write
+  contents: read
+  statuses: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -183,7 +188,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux_2_28_{0}@sha256:{1}
+      CUSTOM_IMAGE_NAME: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_{0}@sha256:{1}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -258,13 +263,24 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') && endsWith(inputs.platform-tag, 'aarch64') }}
       run: echo CUSTOM_IMAGE_NAME=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120') }} >> $GITHUB_ENV
 
-    # TODO: would need way to pull this outside of shared workflow
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      name: Setup JFrog CLI
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        version: '2.92.0'
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      with:
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - name: Convert Python tag to Python version
       # Don't use sed because we want this command to work on both mac and windows
