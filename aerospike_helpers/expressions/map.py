@@ -1508,7 +1508,7 @@ class MapGetByRankRangeToEnd(_BaseExpr):
         .. testcode::
 
             # Get the three largest elements in map bin "b".
-            expr = exp.MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, MapBin("b")).compile()
+            expr = exp.MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, exp.MapBin("b")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}

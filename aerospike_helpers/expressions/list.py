@@ -238,7 +238,7 @@ class ListIncrement(_BaseExpr):
 
             # Check if incremented value in list bin "a" is the largest in the list.
             # Rank of -1 == largest element
-            largestListValue = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1)
+            largestListValue = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "a")
             listIncrementedAtIndex1 = exp.ListIncrement(None, None, 1, 5, exp.ListBin("a"))
             listItemAtIndex1 = exp.ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 1,
                 listIncrementedAtIndex1)

@@ -528,7 +528,7 @@ class BitSubtract(_BaseExpr):
 
             # Let blob bin "c" == bytearray([1] * 5).
             # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
-            expr = exp.BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
+            expr = exp.BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, "c").compile()
         """
         self._children = (
             bit_offset,
