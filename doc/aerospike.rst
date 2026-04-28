@@ -216,7 +216,6 @@ Serialization
            return json.dumps(val)
 
         aerospike.set_serializer(my_serializer)
-    0
 
     .. versionadded:: 1.0.39
 
@@ -340,7 +339,10 @@ Other
 
         digest = aerospike.calc_digest("test", "demo", 1)
         pprint.pprint(digest)
-    bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+
+    .. testoutput::
+
+        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
 
 .. _client_config:
 
@@ -386,8 +388,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
                    "password": "password"
                 }
                 client = aerospike.client(config)
-            Traceback (most recent call last):
-            aerospike.exception.ParamError: "username" is an invalid client config dictionary key
+
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "username" is an invalid client config dictionary key
 
             Invalid policy example:
 
@@ -409,8 +414,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
                    "key_policy": aerospike.POLICY_KEY_SEND
                 }
                 client.get(key, policy=policy)
-            Traceback (most recent call last):
-            aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
+
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
