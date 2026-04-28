@@ -204,6 +204,7 @@ class Apply(BatchRecord):
             # Assume that "test_func" takes a bin name string as an argument.
             # Assume the appropriate UDF module has already been registered.
             import aerospike_helpers.operations as op
+            from aerospike_helpers.batch.records import Apply
 
 
             module = "my_lua"
