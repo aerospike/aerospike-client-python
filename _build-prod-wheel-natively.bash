@@ -73,6 +73,15 @@ REQUIREMENTS_TXT=requirements.txt
 "python${PYTHON_VERSION}" -m pip install build -c "$REQUIREMENTS_TXT"
 "python${PYTHON_VERSION}" -m build --wheel
 
+VENV=./.venv
+"python${PYTHON_VERSION}" -m venv $VENV
+. "$VENV/bin/activate"
+
+"python${PYTHON_VERSION}" -m pip install dist/*.whl
+"python${PYTHON_VERSION}" -c "import aerospike"
+
+deactivate
+
 REPAIRED_WHEEL_DIR=wheelhouse
 
 unrepaired_wheel_path=$(find dist/ -type f -name '*.whl' | head -n 1)
