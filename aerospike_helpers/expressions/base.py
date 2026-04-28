@@ -340,7 +340,7 @@ class GeoBin(_BaseExpr):
         .. testcode::
 
             #GeoJSON bin "a" contained by GeoJSON bin "b".
-            expr = exp.CmpGeo(GeoBin("a"), exp.GeoBin("b")).compile()
+            expr = exp.CmpGeo(exp.GeoBin("a"), exp.GeoBin("b")).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 

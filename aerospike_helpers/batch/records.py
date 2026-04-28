@@ -87,7 +87,7 @@ class Write(BatchRecord):
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Write
 
             bin_name = "a"
@@ -148,7 +148,7 @@ class Read(BatchRecord):
 
             # Create a batch Read to read bin "a" from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Read
 
             bin_name = "a"
@@ -259,7 +259,7 @@ class Remove(BatchRecord):
             user_key = 1
             key = (namespace, set, user_key)
 
-            br = Remove(key, ops)
+            br = Remove(key)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
