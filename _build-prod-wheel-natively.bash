@@ -67,15 +67,11 @@ elif [[ $os =~ Linux* && $arch == "x86_64" ]]; then
     export LD_LIBRARY_PATH=/usr/local/lib64
 fi
 
-if [ "$#" -eq 1 ]; then
-    python_version=$1
-else
-    python_version="3"
-fi
+PYTHON_VERSION="${1:-3}"
 
 REQUIREMENTS_TXT=requirements.txt
-"python${python_version}" -m pip install build -c "$REQUIREMENTS_TXT"
-"python${python_version}" -m build --wheel
+"python${PYTHON_VERSION}" -m pip install build -c "$REQUIREMENTS_TXT"
+"python${PYTHON_VERSION}" -m build --wheel
 
 REPAIRED_WHEEL_DIR=wheelhouse
 

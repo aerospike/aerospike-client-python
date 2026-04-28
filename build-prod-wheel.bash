@@ -3,10 +3,8 @@
 set -e
 set -x
 
-KEEP_CONTAINER=$1
-
-this_file_abs_path=$(realpath "${BASH_SOURCE[0]}")
-dir_containing_this_file=$(dirname "$this_file_abs_path")
+abs_path_for_this_file=$(realpath "${BASH_SOURCE[0]}")
+dir_containing_this_file=$(dirname "$abs_path_for_this_file")
 
 helper_script=_build-prod-wheel-natively.bash
 
@@ -17,6 +15,14 @@ if [[ ! "$os" =~ Linux* ]]; then
     "$dir_containing_this_file/${helper_script}"
     exit 0
 fi
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: build-prod-wheel.bash <manylinux-registry-name> <python-version>"
+    exit 1
+fi
+
+MANYLINUX_REGISTRY_NAME=$1
+PYTHON_VERSION=$2
 
 arch=$(uname -m)
 if [[ "$arch" == "aarch64" ]]; then
@@ -40,5 +46,6 @@ cleanup() {
 }
 trap 'cleanup' EXIT SIGINT SIGTERM ERR
 
+# Addresses a git error where the user owning the repo folder is different from the container user
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
 docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./${helper_script} "$PYTHON_VERSION"
