@@ -45,17 +45,17 @@ Client
 
     Simple example:
 
-.. TODO - Multiline comments maybe should be added to API descriptions
+    .. testcode::
 
-    >>> import aerospike
-    >>> # Configure the client to first connect to a cluster node at 127.0.0.1
-    >>> # The client will learn about the other nodes in the cluster from the seed node.
-    >>> # Also sets a top level policy for read commands
-    >>> config = {
-    ...    'hosts':    [ ('127.0.0.1', 3000) ],
-    ...    'policies': {'read': {'total_timeout': 1000}}
-    ... }
-    >>> client = aerospike.client(config)
+        import aerospike
+        # Configure the client to first connect to a cluster node at 127.0.0.1
+        # The client will learn about the other nodes in the cluster from the seed node.
+        # Also sets a top level policy for read commands
+        config = {
+           'hosts':    [ ('127.0.0.1', 3000) ],
+           'policies': {'read': {'total_timeout': 1000}}
+        }
+        client = aerospike.client(config)
 
     Connecting using TLS example:
 
@@ -100,12 +100,14 @@ Geospatial
     :param dict geo_data: a :class:`dict` representing the geospatial data.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    >>> import aerospike
+    .. testcode::
 
-    >>> # Create GeoJSON point using WGS84 coordinates.
-    >>> latitude = 45.920278
-    >>> longitude = 63.342222
-    >>> loc = aerospike.geodata({'type': 'Point', 'coordinates': [longitude, latitude]})
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        latitude = 45.920278
+        longitude = 63.342222
+        loc = aerospike.geodata({'type': 'Point', 'coordinates': [longitude, latitude]})
 
     .. versionadded:: 1.0.54
 
@@ -117,10 +119,12 @@ Geospatial
     :param dict geojson_str: a :class:`str` of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    >>> import aerospike
+    .. testcode::
 
-    >>> # Create GeoJSON point using WGS84 coordinates.
-    >>> loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
 
     .. versionadded:: 1.0.54
 
@@ -144,17 +148,19 @@ Types
 
     :return: a type representing a wildcard value.
 
-    >>> import aerospike
-    >>> from aerospike_helpers.operations import list_operations as list_ops
+    .. testcode::
 
-    >>> client = aerospike.client({'hosts': [('localhost', 3000)]})
-    >>> key = 'test', 'demo', 1
+        import aerospike
+        from aerospike_helpers.operations import list_operations as list_ops
 
-    >>> #  get all values of the form [1, ...] from a list of lists.
-    >>> #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-    >>> #  [1, 2, 3] and [1, 'a']
-    >>> operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
-    >>> _, _, bins = client.operate(key, operations)
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+        key = 'test', 'demo', 1
+
+        #  get all values of the form [1,    ] from a list of lists.
+        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+        #  [1, 2, 3] and [1, 'a']
+        operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
+        _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -166,17 +172,19 @@ Types
 
     :return: a type representing an infinite value.
 
-    >>> import aerospike
-    >>> from aerospike_helpers.operations import list_operations as list_ops
+    .. testcode::
 
-    >>> client = aerospike.client({'hosts': [('localhost', 3000)]})
-    >>> key = 'test', 'demo', 1
+        import aerospike
+        from aerospike_helpers.operations import list_operations as list_ops
 
-    >>> #  get all values of the form [1, ...] from a list of lists.
-    >>> #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-    >>> #  [1, 2, 3] and [1, 'a']
-    >>> operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
-    >>> _, _, bins = client.operate(key, operations)
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+        key = 'test', 'demo', 1
+
+        #  get all values of the form [1,    ] from a list of lists.
+        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
+        #  [1, 2, 3] and [1, 'a']
+        operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
+        _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -202,10 +210,12 @@ Serialization
     .. seealso:: To use this function with :meth:`Client.put`, \
         the argument to the serializer parameter should be :const:`aerospike.SERIALIZER_USER`.
 
-    >>> def my_serializer(val):
-    ...    return json.dumps(val)
+    .. testcode::
 
-    >>> aerospike.set_serializer(my_serializer)
+        def my_serializer(val):
+           return json.dumps(val)
+
+        aerospike.set_serializer(my_serializer)
     0
 
     .. versionadded:: 1.0.39
@@ -323,11 +333,13 @@ Other
     :return: a RIPEMD-160 digest of the input tuple.
     :rtype: :class:`bytearray`
 
-    >>> import aerospike
-    >>> import pprint
+    .. testcode::
 
-    >>> digest = aerospike.calc_digest("test", "demo", 1)
-    >>> pprint.pprint(digest)
+        import aerospike
+        import pprint
+
+        digest = aerospike.calc_digest("test", "demo", 1)
+        pprint.pprint(digest)
     bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
 
 .. _client_config:
@@ -360,39 +372,43 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Invalid client config example:
 
-            >>> import aerospike
+            .. testcode::
 
-            >>> config = {
-            ...    "validate_keys": True,
-            ...    "hosts": [
-            ...       ("127.0.0.1", 3000)
-            ...    ],
-            ...    # The correct key is "user", but "username" may be used by accident
-            ...    "username": "user",
-            ...    "password": "password"
-            ... }
-            >>> client = aerospike.client(config)
+                import aerospike
+
+                config = {
+                   "validate_keys": True,
+                   "hosts": [
+                      ("127.0.0.1", 3000)
+                   ],
+                   # The correct key is "user", but "username" may be used by accident
+                   "username": "user",
+                   "password": "password"
+                }
+                client = aerospike.client(config)
             Traceback (most recent call last):
             aerospike.exception.ParamError: "username" is an invalid client config dictionary key
 
             Invalid policy example:
 
-            >>> import aerospike
+            .. testcode::
 
-            >>> config = {
-            ...    "validate_keys": True,
-            ...    "hosts": [
-            ...        ("127.0.0.1", 3000)
-            ...    ],
-            ... }
-            >>> client = aerospike.client(config)
+                import aerospike
 
-            >>> key = ("test", "demo", 1)
-            >>> # "key_policy" is used instead of the correct key named "key"
-            >>> policy = {
-            ...    "key_policy": aerospike.POLICY_KEY_SEND
-            ... }
-            >>> client.get(key, policy=policy)
+                config = {
+                   "validate_keys": True,
+                   "hosts": [
+                       ("127.0.0.1", 3000)
+                   ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                   "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                client.get(key, policy=policy)
             Traceback (most recent call last):
             aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
