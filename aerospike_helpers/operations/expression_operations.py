@@ -99,12 +99,12 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
         # Let 'client' be a connected aerospike client.
         # Let int bin 'balance' == 50.
 
-        from aerospike_helpers.operations import expression_operations as expressions
+        from aerospike_helpers.operations import expression_operations as expr_ops
         from aerospike_helpers.expressions import *
 
         expr = Add(IntBin("balance"), 50).compile()
         ops = [
-            expressions.expression_write("balance", expr)
+            expr_ops.expression_write("balance", expr)
         ]
         client.operate(self.key, ops)
         _, _, res = client.get(self.key)

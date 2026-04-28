@@ -78,7 +78,7 @@ class IntOr(_BaseExpr):
         .. testcode::
 
             # for int bin "a", a | 0x10 not == 0
-            expr = exp.NE(exp.IntOr(IntBin("a"), 0x10), 0).compile()
+            expr = exp.NE(exp.IntOr(exp.IntBin("a"), 0x10), 0).compile()
         """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
