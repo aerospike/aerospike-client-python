@@ -20,7 +20,7 @@ fi
 
 arch=$(uname -m)
 if [[ "$arch" == "aarch64" ]]; then
-    MANYLINUX_IMAGE_DIGEST="22071eca37ed46821078ac1a6d4e9eccbbd96baa8d07e199ca4df4a299f9c120"
+    MANYLINUX_IMAGE_DIGEST="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
 else
     MANYLINUX_IMAGE_DIGEST="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
 fi
