@@ -145,7 +145,6 @@ env:
   # Note that environment variables in Github are all strings
   # Github mac m1 and windows runners don't support Docker / nested virtualization
   # so we need to use self-hosted runners to test wheels for these platforms
-  RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
   REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
   REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
@@ -178,17 +177,18 @@ jobs:
       # Bash >= 4 supports hashmaps
       shell: bash
 
-  cibuildwheel:
+  build-wheel:
     needs: get-runner-os
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
       fail-fast: false
+    outputs:
+      python-version: ${{ steps.get-python-version.outputs.python_version }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_{0}@sha256:{1}
+      RUN_INTEGRATION_TESTS_IN_THIS_JOB: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -196,7 +196,7 @@ jobs:
         egress-policy: audit
 
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      run: echo STATUS_CHECK_MESSAGE="build-wheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -218,11 +218,11 @@ jobs:
       uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'Run Aerospike server in Docker container and configure tests accordingly'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ inputs.registry-name }}
@@ -233,7 +233,7 @@ jobs:
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
       # Use double quotes otherwise Windows will throw this error in cibuildwheel
       # 'import
       #       ^
@@ -242,9 +242,9 @@ jobs:
       shell: bash
 
     - name: Otherwise, enable integration tests
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -306,7 +306,7 @@ jobs:
     - run: |
         # Checks that server started up properly
         docker logs aerospike
-      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       shell: bash
 
     - name: Upload wheels to GitHub
@@ -326,7 +326,7 @@ jobs:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-self-hosted:
-    needs: cibuildwheel
+    needs: build-wheel
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
@@ -376,18 +376,9 @@ jobs:
         with:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
-      - name: Convert Python tag to Python version
-        # Don't use sed because we want this command to work on both mac and windows
-        # The command used in GNU sed is different than in macOS sed
-        run: |
-          PYTHON_TAG=${{ matrix.python-tag }}
-          PYTHON_VERSION="${PYTHON_TAG/cp/}"
-          echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
-        shell: bash
-
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ needs.build-wheel.outputs.python-version }}
           allow-prereleases: true
 
       - name: Install wheel
