@@ -157,7 +157,9 @@ The following documentation uses type aliases that map to standard Python types.
 
 .. note:: Requires server version >= 5.2.0
 
-Assume all in-line examples run this code beforehand::
+Assume all in-line examples run this code beforehand:
+
+.. testsetup::
 
     import aerospike
     import aerospike_helpers.expressions as exp
