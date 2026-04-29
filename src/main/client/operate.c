@@ -1486,7 +1486,7 @@ static as_status get_operation(as_error *err, PyObject *op_dict,
                                    "Operation must be an integer, but got an "
                                    "indeterminate type instead");
         }
-        PyObject *py_op_type_name = PyType_GetName(py_op_type);
+        PyObject *py_op_type_name = PyType_GetName((PyTypeObject *)py_op_type);
         if (!py_op_type_name) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Operation must be an integer, but got an "
