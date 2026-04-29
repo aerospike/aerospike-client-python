@@ -162,6 +162,8 @@ Types
         operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
         import sys
         print(operations, file=sys.stderr)
+        print(aerospike.OP_LIST_GET_BY_VALUE, file=sys.stderr)
+        print(type(aerospike.OP_LIST_GET_BY_VALUE), file=sys.stderr)
         _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
