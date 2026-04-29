@@ -160,6 +160,8 @@ Types
         #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
         #  [1, 2, 3] and [1, 'a']
         operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
+        import sys
+        print(operations, file=sys.stderr)
         _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
