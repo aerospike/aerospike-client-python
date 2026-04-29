@@ -1480,8 +1480,28 @@ static as_status get_operation(as_error *err, PyObject *op_dict,
                                "Operation must contain an \"op\" entry");
     }
     if (!PyLong_Check(py_operation)) {
+        PyObject *py_op_type = PyObject_Type(py_operation);
+        if (!py_op_type) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation must be an integer, but got an "
+                                   "indeterminate type instead");
+        }
+        PyObject *py_op_type_name = PyType_GetName(py_op_type);
+        if (!py_op_type_name) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation must be an integer, but got an "
+                                   "indeterminate type instead");
+        }
+        const char *op_type_name = PyUnicode_AsUTF8(py_op_type_name);
+        if (!op_type_name) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation must be an integer, but got an "
+                                   "indeterminate type instead");
+        }
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must be an integer");
+                               "Operation must be an integer, but got a value "
+                               "with type %s instead",
+                               op_type_name);
     }
 
     *operation_ptr = PyLong_AsLong(py_operation);
