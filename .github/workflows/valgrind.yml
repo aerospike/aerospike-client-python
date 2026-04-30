@@ -139,7 +139,6 @@ jobs:
     with:
       python-version: "${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}"
       platform-tag: manylinux_x86_64
-      sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
   upload-built-wheel-to-jfrog:

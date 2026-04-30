@@ -21,8 +21,6 @@ jobs:
   build-artifacts:
     needs: promote-rc-build-to-release
     uses: ./.github/workflows/build-artifacts.yml
-    with:
-      sha-to-build-and-test: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
     secrets: inherit
 
   upload-to-jfrog:

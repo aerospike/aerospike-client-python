@@ -95,10 +95,6 @@ on:
       platform-tag:
         type: string
         required: true
-      # Only used in workflow_call event
-      sha-to-build-and-test:
-        type: string
-        required: true
       unoptimized:
         type: boolean
         required: false
@@ -142,7 +138,6 @@ on:
         required: true
 
 env:
-  COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
   # Note that environment variables in Github are all strings
   # Github mac m1 and windows runners don't support Docker / nested virtualization
   # so we need to use self-hosted runners to test wheels for these platforms
@@ -184,13 +179,12 @@ jobs:
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        sha: ${{ github.sha }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
@@ -293,7 +287,7 @@ jobs:
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        sha: ${{ github.sha }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
@@ -322,12 +316,10 @@ jobs:
         uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          sha: ${{ github.sha }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
       # Need to be able to save Docker Hub credentials to keychain
       # Unable to do this via the ansible script for self hosted mac m1 runners
@@ -369,6 +361,6 @@ jobs:
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
         uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
         with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          sha: ${{ github.sha }}
           status: ${{ job.status }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}

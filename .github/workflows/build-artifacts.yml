@@ -57,12 +57,6 @@ on:
         type: boolean
         default: true
         required: false
-      # This input is only used in workflow_call events
-      sha-to-build-and-test:
-        description: A calling workflow may want to run this workflow on a different ref than the calling workflow's ref
-        type: string
-        # Make it required to make things simple
-        required: true
       # A calling workflow doesn't actually set values to the inputs below
       # But that workflow needs to have default values for these inputs
       unoptimized:
@@ -100,8 +94,6 @@ on:
 jobs:
   build-sdist:
     uses: ./.github/workflows/build-sdist.yml
-    with:
-      sha_to_build: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
 
   build-wheels:
     strategy:
@@ -117,8 +109,6 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      # Can't use env context here, so just copy from build-sdist env var
-      sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
       unoptimized: ${{ inputs.unoptimized }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
       registry-name: ${{ inputs.registry-name }}
