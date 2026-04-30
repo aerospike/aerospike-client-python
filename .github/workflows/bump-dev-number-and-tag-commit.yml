@@ -45,37 +45,37 @@ jobs:
         fetch-depth: 0
 
     - name: Get tag from commit before push
-      id: get-current-version
+      id: get-latest-tag
       run: |
         prev_commit=$(git rev-parse HEAD~)
-        echo current_version=$(git describe --tags --exact-match $prev_commit) >> $GITHUB_OUTPUT
+        echo latest_tag=$(git describe --tags --exact-match $prev_commit) >> $GITHUB_OUTPUT
 
     - name: Install library that parses PEP 440 versions
       run: pip install parver -c requirements.txt
       working-directory: .github/workflows
 
-    - name: Get new version
-      id: get-new-version
-      run: echo new_version=$(python3 .github/workflows/${CHANGE_VERSION_SCRIPT_NAME}.py "${CURRENT_VERSION}") >> $GITHUB_OUTPUT
+    - name: Get new tag
+      id: get-new-tag
+      run: echo new_tag=$(python3 .github/workflows/${CHANGE_VERSION_SCRIPT_NAME}.py "${LATEST_TAG}") >> $GITHUB_OUTPUT
       env:
-        CURRENT_VERSION: ${{ steps.get-current-version.outputs.current_version }}
+        LATEST_TAG: ${{ steps.get-latest-tag.outputs.latest_tag }}
         CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.bump-type-for-new-tag }}
 
     - name: Compare current and next release version
       id: get-current-and-next-release-version
       run: |
-        next_version=$(python3 .github/workflows/strip_prerelease_part.py "${{ steps.get-new-version.outputs.new_version }}") >> $GITHUB_OUTPUT
+        next_release_version=$(python3 .github/workflows/strip_prerelease_part.py "${{ steps.get-new-tag.outputs.new_tag }}") >> $GITHUB_OUTPUT
         current_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
 
-    - if: ${{ inputs.dry-run == false && steps.get-current-and-next-release-version.outputs.current_release_version != steps.get-current-and-next-release-version.outputs.next_version }}
+    - if: ${{ inputs.dry-run == false && steps.get-current-and-next-release-version.outputs.current_release_version != steps.get-current-and-next-release-version.outputs.next_release_version }}
       name: Update version in repo
       uses: ./.github/actions/update-version
       with:
-        new_version: ${{ steps.get-current-and-next-release-version.outputs.next_version }}
+        new_version: ${{ steps.get-current-and-next-release-version.outputs.next_release_version }}
 
     - if: ${{ inputs.dry-run == false }}
       run: |
-        git tag $NEW_VERSION
-        git push origin tag $NEW_VERSION
+        git tag $NEW_TAG
+        git push origin tag $NEW_TAG
       env:
-        NEW_VERSION: ${{ steps.get-new-version.outputs.new_version }}
+        NEW_TAG: ${{ steps.get-new-tag.outputs.new_tag }}
