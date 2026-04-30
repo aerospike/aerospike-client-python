@@ -17,10 +17,9 @@ if [[ ! "$os" =~ Linux* ]]; then
 fi
 
 MANYLINUX_REGISTRY_NAME=$1
-PYTHON_VERSION=$2
 
-if [[ -z "$MANYLINUX_REGISTRY_NAME" || -z "$PYTHON_VERSION" ]]; then
-    echo "MANYLINUX_REGISTRY_NAME and PYTHON_VERSION env vars must be defined."
+if [[ -z "$MANYLINUX_REGISTRY_NAME" ]]; then
+    echo "MANYLINUX_REGISTRY_NAME env var must be defined."
     exit 1
 fi
 
@@ -49,4 +48,7 @@ trap 'cleanup' EXIT SIGINT SIGTERM ERR
 
 # Addresses a git error where the user owning the repo folder is different from the container user
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
-docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./${helper_script} "$PYTHON_VERSION"
+
+active_python_minor_version=$(python3 --version | cut -f 2- -d' ' | cut -f -2 -d'.')
+
+docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./${helper_script} "$active_python_minor_version"

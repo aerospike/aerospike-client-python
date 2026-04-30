@@ -56,10 +56,6 @@ jobs:
   build-test-and-publish-artifacts-as-jfrog-build:
     needs: get-runner-os-and-all-supported-python-versions
     uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
-    strategy:
-      matrix:
-        runner-os: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses) }}
-        python-version: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions) }}
     with:
       gh-artifact-directory: wheelhouse
       gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de
@@ -70,12 +66,15 @@ jobs:
       # TODO: maybe this should be the actions run #?
       version: ${{ github.ref_name }}
       build-script-path: ./build-prod-wheel.bash
+      matrix-json: >-
+        {
+          "runner-os": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses }},
+          "python-version": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions }}
+        }
       dry-run: ${{ inputs.dry-run }}
       build-type: ${{ inputs.build-type }}
-      runs-on: ${{ matrix.runner-os }}
       setup-python: true
-      python-version: ${{ matrix.python-version }}
-      build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};PYTHON_VERSION=3
+      build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
     secrets:
       gpg-private-key: ''
       gpg-public-key: ''
