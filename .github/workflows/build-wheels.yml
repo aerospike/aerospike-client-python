@@ -159,8 +159,6 @@ jobs:
       matrix:
         python-version: ${{ inputs.python-versions == '*' && fromJson(needs.get-runner-os-and-all-python-versions.outputs.python-versions) || fromJson(inputs.python-versions) }}
       fail-fast: false
-    outputs:
-      python-version: ${{ steps.get-python-version.outputs.python_version }}
     runs-on: ${{ needs.get-runner-os-and-all-python-versions.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-version }}-${{ inputs.platform-tag }}"
@@ -327,7 +325,7 @@ jobs:
 
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ needs.build-wheel.outputs.python-version }}
+          python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
       - name: Install wheel
