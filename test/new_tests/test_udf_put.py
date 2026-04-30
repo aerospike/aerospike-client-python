@@ -2,7 +2,6 @@
 
 import pytest
 from .as_status_codes import AerospikeStatus
-from .udf_helpers import wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
@@ -79,8 +78,6 @@ class TestUdfPut(TestBaseClass):
 
         assert status == 0
 
-        # wait for the udf to propagate to the server
-        wait_for_udf_to_exist(self.as_connection, filename)
         udf_list = self.as_connection.udf_list({})
 
         present = False

@@ -3,7 +3,6 @@ from __future__ import print_function
 
 import pytest
 from .as_status_codes import AerospikeStatus
-from .udf_helpers import wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
@@ -16,7 +15,6 @@ class TestUdfRemove(object):
         Setup Method, adds a UDF and waits for the UDF to exist
         """
         as_connection.udf_put(self.udf_name, 0, {})
-        wait_for_udf_to_exist(as_connection, self.udf_name)
 
         def teardown():
             """

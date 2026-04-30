@@ -119,18 +119,18 @@ def increment(bin_name, amount):
 def touch(ttl: Optional[int] = None):
     """Create a touch operation dictionary.
 
-    Using ttl here is deprecated. It should be set in the record metadata for the operate method.
+    Using ttl here is deprecated. It should be set in the policy parameter for the operate method.
 
     Args:
         ttl (int): Deprecated. The ttl that should be set for the record.
-            This should be set in the metadata passed to the operate or
+            This should be set in the policy parameter passed to the operate or
             operate_ordered methods.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
     op_dict = {"op": aerospike.OPERATOR_TOUCH}
     if ttl:
-        warnings.warn("TTL should be specified in the meta dictionary for operate", DeprecationWarning)
+        warnings.warn("TTL should be specified in the policy parameter for operate", DeprecationWarning)
         op_dict["val"] = ttl
     return op_dict
 
@@ -142,6 +142,7 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
     Args:
         bin_name: Name of bin where this select operation is performed against.
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+            See :ref:`path_expressions_contexts` for possible contexts.
         flags: See :ref:`exp_path_select_flags` for the set of valid flags for this function.
 
     Returns:
@@ -156,11 +157,12 @@ def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     Create path expression modification operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
 
     Args:
         bin_name: Name of bin that this modify operation is performed against
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+            See :ref:`path_expressions_contexts` for possible contexts.
         expr: compiled modifying expression.
         flags: See :ref:`exp_path_modify_flags` for the set of valid flags for this function.
 

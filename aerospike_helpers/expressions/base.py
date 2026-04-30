@@ -33,6 +33,7 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
+import warnings
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1005,7 +1006,7 @@ class Let(_BaseExpr):
     def __init__(self, *exprs: _BaseExpr):
         """Args:
             `*exprs` (_BaseExpr): Variable number of :class:`~aerospike_helpers.expressions.base.Def` expressions
-            followed by a scoped expression.
+                followed by a scoped expression.
 
         :return: (result of scoped expression)
 
@@ -1120,11 +1121,6 @@ class LoopVarBool(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_BOOL
 
 
-# TODO: remove?
-# class LoopVarInfinity(LoopVar):
-#     _op = aerospike._AS_EXP_LOOPVAR_INF
-
-
 class LoopVarNil(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_NIL
 
@@ -1133,13 +1129,22 @@ class LoopVarGeoJson(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_GEOJSON
 
 
+class LoopVarHLL(LoopVar):
+    _op = aerospike._AS_EXP_LOOPVAR_HLL
+
+
 class ResultRemove(_BaseExpr):
     """
-    Indicates entry deletion for modify_by_path.
+    Indicates entry deletion for :py:class:`ModifyByPath`.
     """
-    _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
+    _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
+        warnings.warn(
+            "This expression will be renamed to RemoveResult in the next major client release",
+            DeprecationWarning
+        )
+
         """
         :return: (result_remove)
         """
@@ -1156,7 +1161,8 @@ class SelectByPath(_BaseExpr):
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Return type specifier.
             flags: See :ref:`exp_path_select_flags` for possible values.
             bin: Bin expression to which this expression applies.
@@ -1176,14 +1182,15 @@ class ModifyByPath(_BaseExpr):
     Constructs an apply by path operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Value type specifier.
             mod_exp: Compiled expression to apply.
             flags: See :ref:`exp_path_modify_flags` for possible values.
