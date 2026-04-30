@@ -156,18 +156,16 @@ Types
         client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
-        #  get all values of the form [1,    ] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
+        #  get all values of the form [1, ...] from a list of lists.
         operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
-        import sys
-        print(aerospike.OP_LIST_GET_BY_VALUE, file=sys.stderr)
-        print(type(aerospike.OP_LIST_GET_BY_VALUE), file=sys.stderr)
-        print(operations, file=sys.stderr)
-        print(operations[0], file=sys.stderr)
-        print(operations[0]['op'], file=sys.stderr)
-        print(type(operations[0]['op']), file=sys.stderr)
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -187,11 +185,16 @@ Types
         client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
-        #  get all values of the form [1,    ] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
+        #  get all values of the form [1, ...] from a list of lists.
         operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
