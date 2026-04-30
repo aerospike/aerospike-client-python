@@ -23,13 +23,12 @@ on:
 jobs:
   promote-release-bundle-to-dev:
     runs-on: ubuntu-24.04
-    env:
-      JF_PROJECT: ${{ inputs.jfrog-project }}
     steps:
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
       env:
-        JF_URL: https://artifact.aerospike.io
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ inputs.jfrog-project }}
       with:
         version: '2.92.0'
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
