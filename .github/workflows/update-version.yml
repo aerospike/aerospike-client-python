@@ -48,6 +48,7 @@ jobs:
   update-version-in-repo:
     name: Update version in repo
     runs-on: ubuntu-22.04
+    # TODO: no longer need?
     outputs:
       bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:
@@ -60,8 +61,30 @@ jobs:
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
-    # TODO: should automatically delete tags if we are reverting from a larger bump to smaller bump
+    - id: get-next-release-version
+      run: |
+        echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
+        pip install parver -c .github/workflows/requirements.txt
+
+    - name: Check if reverting to a lower version bump
+      id: check-for-downgrade
+      continue-on-error: true
+      run: |
+        from parver import Version
+        current_release=Version.parse("${{ steps.get-next-release-version.outputs.next_release_version }}")
+        new_release=Version.parse("${{ inputs.new_version }}")
+        assert (current_release > new_release)
+      shell: python
+
+    - if: ${{ steps.check-for-downgrade.outcome == 'success' }}
+      name: Delete all tags for current release
+      run: |
+        tags_to_delete=$(git tag -l | grep "$current_release")
+        echo $tags_to_delete | xargs -I _ -n1 git tag -d _
+        git push origin --delete $tags_to_delete
+      shell: bash
 
     - name: Update version in repo
       uses: ./.github/actions/update-version
