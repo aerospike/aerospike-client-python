@@ -11,20 +11,22 @@ on:
     - 'dev*'
     tags-ignore:
     - '*'
+  # For debugging
   workflow_dispatch:
-    inputs:
+    inputs: &inputs
       bump-type-for-new-tag:
-        type: choice
+        # - bump-dev-num
+        # - strip_prerelease_part
+        type: string
         description: Type of change to make to existing version
         required: true
-        options:
-        - bump-dev-num
-        - promote-dev-version-to-release-version
       dry-run:
         required: false
         default: false
         type: boolean
         description: No tagging in repo
+  workflow_call:
+    inputs: *inputs
 
 jobs:
   apply-change-to-version-and-tag:
