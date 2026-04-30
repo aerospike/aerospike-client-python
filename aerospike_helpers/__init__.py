@@ -28,6 +28,7 @@ class HyperLogLog(bytes):
         h = HyperLogLog([1, 2, 3])
 
         client = aerospike.client({'hosts': [('localhost', 3000)]})
+        key = ("test", "demo", 1)
         client.put(key, {"hyperloglog": h})
 
         _, _, bins = client.get(key)
