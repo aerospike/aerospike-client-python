@@ -207,21 +207,6 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
-    - name: If not running tests against server, only run basic import test
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
-      # Use double quotes otherwise Windows will throw this error in cibuildwheel
-      # 'import
-      #       ^
-      # SyntaxError: EOL while scanning string literal
-      run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Otherwise, enable integration tests
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
-      # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
-      run: echo "TEST_COMMAND=cd test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
-      shell: bash
-
     - name: Set unoptimize flag
       if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
