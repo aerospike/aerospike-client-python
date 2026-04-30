@@ -11,3 +11,11 @@ runs:
   - name: Update VERSION metadata
     run: echo ${{ inputs.new_version }} > VERSION
     shell: bash
+
+  - name: Commit and tag new version
+    uses: step-security/git-auto-commit-action@749bc1cc775376092cc4227ba537137f445ca7c3 # v7.1.1
+    with:
+      commit_message: 'Set version to ${{ inputs.new_version }} [skip ci]'
+      commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+      tagging_message: ${{ inputs.new_version }}
+      branch: ${{ inputs.new_version }}

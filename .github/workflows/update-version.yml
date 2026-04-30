@@ -67,11 +67,3 @@ jobs:
       uses: ./.github/actions/update-version
       with:
         new_version: ${{ inputs.new_version }}
-
-    - name: Tag new version
-      uses: step-security/git-auto-commit-action@749bc1cc775376092cc4227ba537137f445ca7c3 # v7.1.1
-      with:
-        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
-        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        tagging_message: ${{ inputs.dry-run == false && inputs.new_version || '' }}
-        branch: ${{ inputs.new_version }}

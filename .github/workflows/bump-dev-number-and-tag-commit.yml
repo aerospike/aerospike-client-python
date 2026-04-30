@@ -60,7 +60,17 @@ jobs:
         CURRENT_VERSION: ${{ steps.get-current-version.outputs.current_version }}
         CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.bump-type-for-new-tag }}
 
-    - run:
+    - name: Compare current and next release version
+      id: get-current-and-next-release-version
+      run: |
+        next_version=$(python3 .github/workflows/strip_prerelease_part.py "${{ steps.get-new-version.outputs.new_version }}") >> $GITHUB_OUTPUT
+        current_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
+
+    - if: ${{ inputs.dry-run == false && steps.get-current-and-next-release-version.outputs.current_release_version != steps.get-current-and-next-release-version.outputs.next_version }}
+      name: Update version in repo
+      uses: ./.github/actions/update-version
+      with:
+        new_version: ${{ steps.get-current-and-next-release-version.outputs.next_version }}
 
     - if: ${{ inputs.dry-run == false }}
       run: |
