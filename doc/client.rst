@@ -610,7 +610,7 @@ User Defined Functions
 
     client.close()
 
-.. testoutput::
+.. testoutput:: udf
 
     [
         {'content': bytearray(b'...'),
