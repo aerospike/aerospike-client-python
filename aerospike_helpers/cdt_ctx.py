@@ -83,6 +83,7 @@ Example:
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
+    ctx_list_index = [cdt_ctx.cdt_ctx_list_index(0)]
     bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
 
     r = []

@@ -339,12 +339,15 @@ class BatchRecords:
             for br in brs.batch_records:
                 print(br.result)
                 print(br.record)
-            # 0
-            # (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0
-            # (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
-            # 0
-            # (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
+            0
+            (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
         """
 
         if batch_records is None:
