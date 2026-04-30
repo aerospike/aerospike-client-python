@@ -53,8 +53,34 @@ jobs:
     with:
       platform-tag: '*'
 
+  get-next-release-version-and-latest-tag:
+    outputs:
+      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - name: Install library that parses PEP 440 versions
+      run: pip install parver -c requirements.txt
+      working-directory: .github/workflows
+
+    - id: get-next-release-version
+      run: echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
+
+    - id: get-latest-tag
+      run: echo latest_tag=$(git describe --tags --exact-match $prev_commit) >> $GITHUB_OUTPUT
+
   build-test-and-publish-artifacts-as-jfrog-build:
-    needs: get-runner-os-and-all-supported-python-versions
+    needs: [
+      get-runner-os-and-all-supported-python-versions,
+      get-next-release-version-and-latest-tag
+    ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
     with:
       gh-artifact-directory: wheelhouse
@@ -63,8 +89,8 @@ jobs:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-      # TODO: maybe this should be the actions run #?
-      version: ${{ github.ref_name }}
+      # This workflow generates a unique build id internally
+      version: ${{ needs.get-jfrog-build-version.outputs.next-release-version }}
       build-script-path: ./build-prod-wheel.bash
       matrix-json: >-
         {
@@ -82,11 +108,15 @@ jobs:
 
   create-release-bundle-and-promote-to-dev:
     if: ${{ inputs.dry-run }}
-    needs: build-test-and-publish-artifacts-as-jfrog-build
+    needs: [
+      build-test-and-publish-artifacts-as-jfrog-build,
+      get-next-release-version-and-latest-tag
+    ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@7f563f650178064e0c0cedde00277226bfb131de
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: ${{ vars.JFROG_BUILD_NAME }}
       jf-bundle-name: ${{ vars.JFROG_BUILD_NAME }}
-      version: ${{ github.ref_name }}
+      # JFrog release bundle version
+      version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
       gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de # Should match the version in your 'uses:' line
