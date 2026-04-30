@@ -601,7 +601,7 @@ User Defined Functions
     }
     client = aerospike.client(config)
     # Register the UDF module and copy it to the Lua 'user_path'
-    client.udf_put('doc/examples/scan/my_udf.lua')
+    client.udf_put('./examples/scan/my_udf.lua')
 
     print("Before remove:", client.udf_list())
 
