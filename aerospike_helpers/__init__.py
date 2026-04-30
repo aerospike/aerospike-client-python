@@ -23,6 +23,8 @@ class HyperLogLog(bytes):
     .. testcode::
 
         from aerospike_helpers import HyperLogLog
+        import aerospike
+
         h = HyperLogLog([1, 2, 3])
 
         client = aerospike.client({'hosts': [('localhost', 3000)]})
