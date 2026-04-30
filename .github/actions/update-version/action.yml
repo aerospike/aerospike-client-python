@@ -16,7 +16,7 @@ runs:
     run: echo ${{ inputs.new_version }} > VERSION
     shell: bash
 
-  - if: ${{ inputs.dry-run }}
+  - if: ${{ inputs.dry-run == "false" }}
     name: Commit and tag new version
     uses: step-security/git-auto-commit-action@749bc1cc775376092cc4227ba537137f445ca7c3 # v7.1.1
     with:
