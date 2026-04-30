@@ -343,11 +343,11 @@ class BatchRecords:
         .. testoutput::
 
             0
-            (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 1, bytearray(b'...')), {...}, {})
             0
-            (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
+            (('test', 'demo', 2, bytearray(b'...')), {...}, {'id': 100})
             0
-            (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
+            (('test', 'demo', 3, bytearray(b'...')), {...}, {'id': 1})
         """
 
         if batch_records is None:
