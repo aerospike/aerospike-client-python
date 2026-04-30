@@ -62,7 +62,7 @@ jobs:
     strategy:
       matrix:
         runner-os: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses) }}
-        python-tags: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.python-tags) }}
+        python-version: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions) }}
     with:
       gh-artifact-directory: wheelhouse
       gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de
@@ -77,7 +77,7 @@ jobs:
       build-type: ${{ inputs.build-type }}
       runs-on: ${{ matrix.runner-os }}
       setup-python: true
-      python-version: ${{ matrix.python-tags }}
+      python-version: ${{ matrix.python-version }}
       build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};PYTHON_VERSION=3
     secrets:
       gpg-private-key: ''

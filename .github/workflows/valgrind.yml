@@ -63,16 +63,13 @@ on:
         required: false
         default: true
 
-env:
-  PYTHON_TAG: cp310
-
 jobs:
   look-for-wheel-in-jfrog:
     if: ${{ inputs.download-wheel-from-github-artifacts == false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       # So we can pass the python tag to a reusable workflow
-      python-tag: ${{ env.PYTHON_TAG }}
+      python-version: '3.10'
     runs-on: ubuntu-22.04
     env:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
@@ -140,7 +137,7 @@ jobs:
     if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+      python-version: "${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}"
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
@@ -160,6 +157,7 @@ jobs:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
     needs: [
+      build-manylinux-wheel,
       upload-built-wheel-to-jfrog
     ]
     # Case 1: Did not find artifact in JFrog, had to build it in GHA
@@ -178,18 +176,14 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Convert Python tag to Python version
-      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
-      shell: bash
-
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version: '${{ env.PYTHON_VERSION }}'
+        python-version: ${{ needs.build-manylinux-wheel.outputs.python-version }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: ${{ env.PYTHON_TAG }}-manylinux_x86_64.build
+        name: ${{ needs.build-manylinux-wheel.outputs.python-version }}-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl

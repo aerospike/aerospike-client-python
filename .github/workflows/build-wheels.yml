@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
+run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -257,19 +257,10 @@ jobs:
         username: ${{ steps.setup-jf.outputs.oidc-user }}
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
-    - name: Convert Python tag to Python version
-      # Don't use sed because we want this command to work on both mac and windows
-      # The command used in GNU sed is different than in macOS sed
-      id: get-python-version
-      run: |
-        PYTHON_TAG=${{ matrix.python-tag }}
-        PYTHON_VERSION="${PYTHON_TAG/cp/}"
-        echo python_version="${PYTHON_VERSION/3/3.}" >> $GITHUB_OUTPUT
-      shell: bash
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version: ${{ steps.get-python-version.outputs.python_version }}
+        python-version: ${{ matrix.python-version }}
         allow-prereleases: true
 
     - name: Build wheel
@@ -277,7 +268,7 @@ jobs:
       shell: bash
       env:
         MANYLINUX_REGISTRY_NAME: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
-        PYTHON_VERSION: ${{ steps.get-python-version.outputs.python_version }}
+        PYTHON_VERSION: ${{ matrix.python-version }}
 
     # - name: Setup tmate session
     #   if: ${{ !cancelled() }}
@@ -313,10 +304,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-tag: ${{ fromJSON(inputs.python-tags) }}
+        python-version: ${{ fromJSON(inputs.python-versions) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
-      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
+      BUILD_IDENTIFIER: "${{ matrix.python-version }}-${{ inputs.platform-tag }}"
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
