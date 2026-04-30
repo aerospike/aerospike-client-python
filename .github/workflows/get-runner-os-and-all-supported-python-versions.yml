@@ -21,8 +21,6 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    #   with:
-        # ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
     - id: get-runner-oses
       # Single source of truth for which runner OS to use for each platform tag
