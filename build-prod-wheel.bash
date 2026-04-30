@@ -16,13 +16,14 @@ if [[ ! "$os" =~ Linux* ]]; then
     exit 0
 fi
 
-if [[ $# -lt 2 ]]; then
-    echo "Usage: build-prod-wheel.bash <manylinux-registry-name> <python-version>"
+MANYLINUX_REGISTRY_NAME=$1
+PYTHON_VERSION=$2
+
+if [[ -z "$MANYLINUX_REGISTRY_NAME" || -z "$PYTHON_VERSION" ]]; then
+    echo "MANYLINUX_REGISTRY_NAME and PYTHON_VERSION env vars must be defined."
     exit 1
 fi
 
-MANYLINUX_REGISTRY_NAME=$1
-PYTHON_VERSION=$2
 
 arch=$(uname -m)
 if [[ "$arch" == "aarch64" ]]; then

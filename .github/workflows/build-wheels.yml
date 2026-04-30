@@ -241,7 +241,7 @@ jobs:
         allow-prereleases: true
 
     - name: Build wheel
-      run: KEEP_CONTAINER=1 ./build-prod-wheel.bash "$MANYLINUX_REGISTRY_NAME" "$PYTHON_VERSION"
+      run: KEEP_CONTAINER=1 ./build-prod-wheel.bash
       shell: bash
       env:
         MANYLINUX_REGISTRY_NAME: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
