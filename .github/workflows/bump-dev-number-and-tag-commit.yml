@@ -1,11 +1,18 @@
 # Takes in how to bump version as input
 # Tags version and outputs the new tagged version
 
+permissions:
+  contents: write
+
 name: Bump version
 on:
+  # TODO: make sure this doesn't trigger on new tag
+  push:
+    branches:
+    - 'dev*'
   workflow_dispatch:
     inputs:
-      change:
+      bump-type-for-new-tag:
         type: choice
         description: Type of change to make to existing version
         required: true
@@ -17,32 +24,9 @@ on:
         default: false
         type: boolean
         description: No tagging in repo
-  workflow_call:
-    inputs:
-      dry-run:
-        required: false
-        default: false
-        type: boolean
-        description: No tagging in repo
-      change:
-        type: string
-        description: Type of change to make to existing version
-        required: true
-      ref:
-        required: false
-        description: Commit to tag
-        type: string
-      # See workflow call hack in update-version.yml
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
-    outputs:
-      new_version:
-        value: ${{ jobs.get-new-version.outputs.new_version }}
 
 jobs:
-  get-current-version:
+  apply-change-to-version-and-tag:
     name: Get new version string
     runs-on: ubuntu-22.04
     outputs:
@@ -56,7 +40,6 @@ jobs:
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
-        ref: ${{ inputs.ref }}
         # Get all tags
         fetch-depth: 0
 
@@ -75,7 +58,9 @@ jobs:
       run: echo new_version=$(python3 .github/workflows/${CHANGE_VERSION_SCRIPT_NAME}.py "${CURRENT_VERSION}") >> $GITHUB_OUTPUT
       env:
         CURRENT_VERSION: ${{ steps.get-current-version.outputs.current_version }}
-        CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.change }}
+        CHANGE_VERSION_SCRIPT_NAME: ${{ inputs.bump-type-for-new-tag }}
+
+    - run:
 
     - if: ${{ inputs.dry-run == false }}
       run: |
