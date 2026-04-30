@@ -76,11 +76,11 @@ Example:
     client.remove(key)
     client.close()
 
-    .. testoutput::
+.. testoutput::
 
-        5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
-        After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
-        After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
+    5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
+    After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
+    After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
 Example:
 
@@ -139,11 +139,11 @@ Example:
 
     client.close()
 
-    .. testoutput::
+.. testoutput::
 
-        {'bitwise1': b'\x01\x01\x01\x01\x01'}
-        {'bitwise1': b'\xff\x01\x01\x01\x01'}
-        {'bitwise1': b'\x01\x01\x01'}
+    {'bitwise1': b'\x01\x01\x01\x01\x01'}
+    {'bitwise1': b'\xff\x01\x01\x01\x01'}
+    {'bitwise1': b'\x01\x01\x01'}
 
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
