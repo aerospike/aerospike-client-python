@@ -7,8 +7,6 @@ permissions:
   # For shared reusable workflows
   id-token: write
   statuses: write
-  # For downloading docker images from ghcr.io
-  packages: read
 
 on:
   workflow_dispatch:
