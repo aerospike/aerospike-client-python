@@ -164,9 +164,9 @@ Types
         print(aerospike.OP_LIST_GET_BY_VALUE, file=sys.stderr)
         print(type(aerospike.OP_LIST_GET_BY_VALUE), file=sys.stderr)
         print(operations, file=sys.stderr)
-        print(operations[0])
-        print(operations[0]['op'])
-        print(type(operations[0]['op']))
+        print(operations[0], file=sys.stderr)
+        print(operations[0]['op'], file=sys.stderr)
+        print(type(operations[0]['op']), file=sys.stderr)
         _, _, bins = client.operate(key, operations)
 
     .. versionadded:: 3.5.0
