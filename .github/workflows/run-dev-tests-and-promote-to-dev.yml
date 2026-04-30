@@ -51,7 +51,23 @@ on:
         type: string
         description: Build metadata
 jobs:
+  get-prod-wheel-matrix:
+    outputs:
+      matrix-json: ${{ steps.get-matrix-json.outputs.matrix_json }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - id: get-matrix-json
+      run: echo matrix_json=$(jq "." .github/workflows/prod-wheel-matrix.json) >> $GITHUB_OUTPUT
+
   build-test-and-publish-artifacts-as-jfrog-build:
+    needs: get-prod-wheel-matrix
     uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
     with:
       gh-artifact-directory: wheelhouse
@@ -65,21 +81,7 @@ jobs:
       build-script-path: ./build-prod-wheel.bash
       dry-run: ${{ inputs.dry-run }}
       build-type: ${{ inputs.build-type }}
-      # TODO: maybe don't need platform tag anymore if we build from a script instead of
-      # cibuildwheel
-      matrix-json: |
-        {
-          "python-tags": [
-            "cp310", "cp311", "cp312", "cp313", "cp314"
-          ],
-          "os-and-platform-tag": [
-            {"runs-on":"ubuntu-22.04","platform-tag":"manylinux_x86_64"},
-            {"runs-on":"ubuntu-22.04-arm","platform-tag":"manylinux_aarch64"},
-            {"runs-on":"macos-14-large","platform-tag":"macosx_x86_64"},
-            {"runs-on":"macos-14","platform-tag":"macosx_arm64"},
-            {"runs-on":"windows-2022","platform-tag":"win_amd64"},
-          ]
-        }
+      matrix-json: ${{ needs.get-prod-wheel-matrix.outputs.matrix-json }}
       setup-python: true
       build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};PYTHON_VERSION=3
     secrets:
