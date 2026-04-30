@@ -78,7 +78,15 @@ VENV=./.venv
 . "$VENV/bin/activate"
 
 "python${PYTHON_VERSION}" -m pip install dist/*.whl
-"python${PYTHON_VERSION}" -c "import aerospike"
+
+if [[ -z "$RUN_INTEGRATION_TESTS_IN_THIS_JOB" ]]; then
+    "python${PYTHON_VERSION}" -c "import aerospike"
+else
+    cd test
+    "python${PYTHON_VERSION}" -m pip install pytest -c requirements.txt
+    "python${PYTHON_VERSION}" -m pytest new_tests/
+    cd ..
+fi
 
 deactivate
 
