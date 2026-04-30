@@ -5,6 +5,9 @@ on:
         type: string
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   get-runner-os-and-python-versions:
     outputs:
