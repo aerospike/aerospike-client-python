@@ -13,7 +13,7 @@ on:
         required: false
         default: false
         type: boolean
-        description: No tagging in repo
+        description: No committing or tagging in repo
   workflow_call:
     inputs:
       new_version:
@@ -28,7 +28,7 @@ on:
         required: false
         default: false
         type: boolean
-        description: No tagging in repo
+        description: No committing or tagging in repo
       # A hack to tell if workflow is triggered by workflow_call or not
       # Calling workflows should not set this input
       # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
@@ -67,3 +67,4 @@ jobs:
       uses: ./.github/actions/update-version
       with:
         new_version: ${{ inputs.new_version }}
+        dry-run: ${{ inputs.dry-run }}

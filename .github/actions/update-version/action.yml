@@ -4,6 +4,10 @@ inputs:
   new_version:
     description: Version string to set
     required: true
+  dry-run:
+    description: No tagging or committing
+    required: true
+
 
 runs:
   using: "composite"
@@ -12,7 +16,8 @@ runs:
     run: echo ${{ inputs.new_version }} > VERSION
     shell: bash
 
-  - name: Commit and tag new version
+  - if: ${{ inputs.dry-run }}
+    name: Commit and tag new version
     uses: step-security/git-auto-commit-action@749bc1cc775376092cc4227ba537137f445ca7c3 # v7.1.1
     with:
       commit_message: 'Set version to ${{ inputs.new_version }} [skip ci]'
