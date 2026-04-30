@@ -1055,14 +1055,17 @@ class Cond(_BaseExpr):
             ]
             record = client.operate(keyTuple, ops)
             print(record)
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
 
             client.put(keyTuple, {"operation": "divide"})
 
             record = client.operate(keyTuple, ops)
             print(record)
             # Divide isn't supported, so we get -1
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
+
+        .. testoutput::
+            (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
+            (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
+
         """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
