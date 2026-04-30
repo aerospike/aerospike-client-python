@@ -1,15 +1,16 @@
 # Takes in how to bump version as input
-# Tags version and outputs the new tagged version
+# Bumps current version to new version, and tags new version
 
 permissions:
   contents: write
 
 name: Bump version
 on:
-  # TODO: make sure this doesn't trigger on new tag
   push:
     branches:
     - 'dev*'
+    tags-ignore:
+    - '*'
   workflow_dispatch:
     inputs:
       bump-type-for-new-tag:
