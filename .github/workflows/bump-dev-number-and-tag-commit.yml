@@ -32,8 +32,6 @@ jobs:
   apply-change-to-version-and-tag:
     name: Get new version string
     runs-on: ubuntu-22.04
-    outputs:
-      current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
     # Checkout the branch where we want to bump the new version
     - name: Harden the runner (Audit all outbound calls)
