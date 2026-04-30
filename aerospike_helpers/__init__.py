@@ -20,9 +20,20 @@ class HyperLogLog(bytes):
 
     The constructor takes in any argument that the :class:`bytes` constructor takes in.
 
-    >>> from aerospike_helpers import HyperLogLog
-    >>> h = HyperLogLog([1, 2, 3])
-    >>> client.put(key, {"hyperloglog": h})
+    .. testcode::
+
+        from aerospike_helpers import HyperLogLog
+        h = HyperLogLog([1, 2, 3])
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+        client.put(key, {"hyperloglog": h})
+
+        _, _, bins = client.get(key)
+        print(bins["hyperloglog"])
+
+    .. testoutput::
+
+        HyperLogLog(...)
     """
     def __new__(cls, o) -> "HyperLogLog":
         return super().__new__(cls, o)
