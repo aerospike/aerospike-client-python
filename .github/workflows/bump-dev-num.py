@@ -11,8 +11,8 @@ elif version.is_release_candidate:
     version = version.replace(dev=1)
 else:
     # Assume this is a release version
-    # Bump to next minor version
-    version = version.bump_release(index=1)
+    # Bump to next patch version to be safe
+    version = version.bump_release(index=2)
     # RC numbers should start from 1
     version = version.replace(pre_tag='rc', pre=1, dev=1)
 
