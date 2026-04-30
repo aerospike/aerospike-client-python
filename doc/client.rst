@@ -591,6 +591,35 @@ Transactions
 User Defined Functions
 ----------------------
 
+.. testcode:: udf
+
+    import aerospike
+
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)],
+        'lua': { 'user_path': '~/lua-scripts/'}
+    }
+    client = aerospike.client(config)
+    # Register the UDF module and copy it to the Lua 'user_path'
+    client.udf_put('doc/examples/scan/my_udf.lua')
+
+    print("Before remove:", client.udf_list())
+
+    client.udf_remove('my_udf.lua')
+    print("After remove:", client.udf_list())
+
+    client.close()
+
+.. testoutput::
+
+    [
+        {'content': bytearray(b'...'),
+        'hash': bytearray(b'...'),
+        'name': 'my_udf.lua',
+        'type': 0}
+    ]
+    []
+
 .. class:: Client
     :noindex:
 
@@ -612,19 +641,6 @@ User Defined Functions
 
     .. :emphasize-lines: 5,9
 
-    .. testcode::
-
-        import aerospike
-
-        config = {
-            'hosts': [ ('127.0.0.1', 3000)],
-            'lua': { 'user_path': '/path/to/lua/user_path'}
-        }
-        client = aerospike.client(config)
-        # Register the UDF module and copy it to the Lua 'user_path'
-        client.udf_put('/path/to/my_module.lua')
-        client.close()
-
     .. method:: udf_remove(module[, policy: dict])
 
         Remove a previously registered UDF module from the cluster.
@@ -635,10 +651,6 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. testcode::
-
-            client.udf_remove('my_module.lua')
-
     .. method:: udf_list([policy: dict]) -> []
 
         Return the list of UDF modules registered with the cluster.
@@ -646,23 +658,6 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`list`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. testcode::
-
-            print(client.udf_list())
-
-        .. testoutput::
-
-            [
-               {'content': bytearray(b''),
-               'hash': bytearray(b'195e39ceb51c110950bd'),
-               'name': 'my_udf1.lua',
-               'type': 0},
-               {'content': bytearray(b''),
-               'hash': bytearray(b'8a2528e8475271877b3b'),
-               'name': 'stream_udf.lua',
-               'type': 0}
-            ]
 
     .. method:: udf_get(module: str[, language: int = aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
