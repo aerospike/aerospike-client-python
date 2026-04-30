@@ -54,13 +54,11 @@ Example:
 
     _, _, bins = client.get(key)
     print("5 bytes: ", bins)
-    # 5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     _, _, _ = client.operate(key, ops)
 
     _, _, newbins = client.get(key)
     print("After resize to 10 bytes: ", newbins)
-    # After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
 
     # EXAMPLE 2: shrink the five_ones bin to a bytesize of 5 from the front.
 
@@ -73,11 +71,16 @@ Example:
     _, _, _ = client.operate(key, ops)
     _, _, newbins = client.get(key)
     print("After resize to 5 bytes again: ", newbins)
-    # After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
     # Cleanup and close the connection to the Aerospike cluster.
     client.remove(key)
     client.close()
+
+    .. testoutput::
+
+        5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
+        After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
+        After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
 Example:
 
@@ -110,7 +113,6 @@ Example:
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     # Example 2: modify bits using the 'or' op, then read bits
     # 0 = offset
@@ -123,7 +125,6 @@ Example:
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\xff\x01\x01\x01\x01'}
 
     # Example 3: modify bits using the 'remove' op, then read bits'
     # offset = 0
@@ -135,9 +136,14 @@ Example:
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01'}
 
     client.close()
+
+    .. testoutput::
+
+        {'bitwise1': b'\x01\x01\x01\x01\x01'}
+        {'bitwise1': b'\xff\x01\x01\x01\x01'}
+        {'bitwise1': b'\x01\x01\x01'}
 
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """

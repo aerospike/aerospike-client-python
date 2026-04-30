@@ -54,7 +54,6 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
         # Read the value of int bin "balance".
         # Let 'client' be a connected aerospike client.
         # Let int bin 'balance' == 50.
-
         from aerospike_helpers.operations import expression_operations as expressions
         from aerospike_helpers.expressions import *
 
@@ -65,7 +64,10 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
         _, _, res = client.operate(self.key, ops)
        print(res)
 
-       # EXPECTED OUTPUT: {"balance": 50}
+    .. testoutput::
+
+       {"balance": 50}
+
     """
 
     op_dict = {
@@ -98,7 +100,6 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
         # Write the value of int bin "balance" + 50 back to "balance".
         # Let 'client' be a connected aerospike client.
         # Let int bin 'balance' == 50.
-
         from aerospike_helpers.operations import expression_operations as expr_ops
         from aerospike_helpers.expressions import *
 
@@ -110,7 +111,10 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
         _, _, res = client.get(self.key)
        print(res)
 
-       # EXPECTED OUTPUT: {"balance": 100}
+    .. testoutput::
+
+        {"balance": 100}
+
     """
 
     op_dict = {

@@ -489,7 +489,7 @@ String Operations
 
         .. testoutput::
 
-            {"bin1": "Gordon Freeman"}
+            {'bin1': 'Gordon Freeman'}
 
     .. index::
         single: Numeric Operations
@@ -523,12 +523,12 @@ Numeric Operations
             # Gain health
             client.increment(keyTuple, 'lives', 10)
             (key, meta, bins) = client.get(keyTuple)
-            print("Lives:", bins)
+            print("Lives:", bins["lives"])
 
             # Take damage
             client.increment(keyTuple, 'lives', -90)
             (key, meta, bins) = client.get(keyTuple)
-            print("Lives:", bins)
+            print("Lives:", bins["lives"])
 
         .. testoutput::
 
@@ -766,7 +766,7 @@ Info Operations
 
         .. testoutput::
 
-            [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+            [{'address': '...', 'port': ..., 'node_name': '...'}...]
 
         .. versionchanged:: 6.0.0
 
@@ -785,7 +785,7 @@ Info Operations
 
         .. testoutput::
 
-            [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
+            [('127.0.0.1', 3000)...]
 
         .. versionchanged:: 3.0.0
 
@@ -821,7 +821,7 @@ Info Operations
 
         .. testoutput::
 
-            {'BB9020011AC4202': (None, 'test\n')}
+            {'...': (None, 'test\n')}
 
         .. versionadded:: 3.0.0
 
