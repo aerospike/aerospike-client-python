@@ -1,0 +1,37 @@
+on:
+  workflow_call:
+    inputs:
+      platform-tag:
+        type: string
+        required: true
+
+jobs:
+  get-runner-os-and-python-versions:
+    outputs:
+      runner-oses: ${{ steps.get-runner-oses.outputs.runner_oses }}
+      python-versions: ${{ steps.get-python-versions.outputs.python_versions }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    #   with:
+        # ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+
+    - id: get-runner-oses
+      # Single source of truth for which runner OS to use for each platform tag
+      # We use the larger runner for mac x86 because there is noise when using the regular runners
+      # I suspect it's from building the server Docker image
+      run: |
+        if [[ "${{ inputs.platform-tag }}" == "*" ]]; then
+          selector="[]"
+        else
+          selector="${{ inputs.platform-tag }}"
+        fi
+        echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg selector "$selector" '.["platform-tag-to-runner-os"].[$selector]') >> $GITHUB_OUTPUT
+
+    - id: get-python-versions
+      run: echo python_versions=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["python-versions"]') >> $GITHUB_OUTPUT

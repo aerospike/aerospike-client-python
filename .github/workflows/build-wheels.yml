@@ -28,11 +28,11 @@ on:
       # We want each platform to be tested independently of each other,
       # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
-      python-tags:
+      python-versions:
         type: string
-        description: Valid JSON list of Python tags to build the client for
+        description: Valid JSON list of Python tags to build the client for. If empty, build for all supported python versions
         required: false
-        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '*'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -87,10 +87,11 @@ on:
         type: boolean
         default: true
         required: false
-      python-tags:
+      python-versions:
         type: string
+        description: Valid JSON list of Python tags to build the client for. If empty, build for all supported python versions
         required: false
-        default: '["cp310", "cp311", "cp312", "cp313", "cp314"]'
+        default: '*'
       platform-tag:
         type: string
         required: true
@@ -152,37 +153,22 @@ jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
   # but this should be ok based on the minutes usage data for the aerospike organization
-  get-runner-os:
-    outputs:
-      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-
-    - id: get-runner-os
-      # Single source of truth for which runner OS to use for each platform tag
-      # We use the larger runner for mac x86 because there is noise when using the regular runners
-      # I suspect it's from building the server Docker image
-      run: echo runner_os=$(jq ".${{ inputs.platform-tag }}" .github/workflows/prod-wheel-matrix.json) >> $GITHUB_OUTPUT
+  get-runner-os-and-all-python-versions:
+    uses: ./.github/workflows/get-runner-os-and-all-supported-python-versions.yml
+    with:
+      platform-tag: ${{ inputs.platform-tag }}
 
   build-wheel:
-    needs: get-runner-os
+    needs: get-runner-os-and-all-python-versions
     strategy:
       matrix:
-        python-tag: ${{ fromJSON(inputs.python-tags) }}
+        python-version: ${{ inputs.python-versions == '' && fromJson(needs.get-runner-os-and-all-python-versions.outputs.python-versions) || inputs.python-versions }}
       fail-fast: false
     outputs:
       python-version: ${{ steps.get-python-version.outputs.python_version }}
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    runs-on: ${{ needs.get-runner-os-and-all-python-versions.outputs.runner-os }}
     env:
-      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
+      BUILD_IDENTIFIER: "${{ matrix.python-version }}-${{ inputs.platform-tag }}"
       RUN_INTEGRATION_TESTS_IN_THIS_JOB: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
     steps:
     - name: Harden the runner (Audit all outbound calls)

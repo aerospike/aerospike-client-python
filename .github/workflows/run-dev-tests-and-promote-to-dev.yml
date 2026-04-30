@@ -51,24 +51,18 @@ on:
         type: string
         description: Build metadata
 jobs:
-  get-prod-wheel-matrix:
-    outputs:
-      matrix-json: ${{ steps.get-matrix-json.outputs.matrix_json }}
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-    - id: get-matrix-json
-      run: echo matrix_json=$(jq "." .github/workflows/prod-wheel-matrix.json) >> $GITHUB_OUTPUT
+  get-runner-os-and-all-supported-python-versions:
+    uses: ./.github/workflows/get-runner-os-and-all-supported-python-versions.yml
+    with:
+      platform-tag: '*'
 
   build-test-and-publish-artifacts-as-jfrog-build:
-    needs: get-prod-wheel-matrix
+    needs: get-runner-os-and-all-supported-python-versions
     uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
+    strategy:
+      matrix:
+        runner-os: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses) }}
+        python-tags: ${{ fromJson(needs.get-runner-os-and-all-supported-python-versions.outputs.python-tags) }}
     with:
       gh-artifact-directory: wheelhouse
       gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de
@@ -81,8 +75,9 @@ jobs:
       build-script-path: ./build-prod-wheel.bash
       dry-run: ${{ inputs.dry-run }}
       build-type: ${{ inputs.build-type }}
-      matrix-json: ${{ needs.get-prod-wheel-matrix.outputs.matrix-json }}
+      runs-on: ${{ matrix.runner-os }}
       setup-python: true
+      python-version: ${{ matrix.python-tags }}
       build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};PYTHON_VERSION=3
     secrets:
       gpg-private-key: ''
