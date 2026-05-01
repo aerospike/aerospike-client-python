@@ -53,7 +53,6 @@ Example:
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 200}
 
     # Example 2: add a new person and get their rating of Facebook
     cindy = {
@@ -78,7 +77,6 @@ Example:
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 4}
 
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
@@ -103,6 +101,11 @@ Example:
     # Cleanup
     client.remove(key)
     client.close()
+
+.. testoutput::
+
+    {'users': 200}
+    {'users': 4}
 
 .. _path_expressions_contexts:
 
