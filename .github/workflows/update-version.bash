@@ -8,6 +8,11 @@ CHANGE_TYPE=$1
 # Optional, only required if manual-override is passed as the script name
 RELEASE_VERSION_TO_OVERRIDE=$2
 
+if [[ -z "$DRY_RUN" ]]; then
+    git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    git config --global user.name "github-actions[bot]"
+fi
+
 update_release_version_in_repo () {
     verb=$1
     new_version=$2
