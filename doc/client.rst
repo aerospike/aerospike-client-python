@@ -612,13 +612,8 @@ User Defined Functions
 
 .. testoutput:: udf
 
-    [
-        {'content': bytearray(b'...'),
-        'hash': bytearray(b'...'),
-        'name': 'my_udf.lua',
-        'type': 0}
-    ]
-    []
+    Before remove: [{'content': bytearray(b'...'), 'hash': bytearray(b'...'), 'name': 'my_udf.lua', 'type': 0}]
+    After remove: []
 
 .. class:: Client
     :noindex:

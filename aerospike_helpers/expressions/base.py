@@ -1063,6 +1063,7 @@ class Cond(_BaseExpr):
             # Divide isn't supported, so we get -1
 
         .. testoutput::
+
             (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
             (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
 
