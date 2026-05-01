@@ -25,11 +25,10 @@ jobs:
     - id: get-runner-oses
       run: |
         if [[ "${{ inputs.platform-tag }}" == "*" ]]; then
-          platform_tag=""
+          echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["platform-tag-to-runner-os"].[]') >> $GITHUB_OUTPUT
         else
-          platform_tag="${{ inputs.platform-tag }}"
+          echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
         fi
-        echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
 
     - id: get-python-versions
       run: echo python_versions=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["python-versions"]') >> $GITHUB_OUTPUT
