@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -x
+
 # This script assumes you:
 # Have authenticated to Github
 # and have cloned and cd'ed into the Python client repo's root directory
@@ -64,6 +67,7 @@ fi
 
 prev_commit=$(git rev-parse HEAD~)
 latest_tag=$(git describe --tags --exact-match "$prev_commit")
+pip install parver -c .github/workflows/requirements.txt
 new_tag_for_push_event="$(python3 .github/workflows/"${CHANGE_TYPE}.py" "$latest_tag")"
 
 if [[ "$CHANGE_TYPE" == "bump-dev-num" ]]; then
