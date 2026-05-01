@@ -25,7 +25,7 @@ jobs:
     - id: get-runner-oses
       run: |
         if [[ "${{ inputs.platform-tag }}" == "*" ]]; then
-          echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["platform-tag-to-runner-os"].[]') >> $GITHUB_OUTPUT
+          echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq '[.["platform-tag-to-runner-os"].[]]') >> $GITHUB_OUTPUT
         else
           echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
         fi
