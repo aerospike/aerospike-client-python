@@ -103,8 +103,7 @@ jobs:
       matrix-json: >-
         {
           "runs-on": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses }},
-          "python-version": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions }},
-          "fail-fast": false
+          "python-version": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions }}
         }
       dry-run: ${{ inputs.dry-run }}
       build-type: ${{ inputs.build-type }}
