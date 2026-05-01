@@ -20,7 +20,7 @@ if [[ $running_on_windows -eq 0 ]]; then
     nuget restore
     cd -
 
-    export PATH="$PATH:C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin"
+    export PATH="$PATH:/c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/bin"
 fi
 
 arch=$(uname -m)
