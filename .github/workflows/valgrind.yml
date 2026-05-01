@@ -133,7 +133,7 @@ jobs:
     ]
     # Case 1: Did not find artifact in JFrog, had to build it in GHA
     # Case 2: Found artifact in JFrog
-    if: ${{ !cancelled() && (needs.upload-built-wheel-to-jfrog.result == 'success' || needs.upload-built-wheel-to-jfrog.result == 'skipped') }}
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
