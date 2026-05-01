@@ -429,6 +429,9 @@ jobs:
       run: sphinx-build -b doctest . doctest
       working-directory: doc
 
+    - if: ${{ !cancelled() }}
+      run: docker logs aerospike
+
   test-ee:
     runs-on: ubuntu-22.04
     needs: build
