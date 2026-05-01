@@ -133,7 +133,6 @@ jobs:
     ]
     # Case 1: Did not find artifact in JFrog, had to build it in GHA
     # Case 2: Found artifact in JFrog
-    # Case 3: Not using JFrog artifact (i.e using wheel from Github artifact)
     if: ${{ !cancelled() && (needs.upload-built-wheel-to-jfrog.result == 'success' || needs.upload-built-wheel-to-jfrog.result == 'skipped') }}
     runs-on: ubuntu-22.04
     steps:
