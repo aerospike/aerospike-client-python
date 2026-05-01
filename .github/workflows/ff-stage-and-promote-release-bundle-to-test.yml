@@ -28,7 +28,7 @@ jobs:
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
-  promote-release-bundle-to-dev:
+  promote-release-bundle-to-test:
     needs: [
       ff-stage-to-dev-tag,
     ]
