@@ -51,12 +51,12 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
 
     .. testcode::
 
-        # Read the value of int bin "balance".
-        # Let 'client' be a connected aerospike client.
-        # Let int bin 'balance' == 50.
         from aerospike_helpers.operations import expression_operations as expressions
         from aerospike_helpers.expressions import *
 
+        # Read the value of int bin "balance".
+        # Let 'client' be a connected aerospike client.
+        # Let int bin 'balance' == 50.
         expr = IntBin("balance").compile()
         ops = [
             expressions.expression_read("balance", expr)
@@ -97,11 +97,12 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
 
     .. testcode::
 
+        from aerospike_helpers.operations import expression_operations as expr_ops
+        from aerospike_helpers.expressions import *
+
         # Write the value of int bin "balance" + 50 back to "balance".
         # Let 'client' be a connected aerospike client.
         # Let int bin 'balance' == 50.
-        from aerospike_helpers.operations import expression_operations as expr_ops
-        from aerospike_helpers.expressions import *
 
         expr = Add(IntBin("balance"), 50).compile()
         ops = [
