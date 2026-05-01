@@ -29,7 +29,7 @@ jobs:
         else
           platform_tag="[${{ inputs.platform-tag }}]"
         fi
-        echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-runner-os"].$platform_tag') >> $GITHUB_OUTPUT
+        echo runner_oses=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
 
     - id: get-python-versions
       run: echo python_versions=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["python-versions"]') >> $GITHUB_OUTPUT
