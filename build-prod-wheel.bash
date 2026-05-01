@@ -16,8 +16,6 @@ if [[ ! "$os" =~ Linux* ]]; then
     exit 0
 fi
 
-MANYLINUX_REGISTRY_NAME=$1
-
 if [[ -z "$MANYLINUX_REGISTRY_NAME" ]]; then
     echo "MANYLINUX_REGISTRY_NAME env var must be defined."
     exit 1
