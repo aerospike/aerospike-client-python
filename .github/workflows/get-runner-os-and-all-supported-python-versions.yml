@@ -4,6 +4,11 @@ on:
       platform-tag:
         type: string
         required: true
+    outputs:
+      runner-oses:
+        value: ${{ jobs.get-runner-os-and-python-versions.outputs.runner-oses }}
+      python-versions:
+        value: ${{ jobs.get-runner-os-and-python-versions.outputs.python-versions }}
 
 permissions:
   contents: read
