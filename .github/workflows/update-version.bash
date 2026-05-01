@@ -31,6 +31,11 @@ tag_and_push () {
 current_release_version=$(cat VERSION)
 
 if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
+    if [[ -z $RELEASE_VERSION_TO_OVERRIDE ]]; then
+        echo "Manual override requires a version to override with" >&2
+        exit 1
+    fi
+
     lower_release_version=$(echo -e "$current_release_version\n$RELEASE_VERSION_TO_OVERRIDE" | sort -V | head -n 1)
     if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
         # Delete tags for current release version
