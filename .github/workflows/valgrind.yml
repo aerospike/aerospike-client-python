@@ -29,47 +29,16 @@ on:
         description: 'Use massif for testing memory usage'
         required: false
         default: false
-  workflow_call:
-    inputs:
-      test-file:
-        description: 'new_test/<test-file>'
-        required: false
-        default: ""
-        type: string
-      registry-name:
-        type: string
-        required: false
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
-      server-tag:
-        required: false
-        description: Server tag
-        default: latest
-        type: string
-      massif:
-        type: boolean
-        description: 'Use massif for testing memory usage'
-        required: false
-        default: false
-      # Workflow call specific inputs
-      # Will be false for workflow_dispatch trigger
-      download-wheel-from-github-artifacts:
-        type: boolean
-        required: false
-        default: true
+
+env:
+  PYTHON_VERSION: '3.10'
 
 jobs:
   look-for-wheel-in-jfrog:
-    if: ${{ inputs.download-wheel-from-github-artifacts == false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
-      # So we can pass the python tag to a reusable workflow
-      python-version: '3.10'
+      # So we can pass the python version to a reusable workflow as an input
+      python-version: ${{ env.PYTHON_VERSION }}
     runs-on: ubuntu-22.04
     env:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
@@ -93,7 +62,9 @@ jobs:
       # but it doesn't allow regex, so we can't filter out any type of label in a wheel name
       # Example: we want to filter out "unoptimized" and "dsym" but in case we add more labels, we want to use regex
       # to handle those new labels without updating the regex.
-      run: jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+      run: |
+        PYTHON_TAG=cp$(echo ${{ env.PYTHON_VERSION }} | tr -d '.')
+        jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${PYTHON_TAG}*manylinux*x86_64*.whl" > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Show unfiltered results
       run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
@@ -156,6 +127,7 @@ jobs:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
     needs: [
+      look-for-wheel-in-jfrog,
       build-manylinux-wheel,
       upload-built-wheel-to-jfrog
     ]
@@ -177,12 +149,12 @@ jobs:
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version: ${{ needs.build-manylinux-wheel.outputs.python-version }}
+        python-version: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: ${{ needs.build-manylinux-wheel.outputs.python-version }}-manylinux_x86_64.build
+        name: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
@@ -225,5 +197,5 @@ jobs:
       valgrind
     ]
     # Workflow run must clean up after itself even if cancelled
-    if: ${{ always() && inputs.download-wheel-from-github-artifacts == false }}
+    if: ${{ always() }}
     uses: ./.github/workflows/delete-artifacts.yml
