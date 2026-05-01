@@ -79,7 +79,7 @@ jobs:
       run: |
         latest_tag=$(git describe --tags --exact-match $prev_commit)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
-          echo "We have not merged any changes to dev since the last release yet." >&
+          echo "We have not merged any changes to dev since the last release yet." >&2
           exit 1
         fi
         echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
