@@ -98,7 +98,7 @@ jobs:
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
       # This workflow generates a unique build id internally
-      version: ${{ needs.get-jfrog-build-version.outputs.next-release-version }}
+      version: ${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
       build-script-path: ./build-prod-wheel.bash
       matrix-json: >-
         {
