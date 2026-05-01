@@ -18,26 +18,18 @@ inputs:
     required: false
   wheel_cpu_arch:
     description: 'If getting wheel, what CPU arch is it built for? Must be the same in wheel name / cibw build identifier used to build wheel (e.g possible value: x86_64)'
-  # Secrets
-  JFROG_PLATFORM_URL:
-    description: For downloading the release bundle
-    required: false
-  # Variables
-  JFROG_PROJECT:
-    required: false
-    description: For downloading the release bundle
-  JFROG_RELEASE_BUNDLE_NAME:
-    required: false
-    description: For downloading the release bundle
-  JFROG_BUILD_NAME:
-    required: false
-    description: For downloading the release bundle
-  OIDC_PROVIDER_NAME:
-    required: false
-    description: For downloading the release bundle
-  OIDC_AUDIENCE:
-    required: false
-    description: For downloading the release bundle
+  jfrog-platform-url:
+    description: For pulling release bundle
+    required: true
+  jfrog-project:
+    description: For pulling release bundle
+    required: true
+  jfrog-oidc-provider-name:
+    description: For pulling release bundle
+    required: true
+  jfrog-oidc-audience:
+    description: For pulling release bundle
+    required: true
 
 runs:
   using: 'composite'
@@ -85,19 +77,19 @@ runs:
   - if: ${{ inputs.get_from_jfrog == 'true' }}
     uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
     env:
-      JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
-      JF_PROJECT: ${{ inputs.JFROG_PROJECT }}
+      JF_URL: ${{ inputs.jfrog-platform-url }}
+      JF_PROJECT: ${{ inputs.jfrog-project }}
     with:
-      oidc-provider-name: ${{ inputs.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ inputs.OIDC_AUDIENCE }}
+      oidc-provider-name: ${{ inputs.jfrog-oidc-provider-name }}
+      oidc-audience: ${{ inputs.jfrog-oidc-audience }}
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
     run: |
-      bundle_version=$(jf rbs --format json --order-by created versions ${{ inputs.JFROG_RELEASE_BUNDLE_NAME }} | jq -r '.release_bundles[0].release_bundle_version')
+      bundle_version=$(jf rbs --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
       # Currently no way to download specific artifacts from a release bundle
       # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
       build_number="${bundle_version##*-}"
-      artifact_path=$(jf rt s --fail-no-op --build ${{ inputs.JFROG_BUILD_NAME }}/$build_number "${{ inputs.JFROG_PROJECT }}-pypi-dev-local/**/$ARTIFACT_FILE_NAME_PATTERN" | jq -r '.[0].path')
+      artifact_path=$(jf rt s --fail-no-op --build "$JFROG_BUILD_NAME/$build_number" "${JFROG_PROJECT}-pypi-dev-local/**/$ARTIFACT_FILE_NAME_PATTERN" | jq -r '.[0].path')
       jf rt dl --fail-no-op --flat $artifact_path
     shell: bash

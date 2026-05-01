@@ -43,6 +43,10 @@ on:
 env:
   REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
   REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  # We set env vars here for the composite action to access automatically
+  # without needing to use inputs in the composite action.
+  JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_BUILD_NAME }}
+  JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
 
 jobs:
   linux-distro-tests:
@@ -111,12 +115,10 @@ jobs:
         wheel_python_version: ${{ env.PYTHON_VERSION }}
         wheel_os: manylinux
         wheel_cpu_arch: ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM == 'linux/amd64' && 'x86_64' || 'aarch64' }}
-        JFROG_PLATFORM_URL: ${{ vars.JF_EXTERNAL_URL }}
-        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_BUILD_NAME }}
-        JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
-        OIDC_PROVIDER_NAME: ${{ vars.OIDC_PROVIDER_NAME }}
-        OIDC_AUDIENCE: ${{ vars.OIDC_AUDIENCE }}
+        jfrog-platform-url: ${{ vars.JF_EXTERNAL_URL }}
+        jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        jfrog-oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        jfrog-oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -223,12 +225,10 @@ jobs:
         wheel_python_version: ${{ matrix.python-version }}
         wheel_os: macosx
         wheel_cpu_arch: ${{ matrix.runner-os-and-arch[1] }}
-        JFROG_PLATFORM_URL: ${{ vars.JF_EXTERNAL_URL }}
-        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_BUILD_NAME }}
-        JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
-        OIDC_PROVIDER_NAME: ${{ vars.OIDC_PROVIDER_NAME }}
-        OIDC_AUDIENCE: ${{ vars.OIDC_AUDIENCE }}
+        jfrog-platform-url: ${{ vars.JF_EXTERNAL_URL }}
+        jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        jfrog-oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        jfrog-oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
