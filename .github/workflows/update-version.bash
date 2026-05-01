@@ -40,7 +40,7 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
     if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
         # Delete tags for current release version
         tags_to_delete=$(git tag -l | grep "$current_release_version")
-        echo "$tags_to_delete" | xargs -I _ -n1 git tag -d _
+        git tag -d $tags_to_delete
         if [[ -z "$DRY_RUN" ]]; then
             git push origin --delete $tags_to_delete
         fi
