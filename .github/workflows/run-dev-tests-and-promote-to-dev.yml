@@ -108,7 +108,7 @@ jobs:
       dry-run: ${{ inputs.dry-run }}
       build-type: ${{ inputs.build-type }}
       setup-python: true
-      build-env: MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};JF_BUILD_NAME=${{ vars.JFROG_BUILD_NAME }};JF_BUILD_NUMBER=${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}"
     secrets:
       gpg-private-key: ''
       gpg-public-key: ''
