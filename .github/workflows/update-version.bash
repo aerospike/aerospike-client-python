@@ -65,8 +65,7 @@ fi
 
 # Auto bump event
 
-prev_commit=$(git rev-parse HEAD~)
-latest_tag=$(git describe --tags --exact-match "$prev_commit")
+latest_tag=$(git describe --tags --abbrev=0)
 pip install parver -c .github/workflows/requirements.txt
 new_tag_for_push_event="$(python3 .github/workflows/"${CHANGE_TYPE}.py" "$latest_tag")"
 
