@@ -93,7 +93,7 @@ Methods
 
         :param dict geo_data: a :class:`dict` representing the geospatial data.
 
-    .. method:: unwrap() -> dict of geospatial data
+    .. method:: unwrap() -> dict
 
         Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class.
 
@@ -105,7 +105,7 @@ Methods
 
         :param str raw_geo: a GeoJSON string representation.
 
-    .. method:: dumps() -> a GeoJSON string
+    .. method:: dumps() -> str
 
         Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class as a GeoJSON string.
 

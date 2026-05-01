@@ -9,6 +9,10 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.batch.records import BatchRecords, Write
+from contextlib import nullcontext
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -257,3 +261,64 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+
+# Shared between bin projection and execute background tests
+
+TEST_NS = "test"
+TEST_SET = "demo"
+BIN_NAME = "number"
+MAP_BIN_NAME = "map"
+
+# TODO: scale down tests maybe
+KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
+expected_number_bin_values = set()
+
+# Add records around the test
+@pytest.fixture(scope="function")
+def clean_test_background(as_connection):
+    batch_records = []
+    brs = BatchRecords(batch_records=batch_records)
+    for i, key in enumerate(KEYS):
+        ops = [
+            operations.write(BIN_NAME, i),
+            operations.write(MAP_BIN_NAME, {"a": i})
+        ]
+        br = Write(key, ops=ops)
+        batch_records.append(br)
+        expected_number_bin_values.add(i)
+    as_connection.batch_write(brs)
+    yield
+    as_connection.batch_remove(KEYS)
+
+BASIC_READ_BIN_OPS = [
+    operations.read(BIN_NAME)
+]
+
+READ_AND_WRITE_OPS = [
+    operations.read(BIN_NAME),
+    operations.write(BIN_NAME, 1)
+]
+
+WRITE_OPS = [
+    operations.write(BIN_NAME, 3)
+]
+
+NON_EXISTENT_BIN_NAME = "asdf"
+
+@pytest.fixture()
+def query(request, clean_test_background, as_connection):
+    if not hasattr(request, "param"):
+        query = as_connection.query(TEST_NS, TEST_SET)
+    else:
+        query = request.param(as_connection, TEST_NS, TEST_SET)
+    yield query
+
+@pytest.fixture(scope="function")
+def expect_earlier_than_server_version_to_fail(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)

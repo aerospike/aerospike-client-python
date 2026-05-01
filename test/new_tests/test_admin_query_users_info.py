@@ -65,12 +65,10 @@ class TestQueryUsersInfo(TestBaseClass):
 
         policy = {"timeout": 0.1}
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_users_info(policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_query_users_info_with_proper_timeout_policy_value(self):
 
@@ -107,9 +105,7 @@ class TestQueryUsersInfo(TestBaseClass):
         Invoke query_users() with policy as string
         """
         policy = ""
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_users_info(policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "policy must be a dict"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "policy must be a dict"
