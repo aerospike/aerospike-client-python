@@ -49,3 +49,5 @@ jobs:
           change_type="strip_prerelease_part"
         fi
         ./update-version.bash "$change_type" $version_to_override
+      env:
+        DRY_RUN: ${{ inputs.dry-run }}

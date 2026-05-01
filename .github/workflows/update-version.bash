@@ -15,13 +15,17 @@ update_release_version_in_repo () {
     git add -u
     # TODO: double verify that github actions bot user info is configured
     git commit -m "$verb version to $new_version [skip ci]"
-    git push
+    if [[ -z "$DRY_RUN" ]]; then
+        git push
+    fi
 }
 
 tag_and_push () {
     tag=$1
     git tag "$tag"
-    git push origin tag "$tag"
+    if [[ -z "$DRY_RUN" ]]; then
+        git push origin tag "$tag"
+    fi
 }
 
 current_release_version=$(cat VERSION)
@@ -32,7 +36,9 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
         # Delete tags for current release version
         tags_to_delete=$(git tag -l | grep "$current_release_version")
         echo "$tags_to_delete" | xargs -I _ -n1 git tag -d _
-        git push origin --delete $tags_to_delete
+        if [[ -z "$DRY_RUN" ]]; then
+            git push origin --delete $tags_to_delete
+        fi
     fi
     update_release_version_in_repo "Reset" "$RELEASE_VERSION_TO_OVERRIDE"
     tag_and_push "$RELEASE_VERSION_TO_OVERRIDE"
