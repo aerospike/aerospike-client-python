@@ -126,8 +126,7 @@ jobs:
   valgrind:
     needs: [
       look-for-wheel-in-jfrog,
-      build-manylinux-wheel,
-      upload-built-wheel-to-jfrog
+      build-manylinux-wheel
     ]
     # Case 1: Did not find artifact in JFrog, had to build it in GHA
     # Case 2: Found artifact in JFrog
