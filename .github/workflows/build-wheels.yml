@@ -119,7 +119,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ needs.get-runner-os-and-all-python-versions.outputs.runner-os }}
     env:
-      WHEEL_ARTIFACT_NAME: "${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
+      GH_ARTIFACT_NAME_FOR_WHEEL: "${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
       RUN_INTEGRATION_TESTS_IN_THIS_JOB: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -128,7 +128,7 @@ jobs:
         egress-policy: audit
 
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="build-wheel (${{ env.WHEEL_ARTIFACT_NAME }})" >> $GITHUB_ENV
+      run: echo STATUS_CHECK_MESSAGE="build-wheel (${{ env.GH_ARTIFACT_NAME_FOR_WHEEL }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -221,7 +221,7 @@ jobs:
       if: ${{ !cancelled() }}
       with:
         path: ./wheelhouse/*.whl
-        name: ${{ env.WHEEL_ARTIFACT_NAME }}
+        name: ${{ env.GH_ARTIFACT_NAME_FOR_WHEEL }}
         if-no-files-found: error
 
     - name: Set final commit status
