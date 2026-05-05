@@ -161,7 +161,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ needs.get-runner-os-and-all-python-versions.outputs.runner-os }}
     env:
-      WHEEL_ARTIFACT_NAME: "build-artifacts-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
+      WHEEL_ARTIFACT_NAME: "${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
       RUN_INTEGRATION_TESTS_IN_THIS_JOB: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -284,7 +284,7 @@ jobs:
         python-version: ${{ fromJSON(inputs.python-versions) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
-      WHEEL_ARTIFACT_NAME: "build-artifacts-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
+      WHEEL_ARTIFACT_NAME: "${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0

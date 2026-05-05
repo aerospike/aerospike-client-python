@@ -1,6 +1,9 @@
 name: 'Get artifact for stage tests'
 description: 'Downloads artifact either from Github artifacts or JFrog to current working dir'
 inputs:
+  gh_artifact_name_prefix:
+    description: ''
+    required: true
   get_from_jfrog:
     description: Boolean. If false, get artifacts from Github
     required: true
@@ -36,7 +39,7 @@ runs:
   steps:
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
     name: 'Cat 1: Get Github artifact name for source distribution'
-    run: echo "GITHUB_ARTIFACT_NAME=build-artifacts-sdist" >> $GITHUB_ENV
+    run: echo "GITHUB_ARTIFACT_NAME=${{ inputs.gh_artifact_name_prefix }}-sdist" >> $GITHUB_ENV
     shell: bash
 
   # If getting a wheel from Github, construct artifact name containing that wheel

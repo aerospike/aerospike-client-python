@@ -95,7 +95,7 @@ jobs:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
       jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
-      gh-artifact-name: build-artifacts-${{ matrix.python-version }}-${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-os-to-platform-tag)[matrix.runs-on] }}
+      gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-os-to-platform-tag)[matrix.runs-on] }}
       gh-artifact-directory: wheelhouse
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
