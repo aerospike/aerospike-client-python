@@ -30,6 +30,7 @@ on:
 
 env:
   PYTHON_TAG: cp310
+  SUPP_PATH: './test/new_tests.supp'
 
 jobs:
   look-for-wheel-in-jfrog:
@@ -131,6 +132,9 @@ jobs:
     # Case 2: Did not find artifact in JFrog, had to build it in GHA
     if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
+    outputs:
+      was_supp_found: ${{ steps.get-memcheck-flags.outputs.supp_found }}
+
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -173,19 +177,61 @@ jobs:
     - run: sudo apt-get update
     - run: sudo apt-get install valgrind -y
 
-    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
-      if: ${{ inputs.massif }}
+    - if: ${{ inputs.massif }}
+      run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
 
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 " >> $GITHUB_ENV
-      if: ${{ !inputs.massif }}
+    - if: ${{ !inputs.massif }}
+      id: get-memcheck-flags
+      run: |
+        VALGRIND_ARGS="--leak-check=full"
+        SUPP_PATH=$(basename $SUPP_PATH)
+        SUPPRESSIONS_ARGS="--gen-suppressions=all --suppressions="$SUPP_PATH" --num-callers=350"
+        if [[ -f "$SUPP_PATH" ]]; then
+          supp_found=true
+          VALGRIND_ARGS="$VALGRIND_ARGS $SUPPRESSIONS_ARGS"
+        else
+          supp_found=false
+        fi
+        echo "VALGRIND_ARGS=$VALGRIND_ARGS" >> $GITHUB_ENV
 
-    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 "$VALGRIND_ARGS" python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
 
     # TODO: upload report as artifact
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
       if: ${{ !cancelled() && inputs.massif }}
       working-directory: test
+
+    - name: Upload suppressions file if changed
+      if: ${{ steps.get-memcheck-flags.outputs.supp_found == 'false' }}
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        if-no-files-found: error
+        path: ${{ env.SUPP_PATH }}
+
+  commit-suppressions-file-if-changed:
+    needs: valgrind
+    if: ${{ needs.valgrind.outputs.was_supp_found == 'false' }}
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-depth: 0
+
+    - name: Get suppressions file
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        if-no-files-found: error
+        path: ${{ env.SUPP_PATH }}
+
+    - run: cat $SUPP_PATH
+
+    # TODO: commit to repo
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
   delete-artifacts:
