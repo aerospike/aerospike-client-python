@@ -118,10 +118,6 @@ jobs:
 
   upload-built-wheel-to-jfrog:
     needs: build-manylinux-wheel
-    # TODO: this job should skip when this workflow is run on central branches
-    # We already have artifacts available for central branches in the PyPI-type JFrog repo
-    # The problem is we have to conditionally skip this job, but using the github context to get the branch name
-    # doesn't work for some reason. Just leave this alone for now.
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
