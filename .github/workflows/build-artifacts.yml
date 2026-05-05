@@ -26,17 +26,17 @@ on:
         default: false
       registry-name:
         type: string
-        required: true
+        required: false
         description: Registry name
         default: 'docker.io'
       image-name:
         type: string
-        required: true
+        required: false
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
-        required: true
+        required: false
         default: 'latest'
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
@@ -50,8 +50,6 @@ on:
         type: boolean
 
   workflow_call:
-      # A calling workflow doesn't actually set values to the inputs below
-      # But that workflow needs to have default values for these inputs
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true
@@ -59,6 +57,8 @@ on:
         required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
+    # A calling workflow doesn't actually set values to the inputs below
+    # But that workflow needs to have default values for these inputs
     inputs: *inputs
 
 jobs:
