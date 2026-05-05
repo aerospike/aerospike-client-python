@@ -115,10 +115,10 @@ jobs:
       get-platform-info-and-all-supported-python-versions,
       get-next-release-version-and-latest-tag
     ]
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-manylinux-wheel.yml
     strategy:
       matrix:
-        runs-on: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
+        runner-os: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
         python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
       fail-fast: false
 
@@ -131,31 +131,22 @@ jobs:
     uses: ./.github/workflows/test-wheel.yml
     strategy:
       matrix:
-        runs-on: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
+        runner-os: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
         python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
       fail-fast: false
 
   valgrind:
     needs: build-artifacts
     uses: ./.github/workflows/valgrind.yml
-
-  regular-integration-tests:
-    needs: [
-      build-artifacts,
-      get-platform-info-and-all-supported-python-versions,
-      get-next-release-version-and-latest-tag
-    ]
-    uses: ./.github/workflows/test-artifacts.yml
-    strategy:
-      matrix:
-        python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
-      fail-fast: false
     with:
-      python-version: ${{ matrix.python-version }}
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
+      server-tag: ${{ inputs.server-tag }}
 
   reupload-artifacts-as-one-artifact-in-github:
     needs: [
-      regular-integration-tests,
+      test-manylinux-wheels,
+      test-macos-and-windows-wheels,
       valgrind
     ]
     runs-on: ubuntu-24.04
