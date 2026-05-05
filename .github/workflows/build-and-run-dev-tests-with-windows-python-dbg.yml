@@ -1,0 +1,78 @@
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  windows-python-dbg:
+    runs-on: ["self-hosted", "Windows", "X64"]
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      with:
+        egress-policy: audit
+
+    - name: Get tests and Github action scripts
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+        submodules: recursive
+        # Always required for versioningit to work when building
+        # TODO: maybe move to a single config file
+        fetch-depth: 0
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        repository: python/cpython
+        submodules: recursive
+        path: cpython
+
+    # Why install from source:
+    # 1. Not using pyenv, because I believe pyenv is more suited for user installations. Installing on Github Actions
+    # means installing as administrator. When doing so, pyenv could not be called automatically even after setting the PATH.
+    # 2. Using the legacy Python install wizard to install in debug mode fails with error code 1 as well.
+    # 3. The newer Python install manager doesn't have a Python debug build available for Windows
+    - run: ./build.bat -d
+      working-directory: cpython/PCbuild
+
+    - run: |
+        pydebug_abs_path="$(realpath PCbuild/amd64/)"
+        echo $(cygpath -w "$pydebug_abs_path") >> $GITHUB_PATH
+      shell: bash
+      working-directory: cpython
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        # registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        # image-name: ${{ inputs.image-name }}
+        # server-tag: ${{ inputs.server-tag }}
+        where-is-client-connecting-from: 'remote-connection'
+
+    - name: 'Windows: Add msbuild to PATH'
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
+
+    - name: 'Windows: Install C client deps'
+      run: |
+        choco install --yes nuget.commandline
+        nuget restore
+      working-directory: aerospike-client-c/vs
+
+    - name: Install wheel
+      run: |
+        # pip isn't included by default here
+        python_d -m ensurepip --upgrade
+        python_d -m pip install build -c requirements.txt
+        python_d -m build
+        python_d -m pip install dist/*.whl
+      env:
+        UNOPTIMIZED: 1
+
+    - name: Install test dependencies
+      run: python_d -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run tests
+      run: python_d -m pytest new_tests/
+      working-directory: test

@@ -258,3 +258,6 @@ jobs:
       if: ${{ matrix.runner-os-and-arch[1] == 'arm64' }}
       run: python3 -c "import aerospike"
       working-directory: test
+
+  windows-dbg:
+    uses: .github/workflows/build-and-run-dev-tests-with-windows-python-dbg.yml
