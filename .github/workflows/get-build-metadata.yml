@@ -24,9 +24,6 @@ on:
       # So we can run tests in a separate job from the one that builds the artifact
       all-test-runner-oses:
         value: ${{ jobs.get-build-metadata.outputs.all-test-runner-oses }}
-      # Same note applies from above
-      test-runner-oses-to-platform-tags:
-        value: ${{ jobs.get-build-metadata.outputs.test-runner-oses-to-platform-tags }}
 
 permissions:
   contents: read
@@ -40,7 +37,6 @@ jobs:
       test-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.test_runner_os }}
       all-python-versions: ${{ steps.get-all-python-versions.outputs.python_versions }}
       build-runner-oses-to-platform-tags: ${{ steps.get-build-runner-oses-to-platform-tags.outputs.build_runner_oses_to_platform_tags }}
-      test-runner-oses-to-platform-tags: ${{ steps.get-test-runner-oses-to-platform-tags.outputs.map }}
     runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -61,7 +57,7 @@ jobs:
       run: |
         # Get runner OS for just one platform tag (i.e when building for one platform on a feature branch)
         echo build_runner_os=$(cat .github/workflows/prod-wheel-matrix.json | jq -r --arg platform_tag "$platform_tag" '.["platform-tag-to-build-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
-        echo test_runner_os=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" --arg build_runner_os "$build_runner_os" '.["platform-tag-to-test-runner-os"].[$platform_tag] // $build_runner_os') >> $GITHUB_OUTPUT
+        echo test_runner_os=$(cat .github/workflows/prod-wheel-matrix.json | jq --arg platform_tag "$platform_tag" '.["platform-tag-to-test-runner-os"].[$platform_tag]') >> $GITHUB_OUTPUT
       env:
         platform_tag: ${{ inputs.platform-tag }}
 
@@ -71,7 +67,3 @@ jobs:
     - id: get-build-runner-oses-to-platform-tags
       run: |
         echo build_runner_oses_to_platform_tags=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["platform-tag-to-build-runner-os"] | with_entries({key: .value, value: .key})') >> $GITHUB_OUTPUT
-
-    - id: get-platform-tags-to-test-runner-oses
-      run: |
-        echo map=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["platform-tag-to-test-runner-os"]) >> $GITHUB_OUTPUT

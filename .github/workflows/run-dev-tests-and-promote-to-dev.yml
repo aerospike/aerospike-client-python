@@ -111,11 +111,10 @@ jobs:
     uses: ./.github/workflows/test-wheel-in-container.yml
     strategy:
       matrix:
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.python-versions) }}
-        image-name: [
-          quay.io/pypa/manylinux_2_28_x86_64,
-          quay.io/pypa/manylinux_2_28_aarch64
-        ]
+        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
+        image-name:
+          - quay.io/pypa/manylinux_2_28_x86_64
+          - quay.io/pypa/manylinux_2_28_aarch64
       fail-fast: false
     with:
       python-version: ${{ matrix.python-version }}
@@ -131,8 +130,8 @@ jobs:
     uses: ./.github/workflows/test-wheel.yml
     strategy:
       matrix:
-        runner-os: ${{ fromJson(needs.get-build-metadata.outputs.test-runner-oses) }}
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.python-versions) }}
+        runner-os: ${{ fromJson(needs.get-build-metadata.outputs.all-test-runner-oses) }}
+        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
       fail-fast: false
     secrets: inherit
 
