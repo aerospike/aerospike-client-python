@@ -10,6 +10,26 @@ on:
       python-version:
         required: true
         type: string
+      # For accessing the QE builds
+      registry-name:
+        required: true
+        type: string
+      registry-username:
+        required: true
+        type: string
+      registry-password:
+        required: true
+        type: string
+      image-name:
+        required: true
+        type: string
+      server-tag:
+        required: true
+        type: string
+      test-file:
+        required: false
+        type: string
+        default: ''
 
 jobs:
   test-wheel:
@@ -19,6 +39,17 @@ jobs:
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
       with:
         egress-policy: audit
+
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="Test wheel (${{ inputs.python-version }}-${{ inputs.platform-tag }})" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ github.sha }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
@@ -33,16 +64,40 @@ jobs:
 
     - name: Install wheel
       run: pip install *.whl
+      shell: bash
 
     - run: pip install -r requirements.txt
       working-directory: test
+      shell: bash
 
-    - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+    # Need to be able to save Docker Hub credentials to keychain
+    # Unable to do this via the ansible script for self hosted mac m1 runners
+    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+      shell: bash
 
-    - run: python3 -m pytest new_tests/
+    - uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-username }}
+        registry-password: ${{ inputs.registry-password }}
+        image-name: ${{ inputs.image-name }}
+        server-tag: ${{ inputs.server-tag }}
+        where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
+
+    - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
       working-directory: test
+      shell: bash
 
     - name: Show server logs to debug test results
       if: ${{ !failure() }}
       run: docker logs aerospike
+      shell: bash
+
+    - name: Show job status for commit
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      with:
+        sha: ${{ github.sha }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
