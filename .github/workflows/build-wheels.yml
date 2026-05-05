@@ -120,7 +120,6 @@ jobs:
     runs-on: ${{ needs.get-build-metadata.outputs.build-runner-os-from-platform-tag-input }}
     env:
       GH_ARTIFACT_NAME_FOR_WHEEL: "${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}"
-      RUN_INTEGRATION_TESTS_IN_THIS_JOB: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -147,21 +146,6 @@ jobs:
     - name: 'Windows: Add msbuild to PATH'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
-
-    - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
-      uses: ./.github/actions/setup-docker-on-macos
-
-    - name: 'Run Aerospike server in Docker container and configure tests accordingly'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
-      uses: ./.github/actions/run-ee-server
-      with:
-        registry-name: ${{ inputs.registry-name }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
-        image-name: ${{ inputs.image-name }}
-        server-tag: ${{ inputs.server-tag }}
-        where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: Set unoptimize flag
       if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
@@ -233,7 +217,7 @@ jobs:
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-  test-self-hosted:
+  test-wheel:
     needs: [
       build-wheel,
       get-build-metadata
