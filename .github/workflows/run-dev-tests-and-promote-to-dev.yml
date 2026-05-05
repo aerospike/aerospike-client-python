@@ -1,13 +1,6 @@
 name: Run dev tests and promote release bundle to DEV
 run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
 
-permissions:
-  # We are building the artifacts in build-artifacts.yml
-  contents: read
-  # For shared reusable workflows
-  id-token: write
-  statuses: write
-
 on:
   workflow_dispatch:
     inputs:
@@ -52,6 +45,11 @@ jobs:
     with:
       run_tests: true
       test-macos-x86: false
+    permissions:
+      contents: read
+      # For shared reusable workflows
+      id-token: write
+      statuses: write
 
   valgrind:
     needs: build-artifacts
@@ -61,6 +59,8 @@ jobs:
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
     secrets: inherit
+    permissions:
+      contents: read
 
   reupload-artifacts-as-one-artifact-in-github:
     needs: [
@@ -70,12 +70,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    permissions:
+      actions: read
 
   get-next-release-version-and-latest-tag:
     outputs:
       next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
       latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
@@ -117,6 +121,9 @@ jobs:
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       dry-run: ${{ inputs.dry-run }}
+    permissions:
+      id-token: write
+      actions: read
 
   create-release-bundle-and-promote-to-dev:
     if: ${{ inputs.dry-run }}
@@ -132,3 +139,5 @@ jobs:
       # JFrog release bundle version
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
+    permissions:
+      id-token: write
