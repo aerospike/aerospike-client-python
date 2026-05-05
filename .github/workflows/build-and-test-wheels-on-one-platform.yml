@@ -6,8 +6,6 @@ run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform
 permissions:
   id-token: write
   contents: read
-  # TODO: not sure if shared workflows writes commit statuses for manual events
-  # statuses: write
 
 on:
   workflow_dispatch:
