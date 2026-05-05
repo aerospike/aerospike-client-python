@@ -49,6 +49,8 @@ jobs:
       get-next-release-version-and-latest-tag
     ]
     uses: ./.github/workflows/build-artifacts.yml
+    with:
+      run_tests: true
 
   valgrind:
     needs: build-artifacts

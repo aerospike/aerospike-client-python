@@ -15,8 +15,6 @@ on:
       # For build-artifacts.yml
       all-python-versions:
         value: ${{ jobs.get-build-metadata.outputs.all-python-versions }}
-      all_platform_tags:
-        value: ${{ jobs.get-build-metadata.outputs.all_platform_tags }}
 
 permissions:
   contents: read
@@ -54,6 +52,3 @@ jobs:
 
     - id: get-all-python-versions
       run: echo python_versions=$(cat $BUILD_METADATA_PATH | jq '.["python-versions"]') >> $GITHUB_OUTPUT
-
-    - id: get-all-platform-tags
-      run: echo all_platform_tags=$(cat $BUILD_METADATA_PATH | jq '.["platform-tag-to-build-runner-os"] | keys') >> $GITHUB_OUTPUT
