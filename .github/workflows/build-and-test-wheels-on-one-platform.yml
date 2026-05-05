@@ -1,5 +1,5 @@
 name: 'Build and test wheel'
-run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests_in_this_workflow=${{ inputs.run_tests_in_this_workflow }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }})'
+run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -23,13 +23,13 @@ on:
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
       #
       # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
-      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
+      # in Github Actions. So all jobs in the build-wheel job would have to pass for a self hosted job to run.
       # We want each platform to be tested independently of each other,
       # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       python-versions:
         type: string
-        description: Valid JSON list of Python tags to build the client for. If *, build for all supported python versions
+        description: Valid JSON list of Python tags to build the client for.
         required: false
         default: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
       platform-tag:
@@ -54,7 +54,7 @@ on:
         type: boolean
         required: false
         default: false
-      run_tests_in_this_workflow:
+      run_tests:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
         required: false
@@ -132,7 +132,7 @@ jobs:
       build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
 
   test-wheel:
-    if: ${{ inputs.run_tests_in_this_workflow && (inputs.platform_tag == 'macosx_arm64' || inputs.platform_tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform_tag == 'macosx_arm64' || inputs.platform_tag == 'win_amd64') }}
     needs: [
       build-wheel
     ]
@@ -147,7 +147,7 @@ jobs:
       python-version: ${{ matrix.python-version }}
 
   test-manylinux-wheel:
-    if: ${{ inputs.run_tests_in_this_workflow && startsWith(inputs.platform-tag, 'manylinux') }}
+    if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
     needs: [
       build-wheel
     ]
