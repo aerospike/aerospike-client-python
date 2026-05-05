@@ -30,7 +30,7 @@ on:
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       python-versions:
         type: string
-        description: Valid JSON list of Python tags to build the client for. If empty, build for all supported python versions
+        description: Valid JSON list of Python tags to build the client for. If *, build for all supported python versions
         required: false
         default: '*'
       platform-tag:
