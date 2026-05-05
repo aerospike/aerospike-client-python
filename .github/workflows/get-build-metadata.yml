@@ -27,8 +27,6 @@ permissions:
 jobs:
   get-build-metadata:
     outputs:
-      # Used by build-artifacts.yml
-      all_platform_tags: ${{ steps.get-all-platform-tags.outputs.all_platform_tags }}
       # Used by build-and-test-wheel workflow
       build-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.build_runner_os }}
       test-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.test_runner_os }}

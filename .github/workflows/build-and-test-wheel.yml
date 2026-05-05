@@ -1,5 +1,5 @@
 name: 'Build and test wheel'
-run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests_in_this_workflow=${{ inputs.run_tests_in_this_workflow }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
+# run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests_in_this_workflow=${{ inputs.run_tests_in_this_workflow }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -35,6 +35,7 @@ on:
         required: false
         default: '*'
       platform-tag:
+        # One of these values:
         # - manylinux_x86_64
         # - manylinux_aarch64
         # - macosx_x86_64
@@ -85,17 +86,40 @@ on:
     inputs: *inputs
 
 jobs:
-  get-build-metadata:
-    uses: ./.github/workflows/get-build-metadata.yml
-    with:
-      platform-tag: ${{ inputs.platform-tag }}
+  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
+  # This uses up more billing minutes (rounded up to 1 minute for each job run),
+  # but this should be ok based on the minutes usage data for the aerospike organization
+  get-build-runner-os:
+    outputs:
+      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - id: get-runner-os
+      # Single source of truth for which runner OS to use for each platform tag
+      # We use the larger runner for mac x86 because there is noise when using the regular runners
+      # I suspect it's from building the server Docker image
+      run: |
+        declare -A hashmap
+        hashmap[manylinux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
+        hashmap[macosx_x86_64]="macos-14-large"
+        hashmap[macosx_arm64]="macos-14"
+        hashmap[win_amd64]="windows-2022"
+        echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
+      # Bash >= 4 supports hashmaps
+      shell: bash
 
   build-wheel:
-    needs: get-build-metadata
+    needs: get-build-runner-os
     strategy:
       matrix:
-        runs-on: ${{ fromJson(needs.get-build-metadata.outputs.build-runner-os-from-platform-tag-input) }}
-        python-version: ${{ inputs.python-versions == '*' && fromJson(needs.get-build-metadata.outputs.all-python-versions) || fromJson(inputs.python-versions) }}
+        runs-on: ${{ needs.get-build-runner-os.outputs.runner_os }}
+        python-version: ${{ fromJson(inputs.python-versions) }}
       fail-fast: false
     uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
     with:
@@ -112,36 +136,31 @@ jobs:
       build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
 
   test-wheel:
-    if: ${{ inputs.run_tests_in_this_workflow }}
+    if: ${{ inputs.run_tests_in_this_workflow && (inputs.platform_tag == 'macosx_arm64' || inputs.platform_tag == 'win_amd64') }}
     needs: [
-      build-wheel,
-      get-build-metadata
+      build-wheel
     ]
-    # There's a top-level env variable for this but we can't use it here, unfortunately
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJSON(inputs.python-versions) }}
-        runner-os: ${{ needs.get-build-metadata.outputs.test-runner-os-from-platform-tag-input }}
     uses: ./.github/workflows/test-wheel.yml
     with:
+      # Not the prettiest solution...
+      runner-os: ${{ inputs.platform_tag == 'macosx_x86_64' && 'macos-14-large' || (inputs.platform_tag == 'macosx_arm64' && ['self-hosted', 'macOS', 'ARM64'] || ['self-hosted', 'Windows', 'X64']) }}
       python-version: ${{ matrix.python-version }}
 
   test-manylinux-wheel:
-    if: ${{ inputs.run_tests_in_this_workflow }}
+    if: ${{ inputs.run_tests_in_this_workflow && startsWith(inputs.platform-tag, 'manylinux') }}
     needs: [
-      get-build-metadata,
       build-wheel
     ]
     uses: ./.github/workflows/test-wheel-in-container.yml
     strategy:
-      matrix:
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
-        image-name:
-          - quay.io/pypa/manylinux_2_28_x86_64
-          - quay.io/pypa/manylinux_2_28_aarch64
       fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(inputs.python-versions) }}
     with:
       python-version: ${{ matrix.python-version }}
-      container-image-name: ${{ matrix.image-name }}
+      container-image-name: quay.io/pypa/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
       cpu-arch: ${{ endsWith(matrix.image-name, 'x86_64') && 'x86_64' || 'aarch64' }}
