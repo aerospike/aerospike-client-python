@@ -105,7 +105,7 @@ jobs:
         - macosx_arm64
         - win_amd64
       fail-fast: false
-    uses: ./.github/workflows/build-and-test-wheel.yml
+    uses: ./.github/workflows/build-and-test-wheels-on-one-platform.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
       unoptimized: ${{ inputs.unoptimized }}
