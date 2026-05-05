@@ -42,11 +42,6 @@ on:
         required: false
         type: string
         description: For speeding up debugging
-      # build-type:
-      #   required: false
-      #   default: 'release'
-      #   type: string
-      #   description: Build metadata
 
 jobs:
   get-platform-info-and-all-supported-python-versions:
