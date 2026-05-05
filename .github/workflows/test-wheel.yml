@@ -1,10 +1,11 @@
 on:
   workflow_call:
     inputs:
-      platform-tag:
+      runner-os:
         required: true
         type: string
-      runner-os:
+      # For downloading the correct wheel from upstream jobs
+      platform-tag:
         required: true
         type: string
       python-version:
