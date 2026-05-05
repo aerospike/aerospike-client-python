@@ -5,9 +5,6 @@ on:
         required: true
         type: string
       # For downloading the correct wheel from upstream jobs
-      platform-tag:
-        required: true
-        type: string
       python-version:
         required: true
         type: string
@@ -44,8 +41,23 @@ jobs:
       with:
         egress-policy: audit
 
+    - name: Get platform tag of wheel to download
+      run: |
+        os=$(uname -s)
+        arch=$(uname -m)
+        if [[ $os =~ Darwin* ]]; then
+          PLATFORM_TAG="macosx_$arch"
+        elif [[ $os =~ CYGWIN* || $os =~ MINGW* ]]; then
+          PLATFORM_TAG=win_amd64
+        elif [[ $os =~ Linux* ]]; then
+          PLATFORM_TAG="manylinux_$arch"
+        fi
+        echo "PLATFORM_TAG=$PLATFORM_TAG" >> $GITHUB_ENV
+      shell: bash
+
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="Test wheel (${{ inputs.python-version }}-${{ inputs.platform-tag }})" >> $GITHUB_ENV
+      run: |
+        echo STATUS_CHECK_MESSAGE="Test wheel (${{ inputs.python-version }}-$PLATFORM_TAG)" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -59,7 +71,7 @@ jobs:
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-${{ inputs.platform-tag }}
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-${{ env.PLATFORM_TAG }}
         path: ./
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -76,7 +88,7 @@ jobs:
 
     # Need to be able to save Docker Hub credentials to keychain
     # Unable to do this via the ansible script for self hosted mac m1 runners
-    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+    - if: ${{ env.PLATFORM_TAG == 'macosx_arm64' }}
       run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
       shell: bash
 
@@ -87,7 +99,7 @@ jobs:
         registry-password: ${{ inputs.registry-password }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
+        where-is-client-connecting-from: ${{ env.PLATFORM_TAG == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
     - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
       working-directory: test

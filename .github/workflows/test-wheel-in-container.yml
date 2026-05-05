@@ -1,4 +1,4 @@
-name: Test manylinux wheel
+name: Test wheel inside container
 
 on:
   workflow_call:
@@ -17,7 +17,7 @@ jobs:
   test-wheel:
     runs-on: ${{ inputs.cpu-arch && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     env:
-      CONTAINER_NAME: manylinux
+      CONTAINER_NAME: linux-distro
       REPO_DIR_NAME: aerospike-client-python
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -42,7 +42,7 @@ jobs:
         name: ${{ inputs.python-version }}-manylinux_${{ inputs.cpu-arch }}
         path: ./
 
-    - name: Copy repo and wheel into manylinux container
+    - name: Copy repo and wheel into container
       run: docker cp ../$REPO_DIR_NAME $CONTAINER_NAME:/
 
     - name: Install wheel
