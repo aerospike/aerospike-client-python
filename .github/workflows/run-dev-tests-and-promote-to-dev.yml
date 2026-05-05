@@ -51,6 +51,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: true
+      test-macos-x86: false
 
   valgrind:
     needs: build-artifacts

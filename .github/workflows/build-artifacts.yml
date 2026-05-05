@@ -7,7 +7,7 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ 
 
 on:
   workflow_dispatch:
-    inputs:
+    inputs: &inputs
       # There may be a case where we want to test these build debug flags on all platforms that support them
       unoptimized:
         description: 'macOS or Linux: Apply -O0 flag?'
@@ -41,48 +41,17 @@ on:
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
         required: false
+        type: string
         default: ''
         description: 'new_tests/<value>'
+      test-macos-x86:
+        required: false
+        default: true
+        type: boolean
 
   workflow_call:
-    inputs:
-      # The "dev" tests test the artifacts against a server
-      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
-      run_tests:
-        required: false
-        type: boolean
-        default: false
-      # workflow_call hack
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
       # A calling workflow doesn't actually set values to the inputs below
       # But that workflow needs to have default values for these inputs
-      unoptimized:
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        type: boolean
-        required: false
-        default: false
-      registry-name:
-        type: string
-        required: false
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        default: 'aerospike/aerospike-server-enterprise'
-      server-tag:
-        type: string
-        required: false
-        default: 'latest'
-      test-file:
-        required: false
-        type: string
-        default: ''
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true
@@ -90,6 +59,7 @@ on:
         required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
+    inputs: *inputs
 
 jobs:
   build-sdist:
@@ -116,4 +86,5 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+      test-macos-x86: ${{ inputs.test-macos-x86 }}
     secrets: inherit
