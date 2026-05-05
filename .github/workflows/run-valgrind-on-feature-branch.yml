@@ -139,6 +139,7 @@ jobs:
       registry-name: ${{ inputs.registry-name }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
+    secrets: inherit
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
   delete-artifacts:

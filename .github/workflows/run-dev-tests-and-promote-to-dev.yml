@@ -142,6 +142,7 @@ jobs:
       registry-name: ${{ inputs.registry-name }}
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
+    secrets: inherit
 
   reupload-artifacts-as-one-artifact-in-github:
     needs: [
