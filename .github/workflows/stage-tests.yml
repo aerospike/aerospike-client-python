@@ -49,33 +49,48 @@ env:
   JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
 
 jobs:
-  linux-distro-tests:
+  # Cat 2 tests
+  # TODO: missing steps from old code to set up python (I think)
+  linux-distro-wheel-tests:
+    strategy:
+      matrix:
+        test-case: [
+          # Docker image + tag, test category, Docker image platform (cpu arch), Python version
+          ["amazonlinux:2023", "x86_64", "3.11"],
+          ["amazonlinux:2023", "aarch64", "3.11"],
+          ["ubuntu:22.04", "x86_64", "3.10"],
+          ["ubuntu:22.04", "aarch64", "3.10"],
+          ["ubuntu:24.04", "x86_64", "3.12"],
+          ["ubuntu:24.04", "aarch64", "3.12"],
+          # Bookworm is Debian 12
+          ["python:3.10-bookworm", "x86_64", "3.10"],
+          ["python:3.10-bookworm", "aarch64", "3.10"],
+          ["python:3.11-bookworm", "x86_64", "3.11"],
+          ["python:3.11-bookworm", "aarch64", "3.11"],
+          ["python:3.12-bookworm", "x86_64", "3.12"],
+          ["python:3.12-bookworm", "aarch64", "3.12"],
+          ["python:3.13-bookworm", "x86_64", "3.13"],
+          ["python:3.13-bookworm", "aarch64", "3.13"],
+          ["python:3.14-rc-bookworm", "x86_64", "3.14"],
+          ["python:3.14-rc-bookworm", "aarch64", "3.14"],
+          # QE currently covers Debian 13 on all client-supported Python versions
+          # We do not use ubi9/python-311 because we cannot install packages using dnf as root
+          ["redhat/ubi9", "x86_64", "3.11"],
+          ["redhat/ubi9", "aarch64", "3.11"],
+        ]
+      fail-fast: false
+    uses: ./.github/workflows/test-wheel-in-container.yml
+    with:
+      container-image-name: ${{ matrix.test-case[0] }}
+      cpu-arch: ${{ matrix.test-case[1] }}
+      python-version: ${{ matrix.test-case[2] }}
+
+  linux-distro-source-build-tests:
     strategy:
       matrix:
         test-case: [
           # Docker image + tag, test category, Docker image platform (cpu arch), Python version
           ["amazonlinux:2023", 1, "linux/amd64", "3.11"],
-          ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
-          ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
-          ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
-          ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
-          ["ubuntu:24.04", 2, "linux/amd64", "3.12"],
-          ["ubuntu:24.04", 2, "linux/arm64", "3.12"],
-          # Bookworm is Debian 12
-          ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
-          ["python:3.10-bookworm", 2, "linux/arm64", "3.10"],
-          ["python:3.11-bookworm", 2, "linux/amd64", "3.11"],
-          ["python:3.11-bookworm", 2, "linux/arm64", "3.11"],
-          ["python:3.12-bookworm", 2, "linux/amd64", "3.12"],
-          ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
-          ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
-          ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
-          ["python:3.14-rc-bookworm", 2, "linux/amd64", "3.14"],
-          ["python:3.14-rc-bookworm", 2, "linux/arm64", "3.14"],
-          # QE currently covers Debian 13 on all client-supported Python versions
-          # We do not use ubi9/python-311 because we cannot install packages using dnf as root
-          ["redhat/ubi9", 2, "linux/amd64", "3.11"],
-          ["redhat/ubi9", 2, "linux/arm64", "3.11"],
           ["redhat/ubi9", 1, "linux/amd64", "3.11"],
         ]
       fail-fast: false
@@ -119,6 +134,7 @@ jobs:
         jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         jfrog-oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         jfrog-oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        gh_artifact_name_prefix: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
 
     - uses: ./.github/actions/run-ee-server
       with:
