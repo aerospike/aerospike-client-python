@@ -98,12 +98,13 @@ jobs:
   build-wheels:
     strategy:
       matrix:
-        platform-tag:
-        - manylinux_x86_64
-        - manylinux_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_arm64",
+          "win_amd64"
+        ]
       fail-fast: false
     uses: ./.github/workflows/build-and-test-wheels-on-one-platform.yml
     with:
