@@ -44,8 +44,29 @@ on:
         description: For speeding up debugging
 
 jobs:
-  get-build-metadata:
-    uses: ./.github/workflows/get-build-metadata.yml
+  build-artifacts:
+    needs: [
+      get-next-release-version-and-latest-tag
+    ]
+    uses: ./.github/workflows/build-artifacts.yml
+
+  valgrind:
+    needs: build-artifacts
+    uses: ./.github/workflows/valgrind.yml
+    with:
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
+      server-tag: ${{ inputs.server-tag }}
+    secrets: inherit
+
+  reupload-artifacts-as-one-artifact-in-github:
+    needs: [
+      build-artifacts,
+      valgrind
+    ]
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
 
   get-next-release-version-and-latest-tag:
     outputs:
@@ -77,82 +98,6 @@ jobs:
           exit 1
         fi
         echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
-
-  build-artifacts:
-    needs: [
-      get-build-metadata,
-      get-next-release-version-and-latest-tag
-    ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
-    strategy:
-      matrix:
-        runs-on: ${{ fromJson(needs.get-build-metadata.outputs.all-build-runner-oses) }}
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
-      fail-fast: false
-    with:
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
-      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
-      gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ fromJson(needs.get-build-metadata.outputs.build-runner-oses-to-platform-tags)[matrix.runs-on] }}
-      gh-artifact-directory: wheelhouse
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
-      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-      build-script-path: ./build-prod-wheel.bash
-      setup-python: true
-      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
-
-  test-manylinux-wheels:
-    needs: [
-      get-build-metadata,
-      build-artifacts,
-      get-next-release-version-and-latest-tag
-    ]
-    uses: ./.github/workflows/test-wheel-in-container.yml
-    strategy:
-      matrix:
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
-        image-name:
-          - quay.io/pypa/manylinux_2_28_x86_64
-          - quay.io/pypa/manylinux_2_28_aarch64
-      fail-fast: false
-    with:
-      python-version: ${{ matrix.python-version }}
-      container-image-name: ${{ matrix.image-name }}
-      cpu-arch: ${{ endsWith(matrix.image-name, 'x86_64') && 'x86_64' || 'aarch64' }}
-
-  test-macos-and-windows-wheels:
-    needs: [
-      get-build-metadata,
-      build-artifacts,
-      get-next-release-version-and-latest-tag
-    ]
-    uses: ./.github/workflows/test-wheel.yml
-    strategy:
-      matrix:
-        runner-os: ${{ fromJson(needs.get-build-metadata.outputs.all-test-runner-oses) }}
-        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
-      fail-fast: false
-    secrets: inherit
-
-  valgrind:
-    needs: build-artifacts
-    uses: ./.github/workflows/valgrind.yml
-    with:
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
-      server-tag: ${{ inputs.server-tag }}
-    secrets: inherit
-
-  reupload-artifacts-as-one-artifact-in-github:
-    needs: [
-      test-manylinux-wheels,
-      test-macos-and-windows-wheels,
-      valgrind
-    ]
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
 
   upload-artifacts-to-jfrog:
     needs: [

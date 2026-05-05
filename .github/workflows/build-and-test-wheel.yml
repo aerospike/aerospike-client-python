@@ -1,0 +1,147 @@
+name: 'Build and test wheel'
+run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests_in_this_workflow=${{ inputs.run_tests_in_this_workflow }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
+
+# Build wheels on all (or select) Python versions supported by the Python client for a specific platform
+
+permissions:
+  id-token: write
+  contents: read
+  # TODO: not sure if shared workflows writes commit statuses for manual events
+  # statuses: write
+
+on:
+  workflow_dispatch:
+    inputs: &inputs
+      # These are the usual cases for building wheels:
+      #
+      # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
+      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
+      # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
+      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
+      # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
+      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
+      #
+      # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
+      # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
+      #
+      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
+      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
+      # We want each platform to be tested independently of each other,
+      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
+      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
+      python-versions:
+        type: string
+        description: Valid JSON list of Python tags to build the client for. If *, build for all supported python versions
+        required: false
+        default: '*'
+      platform-tag:
+        # - manylinux_x86_64
+        # - manylinux_aarch64
+        # - macosx_x86_64
+        # - macosx_arm64
+        # - win_amd64
+        description: Platform to build the client for.
+        type: string
+        required: true
+        default: manylinux_x86_64
+      unoptimized:
+        description: 'macOS or Linux: Apply -O0 flag?'
+        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        description: 'macOS: Build wheels for debugging?'
+        type: boolean
+        required: false
+        default: false
+      run_tests_in_this_workflow:
+        description: 'Run Aerospike server and run tests using built wheels?'
+        type: boolean
+        required: false
+        default: false
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-file:
+        type: string
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
+
+  workflow_call:
+    inputs: *inputs
+
+jobs:
+  get-build-metadata:
+    uses: ./.github/workflows/get-build-metadata.yml
+    with:
+      platform-tag: ${{ inputs.platform-tag }}
+
+  build-wheel:
+    needs: get-build-metadata
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson(needs.get-build-metadata.outputs.build-runner-os-from-platform-tag-input) }}
+        python-version: ${{ inputs.python-versions == '*' && fromJson(needs.get-build-metadata.outputs.all-python-versions) || fromJson(inputs.python-versions) }}
+      fail-fast: false
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
+      gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ matrix.platform-tag }}
+      gh-artifact-directory: wheelhouse
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+      build-script-path: ./build-prod-wheel.bash
+      setup-python: true
+      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
+
+  test-wheel:
+    if: ${{ inputs.run_tests_in_this_workflow }}
+    needs: [
+      build-wheel,
+      get-build-metadata
+    ]
+    # There's a top-level env variable for this but we can't use it here, unfortunately
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(inputs.python-versions) }}
+        runner-os: ${{ needs.get-build-metadata.outputs.test-runner-os-from-platform-tag-input }}
+    uses: ./.github/workflows/test-wheel.yml
+    with:
+      python-version: ${{ matrix.python-version }}
+
+  test-manylinux-wheel:
+    if: ${{ inputs.run_tests_in_this_workflow }}
+    needs: [
+      get-build-metadata,
+      build-wheel
+    ]
+    uses: ./.github/workflows/test-wheel-in-container.yml
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.get-build-metadata.outputs.all-python-versions) }}
+        image-name:
+          - quay.io/pypa/manylinux_2_28_x86_64
+          - quay.io/pypa/manylinux_2_28_aarch64
+      fail-fast: false
+    with:
+      python-version: ${{ matrix.python-version }}
+      container-image-name: ${{ matrix.image-name }}
+      cpu-arch: ${{ endsWith(matrix.image-name, 'x86_64') && 'x86_64' || 'aarch64' }}

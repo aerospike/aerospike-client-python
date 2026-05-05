@@ -12,31 +12,28 @@ on:
         value: ${{ jobs.get-build-metadata.outputs.build-runner-os-from-platform-tag-input }}
       test-runner-os-from-platform-tag-input:
         value: ${{ jobs.get-build-metadata.outputs.test-runner-os-from-platform-tag-input }}
-      # For dev workflow
-      all-build-runner-oses:
-        value: ${{ jobs.get-build-metadata.outputs.all-build-runner-oses }}
+      # For build-artifacts.yml
       all-python-versions:
         value: ${{ jobs.get-build-metadata.outputs.all-python-versions }}
-      # So we can label the artifact with the platform tag instead of the runner os
-      # Note: this only works if the runner OS'es are unique from each other in the hashmap
-      build-runner-oses-to-platform-tags:
-        value: ${{ jobs.get-build-metadata.outputs.build-runner-oses-to-platform-tags }}
-      # So we can run tests in a separate job from the one that builds the artifact
-      all-test-runner-oses:
-        value: ${{ jobs.get-build-metadata.outputs.all-test-runner-oses }}
+      all_platform_tags:
+        value: ${{ jobs.get-build-metadata.outputs.all_platform_tags }}
 
 permissions:
   contents: read
 
+# Maps don't exist in Github Actions, so we have to store the map using a file and fetch it in a job
+# This uses up more billing minutes (rounded up to 1 minute for each job run),
+# but this should be ok based on the minutes usage data for the aerospike organization
 jobs:
   get-build-metadata:
     outputs:
-      all-build-runner-oses: ${{ steps.get-all-runner-oses.outputs.all_build_runner_oses }}
-      all-test-runner-oses: ${{ steps.get-all-runner-oses.outputs.all_test_runner_oses }}
+      # Used by build-artifacts.yml
+      all_platform_tags: ${{ steps.get-all-platform-tags.outputs.all_platform_tags }}
+      # Used by build-and-test-wheel workflow
       build-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.build_runner_os }}
       test-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.test_runner_os }}
+      # Used by both dev and build-and-test-wheel workflow
       all-python-versions: ${{ steps.get-all-python-versions.outputs.python_versions }}
-      build-runner-oses-to-platform-tags: ${{ steps.get-build-runner-oses-to-platform-tags.outputs.build_runner_oses_to_platform_tags }}
     runs-on: ubuntu-24.04
     env:
       BUILD_METADATA_PATH: .github/workflows/prod-wheel-matrix.json
@@ -47,12 +44,6 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-    - id: get-all-runner-oses
-      run: |
-        # Get all runner OS'es to use in dev workflow (i.e shared workflow for building artifacts)
-        echo all_build_runner_oses=$(cat $BUILD_METADATA_PATH | jq '[.["platform-tag-to-build-runner-os"].[]]') >> $GITHUB_OUTPUT
-        echo all_test_runner_oses=$(cat $BUILD_METADATA_PATH | jq '[.["platform-tag-to-test-runner-os"].[]]') >> $GITHUB_OUTPUT
 
     - id: get-runner-os-from-platform-tag-input
       if: ${{ inputs.platform-tag != '' }}
@@ -66,6 +57,5 @@ jobs:
     - id: get-all-python-versions
       run: echo python_versions=$(cat $BUILD_METADATA_PATH | jq '.["python-versions"]') >> $GITHUB_OUTPUT
 
-    - id: get-build-runner-oses-to-platform-tags
-      run: |
-        echo build_runner_oses_to_platform_tags=$(cat $BUILD_METADATA_PATH | jq '.["platform-tag-to-build-runner-os"] | with_entries({key: .value, value: .key})') >> $GITHUB_OUTPUT
+    - id: get-all-platform-tags
+      run: echo all_platform_tags=$(cat $BUILD_METADATA_PATH | jq '.["platform-tag-to-build-runner-os"] | keys') >> $GITHUB_OUTPUT
