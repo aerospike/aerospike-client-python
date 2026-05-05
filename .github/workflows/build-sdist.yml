@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         path: ./dist/*.tar.gz
-        name: sdist.build
+        name: build-artifacts-sdist
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1

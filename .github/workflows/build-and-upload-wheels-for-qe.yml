@@ -1,3 +1,5 @@
+# NOTE: Unmaintained
+
 name: Build and upload wheels for QE
 run-name: Build and upload wheels for QE (disable-optimizations=${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }})
 

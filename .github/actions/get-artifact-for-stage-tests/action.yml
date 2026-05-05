@@ -36,7 +36,7 @@ runs:
   steps:
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
     name: 'Cat 1: Get Github artifact name for source distribution'
-    run: echo "GITHUB_ARTIFACT_NAME=sdist.build" >> $GITHUB_ENV
+    run: echo "GITHUB_ARTIFACT_NAME=build-artifacts-sdist" >> $GITHUB_ENV
     shell: bash
 
   # If getting a wheel from Github, construct artifact name containing that wheel
@@ -50,7 +50,7 @@ runs:
     shell: bash
 
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
-    run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}.build" >> $GITHUB_ENV
+    run: echo "GITHUB_ARTIFACT_NAME=${{ inputs.wheel_python_version }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}" >> $GITHUB_ENV
     shell: bash
 
   - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

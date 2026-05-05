@@ -29,7 +29,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: '*.build'
+        pattern: 'build-artifacts*'
         merge-multiple: true
         path: artifacts
 
@@ -43,15 +43,3 @@ jobs:
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
       run: jf rt upload "*manylinux*" ${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/
       working-directory: artifacts
-
-    - name: Upload passing builds to JFrog PyPI repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" ${{ vars.JFROG_REPO_NAME }}/aerospike/$NEW_VERSION/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish python-client ${{ inputs.version }}
