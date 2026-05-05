@@ -25,9 +25,6 @@ permissions:
 jobs:
   get-build-metadata:
     outputs:
-      # Used by build-and-test-wheel workflow
-      build-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.build_runner_os }}
-      test-runner-os-from-platform-tag-input: ${{ steps.get-runner-os-from-platform-tag-input.outputs.test_runner_os }}
       # Used by both dev and build-and-test-wheel workflow
       all-python-versions: ${{ steps.get-all-python-versions.outputs.python_versions }}
     runs-on: ubuntu-24.04
