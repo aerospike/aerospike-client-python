@@ -31,6 +31,9 @@ on:
         required: false
         type: string
         default: ''
+    secrets:
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: false
 
 jobs:
   test-wheel:

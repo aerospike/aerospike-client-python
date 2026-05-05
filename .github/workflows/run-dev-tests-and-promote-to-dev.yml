@@ -129,6 +129,7 @@ jobs:
         runner-os: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
         python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
       fail-fast: false
+    secrets: inherit
 
   valgrind:
     needs: build-artifacts
