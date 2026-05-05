@@ -140,7 +140,7 @@ jobs:
       server-tag: ${{ inputs.server-tag }}
     secrets: inherit
 
-  # See reason for deleting artifacts in dev-workflow-p2.yml
+  # See reason for deleting artifacts in run-dev-tests-and-promote-to-dev.yml
   delete-artifacts:
     needs: [
       # These jobs must have downloaded the artifact from Github before we can delete it
