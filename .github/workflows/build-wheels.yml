@@ -194,13 +194,6 @@ jobs:
     #   if: ${{ !cancelled() }}
     #   uses: mxschmitt/action-tmate@v3
 
-    # For debugging
-    - run: |
-        # Checks that server started up properly
-        docker logs aerospike
-      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
-      shell: bash
-
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: ${{ !cancelled() }}
