@@ -42,14 +42,15 @@ on:
         required: false
         type: string
         description: For speeding up debugging
-      build-type:
-        required: false
-        default: 'release'
-        type: string
-        description: Build metadata
+      # build-type:
+      #   required: false
+      #   default: 'release'
+      #   type: string
+      #   description: Build metadata
+
 jobs:
-  get-runner-os-and-all-supported-python-versions:
-    uses: ./.github/workflows/get-runner-os-and-all-supported-python-versions.yml
+  get-platform-info-and-all-supported-python-versions:
+    uses: ./.github/workflows/get-platform-info-and-all-supported-python-versions.yml
     with:
       platform-tag: '*'
 
@@ -84,47 +85,110 @@ jobs:
         fi
         echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
 
-  build-test-and-publish-artifacts-as-jfrog-build:
+  build-artifacts:
     needs: [
-      get-runner-os-and-all-supported-python-versions,
+      get-platform-info-and-all-supported-python-versions,
       get-next-release-version-and-latest-tag
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_artifacts-cicd.yaml@7f563f650178064e0c0cedde00277226bfb131de
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
+        python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
+      fail-fast: false
     with:
-      gh-artifact-directory: wheelhouse
-      gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de
-      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
+      gh-artifact-name: build-artifacts-${{ matrix.python-version }}-${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-os-to-platform-tag)[matrix.runs-on] }}
+      gh-artifact-directory: wheelhouse
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-      # This workflow generates a unique build id internally
-      version: ${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
       build-script-path: ./build-prod-wheel.bash
-      matrix-json: >-
-        {
-          "runs-on": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.runner-oses }},
-          "python-version": ${{ needs.get-runner-os-and-all-supported-python-versions.outputs.python-versions }}
-        }
-      dry-run: ${{ inputs.dry-run }}
-      build-type: ${{ inputs.build-type }}
       setup-python: true
-      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};JF_BUILD_NAME=${{ vars.JFROG_BUILD_NAME }};JF_BUILD_NUMBER=${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}"
-    secrets:
-      gpg-private-key: ''
-      gpg-public-key: ''
-      gpg-key-pass: ''
+      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
+
+  test-manylinux-wheels:
+    needs: [
+      build-artifacts,
+      get-platform-info-and-all-supported-python-versions,
+      get-next-release-version-and-latest-tag
+    ]
+    uses: ./.github/workflows/test-wheel.yml
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
+        python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
+      fail-fast: false
+
+  test-macos-and-windows-wheels:
+    needs: [
+      build-artifacts,
+      get-platform-info-and-all-supported-python-versions,
+      get-next-release-version-and-latest-tag
+    ]
+    uses: ./.github/workflows/test-wheel.yml
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.runner-oses) }}
+        python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
+      fail-fast: false
+
+  valgrind:
+    needs: build-artifacts
+    uses: ./.github/workflows/valgrind.yml
+
+  regular-integration-tests:
+    needs: [
+      build-artifacts,
+      get-platform-info-and-all-supported-python-versions,
+      get-next-release-version-and-latest-tag
+    ]
+    uses: ./.github/workflows/test-artifacts.yml
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.get-platform-info-and-all-supported-python-versions.outputs.python-versions) }}
+      fail-fast: false
+    with:
+      python-version: ${{ matrix.python-version }}
+
+  reupload-artifacts-as-one-artifact-in-github:
+    needs: [
+      regular-integration-tests,
+      valgrind
+    ]
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+
+  upload-artifacts-to-jfrog:
+    needs: [
+      get-next-release-version-and-latest-tag,
+      reupload-artifacts-as-one-artifact-in-github
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      # TODO: may be easier to have a default for these two inputs
+      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
+      jf-metadata-build-id: ${{ github.run_id }}-${{ github.run_attempt }}-buildinfo
+      version: ${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      dry-run: ${{ inputs.dry-run }}
 
   create-release-bundle-and-promote-to-dev:
     if: ${{ inputs.dry-run }}
     needs: [
-      build-test-and-publish-artifacts-as-jfrog-build,
+      upload-artifacts-to-jfrog,
       get-next-release-version-and-latest-tag
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@7f563f650178064e0c0cedde00277226bfb131de
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: ${{ vars.JFROG_BUILD_NAME }}
       jf-bundle-name: ${{ vars.JFROG_BUILD_NAME }}
       # JFrog release bundle version
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
-      gh-workflows-ref: 7f563f650178064e0c0cedde00277226bfb131de # Should match the version in your 'uses:' line
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line

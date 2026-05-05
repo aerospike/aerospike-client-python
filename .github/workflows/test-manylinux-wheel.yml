@@ -1,0 +1,60 @@
+name: Test manylinux wheel
+
+on:
+  workflow_call:
+    inputs:
+      cpu-arch:
+        required: true
+        type: string
+      runner-os:
+        required: true
+        type: string
+      python-version:
+        required: true
+        type: string
+
+jobs:
+  # This runs tests in a manylinux_2_28 container which is Alma Linux 8 based
+  manylinux:
+    runs-on: ${{ inputs.runner-os }}
+    env:
+      MANYLINUX_CONTAINER_NAME: manylinux
+      REPO_DIR_NAME: aerospike-client-python
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    # TODO: should centralize which manylinux image to use
+    - run: docker run -d --name "$MANYLINUX_CONTAINER_NAME" quay.io/pypa/manylinux_2_28_${{ inputs.cpu-arch }} tail -f /dev/null
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        # TODO: need to support server RC's from JFrog eventually
+        server-tag: latest
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: 'docker-container'
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.python-version }}-manylinux_${{ inputs.cpu-arch }}
+        path: ./
+
+    - name: Copy repo and wheel into manylinux container
+      run: docker cp ../$REPO_DIR_NAME $MANYLINUX_CONTAINER_NAME:/
+
+    - name: Install wheel
+      run: docker exec --workdir /$REPO_DIR_NAME "$MANYLINUX_CONTAINER_NAME" python${{ inputs.python-version }} -m pip install *.whl
+
+    - name: Install test prerequisites
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$MANYLINUX_CONTAINER_NAME" python${{ inputs.python-version }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$MANYLINUX_CONTAINER_NAME" python${{ inputs.python-version }} -m pytest new_tests/
+
+    - if: ${{ always() }}
+      run: docker logs aerospike

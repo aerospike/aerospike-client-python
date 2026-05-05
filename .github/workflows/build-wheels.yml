@@ -149,7 +149,7 @@ jobs:
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
   # but this should be ok based on the minutes usage data for the aerospike organization
   get-runner-os-and-all-python-versions:
-    uses: ./.github/workflows/get-runner-os-and-all-supported-python-versions.yml
+    uses: ./.github/workflows/get-platform-info-and-all-supported-python-versions.yml
     with:
       platform-tag: ${{ inputs.platform-tag }}
 

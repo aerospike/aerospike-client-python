@@ -75,23 +75,6 @@ REQUIREMENTS_TXT=requirements.txt
 "python${PYTHON_VERSION}" -m pip install build -c "$REQUIREMENTS_TXT"
 "python${PYTHON_VERSION}" -m build --wheel
 
-VENV=./.venv
-"python${PYTHON_VERSION}" -m venv $VENV
-. "$VENV/bin/activate"
-
-"python${PYTHON_VERSION}" -m pip install dist/*.whl
-
-if [[ -z "$RUN_INTEGRATION_TESTS_IN_THIS_JOB" ]]; then
-    "python${PYTHON_VERSION}" -c "import aerospike"
-else
-    cd test
-    "python${PYTHON_VERSION}" -m pip install pytest -c requirements.txt
-    "python${PYTHON_VERSION}" -m pytest new_tests/
-    cd ..
-fi
-
-deactivate
-
 REPAIRED_WHEEL_DIR=wheelhouse
 
 unrepaired_wheel_path=$(find dist/ -type f -name '*.whl' | head -n 1)

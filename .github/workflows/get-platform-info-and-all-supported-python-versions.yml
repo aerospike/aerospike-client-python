@@ -5,6 +5,8 @@ on:
         type: string
         required: true
     outputs:
+      platform-tags:
+        value: ${{ jobs.get-runner-os-and-python-versions.outputs.platform-tags }}
       runner-oses:
         value: ${{ jobs.get-runner-os-and-python-versions.outputs.runner-oses }}
       python-versions:
@@ -18,6 +20,7 @@ jobs:
     outputs:
       runner-oses: ${{ steps.get-runner-oses.outputs.runner_oses }}
       python-versions: ${{ steps.get-python-versions.outputs.python_versions }}
+      runner-os-to-platform-tag: ${{ steps.get-runner-os-to-platform-tag.outputs.runner-os-to-platform-tag }}
     runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -37,3 +40,7 @@ jobs:
 
     - id: get-python-versions
       run: echo python_versions=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["python-versions"]') >> $GITHUB_OUTPUT
+
+    - id: get-runner-os-to-platform-tag
+      run: |
+        echo runner-os-to-platform-tag=$(cat .github/workflows/prod-wheel-matrix.json | jq '.["platform-tag-to-runner-os"] | with_entries({key: .value, value: .key})') >> $GITHUB_OUTPUT
