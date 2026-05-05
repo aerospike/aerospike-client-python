@@ -10,7 +10,7 @@ permissions:
 
 on:
   workflow_dispatch:
-    inputs:
+    inputs: &inputs
       # These are the usual cases for building wheels:
       #
       # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
@@ -34,16 +34,14 @@ on:
         required: false
         default: '*'
       platform-tag:
+        # - manylinux_x86_64
+        # - manylinux_aarch64
+        # - macosx_x86_64
+        # - macosx_arm64
+        # - win_amd64
         description: Platform to build the client for.
-        type: choice
+        type: string
         required: true
-        options:
-        - manylinux_x86_64
-        - manylinux_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
-        # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       unoptimized:
         description: 'macOS or Linux: Apply -O0 flag?'
@@ -72,58 +70,17 @@ on:
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
+        type: string
         required: true
         default: 'latest'
         description: 'Server docker image tag'
       test-file:
+        type: string
         required: false
         default: ''
         description: 'new_tests/<value>'
 
   workflow_call:
-    inputs:
-      # See workflow call hack in update-version.yml
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
-      python-versions:
-        type: string
-        description: Valid JSON list of Python tags to build the client for. If empty, build for all supported python versions
-        required: false
-        default: '*'
-      platform-tag:
-        type: string
-        required: true
-      unoptimized:
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        type: boolean
-        required: false
-        default: false
-      run_tests:
-        type: boolean
-        required: false
-        default: false
-      registry-name:
-        type: string
-        required: false
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        default: 'aerospike/aerospike-server-enterprise'
-      server-tag:
-        required: false
-        type: string
-        default: 'latest'
-        description: 'Server docker image tag'
-      test-file:
-        required: false
-        type: string
-        default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
@@ -136,6 +93,7 @@ on:
         required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
+    inputs: *inputs
 
 env:
   # Note that environment variables in Github are all strings
