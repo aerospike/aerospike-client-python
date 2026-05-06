@@ -88,8 +88,7 @@ jobs:
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
 
-  # TODO: prob rename
-  run-stage-tests-on-jfrog-artifacts:
+  run-stage-tests:
     needs: reupload-jfrog-artifacts-as-github-ones
     # All job outputs are unicode strings
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
@@ -110,10 +109,10 @@ jobs:
   # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
   bump-stage-and-upload-to-jfrog:
     needs: [
-      run-stage-tests-on-jfrog-artifacts,
+      run-stage-tests,
       compare-latest-dev-tag-and-stage
     ]
-    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests-on-jfrog-artifacts.result == 'success' || needs.run-stage-tests-on-jfrog-artifacts.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped') }}
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
