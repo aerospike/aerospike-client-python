@@ -90,7 +90,9 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
-    - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
+    # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
+    # There's no way to tell unless we see the logs
+    - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }} -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
       shell: bash
 
