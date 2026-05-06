@@ -281,7 +281,7 @@ jobs:
         type:
           - sanitizer
           - dont_validate_keys
-          # - lowest_supported_server_version
+          - lowest_supported_server_version
       fail-fast: false
     runs-on: ubuntu-22.04
     needs: build
@@ -329,7 +329,7 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         features-content: ${{ secrets.FEATURES_CONTENT }}
-        server-tag: ${{ env.SERVER_TAG }}
+        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
