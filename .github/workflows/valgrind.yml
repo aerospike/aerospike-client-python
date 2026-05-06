@@ -192,6 +192,7 @@ jobs:
         else
           supp_found=false
         fi
+        echo "supp_found=$supp_found" >> $GITHUB_OUTPUT
         echo "VALGRIND_ARGS=$VALGRIND_ARGS" >> $GITHUB_ENV
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 "$VALGRIND_ARGS" python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
