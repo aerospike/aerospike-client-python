@@ -8,7 +8,6 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ 
 permissions:
   id-token: write
   statuses: write
-  packages: read
   contents: read
 
 on:
