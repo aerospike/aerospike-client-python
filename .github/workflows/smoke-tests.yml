@@ -37,6 +37,7 @@ jobs:
   build:
     outputs:
       server_tag: ${{ steps.get_server_tag.outputs.server_tag }}
+      lowest_supported_python_version: ${{ matrix.py-version[0] }}
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -79,11 +80,6 @@ jobs:
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
-
-    - run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.py-version }}-*linux*x86_64* >> $GITHUB_ENV
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=$GH_ARTIFACT_PATTERN_FOR_WHEEL-sanitizer >> $GITHUB_ENV
 
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -280,8 +276,8 @@ jobs:
 
     - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
 
-  # TODO: use reusable workflow
   test-full-suite:
+    needs: build
     strategy:
       matrix:
         type:
@@ -289,65 +285,12 @@ jobs:
           - dont_validate_keys
           - lowest_supported_server_version
       fail-fast: false
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - if: ${{ matrix.type == 'sanitizer' }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
-
-    - if: ${{ matrix.type != 'sanitizer' }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
-
-    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    # We can already detect leaks using valgrind
-    # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
-    - if: ${{ matrix.type == 'sanitizer' }}
-      run: |
-        echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
-        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
-
-    - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
-      with:
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        features-content: ${{ secrets.FEATURES_CONTENT }}
-        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
-
-    - if: ${{ matrix.type == 'dont_validate_keys' }}
-      run: crudini --existing=param --set config.conf input-validation validate_keys false
-      working-directory: test
-
-    - name: Run tests
-      # We need to disable capturing output or else we cannot see memory errors reported by
-      # libasan during the test run
-      # Here we also treat DeprecationWarnings as errors to make sure we're showing warnings as expected
-      # throughout the API
-      run: python -m pytest ./new_tests -vvs -W error::DeprecationWarning
-      working-directory: test
+    uses: ./.github/workflows/test-wheel.yml
+    with:
+      runner-os: ubuntu-22.04
+      python-version: ${{ needs.build.outputs.lowest_supported_python_version }}
+      server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || needs.build.outputs.server_tag }}
+      test-metadata: ${{ matrix.type }}
 
   test-ce:
     runs-on: ubuntu-22.04
