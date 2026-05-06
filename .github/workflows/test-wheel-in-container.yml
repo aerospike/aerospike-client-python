@@ -17,6 +17,9 @@ on:
         default: false
         description: 'If false, download wheel artifact from Github'
         type: boolean
+      server-tag:
+        required: true
+        type: string
 
 jobs:
   test-wheel:
@@ -41,7 +44,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         # TODO: need to support server RC's from JFrog eventually
-        server-tag: latest
+        server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'separate-docker-container'

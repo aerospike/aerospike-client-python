@@ -8,19 +8,6 @@ on:
       python-version:
         required: true
         type: string
-      # For accessing the QE builds
-      registry-name:
-        required: true
-        type: string
-      registry-username:
-        required: true
-        type: string
-      registry-password:
-        required: true
-        type: string
-      image-name:
-        required: true
-        type: string
       server-tag:
         required: true
         type: string
@@ -101,7 +88,6 @@ jobs:
         registry-name: ${{ inputs.registry-name }}
         registry-username: ${{ inputs.registry-username }}
         registry-password: ${{ inputs.registry-password }}
-        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ env.PLATFORM_TAG == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 

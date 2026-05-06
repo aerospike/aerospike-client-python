@@ -9,20 +9,9 @@ on:
         type: boolean
         required: false
         default: false
-      registry-name:
-        type: string
-        required: true
-      image-name:
-        type: string
-        required: true
       server-tag:
         type: string
         required: true
-    secrets:
-      QE_DOCKER_REGISTRY_USERNAME:
-        required: false
-      QE_DOCKER_REGISTRY_PASSWORD:
-        required: false
 
 jobs:
   valgrind:
@@ -57,10 +46,6 @@ jobs:
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ inputs.registry-name }}
-        registry-username: ${{ inputs.registry-name == vars.QE_SECURE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_USERNAME || '' }}
-        registry-password: ${{ inputs.registry-name == vars.QE_SECURE_DOCKER_REGISTRY_URL && secrets.QE_DOCKER_REGISTRY_PASSWORD || '' }}
-        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
 
     - run: sudo apt-get update

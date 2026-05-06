@@ -24,16 +24,6 @@ on:
         required: true
         type: boolean
         default: false
-      registry-name:
-        type: string
-        required: false
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -81,8 +71,6 @@ jobs:
       platform-tag: ${{ matrix.platform-tag }}
       unoptimized: ${{ inputs.unoptimized }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}

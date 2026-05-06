@@ -8,6 +8,8 @@ name: Stage tests
 on:
   workflow_call:
     inputs:
+      # TODO: make simpler by just making a single job that downloads all the artifacts from jfrog and reuploads them
+      # as github artifacts with the same naming schema as used in the shared workflows
       use_jfrog_builds:
         description: If false, download artifacts from Github
         required: true
@@ -22,16 +24,6 @@ on:
       python-versions-to-test:
         required: true
         type: string
-      registry-name:
-        type: string
-        required: false
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -44,8 +36,6 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 env:
-  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
   # We set env vars here for the composite action to access automatically
   # without needing to use inputs in the composite action.
   JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_BUILD_NAME }}
@@ -94,6 +84,7 @@ jobs:
       cpu-arch: ${{ matrix.test-case[1] }}
       python-version: ${{ matrix.test-case[2] }}
       build-from-source: ${{ matrix.test-case[3] }}
+      server-tag: ${{ inputs.server-tag }}
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
@@ -112,4 +103,4 @@ jobs:
     with:
       runner-os: ${{ matrix.runner-os }}
       python-version: ${{ matrix.python-version }}
-      # TODO: will fail without passing in required inputs
+      server-tag: ${{ inputs.server-tag }}
