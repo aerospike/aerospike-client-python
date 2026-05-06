@@ -73,6 +73,10 @@ on:
         type: boolean
         required: false
         default: true
+      publish-build-info:
+        required: false
+        default: false
+        type: boolean
 
   workflow_call:
     inputs: *inputs
@@ -123,10 +127,11 @@ jobs:
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
       build-script-path: ./build-prod-wheel.bash
       setup-python: true
+      publish-build-info: ${{ inputs.publish-build-info }}
       build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
 
   test-wheel:
-    if: ${{ inputs.run_tests && !startsWith(inputs.platform_tag, 'manylinux') && (inputs.platform_tag != 'macosx_x86_64' || inputs.test-macos-x86 == true) }}
+    if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') && (inputs.platform-tag != 'macosx_x86_64' || inputs.test-macos-x86 == true) }}
     needs: [
       build-wheel
     ]

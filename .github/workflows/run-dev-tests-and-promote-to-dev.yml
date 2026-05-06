@@ -45,6 +45,7 @@ jobs:
     with:
       run_tests: true
       test-macos-x86: false
+      publish-build-info: true
     permissions:
       contents: read
       # For shared reusable workflows
@@ -64,7 +65,6 @@ jobs:
 
   reupload-artifacts-as-one-artifact-in-github:
     needs: [
-      build-artifacts,
       valgrind
     ]
     runs-on: ubuntu-24.04
