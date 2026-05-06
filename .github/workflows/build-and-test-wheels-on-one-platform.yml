@@ -68,6 +68,7 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
+      # Used upstream by the dev workflow to disable testing for macos x86
       test-macos-x86:
         type: boolean
         required: false
