@@ -27,7 +27,7 @@ jobs:
           "macosx_arm64"
         ]
       # Need all the artifacts to run all the stage tests, so fail fast
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
     secrets: inherit

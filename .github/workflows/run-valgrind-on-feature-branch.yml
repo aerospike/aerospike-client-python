@@ -99,7 +99,7 @@ jobs:
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
     if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       python-version: "${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}"
       platform-tag: manylinux_x86_64
