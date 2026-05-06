@@ -13,7 +13,7 @@ on:
         required: false
         default: false
         type: boolean
-        description: Don't create release bundle
+        description: Don't publish JFrog build info or create a JFrog build + release bundle
       run_tests:
         required: false
         default: false
@@ -33,7 +33,7 @@ jobs:
     with:
       run_tests: true
       test-macos-x86: false
-      publish-build-info: true
+      publish-build-info: ${{ inputs.dry-run == false }}
     permissions:
       contents: read
       # For shared reusable workflows
