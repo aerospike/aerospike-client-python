@@ -73,6 +73,7 @@ on:
         type: boolean
         required: false
         default: true
+      # Used upstream by dev workflow
       publish-build-info:
         required: false
         default: false
