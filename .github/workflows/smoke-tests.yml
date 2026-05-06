@@ -511,7 +511,7 @@ jobs:
     - run: python3 -m pip install *.whl
 
     - if: ${{ startsWith(matrix.test-script-args, 'true') }}
-      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@48edf9ff59ab4da5f15915b22d8895f19ce7fd55
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@1004088a1b5122b9b71a39b40f619f6b50e78d16
       with:
         enable-security: "true"
         num-nodes: 1
