@@ -45,10 +45,6 @@ on:
 
   workflow_call:
     secrets:
-      DOCKER_HUB_BOT_USERNAME:
-        required: true
-      DOCKER_HUB_BOT_PW:
-        required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
     # A calling workflow doesn't actually set values to the inputs below
