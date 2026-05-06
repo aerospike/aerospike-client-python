@@ -14,9 +14,8 @@ on:
         default: ""
         type: string
       server-tag:
-        required: false
+        required: true
         description: Server tag
-        default: latest
         type: string
       massif:
         type: boolean

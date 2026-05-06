@@ -62,7 +62,6 @@ on:
       server-tag:
         type: string
         required: true
-        default: 'latest'
         description: 'Server docker image tag'
       test-file:
         type: string

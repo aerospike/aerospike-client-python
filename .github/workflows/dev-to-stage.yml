@@ -6,7 +6,6 @@ on:
     inputs:
       server-tag:
         required: true
-        default: 'latest'
         description: 'Server docker image tag'
       # For debugging
       dry-run:
