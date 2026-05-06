@@ -46,6 +46,9 @@ jobs:
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
       with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
 
     - run: sudo apt-get update
