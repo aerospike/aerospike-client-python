@@ -1,4 +1,4 @@
-name: Test wheel inside container
+name: (Optionally build and) test wheel inside container
 
 on:
   workflow_call:
@@ -12,6 +12,11 @@ on:
       python-version:
         required: true
         type: string
+      build-from-source:
+        required: true
+        default: false
+        description: 'If false, download wheel artifact from Github'
+        type: boolean
 
 jobs:
   test-wheel:
@@ -26,6 +31,10 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        sparse-checkout: |
+          test
+          .github
 
     - run: docker run -d --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
 
@@ -35,7 +44,7 @@ jobs:
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-        where-is-client-connecting-from: 'docker-container'
+        where-is-client-connecting-from: 'separate-docker-container'
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
@@ -44,6 +53,25 @@ jobs:
 
     - name: Copy repo and wheel into container
       run: docker cp ../$REPO_DIR_NAME $CONTAINER_NAME:/
+
+    - name: 'DNF based distros: install python3'
+      if: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
+      run: docker exec "$CONTAINER_NAME" dnf install -y python3.11
+
+    - name: 'Cat 1: Install build dependencies'
+      # Here we assume all cat 1 tests are running on a dnf-based. distro
+      run: |
+        docker exec "$CONTAINER_NAME" dnf install -y libyaml-devel \
+          openssl-devel \
+          glibc-devel \
+          autoconf \
+          automake \
+          libtool \
+          zlib-devel \
+          openssl-devel \
+          python3.11-devel
+        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m pip install -r requirements.txt
+        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m build
 
     - name: Install wheel
       run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m pip install *.whl
