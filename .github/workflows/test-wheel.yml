@@ -8,6 +8,10 @@ on:
       python-version:
         required: true
         type: string
+      test-ce:
+        type: boolean
+        required: false
+        default: false
       server-tag:
         required: true
         type: string
@@ -91,7 +95,20 @@ jobs:
       if: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/run-ee-server
+    - if: ${{ inputs.test-ce }}
+      name: Run CE server
+      run: |
+        docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
+        cp config.conf.template config.conf
+      working-directory: test
+
+    - if: ${{ inputs.test-ce }}
+      uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
+
+    - if: ${{ inputs.test-ce == false }}
+      uses: ./.github/actions/run-ee-server
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
