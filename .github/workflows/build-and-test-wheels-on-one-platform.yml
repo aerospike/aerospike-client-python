@@ -161,6 +161,6 @@ jobs:
         python-version: ${{ fromJSON(inputs.python-versions) }}
     with:
       python-version: ${{ matrix.python-version }}
-      container-image-name: quay.io/pypa/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
+      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
       cpu-arch: ${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
       server-tag: ${{ inputs.server-tag }}
