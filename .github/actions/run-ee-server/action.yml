@@ -1,5 +1,5 @@
-name: 'Run EE Server in a Docker container'
-description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+name: 'Run EE server'
+description: 'Run EE Server in a Docker container with SC, security, and mutual TLS enabled. Also configure python client dev tests'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
 outputs:

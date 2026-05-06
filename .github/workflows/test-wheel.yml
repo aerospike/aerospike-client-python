@@ -85,9 +85,8 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        registry-name: ${{ inputs.registry-name }}
-        registry-username: ${{ inputs.registry-username }}
-        registry-password: ${{ inputs.registry-password }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
