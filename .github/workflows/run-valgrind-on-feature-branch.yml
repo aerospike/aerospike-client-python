@@ -13,16 +13,6 @@ on:
         required: false
         default: ""
         type: string
-      registry-name:
-        type: string
-        required: false
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: false
         description: Server tag
@@ -135,8 +125,6 @@ jobs:
     with:
       python-version: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}
       massif: ${{ inputs.massif }}
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
     secrets: inherit
 

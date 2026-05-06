@@ -4,17 +4,6 @@ run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dr
 on:
   workflow_dispatch:
     inputs:
-      # These inputs are in case we need to test against a QE build
-      registry-name:
-        type: string
-        required: true
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: true
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: true
@@ -56,8 +45,6 @@ jobs:
     needs: build-artifacts
     uses: ./.github/workflows/valgrind.yml
     with:
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
     secrets: inherit
     permissions:
