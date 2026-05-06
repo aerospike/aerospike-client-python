@@ -37,10 +37,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-  - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
-    name: 'Cat 1: Get Github artifact name for source distribution'
-    run: echo "GITHUB_ARTIFACT_NAME=${{ inputs.gh_artifact_name_prefix }}-sdist" >> $GITHUB_ENV
-    shell: bash
 
   # If getting a wheel from Github, construct artifact name containing that wheel
   # The artifact name is the build identifier used in cibuildwheel to build that wheel
@@ -51,15 +47,6 @@ runs:
     # example: 3.9 -> cp39
     run: echo "PYTHON_TAG=cp$(echo ${{ inputs.wheel_python_version }} | tr -d '.')" >> $GITHUB_ENV
     shell: bash
-
-  - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
-    run: echo "GITHUB_ARTIFACT_NAME=${{ inputs.wheel_python_version }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}" >> $GITHUB_ENV
-    shell: bash
-
-  - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-    if: ${{ inputs.get_from_jfrog == 'false' }}
-    with:
-      name: ${{ env.GITHUB_ARTIFACT_NAME }}
 
   # Either way when we download from JFrog or Github,
   # we need the file name pattern to install the artifact using pip later on
@@ -76,15 +63,6 @@ runs:
 
   # End codepath that downloads artifacts from Github
   # Begin codepath that downloads from JFrog
-
-  - if: ${{ inputs.get_from_jfrog == 'true' }}
-    uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-    env:
-      JF_URL: ${{ inputs.jfrog-platform-url }}
-      JF_PROJECT: ${{ inputs.jfrog-project }}
-    with:
-      oidc-provider-name: ${{ inputs.jfrog-oidc-provider-name }}
-      oidc-audience: ${{ inputs.jfrog-oidc-audience }}
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
