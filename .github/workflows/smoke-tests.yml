@@ -362,7 +362,7 @@ jobs:
     - run: python3 -m pip install *.whl
 
     - if: ${{ startsWith(matrix.test-script-args, 'true') }}
-      id: run-ee-server
+      id: setup-aerospike-ee-server
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@1004088a1b5122b9b71a39b40f619f6b50e78d16
       with:
         enable-security: "true"
@@ -388,4 +388,4 @@ jobs:
       run: |
         docker logs "$CONTAINER_NAME"
       env:
-        CONTAINER_NAME: ${{ steps.run-ee-server.outcome == 'success' && steps.run-ee-server.outputs.container-name || env.CE_CONTAINER_NAME }}
+        CONTAINER_NAME: ${{ steps.setup-aerospike-ee-server.outcome == 'success' && steps.setup-aerospike-ee-server.outputs.container-names || env.CE_CONTAINER_NAME }}
