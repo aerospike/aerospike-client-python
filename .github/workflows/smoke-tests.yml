@@ -278,7 +278,7 @@ jobs:
     ]
     strategy:
       matrix:
-        py-version: ${{ needs.build.outputs.python-versions }}
+        py-version: ${{ fromJson(needs.build.outputs.python-versions) }}
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
