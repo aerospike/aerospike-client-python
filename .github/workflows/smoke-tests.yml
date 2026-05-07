@@ -266,6 +266,7 @@ jobs:
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
       env-vars: ${{ matrix.type == 'dont_validate_keys' && 'DONT_VALIDATE_KEYS=1' || '' }}
+    secrets: inherit
 
   test-ce:
     needs: [
@@ -300,6 +301,7 @@ jobs:
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-file: 'test_{mrt_functionality,admin_*,compress}.py'
+    secrets: inherit
 
   test-metrics:
     needs: build
