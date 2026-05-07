@@ -25,7 +25,7 @@ on:
       test-file:
         required: false
         type: string
-        default: 'Only used if running integration tests'
+        description: 'Only used if running integration tests'
       env-vars:
         required: false
         type: string
