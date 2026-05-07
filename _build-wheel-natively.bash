@@ -73,7 +73,12 @@ PYTHON_VERSION="${1:-3}"
 
 REQUIREMENTS_TXT=requirements.txt
 "python${PYTHON_VERSION}" -m pip install build -c "$REQUIREMENTS_TXT"
-"python${PYTHON_VERSION}" -m build --wheel
+
+if [[ -n "$SKIP_REPAIR_WHEEL" ]]; then
+    FLAGS_FOR_CUSTOM_DEST_FOLDER="-o ./wheelhouse"
+fi
+# shellcheck disable=SC2086
+"python${PYTHON_VERSION}" -m build --wheel $FLAGS_FOR_CUSTOM_DEST_FOLDER
 
 REPAIRED_WHEEL_DIR=wheelhouse
 
