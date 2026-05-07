@@ -1250,11 +1250,11 @@ List Sort Flags
 
 Flags used by list sort.
 
-.. data:: aerospike.LIST_SORT_DEFAULT
+.. data:: LIST_SORT_DEFAULT
 
     Default. Preserve duplicates when sorting the list.
 
-.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+.. data:: LIST_SORT_DROP_DUPLICATES
 
     Drop duplicate values when sorting the list.
 
