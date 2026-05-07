@@ -242,11 +242,10 @@ jobs:
     needs: get-env-vars
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
-      runner-os: ubuntu-22.04
       python-versions: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      platform-tag: linux_x86_64
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-      test-metadata: ${{ matrix.type }}
       env-vars: SANITIZER=1
 
   test-full-suite:
@@ -265,7 +264,7 @@ jobs:
       runner-os: ubuntu-22.04
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
-      test-metadata: ${{ matrix.type }}
+      env-vars: ${{ matrix.type == 'dont_validate_keys' && 'DONT_VALIDATE_KEYS=1' || '' }}
 
   test-ce:
     needs: [
