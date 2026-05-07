@@ -32,7 +32,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@1004088a1b5122b9b71a39b40f619f6b50e78d16
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@jnguyen-tmp-debug-setup-aerospike-server
     id: setup-as-server
     with:
       enable-security: "true"
