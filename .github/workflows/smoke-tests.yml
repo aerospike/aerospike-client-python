@@ -248,7 +248,7 @@ jobs:
       platform-tag: linux_x86_64
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-      env-vars: SANITIZER=1
+      env-vars: SANITIZER=1;SKIP_REPAIR_WHEEL=1
 
   test-full-suite:
     needs: [
