@@ -69,7 +69,8 @@ jobs:
     - run: |
         sudo apt-get update
         sudo apt-get install -y python3-dbg
-        echo PYTHON_BINARY="${PYTHON_BINARY}-dbg" >> $GITHUB_ENV
+        PYTHON_BINARY=python3-dbg
+        echo PYTHON_BINARY="$PYTHON_BINARY" >> $GITHUB_ENV
 
         "$PYTHON_BINARY" -m pip install build -c requirements.txt
         "$PYTHON_BINARY" -m build
