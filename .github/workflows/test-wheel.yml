@@ -8,13 +8,17 @@ on:
       python-version:
         required: true
         type: string
+      server-tag:
+        required: true
+        type: string
+      run-integration-tests:
+        type: boolean
+        required: false
+        default: true
       test-ce:
         type: boolean
         required: false
         default: false
-      server-tag:
-        required: true
-        type: string
       test-file:
         required: false
         type: string
@@ -81,33 +85,34 @@ jobs:
       run: pip install *.whl
       shell: bash
 
-    - run: pip install -r requirements.txt
+    - if: ${{ inputs.run-integration-tests }}
+      run: pip install -r requirements.txt
       working-directory: test
       shell: bash
 
     # Need to be able to save Docker Hub credentials to keychain
     # Unable to do this via the ansible script for self hosted mac m1 runners
-    - if: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'macosx_arm64' }}
+    - if: ${{ inputs.run-integration-tests && env.PLATFORM_TAG_GLOB_PATTERN == 'macosx_arm64' }}
       run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
       shell: bash
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'macosx_x86_64' }}
+      if: ${{ inputs.run-integration-tests && env.PLATFORM_TAG_GLOB_PATTERN == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - if: ${{ inputs.test-ce }}
+    - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       name: Run CE server
       run: |
         docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
         cp config.conf.template config.conf
       working-directory: test
 
-    - if: ${{ inputs.test-ce }}
+    - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
-    - if: ${{ inputs.test-ce == false }}
+    - if: ${{ inputs.run-integration-tests && inputs.test-ce == false }}
       uses: ./.github/actions/run-ee-server
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
@@ -128,12 +133,17 @@ jobs:
 
     # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
     # There's no way to tell unless we see the logs
-    - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }} -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
+    - if: ${{ inputs.run-integration-tests }}
+      run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }} -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
       working-directory: test
       shell: bash
 
+    - if: ${{ inputs.run-integration-tests == false }}
+      run: python3 -c "import aerospike"
+      shell: bash
+
     - name: Show server logs to debug test results
-      if: ${{ always() }}
+      if: ${{ always() && inputs.run-integration-tests }}
       run: docker logs aerospike
       shell: bash
 

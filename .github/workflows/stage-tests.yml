@@ -12,19 +12,6 @@ permissions:
 on:
   workflow_call:
     inputs:
-      # TODO: make simpler by just making a single job that downloads all the artifacts from jfrog and reuploads them
-      # as github artifacts with the same naming schema as used in the shared workflows
-      use_jfrog_builds:
-        description: If false, download artifacts from Github
-        required: true
-        type: boolean
-        default: true
-      jfrog-build-version-to-test:
-        description: Used only when use_jfrog_builds is true.
-        type: string
-        required: false
-      # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
-      # If use_jfrog_builds is true, only the defaults will be used
       python-versions-to-test:
         required: true
         type: string
@@ -37,21 +24,15 @@ on:
         default: ''
         type: string
         description: 'new_tests/<value>'
+      # Set to false by the upstream stage workflow
       test-macos-x86:
         required: false
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
 
-env:
-  # We set env vars here for the composite action to access automatically
-  # without needing to use inputs in the composite action.
-  JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_BUILD_NAME }}
-  JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
-
 jobs:
   # Cat 2 tests
-  # TODO: missing steps from old code to set up python (I think)
   linux-distro-wheel-tests:
     strategy:
       matrix:
@@ -95,7 +76,6 @@ jobs:
       server-tag: ${{ inputs.server-tag }}
 
   macOS:
-    if: ${{ inputs.test-macos-x86 }}
     strategy:
       matrix:
         runner-os: [
@@ -112,3 +92,4 @@ jobs:
       runner-os: ${{ matrix.runner-os }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
+      run-integration-tests: false
