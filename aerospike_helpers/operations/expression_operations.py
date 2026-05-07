@@ -86,8 +86,8 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
         bin_name (str): The name of the bin to write to.
         expression: A compiled Aerospike expression, see :ref:`aerospike_operation_helpers.expressions`.
         expression_write_flags (int): :ref:`aerospike_expression_write_flags` such as
-        :py:data:`aerospike.EXP_WRITE_UPDATE_ONLY` | :py:data:`aerospike.EXP_WRITE_POLICY_NO_FAIL`
-        (default :py:data:`aerospike.EXP_WRITE_DEFAULT`).
+            :py:data:`aerospike.EXP_WRITE_UPDATE_ONLY` | :py:data:`aerospike.EXP_WRITE_POLICY_NO_FAIL`
+            (default :py:data:`aerospike.EXP_WRITE_DEFAULT`).
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
