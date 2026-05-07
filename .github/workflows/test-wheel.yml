@@ -11,6 +11,7 @@ on:
       server-tag:
         required: true
         type: string
+        description: 'Only used if running integration tests'
       run-integration-tests:
         type: boolean
         required: false
@@ -20,11 +21,11 @@ on:
         type: boolean
         required: false
         default: false
-        description: 'If false, run EE server'
+        description: 'Only used if running integration tests. If false, run EE server'
       test-file:
         required: false
         type: string
-        default: ''
+        default: 'Only used if running integration tests'
       env-vars:
         required: false
         type: string
