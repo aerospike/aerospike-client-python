@@ -3,13 +3,10 @@ permissions:
   contents: read
   id-token: write
 
-# Trigger test workflow whenever:
-# 1. A pull request is updated (e.g with new commits)
-# 2. Commits are pushed directly to the dev, stage or master branch
 on:
+  # Using push instead of pull_request so that commits with no applicable code changes will not trigger a rebuild
+  # This saves compute cost
   push:
-  #   branches: ["dev*", "stage*", "master*", "v*-backport*"]
-  # pull_request:
     paths-ignore:
       # Only doc related changes
       - doc/**/*
