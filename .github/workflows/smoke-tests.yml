@@ -244,7 +244,7 @@ jobs:
     needs: get-env-vars
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
-      python-versions: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      python-versions: '["${{ needs.get-env-vars.outputs.lowest-supported-python-version }}"]'
       platform-tag: linux_x86_64
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
