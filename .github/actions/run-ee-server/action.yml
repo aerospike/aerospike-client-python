@@ -43,7 +43,7 @@ runs:
       oidc-provider: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}
       server-tag: ${{ inputs.server-tag }}
-      env-vars: DEFAULT_TTL=2592000\;
+      env-vars: DEFAULT_TTL=2592000;
 
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
