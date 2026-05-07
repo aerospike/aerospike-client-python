@@ -46,6 +46,7 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

@@ -117,6 +117,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ env.PLATFORM_TAG_GLOB_PATTERN == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
