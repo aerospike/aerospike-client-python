@@ -140,8 +140,6 @@ Types
     A type for distinguishing a server-side null from a Python :py:obj:`None`.
     Replaces the constant ``aerospike.null``.
 
-    .. Needs cross reference to server docs
-
     :return: a type representing the server-side type ``as_null``.
 
     .. versionadded:: 2.0.1
