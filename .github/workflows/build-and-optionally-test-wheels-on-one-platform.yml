@@ -77,6 +77,8 @@ on:
     outputs:
       runner-os-used-for-build:
         value: ${{ jobs.get-build-runner-os.outputs.runner-os }}
+      python-versions:
+        value: ${{ inputs.python-versions }}
     inputs: *inputs
     secrets:
       FEATURES_CONTENT:
