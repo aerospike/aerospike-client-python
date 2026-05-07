@@ -68,8 +68,8 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
-      # Used upstream by the dev workflow to disable testing for macos x86
-      test-macos-x86:
+      # Used upstream by the dev workflow to disable integration testing for macos x86
+      run-integration-tests-on-macos-x86:
         type: boolean
         required: false
         default: true
@@ -134,7 +134,7 @@ jobs:
       build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
 
   test-wheel:
-    if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') && (inputs.platform-tag != 'macosx_x86_64' || inputs.test-macos-x86 == true) }}
+    if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') }}
     needs: [
       build-wheel
     ]
@@ -148,6 +148,7 @@ jobs:
       runner-os: ${{ inputs.platform-tag == 'macosx_x86_64' && 'macos-14-large' || (inputs.platform-tag == 'macosx_arm64' && fromJson('["self-hosted", "macOS", "ARM64"]') || fromJson('["self-hosted", "Windows", "X64"]')) }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
+      run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
 
   test-manylinux-wheel:
     if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}

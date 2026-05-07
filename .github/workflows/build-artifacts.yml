@@ -38,10 +38,11 @@ on:
         type: string
         default: ''
         description: 'new_tests/<value>'
-      test-macos-x86:
+      run-integration-tests-on-macos-x86:
         required: false
         default: true
         type: boolean
+        description: 'If false, only run import test'
       publish-build-info:
         required: false
         default: false
@@ -78,6 +79,6 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
-      test-macos-x86: ${{ inputs.test-macos-x86 }}
+      run-integration-tests-on-macos-x86: ${{ inputs.run-integration-tests-on-macos-x86 }}
       publish-build-info: ${{ inputs.publish-build-info }}
     secrets: inherit

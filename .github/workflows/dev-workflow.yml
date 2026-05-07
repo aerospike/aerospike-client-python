@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: true
-      test-macos-x86: false
+      run-integration-tests-on-macos-x86: false
       publish-build-info: ${{ inputs.dry-run == false }}
     permissions:
       contents: read

@@ -47,4 +47,4 @@ jobs:
     with:
       use_jfrog_builds: false
       server-tag: ${{ inputs.server-tag }}
-      test-macos-x86: true
+      run-integration-tests-on-macos-x86: true

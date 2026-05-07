@@ -25,11 +25,10 @@ on:
         type: string
         description: 'new_tests/<value>'
       # Set to false by the upstream stage workflow
-      test-macos-x86:
+      run-integration-tests-on-macos-x86:
         required: false
         type: boolean
         default: false
-        description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
   # Cat 2 tests
