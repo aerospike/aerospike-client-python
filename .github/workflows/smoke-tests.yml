@@ -314,6 +314,7 @@ jobs:
       runner-os: ubuntu-22.04
       python-version: ${{ matrix.py-version }}
       server-tag: ${{ needs.build.outputs.server_tag }}
+      test-ce: true
 
   test-ee:
     needs: build
