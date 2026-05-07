@@ -329,7 +329,10 @@ jobs:
 
   # This is an e2e test to check that the user agent was sent correctly to the server
   test-user-agent:
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       fail-fast: false
       matrix:
@@ -361,7 +364,7 @@ jobs:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        server-tag: "8.0"
+        server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
