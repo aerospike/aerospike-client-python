@@ -81,7 +81,7 @@ jobs:
         runner-os: [
           # These larger runners run on intel
           # TODO: check if there's a regular size runner for x86
-          "macos-15-large",
+          "macos-15-intel",
           # arm64, since x86 not avaiable as Github hosted runner
           "macos-26"
         ]
