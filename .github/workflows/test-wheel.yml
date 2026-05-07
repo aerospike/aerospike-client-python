@@ -69,7 +69,7 @@ jobs:
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-    - run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-*linux*x86_64* >> $GITHUB_ENV
+    - run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-*linux*x86_64 >> $GITHUB_ENV
 
     - if: ${{ inputs.test-metadata == 'sanitizer' }}
       run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=$GH_ARTIFACT_PATTERN_FOR_WHEEL-sanitizer >> $GITHUB_ENV
