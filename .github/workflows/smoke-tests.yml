@@ -45,9 +45,11 @@ jobs:
       run: echo 1
 
   build:
+    needs: get-env-vars
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       platform-tag: linux_x86_64
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
     secrets: inherit
 
   build-and-test-using-debug-interpreter:
