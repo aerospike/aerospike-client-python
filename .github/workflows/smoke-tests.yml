@@ -211,7 +211,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -309,7 +309,7 @@ jobs:
         - ext_metrics_node_close_listener
         - ext_metrics_cluster_name
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -340,7 +340,7 @@ jobs:
           - "false"
           - "true"
           - "true my_app_id"
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0

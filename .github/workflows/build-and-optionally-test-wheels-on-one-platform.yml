@@ -74,6 +74,9 @@ on:
         type: boolean
 
   workflow_call:
+    outputs:
+      runner-os-used-for-build:
+        value: ${{ jobs.get-build-runner-os.outputs.runner-os }}
     inputs: *inputs
 
 jobs:
