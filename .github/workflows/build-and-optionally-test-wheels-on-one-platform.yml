@@ -122,6 +122,8 @@ jobs:
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
       build-script-path: ./build-wheel.bash
+      # Same as default folder where source repo is cloned
+      working-directory: local
       setup-python: true
       python-version: ${{ matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
