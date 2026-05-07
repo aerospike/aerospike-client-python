@@ -39,6 +39,8 @@ on:
 jobs:
   test-wheel:
     runs-on: ${{ inputs.runner-os }}
+    env:
+      CE_CONTAINER_NAME: aerospike
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -106,16 +108,17 @@ jobs:
     - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       name: Run CE server
       run: |
-        docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
+        docker run -d --name "$CE_CONTAINER_NAME" -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
         cp config.conf.template config.conf
       working-directory: test
 
     - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       uses: ./.github/actions/wait-for-ce-server-to-start
       with:
-        container-name: aerospike
+        container-name: ${{ env.CE_CONTAINER_NAME }}
 
     - if: ${{ inputs.run-integration-tests && inputs.test-ce == false }}
+      id: run-ee-server
       uses: ./.github/actions/run-ee-server
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
@@ -148,8 +151,10 @@ jobs:
 
     - name: Show server logs to debug test results
       if: ${{ always() && inputs.run-integration-tests }}
-      run: docker logs aerospike
+      run: docker logs "$CONTAINER_NAME"
       shell: bash
+      env:
+        CONTAINER_NAME: ${{ steps.run-ee-server.outcome == 'success' && steps.run-ee-server.outputs.container-name || env.CE_CONTAINER_NAME }}
 
     - name: Show job status for commit
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
