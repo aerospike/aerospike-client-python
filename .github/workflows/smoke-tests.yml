@@ -34,68 +34,23 @@ env:
   SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1' }}
 
 jobs:
-  build:
+  # For reusable workflows to access env.SERVER_TAG
+  get-env-vars:
     outputs:
-      server_tag: ${{ steps.get_server_tag.outputs.server_tag }}
-      lowest_supported_python_version: ${{ matrix.py-version[0] }}
+      lowest-supported-python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+      server-tag: ${{ env.SERVER_TAG }}
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        # Make sure we can build and run tests on an instrumented build that uses libasan
-        # We aren't necessarily checking for memory errors / leaks in this test
-        sanitizer: [false]
-        include:
-        - py-version: '3.10'
-          sanitizer: true
-      fail-fast: false
-
     steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
+    - name: no-op
+      run: echo 1
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-        fetch-depth: 0
+  build:
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      platform-tag: linux_x86_64
+    secrets: inherit
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
-        allow-prereleases: true
-
-    - run: sudo apt-get update
-    - name: Install build dependencies (apt packages)
-      run: sudo apt-get install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install -r requirements.txt
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo SANITIZER=1 >> $GITHUB_ENV
-
-    - name: Build client
-      run: python3 -m build
-      env:
-        CFLAGS: '-Werror'
-
-    - run: echo GH_ARTIFACT_NAME_FOR_WHEEL=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.py-version }}-linux_x86_64 >> $GITHUB_ENV
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo GH_ARTIFACT_NAME_FOR_WHEEL=$GH_ARTIFACT_NAME_FOR_WHEEL-sanitizer >> $GITHUB_ENV
-
-    - name: Send wheel to test jobs
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: ${{ env.GH_ARTIFACT_NAME_FOR_WHEEL }}
-        path: ./dist/*.whl
-
-    - id: get_server_tag
-      run: echo server_tag=${{ env.SERVER_TAG }} >> $GITHUB_OUTPUT
-
-  build-and-run-tests-with-debug-interpreter:
+  build-and-test-using-debug-interpreter:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -111,13 +66,11 @@ jobs:
     - run: |
         sudo apt-get update
         sudo apt-get install -y python3-dbg
-        # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
-        python3-dbg -m pip install build -c requirements.txt
-        python3-dbg -m build
-        python3-dbg -m pip install dist/*.whl
+        echo PYTHON_BINARY="${PYTHON_BINARY}-dbg" >> $GITHUB_ENV
 
-    - run: python3-dbg -m pip install pytest -c requirements.txt
-      working-directory: test
+        "$PYTHON_BINARY" -m pip install build -c requirements.txt
+        "$PYTHON_BINARY" -m build
+        "$PYTHON_BINARY" -m pip install dist/*.whl
 
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
@@ -127,7 +80,9 @@ jobs:
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
-    - run: python3-dbg -m pytest ./new_tests
+    - run: |
+        "$PYTHON_BINARY" -m pip install pytest -c requirements.txt
+        "$PYTHON_BINARY" -m pytest ./new_tests
       working-directory: test
 
   generate-coverage-report:
@@ -281,24 +236,40 @@ jobs:
 
     - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
 
+  test-sanitizer:
+    needs: get-env-vars
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      runner-os: ubuntu-22.04
+      python-versions: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      run_tests: true
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      test-metadata: ${{ matrix.type }}
+      env-vars: SANITIZER=1
+
   test-full-suite:
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       matrix:
         type:
-          - sanitizer
           - dont_validate_keys
           - lowest_supported_server_version
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
       runner-os: ubuntu-22.04
-      python-version: ${{ needs.build.outputs.lowest_supported_python_version }}
-      server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || needs.build.outputs.server_tag }}
+      python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
       test-metadata: ${{ matrix.type }}
 
   test-ce:
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       matrix:
         py-version: [
@@ -313,16 +284,19 @@ jobs:
     with:
       runner-os: ubuntu-22.04
       python-version: ${{ matrix.py-version }}
-      server-tag: ${{ needs.build.outputs.server_tag }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-ce: true
 
   test-ee:
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     uses: ./.github/workflows/test-wheel.yml
     with:
       runner-os: ubuntu-22.04
-      python-version: '3.13'
-      server-tag: ${{ needs.build.outputs.server_tag }}
+      python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-file: 'test_{mrt_functionality,admin_*,compress}.py'
 
   test-metrics:

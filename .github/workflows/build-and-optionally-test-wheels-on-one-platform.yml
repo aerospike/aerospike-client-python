@@ -36,6 +36,7 @@ on:
         # One of these values:
         # - manylinux_x86_64
         # - manylinux_aarch64
+        # - linux_x86_64
         # - macosx_x86_64
         # - macosx_arm64
         # - win_amd64
@@ -43,17 +44,10 @@ on:
         type: string
         required: true
         default: manylinux_x86_64
-      unoptimized:
-        description: 'macOS or Linux: Apply -O0 flag?'
-        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        description: 'macOS: Build wheels for debugging?'
-        type: boolean
-        required: false
-        default: false
+      env-vars:
+        description: Used for building wheels
+        type: string
+        default: ''
       run_tests:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
@@ -100,6 +94,7 @@ jobs:
       # Single source of truth for which runner OS to use for each platform tag
       run: |
         declare -A hashmap
+        hashmap[linux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
         hashmap[macosx_x86_64]="macos-14-large"
@@ -127,11 +122,11 @@ jobs:
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-      build-script-path: ./build-prod-wheel.bash
+      build-script-path: ./build-wheel.bash
       setup-python: true
       python-version: ${{ matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
-      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}"
+      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};${{ inputs.env-vars }}"
 
   test-wheel:
     if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') }}

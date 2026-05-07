@@ -6,11 +6,9 @@ set -x
 abs_path_for_this_file=$(realpath "${BASH_SOURCE[0]}")
 dir_containing_this_file=$(dirname "$abs_path_for_this_file")
 
-helper_script=_build-prod-wheel-natively.bash
+helper_script=_build-wheel-natively.bash
 
-os=$(uname -s)
-
-if [[ ! "$os" =~ Linux* ]]; then
+if [[ "$BUILD_MANYLINUX_WHEEL" == "false" ]]; then
     # Build wheel natively
     "$dir_containing_this_file/${helper_script}"
     exit 0
