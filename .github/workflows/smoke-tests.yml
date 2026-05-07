@@ -335,6 +335,8 @@ jobs:
       build,
       get-env-vars
     ]
+    env:
+      CE_CONTAINER_NAME: aerospike
     strategy:
       fail-fast: false
       matrix:
@@ -360,6 +362,7 @@ jobs:
     - run: python3 -m pip install *.whl
 
     - if: ${{ startsWith(matrix.test-script-args, 'true') }}
+      id: run-ee-server
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@1004088a1b5122b9b71a39b40f619f6b50e78d16
       with:
         enable-security: "true"
@@ -369,12 +372,12 @@ jobs:
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
+      run: docker run -d -p 3000:3000 --name "$CE_CONTAINER_NAME" -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       uses: ./.github/actions/wait-for-ce-server-to-start
       with:
-        container-name: aerospike
+        container-name: ${{ env.CE_CONTAINER_NAME }}
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
@@ -382,4 +385,7 @@ jobs:
       working-directory: test/standalone
 
     - if: ${{ !cancelled() }}
-      run: docker logs aerospike
+      run: |
+        docker logs "$CONTAINER_NAME"
+      env:
+        CONTAINER_NAME: ${{ steps.run-ee-server.outcome == 'success' && steps.run-ee-server.outputs.container-name || env.CE_CONTAINER_NAME }}
