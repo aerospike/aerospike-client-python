@@ -90,4 +90,4 @@ jobs:
       runner-os: ${{ matrix.runner-os }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
-      run-integration-tests: false
+      run-integration-tests: ${{ matrix.runner-os == 'macos-15-intel' && inputs.run-integration-tests-on-macos-x86 }}
