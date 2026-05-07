@@ -20,6 +20,7 @@ on:
         type: boolean
         required: false
         default: false
+        description: 'If false, run EE server'
       test-file:
         required: false
         type: string
