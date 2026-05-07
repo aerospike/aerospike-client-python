@@ -105,7 +105,7 @@ jobs:
     - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       name: Run CE server
       run: |
-        docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
+        docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
         cp config.conf.template config.conf
       working-directory: test
 
