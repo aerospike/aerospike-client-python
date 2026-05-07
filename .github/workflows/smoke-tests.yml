@@ -32,6 +32,7 @@ env:
   # pull_request event doesn't support inputs
   # Our JFrog docker repo doesn't automatically update the latest tag, so we can't use it (it currently points to an old nightly build)
   SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1' }}
+  PLATFORM_TAG: linux_x86_64
 
 jobs:
   # For reusable workflows to access env.SERVER_TAG
@@ -39,6 +40,7 @@ jobs:
     outputs:
       lowest-supported-python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
       server-tag: ${{ env.SERVER_TAG }}
+      platform-tag: ${{ env.PLATFORM_TAG }}
     runs-on: ubuntu-22.04
     steps:
     - name: no-op
@@ -48,7 +50,7 @@ jobs:
     needs: get-env-vars
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
-      platform-tag: linux_x86_64
+      platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       env-vars: SKIP_REPAIR_WHEEL=1
     secrets: inherit
@@ -230,7 +232,7 @@ jobs:
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-*linux*x86_64*
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
 
     - name: Install client
       run: pip install *.whl
@@ -245,7 +247,7 @@ jobs:
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       python-versions: '["${{ needs.get-env-vars.outputs.lowest-supported-python-version }}"]'
-      platform-tag: linux_x86_64
+      platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       env-vars: SANITIZER=1;SKIP_REPAIR_WHEEL=1
@@ -320,7 +322,7 @@ jobs:
         architecture: 'x64'
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-*linux*x86_64*
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
@@ -354,7 +356,7 @@ jobs:
         architecture: 'x64'
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-*linux*x86_64*
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
     - run: python3 -m pip install *.whl
 
     - if: ${{ startsWith(matrix.test-script-args, 'true') }}
