@@ -77,6 +77,10 @@ REQUIREMENTS_TXT=requirements.txt
 
 REPAIRED_WHEEL_DIR=wheelhouse
 
+if [[ -n "$SKIP_REPAIR_WHEEL" ]]; then
+    exit 0
+fi
+
 unrepaired_wheel_path=$(find dist/ -type f -name '*.whl' | head -n 1)
 if [[ $os =~ Linux* ]]; then
     if [[ "$VERIFY_REPAIR" != "" ]]; then
