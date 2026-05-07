@@ -43,7 +43,8 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
         bin_name (str): The name of the bin to read from. Even if no bin is being read from, the value will be returned
             with this bin name.
         expression: A compiled Aerospike expression, see :ref:`aerospike_operation_helpers.expressions`.
-        expression_read_flags (int): :ref:`aerospike_expression_read_flags` (default ``aerospike.EXP_READ_DEFAULT``)
+        expression_read_flags (int): :ref:`aerospike_expression_read_flags`
+            (default :py:data:`aerospike.EXP_READ_DEFAULT`)
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
@@ -84,8 +85,9 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
     Args:
         bin_name (str): The name of the bin to write to.
         expression: A compiled Aerospike expression, see :ref:`aerospike_operation_helpers.expressions`.
-        expression_write_flags (int): :ref:`aerospike_expression_write_flags` such as ``aerospike.EXP_WRITE_UPDATE_ONLY
-            | aerospike.EXP_WRITE_POLICY_NO_FAIL``   (default ``aerospike.EXP_WRITE_DEFAULT``).
+        expression_write_flags (int): :ref:`aerospike_expression_write_flags` such as
+        :py:data:`aerospike.EXP_WRITE_UPDATE_ONLY` | :py:data:`aerospike.EXP_WRITE_POLICY_NO_FAIL`
+        (default :py:data:`aerospike.EXP_WRITE_DEFAULT`).
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
