@@ -20,6 +20,9 @@ on:
       server-tag:
         required: true
         type: string
+    secrets:
+      FEATURES_CONTENT:
+        required: true
 
 jobs:
   test-wheel:
