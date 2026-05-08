@@ -12,6 +12,9 @@ on:
       server-tag:
         type: string
         required: true
+      test-file:
+        required: false
+        type: string
 
 jobs:
   valgrind:
