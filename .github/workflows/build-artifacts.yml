@@ -31,7 +31,7 @@ on:
         default: false
       server-tag:
         type: string
-        required: true
+        required: false
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
         required: false
@@ -51,7 +51,7 @@ on:
   workflow_call:
     secrets:
       MAC_M1_SELF_HOSTED_RUNNER_PW:
-        required: true
+        required: false
     # A calling workflow doesn't actually set values to the inputs below
     # But that workflow needs to have default values for these inputs
     inputs: *inputs
