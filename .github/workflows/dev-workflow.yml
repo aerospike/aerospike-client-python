@@ -16,7 +16,7 @@ on:
         description: Don't publish JFrog build info or create a JFrog build + release bundle
       run_tests:
         required: false
-        default: false
+        default: true
         type: boolean
         description: Run dev tests. For speeding up debugging
       test-file:
