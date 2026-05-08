@@ -38,8 +38,9 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+        :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+        containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -126,7 +127,7 @@ class Read(BatchRecord):
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
             meta (dict): the metadata to set for this command
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
+            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
 

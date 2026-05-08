@@ -206,7 +206,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
-        [_AS_EXP_CODE_RESULT_REMOVE] = EXP_SZ(as_exp_result_remove()),
+        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_result_remove()),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
@@ -251,6 +251,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_GET_BY_INDEX] =
             EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, NIL, NIL)),
         [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, NIL)),
+        [_AS_EXP_CODE_IN_LIST] = EXP_SZ(as_exp_in_list(NIL, NIL)),
         [OP_LIST_GET_BY_VALUE] =
             EXP_SZ(as_exp_list_get_by_value(NULL, 0, NIL, NIL)),
         [OP_LIST_GET_BY_VALUE_RANGE] =
@@ -350,6 +351,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, NIL)),
         [OP_MAP_GET_BY_KEY] =
             EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, NIL, NIL)),
+        [_AS_EXP_CODE_MAP_KEYS] = EXP_SZ(as_exp_map_keys(NIL)),
+        [_AS_EXP_CODE_MAP_VALUES] = EXP_SZ(as_exp_map_values(NIL)),
+        [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, NIL)),
         [OP_MAP_GET_BY_KEY_RANGE] =
             EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_GET_BY_KEY_LIST] =
@@ -843,6 +847,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_LIST_SIZE:
             APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, NIL));
             break;
+        case _AS_EXP_CODE_IN_LIST:
+            APPEND_ARRAY(2, as_exp_in_list(
+                                NIL, NIL)); // - 2 for left value and list value
+            break;
         case OP_LIST_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
@@ -1236,6 +1244,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_MAP_SIZE:
             APPEND_ARRAY(1, as_exp_map_size(temp_expr->ctx,
                                             NIL)); // - 1 for bin
+            break;
+        case _AS_EXP_CODE_MAP_KEYS:
+            APPEND_ARRAY(1, as_exp_map_keys(NIL)); // - 1 for bin
+            break;
+        case _AS_EXP_CODE_MAP_VALUES:
+            APPEND_ARRAY(1, as_exp_map_values(NIL)); // - 1 for bin
             break;
         case OP_MAP_GET_BY_KEY:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1705,7 +1719,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                                       lval2, NIL));
             }
             break;
-        case _AS_EXP_CODE_RESULT_REMOVE:
+        case _AS_EXP_CODE_REMOVE_RESULT:
             APPEND_ARRAY(0, as_exp_result_remove());
             break;
         default:
@@ -1917,6 +1931,10 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     }
 
     *exp_list = as_exp_compile(c_expr_entries, bottom);
+    if (*exp_list == NULL) {
+        as_error_update(err, AEROSPIKE_ERR, "as_exp_compile failed.");
+        goto CLEANUP;
+    }
 
 CLEANUP:
     if (is_building_temp_expr) {
