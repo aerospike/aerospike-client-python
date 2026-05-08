@@ -273,7 +273,7 @@ jobs:
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os-json-string: \"ubuntu-22.04\"
+      runner-os-json-string: '"ubuntu-22.04"'
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
       env-vars: ${{ matrix.type == 'dont_validate_keys' && 'DONT_VALIDATE_KEYS=1' || '' }}
@@ -290,7 +290,7 @@ jobs:
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os-json-string: \"ubuntu-22.04\"
+      runner-os-json-string: '"ubuntu-22.04"'
       python-version: ${{ matrix.py-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-ce: true
@@ -303,7 +303,7 @@ jobs:
     ]
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os-json-string: \"ubuntu-22.04\"
+      runner-os-json-string: '"ubuntu-22.04"'
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-file: 'test_{mrt_functionality,admin_*,compress}.py'
