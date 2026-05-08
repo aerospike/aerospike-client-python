@@ -19,6 +19,8 @@ on:
       - benchmarks/**/*
     tags-ignore:
       - '**'
+    branches:
+      - '**'
   workflow_dispatch:
     inputs:
       server-tag:
