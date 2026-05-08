@@ -43,7 +43,9 @@ runs:
       oidc-provider: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}
       server-tag: ${{ inputs.server-tag }}
-      env-vars: DEFAULT_TTL=2592000;
+      # This way doesn't work, so pass a custom server config for now with this setting enabled
+      # env-vars: DEFAULT_TTL=2592000;
+      config-file: ./.github/workflows/docker-setup/aerospike.conf
 
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
