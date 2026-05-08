@@ -65,6 +65,7 @@ jobs:
     - run: docker run -d --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         server-tag: ${{ inputs.server-tag }}
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
@@ -109,5 +110,5 @@ jobs:
     - name: Run tests
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" python${{ inputs.python-version }} -m pytest new_tests/
 
-    - if: ${{ always() }}
+    - if: ${{ always() && steps.run-ee-server.conclusion == 'success' }}
       run: docker logs aerospike

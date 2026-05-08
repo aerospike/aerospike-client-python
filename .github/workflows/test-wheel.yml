@@ -161,11 +161,11 @@ jobs:
       shell: bash
 
     - name: Show server logs to debug test results
-      if: ${{ always() && inputs.run-integration-tests }}
+      if: ${{ always() && inputs.run-integration-tests && steps.run-ee-server.conclusion == 'success' }}
       run: docker logs "$CONTAINER_NAME"
       shell: bash
       env:
-        CONTAINER_NAME: ${{ steps.run-ee-server.outcome == 'success' && steps.run-ee-server.outputs.container-name || env.CE_CONTAINER_NAME }}
+        CONTAINER_NAME: ${{ inputs.test-ce == true && env.CE_CONTAINER_NAME || steps.run-ee-server.outputs.container-name }}
 
     - name: Show job status for commit
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
