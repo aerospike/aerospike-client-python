@@ -77,6 +77,7 @@ jobs:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-${{ env.PLATFORM_TAG_GLOB_PATTERN }} >> $GITHUB_ENV
+      shell: bash
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
@@ -118,6 +119,7 @@ jobs:
         docker run -d --name "$CE_CONTAINER_NAME" -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
         cp config.conf.template config.conf
       working-directory: test
+      shell: bash
 
     - if: ${{ inputs.run-integration-tests && inputs.test-ce }}
       uses: ./.github/actions/wait-for-ce-server-to-start
@@ -137,6 +139,7 @@ jobs:
     - if: ${{ contains(inputs.env-vars, 'DONT_VALIDATE_KEYS') }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
       working-directory: test
+      shell: bash
 
     # We can already detect leaks using valgrind
     # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
@@ -144,6 +147,7 @@ jobs:
       run: |
         echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+      shell: bash
 
     # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
     # There's no way to tell unless we see the logs
