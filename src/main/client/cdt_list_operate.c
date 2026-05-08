@@ -423,6 +423,13 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
         goto CLEANUP_VAL2_ON_ERROR;
     }
 
+    has_as_operations_taken_ownership_of_as_val_objs = true;
+
+    if (!success) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add %s operation",
+                        op_code_to_names[operation_code]);
+    }
+
     if (has_as_operations_taken_ownership_of_as_val_objs == false) {
     CLEANUP_VAL2_ON_ERROR:
         if (val2) {
