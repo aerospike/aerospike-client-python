@@ -159,8 +159,9 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
 
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
-    if (as_cdt_ctx_init_from_pyobject(self, err, &ctx, op_dict, static_pool,
-                                      serializer_type) != AEROSPIKE_OK) {
+    if (get_optional_cdt_ctx_from_py_dict_and_as_cdt_ctx_init(
+            self, err, &ctx, op_dict, static_pool, serializer_type) !=
+        AEROSPIKE_OK) {
         goto exit;
     }
     as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
