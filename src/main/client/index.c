@@ -179,9 +179,6 @@ CLEANUP3:
         as_cdt_ctx_destroy(ctx_ref);
     }
 
-CLEANUP2:
-    Py_XDECREF(py_ctx_dict);
-
 CLEANUP:
     Py_XDECREF(py_ustr_set);
     Py_XDECREF(py_ustr_bin);
