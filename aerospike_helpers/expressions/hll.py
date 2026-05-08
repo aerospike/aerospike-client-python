@@ -123,7 +123,7 @@ class HLLAdd(_BaseExpr):
             # 'key6']
             expr = exp.HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, exp.HLLBin("d")).compile()
             ops = [
-                expression_operations.expression_write("d", expr)
+                expression_operations.expression_write("d", expr),
                 operations.read("d")
             ]
             _, _, bins = client.operate(key, ops)
