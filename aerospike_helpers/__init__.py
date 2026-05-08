@@ -21,6 +21,9 @@ class HyperLogLog(bytes):
     .. testcode::
 
         from aerospike_helpers.operations import hll_operations
+        import aerospike
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
 
         BIN_NAME="hll"
         ops = [
