@@ -48,7 +48,7 @@ class HLLInit(_BaseExpr):
         import aerospike
         client = aerospike.client({'hosts': [('localhost', 3000)]})
         ops = [
-            expr = exp.HLLInit(None, 12, 24, exp.HLLBin("d"))
+            exp.HLLInit(None, 12, 24, exp.HLLBin("d"))
         ]
         key = ("test", "demo", 1)
         client.operate(key, ops)
