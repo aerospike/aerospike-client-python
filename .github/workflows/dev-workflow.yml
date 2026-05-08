@@ -111,6 +111,7 @@ jobs:
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       dry-run: ${{ inputs.dry-run }}
     permissions:
+      contents: read
       id-token: write
       actions: read
 
