@@ -18,7 +18,7 @@ on:
         required: false
         default: false
         type: boolean
-        description: Run dev tests
+        description: Run dev tests. For speeding up debugging
       test-file:
         required: false
         type: string
