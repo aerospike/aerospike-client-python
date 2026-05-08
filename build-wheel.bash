@@ -14,19 +14,13 @@ if [[ "$BUILD_MANYLINUX_WHEEL" == "false" ]]; then
     exit 0
 fi
 
-if [[ -z "$MANYLINUX_REGISTRY_NAME" ]]; then
-    echo "MANYLINUX_REGISTRY_NAME env var must be defined."
+if [[ -z "$MANYLINUX_REGISTRY_NAME" || -z "$MANYLINUX_IMAGE_DIGEST" ]]; then
+    echo "MANYLINUX_REGISTRY_NAME and MANYLINUX_IMAGE_DIGEST env var must be defined."
     exit 1
 fi
 
 
 arch=$(uname -m)
-if [[ "$arch" == "aarch64" ]]; then
-    MANYLINUX_IMAGE_DIGEST="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
-else
-    MANYLINUX_IMAGE_DIGEST="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
-fi
-
 MANYLINUX_IMAGE_NAME="$MANYLINUX_REGISTRY_NAME/manylinux_2_28_${arch}@sha256:$MANYLINUX_IMAGE_DIGEST"
 
 # Use UUID to minimize chance of colliding with another container

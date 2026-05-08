@@ -89,6 +89,7 @@ jobs:
   get-build-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+      manylinux-image-digest: ${{ steps.get-runner-os.outputs.manylinux_image_digest }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -107,6 +108,11 @@ jobs:
         hashmap[macosx_arm64]="macos-14"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
+
+        declare -A manylinux_digest
+        manylinux_digest[manylinux_x86_64]="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
+        manylinux_digest[manylinux_aarch64]="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
+        echo manylinux_image_digest=${manylinux_digest[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
       shell: bash
 
@@ -133,7 +139,11 @@ jobs:
       setup-python: true
       python-version: ${{ matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
-      build-env: "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};${{ inputs.env-vars }}"
+      build-env: >
+        "MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};
+        BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};
+        MANYLINUX_IMAGE_DIGEST=${{ needs.get-build-runner-os.outputs.manylinux-image-digest }};
+        ${{ inputs.env-vars }}"
 
   test-wheel:
     if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') }}
@@ -157,6 +167,7 @@ jobs:
   test-manylinux-wheel:
     if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
     needs: [
+      get-build-runner-os,
       build-wheel
     ]
     uses: ./.github/workflows/test-wheel-in-container.yml
@@ -166,7 +177,7 @@ jobs:
         python-version: ${{ fromJSON(inputs.python-versions) }}
     with:
       python-version: ${{ matrix.python-version }}
-      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
+      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
       cpu-arch: ${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
       server-tag: ${{ inputs.server-tag }}
     secrets: inherit
