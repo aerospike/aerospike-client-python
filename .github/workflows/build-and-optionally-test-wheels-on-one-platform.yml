@@ -6,6 +6,7 @@ run-name: 'Build wheels (python-versions=${{ inputs.python-versions }}, platform
 permissions:
   id-token: write
   contents: read
+  statuses: write
 
 on:
   workflow_dispatch:
