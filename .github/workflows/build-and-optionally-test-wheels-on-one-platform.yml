@@ -81,9 +81,6 @@ on:
       python-versions:
         value: ${{ inputs.python-versions }}
     inputs: *inputs
-    secrets:
-      FEATURES_CONTENT:
-        required: false
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job

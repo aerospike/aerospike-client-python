@@ -250,6 +250,7 @@ jobs:
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       env-vars: SANITIZER=1;SKIP_REPAIR_WHEEL=1
+    secrets: inherit
 
   test-full-suite:
     needs: [
@@ -288,6 +289,7 @@ jobs:
       python-version: ${{ matrix.py-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-ce: true
+    secrets: inherit
 
   test-ee:
     needs: [

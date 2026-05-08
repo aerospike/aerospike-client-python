@@ -41,6 +41,7 @@ jobs:
       # For shared reusable workflows
       id-token: write
       statuses: write
+    secrets: inherit
 
   valgrind:
     needs: build-artifacts

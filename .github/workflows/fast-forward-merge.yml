@@ -20,9 +20,6 @@ on:
       base_branch:
         type: string
         required: true
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
 
 jobs:
   merge:

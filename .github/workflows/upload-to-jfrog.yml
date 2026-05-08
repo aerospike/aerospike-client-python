@@ -15,11 +15,6 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-    secrets:
-      JFROG_PLATFORM_URL:
-        required: true
-      JFROG_ACCESS_TOKEN:
-        required: true
 
 jobs:
   upload-to-jfrog:
