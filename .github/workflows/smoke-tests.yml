@@ -2,6 +2,9 @@ name: Smoke tests
 permissions:
   contents: read
   id-token: write
+  # For build-and-optionally-test-wheels-on-one-platform.yml
+  # No way to only set this if tests are enabled in that workflow, AFAIK
+  statuses: write
 
 on:
   # Using push instead of pull_request so that commits with no applicable code changes will not trigger a rebuild
