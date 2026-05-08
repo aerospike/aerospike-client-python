@@ -85,7 +85,7 @@ jobs:
 
     - name: Sanity test that only one wheel was pulled
       run: |
-        wheel_count=test $(find . -maxdepth 1 -type f -name '*.whl' | wc -l)
+        wheel_count=$(find . -maxdepth 1 -type f -name '*.whl' | wc -l)
         test "$wheel_count" = "1"
       shell: bash
 
