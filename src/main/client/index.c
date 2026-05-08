@@ -264,25 +264,6 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
         self, py_policy, py_ns, py_set, py_bin, py_name, index_type,
         index_datatype, py_ctx, NULL);
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
-    as_cdt_ctx *ctx_ref = as_cdt_ctx_init_from_pyobject(
-        self, &err, &ctx, py_ctx, &static_pool, SERIALIZER_PYTHON);
-    if (ctx_ref == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "ctx is a required argument and must not be None");
-        goto CLEANUP_ON_ERROR;
-    }
-
-    // Even if this call fails, it will raise its own exception
-    // and the err object here will not be set. We don't raise an exception twice
-    py_obj = convert_python_args_to_c_and_create_index(
-        self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
-        &ctx, NULL);
-
-    as_cdt_ctx_destroy(&ctx);
-
 CLEANUP_ON_ERROR:
 
     if (err.code != AEROSPIKE_OK) {
