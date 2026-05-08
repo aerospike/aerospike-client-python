@@ -51,10 +51,16 @@ jobs:
         elif [[ $os =~ CYGWIN* || $os =~ MINGW* ]]; then
           PLATFORM_TAG_GLOB_PATTERN=*win_amd64*
         elif [[ $os =~ Linux* ]]; then
-          PLATFORM_TAG_GLOB_PATTERN="*linux_$arch*"
+          PLATFORM_TAG_GLOB_PATTERN="*linux_$arch"
+        fi
+
+        if [[ -n "$SANITIZER" ]]; then
+          PLATFORM_TAG_GLOB_PATTERN="${PLATFORM_TAG_GLOB_PATTERN}-sanitizer"
         fi
         echo "PLATFORM_TAG_GLOB_PATTERN=$PLATFORM_TAG_GLOB_PATTERN" >> $GITHUB_ENV
       shell: bash
+      env:
+        SANITIZER: ${{ contains(inputs.env-vars, 'SANITIZER') }}
 
     - name: Create status check message
       run: |
