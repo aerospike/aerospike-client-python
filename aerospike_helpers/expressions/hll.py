@@ -42,18 +42,6 @@ class HLLInit(_BaseExpr):
     If 1 of index_bit_count or mh_bit_count are set,
     an existing HLL bin will set that config and retain its current value for the unset config.
     If the HLL bin does not exist, index_bit_count is required to create it, mh_bit_count is optional.
-
-    .. testsetup::
-
-        import aerospike
-        client = aerospike.client({'hosts': [('localhost', 3000)]})
-        ops = [
-            exp.HLLInit(None, 12, 24, exp.HLLBin("d"))
-        ]
-        key = ("test", "demo", 1)
-        client.operate(key, ops)
-
-        values = []
     """
 
     _op = aerospike.OP_HLL_INIT
