@@ -2,6 +2,7 @@ name: Run dev tests and promote release bundle to DEV
 run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       server-tag:
@@ -26,6 +27,7 @@ on:
 
 jobs:
   build-artifacts:
+    if: ${{ false }}
     needs: [
       get-next-release-version-and-latest-tag
     ]
