@@ -239,9 +239,6 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
     PyObject *py_name = NULL;
     PyObject *py_datatype = NULL;
     PyObject *py_ctx = NULL;
-    as_cdt_ctx ctx;
-    PyObject *py_obj = NULL;
-    as_index_datatype data_type;
 
     static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
                              "name", "policy", "ctx", NULL};
@@ -266,11 +263,8 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
 
 CLEANUP_ON_ERROR:
 
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
-        return NULL;
-    }
-    return py_obj;
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    return NULL;
 }
 
 PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
