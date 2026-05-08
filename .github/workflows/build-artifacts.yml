@@ -14,16 +14,10 @@ on:
   workflow_dispatch:
     inputs: &inputs
       # There may be a case where we want to test these build debug flags on all platforms that support them
-      unoptimized:
-        description: 'macOS or Linux: Apply -O0 flag?'
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        description: 'macOS: Build wheels for debugging?'
-        type: boolean
-        required: false
-        default: false
+      env-vars:
+        description: Used for building wheels
+        type: string
+        default: ''
       run_tests:
         description: "Run integration tests with the wheels after building them"
         required: true
@@ -74,8 +68,7 @@ jobs:
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      unoptimized: ${{ inputs.unoptimized }}
-      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
+      env-vars: ${{ inputs.env-vars }}
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
