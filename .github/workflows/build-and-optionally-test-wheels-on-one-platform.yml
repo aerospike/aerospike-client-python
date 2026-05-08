@@ -148,7 +148,7 @@ jobs:
     uses: ./.github/workflows/test-wheel.yml
     with:
       # Not the prettiest solution...
-      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_x86_64' && format('"{0}"', needs.get-build-runner-os.outputs.runner-os) || (inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || '["self-hosted", "Windows", "X64"]') }}
+      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
