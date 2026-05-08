@@ -17,6 +17,14 @@
 HyperLogLog expressions contain expressions for performing HLL operations.
 Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_helpers.operations.hll_operations>`.
 
+# TODO: Run once for entire file
+.. testsetup::
+
+    from aerospike_helpers.operations import hll_operations
+
+    config = {"hosts": [("127.0.0.1", 3000)]}
+    client = aerospike.client(config)
+    key = ("test", "demo", 1)
 """
 
 # from __future__ import annotations
@@ -103,9 +111,27 @@ class HLLAdd(_BaseExpr):
         .. testcode::
 
             # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key1', 'key2', 'key3'])
+            ]
+            client.operate(key, ops)
+
+            from aerospike_helpers.operations import expression_operations
+            from aerospike_helpers.operations import operations
             # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5',
             # 'key6']
             expr = exp.HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, exp.HLLBin("d")).compile()
+            ops = [
+                expression_operations.expression_write("d", expr)
+                operations.read("d")
+            ]
+            _, _, bins = client.operate(key, ops)
+            print(bins["d"])
+
+        .. testoutput::
+
+            HyperLogLog(...)
         """
         self._children = (
             list,
