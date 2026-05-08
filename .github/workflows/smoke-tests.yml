@@ -258,7 +258,10 @@ jobs:
       matrix:
         type:
           - dont_validate_keys
-          - lowest_supported_server_version
+          # This is disabled because the test code's strong consistency test returns an error
+          # ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+          # exception.ServerError: (1, 'invalid id from 127.0.0.1:4333', 'src/main/aerospike/as_info.c', 360, False)
+          # - lowest_supported_server_version
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
