@@ -88,7 +88,7 @@ jobs:
       run: |
         wheel_count=$(find . -maxdepth 1 -type f -name '*.whl' | wc -l)
         test "$wheel_count" = "1"
-      shell: bash
+      shell: bash -x {0}
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
