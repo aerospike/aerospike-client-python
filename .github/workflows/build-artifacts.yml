@@ -46,6 +46,8 @@ on:
     secrets:
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: false
+      FEATURES_CONTENT:
+        required: false
     # A calling workflow doesn't actually set values to the inputs below
     # But that workflow needs to have default values for these inputs
     inputs: *inputs
