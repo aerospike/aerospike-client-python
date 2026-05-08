@@ -54,13 +54,13 @@ jobs:
           PLATFORM_TAG_GLOB_PATTERN="*linux_$arch"
         fi
 
-        if [[ -n "$SANITIZER" ]]; then
+        if [[ "$DOWNLOAD_SANITIZER_WHEEL" == "true" ]]; then
           PLATFORM_TAG_GLOB_PATTERN="${PLATFORM_TAG_GLOB_PATTERN}-sanitizer"
         fi
         echo "PLATFORM_TAG_GLOB_PATTERN=$PLATFORM_TAG_GLOB_PATTERN" >> $GITHUB_ENV
       shell: bash
       env:
-        SANITIZER: ${{ contains(inputs.env-vars, 'SANITIZER') }}
+        DOWNLOAD_SANITIZER_WHEEL: ${{ contains(inputs.env-vars, 'SANITIZER') }}
 
     - name: Create status check message
       run: |
