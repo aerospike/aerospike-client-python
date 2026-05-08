@@ -19,6 +19,7 @@ class HyperLogLog(bytes):
     Represents a HyperLogLog value. This can be returned from or sent to the server.
 
     .. testcode::
+
         from aerospike_helpers.operations import hll_operations
 
         BIN_NAME="hll"
