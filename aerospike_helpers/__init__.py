@@ -29,6 +29,7 @@ class HyperLogLog(bytes):
         ops = [
             hll_operations.hll_init(BIN_NAME, index_bit_count=4, mh_bit_count=4)
         ]
+        keyTuple = ("test", "demo", 1)
         client.operate(keyTuple, ops)
         _, _, bins = client.get(keyTuple)
         print(bins[BIN_NAME])
