@@ -17,6 +17,8 @@ on:
       - .build.yml
       # Other misc files not related to source code changes
       - benchmarks/**/*
+    tags-ignore:
+      - '**'
   workflow_dispatch:
     inputs:
       server-tag:
