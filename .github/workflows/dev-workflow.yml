@@ -130,4 +130,5 @@ jobs:
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
     permissions:
+      contents: read
       id-token: write
