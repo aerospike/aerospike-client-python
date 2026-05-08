@@ -1,5 +1,9 @@
 name: (Optionally build and) test wheel inside container
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   workflow_call:
     inputs:
@@ -38,6 +42,24 @@ jobs:
         sparse-checkout: |
           test
           .github
+
+    - if: ${{ contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
+      name: Log into JFrog to pull custom manylinux image
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: ${{ vars.JFROG_PLATFORM_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - name: Log into internal JFrog registry
+      uses: docker/login-action@v4
+      with:
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - run: docker run -d --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
 
