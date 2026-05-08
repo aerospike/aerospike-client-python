@@ -88,7 +88,7 @@ jobs:
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os: ${{ matrix.runner-os }}
+      runner-os-json-string: ${{ format('"{0}"', matrix.runner-os) }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ matrix.runner-os == 'macos-15-intel' && inputs.run-integration-tests-on-macos-x86 }}

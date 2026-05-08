@@ -1,7 +1,7 @@
 on:
   workflow_call:
     inputs:
-      runner-os:
+      runner-os-json-string:
         required: true
         type: string
       # For downloading the correct wheel from upstream jobs
@@ -38,7 +38,7 @@ on:
 
 jobs:
   test-wheel:
-    runs-on: ${{ inputs.runner-os }}
+    runs-on: ${{ fromJson(inputs.runner-os-json-string) }}
     env:
       CE_CONTAINER_NAME: aerospike
     steps:
