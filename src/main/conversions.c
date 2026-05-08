@@ -2667,13 +2667,7 @@ as_cdt_ctx *as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
         goto RETURN_NULL;
     }
 
-    long int_val = 0;
-    as_val *val = NULL;
     as_status status = AEROSPIKE_OK;
-
-    PyObject *py_id = NULL;
-    PyObject *py_value = NULL;
-    PyObject *py_extra_args = NULL;
 
     Py_ssize_t py_list_size = PyList_Size(py_ctx_list);
     if (!PyList_Check(py_ctx_list)) {
