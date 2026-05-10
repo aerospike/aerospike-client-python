@@ -30,16 +30,7 @@
 #include "cdt_list_operations.h"
 #include "cdt_operation_utils.h"
 
-typedef struct {
-    int operation_code;
-    const char *operation_name;
-} op_code_to_name;
-
-const char *op_code_to_names[] = {
-#define X(op_name) [OP_##op_name] = #op_name
-    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
-#undef X
-};
+extern const char *op_code_to_names[];
 
 as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
                       as_vector *unicodeStrVector, as_static_pool *static_pool,

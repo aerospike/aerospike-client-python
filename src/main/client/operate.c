@@ -293,6 +293,12 @@ static bool op_requires_value[] = {[AS_OPERATOR_WRITE] = true,
                                    // TODO
                                    [AS_OPERATOR_HLL_MODIFY] = false};
 
+const char *op_code_to_names[] = {
+#define X(op_name) [OP_##op_name] = #op_name
+    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
+#undef X
+};
+
 as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
                                           PyObject *py_op_dict,
                                           as_vector *unicodeStrVector,
@@ -400,6 +406,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
 
     // No way to define an array of function pointers with differing arguments
+    bool success = false;
     switch (op_code) {
     // TODO
     case AS_OPERATOR_TOUCH:
@@ -409,16 +416,17 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             }
             ops->ttl = ttl;
         }
-        as_operations_add_touch(ops);
+        success = as_operations_add_touch(ops);
         break;
     case AS_OPERATOR_READ:
-        as_operations_add_read(ops, bin_name);
+        success = as_operations_add_read(ops, bin_name);
         break;
     case AS_OPERATOR_DELETE:
-        as_operations_add_delete(ops);
+        success = as_operations_add_delete(ops);
         break;
     case AS_OPERATOR_WRITE:
-        as_operations_add_write(ops, bin_name, (as_bin_value *)put_val);
+        success =
+            as_operations_add_write(ops, bin_name, (as_bin_value *)put_val);
         break;
     }
 
