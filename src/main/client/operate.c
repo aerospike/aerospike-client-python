@@ -424,7 +424,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
     if (op_code >= OP_LIST_APPEND && op_code <= OP_LIST_CREATE) {
-        return add_new_list_op(
+        return add_list_op(
             self, err, py_op_dict, unicodeStrVector, static_pool, ops, op_code,
             ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
