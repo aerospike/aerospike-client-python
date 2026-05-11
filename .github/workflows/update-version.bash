@@ -21,7 +21,6 @@ update_release_version_in_repo () {
     new_version=$2
     echo "$new_version" > VERSION
     git add -u
-    # TODO: double verify that github actions bot user info is configured
     git commit -m "$verb version to $new_version [skip ci]"
     if [[ -z "$DRY_RUN" ]]; then
         git push
