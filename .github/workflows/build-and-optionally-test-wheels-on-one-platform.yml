@@ -157,7 +157,7 @@ jobs:
       setup-python: true
       python-version: ${{ matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
-      build-env: BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};MANYLINUX_IMAGE_DIGEST=${{ needs.get-build-runner-os.outputs.manylinux-image-digest }};VERIFY_REPAIR=1;${{ inputs.env-vars-for-building }}
+      build-env: BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};MANYLINUX_IMAGE_DIGEST=${{ needs.get-build-runner-os.outputs.manylinux-image-digest }};VERIFY_REPAIR=1;KEEP_CONTAINER=1;${{ inputs.env-vars-for-building }}
 
   test-wheel:
     if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') }}
