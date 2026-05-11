@@ -145,6 +145,8 @@ jobs:
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ contains(env.PLATFORM_TAG_GLOB_PATTERN, 'win_amd64') && 'remote-connection' || 'docker-host' }}
+      env:
+        MSYS_NO_PATHCONV: 1
 
     - if: ${{ contains(inputs.env-vars, 'DONT_VALIDATE_KEYS') }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
