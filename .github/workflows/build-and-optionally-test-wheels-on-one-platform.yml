@@ -82,9 +82,9 @@ on:
         type: boolean
         required: false
         default: true
-      # Used upstream by dev workflow
       publish-build-info:
         required: false
+        description: Only used upstream by dev workflow
         default: false
         type: boolean
 

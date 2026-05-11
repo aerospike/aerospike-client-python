@@ -44,6 +44,7 @@ on:
       publish-build-info:
         required: false
         default: false
+        description: Only used upstream by dev workflow
         type: boolean
 
   workflow_call:
