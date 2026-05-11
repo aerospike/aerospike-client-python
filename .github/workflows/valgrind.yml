@@ -57,11 +57,11 @@ jobs:
     - run: sudo apt-get update
     - run: sudo apt-get install valgrind -y
 
-    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
-      if: ${{ inputs.massif }}
+    - if: ${{ inputs.massif }}
+      run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
 
-    - run: echo VALGRIND_ARGS="--leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
-      if: ${{ !inputs.massif }}
+    - if: ${{ !inputs.massif }}
+      run: echo VALGRIND_ARGS="--leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 $VALGRIND_ARGS python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test

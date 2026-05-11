@@ -1,5 +1,5 @@
 name: Build artifacts and run stage tests
-run-name: Build artifacts and run stage tests (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }})
+run-name: Build artifacts and run stage tests (server-tag=${{ inputs.server-tag }})
 
 permissions:
   contents: read

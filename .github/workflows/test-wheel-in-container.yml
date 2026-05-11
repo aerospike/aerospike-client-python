@@ -31,6 +31,7 @@ jobs:
     env:
       CONTAINER_NAME: linux-distro
       REPO_DIR_NAME: aerospike-client-python
+      PYTHON_VERSION: ${{ inputs.python-version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -62,7 +63,9 @@ jobs:
         username: ${{ steps.setup-jf.outputs.oidc-user }}
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
-    - run: docker run -d  -v /:/host:ro --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
+    - run: docker run -d  -v /:/host:ro --name "$CONTAINER_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
+      env:
+        LINUX_DISTRO_IMAGE_NAME: ${{ inputs.container-image-name }}
 
     - uses: ./.github/actions/run-ee-server
       id: run-ee-server
@@ -98,17 +101,17 @@ jobs:
           zlib-devel \
           openssl-devel \
           python3.11-devel
-        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m pip install -r requirements.txt
-        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m build
+        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
+        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m build
 
     - name: Install wheel
-      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" python${{ inputs.python-version }} -m pip install *.whl
+      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install *.whl
 
     - name: Install test prerequisites
-      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" python${{ inputs.python-version }} -m pip install -r requirements.txt
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" python${{ inputs.python-version }} -m pytest new_tests/
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/
 
     - if: ${{ always() && steps.run-ee-server.conclusion == 'success' }}
       run: docker logs aerospike

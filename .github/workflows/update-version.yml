@@ -42,8 +42,8 @@ jobs:
     - run: |
         if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
           change_type="manual-override"
-          version_to_override=${{ inputs.new_version }}
-        elif [[ ${{ github.ref_name }} =~ dev* ]]; then
+          version_to_override="$NEW_VERSION"
+        elif [[ $GH_REF_NAME =~ dev* ]]; then
           change_type="bump-dev-num"
         else
           change_type="strip_prerelease_part"
@@ -51,3 +51,5 @@ jobs:
         ./.github/workflows/update-version.bash "$change_type" $version_to_override
       env:
         DRY_RUN: ${{ inputs.dry-run }}
+        NEW_VERSION: ${{ inputs.new_version }}
+        GH_REF_NAME: ${{ github.ref_name }}
