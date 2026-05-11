@@ -70,8 +70,8 @@ on:
         default: false
       server-tag:
         type: string
-        required: true
-        description: 'Server docker image tag'
+        required: false
+        description: 'Only required if run_tests is true. Server docker image tag'
       test-file:
         type: string
         required: false
