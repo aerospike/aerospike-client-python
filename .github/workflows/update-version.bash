@@ -43,6 +43,11 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
         exit 1
     fi
 
+    if [[ "$current_release_version" == "$RELEASE_VERSION_TO_OVERRIDE" ]]; then
+        echo "New version is the same as current version" >&2
+        exit 1
+    fi
+
     lower_release_version=$(echo -e "$current_release_version\n$RELEASE_VERSION_TO_OVERRIDE" | sort -V | head -n 1)
     if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
         # Delete tags for current release version
