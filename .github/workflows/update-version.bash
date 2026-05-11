@@ -8,7 +8,7 @@ set -x
 # and have cloned and cd'ed into the Python client repo's root directory
 
 CHANGE_TYPE=$1
-# Optional, only required if manual-override is passed as the script name
+# Optional, only required if manual-override is passed as the change type
 RELEASE_VERSION_TO_OVERRIDE=$2
 
 if [[ -z "$DRY_RUN" ]]; then
