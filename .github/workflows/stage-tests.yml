@@ -31,8 +31,7 @@ on:
         default: false
 
 jobs:
-  # Cat 2 tests
-  linux-distro-wheel-tests:
+  linux-distro-tests:
     strategy:
       matrix:
         test-case: [
