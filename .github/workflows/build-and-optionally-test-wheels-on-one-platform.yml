@@ -157,6 +157,8 @@ jobs:
       setup-python: true
       python-version: ${{ matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
+      # TODO: I have already raised an issue with dev infra team re: the action not ignoring newlines/spaces for env var
+      # names. For now, just put all the env vars in one line.
       build-env: BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};MANYLINUX_IMAGE_DIGEST=${{ needs.get-build-runner-os.outputs.manylinux-image-digest }};VERIFY_REPAIR=1;KEEP_CONTAINER=1;${{ inputs.env-vars-for-building }}
 
   test-wheel:
