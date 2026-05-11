@@ -1,5 +1,9 @@
 name: Dev to stage
 
+permissions:
+  contents: write
+  id-token: write
+
 on:
   # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
   workflow_dispatch:
