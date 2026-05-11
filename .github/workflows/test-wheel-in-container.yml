@@ -90,7 +90,7 @@ jobs:
 
     - name: 'Cat 1: Install build dependencies'
       if: ${{ inputs.build-from-source }}
-      # Here we assume all cat 1 tests are running on a dnf-based. distro
+      # Here we assume all cat 1 tests are running on a dnf-based distro
       run: |
         docker exec "$CONTAINER_NAME" dnf install -y libyaml-devel \
           openssl-devel \
