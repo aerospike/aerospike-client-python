@@ -50,6 +50,6 @@ jobs:
         fi
         ./.github/workflows/update-version.bash "$change_type" "$version_to_override"
       env:
-        DRY_RUN: ${{ inputs.dry-run }}
+        DRY_RUN: ${{ inputs.dry-run && '1' || '' }}
         NEW_VERSION: ${{ inputs.new_version }}
         GH_REF_NAME: ${{ github.ref_name }}
