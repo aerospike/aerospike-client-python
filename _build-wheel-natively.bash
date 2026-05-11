@@ -28,7 +28,10 @@ arch=$(uname -m)
 if [[ $os =~ Darwin* ]]; then
     # It is not documented in Github that openssl 3 / libyaml is installed in their macos images
     # so we install it here to be safe
-    brew install openssl@3 libyaml
+    libraries=('libyaml' 'openssl@3')
+    for library in "${libraries[@]}"; do
+        brew install "$library"
+    done
 
     # Set minimum macos version required to install wheel
     #
@@ -54,7 +57,6 @@ if [[ $os =~ Darwin* ]]; then
     if [[ $arch == "arm64" ]]; then
         # Ensure that linker can find brew packages
         # On mac arm64, packages installed via brew are not in the linker's default library path
-        libraries=('libyaml' 'openssl')
         for library in "${libraries[@]}"; do
           LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix "$library")/lib"
         done
