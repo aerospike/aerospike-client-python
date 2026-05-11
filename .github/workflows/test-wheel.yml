@@ -161,6 +161,7 @@ jobs:
 
     # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
     # There's no way to tell unless we see the logs
+    # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
     - if: ${{ inputs.run-integration-tests }}
       run: |
         eval python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
