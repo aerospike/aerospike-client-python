@@ -62,18 +62,11 @@ runs:
     working-directory: .github/workflows
     shell: bash
 
-  - name: Create config.conf
-    run: cp config.conf.template config.conf
-    working-directory: test
-    shell: bash
-
-  - name: Disable community edition connection
-    run: crudini --existing=param --set config.conf community-edition hosts ''
-    working-directory: test
-    shell: bash
-
   - name: Set credentials in config file
     run: |
+      cp config.conf.template config.conf
+      # Disable community edition connection
+      crudini --existing=param --set config.conf community-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
@@ -86,7 +79,7 @@ runs:
       crudini --set config.conf tls keyfile $tls_cert_dir/client.key
       crudini --set config.conf tls certfile $tls_cert_dir/client.crt
     working-directory: test
-    shell: bash
+    shell: bash -x {0}
     env:
       WHERE_IS_CLIENT_CONNECTING_FROM: "${{ inputs.where-is-client-connecting-from }}"
 
