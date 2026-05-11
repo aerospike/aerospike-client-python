@@ -23,8 +23,11 @@ jobs:
 
     - uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
       env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JF_URL: ${{ vars.JFROG_PLATFORM_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - name: Download JFrog build
       run: jf rt dl --build "$JFROG_BUILD_NAME/$VERSION_TO_PUBLISH" "$JF_REPO_NAME"
