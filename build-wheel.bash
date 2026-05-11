@@ -27,7 +27,7 @@ MANYLINUX_IMAGE_NAME="$MANYLINUX_REGISTRY_NAME/manylinux_2_28_${arch}@sha256:$MA
 CONTAINER_NAME=manylinux-$(uuidgen)
 
 MOUNTED_REPO_DIR=/repo
-jf docker login artifact.aerospike.io/database-docker-dev-local
+jf docker login "$MANYLINUX_REGISTRY_NAME"
 docker run -d -v "${dir_containing_this_file}:${MOUNTED_REPO_DIR}/" --rm --name "$CONTAINER_NAME" "$MANYLINUX_IMAGE_NAME" tail -f /dev/null
 
 cleanup() {
