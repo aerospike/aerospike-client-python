@@ -56,7 +56,7 @@ jobs:
     with:
       platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-      env-vars-for-building-and-testing: SKIP_REPAIR_WHEEL=1
+      env-vars-for-building: SKIP_REPAIR_WHEEL=1
     secrets: inherit
 
   build-and-test-using-debug-interpreter:
