@@ -22,6 +22,7 @@ on:
       - benchmarks/**/*
     tags-ignore:
       - '**'
+    # Have to add this or tags-ignore will cause workflow to never run
     branches:
       - '**'
   workflow_dispatch:
