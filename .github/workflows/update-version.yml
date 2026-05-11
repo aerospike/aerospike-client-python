@@ -48,7 +48,7 @@ jobs:
         else
           change_type="strip_prerelease_part"
         fi
-        ./.github/workflows/update-version.bash "$change_type" $version_to_override
+        ./.github/workflows/update-version.bash "$change_type" "$version_to_override"
       env:
         DRY_RUN: ${{ inputs.dry-run }}
         NEW_VERSION: ${{ inputs.new_version }}
