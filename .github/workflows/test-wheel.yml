@@ -4,10 +4,12 @@ on:
       runner-os-json-string:
         required: true
         type: string
+        description: 'Runner OS to use. Can be a JSON list or raw string'
       # For downloading the correct wheel from upstream jobs
       python-version:
         required: true
         type: string
+        description: 'Python wheel version to test'
       server-tag:
         required: true
         type: string
