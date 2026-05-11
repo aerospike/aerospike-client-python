@@ -50,11 +50,11 @@ jobs:
         os=$(uname -s)
         arch=$(uname -m)
         if [[ $os =~ Darwin* ]]; then
-          PLATFORM_TAG_GLOB_PATTERN="*macosx_$arch*"
+          PLATFORM_TAG_GLOB_PATTERN="macosx_$arch"
         elif [[ $os =~ CYGWIN* || $os =~ MINGW* ]]; then
-          PLATFORM_TAG_GLOB_PATTERN=*win_amd64*
+          PLATFORM_TAG_GLOB_PATTERN=win_amd64
         elif [[ $os =~ Linux* ]]; then
-          PLATFORM_TAG_GLOB_PATTERN="*linux_$arch*"
+          PLATFORM_TAG_GLOB_PATTERN="linux_$arch"
         fi
 
         if [[ "$DOWNLOAD_SANITIZER_WHEEL" == "true" ]]; then
