@@ -14,8 +14,12 @@ on:
   workflow_dispatch:
     inputs: &inputs
       # There may be a case where we want to test these build debug flags on all platforms that support them
-      env-vars:
+      env-vars-for-building:
         description: Used for building wheels
+        type: string
+        default: ''
+      env-vars-for-testing:
+        description: Used for testing wheels
         type: string
         default: ''
       run_tests:
@@ -65,7 +69,8 @@ jobs:
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      env-vars: ${{ inputs.env-vars }}
+      env-vars-for-building: ${{ inputs.env-vars-for-building }}
+      env-vars-for-testing: ${{ inputs.env-vars-for-testing }}
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}

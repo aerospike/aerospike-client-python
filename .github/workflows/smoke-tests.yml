@@ -56,7 +56,7 @@ jobs:
     with:
       platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-      env-vars: SKIP_REPAIR_WHEEL=1
+      env-vars-for-building-and-testing: SKIP_REPAIR_WHEEL=1
     secrets: inherit
 
   build-and-test-using-debug-interpreter:
@@ -254,7 +254,8 @@ jobs:
       platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-      env-vars: SANITIZER=1;SKIP_REPAIR_WHEEL=1
+      env-vars-for-building: SKIP_REPAIR_WHEEL=1;SANITIZER=1
+      env-vars-for-testing: SANITIZER=1
     secrets: inherit
 
   test-full-suite:
