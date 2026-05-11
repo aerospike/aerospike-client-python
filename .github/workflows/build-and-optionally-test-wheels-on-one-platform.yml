@@ -98,7 +98,8 @@ on:
     inputs: *inputs
 
 jobs:
-  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
+  # Maps don't exist in Github Actions and we cannot pass env vars as inputs to reusable workflows,
+  # so we have to store the map using a script and fetch it in a job
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
   # but this should be ok based on the minutes usage data for the aerospike organization
   get-build-runner-os:
