@@ -1,15 +1,13 @@
 name: 'Build and optionally test wheels for one platform'
 run-name: >
   Build wheels
-  (
-  python-versions=${{ inputs.python-versions }},
+  (python-versions=${{ inputs.python-versions }},
   platform-tag=${{ inputs.platform-tag }},
   env-vars-for-building=${{ inputs.env-vars-for-building }},
   run_tests=${{ inputs.run_tests }},
   env-vars-for-testing=${{ inputs.env-vars-for-building }},
   server-tag=${{ inputs.server-tag }},
-  test-file=${{ inputs.test-file }}
-  )'
+  test-file=${{ inputs.test-file }})
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
