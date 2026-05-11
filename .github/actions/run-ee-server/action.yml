@@ -78,7 +78,7 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
       tls_cert_dir=${{ steps.setup-as-server.outputs.tls-cert-dir }}
-      if [[ "${{ inputs.where-is-client-connecting-from }}" == "separate-docker-container" ]]; then
+      if [[ "$WHERE_IS_CLIENT_CONNECTING_FROM" == "separate-docker-container" ]]; then
         tls_cert_dir="/host${tls_cert_dir}"
       fi
 
@@ -87,6 +87,8 @@ runs:
       crudini --set config.conf tls certfile $tls_cert_dir/client.crt
     working-directory: test
     shell: bash
+    env:
+      WHERE_IS_CLIENT_CONNECTING_FROM: "${{ inputs.where-is-client-connecting-from }}"
 
   - name: Set IP address to localhost
     if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
