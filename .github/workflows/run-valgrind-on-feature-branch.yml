@@ -64,8 +64,6 @@ jobs:
       run: |
         PYTHON_TAG=cp$(echo ${{ env.PYTHON_VERSION }} | tr -d '.')
         jf rt search "${GENERIC_REPO_DIR}/*${SHORT_GITHUB_SHA}*${PYTHON_TAG}*manylinux*x86_64*.whl" > "$JF_SEARCH_RESULTS_FILE_NAME"
-      env:
-        SHORT_GITHUB_SHA: ${{ env.SHORT_GITHUB_SHA }}
 
     - name: Show unfiltered results
       run: cat "$JF_SEARCH_RESULTS_FILE_NAME"
@@ -76,8 +74,6 @@ jobs:
     - name: Filter out wheels with labels in results
       run: jq 'map(select(.path | test("\\.") | not))' "$JF_SEARCH_RESULTS_FILE_NAME" | sponge "$JF_SEARCH_RESULTS_FILE_NAME"
       shell: bash
-      env:
-        SHORT_GITHUB_SHA: ${{ env.SHORT_GITHUB_SHA }}
 
     - name: Check if artifacts with labels were filtered out
       run: cat "$JF_SEARCH_RESULTS_FILE_NAME"
