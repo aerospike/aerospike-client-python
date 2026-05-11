@@ -40,6 +40,7 @@ trap 'cleanup' EXIT SIGINT SIGTERM ERR
 # Addresses a git error where the user owning the repo folder is different from the container user
 docker exec "$CONTAINER_NAME" git config --global --add safe.directory "$MOUNTED_REPO_DIR"
 
+# Command output format: Python 3.x.y
 active_python_minor_version=$(python3 --version | cut -f 2- -d' ' | cut -f -2 -d'.')
 
 docker exec -w "$MOUNTED_REPO_DIR" "$CONTAINER_NAME" ./${helper_script} "$active_python_minor_version"
