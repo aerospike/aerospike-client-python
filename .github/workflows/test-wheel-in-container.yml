@@ -62,7 +62,7 @@ jobs:
         username: ${{ steps.setup-jf.outputs.oidc-user }}
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
-    - run: docker run -d --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
+    - run: docker run -d  -v /:/host:ro --name "$CONTAINER_NAME" "${{ inputs.container-image-name }}" tail -f /dev/null
 
     - uses: ./.github/actions/run-ee-server
       id: run-ee-server
