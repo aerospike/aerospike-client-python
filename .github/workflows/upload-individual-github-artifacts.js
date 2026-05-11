@@ -8,7 +8,7 @@ process.chdir(jfrog_artifacts_folder_path);
 
 async function upload() {
   const client = new DefaultArtifactClient();
-  const files = fs.readdirSync(jfrog_artifacts_folder_path);
+  const files = fs.readdirSync(process.cwd());
 
   for (const file of files) {
     await client.uploadArtifact(
