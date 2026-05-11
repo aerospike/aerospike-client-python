@@ -40,7 +40,7 @@ env:
   PLATFORM_TAG: linux_x86_64
 
 jobs:
-  # For reusable workflows to access env.SERVER_TAG
+  # For reusable workflows to access environment variables
   get-env-vars:
     outputs:
       lowest-supported-python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
