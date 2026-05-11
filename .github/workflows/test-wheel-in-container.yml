@@ -27,7 +27,7 @@ on:
 
 jobs:
   test-wheel:
-    runs-on: ${{ inputs.cpu-arch == 'aarch64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
+    runs-on: ${{ inputs.cpu-arch == 'x86_64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     env:
       CONTAINER_NAME: linux-distro
       REPO_DIR_NAME: aerospike-client-python
