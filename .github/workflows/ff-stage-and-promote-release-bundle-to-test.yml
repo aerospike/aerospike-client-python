@@ -23,8 +23,7 @@ jobs:
     ]
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
-      # TODO: should not be hardcoded
-      release-bundle-name: python-client-release
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ inputs.passed-dev-tag }}
       new-environment: TEST
     permissions:

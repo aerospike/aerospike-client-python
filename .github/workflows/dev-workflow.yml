@@ -126,7 +126,7 @@ jobs:
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: ${{ vars.JFROG_BUILD_NAME }}
-      jf-bundle-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
