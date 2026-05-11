@@ -88,7 +88,7 @@ jobs:
       if: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
       run: docker exec "$CONTAINER_NAME" dnf install -y python3.11
 
-    - name: 'Cat 1: Install build dependencies'
+    - name: 'Cat 1: build from source'
       if: ${{ inputs.build-from-source }}
       # Here we assume all cat 1 tests are running on a dnf-based distro
       run: |
