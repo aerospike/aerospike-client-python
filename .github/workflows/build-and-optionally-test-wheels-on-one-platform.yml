@@ -90,6 +90,7 @@ on:
 
   workflow_call:
     outputs:
+      # Both outputs are used by downstream jobs that need to test the wheel
       runner-os-used-for-build:
         value: ${{ jobs.get-build-runner-os.outputs.runner-os }}
       python-versions:
