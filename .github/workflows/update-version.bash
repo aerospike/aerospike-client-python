@@ -46,10 +46,10 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
     lower_release_version=$(echo -e "$current_release_version\n$RELEASE_VERSION_TO_OVERRIDE" | sort -V | head -n 1)
     if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
         # Delete tags for current release version
-        tags_to_delete=$(git tag -l | grep "$current_release_version")
-        git tag -d $tags_to_delete
+        readarray <(git tag -l | grep "$current_release_version") tags_to_delete
+        git tag -d "${tags_to_delete[@]}"
         if [[ -z "$DRY_RUN" ]]; then
-            git push origin --delete $tags_to_delete
+            git push origin --delete "${tags_to_delete[@]}"
         fi
     fi
     update_release_version_in_repo "Reset" "$RELEASE_VERSION_TO_OVERRIDE"
