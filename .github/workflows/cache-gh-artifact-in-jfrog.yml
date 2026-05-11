@@ -15,6 +15,9 @@ on:
 
 jobs:
   upload-to-jfrog:
+    permissions:
+      actions: read
+      id-token: write
     env:
       ARTIFACTS_DEST_DIR: artifacts
     name: Upload artifacts to JFrog
