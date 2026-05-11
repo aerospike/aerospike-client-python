@@ -43,6 +43,5 @@ jobs:
     ]
     secrets: inherit
     with:
-      use_jfrog_builds: false
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests-on-macos-x86: true
