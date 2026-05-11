@@ -48,8 +48,6 @@ on:
         type: boolean
 
   workflow_call:
-    # A calling workflow doesn't actually set values to the inputs below
-    # But that workflow needs to have default values for these inputs
     inputs: *inputs
 
 jobs:
