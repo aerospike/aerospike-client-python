@@ -77,10 +77,11 @@ jobs:
     strategy:
       matrix:
         runner-os: [
-          # These larger runners run on intel
-          "macos-15-intel",
-          # arm64, since x86 not avaiable as Github hosted runner
-          "macos-26"
+          macos-15-intel,
+          macos-26-intel,
+          # These are arm64 runners
+          macos-15,
+          macos-26
         ]
         python-version: ${{ fromJson(inputs.python-versions-to-test) }}
       fail-fast: false
@@ -89,5 +90,5 @@ jobs:
       runner-os-json-string: ${{ format('"{0}"', matrix.runner-os) }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
-      run-integration-tests: ${{ matrix.runner-os == 'macos-15-intel' && inputs.run-integration-tests-on-macos-x86 }}
+      run-integration-tests: ${{ endsWith(matrix.runner-os, '-intel') && inputs.run-integration-tests-on-macos-x86 }}
     secrets: inherit
