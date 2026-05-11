@@ -46,7 +46,7 @@ runs:
       # This way doesn't work, so pass a custom server config for now with this setting enabled
       # Problem is the shared action is overriding the entrypoint script that parses this env var
       # env-vars: DEFAULT_TTL=2592000;
-      config-file: ./.github/workflows/docker-setup/aerospike.conf
+      config-file: ./.github/workflows/aerospike.conf
 
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
