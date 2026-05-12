@@ -32,7 +32,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@jnguyen-tmp-debug-setup-aerospike-server
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
     id: setup-as-server
     with:
       enable-security: "true"
