@@ -177,6 +177,7 @@ jobs:
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
+      test-file: ${{ inputs.test-file }}
     secrets: inherit
 
   test-manylinux-wheel:
@@ -195,4 +196,5 @@ jobs:
       container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
       cpu-arch: ${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}
       server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
     secrets: inherit

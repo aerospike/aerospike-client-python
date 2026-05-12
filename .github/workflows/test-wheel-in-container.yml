@@ -21,6 +21,10 @@ on:
         default: false
         description: 'If false, download wheel artifact from Github'
         type: boolean
+      test-file:
+        required: false
+        type: string
+        description: 'Only used if running integration tests'
       server-tag:
         required: true
         type: string
@@ -111,7 +115,9 @@ jobs:
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/$TEST_FILE
+      env:
+        TEST_FILE: ${{ inputs.test-file }}
 
     - if: ${{ always() && steps.run-ee-server.conclusion == 'success' }}
       run: docker logs ${{ steps.run-ee-server.outputs.container-name }}
