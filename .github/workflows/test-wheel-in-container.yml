@@ -114,4 +114,4 @@ jobs:
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/
 
     - if: ${{ always() && steps.run-ee-server.conclusion == 'success' }}
-      run: docker logs aerospike
+      run: docker logs ${{ steps.run-ee-server.outputs.container-name }}
