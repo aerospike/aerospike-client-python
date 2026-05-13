@@ -70,6 +70,12 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
+
+      if [[ "${{ runner.os }}" == "Windows" ]]; then
+        # Prevent path from being expanded unintentionally
+        export MSYS_NO_PATHCONV=1
+      fi
+
       tls_cert_dir=${{ steps.setup-as-server.outputs.tls-cert-dir }}
       if [[ "$WHERE_IS_CLIENT_CONNECTING_FROM" == "separate-docker-container" ]]; then
         tls_cert_dir="/host${tls_cert_dir}"
