@@ -71,20 +71,9 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
 
-      if [[ "${{ runner.os }}" == "Windows" ]]; then
-        # Prevent path from being expanded unintentionally
-        export MSYS_NO_PATHCONV=1
-      fi
-
       tls_cert_dir=${{ steps.setup-as-server.outputs.tls-cert-dir }}
       if [[ "$WHERE_IS_CLIENT_CONNECTING_FROM" == "separate-docker-container" ]]; then
         tls_cert_dir="/host${tls_cert_dir}"
-      fi
-
-      # Setting MSYS_NO_PATHCONV causes paths under /tmp to not evaluate to their real folders on Windows
-      if [[ "${{ runner.os }}" == "Windows" ]]; then
-        # Unset for the rest of this step
-        unset MSYS_NO_PATHCONV
       fi
 
       crudini --set config.conf tls cafile $tls_cert_dir/ca.crt
