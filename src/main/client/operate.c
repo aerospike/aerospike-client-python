@@ -281,7 +281,7 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-static bool op_requires_bin_name[] = {[AS_OPERATOR_READ] = true,
+static bool OP_REQUIRES_BIN_NAME[] = {[AS_OPERATOR_READ] = true,
                                       [AS_OPERATOR_WRITE] = true,
                                       [AS_OPERATOR_INCR] = true,
                                       [AS_OPERATOR_APPEND] = true,
@@ -289,11 +289,11 @@ static bool op_requires_bin_name[] = {[AS_OPERATOR_READ] = true,
                                       // Last element of enum
                                       [AS_OPERATOR_HLL_MODIFY] = false};
 
-static bool op_requires_value[] = {[AS_OPERATOR_WRITE] = true,
+static bool OP_REQUIRES_VALUE[] = {[AS_OPERATOR_WRITE] = true,
                                    // TODO
                                    [AS_OPERATOR_HLL_MODIFY] = false};
 
-const char *op_code_to_names[] = {
+const char *OP_CODE_TO_NAMES[] = {
 #define X(op_name) [OP_##op_name] = #op_name
     X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
 #undef X
@@ -348,7 +348,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
 
     const char *bin_name = NULL;
-    if (op_requires_bin_name[op_code] == true) {
+    if (OP_REQUIRES_BIN_NAME[op_code] == true) {
         PyObject *py_key_for_bin_name = PyUnicode_FromString("bin_name");
         if (py_key_for_bin_name == NULL) {
             return NULL;
@@ -376,7 +376,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
 
     as_val *put_val = NULL;
-    if (op_requires_value[op_code]) {
+    if (OP_REQUIRES_VALUE[op_code]) {
         if (as_val_new_from_pyobject(self, err, py_value, &put_val, static_pool,
                                      SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err->code;
