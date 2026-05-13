@@ -127,22 +127,61 @@ static as_status invertIfSpecified(as_error *err, PyObject *op_dict,
  * Returns 0 if operation can be performed.
  *******************************************************************************************************
  */
-PyObject *create_py_list_with_single_operation(PyObject *py_list,
-                                               long operation, PyObject *py_bin,
+PyObject *create_py_list_with_single_operation(PyObject *py_list, long op_code,
+                                               PyObject *py_bin_name,
                                                PyObject *py_value)
 {
-    PyObject *dict = PyDict_New();
-    py_list = PyList_New(0);
-    PyDict_SetItemString(dict, "op", PyLong_FromLong(operation));
-    if (operation != AS_OPERATOR_TOUCH) {
-        PyDict_SetItemString(dict, "bin_name", py_bin);
+    PyObject *py_dict = PyDict_New();
+    PyObject *py_ret_val = NULL;
+    if (!py_dict) {
+        goto error;
     }
-    PyDict_SetItemString(dict, "val", py_value);
 
-    PyList_Append(py_list, dict);
-    Py_DECREF(dict);
+    py_list = PyList_New(0);
+    if (!py_list) {
+        goto CLEANUP1;
+    }
 
-    return py_list;
+    PyObject *py_op_code = PyLong_FromLong(op_code);
+    if (!py_op_code) {
+        goto CLEANUP2;
+    }
+
+    // TODO: should use macros for strings
+    int retval = PyDict_SetItemString(py_dict, "op", py_op_code);
+    Py_DECREF(py_op_code);
+    if (retval == -1) {
+        goto CLEANUP3;
+    }
+
+    if (op_code != AS_OPERATOR_TOUCH) {
+        // TODO: make sure bin_name str is consistent
+        retval = PyDict_SetItemString(py_dict, "bin_name", py_bin_name);
+        if (retval == -1) {
+            goto CLEANUP3;
+        }
+    }
+
+    retval = PyDict_SetItemString(py_dict, "val", py_value);
+    if (retval == -1) {
+        goto CLEANUP3;
+    }
+
+    retval = PyList_Append(py_list, py_dict);
+    if (retval == -1) {
+        goto CLEANUP3;
+    }
+
+    py_ret_val = py_list;
+
+CLEANUP3:
+    Py_DECREF(py_op_code);
+CLEANUP2:
+    Py_DECREF(py_list);
+CLEANUP1:
+    Py_DECREF(py_dict);
+error:
+    return py_ret_val;
 }
 
 /**
