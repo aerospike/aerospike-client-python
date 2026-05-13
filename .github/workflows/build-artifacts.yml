@@ -29,7 +29,7 @@ on:
         default: false
       server-tag:
         type: string
-        required: false
+        required: true
         description: 'Server docker image tag (e.g to test a client backport version)'
       test-file:
         required: false
