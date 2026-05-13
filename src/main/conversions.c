@@ -2211,9 +2211,9 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     *obj = py_err;
 }
 
-void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
-                                   PyObject *py_value, as_binop *binop,
-                                   char *bin, as_static_pool *static_pool)
+void initialize_bin_for_strict_types(AerospikeClient *self, as_error *err,
+                                     PyObject *py_value, as_binop *binop,
+                                     char *bin, as_static_pool *static_pool)
 {
     as_bin *binop_bin = &binop->bin;
     as_status status = as_val_new_from_pyobject(self, err, py_value,

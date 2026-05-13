@@ -153,9 +153,9 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
                                     as_privilege **privileges,
                                     int privileges_size);
 
-void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
-                                   PyObject *py_value, as_binop *binop,
-                                   char *bin, as_static_pool *static_pool);
+void initialize_bin_for_strict_types(AerospikeClient *self, as_error *err,
+                                     PyObject *py_value, as_binop *binop,
+                                     char *bin, as_static_pool *static_pool);
 
 // Both as_operations and as_record have ttl and gen fields,
 // so we have ttl and gen as separate parameters instead of accepting either as_operations or as_record

@@ -640,8 +640,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_APPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              static_pool);
+                initialize_bin_for_strict_types(self, err, py_value, binop, bin,
+                                                static_pool);
             }
         }
         break;
@@ -673,8 +673,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_PREPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              static_pool);
+                initialize_bin_for_strict_types(self, err, py_value, binop, bin,
+                                                static_pool);
             }
         }
         break;
@@ -701,8 +701,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_INCR;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              static_pool);
+                initialize_bin_for_strict_types(self, err, py_value, binop, bin,
+                                                static_pool);
             }
         }
         break;
