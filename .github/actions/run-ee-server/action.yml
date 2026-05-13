@@ -75,6 +75,11 @@ runs:
         tls_cert_dir="/host${tls_cert_dir}"
       fi
 
+      win_path=$(cygpath -w "$tls_cert_dir")
+      echo $win_path
+      ls -l "$win_path"
+      whoami
+
       crudini --set config.conf tls cafile $tls_cert_dir/ca.crt
       crudini --set config.conf tls keyfile $tls_cert_dir/client.key
       crudini --set config.conf tls certfile $tls_cert_dir/client.crt
