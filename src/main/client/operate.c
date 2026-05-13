@@ -127,8 +127,9 @@ static as_status invertIfSpecified(as_error *err, PyObject *op_dict,
  * Returns 0 if operation can be performed.
  *******************************************************************************************************
  */
-PyObject *create_pylist(PyObject *py_list, long operation, PyObject *py_bin,
-                        PyObject *py_value)
+PyObject *create_py_list_with_single_operation(PyObject *py_list,
+                                               long operation, PyObject *py_bin,
+                                               PyObject *py_value)
 {
     PyObject *dict = PyDict_New();
     py_list = PyList_New(0);
@@ -1308,7 +1309,8 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_list = NULL;
-    py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
+    py_list = create_py_list_with_single_operation(py_list, AS_OPERATOR_APPEND,
+                                                   py_bin, py_append_str);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
 
@@ -1355,8 +1357,8 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_list = NULL;
-    py_list =
-        create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
+    py_list = create_py_list_with_single_operation(py_list, AS_OPERATOR_PREPEND,
+                                                   py_bin, py_prepend_str);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
 
@@ -1403,7 +1405,8 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_list = NULL;
-    py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
+    py_list = create_py_list_with_single_operation(py_list, AS_OPERATOR_INCR,
+                                                   py_bin, py_offset_value);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
 
@@ -1454,7 +1457,8 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_list = NULL;
-    py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
+    py_list = create_py_list_with_single_operation(py_list, AS_OPERATOR_TOUCH,
+                                                   NULL, py_touchvalue);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
 
