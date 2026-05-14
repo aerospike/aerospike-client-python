@@ -133,7 +133,7 @@ jobs:
           python3.11-devel
 
     - name: Install wheel
-      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$FILE_PATTERN_TO_INSTALL"
+      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND $FILE_PATTERN_TO_INSTALL
 
     - name: Install test prerequisites
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
