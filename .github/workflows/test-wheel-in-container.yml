@@ -33,9 +33,11 @@ jobs:
   test-wheel:
     runs-on: ${{ inputs.cpu-arch == 'x86_64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     env:
+      LINUX_DISTRO_IMAGE_NAME: ${{ inputs.container-image-name }}
       CONTAINER_NAME: linux-distro
       REPO_DIR_NAME: aerospike-client-python
       PYTHON_VERSION: ${{ inputs.python-version }}
+      PIP_INSTALL_COMMAND: 'pip install'
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -77,8 +79,6 @@ jobs:
         where-is-client-connecting-from: 'separate-docker-container'
 
     - run: docker run -d --network "${{ steps.run-ee-server.outputs.container-network }}" -v /:/host:ro --name "$CONTAINER_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
-      env:
-        LINUX_DISTRO_IMAGE_NAME: ${{ inputs.container-image-name }}
 
     - if: ${{ !inputs.build-from-source }}
       run: |
@@ -102,6 +102,22 @@ jobs:
       if: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
       run: docker exec "$CONTAINER_NAME" dnf install -y python3.11
 
+    - name: 'Ubuntu: Install python 3 that comes by default (step 1)'
+      if: ${{ startsWith(env.LINUX_DISTRO_IMAGE_NAME, 'ubuntu') }}
+      run: |
+        docker exec "$CONTAINER_NAME" apt-get update
+        docker exec "$CONTAINER_NAME" apt-get install python3 python3-pip -y
+
+    - name: Make sure pip is installed
+      # This is good to check in general, so we run for all distros
+      # Ubuntu doesn't have this by default though, but it's fine since it has pip already
+      if: ${{ !startsWith(env.LINUX_DISTRO_IMAGE_NAME, 'ubuntu') }}
+      run: docker exec "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m ensurepip
+
+    - if: ${{ env.LINUX_DISTRO_IMAGE_NAME == 'ubuntu:24.04' }}
+      # Python 3.12+ fails to install packages to the system directory by default
+      run: echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
+
     - name: 'Cat 1: build from source'
       if: ${{ inputs.build-from-source }}
       # Here we assume all cat 1 tests are running on a dnf-based distro
@@ -117,10 +133,10 @@ jobs:
           python3.11-devel
 
     - name: Install wheel
-      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install "$FILE_PATTERN_TO_INSTALL"
+      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$FILE_PATTERN_TO_INSTALL"
 
     - name: Install test prerequisites
-      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
+      run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/$TEST_FILE
