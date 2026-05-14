@@ -84,9 +84,8 @@ jobs:
         build_number=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
         # Currently no way to download specific artifacts from a release bundle
         # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
-        artifact_path=$(jf rt s --fail-no-op --build "$JFROG_BUILD_NAME/$build_number" "${JFROG_PROJECT}-pypi-dev-local/**/*" | jq -r '.[0].path')
         DEST_DIR_PATH="./dest-dir/"
-        jf rt dl --fail-no-op --flat "$artifact_path" "$DEST_DIR_PATH"
+        jf rt dl --fail-no-op --build="${JFROG_BUILD_NAME}/${build_number}" --flat "${JFROG_PROJECT}-pypi-dev-local/**/*" "$DEST_DIR_PATH"
 
         npm install
         node upload-individual-github-artifacts.js "$DEST_DIR_PATH" "$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS"
