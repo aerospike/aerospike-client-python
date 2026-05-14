@@ -72,6 +72,7 @@ jobs:
       python-version: ${{ matrix.test-case[2] }}
       build-from-source: ${{ matrix.test-case[3] }}
       server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
     secrets: inherit
 
   macOS:
@@ -92,4 +93,5 @@ jobs:
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ endsWith(matrix.runner-os, '-intel') && inputs.run-integration-tests-on-macos-x86 }}
+      test-file: ${{ inputs.test-file }}
     secrets: inherit
