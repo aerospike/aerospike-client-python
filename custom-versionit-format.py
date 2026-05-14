@@ -23,6 +23,9 @@ def append_to_local(version_str: str, value: str) -> str:
     version = version.replace(local=new_local)
     return version.__str__()
 
+def is_central_branch(branch: str | None) -> bool:
+    return type(branch) == str and re.match(r'^(dev|stage|master).*', branch)
+
 def my_vcs(
         project_dir: Union[str, pathlib.Path],
         params: Dict[str, Any]
@@ -33,7 +36,7 @@ def my_vcs(
     )
 
     print("Branch:", vcs_description.branch)
-    if vcs_description.branch and re.match(r'^(dev|stage|master).*', vcs_description.branch):
+    if is_central_branch(vcs_description.branch):
         print("We are on a central branch")
         # Skip the format step. (i.e wheel should have the release version)
         vcs_description.state = "exact"
@@ -43,6 +46,23 @@ def my_vcs(
         # Workaround: https://github.com/jwodder/versioningit/issues/42#issuecomment-1235573432
         vcs_description.state = "exact_"
     return vcs_description
+
+def my_next_version(
+    version: str,
+    branch: str | None,
+    params: Dict[str, Any]
+):
+    if is_central_branch(branch):
+        next_version_func = versioningit.next_version.next_smallest_release_version
+    else:
+        next_version_func = versioningit.next_version.null_next_version
+
+    next_version = next_version_func(
+        version=version,
+        branch=branch,
+        params=params
+    )
+    return next_version
 
 def my_format(
         description: versioningit.VCSDescription,
