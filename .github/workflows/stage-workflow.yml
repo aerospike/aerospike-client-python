@@ -78,7 +78,7 @@ jobs:
     - name: Download JFrog artifacts from release bundle and reupload as Github artifacts
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
-        bundle_version=$(jf rbs --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
+        bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
         # Currently no way to download specific artifacts from a release bundle
         # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
         build_number="${bundle_version##*-}"
