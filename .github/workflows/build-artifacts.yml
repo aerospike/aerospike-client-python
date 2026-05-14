@@ -49,6 +49,10 @@ on:
 
   workflow_call:
     inputs: *inputs
+    outputs:
+      # TODO: this assumes matrix jobs write to outputs atomically
+      python-versions:
+        value: ${{ jobs.build-wheels.outputs.python-versions }}
 
 jobs:
   build-sdist:

@@ -48,8 +48,8 @@ jobs:
     uses: ./.github/workflows/test-wheel.yml
     with:
       runner-os-json-string: \"ubuntu-22.04\"
-      # TODO: get this dynamically from build artifacts
-      python-version: '3.10'
+      # Get lowest supported python version
+      python-version: ${{ fromJson(needs.build-artifacts.outputs.python-versions)[0] }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       env-vars: VALGRIND=1;MASSIF=false
