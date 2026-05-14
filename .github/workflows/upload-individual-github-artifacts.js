@@ -14,7 +14,7 @@ async function upload() {
   for (const file of files) {
     // Get platform tag of wheel
     // Python tag - ABI tag - platform tag
-    const matches = file.match(/.*(+)-[a-z0-9.]+-(.+)\.whl$/);
+    const matches = file.match(/.*-(.+)-[a-z0-9.]+-(.+)\.whl$/);
 
     const python_tag = matches[0];
     // Ignore cp- prefix of python tag
