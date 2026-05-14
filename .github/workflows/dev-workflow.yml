@@ -106,6 +106,8 @@ jobs:
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      # Have to override the default artifact name because we are not signing the artifacts
+      gh-artifact-name: build-artifacts
       # TODO: may be easier to have a default for these two inputs
       jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
       jf-metadata-build-id: ${{ github.run_id }}-${{ github.run_attempt }}-buildinfo
