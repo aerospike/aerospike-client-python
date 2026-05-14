@@ -43,8 +43,8 @@ include-package-data = true
 [tool.versioningit.vcs]
 method = {module = "custom-versionit-format", value="my_vcs"}
 
-[tool.versioningit.next-version]
-method = {module = "custom-versionit-format", value="my_next_version"}
+[tool.versioningit.tag2version]
+method = {module = "custom-versionit-format", value="my_tag2version"}
 
 # Use versioneer formatting
 [tool.versioningit.format]

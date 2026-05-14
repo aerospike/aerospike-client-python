@@ -27,6 +27,8 @@ def append_to_local(version_str: str, value: str) -> str:
 def is_central_branch(branch: str | None) -> bool:
     return type(branch) == str and re.match(r'^(dev|stage|master).*', branch)
 
+building_on_central_branch = False
+
 def my_vcs(
         project_dir: Union[str, pathlib.Path],
         params: Dict[str, Any]
@@ -39,6 +41,10 @@ def my_vcs(
     print("Branch:", vcs_description.branch)
     if is_central_branch(vcs_description.branch):
         print("We are on a central branch")
+        # Need to set flag to override latest tag with release version in tag2version for central branches
+        global building_on_central_branch
+        building_on_central_branch = True
+
         # Skip the format step. (i.e wheel should have the release version)
         vcs_description.state = "exact"
     elif vcs_description.state == "exact":
@@ -48,25 +54,20 @@ def my_vcs(
         vcs_description.state = "exact_"
     return vcs_description
 
-def my_next_version(
-    version: str,
-    branch: str | None,
+def my_tag2version(
+    tag: str,
     params: Dict[str, Any]
 ):
-    if is_central_branch(branch):
+    if building_on_central_branch:
         print("my_next_version: we are on a central branch")
-        next_version_func = versioningit.next_version.next_smallest_release_version
+        version_with_dev_number = Version.parse(tag, strict=True)
+        # Get release version
+        version = version_with_dev_number.replace(dev=None)
     else:
-        print("my_next_version: we are on a feature branch")
-        next_version_func = versioningit.next_version.null_next_version
+        version = versioningit.basics.basic_tag2version(tag, params)
 
-    next_version = next_version_func(
-        version=version,
-        branch=branch,
-        params=params
-    )
-    print(f"my_next_version: {next_version}")
-    return next_version
+    print(f"tag2version: {version}")
+    return version
 
 def my_format(
         description: versioningit.VCSDescription,
