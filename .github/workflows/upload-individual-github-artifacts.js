@@ -32,12 +32,12 @@ async function upload() {
       if (platform_tag.includes("macosx")) {
         // Strip the macos major and minor version from the platform tag
         let arch = platform_tag.match(/(arm64|x86_64)$/);
-        arch = match[0]
+        arch = arch[0]
         platform_tag = `macosx_${arch}`;
       } else if (platform_tag.includes("manylinux")) {
         // Strip the glibc version from the platform tag
         let arch = platform_tag.match(/(aarch64|x86_64)$/);
-        arch = match[0]
+        arch = arch[0]
         platform_tag = `manylinux_${arch}`;
       }
       console.log("Transformed platform tag:", platform_tag)
