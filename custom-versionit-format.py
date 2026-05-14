@@ -32,12 +32,13 @@ def my_vcs(
         params=params
     )
 
+    print("Branch:", vcs_description.branch)
     if vcs_description.branch and re.match(r'^(dev|stage|master).*', vcs_description.branch):
-        # We are on a central branch
+        print("We are on a central branch")
         # Skip the format step. (i.e wheel should have the release version)
         vcs_description.state == "exact"
     elif vcs_description.state == "exact":
-        # We are on a feature branch.
+        print("We are on a feature branch")
         # We don't want the format step to be skipped (we always want the build to have the latest tag in the version)
         # Workaround: https://github.com/jwodder/versioningit/issues/42#issuecomment-1235573432
         vcs_description.state = "exact_"
