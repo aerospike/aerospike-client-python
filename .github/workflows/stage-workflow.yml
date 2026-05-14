@@ -67,6 +67,9 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
+    - name: Get workflow code
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
     - name: Download JFrog artifacts from release bundle and reupload as Github artifacts
       run: |
         bundle_version=$(jf rbs --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
@@ -79,6 +82,7 @@ jobs:
 
         npm install --no-save @actions/artifact
         node upload-individual-github-artifacts.js "$DEST_DIR_PATH" "$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS"
+      shell: bash -ex {0}
       working-directory: .github/workflows
       env:
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
