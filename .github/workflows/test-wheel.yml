@@ -39,6 +39,7 @@ jobs:
     env:
       CE_CONTAINER_NAME: aerospike
       PYTHON_VERSION: ${{ inputs.python-version }}
+      MASSIF_REPORT_FILE_NAME: massif.out
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -159,12 +160,24 @@ jobs:
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
       shell: bash
 
+    - if: ${{ contains(inputs.env-vars, 'VALGRIND') }}
+      name: Install valgrind
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y valgrind
+
+    - if: ${{ contains(inputs.env-vars, 'MASSIF=true') }}
+      run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
+
+    - if: ${{ contains(inputs.env-vars, 'MASSIF=false') }}
+      run: echo VALGRIND_ARGS="--leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
+
     # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
     # There's no way to tell unless we see the logs
     # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
     - if: ${{ inputs.run-integration-tests }}
       run: |
-        eval python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
+        eval PYTHONMALLOC=malloc valgrind --error-exitcode=1 python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
       working-directory: test
       shell: bash
       env:
@@ -173,6 +186,11 @@ jobs:
     - if: ${{ inputs.run-integration-tests == false }}
       run: python3 -c "import aerospike"
       shell: bash
+
+    # TODO: upload report as artifact to compare against baseline.
+    - if: ${{ !cancelled() && contains(inputs.env-vars, 'MASSIF=true') }}
+      run: ms_print "./$MASSIF_REPORT_FILE_NAME"
+      working-directory: test
 
     - name: Show server logs to debug test results
       if: ${{ always() && inputs.run-integration-tests && steps.run-ee-server.conclusion == 'success' }}
