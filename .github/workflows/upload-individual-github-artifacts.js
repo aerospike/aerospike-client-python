@@ -13,7 +13,7 @@ async function upload() {
 
   for (const file of files) {
     if (file.endsWith('.tar.gz')) {
-      let artifact_name = `${gh_artifact_name_prefix}-sdist`;
+      var artifact_name = `${gh_artifact_name_prefix}-sdist`;
     } else if (file.endsWith('.whl')) {
       // Get platform tag of wheel
       // Python tag - ABI tag - platform tag
@@ -36,7 +36,7 @@ async function upload() {
         platform_tag = `manylinux_${arch}`;
       }
 
-      let artifact_name = `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`;
+      var artifact_name = `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`;
     } else {
       console.log("Invalid artifact file extension. Artifact name is ", file);
       process.exit(1)
