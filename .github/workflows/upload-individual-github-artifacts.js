@@ -20,13 +20,13 @@ async function upload() {
       // Python tag - ABI tag - platform tag
       const matches = file.match(/.*-([a-zA-Z0-9_]+)-[a-zA-Z0-9_]+-([a-zA-Z0-9_]+)\.whl$/);
 
-      const python_tag = matches[0];
+      const python_tag = matches[1];
       // Ignore cp- prefix of python tag
       // Concats major version with the minor version using a dot
       const python_version = python_tag.slice(2, 3) + '.' + python_tag.slice(3);
       console.log("Python version:", python_version)
 
-      let platform_tag = matches[1];
+      let platform_tag = matches[2];
       console.log("Platform tag:", platform_tag)
 
       if (platform_tag.includes("macosx")) {
