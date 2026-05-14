@@ -129,7 +129,7 @@ jobs:
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: |
-        ${{ vars.JFROG_BUILD_NAME }}:${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
+        ${{ vars.JFROG_BUILD_NAME }}:${{ github.run_id }}-${{ github.run_attempt }}
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
       version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
