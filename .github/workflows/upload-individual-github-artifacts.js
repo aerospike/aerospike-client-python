@@ -35,13 +35,15 @@ async function upload() {
         const arch = platform_tag.match(/(aarch64|x86_64)$/);
         platform_tag = `manylinux_${arch}`;
       }
+
+      let artifact_name = `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`;
     } else {
-      console.log("Invalid artifact file extension. Artifact name is ", file)
+      console.log("Invalid artifact file extension. Artifact name is ", file);
       process.exit(1)
     }
 
     await client.uploadArtifact(
-      `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`, // Unique name that will be selected downstream by a glob pattern
+      artifact_name, // Unique name that will be selected downstream by a glob pattern
       [`${file}`], // File path
       './' // Root directory
     );
