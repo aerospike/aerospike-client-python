@@ -116,10 +116,11 @@ jobs:
   # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
   fast-forward-stage-to-dev-and-promote-rb-to-test:
     needs: [
-      run-stage-tests,
-      compare-latest-dev-tag-and-stage
+      compare-latest-dev-tag-and-stage,
+      reupload-jfrog-artifacts-as-github-ones,
+      run-stage-tests
     ]
-    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && ((needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' && needs.run-stage-tests.result == 'success') || needs.run-stage-tests.result == 'skipped') }}
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
