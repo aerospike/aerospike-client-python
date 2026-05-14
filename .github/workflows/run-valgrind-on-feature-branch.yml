@@ -73,7 +73,7 @@ jobs:
       run: sudo apt-get install -y moreutils
 
     - name: Filter out wheels with labels in results
-      run: jq 'map(select(.path | test("\\.") | not))' "$JF_SEARCH_RESULTS_FILE_NAME" | sponge "$JF_SEARCH_RESULTS_FILE_NAME"
+      run: jq --arg short_github_sha "$SHORT_GITHUB_SHA" 'map(select(.path | test("$short_github_sha\\.") | not))' "$JF_SEARCH_RESULTS_FILE_NAME" | sponge "$JF_SEARCH_RESULTS_FILE_NAME"
       shell: bash
 
     - name: Check if artifacts with labels were filtered out
