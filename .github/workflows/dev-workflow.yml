@@ -119,7 +119,7 @@ jobs:
       id-token: write
       actions: read
 
-  create-release-bundle-and-promote-to-dev:
+  create-release-bundle:
     if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog,
@@ -136,4 +136,17 @@ jobs:
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
     permissions:
       contents: read
+      id-token: write
+
+  promote-release-bundle-to-dev:
+    needs: [
+      get-next-release-version-and-latest-tag,
+      create-release-bundle
+    ]
+    uses: ./.github/workflows/promote-release-bundle.yml
+    with:
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
+      new-environment: DEV
+    permissions:
       id-token: write
