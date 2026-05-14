@@ -2,8 +2,8 @@ import { DefaultArtifactClient } from '@actions/artifact';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 
-const jfrog_artifacts_folder_path=process.argv[1]
-const gh_artifact_name_prefix=process.argv[2]
+const jfrog_artifacts_folder_path=process.argv[2]
+const gh_artifact_name_prefix=process.argv[3]
 
 process.chdir(jfrog_artifacts_folder_path);
 
