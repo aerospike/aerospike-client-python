@@ -67,6 +67,7 @@ def my_tag2version(
         version = versioningit.basics.basic_tag2version(tag, params)
 
     print(f"tag2version: {version}")
+    version = version.__str__()
     return version
 
 def my_format(
