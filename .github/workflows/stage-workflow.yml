@@ -11,12 +11,6 @@ on:
       server-tag:
         required: true
         description: 'Server docker image tag'
-      # For debugging
-      dry-run:
-        required: false
-        default: false
-        type: boolean
-        description: "Don't tag or upload anything to JFrog"
       test-file:
         required: false
         default: ''
@@ -120,5 +114,4 @@ jobs:
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
-      dry-run: ${{ inputs.dry-run }}
     secrets: inherit
