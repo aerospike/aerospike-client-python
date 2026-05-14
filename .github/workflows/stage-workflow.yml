@@ -47,8 +47,8 @@ jobs:
       run: |
         num_files_changed=$(git diff origin/$STAGE_BRANCH_NAME..origin/$DEV_BRANCH_NAME --name-only | grep --invert-match --count -e "^doc/" -e "^aerospike-stubs/" -e VERSION)
         echo NUM_FILES_CHANGED=$num_files_changed >> $GITHUB_ENV
-      # We want this step to fail if a command failed while using pipes
-      shell: bash
+      # We run in posix mode so if a command running via command substitution fails, the step fails
+      shell: bash --posix --noprofile --norc -eo pipefail {0}
 
     - name: If any files were changed besides the exceptions, run the stage tests
       run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
