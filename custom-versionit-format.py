@@ -6,6 +6,7 @@ import re
 
 import versioningit.basics
 import versioningit.git
+import versioningit.next_version
 import os
 
 # Take in <version> and <string> as input
