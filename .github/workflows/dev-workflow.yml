@@ -120,7 +120,7 @@ jobs:
       actions: read
 
   create-release-bundle-and-promote-to-dev:
-    if: ${{ inputs.dry-run }}
+    if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog,
       get-next-release-version-and-latest-tag
