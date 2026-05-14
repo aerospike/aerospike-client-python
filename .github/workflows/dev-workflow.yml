@@ -52,6 +52,7 @@ jobs:
     secrets: inherit
     permissions:
       contents: read
+      id-token: write
 
   reupload-artifacts-as-one-artifact-in-github:
     needs: [
