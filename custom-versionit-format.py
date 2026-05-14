@@ -64,7 +64,7 @@ def my_tag2version(
         # Get release version
         version = version_with_dev_number.replace(dev=None)
     else:
-        version = versioningit.basics.basic_tag2version(tag, params)
+        version = versioningit.basics.basic_tag2version(tag=tag, params=params)
 
     print(f"tag2version: {version}")
     version = version.__str__()
