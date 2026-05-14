@@ -30,8 +30,14 @@ def my_vcs(
         project_dir=project_dir,
         params=params
     )
-    if vcs_description.state == "exact":
-        # We don't want the format step to be skipped
+
+    if vcs_description.branch and vcs_description.branch.startswith("[A-Z]+-") is False:
+        # We are on a central branch (e.g dev)
+        # Skip the format step.
+        vcs_description.state == "exact"
+    elif vcs_description.state == "exact":
+        # We are on a feature branch.
+        # We don't want the format step to be skipped (we want the build to have the latest tag in the version)
         # Workaround: https://github.com/jwodder/versioningit/issues/42#issuecomment-1235573432
         vcs_description.state = "exact_"
     return vcs_description
