@@ -36,7 +36,7 @@ def my_vcs(
     if vcs_description.branch and re.match(r'^(dev|stage|master).*', vcs_description.branch):
         print("We are on a central branch")
         # Skip the format step. (i.e wheel should have the release version)
-        vcs_description.state == "exact"
+        vcs_description.state = "exact"
     elif vcs_description.state == "exact":
         print("We are on a feature branch")
         # We don't want the format step to be skipped (we always want the build to have the latest tag in the version)
