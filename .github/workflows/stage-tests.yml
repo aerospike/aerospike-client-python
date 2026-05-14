@@ -12,7 +12,7 @@ permissions:
 on:
   workflow_call:
     inputs:
-      python-versions-to-test:
+      macos-python-versions-to-test:
         required: true
         type: string
       server-tag:
@@ -83,7 +83,7 @@ jobs:
           macos-15,
           macos-26
         ]
-        python-version: ${{ fromJson(inputs.python-versions-to-test) }}
+        python-version: ${{ fromJson(inputs.macos-python-versions-to-test) }}
       fail-fast: false
     uses: ./.github/workflows/test-wheel.yml
     with:

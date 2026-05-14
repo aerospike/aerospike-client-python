@@ -99,6 +99,8 @@ jobs:
     # Need to pass in JFrog secrets
     secrets: inherit
     with:
+      # TODO: more work to get this dynamically
+      macos-python-versions-to-test: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       run-integration-tests-on-macos-x86: false
