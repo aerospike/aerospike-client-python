@@ -18,7 +18,7 @@ on:
         required: true
 
 jobs:
-  promote-release-bundle-to-dev:
+  promote-release-bundle:
     runs-on: ubuntu-24.04
     steps:
     - name: Setup JFrog CLI
