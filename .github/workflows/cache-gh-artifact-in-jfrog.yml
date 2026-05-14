@@ -1,5 +1,4 @@
 permissions:
-  actions: read
   id-token: write
 
 name: Upload to JFrog
