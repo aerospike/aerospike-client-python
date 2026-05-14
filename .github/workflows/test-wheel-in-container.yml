@@ -80,7 +80,7 @@ jobs:
 
     - run: docker run -d --network "${{ steps.run-ee-server.outputs.container-network }}" -v /:/host:ro --name "$CONTAINER_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
 
-    - if: ${{ !inputs.build-from-source }}
+    - if: ${{ inputs.build-from-source }}
       run: |
         echo ARTIFACT_NAME_PATTERN=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist >> $GITHUB_ENV
         echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> $GITHUB_ENV
