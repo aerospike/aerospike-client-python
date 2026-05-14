@@ -120,7 +120,7 @@ jobs:
       reupload-jfrog-artifacts-as-github-ones,
       run-stage-tests
     ]
-    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && ((needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' && needs.run-stage-tests.result == 'success') || needs.run-stage-tests.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && ((needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' && needs.run-stage-tests.result == 'success') || (needs.reupload-jfrog-artifacts-as-github-ones.result == 'skipped' && needs.run-stage-tests.result == 'skipped')) }}
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
