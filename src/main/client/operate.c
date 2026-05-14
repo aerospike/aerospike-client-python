@@ -389,14 +389,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     const char *bin_name = NULL;
     if (OP_REQUIRES_BIN_NAME[op_code] == true) {
-        PyObject *py_key_for_bin_name = PyUnicode_FromString("bin_name");
-        if (py_key_for_bin_name == NULL) {
-            return NULL;
-        }
-
-        PyObject *py_bin_name =
-            PyDict_GetItemWithError(py_op_dict, py_key_for_bin_name);
-        Py_DECREF(py_key_for_bin_name);
+        PyObject *py_bin_name = PyDict_GetItemStringRef(py_op_dict, "bin_name");
         if (py_bin_name == NULL) {
             if (!PyErr_Occurred()) {
                 // Key not found
@@ -404,14 +397,16 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
                                        "This operation requires a bin_name");
             }
             else {
-                return NULL;
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                       "Unable to get bin_name from op");
             }
         }
 
         // Should be valid as long as dictionary and the bin_name entry exists
         bin_name = PyUnicode_AsUTF8(py_bin_name);
         if (bin_name == NULL) {
-            return NULL;
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to get bin_name from op");
         }
     }
 
