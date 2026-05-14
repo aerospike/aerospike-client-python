@@ -2,8 +2,8 @@ import { DefaultArtifactClient } from '@actions/artifact';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 
-const jfrog_artifacts_folder_path=process.argv[2]
-const gh_artifact_name_prefix=process.argv[3]
+const jfrog_artifacts_folder_path=process.argv[2];
+const gh_artifact_name_prefix=process.argv[3];
 
 process.chdir(jfrog_artifacts_folder_path);
 
@@ -14,14 +14,24 @@ async function upload() {
   for (const file of files) {
     // Get platform tag of wheel
     // Python tag - ABI tag - platform tag
-    const matches = file.match(/.*([a-z0-9]+)-[a-z0-9.]+-(.+)\.whl$/);
+    const matches = file.match(/.*(+)-[a-z0-9.]+-(.+)\.whl$/);
 
     const python_tag = matches[0];
     // Ignore cp- prefix of python tag
     // Concats major version with the minor version using a dot
     const python_version = python_tag.slice(2, 3) + '.' + python_tag.slice(3);
 
-    const platform_tag = matches[1];
+    let platform_tag = matches[1];
+
+    if (platform_tag.includes("macosx")) {
+      // Strip the macos major and minor version from the platform tag
+      const arch = platform_tag.match(/(arm64|x86_64)$/);
+      platform_tag = `macosx_${arch}`;
+    } else if (platform_tag.includes("manylinux")) {
+      // Strip the glibc version from the platform tag
+      const arch = platform_tag.match(/(aarch64|x86_64)$/);
+      platform_tag = `manylinux_${arch}`;
+    }
 
     await client.uploadArtifact(
       `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`, // Unique name that will be selected downstream by a glob pattern
