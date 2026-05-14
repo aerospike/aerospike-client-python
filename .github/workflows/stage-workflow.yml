@@ -86,7 +86,7 @@ jobs:
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
         build_number=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
-        export build_number="$build_number" >> $GITHUB_OUTPUT
+        echo build_number="$build_number" >> $GITHUB_OUTPUT
 
         # Currently no way to download specific artifacts from a release bundle
         # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
