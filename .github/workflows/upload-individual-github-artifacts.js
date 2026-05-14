@@ -24,8 +24,10 @@ async function upload() {
       // Ignore cp- prefix of python tag
       // Concats major version with the minor version using a dot
       const python_version = python_tag.slice(2, 3) + '.' + python_tag.slice(3);
+      console.log("Python version:", python_version)
 
       let platform_tag = matches[1];
+      console.log("Platform tag:", platform_tag)
 
       if (platform_tag.includes("macosx")) {
         // Strip the macos major and minor version from the platform tag
@@ -36,6 +38,7 @@ async function upload() {
         const arch = platform_tag.match(/(aarch64|x86_64)$/);
         platform_tag = `manylinux_${arch}`;
       }
+      console.log("Transformed platform tag:", platform_tag)
 
       var artifact_name = `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`;
     } else {
