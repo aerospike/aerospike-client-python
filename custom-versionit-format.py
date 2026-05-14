@@ -54,8 +54,10 @@ def my_next_version(
     params: Dict[str, Any]
 ):
     if is_central_branch(branch):
+        print("my_next_version: we are on a central branch")
         next_version_func = versioningit.next_version.next_smallest_release_version
     else:
+        print("my_next_version: we are on a feature branch")
         next_version_func = versioningit.next_version.null_next_version
 
     next_version = next_version_func(
@@ -63,6 +65,7 @@ def my_next_version(
         branch=branch,
         params=params
     )
+    print(f"my_next_version: {next_version}")
     return next_version
 
 def my_format(
