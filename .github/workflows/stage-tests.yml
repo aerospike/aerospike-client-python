@@ -8,6 +8,7 @@ name: Stage tests
 permissions:
   contents: read
   id-token: write
+  statuses: write
 
 on:
   workflow_call:
