@@ -85,7 +85,7 @@ jobs:
         DEST_DIR_PATH="./dest-dir/"
         jf rt dl --fail-no-op --flat "$artifact_path" "$DEST_DIR_PATH"
 
-        npm install --no-save @actions/artifact
+        npm install
         node upload-individual-github-artifacts.js "$DEST_DIR_PATH" "$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS"
       shell: bash -ex {0}
       working-directory: .github/workflows
