@@ -12,6 +12,7 @@ async function upload() {
   const files = fs.readdirSync(process.cwd());
 
   for (const file of files) {
+    console.log("Found ", file)
     if (file.endsWith('.tar.gz')) {
       var artifact_name = `${gh_artifact_name_prefix}-sdist`;
     } else if (file.endsWith('.whl')) {
