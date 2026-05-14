@@ -61,7 +61,7 @@ jobs:
 
     - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: ${{ vars.JFROG_PLATFORM_URL }}
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
         JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
