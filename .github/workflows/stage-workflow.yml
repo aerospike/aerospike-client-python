@@ -5,7 +5,6 @@ permissions:
   id-token: write
 
 on:
-  pull_request:
   # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
   workflow_dispatch:
     inputs:
@@ -57,9 +56,8 @@ jobs:
       id: run_stage_tests
 
   reupload-jfrog-artifacts-as-github-ones:
-    if: ${{ false }}
     needs: compare-latest-dev-tag-and-stage
-    # if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
