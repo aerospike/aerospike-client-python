@@ -12,25 +12,32 @@ async function upload() {
   const files = fs.readdirSync(process.cwd());
 
   for (const file of files) {
-    // Get platform tag of wheel
-    // Python tag - ABI tag - platform tag
-    const matches = file.match(/.*-(.+)-[a-z0-9.]+-(.+)\.whl$/);
+    if (file.endsWith('.tar.gz')) {
+      let artifact_name = `${gh_artifact_name_prefix}-sdist`;
+    } else if (file.endsWith('.whl')) {
+      // Get platform tag of wheel
+      // Python tag - ABI tag - platform tag
+      const matches = file.match(/.*-(.+)-[a-z0-9.]+-(.+)\.whl$/);
 
-    const python_tag = matches[0];
-    // Ignore cp- prefix of python tag
-    // Concats major version with the minor version using a dot
-    const python_version = python_tag.slice(2, 3) + '.' + python_tag.slice(3);
+      const python_tag = matches[0];
+      // Ignore cp- prefix of python tag
+      // Concats major version with the minor version using a dot
+      const python_version = python_tag.slice(2, 3) + '.' + python_tag.slice(3);
 
-    let platform_tag = matches[1];
+      let platform_tag = matches[1];
 
-    if (platform_tag.includes("macosx")) {
-      // Strip the macos major and minor version from the platform tag
-      const arch = platform_tag.match(/(arm64|x86_64)$/);
-      platform_tag = `macosx_${arch}`;
-    } else if (platform_tag.includes("manylinux")) {
-      // Strip the glibc version from the platform tag
-      const arch = platform_tag.match(/(aarch64|x86_64)$/);
-      platform_tag = `manylinux_${arch}`;
+      if (platform_tag.includes("macosx")) {
+        // Strip the macos major and minor version from the platform tag
+        const arch = platform_tag.match(/(arm64|x86_64)$/);
+        platform_tag = `macosx_${arch}`;
+      } else if (platform_tag.includes("manylinux")) {
+        // Strip the glibc version from the platform tag
+        const arch = platform_tag.match(/(aarch64|x86_64)$/);
+        platform_tag = `manylinux_${arch}`;
+      }
+    } else {
+      console.log("Invalid artifact file extension. Artifact name is ", file)
+      process.exit(1)
     }
 
     await client.uploadArtifact(

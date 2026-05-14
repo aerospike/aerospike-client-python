@@ -80,12 +80,22 @@ jobs:
       env:
         LINUX_DISTRO_IMAGE_NAME: ${{ inputs.container-image-name }}
 
+    - if: ${{ !inputs.build-from-source }}
+      run: |
+        echo ARTIFACT_NAME_PATTERN=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist >> $GITHUB_ENV
+        echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> $GITHUB_ENV
+
+    - if: ${{ !inputs.build-from-source }}
+      run: |
+        echo ARTIFACT_NAME_PATTERN=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-*manylinux*${{ inputs.cpu-arch }}* >> $GITHUB_ENV
+        echo FILE_PATTERN_TO_INSTALL=*.whl >> $GITHUB_ENV
+
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ inputs.python-version }}-*manylinux*${{ inputs.cpu-arch }}*
+        pattern: ${{ env.ARTIFACT_NAME_PATTERN }}
         path: ./
 
-    - name: Copy repo and wheel into container
+    - name: Copy repo and artifact into container
       run: docker cp ../$REPO_DIR_NAME $CONTAINER_NAME:/
 
     - name: 'DNF based distros: install python3'
@@ -105,11 +115,9 @@ jobs:
           zlib-devel \
           openssl-devel \
           python3.11-devel
-        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
-        docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m build
 
     - name: Install wheel
-      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install *.whl
+      run: docker exec --workdir /$REPO_DIR_NAME "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install "$FILE_PATTERN_TO_INSTALL"
 
     - name: Install test prerequisites
       run: docker exec --workdir /$REPO_DIR_NAME/test "$CONTAINER_NAME" "python${PYTHON_VERSION}" -m pip install -r requirements.txt
