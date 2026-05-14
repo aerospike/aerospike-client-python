@@ -2,6 +2,7 @@ name: Valgrind
 run-name: Valgrind (server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
 permissions:
+  id-token: write
   contents: read
   statuses: write
 
