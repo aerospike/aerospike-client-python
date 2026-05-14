@@ -16,9 +16,6 @@ on:
       jfrog-project:
         type: string
         required: true
-      jfrog-repo-name:
-        type: string
-        required: true
 
 jobs:
   promote-release-bundle-to-dev:

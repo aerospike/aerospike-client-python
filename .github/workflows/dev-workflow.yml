@@ -145,6 +145,7 @@ jobs:
     ]
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
+      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.get-next-release-version-and-latest-tag.outputs.latest-tag }}
       new-environment: DEV
