@@ -45,10 +45,14 @@ jobs:
 
   valgrind:
     needs: build-artifacts
-    uses: ./.github/workflows/valgrind.yml
+    uses: ./.github/workflows/test-wheel.yml
     with:
+      runner-os-json-string: \"ubuntu-22.04\"
+      # TODO: get this dynamically from build artifacts
+      python-version: '3.10'
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+      env-vars: VALGRIND=1;MASSIF=false
     secrets: inherit
     permissions:
       contents: read
