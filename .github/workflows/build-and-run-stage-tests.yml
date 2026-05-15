@@ -13,6 +13,9 @@ on:
         type: string
         required: true
         description: 'Server docker image tag'
+      test-file:
+        type: string
+        required: false
 
 jobs:
   build-artifacts:
@@ -30,3 +33,4 @@ jobs:
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests-on-macos-x86: true
       macos-python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
+      test-file: ${{ inputs.test-file }}
