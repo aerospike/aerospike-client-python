@@ -46,6 +46,12 @@ on:
         default: false
         description: Only used upstream by dev workflow
         type: boolean
+      # NOT used by workflow dispatch
+      jf-build-id:
+        required: false
+        default: ''
+        description: If publishing build info is true
+        type: string
 
   workflow_call:
     inputs: *inputs
@@ -77,4 +83,5 @@ jobs:
       test-file: ${{ inputs.test-file }}
       run-integration-tests-on-macos-x86: ${{ inputs.run-integration-tests-on-macos-x86 }}
       publish-build-info: ${{ inputs.publish-build-info }}
+      jf-build-id: ${{ inputs.jf-build-id }}
     secrets: inherit

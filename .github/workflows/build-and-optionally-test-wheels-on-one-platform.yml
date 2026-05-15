@@ -80,6 +80,12 @@ on:
         description: Only used upstream by dev workflow
         default: false
         type: boolean
+      # NOT used by workflow dispatch
+      jf-build-id:
+        required: false
+        default: ''
+        description: If publishing build info is true
+        type: string
 
   workflow_call:
     outputs:
@@ -139,7 +145,7 @@ jobs:
       runs-on: ${{ needs.get-build-runner-os.outputs.runner-os }}
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
-      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}-buildinfo-${{ matrix.python-version }}-${{ inputs.platform-tag }}
+      jf-build-id: ${{ inputs.jf-build-id }}-buildinfo-${{ matrix.python-version }}-${{ inputs.platform-tag }}
       gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}${{ contains(inputs.env-vars-for-building, 'SANITIZER') && '-sanitizer' || '' }}
       gh-artifact-directory: wheelhouse
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16

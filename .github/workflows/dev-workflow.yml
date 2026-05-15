@@ -25,7 +25,39 @@ on:
         description: For speeding up debugging
 
 jobs:
+  get-jfrog-build-info:
+    outputs:
+      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-depth: 0
+
+    - id: get-next-release-version
+      run: echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
+
+    - name: Safeguard to make sure we don't upload a JFrog build for the latest release
+      run: |
+        latest_tag=$(git describe --tags --exact-match $prev_commit)
+        if [[ "$latest_tag" == "$next_release_version" ]]; then
+          echo "We have not merged any changes to dev since the last release yet." >&2
+          exit 1
+        fi
+
+    - id: get-jfrog-build-id
+      run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> $GITHUB_OUTPUT
+
   build-artifacts:
+    needs: get-jfrog-build-info
     uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: ${{ inputs.run_tests }}
@@ -33,6 +65,7 @@ jobs:
       publish-build-info: ${{ inputs.dry-run == false }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+      jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
     permissions:
       contents: read
       # For shared reusable workflows
@@ -65,37 +98,6 @@ jobs:
       actions: read
     steps:
     - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
-
-  get-jfrog-build-info:
-    outputs:
-      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
-      jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        fetch-depth: 0
-
-    - id: get-next-release-version
-      run: echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
-
-    - name: Safeguard to make sure we don't upload a JFrog build for the latest release
-      run: |
-        latest_tag=$(git describe --tags --exact-match $prev_commit)
-        if [[ "$latest_tag" == "$next_release_version" ]]; then
-          echo "We have not merged any changes to dev since the last release yet." >&2
-          exit 1
-        fi
-
-    - id: get-jfrog-build-id
-      run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> $GITHUB_OUTPUT
 
   upload-artifacts-to-jfrog:
     needs: [
