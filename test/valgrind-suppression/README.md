@@ -16,7 +16,7 @@
 --num-callers=350: include 350 stack frames of context for each error and suppression.
 
 **Note:** Additional stack frames decrease the likelihood of over suppression by increasing the specificity of each suppression.
-However, more stack frames also reduce the speed of the test runs. 
+However, more stack frames also reduce the speed of the test runs.
 Suppressions may not exceed 500 stack frames or else the valgrind will fail with the following error:
 
 ```

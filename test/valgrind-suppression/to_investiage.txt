@@ -265,7 +265,7 @@
 2025-11-21T21:33:33.4808020Z ==8329==    by 0x4A8D98E: Py_RunMain (main.c:681)
 2025-11-21T21:33:33.4808318Z ==8329==    by 0x4A8D4CC: Py_BytesMain (main.c:735)
 2025-11-21T21:33:33.4808651Z ==8329==    by 0x4C40D8F: (below main) (libc_start_call_main.h:58)
-2025-11-21T21:33:33.4808941Z ==8329== 
+2025-11-21T21:33:33.4808941Z ==8329==
 
 2025-11-21T21:33:33.5964768Z ==8329== 342 (160 direct, 182 indirect) bytes in 2 blocks are definitely lost in loss record 6,455 of 7,564
 2025-11-21T21:33:33.5965197Z ==8329==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
@@ -535,7 +535,7 @@
 2025-11-21T21:33:33.6048914Z ==8329==    by 0x4A8D98E: Py_RunMain (main.c:681)
 2025-11-21T21:33:33.6049101Z ==8329==    by 0x4A8D4CC: Py_BytesMain (main.c:735)
 2025-11-21T21:33:33.6049345Z ==8329==    by 0x4C40D8F: (below main) (libc_start_call_main.h:58)
-2025-11-21T21:33:33.6049476Z ==8329== 
+2025-11-21T21:33:33.6049476Z ==8329==
 
 2025-11-21T21:33:33.5082189Z ==8329== 207 bytes in 2 blocks are definitely lost in loss record 5,964 of 7,564
 2025-11-21T21:33:33.5082759Z ==8329==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)

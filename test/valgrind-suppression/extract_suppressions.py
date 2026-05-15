@@ -36,10 +36,10 @@ with open(input_file) as f:
 
             # Only keep if 2nd line matches required suppression name
             REQUIRED = "<insert_a_suppression_name_here>"
-            
+
             if len(current_block) > 1 and current_block[1].strip() != REQUIRED:
                 continue  # skip this block
-            
+
             block_str = "\n".join(l.rstrip() for l in current_block)
             unique_blocks.add(block_str)
 
