@@ -254,9 +254,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         success = as_operations_bit_count(ops, bin, NULL, bit_offset, bit_size);
         break;
     case OP_BIT_ADD:
-        success =
-            as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
-                                  bit_size, uint8_array_value, sign, action);
+        // TODO: value is wrong type
+        success = as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
+                                        bit_size, int64_value, sign, action);
         break;
     case OP_BIT_AND:
         success =
