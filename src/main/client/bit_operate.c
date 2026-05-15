@@ -183,8 +183,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     }
 
-    // TODO: uninitialized
-    as_bit_overflow_action action;
+    as_bit_overflow_action action = AS_BIT_OVERFLOW_FAIL;
     switch (operation_code) {
     case OP_BIT_ADD:
     case OP_BIT_SUBTRACT:
