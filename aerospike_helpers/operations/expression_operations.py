@@ -49,24 +49,24 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
 
     Example:
 
-    .. testcode::
+        .. testcode::
 
-        from aerospike_helpers.operations import expression_operations as expressions
-        from aerospike_helpers.expressions import *
+            from aerospike_helpers.operations import expression_operations as expressions
+            from aerospike_helpers.expressions import *
 
-        # Read the value of int bin "balance".
-        # Let 'client' be a connected aerospike client.
-        # Let int bin 'balance' == 50.
-        expr = IntBin("balance").compile()
-        ops = [
-            expressions.expression_read("balance", expr)
-        ]
-        _, _, res = client.operate(self.key, ops)
-       print(res)
+            # Read the value of int bin "balance".
+            # Let 'client' be a connected aerospike client.
+            # Let int bin 'balance' == 50.
+            expr = IntBin("balance").compile()
+            ops = [
+                expressions.expression_read("balance", expr)
+            ]
+            _, _, res = client.operate(self.key, ops)
+        print(res)
 
-    .. testoutput::
+        .. testoutput::
 
-       {"balance": 50}
+        {"balance": 50}
 
     """
 
@@ -95,26 +95,26 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
 
     Example:
 
-    .. testcode::
+        .. testcode::
 
-        from aerospike_helpers.operations import expression_operations as expr_ops
-        from aerospike_helpers.expressions import *
+            from aerospike_helpers.operations import expression_operations as expr_ops
+            from aerospike_helpers.expressions import *
 
-        # Write the value of int bin "balance" + 50 back to "balance".
-        # Let 'client' be a connected aerospike client.
-        # Let int bin 'balance' == 50.
+            # Write the value of int bin "balance" + 50 back to "balance".
+            # Let 'client' be a connected aerospike client.
+            # Let int bin 'balance' == 50.
 
-        expr = Add(IntBin("balance"), 50).compile()
-        ops = [
-            expr_ops.expression_write("balance", expr)
-        ]
-        client.operate(self.key, ops)
-        _, _, res = client.get(self.key)
-       print(res)
+            expr = Add(IntBin("balance"), 50).compile()
+            ops = [
+                expr_ops.expression_write("balance", expr)
+            ]
+            client.operate(self.key, ops)
+            _, _, res = client.get(self.key)
+        print(res)
 
-    .. testoutput::
+        .. testoutput::
 
-        {"balance": 100}
+            {"balance": 100}
 
     """
 
