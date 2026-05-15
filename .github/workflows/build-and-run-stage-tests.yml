@@ -15,34 +15,15 @@ on:
         description: 'Server docker image tag'
 
 jobs:
-  build-select-wheels:
-    strategy:
-      matrix:
-        platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          # For macos 15
-          "macosx_x86_64",
-          # For macos 26
-          "macosx_arm64"
-        ]
-      # Need all the artifacts to run all the stage tests, so fail fast
-    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
-    with:
-      platform-tag: ${{ matrix.platform-tag }}
+  build-artifacts:
+    uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
-
-  build-sdist:
-    uses: ./.github/workflows/build-sdist.yml
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
-    needs: [
-      build-select-wheels,
-      build-sdist
-    ]
+    needs: build-artifacts
     secrets: inherit
     with:
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests-on-macos-x86: true
-      macos-python-versions-to-test: ${{ needs.build-select-wheels.outputs.python-versions }}
+      macos-python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}

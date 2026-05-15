@@ -75,7 +75,7 @@ jobs:
       test-file: ${{ inputs.test-file }}
     secrets: inherit
 
-  macOS:
+  macos-and-windows:
     strategy:
       matrix:
         runner-os: [
@@ -83,7 +83,8 @@ jobs:
           macos-26-intel,
           # These are arm64 runners
           macos-15,
-          macos-26
+          macos-26,
+          windows-2025
         ]
         python-version: ${{ fromJson(inputs.macos-python-versions-to-test) }}
       fail-fast: false
