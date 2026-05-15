@@ -1,5 +1,12 @@
 name: Build artifacts
-run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, server-tag=${{ inputs.server-tag }})
+run-name: |
+  Build artifacts (
+  env-vars-for-building=${{ inputs.env-vars-for-building }},
+  env-vars-for-testing=${{ inputs.env-vars-for-testing }},
+  run_tests=${{ inputs.run_tests }},
+  server-tag=${{ inputs.server-tag }}
+  test-file=${{ inputs.test-file }}
+  )
 
 # Builds manylinux wheels and source distribution
 # Optionally run tests on manylinux wheels
