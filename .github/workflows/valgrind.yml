@@ -180,18 +180,11 @@ jobs:
     - if: ${{ inputs.massif }}
       run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
 
-    #- run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --suppressions=./valgrind-suppression/file-suppressions/${{ github.event.inputs.test-file }}.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
-    #  if: ${{ !inputs.massif && github.event.inputs.test-file != '' }}
-
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
-      if: ${{ !inputs.massif && github.event.inputs.test-file != '' }}
-
-    - run: echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --suppressions=./valgrind-suppression/file-suppressions/${{ github.event.inputs.test-file }}.supp --num-callers=350 --error-limit=no " >> $GITHUB_ENV
-      if: ${{ !inputs.massif && github.event.inputs.test-file == '' }}
-
     - if: ${{ !inputs.massif }}
       id: get-memcheck-flags
       run: |
+        echo VALGRIND_ARGS="--leak-check=full --gen-suppressions=all --suppressions=./valgrind-suppression/new_tests.supp --num-callers=350 --error-limit=no" >> $GITHUB_ENV
+
         SUPP_PATH=$(basename $SUPP_PATH)
         SUPPRESSIONS_ARGS="--gen-suppressions=all --suppressions="$SUPP_PATH" --num-callers=350"
         if [[ -f "$SUPP_PATH" ]]; then
