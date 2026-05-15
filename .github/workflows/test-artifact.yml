@@ -10,7 +10,7 @@ on:
         required: false
         default: false
       container-image-name:
-        required: true
+        required: false
         type: string
       build-from-tar-gz:
         required: false
