@@ -173,18 +173,7 @@ jobs:
     uses: ./.github/workflows/test-artifact.yml
     with:
       # Not the prettiest solution...
-      runner-os-json-string: |
-        inputs.platform-tag == 'macosx_arm64'
-        &&
-        '["self-hosted", "macOS", "ARM64"]'
-        ||
-        (
-          inputs.platform-tag == 'win_amd64'
-          &&
-          '["self-hosted", "Windows", "X64"]'
-          ||
-          format('"{0}"', needs.get-build-runner-os.outputs.runner-os)
-        )
+      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
       python-version: ${{ matrix.python-version }}
       use-sanitizer-wheel: ${{ contains(inputs.env-vars-for-building, 'SANITIZER') }}
       run-tests-in-container: ${{ contains(inputs.platform-tag, 'manylinux') }}
