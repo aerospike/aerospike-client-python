@@ -2491,7 +2491,7 @@ Privilege Objects
 
             If not specified, the privilege applies to the entire namespace.
 
-    Example::
+    .. testcode::
 
         {'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}
 

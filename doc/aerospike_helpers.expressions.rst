@@ -23,7 +23,9 @@ such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_help
 while passing them other expressions and constants as arguments, and finally calling the
 :meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
 
-Example::
+Example:
+
+.. testcode::
 
     # See if integer bin "bin_name" contains a value equal to 10.
     from aerospike_helpers import expressions as exp
