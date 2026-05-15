@@ -166,6 +166,11 @@ Assume all in-line examples run this code beforehand:
     import aerospike
     import aerospike_helpers.expressions as exp
 
+.. code-block:: Python
+
+    import aerospike
+    import aerospike_helpers.expressions as exp
+
 aerospike\_helpers\.expressions\.base module
 ---------------------------------------------
 
