@@ -65,10 +65,10 @@ jobs:
           ["redhat/ubi9", "x86_64", "3.11", true],
         ]
       fail-fast: false
-    uses: ./.github/workflows/test-in-container.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       container-image-name: ${{ matrix.test-case[0] }}
-      cpu-arch: ${{ matrix.test-case[1] }}
+      runner-os: ${{ matrix.test-case[1] == 'x86_64' && 'ubuntu:22.04' || 'ubuntu:22.04-arm' }}
       python-version: ${{ matrix.test-case[2] }}
       build-from-source: ${{ matrix.test-case[3] }}
       server-tag: ${{ inputs.server-tag }}
@@ -88,7 +88,7 @@ jobs:
         ]
         python-version: ${{ fromJson(inputs.macos-python-versions-to-test) }}
       fail-fast: false
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: ${{ format('"{0}"', matrix.runner-os) }}
       python-version: ${{ matrix.python-version }}

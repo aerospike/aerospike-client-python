@@ -42,14 +42,15 @@ jobs:
 
   valgrind:
     needs: build-artifacts
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"ubuntu-22.04"'
       # Get lowest supported python version
       python-version: ${{ fromJson(needs.build-artifacts.outputs.python-versions)[0] }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
-      env-vars: VALGRIND=1;MASSIF=false
+      run-with-valgrind: true
+      run-valgrind-with-massif: false
     secrets: inherit
     permissions:
       contents: read

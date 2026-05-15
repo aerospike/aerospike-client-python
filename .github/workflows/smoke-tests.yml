@@ -261,7 +261,6 @@ jobs:
       run_tests: true
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       env-vars-for-building: SKIP_REPAIR_WHEEL=1;SANITIZER=1
-      env-vars-for-testing: SANITIZER=1
     secrets: inherit
 
   test-full-suite:
@@ -278,12 +277,12 @@ jobs:
           # exception.ServerError: (1, 'invalid id from 127.0.0.1:4333', 'src/main/aerospike/as_info.c', 360, False)
           # - lowest_supported_server_version
       fail-fast: false
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
-      env-vars: ${{ matrix.type == 'dont_validate_keys' && 'DONT_VALIDATE_KEYS=1' || '' }}
+      validate-keys: false
     secrets: inherit
 
   test-ce:
@@ -295,7 +294,7 @@ jobs:
       matrix:
         py-version: ${{ fromJson(needs.build.outputs.python-versions) }}
       fail-fast: false
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
       python-version: ${{ matrix.py-version }}
@@ -308,7 +307,7 @@ jobs:
       build,
       get-env-vars
     ]
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
@@ -386,9 +385,6 @@ jobs:
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-
-    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      run: docker run -d -p 3000:3000 --name "$CE_CONTAINER_NAME" -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - if: ${{ startsWith(matrix.test-script-args, 'false') }}
       uses: ./.github/actions/wait-for-ce-server-to-start

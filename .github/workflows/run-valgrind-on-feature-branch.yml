@@ -139,13 +139,14 @@ jobs:
           (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')
         )
       )
-    uses: ./.github/workflows/test-wheel.yml
+    uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"ubuntu-22.04"'
       python-version: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
-      env-vars: VALGRIND=1;MASSIF=${{ inputs.massif }}
+      run-with-valgrind: true
+      run-valgrind-with-massif: ${{ inputs.massif }}
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
