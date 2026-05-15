@@ -57,6 +57,12 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
 
+const char *op_code_to_names[] = {
+#define X(op_name) [OP_##op_name] = #op_name
+    X(BIT_RESIZE), BIT_OP_NAMES_EXCEPT_RESIZE
+#undef X
+};
+
 // End forwards
 as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
@@ -317,9 +323,8 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     }
 
     if (!success) {
-        // TODO: needs to be more specific
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Failed to add bit operation");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to add %s operation",
+                        op_code_to_names[operation_code]);
     }
 
 exit:

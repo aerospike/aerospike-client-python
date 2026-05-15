@@ -116,25 +116,17 @@ enum Aerospike_map_operations {
     OP_MAP_CREATE
 };
 
+#define BIT_OP_NAMES_EXCEPT_RESIZE                                             \
+    X(BIT_INSERT), X(BIT_REMOVE), X(BIT_SET), X(BIT_OR), X(BIT_XOR),           \
+        X(BIT_AND), X(BIT_NOT), X(BIT_LSHIFT), X(BIT_RSHIFT), X(BIT_ADD),      \
+        X(BIT_SUBTRACT), X(BIT_GET_INT), X(BIT_SET_INT), X(BIT_GET),           \
+        X(BIT_COUNT), X(BIT_LSCAN), X(BIT_RSCAN)
+
 enum aerospike_bitwise_operations {
-    OP_BIT_RESIZE = 2000,
-    OP_BIT_INSERT,
-    OP_BIT_REMOVE,
-    OP_BIT_SET,
-    OP_BIT_OR,
-    OP_BIT_XOR,
-    OP_BIT_AND,
-    OP_BIT_NOT,
-    OP_BIT_LSHIFT,
-    OP_BIT_RSHIFT,
-    OP_BIT_ADD,
-    OP_BIT_SUBTRACT,
-    OP_BIT_GET_INT,
-    OP_BIT_SET_INT,
-    OP_BIT_GET,
-    OP_BIT_COUNT,
-    OP_BIT_LSCAN,
-    OP_BIT_RSCAN
+#define X(op_name) OP_##op_name
+    X(BIT_RESIZE) = 2000,
+    BIT_OP_NAMES_EXCEPT_RESIZE
+#undef X
 };
 
 enum aerospike_hll_operations {
