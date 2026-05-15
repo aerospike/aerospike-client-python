@@ -43,10 +43,23 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeScan_Type;
+
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
-    return AerospikeScan_New(self, args, kwds);
+    AerospikeScan *scan = AerospikeScan_Type_New(&AerospikeScan_Type, self);
+    if (!scan) {
+        return NULL;
+    }
+
+    if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
+        Py_DECREF(scan);
+        return NULL;
+    }
+
+    return scan;
 }
 
 /**
@@ -81,7 +94,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     PyObject *py_ustr3 = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_static_pool static_pool;
@@ -132,7 +144,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p, true);
+                                &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;

@@ -9,6 +9,7 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "macros.h"
 
 // Struct for Python User-Data for the Callback
 typedef struct {
@@ -153,14 +154,13 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     as_policy_batch *policy_batch_p = NULL;
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, &err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(self, &err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p,
+                                     &self->as->config.policies.batch,
+                                     &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP3;
         }
     }

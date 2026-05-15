@@ -3,11 +3,10 @@ import sys
 from aerospike import exception as ex
 
 config = {'hosts': [('127.0.0.1', 3000)]}
-client = aerospike.client(config).connect()
 
 # Create a client and connect it to the cluster
 try:
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
     client.truncate('test', "demo", 0)
 except ex.ClientError as e:
     print("Error: {0} [{1}]".format(e.msg, e.code))

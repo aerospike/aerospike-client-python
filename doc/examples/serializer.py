@@ -28,11 +28,11 @@ aerospike.set_deserializer(classDeserializer)
 config = {
     'hosts': [('127.0.0.1', 3000)]
 }
-client = aerospike.client(config).connect()
+client = aerospike.client(config)
 
 # Second client has instance-level serializer set in client config
 config['serialization'] = (localSerializer, localDeserializer)
-client2 = aerospike.client(config).connect()
+client2 = aerospike.client(config)
 
 # Keys: foo1, foo2, foo3
 keys = [('test', 'demo', f'foo{i}') for i in range(1, 4)]

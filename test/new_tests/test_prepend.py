@@ -98,9 +98,10 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -122,11 +123,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -148,11 +150,12 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 2, "ttl": 1200}
+        meta = {"gen": gen + 2}
         self.as_connection.prepend(key, "name", "str", meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -297,17 +300,17 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
-        try:
+        meta = {"gen": gen + 5}
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.bin == "name"
+        assert excinfo.value.code == 3
+        assert excinfo.value.bin == "name"
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -328,17 +331,17 @@ class TestPrepend:
             "key": aerospike.POLICY_KEY_SEND,
             "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
-        try:
+        meta = {"gen": gen}
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.prepend(key, "name", "str", meta, policy)
 
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.bin == "name"
+        assert excinfo.value.code == 3
+        assert excinfo.value.bin == "name"
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -356,12 +359,11 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, "name", "str", {}, policy)
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "total_timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "total_timeout is invalid"
 
     @pytest.mark.parametrize(
         "key, bin, value, meta, policy, ex_code, ex_msg",
@@ -375,12 +377,11 @@ class TestPrepend:
         """
         Invoke prepend() with parameters of incorrect datatypes
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, bin, value, meta, policy)
 
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        assert excinfo.value.code == ex_code
+        assert excinfo.value.msg == ex_msg
 
     def test_neg_prepend_with_extra_parameter(self):
         """
@@ -404,12 +405,11 @@ class TestPrepend:
         """
         Invoke prepend() with parameters as None
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, bin, value)
 
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        assert excinfo.value.code == ex_code
+        assert excinfo.value.msg == ex_msg
 
     def test_neg_prepend_invalid_key_invalid_ns(self):
         """
@@ -456,13 +456,12 @@ class TestPrepend:
         """
         Invoke prepend() with invalid key combinations
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, bin, value, meta, policy)
             key, meta, _ = self.as_connection.get(key)
 
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        assert excinfo.value.code == ex_code
+        assert excinfo.value.msg == ex_msg
 
     def test_neg_prepend_without_bin_name(self):
         """
@@ -470,12 +469,11 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, "ABC", {}, policy)
             key, _, _ = self.as_connection.get(key)
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Cannot concatenate 'str' and 'non-str' objects"
 
     def test_neg_prepend_with_correct_parameters_without_connection(self):
         """
@@ -486,8 +484,7 @@ class TestPrepend:
         client1.close()
         key = ("test", "demo", 1)
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.prepend(key, "name", "str")
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11

@@ -446,6 +446,9 @@ class ListRemoveByValueRange(_BaseExpr):
             # Remove list of items with values >= 3 and < 7 from list bin "a".
             expr = exp.ListRemoveByValueRange(None, 3, 7, exp.ListBin("a")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (begin, end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
             _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
@@ -936,6 +939,27 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class InList(_BaseExpr):
+    """
+    Return :py:obj:`True` if value is contained in list. Otherwise return :py:obj:`False`.
+    """
+
+    _op = aerospike._AS_EXP_CODE_IN_LIST
+
+    def __init__(
+        self,
+        value: "TypeValue",
+        bin: "TypeBinName",
+    ):
+        """Args:
+            value (TypeValue): Value or value expression to look for.
+            bin (TypeBinName): list bin name or expression evaluating to a list.
+
+        :return: Expression.
+        """
+        self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
 
 
 class ListGetByValueRelRankRange(_BaseExpr):
