@@ -355,7 +355,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
     if (isListOp(operation)) {
-        return add_new_list_op(
+        return add_list_op(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
