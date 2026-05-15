@@ -67,7 +67,7 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
 
         .. testoutput::
 
-            {"balance": 50}
+            {'balance': 50}
 
     """
 
@@ -110,12 +110,12 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
                 expr_ops.expression_write("balance", expr)
             ]
             client.operate(key, ops)
-            _, _, bins = client.get(self.key)
+            _, _, bins = client.get(key)
             print(bins)
 
         .. testoutput::
 
-            {"balance": 100}
+            {'balance': 100}
 
     """
 
