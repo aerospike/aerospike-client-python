@@ -85,6 +85,7 @@ jobs:
       id: get-jf-build-id
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
+        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
         build_number=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
         echo build_number="$build_number" >> $GITHUB_OUTPUT
 
