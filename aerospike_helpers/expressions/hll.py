@@ -17,7 +17,6 @@
 HyperLogLog expressions contain expressions for performing HLL operations.
 Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_helpers.operations.hll_operations>`.
 
-# TODO: Run once for entire file
 .. testsetup::
 
     from aerospike_helpers.operations import hll_operations
