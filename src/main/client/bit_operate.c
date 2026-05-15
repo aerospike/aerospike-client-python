@@ -202,7 +202,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_SET_INT:
     case OP_BIT_ADD:
     case OP_BIT_SUBTRACT:
-        if (get_int64_t(err, VALUE_KEY, op_dict, &uint8_value) !=
+        if (get_int64_t(err, VALUE_KEY, op_dict, &int64_value) !=
             AEROSPIKE_OK) {
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
