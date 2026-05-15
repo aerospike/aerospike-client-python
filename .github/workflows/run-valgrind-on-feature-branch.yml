@@ -135,12 +135,13 @@ jobs:
         needs.look-for-wheel-in-jfrog.result == 'success'
         && (
           (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1 && needs.build-manylinux-wheel.result == 'skipped')
-          || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')
+          ||
+          (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')
         )
       )
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os-json-string: \"ubuntu-22.04\"
+      runner-os-json-string: '"ubuntu-22.04"'
       python-version: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}

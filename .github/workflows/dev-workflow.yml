@@ -47,7 +47,7 @@ jobs:
     needs: build-artifacts
     uses: ./.github/workflows/test-wheel.yml
     with:
-      runner-os-json-string: \"ubuntu-22.04\"
+      runner-os-json-string: '"ubuntu-22.04"'
       # Get lowest supported python version
       python-version: ${{ fromJson(needs.build-artifacts.outputs.python-versions)[0] }}
       server-tag: ${{ inputs.server-tag }}
