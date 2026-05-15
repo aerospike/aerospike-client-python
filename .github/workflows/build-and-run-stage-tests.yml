@@ -18,6 +18,9 @@ jobs:
   build-artifacts:
     uses: ./.github/workflows/build-artifacts.yml
     secrets: inherit
+    with:
+      run_tests: false
+      server-tag: ''
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
