@@ -115,6 +115,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     uint32_t byte_size = 0;
     switch (operation_code) {
     case OP_BIT_RESIZE:
+    case OP_BIT_REMOVE:
         if (get_uint32t_from_pyargs(err, BYTE_SIZE_KEY, op_dict, &byte_size) !=
             AEROSPIKE_OK) {
             return err->code;
@@ -126,6 +127,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     uint32_t bit_size = 0;
     switch (operation_code) {
     case OP_BIT_SET:
+    case OP_BIT_SET_INT:
     case OP_BIT_COUNT:
     case OP_BIT_ADD:
     case OP_BIT_AND:
