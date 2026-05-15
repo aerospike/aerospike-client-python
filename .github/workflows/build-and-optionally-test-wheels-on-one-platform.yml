@@ -186,7 +186,7 @@ jobs:
       get-build-runner-os,
       build-wheel
     ]
-    uses: ./.github/workflows/test-wheel-in-container.yml
+    uses: ./.github/workflows/test-in-container.yml
     strategy:
       fail-fast: false
       matrix:

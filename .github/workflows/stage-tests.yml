@@ -65,7 +65,7 @@ jobs:
           ["redhat/ubi9", "x86_64", "3.11", true],
         ]
       fail-fast: false
-    uses: ./.github/workflows/test-wheel-in-container.yml
+    uses: ./.github/workflows/test-in-container.yml
     with:
       container-image-name: ${{ matrix.test-case[0] }}
       cpu-arch: ${{ matrix.test-case[1] }}
