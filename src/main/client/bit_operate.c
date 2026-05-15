@@ -87,6 +87,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_BIT_RESIZE:
     case OP_BIT_SET:
+    case OP_BIT_SET_INT:
     case OP_BIT_REMOVE:
     case OP_BIT_ADD:
     case OP_BIT_AND:
