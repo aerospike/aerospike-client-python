@@ -30,7 +30,7 @@
 #include "cdt_list_operations.h"
 #include "cdt_operation_utils.h"
 
-const char *op_code_to_names[] = {
+static const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
     X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
 #undef X

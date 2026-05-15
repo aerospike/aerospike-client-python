@@ -57,7 +57,7 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
 
-const char *op_code_to_names[] = {
+static const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
     X(BIT_RESIZE), BIT_OP_NAMES_EXCEPT_RESIZE
 #undef X
