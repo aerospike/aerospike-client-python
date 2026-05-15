@@ -66,7 +66,7 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
 
         .. testoutput::
 
-        {"balance": 50}
+            {"balance": 50}
 
     """
 
