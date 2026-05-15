@@ -187,6 +187,17 @@ class HLLGetUnion(_BaseExpr):
         .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Let values be a list containing HLL objects retrieved from the aerospike database.
             # Find the union of HLL bin "d" and all HLLs in values.
             expr = exp.HLLGetUnion(values, exp.HLLBin("d")).compile()
@@ -215,6 +226,17 @@ class HLLGetUnionCount(_BaseExpr):
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
             expr = exp.HLLGetUnionCount(values, exp.HLLBin("d")).compile()
         """
@@ -242,6 +264,17 @@ class HLLGetIntersectCount(_BaseExpr):
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
             expr = exp.HLLGetIntersectCount(values, exp.HLLBin("d")).compile()
         """
@@ -269,6 +302,17 @@ class HLLGetSimilarity(_BaseExpr):
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the similarity the HLL in values to HLL bin "d". (Should be around 0.33)
             # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
             expr = exp.HLLGetSimilarity(values, exp.HLLBin("d")).compile()
