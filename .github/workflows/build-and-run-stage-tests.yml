@@ -45,3 +45,4 @@ jobs:
     with:
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests-on-macos-x86: true
+      macos-python-versions-to-test: ${{ needs.build-select-wheels.outputs.python-versions }}
