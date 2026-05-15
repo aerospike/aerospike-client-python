@@ -152,7 +152,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     }
 
     uint32_t value_byte_size = 0;
-    uint8_t *value = NULL;
+    uint8_t *uint8_value = NULL;
     switch (operation_code) {
     case OP_BIT_SET:
     case OP_BIT_AND:
@@ -164,7 +164,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             return err->code;
         }
 
-        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
+        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &uint8_value) !=
             AEROSPIKE_OK) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "unable to parse value from add_op_bit_set");
@@ -172,11 +172,11 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     }
 
-    bool value = false;
+    bool bool_value = false;
     switch (operation_code) {
     case OP_BIT_LSCAN:
     case OP_BIT_RSCAN:
-        if (get_bool_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
+        if (get_bool_from_pyargs(err, VALUE_KEY, op_dict, &bool_value) !=
             AEROSPIKE_OK) {
             return err->code;
         }
@@ -197,12 +197,13 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     }
 
-    int64_t value = 0;
+    int64_t int64_value = 0;
     switch (operation_code) {
     case OP_BIT_SET_INT:
     case OP_BIT_ADD:
     case OP_BIT_SUBTRACT:
-        if (get_int64_t(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
+        if (get_int64_t(err, VALUE_KEY, op_dict, &uint8_value) !=
+            AEROSPIKE_OK) {
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "unable to parse value while adding bit set int operation");
@@ -238,11 +239,11 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_SET:
         success = as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, value);
+                                        bit_size, value_byte_size, uint8_value);
         break;
     case OP_BIT_SET_INT:
         success = as_operations_bit_set_int(ops, bin, NULL, &bit_policy,
-                                            bit_offset, bit_size, value);
+                                            bit_offset, bit_size, uint8_value);
         break;
     case OP_BIT_REMOVE:
         success = as_operations_bit_remove(ops, bin, NULL, &bit_policy,
@@ -253,11 +254,11 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_ADD:
         success = as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value, sign, action);
+                                        bit_size, uint8_value, sign, action);
         break;
     case OP_BIT_AND:
         success = as_operations_bit_and(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, value);
+                                        bit_size, value_byte_size, uint8_value);
         break;
     case OP_BIT_GET:
         success = as_operations_bit_get(ops, bin, NULL, bit_offset, bit_size);
@@ -267,12 +268,13 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                                             bit_size, sign);
         break;
     case OP_BIT_INSERT:
-        success = as_operations_bit_insert(ops, bin, NULL, &bit_policy,
-                                           byte_offset, value_byte_size, value);
+        success =
+            as_operations_bit_insert(ops, bin, NULL, &bit_policy, byte_offset,
+                                     value_byte_size, uint8_value);
         break;
     case OP_BIT_LSCAN:
         success = as_operations_bit_lscan(ops, bin, NULL, bit_offset, bit_size,
-                                          value);
+                                          bool_value);
         break;
     case OP_BIT_LSHIFT:
         success = as_operations_bit_lshift(ops, bin, NULL, &bit_policy,
@@ -284,11 +286,11 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_OR:
         success = as_operations_bit_or(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, value_byte_size, value);
+                                       bit_size, value_byte_size, uint8_value);
         break;
     case OP_BIT_RSCAN:
         success = as_operations_bit_rscan(ops, bin, NULL, bit_offset, bit_size,
-                                          value);
+                                          bool_value);
         break;
     case OP_BIT_RSHIFT:
         success = as_operations_bit_rshift(ops, bin, NULL, &bit_policy,
@@ -297,11 +299,11 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_SUBTRACT:
         success =
             as_operations_bit_subtract(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, value, sign, action);
+                                       bit_size, uint8_value, sign, action);
         break;
     case OP_BIT_XOR:
         success = as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, value);
+                                        bit_size, value_byte_size, uint8_value);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
