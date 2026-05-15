@@ -100,7 +100,7 @@ jobs:
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         if-no-files-found: error
-        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-manylinux_x86_64
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-manylinux_x86_64
         path: './*.whl'
 
   build-manylinux-wheel:
