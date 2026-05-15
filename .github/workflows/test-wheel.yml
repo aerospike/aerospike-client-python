@@ -105,11 +105,6 @@ jobs:
       run: pip install *.whl
       shell: bash
 
-    - if: ${{ inputs.run-integration-tests }}
-      run: pip install -r requirements.txt
-      working-directory: test
-      shell: bash
-
     # Need to be able to save Docker Hub credentials to keychain
     # Unable to do this via the ansible script for self hosted mac m1 runners
     - if: ${{ inputs.run-integration-tests && contains(env.PLATFORM_TAG_GLOB_PATTERN, 'macosx_arm64') }}
@@ -178,6 +173,7 @@ jobs:
     # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
     - if: ${{ inputs.run-integration-tests }}
       run: |
+        pip install -r requirements.txt
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
       working-directory: test
       shell: bash
