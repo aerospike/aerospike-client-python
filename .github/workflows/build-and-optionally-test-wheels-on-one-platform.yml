@@ -121,6 +121,7 @@ jobs:
         declare -A manylinux_digest
         manylinux_digest[manylinux_x86_64]="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
         manylinux_digest[manylinux_aarch64]="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
+        # This will not fail if map key is not found. Assuming only a blank string will be returned
         echo manylinux_image_digest=${manylinux_digest[$PLATFORM_TAG]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
       shell: bash
