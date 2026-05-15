@@ -165,19 +165,20 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
+        echo VALGRIND_ARGS="valgrind --error-exitcode=1" >> $GITHUB_ENV
 
     - if: ${{ contains(inputs.env-vars, 'MASSIF=true') }}
-      run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
+      run: echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
 
     - if: ${{ contains(inputs.env-vars, 'MASSIF=false') }}
-      run: echo VALGRIND_ARGS="--leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
+      run: echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
 
     # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
     # There's no way to tell unless we see the logs
     # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
     - if: ${{ inputs.run-integration-tests }}
       run: |
-        eval PYTHONMALLOC=malloc valgrind --error-exitcode=1 python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
+        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
       working-directory: test
       shell: bash
       env:
