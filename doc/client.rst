@@ -612,7 +612,7 @@ User Defined Functions
 
 .. testoutput:: udf
 
-    Before remove: [{'content': bytearray(b'...'), 'hash': bytearray(b'...'), 'name': 'my_udf.lua', 'type': 0}]
+    Before remove: [{'name': 'my_udf.lua', 'hash': bytearray(b'...'), 'type': 0, 'content': bytearray(b'...')}]
     After remove: []
 
 .. class:: Client
