@@ -152,7 +152,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     }
 
     uint32_t value_byte_size = 0;
-    uint8_t *uint8_value = NULL;
+    uint8_t *uint8_array_value = NULL;
     switch (operation_code) {
     case OP_BIT_SET:
     case OP_BIT_AND:
@@ -164,8 +164,8 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             return err->code;
         }
 
-        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &uint8_value) !=
-            AEROSPIKE_OK) {
+        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict,
+                                   &uint8_array_value) != AEROSPIKE_OK) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "unable to parse value from add_op_bit_set");
         }
@@ -238,12 +238,13 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                                            byte_size, flags);
         break;
     case OP_BIT_SET:
-        success = as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, uint8_value);
+        success =
+            as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
+                                  bit_size, value_byte_size, uint8_array_value);
         break;
     case OP_BIT_SET_INT:
         success = as_operations_bit_set_int(ops, bin, NULL, &bit_policy,
-                                            bit_offset, bit_size, uint8_value);
+                                            bit_offset, bit_size, int64_value);
         break;
     case OP_BIT_REMOVE:
         success = as_operations_bit_remove(ops, bin, NULL, &bit_policy,
@@ -253,12 +254,14 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         success = as_operations_bit_count(ops, bin, NULL, bit_offset, bit_size);
         break;
     case OP_BIT_ADD:
-        success = as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, uint8_value, sign, action);
+        success =
+            as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
+                                  bit_size, uint8_array_value, sign, action);
         break;
     case OP_BIT_AND:
-        success = as_operations_bit_and(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, uint8_value);
+        success =
+            as_operations_bit_and(ops, bin, NULL, &bit_policy, bit_offset,
+                                  bit_size, value_byte_size, uint8_array_value);
         break;
     case OP_BIT_GET:
         success = as_operations_bit_get(ops, bin, NULL, bit_offset, bit_size);
@@ -270,7 +273,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_INSERT:
         success =
             as_operations_bit_insert(ops, bin, NULL, &bit_policy, byte_offset,
-                                     value_byte_size, uint8_value);
+                                     value_byte_size, uint8_array_value);
         break;
     case OP_BIT_LSCAN:
         success = as_operations_bit_lscan(ops, bin, NULL, bit_offset, bit_size,
@@ -285,8 +288,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                                         bit_size);
         break;
     case OP_BIT_OR:
-        success = as_operations_bit_or(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, value_byte_size, uint8_value);
+        success =
+            as_operations_bit_or(ops, bin, NULL, &bit_policy, bit_offset,
+                                 bit_size, value_byte_size, uint8_array_value);
         break;
     case OP_BIT_RSCAN:
         success = as_operations_bit_rscan(ops, bin, NULL, bit_offset, bit_size,
@@ -297,13 +301,15 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                                            bit_offset, bit_size, shift);
         break;
     case OP_BIT_SUBTRACT:
+        // TODO: int64_value is the wrong type here. This problem exists in dev
         success =
             as_operations_bit_subtract(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, uint8_value, sign, action);
+                                       bit_size, int64_value, sign, action);
         break;
     case OP_BIT_XOR:
-        success = as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, value_byte_size, uint8_value);
+        success =
+            as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
+                                  bit_size, value_byte_size, uint8_array_value);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
