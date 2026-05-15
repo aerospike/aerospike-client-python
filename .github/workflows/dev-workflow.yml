@@ -26,9 +26,6 @@ on:
 
 jobs:
   build-artifacts:
-    needs: [
-      get-next-release-version-and-latest-tag
-    ]
     uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: ${{ inputs.run_tests }}
@@ -63,15 +60,15 @@ jobs:
       valgrind
     ]
     runs-on: ubuntu-24.04
-    steps:
-    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
     permissions:
       actions: read
+    steps:
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
 
-  get-next-release-version-and-latest-tag:
+  get-jfrog-build-info:
     outputs:
       next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
-      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
+      jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -85,25 +82,23 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install library that parses PEP 440 versions
-      run: pip install parver -c requirements.txt
-      working-directory: .github/workflows
-
     - id: get-next-release-version
       run: echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
 
-    - id: get-latest-tag
+    - name: Safeguard to make sure we don't upload a JFrog build for the latest release
       run: |
         latest_tag=$(git describe --tags --exact-match $prev_commit)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
           echo "We have not merged any changes to dev since the last release yet." >&2
           exit 1
         fi
-        echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
+
+    - id: get-jfrog-build-id
+      run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> $GITHUB_OUTPUT
 
   upload-artifacts-to-jfrog:
     needs: [
-      get-next-release-version-and-latest-tag,
+      get-jfrog-build-info,
       reupload-artifacts-as-one-artifact-in-github
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
@@ -113,9 +108,9 @@ jobs:
       # Have to override the default artifact name because we are not signing the artifacts
       gh-artifact-name: build-artifacts
       # TODO: may be easier to have a default for these two inputs
-      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
-      jf-metadata-build-id: ${{ github.run_id }}-${{ github.run_attempt }}-buildinfo
-      version: ${{ needs.get-next-release-version-and-latest-tag.outputs.next-release-version }}
+      jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
+      jf-metadata-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}-buildinfo
+      version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
       dry-run: ${{ inputs.dry-run }}
     permissions:
@@ -127,16 +122,16 @@ jobs:
     if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog,
-      get-next-release-version-and-latest-tag
+      get-jfrog-build-info
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: |
-        ${{ vars.JFROG_BUILD_NAME }}:${{ github.run_id }}-${{ github.run_attempt }}
+        ${{ vars.JFROG_BUILD_NAME }}:${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
-      version: ${{ github.run_id }}-${{ github.run_attempt }}
+      version: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
     permissions:
       contents: read
@@ -144,14 +139,14 @@ jobs:
 
   promote-release-bundle-to-dev:
     needs: [
-      get-next-release-version-and-latest-tag,
+      get-jfrog-build-info,
       create-release-bundle
     ]
     uses: ./.github/workflows/promote-release-bundle.yml
     with:
       jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ github.run_id }}-${{ github.run_attempt }}
+      release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       new-environment: DEV
     permissions:
       id-token: write
