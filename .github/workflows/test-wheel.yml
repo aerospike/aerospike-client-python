@@ -1,14 +1,3 @@
-run-name: >
-  Run tests
-  (
-  runner-os-json-string=${{ inputs.runner-os-json-string }}
-  python-version=${{ inputs.python-version }},
-  env-vars=${{ inputs.env-vars }},
-  server-tag=${{ inputs.server-tag }},
-  run-integration-tests=${{ inputs.run-integration-tests }},
-  test-ce=${{ inputs.test-ce }},
-  test-file=${{ inputs.test-file }})
-
 on:
   workflow_call:
     inputs:
