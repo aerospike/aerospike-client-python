@@ -171,7 +171,7 @@ jobs:
         if [[ ${{ inputs.test-ce }} == true ]]; then
           cd .github/workflows
           ./run-ce-server.bash "$CE_CONTAINER_NAME" "$SERVER_TAG"
-          popd
+          cd -
           cd test
           cp config.conf.template config.conf
         fi
