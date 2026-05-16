@@ -238,6 +238,10 @@ jobs:
         fi
         pip install -r requirements.txt
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
+
+        if [[ ${{ inputs.run-with-valgrind && inputs.run-valgrind-with-massif }} ]]; then
+          ms_print "./$MASSIF_REPORT_FILE_NAME"
+        fi
       working-directory: test
       shell: bash
       env:
@@ -306,11 +310,6 @@ jobs:
         IS_CONTAINER_UBUNTU: ${{ startsWith(inputs.container-image-name, 'ubuntu') }}
         CONTAINER_IMAGE_NAME: ${{ inputs.container-image-name }}
         TEST_FILE: ${{ inputs.test-file }}
-
-    # TODO: upload report as artifact to compare against baseline.
-    - if: ${{ !cancelled() && contains(inputs.env-vars, 'MASSIF=true') }}
-      run: ms_print "./$MASSIF_REPORT_FILE_NAME"
-      working-directory: test
 
     - name: Show server logs to debug test results
       if: ${{ always() && inputs.run-integration-tests && steps.run-ee-server.conclusion == 'success' }}
