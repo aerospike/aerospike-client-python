@@ -9,5 +9,5 @@ CONTAINER_NAME=$1
 SERVER_TAG=$2
 
 docker run -d --name "$CONTAINER_NAME" -p 3000:3000 -e DEFAULT_TTL=2592000 "aerospike/aerospike-server:$SERVER_TAG"
-cd .github/workflows/docker-setup
+cd ./docker-setup
 timeout 30s bash wait-for-as-server-to-start.bash
