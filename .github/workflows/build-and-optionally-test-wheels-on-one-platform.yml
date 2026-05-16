@@ -171,6 +171,7 @@ jobs:
       matrix:
         python-version: ${{ fromJSON(inputs.python-versions) }}
     uses: ./.github/workflows/test-artifact.yml
+    if: ${{ inputs.run_tests }}
     with:
       # Not the prettiest solution...
       runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
