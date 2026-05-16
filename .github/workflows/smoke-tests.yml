@@ -1,5 +1,5 @@
 name: Smoke tests
-run-name: Smoke tests (server-tag=${{ inputs.server-tag }})
+run-name: Smoke tests ${{ github.event_name == 'workflow_dispatch' && format('({0})', inputs.server-tag) || '' }})
 
 permissions:
   contents: read
