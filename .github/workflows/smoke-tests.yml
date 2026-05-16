@@ -350,8 +350,6 @@ jobs:
       build,
       get-env-vars
     ]
-    env:
-      CE_CONTAINER_NAME: aerospike
     strategy:
       fail-fast: false
       matrix:
@@ -395,4 +393,4 @@ jobs:
       run: |
         docker logs "$CONTAINER_NAME"
       env:
-        CONTAINER_NAME: ${{ steps.setup-aerospike-ee-server.outcome == 'success' && steps.setup-aerospike-ee-server.outputs.container-names || env.CE_CONTAINER_NAME }}
+        CONTAINER_NAME: ${{ steps.setup-aerospike-server.outputs.container-names }}
