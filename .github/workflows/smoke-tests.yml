@@ -376,20 +376,15 @@ jobs:
         pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
     - run: python3 -m pip install *.whl
 
-    - if: ${{ startsWith(matrix.test-script-args, 'true') }}
-      id: setup-aerospike-ee-server
-      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    - id: setup-aerospike-server
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@8ec712eafbec26c8db8d1183688a5fd806560a95
       with:
         enable-security: "true"
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-
-    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      uses: ./.github/actions/wait-for-ce-server-to-start
-      with:
-        container-name: ${{ env.CE_CONTAINER_NAME }}
+        server-edition: ${{ matrix.test-script-args && 'enterprise' || 'community' }}
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
