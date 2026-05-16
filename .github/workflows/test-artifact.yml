@@ -237,7 +237,9 @@ jobs:
           crudini --existing=param --set config.conf input-validation validate_keys false
         fi
         pip install -r requirements.txt
-        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE -W error::pytest.PytestUnraisableExceptionWarning -W error::DeprecationWarning
+        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
+          -W error::pytest.PytestUnraisableExceptionWarning \
+          -W error::DeprecationWarning
 
         if [[ ${{ inputs.run-with-valgrind && inputs.run-valgrind-with-massif }} ]]; then
           ms_print "./$MASSIF_REPORT_FILE_NAME"
