@@ -187,13 +187,13 @@ jobs:
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
           sudo apt-get update
           sudo apt-get install -y valgrind
-          echo VALGRIND_ARGS="valgrind --error-exitcode=1" >> $GITHUB_ENV
-        fi
+          VALGRIND_ARGS="valgrind --error-exitcode=1"
 
-        if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
-          echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
-        else
-          echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
+          if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
+          else
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
+          fi
         fi
       env:
         MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
