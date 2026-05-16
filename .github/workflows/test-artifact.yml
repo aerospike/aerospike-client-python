@@ -188,6 +188,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y valgrind
           echo VALGRIND_ARGS="valgrind --error-exitcode=1" >> $GITHUB_ENV
+        fi
 
         if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
           echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
