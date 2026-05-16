@@ -67,8 +67,8 @@ jobs:
       fail-fast: false
     uses: ./.github/workflows/test-artifact.yml
     with:
+      runner-os-json-string: ${{ matrix.test-case[1] == 'x86_64' && '"ubuntu:22.04"' || '"ubuntu:22.04-arm"' }}
       container-image-name: ${{ matrix.test-case[0] }}
-      runner-os: ${{ matrix.test-case[1] == 'x86_64' && 'ubuntu:22.04' || 'ubuntu:22.04-arm' }}
       python-version: ${{ matrix.test-case[2] }}
       build-from-source: ${{ matrix.test-case[3] }}
       server-tag: ${{ inputs.server-tag }}
