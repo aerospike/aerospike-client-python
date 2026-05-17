@@ -241,7 +241,7 @@ jobs:
           -W error::pytest.PytestUnraisableExceptionWarning \
           -W error::DeprecationWarning
 
-        if [[ ${{ inputs.run-with-valgrind && inputs.run-valgrind-with-massif }} ]]; then
+        if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == true ]]; then
           ms_print "./$MASSIF_REPORT_FILE_NAME"
         fi
       working-directory: test
