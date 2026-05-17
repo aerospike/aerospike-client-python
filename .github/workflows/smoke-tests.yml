@@ -377,7 +377,7 @@ jobs:
     - id: setup-aerospike-server
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@8ec712eafbec26c8db8d1183688a5fd806560a95
       with:
-        enable-security: "true"
+        enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
