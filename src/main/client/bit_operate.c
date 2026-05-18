@@ -81,7 +81,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_LSCAN:
     case OP_BIT_RSCAN:
 
-        const char *bool_key = VALUE_KEY;
+        char *bool_key = VALUE_KEY;
         switch (operation_code) {
         case OP_BIT_ADD:
         case OP_BIT_SUBTRACT:
