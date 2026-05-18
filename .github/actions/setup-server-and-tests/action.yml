@@ -106,6 +106,7 @@ runs:
       # Set EE server's IP address and TLS name for test config
       cluster_name=$(call_from_tools_container asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2)
       crudini --existing=param --set "$CONFIG_CONF" enterprise-edition hosts "${SERVER_IP}:${TLS_PORT}|${cluster_name}"
+    working-directory: test
     shell: bash -ex {0}
     env:
       WHERE_IS_CLIENT_CONNECTING_FROM: "${{ inputs.where-is-client-connecting-from }}"
