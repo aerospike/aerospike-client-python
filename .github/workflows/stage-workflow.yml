@@ -45,6 +45,7 @@ jobs:
 
     - name: Get number of files that were changed between dev and stage (with some exceptions)
       run: |
+        # '|| true' required since grep returns non-zero status code when no matches are found
         num_files_changed=$(git diff origin/$STAGE_BRANCH_NAME..origin/$DEV_BRANCH_NAME --name-only | \
           grep --invert-match --count \
           -e "^doc/" \
