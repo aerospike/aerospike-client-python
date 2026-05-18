@@ -384,7 +384,7 @@ jobs:
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-        server-edition: ${{ startsWith(matrix.test-script-args, 'true') && 'enterprise' || 'community' }}
+        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, 'true') && '-enterprise' || '' }}
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background

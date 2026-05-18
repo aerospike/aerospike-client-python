@@ -38,7 +38,7 @@ runs:
   - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
     id: setup-as-server
     with:
-      server-edition: ${{ inputs.server-edition }}
+      server-container-repo: database-docker-virtual/aerospike-server${{ inputs.server-edition == 'enterprise' && '-enterprise' || '' }}
       enable-security: ${{ inputs.server-edition == 'enterprise' }}
       enable-tls: ${{ inputs.server-edition == 'enterprise' }}
       enable-strong-consistency: ${{ inputs.server-edition == 'enterprise' }}
