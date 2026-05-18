@@ -83,7 +83,6 @@ jobs:
     - name: Get artifact name for status message and to download artifact
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
-          # TODO: need better name...
           echo ARTIFACT_NAME_PATTERN=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist >> $GITHUB_ENV
           echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> $GITHUB_ENV
           exit 0
