@@ -28,8 +28,11 @@ on:
 jobs:
   get-jfrog-build-info:
     outputs:
-      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
       jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
+      # Used downstream for labelling the JFrog build with a version
+      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      # Used downstream to tag the release bundle
+      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -47,12 +50,14 @@ jobs:
       run: echo next_release_version=$(cat VERSION) >> $GITHUB_OUTPUT
 
     - name: Safeguard to make sure we don't upload a JFrog build for the latest release
+      id: get-latest-tag
       run: |
         latest_tag=$(git describe --tags --exact-match $prev_commit)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
           echo "We have not merged any changes to dev since the last release yet." >&2
           exit 1
         fi
+        echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
 
     - id: get-jfrog-build-id
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> $GITHUB_OUTPUT
@@ -146,11 +151,12 @@ jobs:
       get-jfrog-build-info,
       create-release-bundle
     ]
-    uses: ./.github/workflows/promote-release-bundle.yml
+    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
     with:
       jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
+      release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.latest-tag }}
       new-environment: DEV
     permissions:
       id-token: write

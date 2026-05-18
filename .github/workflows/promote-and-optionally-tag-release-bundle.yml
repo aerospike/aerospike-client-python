@@ -10,6 +10,10 @@ on:
       release-bundle-version:
         type: string
         required: true
+      release-bundle-tag:
+        type: string
+        description: Optional tag to apply to release bundle when first creating it
+        required: false
       new-environment:
         type: string
         required: true
@@ -20,6 +24,10 @@ on:
 jobs:
   promote-release-bundle:
     runs-on: ubuntu-24.04
+    env:
+      RELEASE_BUNDLE_NAME: ${{ inputs.release-bundle-name }}
+      RELEASE_BUNDLE_VERSION: ${{ inputs.release-bundle-version }}
+      JF_PROJECT: ${{ inputs.jfrog-project }}
     steps:
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
@@ -31,9 +39,14 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
+    # Using --project flag here to be defensive, since setting the default JF project didn't work for other release bundle commands
+    - run: jf release-bundle-annotate --project "$JF_PROJECT" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
+      env:
+        RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
+
     - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
       with:
-        bundle-name: ${{ inputs.release-bundle-name }}
-        version: ${{ inputs.release-bundle-version }}
+        bundle-name: ${{ env.RELEASE_BUNDLE_NAME }}
+        version: ${{ env.RELEASE_BUNDLE_VERSION }}
         environment: ${{ inputs.new-environment }}
-        jf-project: ${{ inputs.jfrog-project }}
+        jf-project: ${{ env.JF_PROJECT }}
