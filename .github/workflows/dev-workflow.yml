@@ -72,6 +72,7 @@ jobs:
       publish-build-info: ${{ inputs.dry-run == false }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+      # Needed for collecting build info
       jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
     permissions:
       contents: read
@@ -117,7 +118,6 @@ jobs:
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
       # Have to override the default artifact name because we are not signing the artifacts
       gh-artifact-name: build-artifacts
-      # TODO: may be easier to have a default for these two inputs
       jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       jf-metadata-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}-buildinfo
       version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
