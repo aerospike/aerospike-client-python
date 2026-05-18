@@ -104,8 +104,17 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+    env:
+      ARTIFACT_NAME: build-artifacts
+    outputs:
+      artifact-name: ${{ env.ARTIFACT_NAME }}
     steps:
-    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    - id: reupload
+      uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+      with:
+        # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
+        # to change unexpectedly.
+        output-name: ${{ env.ARTIFACT_NAME }}
 
   upload-artifacts-to-jfrog:
     needs: [
@@ -117,7 +126,7 @@ jobs:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
       # Have to override the default artifact name because we are not signing the artifacts
-      gh-artifact-name: build-artifacts
+      gh-artifact-name: ${{ needs.reupload-artifacts-as-one-artifact-in-github.outputs.artifact-name }}
       jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       jf-metadata-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}-buildinfo
       version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
