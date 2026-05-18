@@ -1663,3 +1663,9 @@ class TestBitwiseOperations(object):
             )
         ]
     )
+    def test_invalid_args(self, op):
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, ops)
