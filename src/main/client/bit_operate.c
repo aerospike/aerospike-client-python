@@ -73,12 +73,24 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         goto exit;
     }
 
-    bool sign = false;
+    bool bool_value = false;
     switch (operation_code) {
     case OP_BIT_ADD:
     case OP_BIT_SUBTRACT:
     case OP_BIT_GET_INT:
-        if (get_bool_from_pyargs(err, SIGN_KEY, op_dict, &sign) !=
+    case OP_BIT_LSCAN:
+    case OP_BIT_RSCAN:
+
+        const char *bool_key = VALUE_KEY;
+        switch (operation_code) {
+        case OP_BIT_ADD:
+        case OP_BIT_SUBTRACT:
+        case OP_BIT_GET_INT:
+            bool_key = SIGN_KEY;
+            break;
+        }
+
+        if (get_bool_from_pyargs(err, bool_key, op_dict, &bool_value) !=
             AEROSPIKE_OK) {
             goto exit;
         }
@@ -176,17 +188,6 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     }
 
-    bool bool_value = false;
-    switch (operation_code) {
-    case OP_BIT_LSCAN:
-    case OP_BIT_RSCAN:
-        if (get_bool_from_pyargs(err, VALUE_KEY, op_dict, &bool_value) !=
-            AEROSPIKE_OK) {
-            goto exit;
-        }
-        break;
-    }
-
     as_bit_overflow_action action = AS_BIT_OVERFLOW_FAIL;
     switch (operation_code) {
     case OP_BIT_ADD:
@@ -256,8 +257,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_ADD:
         // TODO: value argument is wrong type. This problem exists in dev
-        success = as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
-                                        bit_size, int64_value, sign, action);
+        success =
+            as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
+                                  bit_size, int64_value, bool_value, action);
         break;
     case OP_BIT_AND:
         success =
@@ -269,7 +271,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_GET_INT:
         success = as_operations_bit_get_int(ops, bin, NULL, bit_offset,
-                                            bit_size, sign);
+                                            bit_size, bool_value);
         break;
     case OP_BIT_INSERT:
         success =
@@ -303,9 +305,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         break;
     case OP_BIT_SUBTRACT:
         // TODO: value argument is wrong type. This problem exists in dev
-        success =
-            as_operations_bit_subtract(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, int64_value, sign, action);
+        success = as_operations_bit_subtract(ops, bin, NULL, &bit_policy,
+                                             bit_offset, bit_size, int64_value,
+                                             bool_value, action);
         break;
     case OP_BIT_XOR:
         success =
