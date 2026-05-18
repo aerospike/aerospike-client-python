@@ -68,7 +68,6 @@ jobs:
   test-artifact:
     runs-on: ${{ fromJson(inputs.runner-os-json-string) }}
     env:
-      CE_CONTAINER_NAME: aerospike
       PYTHON_VERSION: ${{ inputs.python-version }}
       MASSIF_REPORT_FILE_NAME: massif.out
       # Used by steps to test from inside container
@@ -172,14 +171,6 @@ jobs:
           colima start
         fi
 
-        if [[ ${{ inputs.test-ce }} == true ]]; then
-          cd .github/workflows
-          ./run-ce-server.bash "$CE_CONTAINER_NAME" "$SERVER_TAG"
-          cd -
-          cd test
-          cp config.conf.template config.conf
-        fi
-
         # Set required env vars for running libasan
         # We can already detect leaks using valgrind
         # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
@@ -217,13 +208,14 @@ jobs:
         fi
       shell: bash
 
-    - if: ${{ inputs.run-integration-tests && inputs.test-ce == false }}
-      id: run-ee-server
-      uses: ./.github/actions/run-ee-server
+    - if: ${{ inputs.run-integration-tests }}
+      id: run-server
+      uses: ./.github/actions/setup-server-and-tests
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        features-content: ${{ secrets.FEATURES_CONTENT }}
+        server-edition: ${{ inputs.test-ce && 'community' || 'enterprise' }}
+        features-content: ${{ !inputs.test-ce && 'enterprise' || secrets.FEATURES_CONTENT }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ steps.test-config.outputs.where_is_client_connecting_from }}
 
@@ -276,7 +268,7 @@ jobs:
 
     - if: ${{ inputs.run-tests-in-container }}
       run: |
-        docker run -d --network "${{ steps.run-ee-server.outputs.container-network }}" -v /:/host:ro --name "$LINUX_DISTRO_CONTAINER_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
+        docker run -d --network "${{ steps.run-server.outputs.container-network }}" -v /:/host:ro --name "$LINUX_DISTRO_CONTAINER_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
         docker cp ../$REPO_DIR_NAME $LINUX_DISTRO_CONTAINER_NAME:/
         if [[ "$IS_DISTRO_CONTAINER_DNF_BASED" == "true" ]]; then
           docker exec "$LINUX_DISTRO_CONTAINER_NAME" dnf install -y python3.11
@@ -318,11 +310,11 @@ jobs:
         TEST_FILE: ${{ inputs.test-file }}
 
     - name: Show server logs to debug test results
-      if: ${{ always() && inputs.run-integration-tests && steps.run-ee-server.conclusion == 'success' }}
+      if: ${{ always() && inputs.run-integration-tests && steps.run-server.conclusion == 'success' }}
       run: docker logs "$CONTAINER_NAME"
       shell: bash
       env:
-        CONTAINER_NAME: ${{ inputs.test-ce == true && env.CE_CONTAINER_NAME || steps.run-ee-server.outputs.container-name }}
+        CONTAINER_NAME: ${{ steps.run-server.outputs.container-name }}
 
     - name: Show job status for commit
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}

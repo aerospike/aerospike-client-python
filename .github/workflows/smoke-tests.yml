@@ -87,7 +87,7 @@ jobs:
         "$PYTHON_BINARY" -m pip install dist/*.whl
 
     - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/setup-server-and-tests
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
@@ -133,7 +133,7 @@ jobs:
       working-directory: test
 
     - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/setup-server-and-tests
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
