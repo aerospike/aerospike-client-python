@@ -206,7 +206,7 @@ jobs:
         else
           echo where_is_client_connecting_from=docker-host >> $GITHUB_OUTPUT
         fi
-      shell: bash
+      shell: bash -ex {0}
 
     - if: ${{ inputs.run-integration-tests }}
       id: run-server
@@ -219,20 +219,23 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ steps.test-config.outputs.where_is_client_connecting_from }}
 
-    # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
-    # There's no way to tell unless we see the logs
-    # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
     - name: Run tests on bare metal
       if: ${{ !inputs.run-tests-in-container }}
       run: |
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           python3 -c "import aerospike"
+          exit 0
         fi
 
         if [[ ${{ inputs.validate-keys }} == false ]]; then
           crudini --existing=param --set config.conf input-validation validate_keys false
         fi
         pip install -r requirements.txt
+
+        # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
+        # There's no way to tell unless we see the logs
+        # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
+
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
           -W error::pytest.PytestUnraisableExceptionWarning \
           -W error::DeprecationWarning
@@ -241,7 +244,7 @@ jobs:
           ms_print "./$MASSIF_REPORT_FILE_NAME"
         fi
       working-directory: test
-      shell: bash
+      shell: bash -ex {0}
       env:
         TEST_FILE: ${{ inputs.test-file }}
 
@@ -303,6 +306,7 @@ jobs:
         docker exec --workdir /$REPO_DIR_NAME "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND $FILE_PATTERN_TO_INSTALL
         docker exec --workdir /$REPO_DIR_NAME/test "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
         docker exec --workdir /$REPO_DIR_NAME/test "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/$TEST_FILE
+      shell: bash -ex {0}
       env:
         IS_DISTRO_CONTAINER_DNF_BASED: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
         IS_CONTAINER_UBUNTU: ${{ startsWith(inputs.container-image-name, 'ubuntu') }}
