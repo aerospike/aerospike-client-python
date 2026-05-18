@@ -1654,7 +1654,7 @@ class TestBitwiseOperations(object):
         "op",
         [
             pytest.param(
-                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign="true"),
+                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign="true", action=aerospike.BIT_OVERFLOW_WRAP),
                 id="invalid sign"
             ),
             pytest.param(
