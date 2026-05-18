@@ -62,8 +62,13 @@ runs:
 
   - if: ${{ inputs.server-edition == 'enterprise' }}
     run: |
+      call_from_tools_container() {
+        # See comment in run-ee-server.bash's call_from_tools_container() for why we surround $@ with double quotes
+        docker run --rm --network host aerospike/aerospike-tools "$@"
+      }
+
       echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
-      docker run --rm --network host aerospike/aerospike-tools asadm -U admin -P admin --enable --execute "manage acl \
+      call_from_tools_container asadm -U admin -P admin --enable --execute "manage acl \
           create user $SUPERUSER_NAME_AND_PASSWORD password $SUPERUSER_NAME_AND_PASSWORD \
           roles read-write-udf, sys-admin, user-admin, data-admin"
 
@@ -99,7 +104,7 @@ runs:
       fi
 
       # Set EE server's IP address and TLS name for test config
-      cluster_name=$(docker run --rm --network host aerospike/aerospike-tools asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2)
+      cluster_name=$(call_from_tools_container asinfo -U admin -P admin -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2)
       crudini --existing=param --set "$CONFIG_CONF" enterprise-edition hosts "${SERVER_IP}:${TLS_PORT}|${cluster_name}"
     shell: bash -x {0}
     env:
