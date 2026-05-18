@@ -82,6 +82,9 @@ jobs:
 
     - name: Get workflow code
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        sparse-checkout: |
+          .github
 
     - name: Expose GitHub Runtime
       uses: step-security/ghaction-github-runtime@3ec2bea23280fd469bb5d759888e9701173b2b0f # v4.0.0
