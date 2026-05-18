@@ -150,7 +150,7 @@ jobs:
         ${{ vars.JFROG_BUILD_NAME }}:${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
-      version: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
+      version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
     permissions:
       contents: read
@@ -165,7 +165,7 @@ jobs:
     with:
       jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
+      release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
       release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.latest-tag }}
       new-environment: DEV
     permissions:

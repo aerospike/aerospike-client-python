@@ -65,7 +65,7 @@ jobs:
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     runs-on: ubuntu-24.04
     outputs:
-      build_number: ${{ steps.get-jf-build-id.outputs.build_number }}
+      bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -90,17 +90,15 @@ jobs:
       uses: step-security/ghaction-github-runtime@3ec2bea23280fd469bb5d759888e9701173b2b0f # v4.0.0
 
     - name: Download JFrog artifacts from release bundle and reupload as Github artifacts
-      id: get-jf-build-id
+      id: get-jf-bundle-version
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
         # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
-        build_number=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
-        echo build_number="$build_number" >> $GITHUB_OUTPUT
+        bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
+        echo bundle_version="$bundle_version" >> $GITHUB_OUTPUT
 
-        # Currently no way to download specific artifacts from a release bundle
-        # Using ARTIFACT_FILE_NAME_PATTERN with jf rt dl --bundle doesn't work
         DEST_DIR_PATH="./dest-dir/"
-        jf rt dl --fail-no-op --build="${JFROG_BUILD_NAME}/${build_number}" --flat "${JFROG_PROJECT}-pypi-dev-local/**/*" "$DEST_DIR_PATH"
+        jf rt dl --project "$JFROG_PROJECT" --fail-no-op --flat --bundle="${JFROG_RELEASE_BUNDLE_NAME}/${bundle_version}" '*' "$DEST_DIR_PATH"
 
         npm install
         node upload-individual-github-artifacts.js "$DEST_DIR_PATH" "$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS"
@@ -108,7 +106,6 @@ jobs:
       working-directory: .github/workflows
       env:
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-        JFROG_BUILD_NAME: ${{ vars.JFROG_BUILD_NAME }}
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
 
@@ -153,5 +150,5 @@ jobs:
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
-      jf-bundle-version: ${{ needs.reupload-jfrog-artifacts-as-github-ones.outputs.build_number }}
+      jf-bundle-version: ${{ needs.reupload-jfrog-artifacts-as-github-ones.outputs.bundle_version }}
     secrets: inherit

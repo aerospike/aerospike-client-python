@@ -44,8 +44,8 @@ async function upload() {
 
       var artifact_name = `${gh_artifact_name_prefix}-${python_version}-${platform_tag}`;
     } else {
-      console.log("Invalid artifact file extension. Artifact name is ", file);
-      process.exit(1)
+      console.log("Invalid artifact file extension, so skipping. Artifact name is ", file);
+      continue;
     }
 
     await client.uploadArtifact(
