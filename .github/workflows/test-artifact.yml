@@ -83,7 +83,7 @@ jobs:
     - name: Get artifact name for status message and to download artifact
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
-          echo ARTIFACT_NAME_PATTERN=${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist >> $GITHUB_ENV
+          echo ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> $GITHUB_ENV
           echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> $GITHUB_ENV
           exit 0
         fi
@@ -93,24 +93,24 @@ jobs:
         os=$(uname -s)
         arch=$(uname -m)
         if [[ $os =~ Darwin* ]]; then
-          ARTIFACT_NAME_PATTERN="macosx_$arch"
+          ARTIFACT_NAME_SUFFIX_PATTERN="macosx_$arch"
         elif [[ $os =~ CYGWIN* || $os =~ MINGW* ]]; then
-          ARTIFACT_NAME_PATTERN=win_amd64
+          ARTIFACT_NAME_SUFFIX_PATTERN=win_amd64
         elif [[ $os =~ Linux* ]]; then
-          ARTIFACT_NAME_PATTERN="*linux_*$arch"
+          ARTIFACT_NAME_SUFFIX_PATTERN="*linux_*$arch"
         fi
 
         if [[ "$DOWNLOAD_SANITIZER_WHEEL" == "true" ]]; then
-          ARTIFACT_NAME_PATTERN="${ARTIFACT_NAME_PATTERN}-sanitizer"
+          ARTIFACT_NAME_SUFFIX_PATTERN="${ARTIFACT_NAME_SUFFIX_PATTERN}-sanitizer"
         fi
-        echo "ARTIFACT_NAME_PATTERN=$ARTIFACT_NAME_PATTERN" >> $GITHUB_ENV
+        echo "ARTIFACT_NAME_SUFFIX_PATTERN=${PYTHON_VERSION}-${ARTIFACT_NAME_SUFFIX_PATTERN}" >> $GITHUB_ENV
       shell: bash
       env:
         DOWNLOAD_SANITIZER_WHEEL: ${{ inputs.use-sanitizer-wheel }}
 
     - name: Create status check message
       run: |
-        echo STATUS_CHECK_MESSAGE="Run tests ($PYTHON_VERSION-$ARTIFACT_NAME_PATTERN)" >> $GITHUB_ENV
+        echo STATUS_CHECK_MESSAGE="Run tests ($ARTIFACT_NAME_SUFFIX_PATTERN)" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -130,7 +130,7 @@ jobs:
 
     # Steps to download wheel
 
-    - run: echo GH_ARTIFACT_PATTERN_FOR_WHEEL=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$PYTHON_VERSION-$ARTIFACT_NAME_PATTERN >> $GITHUB_ENV
+    - run: echo "GH_ARTIFACT_PATTERN_FOR_WHEEL=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$ARTIFACT_NAME_SUFFIX_PATTERN" >> $GITHUB_ENV
       shell: bash
       env:
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
@@ -159,11 +159,11 @@ jobs:
       name: Install wheel and perform extra test setup steps
       run: |
         pip install *.whl
-        if [[ $ARTIFACT_NAME_PATTERN =~ macosx_arm64 ]]; then
+        if [[ $ARTIFACT_NAME_SUFFIX_PATTERN =~ macosx_arm64 ]]; then
           # Need to be able to save Docker registry credentials to keychain
           # Unable to do this via the ansible script for self hosted mac m1 runners
           security unlock-keychain -p "$MAC_M1_SELF_HOSTED_RUNNER_PW"
-        elif [[ $ARTIFACT_NAME_PATTERN =~ macosx_x86_64 ]]; then
+        elif [[ $ARTIFACT_NAME_SUFFIX_PATTERN =~ macosx_x86_64 ]]; then
           # Install Docker Engine
           brew install colima
           # Install Docker client
@@ -210,7 +210,7 @@ jobs:
       run: |
         if [[ ${{ inputs.run-tests-in-container }} == true ]]; then
           echo where_is_client_connecting_from=separate-docker-container >> $GITHUB_OUTPUT
-        elif [[ ${{ contains(env.ARTIFACT_NAME_PATTERN, 'win_amd64') }} == true ]]; then
+        elif [[ ${{ contains(env.ARTIFACT_NAME_SUFFIX_PATTERN, 'win_amd64') }} == true ]]; then
           echo where_is_client_connecting_from=remote-connection >> $GITHUB_OUTPUT
         else
           echo where_is_client_connecting_from=docker-host >> $GITHUB_OUTPUT
