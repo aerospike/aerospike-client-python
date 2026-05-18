@@ -30,6 +30,11 @@
 #include "cdt_list_operations.h"
 #include "cdt_operation_utils.h"
 
+// Estimated size of array: (8 byte const char* address) * 2000 = 16000 bytes = 0.016 MB
+// not including the string constants the array points to
+// We estimate each string to be 15 bytes long.
+// 20 bytes * 2000 = 40000 bytes = 0.04 MB
+// Total memory usage is about 0.056 MB per client
 const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
     X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND, X(BIT_RESIZE),
