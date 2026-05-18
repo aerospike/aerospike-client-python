@@ -67,9 +67,9 @@ runs:
         docker run --rm --network host aerospike/aerospike-tools "$@"
       }
 
-      echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+      SUPERUSER_NAME_AND_PASSWORD="superuser"
       call_from_tools_container asadm -U admin -P admin --enable --execute "manage acl \
-          create user $SUPERUSER_NAME_AND_PASSWORD password $SUPERUSER_NAME_AND_PASSWORD \
+          create user "$SUPERUSER_NAME_AND_PASSWORD" password "$SUPERUSER_NAME_AND_PASSWORD" \
           roles read-write-udf, sys-admin, user-admin, data-admin"
 
       # Install crudini to manipulate config.conf
@@ -77,8 +77,8 @@ runs:
 
       # Disable community edition connection
       crudini --existing=param --set "$CONFIG_CONF" community-edition hosts ''
-      crudini --existing=param --set "$CONFIG_CONF" enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set "$CONFIG_CONF" enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set "$CONFIG_CONF" enterprise-edition user "$SUPERUSER_NAME_AND_PASSWORD"
+      crudini --existing=param --set "$CONFIG_CONF" enterprise-edition password "$SUPERUSER_NAME_AND_PASSWORD"
       crudini --set "$CONFIG_CONF" tls enable true
 
       tls_cert_dir=${{ steps.setup-as-server.outputs.tls-cert-dir }}
