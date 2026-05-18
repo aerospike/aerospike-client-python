@@ -215,7 +215,7 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-edition: ${{ inputs.test-ce && 'community' || 'enterprise' }}
-        features-content: ${{ !inputs.test-ce && 'enterprise' || secrets.FEATURES_CONTENT }}
+        features-content: ${{ !inputs.test-ce && secrets.FEATURES_CONTENT || '' }}
         server-tag: ${{ inputs.server-tag }}
         where-is-client-connecting-from: ${{ steps.test-config.outputs.where_is_client_connecting_from }}
 
