@@ -38,7 +38,8 @@ env:
   LOWEST_SUPPORTED_PY_VERSION: '3.10'
   # pull_request event doesn't support inputs
   # Our JFrog docker repo doesn't automatically update the latest tag, so we can't use it (it currently points to an old nightly build)
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1' }}
+  # 8.1 tag is also currently pointing to a dev 8.0 server build as of this writing...
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.1' }}
   PLATFORM_TAG: linux_x86_64
   COVERAGE_REPORT_ARTIFACT_NAME: coverage-report
 
