@@ -1,3 +1,4 @@
 parver==0.5
 crudini==0.9.4
+pytest-cov==4.1.0
 mypy==1.20.2
