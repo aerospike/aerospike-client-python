@@ -91,6 +91,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-edition: enterprise
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
@@ -137,6 +138,7 @@ jobs:
       with:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-edition: enterprise
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
