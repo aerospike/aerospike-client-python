@@ -22,7 +22,6 @@ jobs:
   # TODO: update whitelisted changes
   compare-latest-dev-tag-and-stage:
     outputs:
-      # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
