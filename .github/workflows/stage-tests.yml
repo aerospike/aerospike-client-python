@@ -13,7 +13,7 @@ permissions:
 on:
   workflow_call:
     inputs:
-      macos-python-versions-to-test:
+      python-versions-to-test:
         required: true
         type: string
       server-tag:
@@ -87,7 +87,7 @@ jobs:
           macos-26,
           windows-2025
         ]
-        python-version: ${{ fromJson(inputs.macos-python-versions-to-test) }}
+        python-version: ${{ fromJson(inputs.python-versions-to-test) }}
       fail-fast: false
     uses: ./.github/workflows/test-artifact.yml
     with:

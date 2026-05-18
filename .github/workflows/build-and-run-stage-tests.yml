@@ -32,5 +32,5 @@ jobs:
     with:
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests-on-macos-x86: true
-      macos-python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
+      python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
       test-file: ${{ inputs.test-file }}
