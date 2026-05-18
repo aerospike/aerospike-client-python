@@ -20,6 +20,9 @@ on:
         type: string
         required: true
         description: 'Server docker image tag'
+      rev-of-integration-tests:
+        required: false
+        type: string
       test-file:
         required: false
         default: ''
@@ -71,6 +74,7 @@ jobs:
       run-tests-in-container: true
       container-image-name: ${{ matrix.test-case[0] }}
       python-version: ${{ matrix.test-case[2] }}
+      rev-of-integration-tests: ${{ inputs.rev-of-integration-tests }}
       build-from-source: ${{ matrix.test-case[3] }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
@@ -95,5 +99,6 @@ jobs:
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ endsWith(matrix.runner-os, '-intel') && inputs.run-integration-tests-on-macos-x86 }}
+      rev-of-integration-tests: ${{ inputs.rev-of-integration-tests }}
       test-file: ${{ inputs.test-file }}
     secrets: inherit

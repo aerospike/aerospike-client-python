@@ -31,6 +31,10 @@ on:
         required: false
         default: true
         description: 'If false, only run import test'
+      # How to run integration tests
+      rev-of-integration-tests:
+        type: string
+        required: false
       test-ce:
         type: boolean
         required: false
@@ -119,6 +123,7 @@ jobs:
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
+        ref: ${{ inputs.rev-of-integration-tests }}
         # Make sure we don't accidentally build from source via the repo
         sparse-checkout: |
           test
