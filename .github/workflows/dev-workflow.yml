@@ -60,6 +60,7 @@ jobs:
         echo latest_tag=$latest_tag >> $GITHUB_OUTPUT
 
     - id: get-jfrog-build-id
+      # Following this convention to be consistent with company policy (instead of using tags for JFrog build id / release bundle version)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> $GITHUB_OUTPUT
 
   build-artifacts:
