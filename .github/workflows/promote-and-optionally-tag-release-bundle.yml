@@ -40,7 +40,8 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     # Using --project flag here to be defensive, since setting the default JF project didn't work for other release bundle commands
-    - run: jf release-bundle-annotate --project "$JF_PROJECT" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
+    - if: ${{ inputs.release-bundle-tag != '' }}
+      run: jf release-bundle-annotate --project "$JF_PROJECT" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
       env:
         RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
 
