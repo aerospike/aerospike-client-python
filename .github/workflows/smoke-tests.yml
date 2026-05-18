@@ -384,6 +384,7 @@ jobs:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, 'true') && '-enterprise' || '' }}
 
