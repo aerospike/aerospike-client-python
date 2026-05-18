@@ -1660,7 +1660,15 @@ class TestBitwiseOperations(object):
             pytest.param(
                 bitwise_operations.bit_resize(BIN_NAME_FOR_INVALID_PARAMS, 7, policy=None, resize_flags={}),
                 id="invalid resize flags"
-            )
+            ),
+            pytest.param(
+                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign="true", action="invalid action"),
+                id="invalid action"
+            ),
+            pytest.param(
+                bitwise_operations.bit_lshift(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, shift=None),
+                id="invalid shift"
+            ),
         ]
     )
     def test_invalid_args(self, op):
