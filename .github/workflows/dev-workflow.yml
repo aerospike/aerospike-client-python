@@ -6,8 +6,9 @@ on:
     inputs:
       server-tag:
         type: string
+        # latest tag is not supported in JFrog
         required: true
-        description: 'Server docker image tag (e.g to test a client backport version)'
+        description: 'Server docker image tag'
       # For testing purposes
       dry-run:
         required: false
