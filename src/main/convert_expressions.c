@@ -1246,10 +1246,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                             NIL)); // - 1 for bin
             break;
         case _AS_EXP_CODE_MAP_KEYS_IN:
-            APPEND_ARRAY(1, as_exp_map_keys(NIL)); // - 1 for bin
+            APPEND_ARRAY(1, as_exp_map_keys_in(NIL)); // - 1 for bin
             break;
         case _AS_EXP_CODE_MAP_VALUES_IN:
-            APPEND_ARRAY(1, as_exp_map_values(NIL)); // - 1 for bin
+            APPEND_ARRAY(1, as_exp_map_values_in(NIL)); // - 1 for bin
             break;
         case OP_MAP_GET_BY_KEY:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
