@@ -45,7 +45,7 @@
 #include <aerospike/version.h>
 
 PyObject *py_global_hosts = NULL;
-int counter = 0xA1100000;
+int counter = 0xAC000000;
 bool user_shm_key = false;
 
 PyDoc_STRVAR(client_doc, "client(config) -> client object\n\
