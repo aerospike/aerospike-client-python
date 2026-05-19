@@ -4,8 +4,12 @@ import pytest
 
 @pytest.mark.usefixtures("connection_config")
 class TestSharedMemory:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.__class__.connection_config["shm"] = {}
+        self.__class__.connection_config["use_shared_connection"] = True
+
     def test_one_client(self):
-        self.connection_config["use_shared_connection"] = True
         client = aerospike.client(self.connection_config)
 
         assert client.is_connected()
@@ -13,7 +17,6 @@ class TestSharedMemory:
         client.close()
 
     def test_multiple_clients(self):
-        self.connection_config["use_shared_connection"] = True
 
         client1 = aerospike.client(self.connection_config)
         assert client1.is_connected()
