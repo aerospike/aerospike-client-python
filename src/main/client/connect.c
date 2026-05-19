@@ -95,9 +95,7 @@ int AerospikeClientConnect(AerospikeClient *self)
             shm_key = self->as->config.shm_key;
             user_shm_key = false;
         }
-        else {
-            shm_key = counter;
-        }
+
         while (1) {
             flag = 0;
             while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
