@@ -7,7 +7,6 @@ class TestSharedMemory:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.__class__.connection_config["shm"] = {}
-        self.__class__.connection_config["use_shared_connection"] = True
 
     def test_one_client(self):
         client = aerospike.client(self.connection_config)
