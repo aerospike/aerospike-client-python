@@ -82,7 +82,7 @@ def as_connection(request) -> aerospike.Client:
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
-    print(config)
+    # print(config)
     as_client = None
     if len(config["hosts"]) == 2:
         for (a, p) in config["hosts"]:
