@@ -168,7 +168,7 @@ class TestQueryApply(object):
         )
 
         self._wait_for_query_complete(query_id)
-        self._items_without_set_have_been_applied()
+        self._correct_items_have_been_applied()
 
     def test_query_apply_with_incorrect_policy(self):
         """
