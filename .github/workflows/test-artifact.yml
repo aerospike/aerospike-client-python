@@ -83,12 +83,10 @@ jobs:
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
           echo GH_ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> "$GITHUB_ENV"
-          echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> "$GITHUB_ENV"
           exit 0
         fi
 
         # Get platform tag of wheel
-        echo FILE_PATTERN_TO_INSTALL=*.whl >> "$GITHUB_ENV"
         os=$(uname -s)
         arch=$(uname -m)
         if [[ $os =~ Darwin* ]]; then
@@ -143,6 +141,14 @@ jobs:
       run: |
         artifact_count=$(find . -maxdepth 1 -type f -name '*.whl' -or -name '*.tar.gz' | wc -l | xargs)
         test "$artifact_count" = "1"
+
+        if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
+          # shellcheck disable=SC2086
+          echo ARTIFACT_FILE_NAME=./*.tar.gz >> "$GITHUB_ENV"
+        else
+          # shellcheck disable=SC2086
+          echo ARTIFACT_FILE_NAME=./*.whl >> "$GITHUB_ENV"
+        fi
       # For seeing how many wheels were pulled from github
       shell: bash -x {0}
 
@@ -157,7 +163,7 @@ jobs:
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install ./*.whl
+        pip install "$ARTIFACT_FILE_NAME"
 
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           exit 0
@@ -312,9 +318,7 @@ jobs:
 
         # Here we assume only one file is present (we already did a sanity check above)
         # shellcheck disable=SC2086
-        artifact_file_name=$FILE_PATTERN_TO_INSTALL
-        # shellcheck disable=SC2086
-        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$artifact_file_name"
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$ARTIFACT_FILE_NAME"
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
