@@ -48,18 +48,18 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
         exit 1
     fi
 
-    lower_release_version=$(echo -e "$current_release_version\n$RELEASE_VERSION_TO_OVERRIDE" | sort -V | head -n 1)
-    if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
-        # Delete tags for current release version
-        readarray <(git tag -l | grep "$current_release_version") tags_to_delete
-        # TODO: does not handle case where:
-        # patch -> major -> patch. If there are any minor dev versions, they will not be deleted
-        readarray -O "${#tags_to_delete[@]}" <(git tag -l | grep "$lower_release_version") tags_to_delete
-        git tag -d "${tags_to_delete[@]}"
-        if [[ -z "$DRY_RUN" ]]; then
-            git push origin --delete "${tags_to_delete[@]}"
-        fi
-    fi
+    # lower_release_version=$(echo -e "$current_release_version\n$RELEASE_VERSION_TO_OVERRIDE" | sort -V | head -n 1)
+    # if [[ "$RELEASE_VERSION_TO_OVERRIDE" == "$lower_release_version" ]]; then
+    #     # Delete tags for current release version
+    #     readarray <(git tag -l | grep "$current_release_version") tags_to_delete
+    #     # TODO: does not handle case where:
+    #     # patch -> major -> patch. If there are any minor dev versions, they will not be deleted
+    #     readarray -O "${#tags_to_delete[@]}" <(git tag -l | grep "$lower_release_version") tags_to_delete
+    #     git tag -d "${tags_to_delete[@]}"
+    #     if [[ -z "$DRY_RUN" ]]; then
+    #         git push origin --delete "${tags_to_delete[@]}"
+    #     fi
+    # fi
     update_release_version_in_repo "Reset" "$RELEASE_VERSION_TO_OVERRIDE"
     tag_and_push "${RELEASE_VERSION_TO_OVERRIDE}.dev1"
     exit 0
