@@ -22,7 +22,6 @@ on:
         description: "Run integration tests with the wheels after building them"
         required: true
         type: boolean
-        default: false
       server-tag:
         type: string
         # latest tag is not supported in JFrog

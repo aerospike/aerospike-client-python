@@ -75,7 +75,7 @@ jobs:
       container-image-name: ${{ matrix.test-case[0] }}
       python-version: ${{ matrix.test-case[2] }}
       rev-of-integration-tests: ${{ inputs.rev-of-integration-tests }}
-      build-from-source: ${{ matrix.test-case[3] }}
+      build-from-tar-gz: ${{ matrix.test-case[3] }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
     secrets: inherit
