@@ -430,7 +430,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         goto END;
     }
 
-    PyObject *py_read_info_list = PyList_New();
+    PyObject *py_read_info_list = PyList_New(0);
     if (!py_read_info_list) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to process read info list");
