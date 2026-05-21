@@ -82,13 +82,13 @@ jobs:
     - name: Get artifact name for status message and to download artifact
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
-          echo GH_ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> $GITHUB_ENV
-          echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> $GITHUB_ENV
+          echo GH_ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> "$GITHUB_ENV"
+          echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> "$GITHUB_ENV"
           exit 0
         fi
 
         # Get platform tag of wheel
-        echo FILE_PATTERN_TO_INSTALL=*.whl >> $GITHUB_ENV
+        echo FILE_PATTERN_TO_INSTALL=*.whl >> "$GITHUB_ENV"
         os=$(uname -s)
         arch=$(uname -m)
         if [[ $os =~ Darwin* ]]; then
@@ -102,14 +102,14 @@ jobs:
         if [[ "$DOWNLOAD_SANITIZER_WHEEL" == "true" ]]; then
           GH_ARTIFACT_NAME_SUFFIX_PATTERN="${GH_ARTIFACT_NAME_SUFFIX_PATTERN}-sanitizer"
         fi
-        echo "GH_ARTIFACT_NAME_SUFFIX_PATTERN=${PYTHON_VERSION}-${GH_ARTIFACT_NAME_SUFFIX_PATTERN}" >> $GITHUB_ENV
+        echo "GH_ARTIFACT_NAME_SUFFIX_PATTERN=${PYTHON_VERSION}-${GH_ARTIFACT_NAME_SUFFIX_PATTERN}" >> "$GITHUB_ENV"
       shell: bash
       env:
         DOWNLOAD_SANITIZER_WHEEL: ${{ inputs.use-sanitizer-wheel }}
 
     - name: Create status check message
       run: |
-        echo STATUS_CHECK_MESSAGE="Run tests ($GH_ARTIFACT_NAME_SUFFIX_PATTERN)" >> $GITHUB_ENV
+        echo STATUS_CHECK_MESSAGE="Run tests ($GH_ARTIFACT_NAME_SUFFIX_PATTERN)" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Show job status for commit
@@ -129,7 +129,7 @@ jobs:
 
     # Steps to download wheel
 
-    - run: echo "GH_ARTIFACT_PATTERN=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$GH_ARTIFACT_NAME_SUFFIX_PATTERN" >> $GITHUB_ENV
+    - run: echo "GH_ARTIFACT_PATTERN=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$GH_ARTIFACT_NAME_SUFFIX_PATTERN" >> "$GITHUB_ENV"
       shell: bash
       env:
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
@@ -154,10 +154,15 @@ jobs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - if: ${{ inputs.run-integration-tests && !inputs.run-tests-in-container }}
+    - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install *.whl
+        pip install ./*.whl
+
+        if [[ ${{ inputs.run-integration-tests }} == false ]]; then
+          exit 0
+        fi
+
         if [[ $GH_ARTIFACT_NAME_SUFFIX_PATTERN =~ macosx_arm64 ]]; then
           # Need to be able to save Docker registry credentials to keychain
           # Unable to do this via the ansible script for self hosted mac m1 runners
@@ -175,8 +180,8 @@ jobs:
         # We can already detect leaks using valgrind
         # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
         if [[ ${{ inputs.use-sanitizer-wheel }} == true ]]; then
-          echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
-          echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+          echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> "$GITHUB_ENV"
+          echo "LD_PRELOAD=$(gcc --print-file-name=libasan.so)" >> "$GITHUB_ENV"
         fi
 
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
@@ -185,9 +190,9 @@ jobs:
           VALGRIND_ARGS="valgrind --error-exitcode=1"
 
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> $GITHUB_ENV
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> $GITHUB_ENV
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
@@ -200,11 +205,11 @@ jobs:
       name: Decide how to connect to server
       run: |
         if [[ ${{ inputs.run-tests-in-container }} == true ]]; then
-          echo where_is_client_connecting_from=separate-docker-container >> $GITHUB_OUTPUT
+          echo where_is_client_connecting_from=separate-docker-container >> "$GITHUB_OUTPUT"
         elif [[ ${{ contains(env.GH_ARTIFACT_NAME_SUFFIX_PATTERN, 'win_amd64') }} == true ]]; then
-          echo where_is_client_connecting_from=remote-connection >> $GITHUB_OUTPUT
+          echo where_is_client_connecting_from=remote-connection >> "$GITHUB_OUTPUT"
         else
-          echo where_is_client_connecting_from=docker-host >> $GITHUB_OUTPUT
+          echo where_is_client_connecting_from=docker-host >> "$GITHUB_OUTPUT"
         fi
       shell: bash -ex {0}
 
@@ -236,6 +241,7 @@ jobs:
         # There's no way to tell unless we see the logs
         # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
 
+        # shellcheck disable=SC2086
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
           -W error::pytest.PytestUnraisableExceptionWarning \
           -W error::DeprecationWarning
@@ -272,7 +278,7 @@ jobs:
     - if: ${{ inputs.run-tests-in-container }}
       run: |
         docker run -d --network "${{ steps.run-server.outputs.container-network }}" -v /:/host:ro --name "$LINUX_DISTRO_CONTAINER_NAME" "$CONTAINER_IMAGE_NAME" tail -f /dev/null
-        docker cp ../$REPO_DIR_NAME $LINUX_DISTRO_CONTAINER_NAME:/
+        docker cp "../$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME:/"
         if [[ "$IS_DISTRO_CONTAINER_DNF_BASED" == "true" ]]; then
           docker exec "$LINUX_DISTRO_CONTAINER_NAME" dnf install -y python3.11
         fi
@@ -288,7 +294,7 @@ jobs:
 
         if [[ "$CONTAINER_IMAGE_NAME" == "ubuntu:24.04" ]]; then
           # Python 3.12+ fails to install packages to the system directory by default
-          echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
+          echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> "$GITHUB_ENV"
         fi
 
         if [[ "${{ inputs.build-from-tar-gz }}" == "true" ]]; then
@@ -303,9 +309,11 @@ jobs:
             python3.11-devel
         fi
 
-        docker exec --workdir /$REPO_DIR_NAME "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND $FILE_PATTERN_TO_INSTALL
-        docker exec --workdir /$REPO_DIR_NAME/test "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
-        docker exec --workdir /$REPO_DIR_NAME/test "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest new_tests/$TEST_FILE
+        # shellcheck disable=SC2086
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$FILE_PATTERN_TO_INSTALL"
+        # shellcheck disable=SC2086
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
       shell: bash -ex {0}
       env:
         IS_DISTRO_CONTAINER_DNF_BASED: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
