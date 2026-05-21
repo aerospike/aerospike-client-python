@@ -446,18 +446,16 @@ PyObject *convert_nullable_array_of_uint32_to_py_list(as_error *err,
     for (int i = 0; i < array_size; i++) {
         PyObject *py_long_value = PyLong_FromUInt32(array[i]);
         if (!py_long_value) {
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to process read info list at index %" PRIu32, i);
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get list item at index %" PRIu32, i);
             goto CLEANUP_ON_ERROR;
         }
 
-        int retval = PyList_Append(py_read_info_list, py_long_value);
+        int retval = PyList_Append(py_list, py_long_value);
         Py_DECREF(py_long_value);
         if (retval == -1) {
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to process read info list at index %" PRIu32, i);
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to append list item at index %" PRIu32, i);
             goto CLEANUP_ON_ERROR;
         }
     }
