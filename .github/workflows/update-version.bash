@@ -58,7 +58,7 @@ if [[ "$CHANGE_TYPE" == "manual-override" ]]; then
         fi
     fi
     update_release_version_in_repo "Reset" "$RELEASE_VERSION_TO_OVERRIDE"
-    tag_and_push "$RELEASE_VERSION_TO_OVERRIDE"
+    tag_and_push "${RELEASE_VERSION_TO_OVERRIDE}.dev1"
     exit 0
 fi
 
