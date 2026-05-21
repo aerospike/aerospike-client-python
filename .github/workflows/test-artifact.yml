@@ -286,7 +286,7 @@ jobs:
           docker exec "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m ensurepip
         fi
 
-        if [[ "$CONTAINER_IMAGE_NAME" == "ubuntu:24.04" ]];
+        if [[ "$CONTAINER_IMAGE_NAME" == "ubuntu:24.04" ]]; then
           # Python 3.12+ fails to install packages to the system directory by default
           echo PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages" >> $GITHUB_ENV
         fi
