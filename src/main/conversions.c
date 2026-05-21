@@ -144,11 +144,16 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
-                                        char str_array_ptr[][AS_ROLE_SIZE],
-                                        PyObject *py_list)
+PyObject *
+convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
+                                      char str_array_ptr[][AS_ROLE_SIZE])
 {
     as_error_reset(err);
+
+    PyObject *py_list = PyList_New(0);
+    if (!py_list) {
+        goto error;
+    }
 
     char *str;
 
@@ -158,14 +163,24 @@ as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
         if (py_str == NULL) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to build string value from %s.", str);
-            break;
+            goto CLEANUP_ON_ERROR;
         }
 
-        PyList_Append(py_list, py_str);
+        int retval = PyList_Append(py_list, py_str);
         Py_DECREF(py_str);
+        if (retval == -1) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to build append string %s to list.", str);
+            goto CLEANUP_ON_ERROR;
+        }
     }
 
-    return err->code;
+    return py_list;
+
+CLEANUP_ON_ERROR:
+    Py_DECREF(py_list);
+error:
+    return NULL;
 }
 
 as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
@@ -460,14 +475,19 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 {
     as_error_reset(err);
 
-    PyObject *py_info = PyDict_New();
-    PyObject *py_roles = PyList_New(0);
+    PyObject *py_user_dict = PyDict_New();
 
-    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
-    if (err->code != AEROSPIKE_OK) {
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
+    PyObject *py_roles = convert_array_of_role_strs_to_py_list(
+        err, user->roles_size, user->roles);
+    if (!py_roles) {
+        goto CLEANUP_ON_ERROR;
+    }
+    int retval = PyDict_SetItemString(py_user_dict, "roles", py_roles);
+    Py_DECREF(py_roles);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to set %s in user dictionary.", "roles");
+        goto CLEANUP_ON_ERROR;
     }
 
     uint32_t *arrays[] = {user->read_info, user->write_info};
@@ -479,44 +499,34 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
             convert_nullable_array_of_uint32_to_py_list(err, arrays[i],
                                                         array_sizes[i]);
         if (!py_optional_list_of_ints) {
-            // TODO: centralize cleanup code in this func
-            goto END;
+            goto CLEANUP_ON_ERROR;
         }
 
-        int retval = PyDict_SetItemString(py_info, array_names[i],
+        int retval = PyDict_SetItemString(py_user_dict, array_names[i],
                                           py_optional_list_of_ints);
         Py_DECREF(py_optional_list_of_ints);
         if (retval == -1) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to set %s in py_info.", array_names[i]);
-            // TODO: centralize cleanup code in this func
-            Py_DECREF(py_roles);
-            Py_DECREF(py_info);
-            goto END;
+                            "Failed to set %s in user dictionary.",
+                            array_names[i]);
+            goto CLEANUP_ON_ERROR;
         }
     }
 
-    if (PyDict_SetItemString(py_info, "conns_in_use",
+    if (PyDict_SetItemString(py_user_dict, "conns_in_use",
                              Py_BuildValue("i", user->conns_in_use)) == -1) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "conns_in_use");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-    if (PyDict_SetItemString(py_info, "roles", py_roles) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "roles");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
+                        "Failed to set %s in py_user_dict.", "conns_in_use");
+        goto CLEANUP_ON_ERROR;
     }
 
-    Py_DECREF(py_roles);
+    *py_as_user = py_user_dict;
 
-    *py_as_user = py_info;
+CLEANUP_ON_ERROR:
+    if (err->code != AEROSPIKE_OK) {
+        Py_DECREF(py_user_dict);
+    }
 
-END:
     return err->code;
 }
 
