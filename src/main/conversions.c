@@ -415,6 +415,46 @@ END:
     return err->code;
 }
 
+PyObject *convert_nullable_array_of_uint32_to_py_list(as_error *err,
+                                                      uint32_t *array,
+                                                      int array_size)
+{
+    if (array == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    PyObject *py_list = PyList_New(0);
+    if (!py_list) {
+        goto error;
+    }
+
+    for (int i = 0; i < array_size; i++) {
+        PyObject *py_long_value = PyLong_FromUInt32(array[i]);
+        if (!py_long_value) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to process read info list at index %" PRIu32, i);
+            goto CLEANUP_ON_ERROR;
+        }
+
+        int retval = PyList_Append(py_read_info_list, py_long_value);
+        Py_DECREF(py_long_value);
+        if (retval == -1) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to process read info list at index %" PRIu32, i);
+            goto CLEANUP_ON_ERROR;
+        }
+    }
+
+    return py_list;
+
+CLEANUP_ON_ERROR:
+    Py_DECREF(py_list);
+error:
+    return NULL;
+}
+
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
                                    PyObject **py_as_user)
 {
@@ -430,61 +470,32 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         goto END;
     }
 
-    PyObject *py_read_info_list = PyList_New(0);
-    if (!py_read_info_list) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to process read info list");
-        // TODO: need to centralize clean up code
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
+    uint32_t *arrays[] = {user->read_info, user->write_info};
+    const char *array_names = {"read_info", "write_info"};
+    int array_sizes[] = {user->read_info_size, user->write_info_size};
 
-    for (uint32_t i = 0; i < user->read_info_size; i++) {
-        PyObject *py_long_value = PyLong_FromUInt32(user->read_info[i]);
-        if (!py_long_value) {
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to process read info list at index %" PRIu32, i);
-            // TODO: need to centralize clean up code
-            Py_DECREF(py_roles);
-            Py_DECREF(py_info);
+    for (unsigned long i = 0; i < sizeof(arrays) / sizeof(arrays[0]); i++) {
+        PyObject *py_optional_list_of_ints =
+            convert_nullable_array_of_uint32_to_py_list(err, arrays[i],
+                                                        array_sizes[i]);
+        if (!py_optional_list_of_ints) {
+            // TODO: centralize cleanup code in this func
             goto END;
         }
 
-        int retval = PyList_Append(py_read_info_list, py_long_value);
-        Py_DECREF(py_long_value);
+        int retval = PyDict_SetItemString(py_info, array_names[i],
+                                          py_optional_list_of_ints);
+        Py_DECREF(py_optional_list_of_ints);
         if (retval == -1) {
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to process read info list at index %" PRIu32, i);
-            // TODO: need to centralize clean up code
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to set %s in py_info.", array_names[i]);
+            // TODO: centralize cleanup code in this func
             Py_DECREF(py_roles);
             Py_DECREF(py_info);
             goto END;
         }
     }
 
-    if (PyDict_SetItemString(
-            py_info, "read_info",
-            Py_BuildValue("i", (user->read_info ? *(user->read_info) : 0))) ==
-        -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "read_info");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-    if (PyDict_SetItemString(
-            py_info, "write_info",
-            Py_BuildValue("i", (user->write_info ? *(user->write_info) : 0))) ==
-        -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "write_info");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
     if (PyDict_SetItemString(py_info, "conns_in_use",
                              Py_BuildValue("i", user->conns_in_use)) == -1) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
