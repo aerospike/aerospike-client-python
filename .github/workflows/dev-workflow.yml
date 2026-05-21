@@ -1,8 +1,3 @@
-permissions:
-  contents: read
-  id-token: write
-  statuses: write
-
 name: Run dev tests and promote release bundle to DEV
 run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }})
 
