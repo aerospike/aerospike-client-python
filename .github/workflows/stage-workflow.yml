@@ -40,24 +40,24 @@ jobs:
         fetch-depth: 0
 
     - name: Get latest dev tag
-      run: echo latest-dev-tag=$(git describe --tags --abbrev=0 origin/$DEV_BRANCH_NAME) >> $GITHUB_OUTPUT
+      run: echo "latest-dev-tag=$(git describe --tags --abbrev=0 "origin/$DEV_BRANCH_NAME")" >> "$GITHUB_OUTPUT"
       id: get-dev-tag
 
     - name: Get number of files that were changed between dev and stage (with some exceptions)
       run: |
         # '|| true' required since grep returns non-zero status code when no matches are found
-        num_files_changed=$(git diff origin/$STAGE_BRANCH_NAME..origin/$DEV_BRANCH_NAME --name-only | \
+        num_files_changed=$(git diff "origin/$STAGE_BRANCH_NAME..origin/$DEV_BRANCH_NAME" --name-only | \
           grep --invert-match --count \
           -e "^doc/" \
           -e "^aerospike-stubs/" \
           -e VERSION \
           || true)
-        echo NUM_FILES_CHANGED=$num_files_changed >> $GITHUB_ENV
+        echo "NUM_FILES_CHANGED=$num_files_changed" >> "$GITHUB_ENV"
       # We want this step to fail if a command failed while using pipes
       shell: bash
 
     - name: If any files were changed besides the exceptions, run the stage tests
-      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
+      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> "$GITHUB_OUTPUT"
       id: run_stage_tests
 
   reupload-jfrog-artifacts-as-github-ones:
@@ -95,7 +95,7 @@ jobs:
         export JFROG_CLI_LOG_LEVEL=DEBUG
         # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
         bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
-        echo bundle_version="$bundle_version" >> $GITHUB_OUTPUT
+        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
 
         DEST_DIR_PATH="./dest-dir/"
         jf rt dl --project "$JFROG_PROJECT" --fail-no-op --flat --bundle="${JFROG_RELEASE_BUNDLE_NAME}/${bundle_version}" '*' "$DEST_DIR_PATH"

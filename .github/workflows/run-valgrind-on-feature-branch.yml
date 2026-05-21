@@ -55,7 +55,7 @@ jobs:
 
     - name: Get shortened commit hash of this workflow run
       # versioningit commit sha is always 8 chars long it seems
-      run: echo SHORT_GITHUB_SHA=$(echo ${{ github.sha }} | cut -c1-8) >> $GITHUB_ENV
+      run: echo "SHORT_GITHUB_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> "$GITHUB_ENV"
 
     - name: Look for wheel built with default settings in JFrog
       # AQL has the option to exclude patterns from search results
@@ -81,7 +81,7 @@ jobs:
 
     - name: Count artifacts
       id: count_num_artifacts_found
-      run: echo num_artifacts=$(jq length "$JF_SEARCH_RESULTS_FILE_NAME") >> $GITHUB_OUTPUT
+      run: echo "num_artifacts=$(jq length "$JF_SEARCH_RESULTS_FILE_NAME")" >> "$GITHUB_OUTPUT"
 
     - name: Multiple artifacts found, not sure which one to use. Fail out
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
@@ -89,7 +89,7 @@ jobs:
 
     - name: Found the exact artifact in JFrog. Get the artifact name
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      run: echo ARTIFACT_PATH=$(jq -r .[0].path "$JF_SEARCH_RESULTS_FILE_NAME") >> $GITHUB_ENV
+      run: echo "ARTIFACT_PATH=$(jq -r .[0].path "$JF_SEARCH_RESULTS_FILE_NAME")" >> "$GITHUB_ENV"
 
     - name: Then download artifact from JFrog
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}

@@ -55,7 +55,7 @@ runs:
   - name: Get config.conf
     run: |
       CONFIG_CONF=config.conf
-      echo "CONFIG_CONF=$CONFIG_CONF" >> $GITHUB_ENV
+      echo "CONFIG_CONF=$CONFIG_CONF" >> "$GITHUB_ENV"
       cp config.conf.template "$CONFIG_CONF"
     working-directory: test
     shell: bash -ex {0}
