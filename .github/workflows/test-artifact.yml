@@ -139,8 +139,8 @@ jobs:
 
     - name: Sanity test that only one wheel was pulled
       run: |
-        wheel_count=$(find . -maxdepth 1 -type f -name '*.whl' | wc -l | xargs)
-        test "$wheel_count" = "1"
+        artifact_count=$(find . -maxdepth 1 -type f -name '*.whl' -or -name '*.tar.gz' | wc -l | xargs)
+        test "$artifact_count" = "1"
       # For seeing how many wheels were pulled from github
       shell: bash -x {0}
 
