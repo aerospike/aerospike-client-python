@@ -139,17 +139,14 @@ jobs:
 
     - name: Sanity test that only one wheel was pulled
       run: |
-        artifact_count=$(find . -maxdepth 1 -type f -name '*.whl' -or -name '*.tar.gz' | wc -l | xargs)
-        test "$artifact_count" = "1"
+        # Get real artifact names
+        # Make sure if no files are matched, the glob pattern itself doesn't get stored in the array
+        shopt -s nullglob
+        artifact_names=( *.whl *.tar.gz )
+        test "${#artifact_names[@]}" = "1"
 
-        if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
-          # shellcheck disable=SC2086
-          echo ARTIFACT_FILE_NAME=./*.tar.gz >> "$GITHUB_ENV"
-        else
-          # shellcheck disable=SC2086
-          echo ARTIFACT_FILE_NAME=./*.whl >> "$GITHUB_ENV"
-        fi
-      # For seeing how many wheels were pulled from github
+        echo "ARTIFACT_FILE_NAME=${artifact_names[0]}" >> "$GITHUB_ENV"
+      # For seeing how many artifacts were pulled from github
       shell: bash -x {0}
 
     # Bare metal steps
@@ -163,7 +160,7 @@ jobs:
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install "$ARTIFACT_FILE_NAME"
+        pip install "./$ARTIFACT_FILE_NAME"
 
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           exit 0
@@ -318,7 +315,7 @@ jobs:
 
         # Here we assume only one file is present (we already did a sanity check above)
         # shellcheck disable=SC2086
-        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$ARTIFACT_FILE_NAME"
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "./$ARTIFACT_FILE_NAME"
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
