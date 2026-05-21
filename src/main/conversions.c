@@ -430,6 +430,41 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         goto END;
     }
 
+    PyObject *py_read_info_list = PyList_New();
+    if (!py_read_info_list) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to process read info list");
+        // TODO: need to centralize clean up code
+        Py_DECREF(py_roles);
+        Py_DECREF(py_info);
+        goto END;
+    }
+
+    for (uint32_t i = 0; i < user->read_info_size; i++) {
+        PyObject *py_long_value = PyLong_FromUInt32(user->read_info[i]);
+        if (!py_long_value) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to process read info list at index %" PRIu32, i);
+            // TODO: need to centralize clean up code
+            Py_DECREF(py_roles);
+            Py_DECREF(py_info);
+            goto END;
+        }
+
+        int retval = PyList_Append(py_read_info_list, py_long_value);
+        Py_DECREF(py_long_value);
+        if (retval == -1) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to process read info list at index %" PRIu32, i);
+            // TODO: need to centralize clean up code
+            Py_DECREF(py_roles);
+            Py_DECREF(py_info);
+            goto END;
+        }
+    }
+
     if (PyDict_SetItemString(
             py_info, "read_info",
             Py_BuildValue("i", (user->read_info ? *(user->read_info) : 0))) ==
