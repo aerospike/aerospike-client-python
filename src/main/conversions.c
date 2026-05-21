@@ -489,7 +489,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
     }
 
     uint32_t *arrays[] = {user->read_info, user->write_info};
-    const char *array_names = {"read_info", "write_info"};
+    const char *array_names[] = {"read_info", "write_info"};
     int array_sizes[] = {user->read_info_size, user->write_info_size};
 
     for (unsigned long i = 0; i < sizeof(arrays) / sizeof(arrays[0]); i++) {
