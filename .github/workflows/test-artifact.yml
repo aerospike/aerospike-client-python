@@ -310,8 +310,11 @@ jobs:
             python3.11-devel
         fi
 
+        # Here we assume only one file is present (we already did a sanity check above)
         # shellcheck disable=SC2086
-        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$FILE_PATTERN_TO_INSTALL"
+        artifact_file_name=$FILE_PATTERN_TO_INSTALL
+        # shellcheck disable=SC2086
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$artifact_file_name"
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
