@@ -271,7 +271,7 @@ jobs:
 
     - if: ${{ inputs.run-tests-in-container }}
       run: |
-        docker run -d --network "${{ steps.run-server.outputs.container-network }}" -v /:/host:ro --name "$CONTAINER_IMAGE_NAME" "$LINUX_DISTRO_IMAGE_NAME" tail -f /dev/null
+        docker run -d --network "${{ steps.run-server.outputs.container-network }}" -v /:/host:ro --name "$LINUX_DISTRO_CONTAINER_NAME" "$CONTAINER_IMAGE_NAME" tail -f /dev/null
         docker cp ../$REPO_DIR_NAME $LINUX_DISTRO_CONTAINER_NAME:/
         if [[ "$IS_DISTRO_CONTAINER_DNF_BASED" == "true" ]]; then
           docker exec "$LINUX_DISTRO_CONTAINER_NAME" dnf install -y python3.11
