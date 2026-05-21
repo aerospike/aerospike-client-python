@@ -41,7 +41,7 @@ jobs:
 
     # Using --project flag here to be defensive, since setting the default JF project didn't work for other release bundle commands
     - if: ${{ inputs.release-bundle-tag != '' }}
-      run: jf release-bundle-annotate --project "$JF_PROJECT" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
+      run: jf release-bundle-annotate --project "$JF_PROJECT" --tag "$RELEASE_BUNDLE_TAG" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
       env:
         RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
 
