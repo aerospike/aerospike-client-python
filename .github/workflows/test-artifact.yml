@@ -83,12 +83,10 @@ jobs:
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
           echo GH_ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> "$GITHUB_ENV"
-          echo FILE_PATTERN_TO_INSTALL=*.tar.gz >> "$GITHUB_ENV"
           exit 0
         fi
 
         # Get platform tag of wheel
-        echo FILE_PATTERN_TO_INSTALL=*.whl >> "$GITHUB_ENV"
         os=$(uname -s)
         arch=$(uname -m)
         if [[ $os =~ Darwin* ]]; then
@@ -311,7 +309,7 @@ jobs:
         fi
 
         # shellcheck disable=SC2086
-        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "$FILE_PATTERN_TO_INSTALL"
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND --no-index --find-links=./ aerospike
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
