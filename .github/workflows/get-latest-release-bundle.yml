@@ -1,0 +1,49 @@
+on:
+  workflow_call:
+    inputs:
+      expected-release-bundle-tag:
+        type: string
+        required: false
+    outputs:
+      release-bundle-version:
+        value: ${{ jobs.get-latest-release-bundle.outputs.release-bundle-version }}
+
+jobs:
+  get-latest-release-bundle:
+    outputs:
+      release-bundle-version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      with:
+        egress-policy: audit
+
+    - uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - name: Get release bundle version
+      id: get-jf-bundle-version
+      run: |
+        export JFROG_CLI_LOG_LEVEL=DEBUG
+        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
+        latest_release_bundle_json_data=$(jf rt curl "/api/v2/release_bundle/records/${JFROG_RELEASE_BUNDLE_NAME}?project=${JFROG_PROJECT}&order_by=created" | jq -r ".release_bundles[0]")
+        bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
+        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
+
+        if [[ -z "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG" ]];
+          exit 0
+        fi
+
+        # Validate release bundle tag
+        bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
+        test "$bundle_tag" = "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG"
+      env:
+        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+        JFROG_EXPECTED_RELEASE_BUNDLE_TAG: ${{ inputs.expected-release-bundle-tag }}
