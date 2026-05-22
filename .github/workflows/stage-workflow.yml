@@ -22,6 +22,7 @@ jobs:
   # TODO: update whitelisted changes
   compare-latest-dev-tag-and-stage:
     outputs:
+      bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
@@ -60,12 +61,29 @@ jobs:
       run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> "$GITHUB_OUTPUT"
       id: run_stage_tests
 
+    - uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - name: Also get release bundle version to test
+      id: get-jf-bundle-version
+      run: |
+        export JFROG_CLI_LOG_LEVEL=DEBUG
+        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
+        bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
+        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
+      env:
+        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+
   reupload-jfrog-artifacts-as-github-ones:
     needs: compare-latest-dev-tag-and-stage
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     runs-on: ubuntu-24.04
-    outputs:
-      bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -90,15 +108,9 @@ jobs:
       uses: step-security/ghaction-github-runtime@3ec2bea23280fd469bb5d759888e9701173b2b0f # v4.0.0
 
     - name: Download JFrog artifacts from release bundle and reupload as Github artifacts
-      id: get-jf-bundle-version
       run: |
-        export JFROG_CLI_LOG_LEVEL=DEBUG
-        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
-        bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
-        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
-
         DEST_DIR_PATH="./dest-dir/"
-        jf rt dl --project "$JFROG_PROJECT" --fail-no-op --flat --bundle="${JFROG_RELEASE_BUNDLE_NAME}/${bundle_version}" '*' "$DEST_DIR_PATH"
+        jf rt dl --project "$JFROG_PROJECT" --fail-no-op --flat --bundle="${JFROG_RELEASE_BUNDLE_NAME}/${JFROG_RELEASE_BUNDLE_VERSION}" '*' "$DEST_DIR_PATH"
 
         npm install
         node upload-individual-github-artifacts.js "$DEST_DIR_PATH" "$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS"
@@ -108,6 +120,7 @@ jobs:
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
+        JFROG_RELEASE_BUNDLE_VERSION: ${{ needs.compare-latest-dev-tag-and-stage.outputs.bundle_version }}
 
   run-stage-tests:
     needs: [
@@ -150,5 +163,5 @@ jobs:
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
-      jf-bundle-version: ${{ needs.reupload-jfrog-artifacts-as-github-ones.outputs.bundle_version }}
+      jf-bundle-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.bundle_version }}
     secrets: inherit
