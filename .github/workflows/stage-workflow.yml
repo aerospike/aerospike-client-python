@@ -42,8 +42,9 @@ jobs:
         fetch-depth: 0
 
     - name: Get latest dev tag
-      run: echo "latest-dev-tag=$(git describe --tags --abbrev=0 "origin/$DEV_BRANCH_NAME")" >> "$GITHUB_OUTPUT"
       id: get-dev-tag
+      # --exact-match: sanity check that dev's latest commit has the latest dev tag
+      run: echo "latest-dev-tag=$(git describe --tags --exact-match "origin/$DEV_BRANCH_NAME")" >> "$GITHUB_OUTPUT"
 
     - name: Get number of files that were changed between dev and stage (with some exceptions)
       run: |
@@ -57,6 +58,8 @@ jobs:
         echo "NUM_FILES_CHANGED=$num_files_changed" >> "$GITHUB_ENV"
       # We want this step to fail if a command failed while using pipes
       shell: bash
+      env:
+        LATEST_DEV_TAG: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
 
     - name: If any files were changed besides the exceptions, run the stage tests
       run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> "$GITHUB_OUTPUT"
@@ -70,16 +73,22 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - name: Also get release bundle version to test
+    - name: Also get release bundle version to optionally test and promote
       id: get-jf-bundle-version
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
         # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
-        bundle_version=$(jf rbs --project "$JFROG_PROJECT" --format json --order-by created versions "$JFROG_RELEASE_BUNDLE_NAME" | jq -r '.release_bundles[0].release_bundle_version')
+        latest_release_bundle_json_data=$(jf rt curl '/api/v2/release_bundle/records/python-client-release?project=database&order_by=created' | jq -r ".release_bundles[0]")
+        bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
         echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
+
+        # Sanity check that the release bundle has the latest dev tag
+        bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
+        test "$bundle_tag" = "$LATEST_DEV_TAG"
       env:
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+        LATEST_DEV_TAG: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
 
   reupload-jfrog-artifacts-as-github-ones:
     needs: compare-latest-dev-tag-and-stage
