@@ -115,7 +115,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.compare-latest-dev-tag-and-stage.result == 'success' &&
-      needs.get-release-bundle-version-to-optionally-test-and-promote == 'success' &&
+      needs.get-release-bundle-version-to-optionally-test-and-promote.result == 'success' &&
       (
         (needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' && needs.run-stage-tests.result == 'success')
         ||
@@ -125,5 +125,5 @@ jobs:
     with:
       # Where to fast forward stage to
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
-      jf-bundle-version: ${{ needs.get-release-bundle-version-to-optionally-test-and-promote.outputs.jfrog_bundle_version }}
+      jf-bundle-version: ${{ needs.get-release-bundle-version-to-optionally-test-and-promote.outputs.release-bundle-version }}
     secrets: inherit
