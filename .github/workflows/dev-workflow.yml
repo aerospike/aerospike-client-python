@@ -63,6 +63,18 @@ jobs:
       # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
 
+  get-release-bundle-version-to-optionally-test-and-promote:
+    needs: compare-latest-dev-tag-and-stage
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    with:
+      expected-release-bundle-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
+
+  compare-latest-dev-tag-and-stage:
+    uses: ./.github/workflows/decide-to-run-integration-tests.yml
+    with:
+      earlier_rev: ${{ vars.STAGE_BRANCH_NAME }}
+      later_rev: ${{ vars.DEV_BRANCH_NAME }}
+
   build-artifacts:
     needs: get-jfrog-build-info
     uses: ./.github/workflows/build-artifacts.yml

@@ -18,81 +18,24 @@ on:
         description: 'new_tests/<value>'
 
 jobs:
-  # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
-  # TODO: update whitelisted changes
   compare-latest-dev-tag-and-stage:
-    outputs:
-      jfrog_bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
-      # Dev version to test
-      latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
-      run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
-    runs-on: ubuntu-22.04
-    env:
-      DEV_BRANCH_NAME: ${{ vars.DEV_BRANCH_NAME }}
-      STAGE_BRANCH_NAME: ${{ vars.STAGE_BRANCH_NAME }}
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
+    uses: ./.github/workflows/decide-to-run-integration-tests.yml
+    with:
+      earlier_rev: ${{ vars.STAGE_BRANCH_NAME }}
+      later_rev: ${{ vars.DEV_BRANCH_NAME }}
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        # Get all tags
-        fetch-depth: 0
-
-    - name: Get latest dev tag
-      id: get-dev-tag
-      # --exact-match: sanity check that dev's latest commit has the latest dev tag
-      run: echo "latest-dev-tag=$(git describe --tags --exact-match "origin/$DEV_BRANCH_NAME")" >> "$GITHUB_OUTPUT"
-
-    - name: Get number of files that were changed between dev and stage (with some exceptions)
-      run: |
-        # '|| true' required since grep returns non-zero status code when no matches are found
-        num_files_changed=$(git diff "origin/$STAGE_BRANCH_NAME..origin/$DEV_BRANCH_NAME" --name-only | \
-          grep --invert-match --count \
-          -e "^doc/" \
-          -e "^aerospike-stubs/" \
-          -e VERSION \
-          || true)
-        echo "NUM_FILES_CHANGED=$num_files_changed" >> "$GITHUB_ENV"
-      # We want this step to fail if a command failed while using pipes
-      shell: bash
-      env:
-        LATEST_DEV_TAG: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
-
-    - name: If any files were changed besides the exceptions, run the stage tests
-      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> "$GITHUB_OUTPUT"
-      id: run_stage_tests
-
-    - uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
-      env:
-        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
-        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      with:
-        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
-        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-
-    - name: Also get release bundle version to optionally test and promote
-      id: get-jf-bundle-version
-      run: |
-        export JFROG_CLI_LOG_LEVEL=DEBUG
-        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
-        latest_release_bundle_json_data=$(jf rt curl '/api/v2/release_bundle/records/python-client-release?project=database&order_by=created' | jq -r ".release_bundles[0]")
-        bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
-        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
-
-        # Sanity check that the release bundle has the latest dev tag
-        bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
-        test "$bundle_tag" = "$LATEST_DEV_TAG"
-      env:
-        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-        LATEST_DEV_TAG: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
+  get-release-bundle-version-to-optionally-test-and-promote:
+    needs: compare-latest-dev-tag-and-stage
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    with:
+      expected-release-bundle-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
 
   reupload-jfrog-artifacts-as-github-ones:
-    needs: compare-latest-dev-tag-and-stage
-    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
+    needs: [
+      compare-latest-dev-tag-and-stage,
+      get-release-bundle-version-to-optionally-test-and-promote
+    ]
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_integration_tests == 'true' }}
     runs-on: ubuntu-24.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -130,14 +73,20 @@ jobs:
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
-        JFROG_RELEASE_BUNDLE_VERSION: ${{ needs.compare-latest-dev-tag-and-stage.outputs.jfrog_bundle_version }}
+        JFROG_RELEASE_BUNDLE_VERSION: ${{ needs.get-release-bundle-version-to-optionally-test-and-promote.outputs.release-bundle-version }}
 
   run-stage-tests:
     needs: [
       compare-latest-dev-tag-and-stage,
       reupload-jfrog-artifacts-as-github-ones
     ]
-    if: ${{ !cancelled() && needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' }}
+    if: |
+      !cancelled() &&
+      (
+        needs.compare-latest-dev-tag-and-stage.outputs.run_integration_tests == 'true'
+        &&
+        needs.reupload-jfrog-artifacts-as-github-ones.result == 'success'
+      )
     uses: ./.github/workflows/stage-tests.yml
     # Need to pass in JFrog secrets
     secrets: inherit
@@ -145,7 +94,7 @@ jobs:
       # TODO: more work to get this dynamically
       python-versions-to-test: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
       # Need to use the same version of tests designed for the client version we're promoting
-      rev-of-integration-tests: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+      rev-of-integration-tests: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       run-integration-tests-on-macos-x86: false
@@ -159,12 +108,14 @@ jobs:
   fast-forward-stage-to-dev-and-promote-rb-to-test:
     needs: [
       compare-latest-dev-tag-and-stage,
+      get-release-bundle-version-to-optionally-test-and-promote,
       reupload-jfrog-artifacts-as-github-ones,
       run-stage-tests
     ]
     if: |
       !cancelled() &&
       needs.compare-latest-dev-tag-and-stage.result == 'success' &&
+      needs.get-release-bundle-version-to-optionally-test-and-promote == 'success' &&
       (
         (needs.reupload-jfrog-artifacts-as-github-ones.result == 'success' && needs.run-stage-tests.result == 'success')
         ||
@@ -173,6 +124,6 @@ jobs:
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
       # Where to fast forward stage to
-      passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
-      jf-bundle-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.jfrog_bundle_version }}
+      passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
+      jf-bundle-version: ${{ needs.get-release-bundle-version-to-optionally-test-and-promote.outputs.jfrog_bundle_version }}
     secrets: inherit
