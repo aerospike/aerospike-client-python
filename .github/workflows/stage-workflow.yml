@@ -22,7 +22,8 @@ jobs:
   # TODO: update whitelisted changes
   compare-latest-dev-tag-and-stage:
     outputs:
-      bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
+      jfrog_bundle_version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
+      # Dev version to test
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
@@ -120,7 +121,7 @@ jobs:
         JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
         GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
-        JFROG_RELEASE_BUNDLE_VERSION: ${{ needs.compare-latest-dev-tag-and-stage.outputs.bundle_version }}
+        JFROG_RELEASE_BUNDLE_VERSION: ${{ needs.compare-latest-dev-tag-and-stage.outputs.jfrog_bundle_version }}
 
   run-stage-tests:
     needs: [
@@ -162,6 +163,7 @@ jobs:
       )
     uses: ./.github/workflows/ff-stage-and-promote-release-bundle-to-test.yml
     with:
+      # Where to fast forward stage to
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
-      jf-bundle-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.bundle_version }}
+      jf-bundle-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.jfrog_bundle_version }}
     secrets: inherit
