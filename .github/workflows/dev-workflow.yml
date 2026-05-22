@@ -32,7 +32,7 @@ jobs:
       # Used downstream for labelling the JFrog build with a version
       next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
       # Used downstream to tag the release bundle
-      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
+      latest-dev-tag: ${{ steps.get-latest-dev-tag.outputs.latest_tag }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -50,7 +50,7 @@ jobs:
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
     - name: Safeguard to make sure there's changes in dev to be promoted
-      id: get-latest-tag
+      id: get-latest-dev-tag
       run: |
         latest_tag=$(git describe --tags --exact-match HEAD)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
@@ -63,17 +63,18 @@ jobs:
       # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
 
-  get-release-bundle-version-to-optionally-test-and-promote:
-    needs: compare-latest-dev-tag-and-stage
+  get-last-release-bundle-info:
     uses: ./.github/workflows/get-latest-release-bundle.yml
-    with:
-      expected-release-bundle-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
 
-  compare-latest-dev-tag-and-stage:
+  compare-last-release-bundle-rev-with-latest-dev-tag:
+    needs: [
+      get-jfrog-build-info,
+      get-last-release-bundle-info
+    ]
     uses: ./.github/workflows/decide-to-run-integration-tests.yml
     with:
-      earlier_rev: ${{ vars.STAGE_BRANCH_NAME }}
-      later_rev: ${{ vars.DEV_BRANCH_NAME }}
+      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.release-bundle-tag }}
+      later_rev: ${{ needs.get-jfrog-build-info.outputs.latest-dev-tag }}
 
   build-artifacts:
     needs: get-jfrog-build-info
@@ -179,7 +180,7 @@ jobs:
       jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
-      release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.latest-tag }}
+      release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.latest-dev-tag }}
       new-environment: DEV
     permissions:
       id-token: write
