@@ -6,3 +6,4 @@ filename =
     ./aerospike_helpers/**/*.py,
     ./test/new_tests/**/*.py
     ./test/standalone/**/*.py
+    ./setup.py
