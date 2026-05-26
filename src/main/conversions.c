@@ -170,7 +170,7 @@ PyObject *convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
         Py_DECREF(py_str);
         if (retval == -1) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build append string %s to list.", str);
+                            "Unable to append string %s to list.", str);
             goto CLEANUP_ON_ERROR;
         }
     }
