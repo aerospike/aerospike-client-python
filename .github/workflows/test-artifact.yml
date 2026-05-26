@@ -332,7 +332,7 @@ jobs:
         # For debugging: get log size (logs can take from a few minutes to over 20 minutes to print. This hasn't happened before the release bundle PR was merged)
         if [[ "${{ runner.os }}" != "Windows" ]]; then
           log_file_path=$(docker inspect --format='{{.LogPath}}' "$CONTAINER_NAME")
-          du -h "$log_file_path"
+          sudo du -h "$log_file_path"
         fi
         docker logs "$CONTAINER_NAME"
       shell: bash
