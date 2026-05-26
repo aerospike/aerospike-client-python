@@ -20,9 +20,6 @@ on:
       base_branch:
         type: string
         required: true
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
 
 jobs:
   merge:
@@ -42,7 +39,9 @@ jobs:
           token: ${{ secrets.CLIENT_BOT_PAT }}
 
       - name: Fast forward
-        run: git merge --ff-only ${{ inputs.ref_to_merge }}
+        run: git merge --ff-only "$REF_TO_MERGE"
+        env:
+          REF_TO_MERGE: ${{ inputs.ref_to_merge }}
 
       - name: Upload changes to remote head branch
         run: git push
