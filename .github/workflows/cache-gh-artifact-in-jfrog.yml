@@ -48,7 +48,9 @@ jobs:
       run: echo "DRY_RUN_FLAG=--dry-run" >> "$GITHUB_ENV"
 
     - name: Upload manylinux build from feature branch to JFrog generic repo
-      run: jf rt upload "$DRY_RUN_FLAG" "*manylinux*" "$DIR_TO_STORE_ARTIFACT/"
+      run: |
+        # shellcheck disable=SC2086
+        jf rt upload $DRY_RUN_FLAG "*manylinux*" "$DIR_TO_STORE_ARTIFACT/"
       working-directory: ${{ env.ARTIFACTS_DEST_DIR }}
       env:
         DIR_TO_STORE_ARTIFACT: ${{ inputs.dir-to-store-artifact }}
