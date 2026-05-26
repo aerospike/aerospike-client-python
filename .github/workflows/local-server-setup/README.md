@@ -14,6 +14,8 @@ MUTUAL_TLS=1
 
 ## Note
 
+- Although the CI/CD pipeline now uses the shared action for deploying the server, we keep this folder to make
+deploying an enterprise server with features enabled locally easier.
 - The CA certificate in this folder is a fake certificate used both by the client and server for connecting via TLS. The
 private key was generated along with this CA certificate, and was only used to sign the server certificate used in testing.
 - The server certificate and private key is also provided here, so the setup script doesn't have to regenerate it every

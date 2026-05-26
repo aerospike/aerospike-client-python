@@ -1,20 +1,17 @@
 name: Smoke tests
+run-name: Smoke tests ${{ github.event_name == 'workflow_dispatch' && format('({0})', inputs.server-tag) || '' }}
+
 permissions:
   contents: read
+  id-token: write
+  # For build-and-optionally-test-wheels-on-one-platform.yml
+  # No way to only set this if tests are enabled in that workflow, AFAIK
+  statuses: write
 
-env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.10'
-  # pull_request event doesn't support inputs
-  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
-
-# Trigger test workflow whenever:
-# 1. A pull request is updated (e.g with new commits)
-# 2. Commits are pushed directly to the dev, stage or master branch
 on:
+  # Using push instead of pull_request so that commits with no applicable code changes will not trigger a rebuild
+  # This saves compute cost
   push:
-    branches: ["dev*", "stage*", "master*", "v*-backport*"]
-  pull_request:
     paths-ignore:
       # Only doc related changes
       - doc/**/*
@@ -25,77 +22,49 @@ on:
       - .build.yml
       # Other misc files not related to source code changes
       - benchmarks/**/*
+    tags-ignore:
+      - '**'
+    # Have to add this or tags-ignore will cause workflow to never run
+    branches:
+      - '**'
   workflow_dispatch:
     inputs:
-      # Used to test server RCs
-      registry-name:
-        description: Registry name
-        type: string
-        default: docker.io
-        required: true
       server-tag:
         description: Server tag
         type: string
-        default: latest
         required: true
 
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.10'
+  # pull_request event doesn't support inputs
+  # Our JFrog docker repo doesn't automatically update the latest tag, so we can't use it (it currently points to an old nightly build)
+  # 8.1 tag is also currently pointing to a dev 8.0 server build as of this writing...
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.1' }}
+  PLATFORM_TAG: linux_x86_64
+  COVERAGE_REPORT_ARTIFACT_NAME: coverage-report
+
 jobs:
-  build:
+  # For reusable workflows to access environment variables
+  get-env-vars:
+    outputs:
+      lowest-supported-python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+      server-tag: ${{ env.SERVER_TAG }}
+      platform-tag: ${{ env.PLATFORM_TAG }}
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        py-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        # Make sure we can build and run tests on an instrumented build that uses libasan
-        # We aren't necessarily checking for memory errors / leaks in this test
-        sanitizer: [false]
-        include:
-        - py-version: '3.10'
-          sanitizer: true
-      fail-fast: false
-
     steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
+    - name: no-op
+      run: echo 1
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-        fetch-depth: 0
+  build:
+    needs: get-env-vars
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      env-vars-for-building: SKIP_REPAIR_WHEEL=1
+    secrets: inherit
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
-        allow-prereleases: true
-
-    - run: sudo apt-get update
-    - name: Install build dependencies (apt packages)
-      run: sudo apt-get install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install -r requirements.txt
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo SANITIZER=1 >> $GITHUB_ENV
-
-    - name: Build client
-      run: python3 -m build
-      env:
-        CFLAGS: '-Werror'
-
-    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
-
-    - name: Send wheel to test jobs
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
-        path: ./dist/*.whl
-
-  build-and-run-tests-with-debug-interpreter:
+  build-and-test-using-debug-interpreter:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -111,23 +80,25 @@ jobs:
     - run: |
         sudo apt-get update
         sudo apt-get install -y python3-dbg
-        # echo DEBUG_FLAGS="-X dev -X showrefcount -X tracemalloc" >> $GITHUB_ENV
-        python3-dbg -m pip install build -c requirements.txt
-        python3-dbg -m build
-        python3-dbg -m pip install dist/*.whl
+        PYTHON_BINARY=python3-dbg
+        echo PYTHON_BINARY="$PYTHON_BINARY" >> "$GITHUB_ENV"
 
-    - run: python3-dbg -m pip install pytest -c requirements.txt
-      working-directory: test
+        "$PYTHON_BINARY" -m pip install build -c requirements.txt
+        "$PYTHON_BINARY" -m build
+        "$PYTHON_BINARY" -m pip install dist/*.whl
 
     - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/setup-server-and-tests
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-edition: enterprise
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - run: python3-dbg -m pytest ./new_tests
+    - run: |
+        "$PYTHON_BINARY" -m pip install pytest -c requirements.txt
+        "$PYTHON_BINARY" -m pytest ./new_tests
       working-directory: test
 
   generate-coverage-report:
@@ -164,12 +135,13 @@ jobs:
       working-directory: test
 
     - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/setup-server-and-tests
       with:
-        registry-name: ${{ env.REGISTRY_NAME }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-edition: enterprise
+        features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     # -Werror: we need code coverage for code paths where warnings are treated as errors
     # TODO: currently this doesn't seem to work though
@@ -221,13 +193,15 @@ jobs:
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: coverage-report
+        name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
         path: build/temp*/src/main/
 
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
     runs-on: ubuntu-22.04
+    env:
+      COVERAGE_REPORT_DIR: coverage-report
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -240,12 +214,12 @@ jobs:
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: coverage-report
-        path: ./coverage-report
+        name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
+        path: ./${{ env.COVERAGE_REPORT_DIR }}
 
     - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
       with:
-        directory: coverage-report
+        directory: ${{ env.COVERAGE_REPORT_DIR }}
         verbose: true # optional (default = false)
         fail_ci_if_error: true
       env:
@@ -253,7 +227,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -271,192 +245,78 @@ jobs:
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
 
     - name: Install client
-      run: pip install *.whl
+      run: pip install ./*.whl
 
     - run: pip install mypy -c requirements.txt
       working-directory: .github/workflows
 
     - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
 
+  test-sanitizer:
+    needs: get-env-vars
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      python-versions: '["${{ needs.get-env-vars.outputs.lowest-supported-python-version }}"]'
+      platform-tag: ${{ needs.get-env-vars.outputs.platform-tag }}
+      run_tests: true
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      env-vars-for-building: SKIP_REPAIR_WHEEL=1;SANITIZER=1
+    secrets: inherit
+
   test-full-suite:
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       matrix:
         type:
-          - sanitizer
           - dont_validate_keys
-          - lowest_supported_server_version
+          # This is disabled because the test code's strong consistency test returns an error
+          # ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+          # exception.ServerError: (1, 'invalid id from 127.0.0.1:4333', 'src/main/aerospike/as_info.c', 360, False)
+          # - lowest_supported_server_version
       fail-fast: false
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - if: ${{ matrix.type == 'sanitizer' }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
-
-    - if: ${{ matrix.type != 'sanitizer' }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }} >> $GITHUB_ENV
-
-    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    # We can already detect leaks using valgrind
-    # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
-    - if: ${{ matrix.type == 'sanitizer' }}
-      run: |
-        echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
-        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ matrix.type == 'lowest_supported_server_version' && vars.LOWEST_SUPPORTED_SERVER_VERSION || env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
-    - if: ${{ matrix.type == 'dont_validate_keys' }}
-      run: crudini --existing=param --set config.conf input-validation validate_keys false
-      working-directory: test
-
-    - name: Run tests
-      # We need to disable capturing output or else we cannot see memory errors reported by
-      # libasan during the test run
-      # Here we also treat DeprecationWarnings as errors to make sure we're showing warnings as expected
-      # throughout the API
-      run: python -m pytest ./new_tests -vvs -W error::DeprecationWarning
-      working-directory: test
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
+      python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      server-tag: ${{ matrix.type == 'lowest_supported_server_version' && '7.1' || needs.get-env-vars.outputs.server-tag }}
+      validate-keys: false
+    secrets: inherit
 
   test-ce:
-    runs-on: ubuntu-22.04
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       matrix:
-        py-version: [
-          "3.10",
-          "3.11",
-          "3.12",
-          "3.13",
-          "3.14"
-        ]
+        py-version: ${{ fromJson(needs.build.outputs.python-versions) }}
       fail-fast: false
-
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
-        allow-prereleases: true
-
-    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
-
-    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-      with:
-        registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - uses: ./.github/actions/wait-for-ce-server-to-start
-      with:
-        container-name: aerospike
-
-    - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
-      working-directory: test
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
+      python-version: ${{ matrix.py-version }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      test-ce: true
+    secrets: inherit
 
   test-ee:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: "3.13"
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        name: wheel-3.13
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
-    - name: Run tests
-      # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
-      # There's no way to tell unless we see the logs
-      run: python -m pytest -s ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
-      working-directory: test
-
-    - name: Show logs if failed
-      if: ${{ failure() }}
-      run: |
-        docker container logs aerospike
-        cat ./configs/aerospike.conf
+    needs: [
+      build,
+      get-env-vars
+    ]
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
+      python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      test-file: 'test_{mrt_functionality,admin_*,compress}.py'
+    secrets: inherit
 
   test-metrics:
     needs: build
@@ -466,7 +326,7 @@ jobs:
         - ext_metrics_node_close_listener
         - ext_metrics_cluster_name
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -480,8 +340,8 @@ jobs:
         architecture: 'x64'
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-    - run: python3 -m pip install *.whl
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
+    - run: python3 -m pip install ./*.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
     - run: python3 test_${{ matrix.suffix }}.py
@@ -489,7 +349,10 @@ jobs:
 
   # This is an e2e test to check that the user agent was sent correctly to the server
   test-user-agent:
-    needs: build
+    needs: [
+      build,
+      get-env-vars
+    ]
     strategy:
       fail-fast: false
       matrix:
@@ -497,7 +360,7 @@ jobs:
           - "false"
           - "true"
           - "true my_app_id"
-    runs-on: ubuntu-22.04
+    runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -511,32 +374,19 @@ jobs:
         architecture: 'x64'
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-    - run: python3 -m pip install *.whl
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
+    - run: python3 -m pip install ./*.whl
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - id: setup-aerospike-server
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
       with:
-        registry: ${{ env.REGISTRY_NAME }}
-        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
-    - uses: ./.github/actions/run-ee-server
-      if: ${{ startsWith(matrix.test-script-args, 'true') }}
-      with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-        # The user agent can also send the client's username if app-id is not set by the client
-        env-vars: 'SECURITY=1'
-
-    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
-
-    - if: ${{ startsWith(matrix.test-script-args, 'false') }}
-      uses: ./.github/actions/wait-for-ce-server-to-start
-      with:
-        container-name: aerospike
+        enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
+        num-nodes: 1
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        features-content: ${{ secrets.FEATURES_CONTENT }}
+        server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, 'true') && '-enterprise' || '' }}
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
@@ -544,4 +394,7 @@ jobs:
       working-directory: test/standalone
 
     - if: ${{ !cancelled() }}
-      run: docker logs aerospike
+      run: |
+        docker logs "$CONTAINER_NAME"
+      env:
+        CONTAINER_NAME: ${{ steps.setup-aerospike-server.outputs.container-names }}
