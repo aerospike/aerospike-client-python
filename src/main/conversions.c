@@ -440,6 +440,7 @@ PyObject *convert_nullable_array_of_uint32_to_py_optional_list(as_error *err,
 
     PyObject *py_list = PyList_New(0);
     if (!py_list) {
+        as_error_update("Failed to create python list");
         goto error;
     }
 
