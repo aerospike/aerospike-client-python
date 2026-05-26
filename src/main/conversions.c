@@ -144,21 +144,21 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-PyObject *
-convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
-                                      char str_array_ptr[][AS_ROLE_SIZE])
+PyObject *convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
+                                                char str_array[][AS_ROLE_SIZE])
 {
     as_error_reset(err);
 
     PyObject *py_list = PyList_New(0);
     if (!py_list) {
+        as_error_update("Failed to create python list");
         goto error;
     }
 
     char *str;
 
     for (int i = 0; i < num_elements; i++) {
-        str = str_array_ptr[i];
+        str = str_array[i];
         PyObject *py_str = Py_BuildValue("s", str);
         if (py_str == NULL) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
