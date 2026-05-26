@@ -110,23 +110,21 @@ class TestMRTBasicFunctionality:
         policy = {
             "txn": mrt
         }
-        brs = [
-            br.BatchRecords(
-                [
-                    br.Write(
-                        key=("test", "demo", 1),
-                        ops=[
-                            op.write("new", 10)
-                        ]
-                    ),
-                    br.Write(
-                        key=("test", "demo", 2),
-                        ops=[
-                            op.write("a", 5)
-                        ]
-                    )
-                ]
-            )
-        ]
+        brs = br.BatchRecords(
+            [
+                br.Write(
+                    key=("test", "demo", 1),
+                    ops=[
+                        op.write("new", 10)
+                    ]
+                ),
+                br.Write(
+                    key=("test", "demo", 2),
+                    ops=[
+                        op.write("a", 5)
+                    ]
+                )
+            ]
+        )
         self.as_connection.batch_write(brs, policy)
         self.as_connection.commit(mrt)
