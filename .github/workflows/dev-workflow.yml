@@ -26,6 +26,11 @@ on:
         description: For speeding up debugging
 
 jobs:
+  get-last-release-bundle-info:
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    permissions:
+      id-token: write
+
   get-this-jfrog-build-info:
     outputs:
       jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
@@ -63,15 +68,10 @@ jobs:
       # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
 
-  get-last-release-bundle-info:
-    uses: ./.github/workflows/get-latest-release-bundle.yml
-    permissions:
-      id-token: write
-
   compare-last-release-bundle-rev-with-latest-dev-tag:
     needs: [
-      get-this-jfrog-build-info,
-      get-last-release-bundle-info
+      get-last-release-bundle-info,
+      get-this-jfrog-build-info
     ]
     uses: ./.github/workflows/decide-to-run-integration-tests.yml
     with:
