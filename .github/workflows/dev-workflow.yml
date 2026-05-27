@@ -127,6 +127,7 @@ jobs:
     needs: [
       get-this-jfrog-build-info,
       compare-last-release-bundle-rev-with-latest-dev-tag,
+      build-artifacts,
       valgrind
     ]
     # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
@@ -136,6 +137,8 @@ jobs:
       needs.valgrind.result == 'success'
       ||
       (
+        needs.build-artifacts.result == 'success'
+        &&
         needs.valgrind.result == 'skipped'
         &&
         needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
