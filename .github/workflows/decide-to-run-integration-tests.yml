@@ -42,6 +42,9 @@ jobs:
     - name: Decide whether to skip integration tests
       id: run_integration_tests
       run: |
+        # Fail inside command substitution
+        shopt -s inherit_errexit
+
         # '|| true' required since grep returns non-zero status code when no matches are found
         num_files_changed=$(git diff "origin/$EARLIER_REV..origin/$LATER_REV" --name-only | \
           grep --invert-match --count \
@@ -66,8 +69,6 @@ jobs:
         git describe --tags --exact-match "origin/$EARLIER_REV"
 
         # Fail if we can't find a tag for the later revision
-        # Fail inside command substitution
-        shopt -s inherit_errexit
         echo "later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV")" >> "$GITHUB_OUTPUT"
       # We want this step to fail if a command failed while using pipes
-      shell: bash
+      shell: bash -ex {0}
