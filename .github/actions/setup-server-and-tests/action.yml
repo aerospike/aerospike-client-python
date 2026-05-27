@@ -51,6 +51,7 @@ runs:
       # Problem is the shared action is overriding the entrypoint script that parses this env var
       # env-vars: DEFAULT_TTL=2592000;
       config-file: ./.github/workflows/aerospike${{ inputs.server-edition == 'community' && '-ce' || '' }}.conf
+      enable-bash-trace-mode: "true"
 
   - name: Get config.conf
     run: |
