@@ -65,6 +65,8 @@ jobs:
 
   get-last-release-bundle-info:
     uses: ./.github/workflows/get-latest-release-bundle.yml
+    permissions:
+      id-token: write
 
   compare-last-release-bundle-rev-with-latest-dev-tag:
     needs: [
