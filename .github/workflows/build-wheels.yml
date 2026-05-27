@@ -357,7 +357,7 @@ jobs:
 
     # For debugging
     - run: |
-        log_file_path=$(docker inspect --format='{{.LogPath}}' "$CONTAINER_NAME")
+        log_file_path=$(docker inspect --format='{{.LogPath}}' aerospike)
         sudo du -h "$log_file_path"
         # Checks that server started up properly
         docker logs aerospike
