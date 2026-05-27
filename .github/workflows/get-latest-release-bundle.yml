@@ -39,6 +39,7 @@ jobs:
 
     - name: Get release bundle version
       id: get-jf-bundle-info
+      shell: bash -ex {0}
       run: |
         echo found-release-bundle=false >> "$GITHUB_OUTPUT"
 
