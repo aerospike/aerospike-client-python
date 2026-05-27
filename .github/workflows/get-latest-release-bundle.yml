@@ -9,6 +9,8 @@ on:
         description: Optionally check that release bundle has a certain tag.
         required: false
     outputs:
+      found-release-bundle:
+        value: ${{ jobs.get-latest-release-bundle.outputs.found-release-bundle }}
       release-bundle-version:
         value: ${{ jobs.get-latest-release-bundle.outputs.release-bundle-version }}
       release-bundle-tag:
@@ -19,6 +21,7 @@ jobs:
     outputs:
       release-bundle-version: ${{ steps.get-jf-bundle-info.outputs.bundle_version }}
       release-bundle-tag: ${{ steps.get-jf-bundle-info.outputs.bundle_tag }}
+      found-release-bundle: ${{ steps.get-jf-bundle-info.outputs.found-release-bundle }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -37,9 +40,19 @@ jobs:
     - name: Get release bundle version
       id: get-jf-bundle-info
       run: |
+        echo found-release-bundle=false >> "$GITHUB_OUTPUT"
+
         export JFROG_CLI_LOG_LEVEL=DEBUG
         # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
-        latest_release_bundle_json_data=$(jf rt curl "/api/v2/release_bundle/records/${JFROG_RELEASE_BUNDLE_NAME}?project=${JFROG_PROJECT}&order_by=created" | jq -r ".release_bundles[0]")
+        release_bundle_json_data=$(jf rt curl "/api/v2/release_bundle/records/${JFROG_RELEASE_BUNDLE_NAME}?project=${JFROG_PROJECT}&order_by=created")
+        release_bundle_count=$(jq -r '.release_bundles | length')
+        if [[ $release_bundle_count -eq 0 ]]; then
+          exit 0
+        fi
+
+        echo found-release-bundle=true >> "$GITHUB_OUTPUT"
+
+        latest_release_bundle_json_data=$(echo "$release_bundle_json_data" | jq -r ".release_bundles[0]")
         bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
         echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
 
