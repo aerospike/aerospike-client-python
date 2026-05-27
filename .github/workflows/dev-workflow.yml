@@ -130,6 +130,8 @@ jobs:
     ]
     # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
     if: |
+      !cancelled()
+      &&
       needs.valgrind.result == 'success'
       ||
       (
