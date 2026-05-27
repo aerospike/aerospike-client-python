@@ -46,7 +46,8 @@ jobs:
         shopt -s inherit_errexit
 
         # '|| true' required since grep returns non-zero status code when no matches are found
-        num_files_changed=$(git diff "origin/$EARLIER_REV..origin/$LATER_REV" --name-only | \
+        files_changed=$(git diff "origin/$EARLIER_REV..origin/$LATER_REV" --name-only)
+        num_files_changed=$(echo "$files_changed" | \
           grep --invert-match --count \
           -e "^doc/" \
           -e "^aerospike-stubs/" \
@@ -71,4 +72,4 @@ jobs:
         # Fail if we can't find a tag for the later revision
         echo "later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV")" >> "$GITHUB_OUTPUT"
       # We want this step to fail if a command failed while using pipes
-      shell: bash -ex {0}
+      shell: bash -exo pipefail {0}
