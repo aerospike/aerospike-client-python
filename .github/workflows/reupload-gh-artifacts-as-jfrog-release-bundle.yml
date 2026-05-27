@@ -1,0 +1,84 @@
+on:
+  workflow_call:
+    inputs:
+      jfrog_build_id:
+        required: true
+        type: string
+      next_release_version:
+        required: true
+        type: string
+      latest_tag:
+        required: true
+        type: string
+      dry-run:
+        required: true
+        type: boolean
+
+jobs:
+  reupload-artifacts-as-one-artifact-in-github:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+    env:
+      ARTIFACT_NAME: build-artifacts
+    outputs:
+      artifact-name: ${{ env.ARTIFACT_NAME }}
+    steps:
+    - id: reupload
+      uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+      with:
+        # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
+        # to change unexpectedly.
+        output-name: ${{ env.ARTIFACT_NAME }}
+
+  upload-artifacts-to-jfrog:
+    needs: [
+      reupload-artifacts-as-one-artifact-in-github
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      # Have to override the default artifact name because we are not signing the artifacts
+      gh-artifact-name: ${{ needs.reupload-artifacts-as-one-artifact-in-github.outputs.artifact-name }}
+      jf-build-id: ${{ inputs.jfrog_build_id }}
+      jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      dry-run: ${{ inputs.dry-run }}
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+
+  create-release-bundle:
+    if: ${{ inputs.dry-run == false }}
+    needs: [
+      upload-artifacts-to-jfrog
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-names: |
+        ${{ vars.JFROG_BUILD_NAME }}:${{ inputs.jfrog_build_id }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      # JFrog release bundle version
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
+    permissions:
+      contents: read
+      id-token: write
+
+  promote-release-bundle-to-dev:
+    needs: [
+      create-release-bundle
+    ]
+    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
+    with:
+      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ inputs.next_release_version }}
+      release-bundle-tag: ${{ inputs.latest_tag }}
+      new-environment: DEV
+    permissions:
+      id-token: write
