@@ -106,7 +106,7 @@ jobs:
       compare-last-release-bundle-rev-with-latest-dev-tag,
       build-artifacts
     ]
-    if: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests }}
+    if: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true' }}
     uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"ubuntu-22.04"'
@@ -134,7 +134,7 @@ jobs:
       (
         needs.valgrind.result == 'skipped'
         &&
-        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true'
+        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
       )
     uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
     with:
