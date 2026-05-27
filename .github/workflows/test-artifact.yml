@@ -63,6 +63,13 @@ on:
         type: boolean
         default: true
         description: 'If running integration tests, validate dictionary keys?'
+      # TODO: This is set to false to mitigate an issue where printing the server logs can cause jobs to hang or delay
+      # CLIENT-4855
+      show-all-server-logs:
+        type: boolean
+        required: false
+        default: false
+        description: 'If false, only print the first lines of the server logs to show the server config'
 
 jobs:
   test-artifact:
@@ -328,7 +335,12 @@ jobs:
 
     - name: Show server logs to debug test results
       if: ${{ always() && inputs.run-integration-tests && steps.run-server.conclusion == 'success' }}
-      run: docker logs "$CONTAINER_NAME"
+      run: |
+        if [[ ${{ inputs.show-all-server-logs }} == true ]]; then
+          docker logs "$CONTAINER_NAME"
+        else
+          docker logs "$CONTAINER_NAME" | head -n 100
+        fi
       shell: bash
       env:
         CONTAINER_NAME: ${{ steps.run-server.outputs.container-name }}
