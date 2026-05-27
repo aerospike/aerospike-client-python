@@ -77,6 +77,8 @@ jobs:
     with:
       earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.release-bundle-tag }}
       later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
+    permissions:
+      contents: read
 
   build-artifacts:
     needs: [
