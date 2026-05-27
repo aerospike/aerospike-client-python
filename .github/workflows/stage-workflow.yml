@@ -21,8 +21,8 @@ jobs:
   compare-latest-dev-tag-and-stage:
     uses: ./.github/workflows/decide-to-run-integration-tests.yml
     with:
-      earlier_rev: ${{ vars.STAGE_BRANCH_NAME }}
-      later_rev: ${{ vars.DEV_BRANCH_NAME }}
+      earlier_rev: origin/${{ vars.STAGE_BRANCH_NAME }}
+      later_rev: origin/${{ vars.DEV_BRANCH_NAME }}
 
   get-release-bundle-version-to-optionally-test-and-promote:
     needs: compare-latest-dev-tag-and-stage

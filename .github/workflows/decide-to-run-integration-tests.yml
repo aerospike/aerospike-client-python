@@ -46,7 +46,7 @@ jobs:
         shopt -s inherit_errexit
 
         # '|| true' required since grep returns non-zero status code when no matches are found
-        files_changed=$(git diff "origin/$EARLIER_REV..origin/$LATER_REV" --name-only)
+        files_changed=$(git diff "$EARLIER_REV..$LATER_REV" --name-only)
         num_files_changed=$(echo "$files_changed" | \
           grep --invert-match --count \
           -e "^doc/" \
@@ -67,9 +67,9 @@ jobs:
         # Sanity check
         # Make sure the earlier revision being compared to has a release bundle (we use tags as a proxy to tell)
         # Otherwise there may have been changes before the earlier revision that weren't tested
-        git describe --tags --exact-match "origin/$EARLIER_REV"
+        git describe --tags --exact-match "$EARLIER_REV"
 
         # Fail if we can't find a tag for the later revision
-        echo "later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV")" >> "$GITHUB_OUTPUT"
+        echo "later_rev_tag=$(git describe --tags --exact-match "$LATER_REV")" >> "$GITHUB_OUTPUT"
       # We want this step to fail if a command failed while using pipes
       shell: bash -exo pipefail {0}

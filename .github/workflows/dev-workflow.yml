@@ -76,7 +76,7 @@ jobs:
     uses: ./.github/workflows/decide-to-run-integration-tests.yml
     with:
       # If no release bundle was found, default to comparing dev with the latest release
-      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'master' }}
+      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'origin/master' }}
       later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
     permissions:
       contents: read
