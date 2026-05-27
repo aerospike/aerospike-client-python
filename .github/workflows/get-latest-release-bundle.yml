@@ -17,8 +17,8 @@ on:
 jobs:
   get-latest-release-bundle:
     outputs:
-      release-bundle-version: ${{ steps.get-jf-bundle-version.outputs.bundle_version }}
-      release-bundle-tag: ${{ steps.get-jf-bundle-version.outputs.bundle_tag }}
+      release-bundle-version: ${{ steps.get-jf-bundle-info.outputs.bundle_version }}
+      release-bundle-tag: ${{ steps.get-jf-bundle-info.outputs.bundle_tag }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -35,7 +35,7 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
     - name: Get release bundle version
-      id: get-jf-bundle-version
+      id: get-jf-bundle-info
       run: |
         export JFROG_CLI_LOG_LEVEL=DEBUG
         # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
