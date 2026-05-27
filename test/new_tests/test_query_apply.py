@@ -168,7 +168,7 @@ class TestQueryApply(object):
         )
 
         self._wait_for_query_complete(query_id)
-        self._items_without_set_have_been_applied()
+        self._all_ns_items_have_been_applied()
 
     def test_query_apply_with_incorrect_policy(self):
         """
@@ -476,14 +476,14 @@ class TestQueryApply(object):
         _, _, bins = self.as_connection.get(self.no_set_key)
         assert bins["name"] != "aerospike"
 
-    def _items_without_set_have_been_applied(self):
+    def _all_ns_items_have_been_applied(self):
         for i in range(1, 10):
             key = ("test", "demo", i)
             _, _, bins = self.as_connection.get(key)
-            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-                assert bins["name"] != "aerospike"
+            if i <= 4:
+                assert bins["name"] == "aerospike"
             else:
-                assert bins["name"] == "aerospike" or bins["name"] == str(i)
+                assert bins["name"] == str(i)
 
         _, _, bins = self.as_connection.get(self.no_set_key)
         assert bins["name"] == "aerospike"
