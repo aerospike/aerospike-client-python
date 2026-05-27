@@ -30,6 +30,7 @@ jobs:
     with:
       expected-release-bundle-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.later_rev_tag }}
 
+  # Preliminary step for running the stage tests
   reupload-jfrog-artifacts-as-github-ones:
     needs: [
       compare-latest-dev-tag-and-stage,
