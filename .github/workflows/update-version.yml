@@ -39,7 +39,15 @@ jobs:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         fetch-depth: 0
 
-    - run: |
+    - shell: bash -ex {0}
+      run: |
+        if ! git describe --tags --exact-match HEAD; then
+          # This commit already has a tag. Don't bump the dev number and retag
+          # This can happen when testing changes to CI/CD code in dev-test and resetting that branch to dev
+          # dev should already have a tag with a dev number
+          exit 0
+        fi
+
         if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
           change_type="manual-override"
           version_to_override="$NEW_VERSION"
