@@ -41,6 +41,7 @@ jobs:
       id: get-jf-bundle-info
       shell: bash -ex {0}
       run: |
+        shopt -s inherit_errexit
         echo found-release-bundle=false >> "$GITHUB_OUTPUT"
 
         export JFROG_CLI_LOG_LEVEL=DEBUG
