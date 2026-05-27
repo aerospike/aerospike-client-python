@@ -13,6 +13,9 @@ on:
       later_rev_tag:
         value: ${{ jobs.compare-two-revs.outputs.later_rev_tag }}
 
+permissions:
+  contents: read
+
 jobs:
   compare-two-revs:
     outputs:
