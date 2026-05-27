@@ -62,10 +62,11 @@ jobs:
 
         # Sanity check
         # Make sure the earlier revision being compared to has a release bundle (we use tags as a proxy to tell)
-        # Otherwise we may have missed testing changes from the last time we ran integration tests
+        # Otherwise there may have been changes before the earlier revision that weren't tested
         git describe --tags --exact-match "origin/$EARLIER_REV"
 
         # Fail if we can't find a tag for the later revision
+        # Fail inside command substitution
         shopt -s inherit_errexit
         echo "later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV")" >> "$GITHUB_OUTPUT"
       # We want this step to fail if a command failed while using pipes
