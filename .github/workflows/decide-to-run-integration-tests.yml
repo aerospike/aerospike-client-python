@@ -20,6 +20,7 @@ jobs:
   compare-two-revs:
     outputs:
       run_integration_tests: ${{ steps.run_integration_tests.outputs.run_integration_tests }}
+      # For stage workflow to get the JFrog release bundle to test
       later_rev_tag: ${{ steps.run_integration_tests.outputs.later_rev_tag }}
     env:
       EARLIER_REV: ${{ inputs.earlier_rev }}
@@ -57,7 +58,7 @@ jobs:
             echo true
           fi
         }
-        echo run_integration_tests=$(run_tests) >> "$GITHUB_OUTPUT"
+        echo "run_integration_tests=$(run_tests)" >> "$GITHUB_OUTPUT"
 
         # Sanity check
         # Make sure the earlier revision being compared to has a release bundle (we use tags as a proxy to tell)
@@ -66,6 +67,6 @@ jobs:
 
         # Fail if we can't find a tag for the later revision
         shopt -s inherit_errexit
-        echo later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV") >> "$GITHUB_OUTPUT"
+        echo "later_rev_tag=$(git describe --tags --exact-match "origin/$LATER_REV")" >> "$GITHUB_OUTPUT"
       # We want this step to fail if a command failed while using pipes
       shell: bash
