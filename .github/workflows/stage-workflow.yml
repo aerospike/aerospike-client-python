@@ -34,6 +34,7 @@ jobs:
   reupload-jfrog-artifacts-as-github-ones:
     needs: [
       compare-latest-dev-tag-and-stage,
+      # For pulling the artifacts from the release bundle
       get-release-bundle-version-to-optionally-test-and-promote
     ]
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_integration_tests == 'true' }}
