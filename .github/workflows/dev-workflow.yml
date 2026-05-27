@@ -128,6 +128,7 @@ jobs:
       compare-last-release-bundle-rev-with-latest-dev-tag,
       valgrind
     ]
+    # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
     if: |
       needs.valgrind.result == 'success'
       ||
