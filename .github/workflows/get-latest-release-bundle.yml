@@ -58,13 +58,12 @@ jobs:
         bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
         echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
 
-        if [[ -z "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG" ]]; then
-          exit 0
+        if [[ -n "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG" ]]; then
+          # Validate release bundle tag
+          bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
+          test "$bundle_tag" = "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG"
         fi
 
-        # Validate release bundle tag
-        bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
-        test "$bundle_tag" = "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG"
         echo bundle_tag="$bundle_tag" >> "$GITHUB_OUTPUT"
       env:
         JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
