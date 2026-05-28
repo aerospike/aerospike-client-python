@@ -195,7 +195,7 @@ jobs:
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
             echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --num-callers=24 --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
