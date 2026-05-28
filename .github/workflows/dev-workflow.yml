@@ -26,7 +26,12 @@ on:
         description: For speeding up debugging
 
 jobs:
-  get-jfrog-build-info:
+  get-last-release-bundle-info:
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    permissions:
+      id-token: write
+
+  get-this-jfrog-build-info:
     outputs:
       jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
       # Used downstream for labelling the JFrog build with a version
@@ -63,17 +68,33 @@ jobs:
       # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
 
+  compare-last-release-bundle-rev-with-latest-dev-tag:
+    needs: [
+      get-last-release-bundle-info,
+      get-this-jfrog-build-info
+    ]
+    uses: ./.github/workflows/decide-to-run-integration-tests.yml
+    with:
+      # If no release bundle was found, default to comparing dev with the latest release
+      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'origin/master' }}
+      later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
+    permissions:
+      contents: read
+
   build-artifacts:
-    needs: get-jfrog-build-info
+    needs: [
+      get-this-jfrog-build-info,
+      compare-last-release-bundle-rev-with-latest-dev-tag
+    ]
     uses: ./.github/workflows/build-artifacts.yml
     with:
-      run_tests: ${{ inputs.run_tests }}
+      run_tests: ${{ fromJson(needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests) && inputs.run_tests }}
       run-integration-tests-on-macos-x86: false
       publish-build-info: ${{ inputs.dry-run == false }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       # Needed for collecting build info
-      jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
+      jf-build-id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
     permissions:
       contents: read
       # For shared reusable workflows
@@ -82,7 +103,11 @@ jobs:
     secrets: inherit
 
   valgrind:
-    needs: build-artifacts
+    needs: [
+      compare-last-release-bundle-rev-with-latest-dev-tag,
+      build-artifacts
+    ]
+    if: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true' }}
     uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"ubuntu-22.04"'
@@ -98,76 +123,29 @@ jobs:
       id-token: write
       statuses: write
 
-  reupload-artifacts-as-one-artifact-in-github:
+  reupload-gh-artifacts-as-jfrog-release-bundle-and-promote-to-dev:
     needs: [
+      get-this-jfrog-build-info,
+      compare-last-release-bundle-rev-with-latest-dev-tag,
+      build-artifacts,
       valgrind
     ]
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-    env:
-      ARTIFACT_NAME: build-artifacts
-    outputs:
-      artifact-name: ${{ env.ARTIFACT_NAME }}
-    steps:
-    - id: reupload
-      uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
-      with:
-        # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
-        # to change unexpectedly.
-        output-name: ${{ env.ARTIFACT_NAME }}
-
-  upload-artifacts-to-jfrog:
-    needs: [
-      get-jfrog-build-info,
-      reupload-artifacts-as-one-artifact-in-github
-    ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
+    if: |
+      !cancelled()
+      &&
+      needs.valgrind.result == 'success'
+      ||
+      (
+        needs.build-artifacts.result == 'success'
+        &&
+        needs.valgrind.result == 'skipped'
+        &&
+        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
+      )
+    uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
     with:
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
-      # Have to override the default artifact name because we are not signing the artifacts
-      gh-artifact-name: ${{ needs.reupload-artifacts-as-one-artifact-in-github.outputs.artifact-name }}
-      jf-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
-      jf-metadata-build-id: ${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}-buildinfo
-      version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      jfrog_build_id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
+      next_release_version: ${{ needs.get-this-jfrog-build-info.outputs.next-release-version }}
+      latest_tag: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
       dry-run: ${{ inputs.dry-run }}
-    permissions:
-      contents: read
-      id-token: write
-      actions: read
-
-  create-release-bundle:
-    if: ${{ inputs.dry-run == false }}
-    needs: [
-      upload-artifacts-to-jfrog,
-      get-jfrog-build-info
-    ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
-    with:
-      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      jf-build-names: |
-        ${{ vars.JFROG_BUILD_NAME }}:${{ needs.get-jfrog-build-info.outputs.jfrog_build_id }}
-      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      # JFrog release bundle version
-      version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
-    permissions:
-      contents: read
-      id-token: write
-
-  promote-release-bundle-to-dev:
-    needs: [
-      get-jfrog-build-info,
-      create-release-bundle
-    ]
-    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
-    with:
-      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ needs.get-jfrog-build-info.outputs.next-release-version }}
-      release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.latest-tag }}
-      new-environment: DEV
-    permissions:
-      id-token: write
