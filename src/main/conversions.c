@@ -144,46 +144,6 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-PyObject *convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
-                                                char str_array[][AS_ROLE_SIZE])
-{
-    as_error_reset(err);
-
-    PyObject *py_list = PyList_New(0);
-    if (!py_list) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create python list");
-        goto error;
-    }
-
-    char *str;
-
-    for (int i = 0; i < num_elements; i++) {
-        str = str_array[i];
-        PyObject *py_str = Py_BuildValue("s", str);
-        if (py_str == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build string value from %s.", str);
-            goto CLEANUP_ON_ERROR;
-        }
-
-        int retval = PyList_Append(py_list, py_str);
-        Py_DECREF(py_str);
-        if (retval == -1) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to append string %s to list.", str);
-            goto CLEANUP_ON_ERROR;
-        }
-    }
-
-    return py_list;
-
-CLEANUP_ON_ERROR:
-    Py_DECREF(py_list);
-error:
-    return NULL;
-}
-
 as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
                                          PyObject **py_as_users, int users_size)
 {
@@ -431,9 +391,10 @@ END:
     return err->code;
 }
 
-PyObject *convert_nullable_array_of_uint32_to_py_optional_list(as_error *err,
-                                                               uint32_t *array,
-                                                               int array_size)
+PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
+                                                     void **array,
+                                                     int array_size,
+                                                     char format_str)
 {
     if (array == NULL) {
         Py_RETURN_NONE;
@@ -447,15 +408,23 @@ PyObject *convert_nullable_array_of_uint32_to_py_optional_list(as_error *err,
     }
 
     for (int i = 0; i < array_size; i++) {
-        PyObject *py_long_value = PyLong_FromUInt32(array[i]);
-        if (!py_long_value) {
+        PyObject *py_element = NULL;
+        switch (format_str) {
+        case 's':
+            py_element = Py_BuildValue(format_str, (const char *)array[i]);
+            break;
+        case 'k':
+            py_element = Py_BuildValue(format_str, (unsigned long)array[i]);
+            break;
+        }
+        if (!py_element) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to get list item at index %" PRIu32, i);
             goto CLEANUP_ON_ERROR;
         }
 
-        int retval = PyList_Append(py_list, py_long_value);
-        Py_DECREF(py_long_value);
+        int retval = PyList_Append(py_list, py_element);
+        Py_DECREF(py_element);
         if (retval == -1) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to append list item at index %" PRIu32, i);
@@ -478,8 +447,8 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 
     PyObject *py_user_dict = PyDict_New();
 
-    PyObject *py_roles = convert_array_of_role_strs_to_py_list(
-        err, user->roles_size, user->roles);
+    PyObject *py_roles = convert_nullable_array_to_py_optional_list(
+        err, user->roles, user->roles_size, 's');
     if (!py_roles) {
         goto CLEANUP_ON_ERROR;
     }
@@ -497,8 +466,8 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 
     for (unsigned long i = 0; i < sizeof(arrays) / sizeof(arrays[0]); i++) {
         PyObject *py_optional_list_of_ints =
-            convert_nullable_array_of_uint32_to_py_optional_list(
-                err, arrays[i], array_sizes[i]);
+            convert_nullable_array_to_py_optional_list(err, arrays[i],
+                                                       array_sizes[i], 'l');
         if (!py_optional_list_of_ints) {
             goto CLEANUP_ON_ERROR;
         }
