@@ -395,6 +395,6 @@ jobs:
 
     - if: ${{ !cancelled() }}
       run: |
-        docker logs "$CONTAINER_NAME"
+        docker logs --tail 100 "$CONTAINER_NAME"
       env:
         CONTAINER_NAME: ${{ steps.setup-aerospike-server.outputs.container-names }}
