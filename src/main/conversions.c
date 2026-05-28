@@ -151,7 +151,8 @@ PyObject *convert_array_of_role_strs_to_py_list(as_error *err, int num_elements,
 
     PyObject *py_list = PyList_New(0);
     if (!py_list) {
-        as_error_update("Failed to create python list");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to create python list");
         goto error;
     }
 
@@ -440,7 +441,8 @@ PyObject *convert_nullable_array_of_uint32_to_py_optional_list(as_error *err,
 
     PyObject *py_list = PyList_New(0);
     if (!py_list) {
-        as_error_update("Failed to create python list");
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to create python list");
         goto error;
     }
 
