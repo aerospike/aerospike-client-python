@@ -88,7 +88,7 @@ jobs:
     ]
     uses: ./.github/workflows/build-artifacts.yml
     with:
-      run_tests: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests && inputs.run_tests }}
+      run_tests: ${{ fromJson(needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests) && inputs.run_tests }}
       run-integration-tests-on-macos-x86: false
       publish-build-info: ${{ inputs.dry-run == false }}
       server-tag: ${{ inputs.server-tag }}
