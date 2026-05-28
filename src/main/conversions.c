@@ -394,7 +394,7 @@ END:
 PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
                                                      void **array,
                                                      int array_size,
-                                                     char format_str)
+                                                     char format_specifier)
 {
     if (array == NULL) {
         Py_RETURN_NONE;
@@ -409,7 +409,9 @@ PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
 
     for (int i = 0; i < array_size; i++) {
         PyObject *py_element = NULL;
-        switch (format_str) {
+        const char format_str[2];
+        sprintf(format_str, "%c", format_specifier);
+        switch (format_specifier) {
         case 's':
             py_element = Py_BuildValue(format_str, (const char *)array[i]);
             break;
