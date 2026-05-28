@@ -409,7 +409,7 @@ PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
 
     for (int i = 0; i < array_size; i++) {
         PyObject *py_element = NULL;
-        const char format_str[2];
+        char format_str[2];
         sprintf(format_str, "%c", format_specifier);
         switch (format_specifier) {
         case 's':
