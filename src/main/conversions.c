@@ -470,7 +470,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
     for (unsigned long i = 0; i < sizeof(arrays) / sizeof(arrays[0]); i++) {
         PyObject *py_optional_list_of_ints =
             convert_nullable_array_to_py_optional_list(err, arrays[i],
-                                                       array_sizes[i], 'l');
+                                                       array_sizes[i], 'k');
         if (!py_optional_list_of_ints) {
             goto CLEANUP_ON_ERROR;
         }
