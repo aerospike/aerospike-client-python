@@ -391,8 +391,7 @@ END:
     return err->code;
 }
 
-PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
-                                                     void **array,
+PyObject *convert_nullable_array_to_py_optional_list(as_error *err, void *array,
                                                      int array_size,
                                                      char format_specifier)
 {
@@ -413,10 +412,10 @@ PyObject *convert_nullable_array_to_py_optional_list(as_error *err,
         sprintf(format_str, "%c", format_specifier);
         switch (format_specifier) {
         case 's':
-            py_element = Py_BuildValue(format_str, (const char *)array[i]);
+            py_element = Py_BuildValue(format_str, ((const char *)array)[i]);
             break;
         case 'k':
-            py_element = Py_BuildValue(format_str, (unsigned long)array[i]);
+            py_element = Py_BuildValue(format_str, ((unsigned long *)array)[i]);
             break;
         }
         if (!py_element) {
