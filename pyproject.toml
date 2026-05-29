@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools",
-    "versioningit==3.1.0",
+    "versioningit==3.3.0",
     # Used by our versioningit script that modifies the version
     "parver==0.5"
 ]
@@ -42,6 +42,9 @@ include-package-data = true
 
 [tool.versioningit.vcs]
 method = {module = "custom-versionit-format", value="my_vcs"}
+
+[tool.versioningit.tag2version]
+method = {module = "custom-versionit-format", value="my_tag2version"}
 
 # Use versioneer formatting
 [tool.versioningit.format]

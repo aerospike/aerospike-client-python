@@ -1,0 +1,151 @@
+name: Run dev tests and promote release bundle to DEV
+run-name: Run dev tests and promote release bundle to DEV (dry-run=${{ inputs.dry-run }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      server-tag:
+        type: string
+        # latest tag is not supported in JFrog
+        required: true
+        description: 'Server docker image tag'
+      # For testing purposes
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+        description: Don't publish JFrog build info or create a JFrog build + release bundle
+      run_tests:
+        required: false
+        default: true
+        type: boolean
+        description: Run dev tests. For speeding up debugging
+      test-file:
+        required: false
+        type: string
+        description: For speeding up debugging
+
+jobs:
+  get-last-release-bundle-info:
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    permissions:
+      id-token: write
+
+  get-this-jfrog-build-info:
+    outputs:
+      jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
+      # Used downstream for labelling the JFrog build with a version
+      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      # Used downstream to tag the release bundle
+      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-depth: 0
+
+    - id: get-next-release-version
+      run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Safeguard to make sure there's changes in dev to be promoted
+      id: get-latest-tag
+      run: |
+        latest_tag=$(git describe --tags --exact-match HEAD)
+        if [[ "$latest_tag" == "$next_release_version" ]]; then
+          echo "We have not merged any changes to dev since the last release yet." >&2
+          exit 1
+        fi
+        echo latest_tag="$latest_tag" >> "$GITHUB_OUTPUT"
+
+    - id: get-jfrog-build-id
+      # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
+      run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
+
+  compare-last-release-bundle-rev-with-latest-dev-tag:
+    needs: [
+      get-last-release-bundle-info,
+      get-this-jfrog-build-info
+    ]
+    uses: ./.github/workflows/decide-to-run-integration-tests.yml
+    with:
+      # If no release bundle was found, default to comparing dev with the latest release
+      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'origin/master' }}
+      later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
+    permissions:
+      contents: read
+
+  build-artifacts:
+    needs: [
+      get-this-jfrog-build-info,
+      compare-last-release-bundle-rev-with-latest-dev-tag
+    ]
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      run_tests: ${{ fromJson(needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests) && inputs.run_tests }}
+      run-integration-tests-on-macos-x86: false
+      publish-build-info: ${{ inputs.dry-run == false }}
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      # Needed for collecting build info
+      jf-build-id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
+    permissions:
+      contents: read
+      # For shared reusable workflows
+      id-token: write
+      statuses: write
+    secrets: inherit
+
+  valgrind:
+    needs: [
+      compare-last-release-bundle-rev-with-latest-dev-tag,
+      build-artifacts
+    ]
+    if: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true' }}
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"ubuntu-22.04"'
+      # Get lowest supported python version
+      python-version: ${{ fromJson(needs.build-artifacts.outputs.python-versions)[0] }}
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      run-with-valgrind: true
+      run-valgrind-with-massif: false
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+      statuses: write
+
+  reupload-gh-artifacts-as-jfrog-release-bundle-and-promote-to-dev:
+    needs: [
+      get-this-jfrog-build-info,
+      compare-last-release-bundle-rev-with-latest-dev-tag,
+      build-artifacts,
+      valgrind
+    ]
+    # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
+    if: |
+      !cancelled()
+      &&
+      needs.valgrind.result == 'success'
+      ||
+      (
+        needs.build-artifacts.result == 'success'
+        &&
+        needs.valgrind.result == 'skipped'
+        &&
+        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
+      )
+    uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
+    with:
+      jfrog_build_id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
+      next_release_version: ${{ needs.get-this-jfrog-build-info.outputs.next-release-version }}
+      latest_tag: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
+      dry-run: ${{ inputs.dry-run }}

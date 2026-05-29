@@ -1,0 +1,75 @@
+permissions:
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      expected-release-bundle-tag:
+        type: string
+        description: Optionally check that release bundle has a certain tag.
+        required: false
+    outputs:
+      found-release-bundle:
+        value: ${{ jobs.get-latest-release-bundle.outputs.found-release-bundle }}
+      release-bundle-version:
+        value: ${{ jobs.get-latest-release-bundle.outputs.release-bundle-version }}
+      release-bundle-tag:
+        value: ${{ jobs.get-latest-release-bundle.outputs.release-bundle-tag }}
+
+jobs:
+  get-latest-release-bundle:
+    outputs:
+      release-bundle-version: ${{ steps.get-jf-bundle-info.outputs.bundle_version }}
+      release-bundle-tag: ${{ steps.get-jf-bundle-info.outputs.bundle_tag }}
+      found-release-bundle: ${{ steps.get-jf-bundle-info.outputs.found-release-bundle }}
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - name: Get release bundle version
+      id: get-jf-bundle-info
+      shell: bash -ex {0}
+      run: |
+        shopt -s inherit_errexit
+        echo found-release-bundle=false >> "$GITHUB_OUTPUT"
+
+        export JFROG_CLI_LOG_LEVEL=DEBUG
+        # Note that setting JF_PROJECT from above step doesn't apply to this command for some reason
+        release_bundle_json_data=$(jf rt curl "/api/v2/release_bundle/records/${JFROG_RELEASE_BUNDLE_NAME}?project=${JFROG_PROJECT}&order_by=created")
+
+        # Convert release bundle list to a stream, filter the stream, and convert back to list
+        # TODO: there is one release bundle that was used for testing the CI/CD pipeline that I'm unable to delete
+        # We filter it out here.
+        release_bundle_count=$(echo "$release_bundle_json_data" | jq -r '[.release_bundles.[] | select(.release_bundle_version != "19.1.0rc1.dev17-34")] | length')
+        if [[ $release_bundle_count -eq 0 ]]; then
+          exit 0
+        fi
+
+        echo found-release-bundle=true >> "$GITHUB_OUTPUT"
+
+        latest_release_bundle_json_data=$(echo "$release_bundle_json_data" | jq -r ".release_bundles[0]")
+        bundle_version=$(echo "$latest_release_bundle_json_data" | jq -r '.release_bundle_version')
+        echo bundle_version="$bundle_version" >> "$GITHUB_OUTPUT"
+
+        bundle_tag=$(echo "$latest_release_bundle_json_data" | jq -r '.tag')
+        if [[ -n "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG" ]]; then
+          # Validate release bundle tag
+          test "$bundle_tag" = "$JFROG_EXPECTED_RELEASE_BUNDLE_TAG"
+        fi
+
+        echo bundle_tag="$bundle_tag" >> "$GITHUB_OUTPUT"
+      env:
+        JFROG_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+        JFROG_RELEASE_BUNDLE_NAME: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+        JFROG_EXPECTED_RELEASE_BUNDLE_TAG: ${{ inputs.expected-release-bundle-tag }}

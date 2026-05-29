@@ -1,0 +1,161 @@
+name: Valgrind
+run-name: Valgrind (server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
+
+permissions:
+  id-token: write
+  contents: read
+  statuses: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      test-file:
+        description: 'new_test/<test-file>'
+        required: false
+        default: ""
+        type: string
+      server-tag:
+        required: true
+        description: Server tag
+        type: string
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
+        default: false
+
+env:
+  PYTHON_VERSION: '3.10'
+  GENERIC_REPO_DIR: "${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-generic-dev-local/${{ vars.JFROG_BUILD_NAME }}/${{ github.ref_name }}"
+
+jobs:
+  look-for-wheel-in-jfrog:
+    outputs:
+      num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
+      # So we can pass the python version to a reusable workflow as an input
+      python-version: ${{ env.PYTHON_VERSION }}
+      generic-repo-dir: ${{ env.GENERIC_REPO_DIR }}
+    runs-on: ubuntu-22.04
+    env:
+      JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - name: Authenticate into client project for now
+      uses: step-security/setup-jfrog-cli@3054b554c0fb4915b3d58847fb7730c593dbb934 # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - name: Get shortened commit hash of this workflow run
+      # versioningit commit sha is always 8 chars long it seems
+      run: echo "SHORT_GITHUB_SHA=$(echo ${{ github.sha }} | cut -c1-8)" >> "$GITHUB_ENV"
+
+    - name: Look for wheel built with default settings in JFrog
+      # AQL has the option to exclude patterns from search results
+      # but it doesn't allow regex, so we can't filter out any type of label in a wheel name
+      # Example: we want to filter out "unoptimized" and "dsym" but in case we add more labels, we want to use regex
+      # to handle those new labels without updating the regex.
+      run: |
+        PYTHON_TAG=cp$(echo ${{ env.PYTHON_VERSION }} | tr -d '.')
+        jf rt search "${GENERIC_REPO_DIR}/*${SHORT_GITHUB_SHA}*${PYTHON_TAG}*manylinux*x86_64*.whl" > "$JF_SEARCH_RESULTS_FILE_NAME"
+
+    - name: Show unfiltered results
+      run: cat "$JF_SEARCH_RESULTS_FILE_NAME"
+
+    - name: Install sponge
+      run: sudo apt-get install -y moreutils
+
+    - name: Filter out wheels with labels in results
+      run: jq --arg short_github_sha "$SHORT_GITHUB_SHA" 'map(select(.path | test("\($short_github_sha)-")))' "$JF_SEARCH_RESULTS_FILE_NAME" | sponge "$JF_SEARCH_RESULTS_FILE_NAME"
+      shell: bash
+
+    - name: Check if artifacts with labels were filtered out
+      run: cat "$JF_SEARCH_RESULTS_FILE_NAME"
+
+    - name: Count artifacts
+      id: count_num_artifacts_found
+      run: echo "num_artifacts=$(jq length "$JF_SEARCH_RESULTS_FILE_NAME")" >> "$GITHUB_OUTPUT"
+
+    - name: Multiple artifacts found, not sure which one to use. Fail out
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
+      run: exit 1
+
+    - name: Found the exact artifact in JFrog. Get the artifact name
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      run: echo "ARTIFACT_PATH=$(jq -r .[0].path "$JF_SEARCH_RESULTS_FILE_NAME")" >> "$GITHUB_ENV"
+
+    - name: Then download artifact from JFrog
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      run: jf rt download --flat --fail-no-op "$ARTIFACT_PATH"
+
+    - name: Pass to valgrind job
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        if-no-files-found: error
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-manylinux_x86_64
+        path: './*.whl'
+
+  build-manylinux-wheel:
+    needs: look-for-wheel-in-jfrog
+    if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      python-versions: "[\"${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}\"]"
+      platform-tag: manylinux_x86_64
+    secrets: inherit
+
+  cache-built-wheel-in-jfrog:
+    needs: [
+      look-for-wheel-in-jfrog,
+      build-manylinux-wheel
+    ]
+    uses: ./.github/workflows/cache-gh-artifact-in-jfrog.yml
+    with:
+      dir-to-store-artifact: ${{ needs.look-for-wheel-in-jfrog.outputs.generic-repo-dir }}
+    secrets: inherit
+
+  valgrind:
+    needs: [
+      look-for-wheel-in-jfrog,
+      build-manylinux-wheel
+    ]
+    # Case 1: Found artifact in JFrog
+    # Case 2: Did not find artifact in JFrog, had to build it in GHA
+    if: |
+      !cancelled()
+      && (
+        needs.look-for-wheel-in-jfrog.result == 'success'
+        && (
+          (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1 && needs.build-manylinux-wheel.result == 'skipped')
+          ||
+          (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')
+        )
+      )
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"ubuntu-22.04"'
+      python-version: ${{ needs.look-for-wheel-in-jfrog.outputs.python-version }}
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      run-with-valgrind: true
+      run-valgrind-with-massif: ${{ inputs.massif }}
+    secrets: inherit
+
+  # We don't want the artifacts in JFrog to also exist in Github
+  delete-artifacts:
+    needs: [
+      # These jobs must have downloaded the artifact from Github before we can delete it
+      cache-built-wheel-in-jfrog,
+      valgrind
+    ]
+    # Workflow run must clean up after itself even if cancelled
+    if: ${{ always() }}
+    uses: ./.github/workflows/delete-artifacts.yml
