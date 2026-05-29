@@ -1662,7 +1662,7 @@ class TestBitwiseOperations(object):
                 id="invalid resize flags"
             ),
             pytest.param(
-                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign="true", action="invalid action"),
+                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign=True, action="invalid action"),
                 id="invalid action"
             ),
             pytest.param(
