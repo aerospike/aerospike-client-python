@@ -1669,6 +1669,10 @@ class TestBitwiseOperations(object):
                 bitwise_operations.bit_lshift(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, shift=None),
                 id="invalid shift"
             ),
+            pytest.param(
+                bitwise_operations.bit_insert(BIN_NAME_FOR_INVALID_PARAMS, byte_offset="1", value_byte_size=1, value=1),
+                id="invalid byte offset"
+            ),
         ]
     )
     def test_invalid_args(self, op):
