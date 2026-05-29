@@ -162,7 +162,7 @@ elif LINUX:
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
         '-rdynamic', '-finline-functions',
-        # On macOS, this flag causes compiler errors. This will be addressed later
+        # TODO: On macOS, this flag causes compiler errors
         # CLIENT-4869
         '-Werror'
     ]
