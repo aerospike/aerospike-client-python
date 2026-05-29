@@ -20,16 +20,13 @@ on:
       base_branch:
         type: string
         required: true
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
 
 jobs:
   merge:
     runs-on: ubuntu-22.04
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
@@ -42,7 +39,9 @@ jobs:
           token: ${{ secrets.CLIENT_BOT_PAT }}
 
       - name: Fast forward
-        run: git merge --ff-only ${{ inputs.ref_to_merge }}
+        run: git merge --ff-only "$REF_TO_MERGE"
+        env:
+          REF_TO_MERGE: ${{ inputs.ref_to_merge }}
 
       - name: Upload changes to remote head branch
         run: git push

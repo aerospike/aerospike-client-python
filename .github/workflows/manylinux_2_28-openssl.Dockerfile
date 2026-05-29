@@ -4,7 +4,7 @@ FROM $BASE_IMAGE
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
-RUN yum install -y perl-core wget
+RUN yum install -y perl-core wget libyaml-devel
 
 WORKDIR /
 ARG OPENSSL_TAR_NAME=openssl-$OPENSSL_VERSION
