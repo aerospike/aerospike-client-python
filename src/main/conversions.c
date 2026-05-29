@@ -417,7 +417,7 @@ PyObject *convert_nullable_array_to_py_optional_list(as_error *err, void *array,
                 format_str, (const char *)(array + i * AS_ROLE_SIZE));
             break;
         case 'k':
-            py_element = Py_BuildValue(format_str, ((unsigned long *)array)[i]);
+            py_element = Py_BuildValue(format_str, ((uint32_t *)array)[i]);
             break;
         }
         if (!py_element) {
