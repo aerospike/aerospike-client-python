@@ -68,7 +68,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-Werror', '-fPIC', '-DDEBUG', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
     '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -161,7 +161,10 @@ elif LINUX:
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions'
+        '-rdynamic', '-finline-functions',
+        # On macOS, this flag causes compiler errors. This will be addressed later
+        # CLIENT-4869
+        '-Werror'
     ]
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
