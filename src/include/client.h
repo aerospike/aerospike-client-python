@@ -25,6 +25,9 @@
 
 #define CLUSTER_NPARTITIONS (4096)
 
+// This allows people to see the function calling the Python client API that issues a warning
+#define STACK_LEVEL 2
+
 /*******************************************************************************
  * Macros for UDF operations.
  ******************************************************************************/
@@ -354,9 +357,21 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
                                               PyObject *args, PyObject *kwds);
 
 /**
+ * Create secondary string index
+ *
+ *		client.index_blob_create(namespace, set, bin, index_name, policy)
+ *
+ */
+PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds);
+
+PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds);
+
+/**
  * Create secondary cdt index
  *
- *		client.index_cdt_create(namespace, set, bin, index_name, ctx, policy)
+ *		client.index_cdt_create(namespace, set, bin, index_type, index_datatype, index_name, ctx, policy)
  *
  */
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
@@ -379,6 +394,11 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
  */
 PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
                                        PyObject *kwds);
+
+PyObject *AerospikeClient_Index_Single_Value_Create(AerospikeClient *self,
+                                                    PyObject *args,
+                                                    PyObject *kwds);
+
 /**
  * Create secondary list index
  *
@@ -404,6 +424,9 @@ PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
 PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
                                                   PyObject *args,
                                                   PyObject *kwds);
+
+PyObject *AerospikeClient_Index_Set_Create(AerospikeClient *self,
+                                           PyObject *args, PyObject *kwds);
 
 /**
 * Get the base64 representation of an aerospike CDT ctx.
@@ -434,24 +457,6 @@ PyObject *AerospikeClient_Set_Log_Level(AerospikeClient *self, PyObject *args,
  */
 PyObject *AerospikeClient_Set_Log_Handler(AerospikeClient *self, PyObject *args,
                                           PyObject *kwds);
-
-/**
- * Get records in a batch
- *
- *		client.get_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds);
-
-/**
- * Get records in a batch
- *
- *		client.batch_get_ops([keys], policies)
- *
- */
-PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-                                       PyObject *kwds);
 
 /**
  * Read/Write multiple records for specified batch keys in one batch call.
@@ -502,24 +507,6 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Filter bins from records in a batch
- *
- *		client.select_many([keys], [bins], policies)
- *
- */
-PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Check existence of given keys
- *
- *		client.exists_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds);
 
 /**
@@ -592,3 +579,15 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op,
 
 PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
                                    PyObject *kwds);
+
+// MRT
+
+PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
+                                 PyObject *kwds);
+PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
+                                PyObject *kwds);
+
+#define SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE                      \
+    "Operations and bin names are mutually exclusive."                         \
+    "In the next major client release, when this %s object is executed, a "    \
+    "ParamError will be raised."

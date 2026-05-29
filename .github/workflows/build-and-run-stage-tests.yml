@@ -1,0 +1,36 @@
+name: Build artifacts and run stage tests
+run-name: Build artifacts and run stage tests (server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }})
+
+permissions:
+  contents: read
+  id-token: write
+  statuses: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      server-tag:
+        type: string
+        required: true
+        description: 'Server docker image tag'
+      test-file:
+        type: string
+        required: false
+
+jobs:
+  build-artifacts:
+    uses: ./.github/workflows/build-artifacts.yml
+    secrets: inherit
+    with:
+      run_tests: false
+      server-tag: ''
+
+  run-stage-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    needs: build-artifacts
+    secrets: inherit
+    with:
+      server-tag: ${{ inputs.server-tag }}
+      run-integration-tests-on-macos-x86: true
+      python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
+      test-file: ${{ inputs.test-file }}

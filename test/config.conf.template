@@ -1,0 +1,10 @@
+[input-validation]
+validate_keys: true
+
+[community-edition]
+hosts: 127.0.0.1:3000
+
+[enterprise-edition]
+hosts :
+user :
+password :

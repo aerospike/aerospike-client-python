@@ -2,88 +2,20 @@ import socket
 import time
 import os
 import sys
-from distutils.version import LooseVersion
 
 import pytest
-from _pytest.terminal import TerminalReporter  # noqa: F401
-from collections import namedtuple
-from itertools import groupby
-import tracemalloc
 
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
+import aerospike
+from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.batch.records import BatchRecords, Write
+from contextlib import nullcontext
 
-test_memleak = int(os.environ.get("TEST_MEMLEAK", 0))
-
-if test_memleak == 1:
-    from psutil import Process
-
-    _proc = Process(os.getpid())
-
-    LEAK_LIMIT = 0
-
-    def get_consumed_ram():
-        return _proc.memory_info().rss
-
-    START = "START"
-    END = "END"
-    ConsumedRamLogEntry = namedtuple("ConsumedRamLogEntry", ("nodeid", "on", "consumed_ram"))
-    consumed_ram_log = []
-    ConsumedTracemallocLogEntry = namedtuple("ConsumedTracemallocLogEntry", ("nodeid", "on", "consumed_tracemalloc"))
-    consumed_tracemalloc_log = []
-
-    tracemalloc.start(10)
-    snapshot1 = []
-    snapshot2 = []
-
-    @pytest.hookimpl(hookwrapper=True)
-    def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator # noqa: F821
-        yield
-
-        # you can do here anything - I just print report info
-        print("*" * 8 + "HERE CUSTOM LOGIC" + "*" * 8)
-
-        for failed in terminalreporter.stats.get("failed", []):  # type: TestReport # noqa: F821
-            print("failed! node_id:%s, duration: %s" % (failed.nodeid, failed.duration))
-
-        for passed in terminalreporter.stats.get("passed", []):  # type: TestReport # noqa: F821
-            print(
-                "passed! node_id:%s, duration: %s, details: %s" % (passed.nodeid, passed.duration, str(passed.longrepr))
-            )
-
-        grouped = groupby(consumed_ram_log, lambda entry: entry.nodeid)
-        for nodeid, (start_entry, end_entry) in grouped:
-            leaked = end_entry.consumed_ram - start_entry.consumed_ram
-            if leaked > LEAK_LIMIT:
-                terminalreporter.write("LEAKED {}KB in {}\n".format(leaked / 1024, nodeid))
-
-        tmgrouped = groupby(consumed_tracemalloc_log, lambda entry: entry.nodeid)
-        for nodeid, (start_entry, end_entry) in tmgrouped:
-            stats = end_entry.consumed_tracemalloc.compare_to(start_entry.consumed_tracemalloc, "lineno")
-            print(f"{nodeid}:")
-            for stat in stats[:3]:
-                print(stat)
-                # terminalreporter.write(stats)
-
-    def pytest_runtest_setup(item):
-
-        log_entry = ConsumedRamLogEntry(item.nodeid, START, get_consumed_ram())
-        consumed_ram_log.append(log_entry)
-
-        tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, START, tracemalloc.take_snapshot())
-        consumed_tracemalloc_log.append(tmlog_entry)
-
-    def pytest_runtest_teardown(item):
-
-        log_entry = ConsumedRamLogEntry(item.nodeid, END, get_consumed_ram())
-        consumed_ram_log.append(log_entry)
-
-        tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, END, tracemalloc.take_snapshot())
-        consumed_tracemalloc_log.append(tmlog_entry)
-
-
+# Comment this out because nowhere in the repository is using it
+'''
 def compare_server_versions(version1, version2):
     """
     Compare two strings version1 and version 2
@@ -116,6 +48,7 @@ def compare_server_versions(version1, version2):
         return -1
 
     return 1
+'''
 
 
 def wait_for_port(address, port, interval=0.1, timeout=60):
@@ -142,8 +75,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 
 
 @pytest.fixture(scope="class")
-def as_connection(request):
+def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
+    # TODO: remove. this is a duplicate.
+    request.cls.config = config
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
@@ -159,6 +94,9 @@ def as_connection(request):
     else:
         as_client = aerospike.client(config).connect(config["user"], config["password"])
 
+    # Some tests need to get the client config
+    request.cls.config = config
+
     request.cls.skip_old_server = True
     request.cls.server_version = []
     versioninfo = as_client.info_all("build")
@@ -173,8 +111,36 @@ def as_connection(request):
                     request.cls.skip_old_server = False
                 TestBaseClass.major_ver = int(versionlist[0])
                 TestBaseClass.minor_ver = int(versionlist[1])
+                TestBaseClass.patch_ver = int(versionlist[2])
 
     request.cls.as_connection = as_client
+
+    # Check that strong consistency is enabled for all nodes
+    if TestBaseClass.enterprise_in_use():
+        ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+        are_all_nodes_sc_enabled = False
+        for i, (error, result) in enumerate(ns_info.values()):
+            if error:
+                # If we can't determine SC is enabled, just assume it isn't
+                # We don't want to break the tests if this code fails
+                print("Node returned error while getting config for namespace test")
+                break
+            ns_properties = result.split(";")
+            ns_properties = filter(lambda prop: "strong-consistency=" in prop, ns_properties)
+            ns_properties = list(ns_properties)
+            if len(ns_properties) == 0:
+                print("Strong consistency not found in node properties, so assuming it's disabled by default")
+                break
+            elif len(ns_properties) > 1:
+                print("Only one strong-consistency property should be present")
+                break
+            _, sc_enabled = ns_properties[0].split("=")
+            if sc_enabled == 'false':
+                print("One of the nodes is not SC enabled")
+                break
+            if i == len(ns_info) - 1:
+                are_all_nodes_sc_enabled = True
+    TestBaseClass.strong_consistency_enabled = TestBaseClass.enterprise_in_use() and are_all_nodes_sc_enabled
 
     def close_connection():
         as_client.close()
@@ -279,3 +245,80 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
+    _, meta = client.exists(key)
+    clock_skew_tolerance_secs = 50
+    assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)
+
+def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < time_limit_secs:
+        response = as_connection.job_info(job_id, job_module)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            break
+        time.sleep(0.1)
+
+# Shared between bin projection and execute background tests
+
+TEST_NS = "test"
+TEST_SET = "demo"
+BIN_NAME = "number"
+MAP_BIN_NAME = "map"
+
+# TODO: scale down tests maybe
+KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
+expected_number_bin_values = set()
+
+# Add records around the test
+@pytest.fixture(scope="function")
+def clean_test_background(as_connection):
+    batch_records = []
+    brs = BatchRecords(batch_records=batch_records)
+    for i, key in enumerate(KEYS):
+        ops = [
+            operations.write(BIN_NAME, i),
+            operations.write(MAP_BIN_NAME, {"a": i})
+        ]
+        br = Write(key, ops=ops)
+        batch_records.append(br)
+        expected_number_bin_values.add(i)
+    as_connection.batch_write(brs)
+    yield
+    as_connection.batch_remove(KEYS)
+
+BASIC_READ_BIN_OPS = [
+    operations.read(BIN_NAME)
+]
+
+READ_AND_WRITE_OPS = [
+    operations.read(BIN_NAME),
+    operations.write(BIN_NAME, 1)
+]
+
+WRITE_OPS = [
+    operations.write(BIN_NAME, 3)
+]
+
+NON_EXISTENT_BIN_NAME = "asdf"
+
+@pytest.fixture()
+def query(request, clean_test_background, as_connection):
+    if not hasattr(request, "param"):
+        query = as_connection.query(TEST_NS, TEST_SET)
+    else:
+        query = request.param(as_connection, TEST_NS, TEST_SET)
+    yield query
+
+@pytest.fixture(scope="function")
+def expect_earlier_than_server_version_to_fail(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)

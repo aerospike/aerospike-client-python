@@ -29,10 +29,10 @@ static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {{NULL}};
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery *self,
-                                             PyObject *args, PyObject *kwds)
+static int AerospikeKeyOrderedDict_Type_Init(PyObject *self, PyObject *args,
+                                             PyObject *kwds)
 {
-    return PyDict_Type.tp_init((PyObject *)self, args, kwds);
+    return PyDict_Type.tp_init(self, args, kwds);
 }
 
 /*******************************************************************************
@@ -40,7 +40,8 @@ static int AerospikeKeyOrderedDict_Type_Init(AerospikeQuery *self,
  ******************************************************************************/
 
 static PyTypeObject AerospikeKeyOrderedDict_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.KeyOrderedDict",
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        FULLY_QUALIFIED_TYPE_NAME("KeyOrderedDict"),
     .tp_basicsize = sizeof(AerospikeKeyOrderedDict),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "The KeyOrderedDict class is a dictionary that directly maps\n"

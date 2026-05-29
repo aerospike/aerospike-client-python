@@ -57,16 +57,16 @@ class TestDropUser(object):
         time.sleep(2)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_info = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_drop_user(user, policy)
 
         assert status == 0
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -76,12 +76,10 @@ class TestDropUser(object):
         """
         Invoke drop_user() with policy none
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_drop_user(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_drop_user_positive(self):
         """
@@ -96,16 +94,16 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(2)
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -124,16 +122,16 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(1)
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -145,18 +143,16 @@ class TestDropUser(object):
         """
         user = "foo-test"
         try:
-            self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_drop_user(user)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_policy_incorrect(self):
         """
@@ -171,16 +167,14 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
         policy = {"timeout": 0.2}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             status = self.client.admin_drop_user(user, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
         status = self.client.admin_drop_user(user)
 
@@ -207,12 +201,10 @@ class TestDropUser(object):
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_drop_user(user)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_with_special_characters_in_username(self):
 

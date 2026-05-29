@@ -162,7 +162,11 @@ class TestCTXOperations(object):
         assert bins[self.nested_list_bin] == expected
 
     @pytest.mark.parametrize(
-        "value, list_indexes, expected", [("toast", [2], e.OpNotApplicable), ("?", "cat", e.ParamError)]
+        "value, list_indexes, expected", [
+            ("toast", [2], e.OpNotApplicable),
+            # Passing in non-int values to a ctx object
+            ("?", "cat", e.ParamError)
+        ]
     )
     def test_ctx_list_append_negative(self, value, list_indexes, expected):
         """
@@ -287,7 +291,7 @@ class TestCTXOperations(object):
         "index, value, list_indexes, expected",
         [
             (1, "toast", [2], e.OpNotApplicable),
-            (0, "?", "cat", e.ParamError),
+            (0, "?", "cat", e.ParamError)
         ],
     )
     def test_ctx_list_insert_negative(self, index, value, list_indexes, expected):
@@ -4960,4 +4964,16 @@ class TestCTXOperations(object):
         ]
 
         with pytest.raises(expected):
+            self.as_connection.operate(self.test_key, ops)
+
+    def test_ctx_invalid_list_value(self):
+        # Python tuple has no server type
+        ctx = [
+            cdt_ctx.cdt_ctx_list_value((1, 2))
+        ]
+        ops = [
+            list_operations.list_append(self.nested_list_bin, "val1", None, ctx),
+        ]
+
+        with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)

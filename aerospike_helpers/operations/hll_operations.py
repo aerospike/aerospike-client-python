@@ -17,7 +17,7 @@
 Helper functions to create HyperLogLog operation dictionary arguments for:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
 HyperLogLog bins and operations allow for your application to form fast, reasonable approximations
 of members in the union or intersection between multiple HyperLogLog bins.

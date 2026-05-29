@@ -317,7 +317,7 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
     case SERIALIZER_PYTHON: {
         /*
 				 * Serialize bytearray as is and store them into database with
-				 * type AS_BYTES_BLOB, unlike other values in case of 
+				 * type AS_BYTES_BLOB, unlike other values in case of
 				 * SERIALIZER_PYTHON.
 				 * This is a special case.
 				 * Refer: AER-3589 for more details.
@@ -476,6 +476,25 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
+    case AS_BYTES_HLL: {
+        // Convert bytes to Python bytes object
+        PyObject *py_bytes = PyBytes_FromStringAndSize(
+            (const char *)bytes->value, (Py_ssize_t)bytes->size);
+        if (py_bytes == NULL) {
+            as_error_update(
+                error_p, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert C client's as_bytes to Python bytes");
+            goto CLEANUP;
+        }
+        PyObject *py_hll = create_class_instance_from_module(
+            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
+        Py_DECREF(py_bytes);
+        if (!py_hll) {
+            goto CLEANUP;
+        }
+        *retval = py_hll;
+        break;
+    }
     default: {
         // First try to return a raw byte array, if that fails raise an error
         uint32_t bval_size = as_bytes_size(bytes);

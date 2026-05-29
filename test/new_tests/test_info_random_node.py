@@ -29,6 +29,9 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         response = self.as_connection.info_random_node("bins")
 
         assert "names" in response
@@ -81,9 +84,9 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         policy = {"timeout": 180000}
-        response = self.as_connection.info_random_node("bins", policy=policy)
+        response = self.as_connection.info_random_node("sets", policy=policy)
 
-        assert "names" in response
+        assert "demo" in response
 
     def test_info_random_node_positive_with_host(self):
         """
@@ -91,6 +94,9 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         response = self.as_connection.info_random_node("bins")
 
         assert "names" in response
@@ -127,7 +133,11 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         Test info for incorrect command.
         """
-        with pytest.raises(e.ClientError):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) <= (7, 0):
+            expected_exception = e.ClientError
+        else:
+            expected_exception = e.InvalidRequest
+        with pytest.raises(expected_exception):
             self.as_connection.info_random_node("abcd")
 
     def test_info_random_node_positive_without_connection(self):

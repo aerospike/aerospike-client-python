@@ -7,6 +7,7 @@ from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
 
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -53,6 +54,7 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -103,7 +105,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -148,7 +150,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_rank},
+            ctx_list_rank,
             policy,
         )
 
@@ -169,7 +171,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_value},
+            ctx_list_value,
             policy,
         )
 
@@ -190,7 +192,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPKEYS,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_index},
+            ctx_map_index,
             policy,
         )
 
@@ -211,7 +213,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_value},
+            ctx_map_value,
             policy,
         )
 
@@ -232,7 +234,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_rank},
+            ctx_map_rank,
             policy,
         )
 
@@ -254,7 +256,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_MAPVALUES,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_map_rank},
+            ctx_map_rank,
             policy,
         )
 
@@ -275,7 +277,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -290,7 +292,7 @@ class TestCDTIndex(object):
         for _ in range(100):
             set_name = set_name + "a"
         policy = {}
-        try:
+        with pytest.raises((e.InvalidRequest, Exception)) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 set_name,
@@ -298,14 +300,15 @@ class TestCDTIndex(object):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
             assert False
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
-        except Exception as exception:
-            assert isinstance(exception, e.InvalidRequest)
+
+        if type(excinfo.value) == e.InvalidRequest:
+            assert excinfo.value.code == 4
+        else:
+            assert isinstance(excinfo.value, e.InvalidRequest)
 
     def test_pos_cdtindex_with_incorrect_bin(self):
         """
@@ -319,7 +322,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -339,7 +342,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -351,7 +354,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_numeric_list_cdt_index",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
             except e.IndexFoundError:
@@ -373,7 +376,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -385,7 +388,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_NUMERIC,
                     "test_string_list_cdt_index",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
                 self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
@@ -409,7 +412,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
         if retobj == 0:
@@ -421,7 +424,7 @@ class TestCDTIndex(object):
                     aerospike.INDEX_TYPE_LIST,
                     aerospike.INDEX_STRING,
                     "test_string_list_cdt_index1",
-                    {"ctx": ctx_list_index},
+                    ctx_list_index,
                     policy,
                 )
             except e.IndexFoundError:
@@ -444,7 +447,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index_pol",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -464,7 +467,7 @@ class TestCDTIndex(object):
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "test_string_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -501,7 +504,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_STRING,
             "uni_name_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -521,7 +524,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "uni_age_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -549,7 +552,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with namespace is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 None,
                 "demo",
@@ -557,20 +560,19 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Namespace should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Namespace should be a string"
 
     def test_neg_cdtindex_with_set_is_int(self):
         """
         Invoke createindex() with set is int
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 1,
@@ -578,36 +580,29 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
             assert False
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be string, unicode or None"
-        except Exception as exception:
-            assert isinstance(exception, e.ParamError)
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Set should be string, unicode or None"
 
-    def test_neg_cdtindex_with_set_is_none(self):
+    def test_cdtindex_with_set_is_none(self):
         """
         Invoke createindex() with set is None
         """
         policy = {}
-        try:
-            self.as_connection.index_cdt_create(
-                "test",
-                None,
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
-                policy,
-            )
+        self.as_connection.index_cdt_create(
+            "test",
+            None,
+            "string_list",
+            aerospike.INDEX_TYPE_LIST,
+            aerospike.INDEX_STRING,
+            "test_string_list_cdt_index",
+            ctx_list_index,
+            policy,
+        )
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Set should be a string"
         self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
@@ -616,7 +611,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke createindex() with bin is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -624,20 +619,18 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Bin should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Bin should be a string"
 
     def test_neg_cdtindex_with_index_is_none(self):
         """
         Invoke createindex() with index is None
         """
         policy = {}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.index_cdt_create(
                 "test",
                 "demo",
@@ -645,13 +638,11 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 None,
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Index name should be string or unicode"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Index name should be string or unicode"
 
     def test_neg_cdtindex_with_incorrect_namespace(self):
         """
@@ -659,7 +650,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        try:
+        with pytest.raises(e.NamespaceNotFound) as excinfo:
             self.as_connection.index_cdt_create(
                 "test1",
                 "demo",
@@ -667,12 +658,11 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "test_numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        assert excinfo.value.code == 20
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """
@@ -686,7 +676,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             aerospike.INDEX_TYPE_LIST,
             aerospike.INDEX_NUMERIC,
             "test_numeric_list_cdt_index",
-            {"ctx": ctx_list_index},
+            ctx_list_index,
             policy,
         )
 
@@ -703,7 +693,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.index_cdt_create(
                 "test",
                 "demo",
@@ -711,12 +701,11 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_STRING,
                 "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
                 policy,
             )
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_cdtindex_with_no_paramters(self):
         """
@@ -726,3 +715,24 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             self.as_connection.index_cdt_create()
 
         assert "argument 'ns' (pos 1)" in str(typeError.value)
+
+    @pytest.mark.parametrize(
+        "ctx",
+        [
+            None,
+            # Invalid type
+            {"ctx": 1}
+        ]
+    )
+    def test_neg_cdtindex_with_invalid_ctx(self, ctx):
+        with pytest.raises(e.ParamError):
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_STRING,
+                "test_string_list_cdt_index",
+                # Ctx must be a list
+                ctx
+            )

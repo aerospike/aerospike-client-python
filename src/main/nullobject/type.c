@@ -17,7 +17,6 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 #include "nullobject.h"
 
@@ -34,9 +33,9 @@ static void AerospikeNullObject_Type_Dealloc(AerospikeNullObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeNullObject_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.null", // tp_name
-    sizeof(AerospikeNullObject),                     // tp_basicsize
-    0,                                               // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("null"), // tp_name
+    sizeof(AerospikeNullObject), // tp_basicsize
+    0,                           // tp_itemsize
     (destructor)AerospikeNullObject_Type_Dealloc,
     // tp_dealloc
     0, // tp_print

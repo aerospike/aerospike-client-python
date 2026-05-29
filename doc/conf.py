@@ -42,7 +42,7 @@ extensions = [
     "sphinxcontrib.spelling"
 ]
 napoleon_google_docstring = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3.8", None)}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
@@ -120,7 +120,7 @@ autodoc_type_aliases = {
     "TypeIndex": "TypeIndex",
     "TypeChild": "TypeChild",
     "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "TypeExpression",
+    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
     "TypeGeo": "TypeGeo",
     "TypeKey": "TypeKey",
     "TypeKeyList": "TypeKeyList",
@@ -133,6 +133,10 @@ autodoc_type_aliases = {
     "TypeResultType": "TypeResultType",
     "TypeFixedEle": "TypeFixedEle",
     "TypeFixed": "TypeFixed",
+}
+nitpicky = True
+nitpick_ignore_regex = {
+    ("py:class", "Type.*")
 }
 
 # -- Options for HTML output ---------------------------------------------------
@@ -255,7 +259,7 @@ todo_include_todos = True
 
 # Spelling check
 
-spelling_ignore_pypi_package_names = True
+spelling_ignore_pypi_package_names = False
 
 linkcheck_anchors_ignore = [
     'truncate',
@@ -268,3 +272,5 @@ linkcheck_anchors_ignore = [
 linkcheck_ignore = [
     "https://docs.aerospike.com/server/guide/security/index.html"
 ]
+
+linkcheck_timeout = 120

@@ -1,21 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-
-from distutils.version import LooseVersion
 import pytest
 from .as_status_codes import AerospikeStatus
-from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-
-
-def is_greater_451(version_str):
-    """
-    Is the server version 4.5.1.0-pre or newer
-    """
-    return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
 class TestUdfRemove(object):
@@ -25,7 +15,6 @@ class TestUdfRemove(object):
         Setup Method, adds a UDF and waits for the UDF to exist
         """
         as_connection.udf_put(self.udf_name, 0, {})
-        wait_for_udf_to_exist(as_connection, self.udf_name)
 
         def teardown():
             """
@@ -39,7 +28,6 @@ class TestUdfRemove(object):
             for udf in udf_list:
                 if udf["name"] == udf_name:
                     as_connection.udf_remove(udf_name)
-                    wait_for_udf_removal(as_connection, udf_name)
                     break
 
         request.addfinalizer(teardown)
@@ -59,7 +47,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module)
         assert status == AerospikeStatus.AEROSPIKE_OK
 
-        wait_for_udf_removal(self.as_connection, module)
         udf_list = self.as_connection.udf_list({"timeout": 180000})
 
         present = False
@@ -80,9 +67,6 @@ class TestUdfRemove(object):
         with pytest.raises(e.ParamError):
             status = self.as_connection.udf_remove(module, policy)
 
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
-
         assert status == 0
 
     def test_udf_remove_with_proper_timeout_policy_value(self):
@@ -96,9 +80,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module, policy)
 
         assert status == AerospikeStatus.AEROSPIKE_OK
-
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
 
         udf_list = self.as_connection.udf_list({"timeout": 180000})
 
@@ -118,9 +99,6 @@ class TestUdfRemove(object):
         status = self.as_connection.udf_remove(module, policy)
 
         assert status == AerospikeStatus.AEROSPIKE_OK
-
-        #  Wait for the removal to take place
-        wait_for_udf_removal(self.as_connection, module)
 
         udf_list = self.as_connection.udf_list({})
 
@@ -169,11 +147,7 @@ class TestIncorrectCallsToUDFRemove(object):
         policy = {}
         module = "some_fake_module_that_does_not_exist"
 
-        if is_greater_451(self.string_server_version):
-            self.as_connection.udf_remove(module, policy)
-        else:
-            with pytest.raises(e.UDFError):
-                self.as_connection.udf_remove(module, policy)
+        self.as_connection.udf_remove(module, policy)
 
     def test_udf_remove_without_parameters(self):
         """

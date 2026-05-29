@@ -65,9 +65,9 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(user, policy)
+        user_details = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
@@ -78,9 +78,9 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -88,12 +88,10 @@ class TestGrantRoles(TestBaseClass):
         user = "example-test"
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_roles(user, roles, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_grant_roles_with_proper_timeout_policy_value(self):
 
@@ -106,33 +104,29 @@ class TestGrantRoles(TestBaseClass):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read-write", "sys-admin"]
+        assert user_details["roles"] == ["read-write", "sys-admin"]
 
     def test_grant_roles_with_none_username(self):
 
         user = None
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_grant_roles(user, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_grant_roles_with_empty_username(self):
 
         user = ""
         roles = ["read-write"]
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_grant_roles(user, roles)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_grant_roles_with_special_characters_in_username(self):
 
@@ -153,9 +147,9 @@ class TestGrantRoles(TestBaseClass):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert set(user_details) == set(["read", "read-write"])
+        assert set(user_details["roles"]) == set(["read", "read-write"])
 
         self.client.admin_drop_user(user)
 

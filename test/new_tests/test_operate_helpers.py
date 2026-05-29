@@ -5,6 +5,7 @@ from aerospike_helpers.operations import list_operations, operations
 
 import aerospike
 from aerospike import exception as e
+import warnings
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -202,7 +203,7 @@ class TestOperate(object):
                 [operations.write("write_bin", False), operations.read("write_bin")],
                 {"write_bin": 0},
             ),
-        ],
+        ]
     )
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """
@@ -213,6 +214,7 @@ class TestOperate(object):
 
         assert bins == expected
         self.as_connection.remove(key)
+
 
     @pytest.mark.parametrize(
         "key, llist, expected",
@@ -278,8 +280,9 @@ class TestOperate(object):
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1200
                 },
-                {"gen": 10, "ttl": 1200},
+                {"gen": 10},
                 [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
             ),
         ],
@@ -309,14 +312,20 @@ class TestOperate(object):
         assert bins == {"name": "name1aa"}
 
     @pytest.mark.parametrize(
-        "key, llist", [(("test", "demo", 1), [operations.touch(4000)]), (("test", "demo", 1), [operations.touch(4000)])]
+        "key", [
+            ("test", "demo", 1)
+        ]
     )
-    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key):
         """
         Invoke operate() with touch value with bin and value combination.
         """
 
-        self.as_connection.operate(key, llist)
+        with pytest.warns(DeprecationWarning):
+            ops = [
+                operations.touch(4000)
+            ]
+        self.as_connection.operate(key, ops)
 
         (key, meta) = self.as_connection.exists(key)
 
@@ -370,11 +379,11 @@ class TestOperate(object):
         Invoke operate() OPERATE_TOUCH using meta to pass in ttl.
         """
         key = ("test", "demo", 1)
-        meta = {"ttl": 1200}
+        policy = {"ttl": 1200}
 
         llist = [operations.touch()]
 
-        self.as_connection.operate(key, llist, meta)
+        self.as_connection.operate(key, llist, policy=policy)
 
         _, meta = self.as_connection.exists(key)
 
@@ -575,12 +584,33 @@ class TestOperate(object):
 
         llist = [operations.prepend("no", aerospike.null()), operations.read("no")]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate(key, llist)
-
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        assert excinfo.value.code == 4
         self.as_connection.remove(key)
+
+    @pytest.mark.parametrize(
+        "ops, expected_result",
+        [
+            (
+                [
+                    # Fetch the last item in the list
+                    list_operations.list_get(bin_name="int_bin", index=-1)
+                ],
+                4
+            ),
+            (
+                [
+                    list_operations.list_get_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                [3, 4]
+            )
+        ]
+    )
+    def test_list_get_ops_with_negative_index(self, ops: list, expected_result: int):
+        key = ("test", "demo", "list_key")
+        _, _, bins = self.as_connection.operate(key, ops)
+        assert bins["int_bin"] == expected_result
 
     @pytest.mark.parametrize(
         "list, result, bin, expected",
@@ -613,7 +643,7 @@ class TestOperate(object):
                         "int_bin",
                         7,
                         99,
-                        {"list_write": aerospike.LIST_WRITE_DEFAULT}
+                        {"write_flags": aerospike.LIST_WRITE_DEFAULT}
                     ),
                 ],
                 {"int_bin": 8},
@@ -641,6 +671,91 @@ class TestOperate(object):
                 "int_bin",
                 [1, 2, 3, 4, None, None, 10],  # Inserting outside of the range adds nils in between
             ),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_increment(bin_name="int_bin", index=-1, value=4),
+                    list_operations.list_get(bin_name="int_bin", index=3)
+                ],
+                {"int_bin": 8},
+                "int_bin",
+                [1, 2, 3, 8]
+            ),
+            (
+                [
+                    list_operations.list_insert_items(bin_name="int_bin", index=-1, values=[5, 6]),
+                ],
+                {"int_bin": 6},
+                "int_bin",
+                [1, 2, 3, 5, 6, 4]
+            ),
+            # We also include list removal operations here since they return something
+            # The test function below doesn't test for the return value of the operations
+            (
+                [
+                    list_operations.list_pop(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_pop_range(bin_name="int_bin", index=-2, count=2),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 1},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index(
+                        bin_name="int_bin",
+                        index=-1,
+                        return_type=aerospike.LIST_RETURN_VALUE
+                    ),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index_range(
+                        bin_name="int_bin",
+                        index=-2,
+                        return_type=aerospike.LIST_RETURN_VALUE,
+                        count=2
+                    ),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                {"int_bin": 2},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_set(bin_name="int_bin", index=-1, value=44)
+                ],
+                {},
+                "int_bin",
+                [1, 2, 3, 44]
+            )
         ],
     )
     def test_pos_operate_with_list_addition_operations(self, list, result, bin, expected):
@@ -663,6 +778,14 @@ class TestOperate(object):
             ([list_operations.list_remove_range("int_bin", 2, 2)], "int_bin", [1, 2]),
             ([list_operations.list_trim("int_bin", 2, 2)], "int_bin", [3, 4]),
             ([list_operations.list_clear("int_bin")], "int_bin", []),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_trim(bin_name="int_bin", index=-3, count=3)
+                ],
+                "int_bin",
+                [2, 3, 4]
+            )
         ],
     )
     def test_pos_operate_with_list_remove_operations(self, list, bin, expected):
@@ -902,22 +1025,18 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_key_is_none(self):
         """
         Invoke operate() with key is none
         """
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_append_value_integer(self):
         """
@@ -926,10 +1045,9 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         llist = [operations.append("name", 12)]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist)
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_with_incorrect_polic(self):
         """
@@ -941,3 +1059,35 @@ class TestOperate(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_insert_items("a", 0, "nonlist")
+        ]
+    )
+    def test_list_operations_with_nonlist_parameters(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
+
+    TOO_LONG_BIN_NAME = "a" * 16
+
+    # We are testing the entire range of list operation codes here
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_append(TOO_LONG_BIN_NAME, 0),
+            list_operations.list_create(TOO_LONG_BIN_NAME, aerospike.LIST_ORDERED, False, False)
+        ]
+    )
+    def test_list_operations_with_bin_name_too_long(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(key, ops)

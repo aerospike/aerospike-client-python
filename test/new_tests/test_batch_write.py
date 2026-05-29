@@ -12,6 +12,7 @@ from aerospike_helpers.operations import list_operations as lop
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
+from . import as_errors
 
 
 def add_udfs(client):
@@ -122,12 +123,13 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
-                            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
+                            meta={"gen": 1},
                             policy={
                                 "key": aerospike.POLICY_KEY_SEND,
                                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                                 "gen": aerospike.POLICY_GEN_IGNORE,
                                 "exists": aerospike.POLICY_EXISTS_UPDATE,
+                                "ttl": aerospike.TTL_NEVER_EXPIRE,
                                 "durable_delete": False,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
@@ -185,15 +187,17 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
-                            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
+                            meta={"gen": 1},
                             policy={
-                                "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
+                                "ttl": aerospike.TTL_NEVER_EXPIRE
                             },
                         )
                     ]
                 ),
-                {},
+                {
+                    "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE
+                },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),
@@ -380,6 +384,58 @@ class TestBatchWrite(TestBaseClass):
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
 
+
+    @pytest.mark.parametrize(
+        "batch_record",
+        [
+            pytest.param(
+                br.Write(
+                    ("test", "demo", 1),
+                    [
+                        op.write("ilist_bin", [2, 6]),
+                    ],
+                ),
+                id="policy_batch_write"
+            ),
+            pytest.param(
+                br.Read(
+                    ("test", "demo", 1),
+                    [
+                        op.read("ilist_bin")
+                    ],
+                ),
+                id="policy_batch_read"
+            ),
+            pytest.param(
+                br.Apply(
+                    key=("test", "demo", 1),
+                    module="sample",
+                    function="list_append",
+                    args=["ilist_bin", 200],
+                ),
+                id="policy_batch_apply"
+            ),
+            pytest.param(
+                br.Remove(
+                    key=("test", "demo", 1),
+                ),
+                id="policy_batch_remove"
+            )
+        ]
+
+    )
+    def test_batch_write_with_expr_filtering_out_record(self, batch_record):
+        policy={
+            "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
+        }
+        batch_record.policy = policy
+        brs = br.BatchRecords(
+            [batch_record]
+        )
+
+        res = self.as_connection.batch_write(brs)
+        assert res.batch_records[0].result == as_errors.AEROSPIKE_FILTERED_OUT
+
     @pytest.mark.parametrize(
         "name, batch_records, policy, exp_res",
         [
@@ -396,6 +452,29 @@ class TestBatchWrite(TestBaseClass):
                         ),
                         "bad_batch_record",
                     ]
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
+                # We're testing a specific helper function that checks if an object's base class
+                # is an aerospike_helpers class. BatchRecord is the expected base class,
+                # but the object's actual base class is "object"
+                # The object needs to be in the same submodule as the expected class
+                # (batch.records submodule in aerospike_helpers)
+                "bad-batch-record-but-is-aerospike-helpers-class-instance",
+                br.BatchRecords(
+                    [
+                        br.BatchRecords(),
+                    ]
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
+                "bad-batch-record-batch_records-field",
+                br.BatchRecords(
+                    1
                 ),
                 {},
                 e.ParamError,
@@ -470,3 +549,91 @@ class TestBatchWrite(TestBaseClass):
         with pytest.raises(exp_res):
             bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
             bad_client.batch_write(batch_records)
+
+    def test_batch_read_invalid_policy_value(self):
+        batch_records = br.BatchRecords(
+            [
+                br.Read(
+                    key=("test", "demo", 1),
+                    ops=[
+                        op.read("count"),
+                    ],
+                    policy={
+                        "read_touch_ttl_percent": "fail"
+                    }
+                )
+            ]
+        )
+        with pytest.raises(e.ParamError):
+            self.as_connection.batch_write(batch_records)
+
+    @pytest.mark.parametrize(
+        "policy_name, batch_record",
+        [
+            (
+                "batch_write",
+                br.Write(
+                    key=("test", "demo", 0),
+                    ops=[
+                        op.write(bin_name="a", write_item=1)
+                    ]
+                )
+            ),
+            (
+                "batch_apply",
+                br.Apply(
+                    key=("test", "demo", 0),
+                    module="sample",
+                    function="list_append",
+                    args=["ilist_bin", 200]
+                ),
+            )
+        ]
+    )
+    def test_global_batch_write_and_apply_policies(self, policy_name: str, batch_record: br.BatchRecord):
+        config = TestBaseClass.get_connection_config()
+        config["policies"][policy_name] = {
+            "key": aerospike.POLICY_KEY_SEND
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                batch_record
+            ]
+        )
+        c.batch_write(batch_records)
+
+        query = self.as_connection.query(self.test_ns, self.test_set)
+        records = query.results()
+        # Only the record with primary key 0 should have its PK returned from the query
+        # The other records should not have a PK returned from the server
+        for record_tuple in records:
+            key_tuple = record_tuple[0]
+            pk = key_tuple[2]
+            # Use count bin to identify record's PK
+            bins = record_tuple[2]
+            if bins["count"] == 0:
+                # Get key tuple with PK 0
+                expected_key_tuple = self.keys[0]
+                assert pk == expected_key_tuple[2]
+            else:
+                assert pk is None
+
+    def test_global_batch_remove_policy(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"]["batch_remove"] = {
+            # Record's real generation should be 1 since it was just written before this test case
+            "gen": aerospike.POLICY_GEN_EQ,
+            "generation": 42
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                br.Remove(
+                    key=("test", "demo", 0),
+                )
+            ]
+        )
+        brs = c.batch_write(batch_records)
+        assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION

@@ -5,6 +5,7 @@ from .as_status_codes import AerospikeStatus
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
+from aerospike_helpers import cdt_ctx
 
 
 import aerospike
@@ -20,6 +21,11 @@ def add_map_keys(client):
             "string_map": {"sa": "a", "sb": "b", "sc": "c"},
             "age": i,
             "no": i,
+            "list_of_maps": [
+                {
+                    1: "a"
+                }
+            ]
         }
         client.put(key, rec)
 
@@ -52,7 +58,7 @@ class TestMapKeysIndex(object):
         policy = {}
         with pytest.raises(TypeError):
             self.as_connection.index_map_keys_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, 1
+                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, None, 1
             )
 
     def test_mapkeysindex_with_correct_parameters(self):
@@ -62,7 +68,7 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            ns="test", set="demo", bin="string_map", index_datatype=aerospike.INDEX_STRING, name="test_string_map_index", policy=policy, ctx=None
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -121,29 +127,32 @@ class TestMapKeysIndex(object):
         ),
         ids=("ns too long", "set too long", "bin too long", "index name too long"),
     )
-    def test_mapkeys_with_parameters_too_long(self, ns, test_set, test_bin, index_name):
+    def test_mapkeys_with_parameters_too_long(self, ns, test_set, test_bin, index_name, request):
         # Invoke index_map_keys_create() with correct arguments and set
         # length extra
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_map_keys_create(ns, test_set, test_bin, aerospike.INDEX_STRING, index_name, policy)
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        if request.node.callspec.id == "ns too long" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+        else:
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
     def test_mapkeysindex_with_incorrect_namespace(self):
         """
         Invoke createindex() with incorrect namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_map_keys_create(
                 "test1", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
             )
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_mapkeysindex_with_nonexistent_set(self):
         """
@@ -345,3 +354,21 @@ class TestMapKeysIndex(object):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+
+    def test_with_ctx(self):
+        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
+        response_code = self.as_connection.index_map_keys_create(
+            ns="test",
+            set="demo",
+            bin="list_of_maps",
+            index_datatype=aerospike.INDEX_NUMERIC,
+            name="test_string_map_index",
+            policy=None,
+            ctx=[
+                cdt_ctx.cdt_ctx_list_index(0)
+            ]
+        )
+        assert response_code == AerospikeStatus.AEROSPIKE_OK
+
+        self.as_connection.index_remove("test", "test_string_map_index")
+        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")

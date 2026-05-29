@@ -1,0 +1,82 @@
+name: Build artifacts
+run-name: |
+  Build artifacts (
+  run_tests=${{ inputs.run_tests }},
+  server-tag=${{ inputs.server-tag }}
+  test-file=${{ inputs.test-file }}
+  )
+
+# Builds manylinux wheels and source distribution
+# Optionally run tests on manylinux wheels
+# Then upload artifacts to Github
+
+permissions:
+  id-token: write
+  statuses: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs: &inputs
+      run_tests:
+        description: "Run integration tests with the wheels after building them"
+        required: true
+        type: boolean
+      server-tag:
+        type: string
+        # latest tag is not supported in JFrog
+        required: true
+        description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
+        description: 'new_tests/<value>'
+      run-integration-tests-on-macos-x86:
+        required: false
+        default: true
+        type: boolean
+        description: 'If false, only run import test'
+      publish-build-info:
+        required: false
+        default: false
+        description: Only used upstream by dev workflow
+        type: boolean
+      # NOT used by workflow dispatch
+      jf-build-id:
+        required: false
+        default: ''
+        description: If publishing build info is true
+        type: string
+
+  workflow_call:
+    inputs: *inputs
+    outputs:
+      python-versions:
+        value: ${{ jobs.build-wheels.outputs.python-versions }}
+
+jobs:
+  build-sdist:
+    uses: ./.github/workflows/build-sdist.yml
+
+  build-wheels:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_arm64",
+          "win_amd64"
+        ]
+      fail-fast: false
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      run_tests: ${{ inputs.run_tests }}
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      run-integration-tests-on-macos-x86: ${{ inputs.run-integration-tests-on-macos-x86 }}
+      publish-build-info: ${{ inputs.publish-build-info }}
+      jf-build-id: ${{ inputs.jf-build-id }}
+    secrets: inherit

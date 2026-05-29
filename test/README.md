@@ -21,7 +21,11 @@ python3 -m pytest new_tests/
 
 [Pytest usage]:http://pytest.org/latest/usage.html
 
-To set the server details, modify `config.conf`.
+To set the server details:
+- Create a copy of `config.conf.template` and rename it to `config.conf`. `config.conf` will be the config file used
+for testing, and it will be ignored by git.
+- Modify `config.conf` to suit your needs.
+
 If a community edition server is to be used, specify the list of hosts in the
 `[community-edition]` section. You can remove the `[enterprise-edition]` section
 or leave its options empty.

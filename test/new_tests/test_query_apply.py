@@ -13,12 +13,12 @@ import aerospike
 
 def add_indexes_to_client(client):
     try:
-        client.index_integer_create("test", "demo", "age", "test_demo_age_idx")
+        client.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "test_demo_age_idx")
     except e.IndexFoundError:
         pass
 
     try:
-        client.index_integer_create("test", None, "age", "test_null_age_idx")
+        client.index_single_value_create("test", None, "age", aerospike.INDEX_NUMERIC, "test_null_age_idx")
     except e.IndexFoundError:
         pass
 
@@ -168,7 +168,7 @@ class TestQueryApply(object):
         )
 
         self._wait_for_query_complete(query_id)
-        self._items_without_set_have_been_applied()
+        self._all_ns_items_have_been_applied()
 
     def test_query_apply_with_incorrect_policy(self):
         """
@@ -319,6 +319,8 @@ class TestQueryApply(object):
             ("age"),
             ("age", 1),
             ("age", 1, 5),
+            (None, 1, "bin"),  # Invalid predicate type
+            (1, None, "bin"),  # Invalid index data type
             (1, 1, "bin"),  # start of a valid predicate
         ),
     )
@@ -474,14 +476,14 @@ class TestQueryApply(object):
         _, _, bins = self.as_connection.get(self.no_set_key)
         assert bins["name"] != "aerospike"
 
-    def _items_without_set_have_been_applied(self):
+    def _all_ns_items_have_been_applied(self):
         for i in range(1, 10):
             key = ("test", "demo", i)
             _, _, bins = self.as_connection.get(key)
-            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-                assert bins["name"] != "aerospike"
+            if i <= 4:
+                assert bins["name"] == "aerospike"
             else:
-                assert bins["name"] == "aerospike" or bins["name"] == str(i)
+                assert bins["name"] == str(i)
 
         _, _, bins = self.as_connection.get(self.no_set_key)
         assert bins["name"] == "aerospike"

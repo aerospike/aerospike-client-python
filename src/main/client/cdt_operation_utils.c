@@ -7,6 +7,26 @@
 #include "policy.h"
 #include "conversions.h"
 
+as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
+                               bool *boolean)
+{
+    PyObject *py_val = PyDict_GetItemString(op_dict, key);
+    if (!py_val) {
+        // op_dict does not contain key
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
+    }
+
+    if (!PyBool_Check(py_val)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "key %s does not point to a boolean in the dict",
+                               key);
+    }
+
+    *boolean = (bool)PyObject_IsTrue(py_val);
+    return AEROSPIKE_OK;
+}
+
 /*
 The caller of this does not own the pointer to binName, and should not free it. It is either
 held by Python, or is added to the list of chars to free later.
@@ -67,8 +87,8 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         *val = NULL;
         return AEROSPIKE_OK;
     }
-    return pyobject_to_val(self, err, py_val, val, static_pool,
-                           serializer_type);
+    return as_val_new_from_pyobject(self, err, py_val, val, static_pool,
+                                    serializer_type);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
@@ -98,6 +118,7 @@ as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
         AEROSPIKE_OK) {
         return err->code;
     }
+
     if (!found) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Operation missing required entry %s", key);
@@ -115,21 +136,19 @@ as_status get_optional_int64_t(as_error *err, const char *key,
         return AEROSPIKE_OK;
     }
 
-    if (PyLong_Check(py_val)) {
-        *i64_valptr = (int64_t)PyLong_AsLong(py_val);
-        if (PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
-                                       key);
-            }
-
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
-        }
-    }
-    else {
+    if (!PyLong_Check(py_val)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be an integer", key);
+    }
+
+    *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
+                                   key);
+        }
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
     }
 
     *found = true;
@@ -184,14 +203,16 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
 }
 
 as_status get_list_policy(as_error *err, PyObject *op_dict,
-                          as_list_policy *policy, bool *found)
+                          as_list_policy *policy, bool *found,
+                          bool validate_keys)
 {
     *found = false;
 
     PyObject *list_policy = PyDict_GetItemString(op_dict, AS_PY_LIST_POLICY);
 
     if (list_policy) {
-        if (pyobject_to_list_policy(err, list_policy, policy) != AEROSPIKE_OK) {
+        if (pyobject_to_list_policy(err, list_policy, policy, validate_keys) !=
+            AEROSPIKE_OK) {
             return err->code;
         }
         /* We succesfully converted the policy*/

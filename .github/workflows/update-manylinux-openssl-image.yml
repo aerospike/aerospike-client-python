@@ -1,0 +1,93 @@
+permissions:
+  contents: read
+  id-token: write
+
+name: Build manylinux openssl image
+run-name: 'Build manylinux openssl image (openssl-version=${{ inputs.openssl-version }})'
+
+on:
+  workflow_dispatch:
+    inputs:
+      openssl-version:
+        required: true
+        description: "Openssl version bundled with wheel"
+
+env:
+  MANYLINUX_TAG: manylinux_2_28
+jobs:
+  main:
+    env:
+      REGISTRY: ghcr.io
+      CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH: cibuildwheel/resources/pinned_docker_images.cfg
+    strategy:
+      matrix:
+        arch-and-runner-os: [
+          [x86_64, ubuntu-24.04],
+          [aarch64, ubuntu-22.04-arm]
+        ]
+      fail-fast: false
+
+    runs-on: ${{ matrix.arch-and-runner-os[1] }}
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        sparse-checkout: |
+          .github/workflows
+        path: aerospike-client-python
+
+    - name: Setup JFrog CLI
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+      with:
+        version: '2.92.0'
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+      id: meta
+      with:
+        images: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
+        # These images aren't used by customers, anyway.
+        flavor: latest=false
+
+    - name: Set up Docker Buildx so we can cache our Docker image layers
+      uses: step-security/setup-buildx-action@c60a792b446ef83310733d5cd9d0c8d6870d043f # v3.12.0
+
+    - name: Get manylinux base image to use
+      id: get-manylinux-base-image
+      run: echo manylinux_base_image=quay.io/pypa/manylinux_2_28_${{ matrix.arch-and-runner-os[0] }}:2026.04.25-0 >> "$GITHUB_OUTPUT"
+
+    - name: Log into internal JFrog registry
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+      with:
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
+
+    - name: Build and push
+      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      with:
+        # Don't want to use default Git context or else it will clone the whole Python client repo again
+        context: ${{ github.workspace }}/aerospike-client-python/.github/workflows
+        file: ${{ github.workspace }}/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
+        build-args: |
+          OPENSSL_VERSION=${{ inputs.openssl-version }}
+          CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}
+          BASE_IMAGE=${{ steps.get-manylinux-base-image.outputs.manylinux_base_image }}
+        pull: true
+        # setup-buildx-action configures Docker to use the docker-container build driver
+        # This driver doesn't publish an image locally by default
+        # so we have to manually enable it
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        # Also cache intermediate layers to make development faster
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
