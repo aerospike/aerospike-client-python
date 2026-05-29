@@ -7,73 +7,73 @@ if TYPE_CHECKING:
 
 
 def strlen(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def find(bin_name: str, needle: int, occurrence: int | None = None, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def contains(bin_name: str, index: int, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def to_integer(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def to_double(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def byte_length(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def is_numeric(bin_name: str, numeric_type: int | None = None, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def is_upper(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def is_lower(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def to_blob(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def split(bin_name: str, separator: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def base64_decode(bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 # TODO: use enum for regex flags
 
 
 def regex_compare(bin_name: str, pattern: str, regex_flags: int, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 class WriteFlags(IntEnum):
@@ -102,67 +102,67 @@ class NumericType(IntEnum):
 
 
 def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def concat(policy: StringPolicy, bin_name: str, value: str | list[str], ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def replace(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def replace_all(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def upper(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def normalize_nfc(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def trim_start(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def trim_end(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def trim(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 
 def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None):
-    pass
+    return locals()
 
 # TODO: regex flags enum
 
@@ -175,8 +175,8 @@ def regex_replace(
         regex_flags: int,
         ctx: TypeCTX = None
 ):
-    pass
+    return locals()
 
 
 def to_string(bin_name: str):
-    pass
+    return locals()
