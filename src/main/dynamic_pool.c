@@ -185,8 +185,8 @@ static inline void as_dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
  * @param dynamic_pool Pointer to a dynamic pool.
  * @param err Pointer to an as_error
  */
-static inline as_bytes *
-as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool, as_error *err)
+inline as_bytes *as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool,
+                                              as_error *err)
 {
     as_bytes **table = dynamic_pool->byte_group_table;
 
