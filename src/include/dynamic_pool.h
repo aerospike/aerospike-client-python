@@ -34,10 +34,10 @@ typedef struct bytes_dynamic_pool {
 } as_dynamic_pool;
 
 static inline void
-dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
-                                    as_error *err);
-static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
-                                             as_error *err);
+as_dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
+                                       as_error *err);
+static inline void as_dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
+                                                as_error *err);
 
 #define AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP 128
 
@@ -50,16 +50,16 @@ static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
  * @param err Pointer to an as_error
  *
  */
-static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
-                                     as_error *err)
+static inline void as_dynamic_pool_init(as_dynamic_pool *dynamic_pool,
+                                        as_error *err)
 {
     dynamic_pool->group_iterator = 0;
     dynamic_pool->byte_iterator = 0;
     dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
 
-    dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+    as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
 
-    dynamic_pool_malloc_group(dynamic_pool, err);
+    as_dynamic_pool_malloc_group(dynamic_pool, err);
 }
 
 #define AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION 4
@@ -72,8 +72,8 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
  *
  */
 static inline void
-dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
-                                    as_error *err)
+as_dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
+                                       as_error *err)
 {
     // Table containing groups of bytes.
     as_bytes **table = dynamic_pool->byte_group_table;
@@ -121,8 +121,8 @@ dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
  * @param dynamic_pool Pointer to a dynamic pool.
  *
  */
-static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
-                                             as_error *err)
+static inline void as_dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
+                                                as_error *err)
 {
     // Table of groups of bytes.
     as_bytes **table = dynamic_pool->byte_group_table;
@@ -154,10 +154,10 @@ static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
     as_bytes **table = dynamic_pool->byte_group_table;
 
     if (table == NULL) {
-        dynamic_pool_init(dynamic_pool, err);
+        as_dynamic_pool_init(dynamic_pool, err);
     }
     else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
-        dynamic_pool_add_group(dynamic_pool, err);
+        as_dynamic_pool_add_group(dynamic_pool, err);
     }
 
     table = dynamic_pool->byte_group_table;
@@ -179,7 +179,7 @@ static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
  *
  */
 static inline void
-dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
+as_dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
 {
     if (dynamic_pool->bytes_per_group <
         AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP) {
@@ -196,8 +196,8 @@ dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
  *
  */
 static inline void
-dynamic_pool_destroy_bytes_in_group(as_dynamic_pool *dynamic_pool,
-                                    uint16_t group_index, uint16_t num_bytes)
+as_dynamic_pool_destroy_bytes_in_group(as_dynamic_pool *dynamic_pool,
+                                       uint16_t group_index, uint16_t num_bytes)
 {
     as_bytes *group = dynamic_pool->byte_group_table[group_index];
     for (uint16_t i = 0; i < num_bytes; i++) {
@@ -213,9 +213,9 @@ dynamic_pool_destroy_bytes_in_group(as_dynamic_pool *dynamic_pool,
  * @param num_bytes number of bytes to free
  *
  */
-static inline void dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
-                                           uint16_t group_index,
-                                           uint16_t num_bytes)
+static inline void as_dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
+                                              uint16_t group_index,
+                                              uint16_t num_bytes)
 {
     as_bytes *group = dynamic_pool->byte_group_table[group_index];
     cf_free(group);
@@ -226,20 +226,20 @@ static inline void dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
  *
  * @param dynamic_pool Pointer to a dynamic pool. *
  */
-static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
+static inline void as_dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
 {
     // Set bytes_per_group back to minimum value to traverse byte pool from the front.
     dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
     // Free all previous byte groups.
     for (uint16_t group_index = 0; group_index < dynamic_pool->group_iterator;
          group_index++) {
-        dynamic_pool_free_group(dynamic_pool, group_index,
-                                dynamic_pool->bytes_per_group);
-        dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
+        as_dynamic_pool_free_group(dynamic_pool, group_index,
+                                   dynamic_pool->bytes_per_group);
+        as_dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
     }
     // Free the current byte group.
-    dynamic_pool_free_group(dynamic_pool, dynamic_pool->group_iterator,
-                            dynamic_pool->byte_iterator);
+    as_dynamic_pool_free_group(dynamic_pool, dynamic_pool->group_iterator,
+                               dynamic_pool->byte_iterator);
     // Free the table.
     cf_free(dynamic_pool->byte_group_table);
 }
@@ -253,16 +253,16 @@ static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
  * @param err Pointer to an as_error
  *
  */
-static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
-                                          as_error *err)
+static inline void as_dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
+                                             as_error *err)
 {
     dynamic_pool->byte_iterator = 0;
     dynamic_pool->group_iterator++;
 
-    dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+    as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
 
-    dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
-    dynamic_pool_malloc_group(dynamic_pool, err);
+    as_dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
+    as_dynamic_pool_malloc_group(dynamic_pool, err);
 }
 
 /**
@@ -282,6 +282,6 @@ static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
 static inline void DESTROY_DYNAMIC_POOL(as_dynamic_pool *dynamic_pool)
 {
     if (dynamic_pool->byte_group_table != NULL) {
-        dynamic_pool_free_table(dynamic_pool);
+        as_dynamic_pool_free_table(dynamic_pool);
     }
 }
