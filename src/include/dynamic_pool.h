@@ -38,6 +38,27 @@ typedef struct bytes_dynamic_pool {
 } as_dynamic_pool;
 
 /**
+ * Fully initializes a null intialized dynamic pool.
+ *
+ * If the group table is full, the table is also expanded.
+ *
+ * @param dynamic_pool Pointer to a dynamic pool.
+ * @param err Pointer to an as_error
+ *
+ */
+static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
+                                     as_error *err)
+{
+    dynamic_pool->group_iterator = 0;
+    dynamic_pool->byte_iterator = 0;
+    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN;
+
+    dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+
+    dynamic_pool_malloc_group(dynamic_pool, err);
+}
+
+/**
  * Allocates a group of as_bytes to the table.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
@@ -185,27 +206,6 @@ static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
                             dynamic_pool->byte_iterator);
     // Free the table.
     cf_free(dynamic_pool->byte_group_table);
-}
-
-/**
- * Fully initializes a null intialized dynamic pool.
- *
- * If the group table is full, the table is also expanded.
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- * @param err Pointer to an as_error
- *
- */
-static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
-                                     as_error *err)
-{
-    dynamic_pool->group_iterator = 0;
-    dynamic_pool->byte_iterator = 0;
-    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN;
-
-    dynamic_pool_expand_table_if_needed(dynamic_pool, err);
-
-    dynamic_pool_malloc_group(dynamic_pool, err);
 }
 
 /**
