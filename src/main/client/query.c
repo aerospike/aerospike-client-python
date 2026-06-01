@@ -291,7 +291,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     PyObject *py_ustr3 = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_static_pool static_pool;
@@ -343,7 +342,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_write(
             self, &err, py_policy, &write_policy, &write_policy_p,
-            &self->as->config.policies.write, &exp_list, &exp_list_p, true);
+            &self->as->config.policies.write, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;

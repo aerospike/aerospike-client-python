@@ -8,8 +8,8 @@ config = {
 }
 print(config)
 if sys.argv[1] == "true":
-    config["user"] = "superuser"
-    config["password"] = "superuser"
+    config["user"] = "admin"
+    config["password"] = "admin"
 if len(sys.argv) == 3:
     config["app_id"] = sys.argv[2]
 client = aerospike.client(config)

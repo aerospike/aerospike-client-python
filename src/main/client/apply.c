@@ -64,7 +64,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     PyObject *py_ufunction = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_static_pool static_pool;
@@ -111,7 +110,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_apply
     pyobject_to_policy_apply(self, &err, py_policy, &apply_policy,
                              &apply_policy_p, &self->as->config.policies.apply,
-                             &exp_list, &exp_list_p);
+                             &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
