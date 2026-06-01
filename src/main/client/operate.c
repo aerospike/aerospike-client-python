@@ -982,8 +982,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list_p,
-                &dynamic_pool) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate, &dynamic_pool,
+                &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1154,8 +1154,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list_p,
-                &dynamic_pool) != AEROSPIKE_OK) {
+                &self->as->config.policies.operate, &dynamic_pool,
+                &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
