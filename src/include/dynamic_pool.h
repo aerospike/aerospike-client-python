@@ -13,8 +13,8 @@ typedef struct as_dynamic_pool as_dynamic_pool;
  * @param dynamic_pool Pointer to a dynamic pool.
  * @param err Pointer to an as_error
  */
-inline as_bytes *as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool,
-                                              as_error *err);
+as_bytes *as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool,
+                                       as_error *err);
 
 /**
  * Initializes the byte pool. Must be called anytime a dynamic pool is declared.
