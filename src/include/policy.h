@@ -289,15 +289,15 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
-                                         as_exp **exp_list_p,
-                                         as_dynamic_pool *dynamic_pool);
+                                         as_dynamic_pool *dynamic_pool,
+                                         as_exp **exp_list_p);
 
 as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
-                                        as_exp **exp_list_p,
-                                        as_dynamic_pool *dynamic_pool);
+                                        as_dynamic_pool *dynamic_pool,
+                                        as_exp **exp_list_p);
 
 as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
