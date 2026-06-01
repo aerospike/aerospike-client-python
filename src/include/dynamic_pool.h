@@ -141,6 +141,46 @@ static inline void as_dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
     }
 }
 
+#define AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP 32768
+
+/**
+ * Manages and adjusts the number of bytes per group.
+ *
+ * bytes_per_group begins at AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP and cannot exceed AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP
+ *
+ * @param dynamic_pool Pointer to a dynamic pool.
+ *
+ */
+static inline void
+as_dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
+{
+    if (dynamic_pool->bytes_per_group <
+        AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP) {
+        dynamic_pool->bytes_per_group <<= 1;
+    }
+}
+
+/**
+ * Adds a new group to the dynamic pool.
+ *
+ * If the group table is full, the table is also expanded.
+ *
+ * @param dynamic_pool Pointer to a dynamic pool.
+ * @param err Pointer to an as_error
+ *
+ */
+static inline void as_dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
+                                             as_error *err)
+{
+    dynamic_pool->byte_iterator = 0;
+    dynamic_pool->group_iterator++;
+
+    as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+
+    as_dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
+    as_dynamic_pool_malloc_group(dynamic_pool, err);
+}
+
 /**
  * Fetches the address of the next as_byte in the pool.
  *
@@ -166,25 +206,6 @@ as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool, as_error *err)
     uint16_t byte_iterator = dynamic_pool->byte_iterator++;
 
     return &group[byte_iterator];
-}
-
-#define AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP 32768
-
-/**
- * Manages and adjusts the number of bytes per group.
- *
- * bytes_per_group begins at AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP and cannot exceed AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- *
- */
-static inline void
-as_dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
-{
-    if (dynamic_pool->bytes_per_group <
-        AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP) {
-        dynamic_pool->bytes_per_group <<= 1;
-    }
 }
 
 /**
@@ -242,27 +263,6 @@ static inline void as_dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
                                dynamic_pool->byte_iterator);
     // Free the table.
     cf_free(dynamic_pool->byte_group_table);
-}
-
-/**
- * Adds a new group to the dynamic pool.
- *
- * If the group table is full, the table is also expanded.
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- * @param err Pointer to an as_error
- *
- */
-static inline void as_dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
-                                             as_error *err)
-{
-    dynamic_pool->byte_iterator = 0;
-    dynamic_pool->group_iterator++;
-
-    as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
-
-    as_dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
-    as_dynamic_pool_malloc_group(dynamic_pool, err);
 }
 
 /**
