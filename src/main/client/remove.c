@@ -51,7 +51,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     as_key key;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
@@ -83,7 +82,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         pyobject_to_policy_remove(
             self, &err, py_policy, &remove_policy, &remove_policy_p,
-            &self->as->config.policies.remove, &exp_list, &exp_list_p, NULL);
+            &self->as->config.policies.remove, &exp_list_p, NULL);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -168,6 +167,17 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
                                     &py_meta, &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_meta) {
+        int retval = PyErr_WarnEx(
+            PyExc_DeprecationWarning,
+            "meta parameter is deprecated and will be removed in the "
+            "next client major release",
+            STACK_LEVEL);
+        if (retval == -1) {
+            return NULL;
+        }
     }
 
     // Invoke Operation

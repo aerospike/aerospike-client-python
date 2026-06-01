@@ -32,6 +32,16 @@ AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
 {
     TRACE();
 
+    // If add_ops() was called on this Scan object before.
+    if (as_operations_defined(self->scan.ops)) {
+        int retval = PyErr_WarnFormat(
+            PyExc_DeprecationWarning, STACK_LEVEL,
+            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Scan");
+        if (retval == -1) {
+            return NULL;
+        }
+    }
+
     char *bin = NULL;
     PyObject *py_ustr = NULL;
     as_error err;

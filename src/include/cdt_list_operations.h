@@ -21,7 +21,7 @@
 #include <aerospike/as_vector.h>
 #include "types.h"
 
-as_status add_new_list_op(AerospikeClient *self, as_error *err,
-                          PyObject *op_dict, as_vector *unicodeStrVector,
-                          as_dynamic_pool *dynamic_pool, as_operations *ops,
-                          long operation_code, long *ret_type);
+as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                      as_vector *unicodeStrVector,
+                      as_dynamic_pool *dynamic_pool, as_operations *ops,
+                      long operation_code, long *ret_type);

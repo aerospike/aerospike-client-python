@@ -253,11 +253,11 @@ CLEANUP:
 /*
  *******************************************************************************************************
  * Checks serializer_policy.
- * Serializes Py_Object (value) into as_bytes using 
+ * Serializes Py_Object (value) into as_bytes using
  * serialization logic based on serializer_policy.
  *
  * @param serializer_policy         The serializer_policy to be used to handle
- *                                  the serialization. The serializer_policy will be ignored if 
+ *                                  the serialization. The serializer_policy will be ignored if
  *                                  user_serilizer_call_info has been set (unless is_client_put_serializer is set).
  * @param bytes                     The as_bytes to be set.
  * @param value                     The value to be serialized.

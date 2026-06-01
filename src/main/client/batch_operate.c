@@ -86,6 +86,7 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
             as_log_error(
                 "as_batch_result_to_BatchRecord failed at results index: %d",
                 i);
+            Py_DECREF(py_batch_record);
             success = false;
             break;
         }
@@ -130,10 +131,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     as_batch_init(&batch, 0);
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
 
-    as_exp batch_write_exp_list;
     as_exp *batch_write_exp_list_p = NULL;
 
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -210,8 +209,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p, &dynamic_pool) != AEROSPIKE_OK) {
+                &self->as->config.policies.batch, &batch_exp_list_p,
+                &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -219,8 +218,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch_write) {
         if (pyobject_to_batch_write_policy(
                 self, err, py_policy_batch_write, &policy_batch_write,
-                &policy_batch_write_p, &batch_write_exp_list,
-                &batch_write_exp_list_p, &dynamic_pool) != AEROSPIKE_OK) {
+                &policy_batch_write_p, &batch_write_exp_list_p,
+                &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

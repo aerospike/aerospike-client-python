@@ -356,10 +356,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
     if (isListOp(operation)) {
-        return add_new_list_op(
-            self, err, py_operation_dict, unicodeStrVector, dynamic_pool, ops,
-            operation,
-            ret_type); //This hardcoding matches current behavior
+        return add_list_op(self, err, py_operation_dict, unicodeStrVector,
+                           dynamic_pool, ops, operation,
+                           ret_type); //This hardcoding matches current behavior
     }
 
     if (isNewMapOp(operation)) {
@@ -967,7 +966,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate *operate_policy_p = NULL;
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -984,7 +982,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list, &exp_list_p,
+                &self->as->config.policies.operate, &exp_list_p,
                 &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -1144,7 +1142,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_operations_inita(&ops, ops_list_size);
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     /* These are the values which will be returned in a 3 element list */
@@ -1157,7 +1154,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     if (py_policy) {
         if (pyobject_to_policy_operate(
                 self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list, &exp_list_p,
+                &self->as->config.policies.operate, &exp_list_p,
                 &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
