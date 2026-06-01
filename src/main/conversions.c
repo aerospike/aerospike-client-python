@@ -2281,6 +2281,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
             if (serialize_based_on_serializer_policy(
                     self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value,
                     err) != AEROSPIKE_OK) {
+                ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
+                binop_bin->valuep = (as_bin_value *)&as_nil;
                 as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "Unable to create bin for unknown Python native type.");
