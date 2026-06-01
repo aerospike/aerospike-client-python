@@ -162,7 +162,10 @@ elif LINUX:
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions'
+        '-rdynamic', '-finline-functions',
+        # TODO: On macOS, this flag causes compiler errors
+        # CLIENT-4869
+        '-Werror'
     ]
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
