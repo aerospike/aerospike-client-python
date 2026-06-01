@@ -168,8 +168,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     if (py_policy != NULL) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy, &batch_policy, &batch_policy_p,
-                &self->as->config.policies.batch, &exp_list_p,
-                &dynamic_pool) != AEROSPIKE_OK) {
+                &self->as->config.policies.batch, &dynamic_pool,
+                &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
     }
