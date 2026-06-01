@@ -1,13 +1,13 @@
 /*
  *******************************************************************************************************
  * Dynamic pool maintained to avoid excessive runtime mallocs and efficiently use memory.
- * 
+ *
  * The dynamic pool maintains a table composed of several groups of as_bytes buffers.
  * New groups are allocated dynamically after the current group is exhausted.
  * As more as_bytes are used, group sizes will grow to reduce malloc calls.
 
  * The dynamic pool does not allocate any memory unless bytes are used in a command.
- * 
+ *
  *******************************************************************************************************
  */
 #define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
@@ -58,7 +58,7 @@ static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
 
 /**
  * Manages and adjusts the number of bytes per group.
- * 
+ *
  * bytes_per_group begins at AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN and cannot exceed AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX
  *
  * @param dynamic_pool Pointer to a dynamic pool.
@@ -79,10 +79,10 @@ static inline void dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool 
  *
  */
 static inline void dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool, as_error* err)
-{   
+{
     // Table containing groups of bytes.
     as_bytes **table = dynamic_pool->byte_group_table;
-    // Holds the index of the current byte group 
+    // Holds the index of the current byte group
     uint16_t group_iterator = dynamic_pool->group_iterator;
 
 
@@ -168,7 +168,7 @@ static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool){
 
 /**
  * Fully initializes a null intialized dynamic pool.
- * 
+ *
  * If the group table is full, the table is also expanded.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
@@ -189,7 +189,7 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
 
 /**
  * Adds a new group to the dynamic pool.
- * 
+ *
  * If the group table is full, the table is also expanded.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
@@ -210,7 +210,7 @@ static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
 }
 
 /**
- * Initializes the byte pool. Must be called anytime a dynamic pool is declared. 
+ * Initializes the byte pool. Must be called anytime a dynamic pool is declared.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
  */
@@ -220,7 +220,7 @@ static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
 
 /**
  * Fetches the address of the next as_byte in the pool.
- * 
+ *
  * @param map_bytes Pointer to an as_bytes.
  * @param dynamic_pool Pointer to a dynamic pool.
  * @param err Pointer to an as_error
@@ -244,7 +244,7 @@ static inline as_bytes* GET_BYTES_POOL(as_dynamic_pool *dynamic_pool, as_error *
 
 /**
  * Destroy the dynamic pool. Must be called before the dynamic_pool loses scope.
- * 
+ *
  * @param dynamic_pool Pointer to a dynamic pool.
  */
 static inline void DESTROY_DYNAMIC_POOL(as_dynamic_pool *dynamic_pool) {
