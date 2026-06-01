@@ -25,7 +25,7 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
-#include "dynamic_pool.hpp"
+#include "dynamic_pool.h"
 #include <aerospike/as_txn.h>
 #include <aerospike/as_config.h>
 
