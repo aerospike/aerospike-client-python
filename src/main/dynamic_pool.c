@@ -215,7 +215,7 @@ static inline void as_dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
  *
  * @param dynamic_pool Pointer to a dynamic pool. *
  */
-static inline void as_dynamic_pool_destroy(as_dynamic_pool *dynamic_pool)
+void as_dynamic_pool_destroy(as_dynamic_pool *dynamic_pool)
 {
     if (dynamic_pool->byte_group_table == NULL) {
         return;
