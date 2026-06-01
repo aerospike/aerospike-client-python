@@ -677,7 +677,7 @@ as_status pyobject_to_policy_scan(
 
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list_p, dynamic_pool);
+            self, err, py_policy, &policy->base, dynamic_pool, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
