@@ -39,9 +39,9 @@ dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
 static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
                                              as_error *err);
 
-#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
-#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX 32768
-#define AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION 4
+#define AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP 128
+#define AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP 32768
+#define AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION 4
 
 /**
  * Fully initializes a null intialized dynamic pool.
@@ -57,7 +57,7 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
 {
     dynamic_pool->group_iterator = 0;
     dynamic_pool->byte_iterator = 0;
-    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN;
+    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
 
     dynamic_pool_expand_table_if_needed(dynamic_pool, err);
 
@@ -80,20 +80,20 @@ dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
     // Holds the index of the current byte group
     uint16_t group_iterator = dynamic_pool->group_iterator;
 
-    // Allocate new groups each time the group iterator reaches a multiple of AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION
+    // Allocate new groups each time the group iterator reaches a multiple of AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION
     bool allocate_more_groups =
-        (group_iterator % AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION) == 0;
+        (group_iterator % AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION) == 0;
     // Allocate using malloc if no groups have be allocated.
     bool allocate_first_group = (group_iterator) == 0;
     if (allocate_more_groups) {
         if (allocate_first_group) {
             table = (as_bytes **)cf_malloc(
-                AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION * sizeof(as_bytes *));
+                AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION * sizeof(as_bytes *));
         }
         else {
             table = (as_bytes **)realloc(
                 table,
-                (group_iterator + AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION) *
+                (group_iterator + AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION) *
                     sizeof(as_bytes *));
         }
     }
@@ -171,7 +171,7 @@ static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
 /**
  * Manages and adjusts the number of bytes per group.
  *
- * bytes_per_group begins at AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN and cannot exceed AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX
+ * bytes_per_group begins at AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP and cannot exceed AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP
  *
  * @param dynamic_pool Pointer to a dynamic pool.
  *
@@ -179,7 +179,8 @@ static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
 static inline void
 dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
 {
-    if (dynamic_pool->bytes_per_group < AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX) {
+    if (dynamic_pool->bytes_per_group <
+        AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP) {
         dynamic_pool->bytes_per_group <<= 1;
     }
 }
@@ -226,7 +227,7 @@ static inline void dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
 static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
 {
     // Set bytes_per_group back to minimum value to traverse byte pool from the front.
-    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN;
+    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
     // Free all previous byte groups.
     for (uint16_t group_index = 0; group_index < dynamic_pool->group_iterator;
          group_index++) {
