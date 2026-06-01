@@ -40,8 +40,6 @@ static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
                                              as_error *err);
 
 #define AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP 128
-#define AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP 32768
-#define AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION 4
 
 /**
  * Fully initializes a null intialized dynamic pool.
@@ -63,6 +61,8 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
 
     dynamic_pool_malloc_group(dynamic_pool, err);
 }
+
+#define AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION 4
 
 /**
  * Expands the table if more groups are needed.
@@ -167,6 +167,8 @@ static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
 
     return &group[byte_iterator];
 }
+
+#define AS_DYNAMIC_POOL_MAX_AS_BYTES_PER_GROUP 32768
 
 /**
  * Manages and adjusts the number of bytes per group.
