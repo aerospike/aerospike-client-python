@@ -22,7 +22,7 @@
  * @attr bytes_per_group number of bytes in the current group.
  *
  */
-typedef struct {
+typedef struct as_dynamic_pool {
     as_bytes **byte_group_table;
     uint16_t group_iterator;
     uint16_t byte_iterator;

@@ -4,7 +4,7 @@
 #include <aerospike/as_error.h>
 #include <citrusleaf/alloc.h>
 
-typedef struct as_dynamic_pool;
+typedef struct as_dynamic_pool as_dynamic_pool;
 
 /**
  * Fetches the address of the next as_byte in the pool.
