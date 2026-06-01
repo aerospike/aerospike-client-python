@@ -10,6 +10,12 @@
  *
  *******************************************************************************************************
  */
+#include <stdint.h>
+#include <stdbool.h>
+#include <aerospike/as_bytes.h>
+#include <aerospike/as_error.h>
+#include <citrusleaf/alloc.h>
+
 #define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
 #define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX 32768
 #define AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION 4
