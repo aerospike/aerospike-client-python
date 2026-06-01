@@ -247,13 +247,11 @@ as_status pyobject_to_policy_scan(
     as_exp **exp_list_p, bool py_policy_also_supports_info_policy_fields);
 
 // py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
-as_status
-pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                         PyObject *py_policy, as_policy_write *policy,
-                         as_policy_write **policy_p,
-                         as_policy_write *config_write_policy,
-                         bool py_policy_also_supports_info_policy_fields,
-                         as_dynamic_pool *dynamic_pool, as_exp **exp_list_p);
+as_status pyobject_to_policy_write(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_dynamic_pool *dynamic_pool,
+    as_exp **exp_list_p, bool py_policy_also_supports_info_policy_fields);
 
 as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      PyObject *py_policy,

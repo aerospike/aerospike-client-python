@@ -640,13 +640,11 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status
-pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
-                        PyObject *py_policy, as_policy_scan *policy,
-                        as_policy_scan **policy_p,
-                        as_policy_scan *config_scan_policy,
-                        bool py_policy_also_supports_info_policy_fields,
-                        as_dynamic_pool *dynamic_pool, as_exp **exp_list_p)
+as_status pyobject_to_policy_scan(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_scan *policy, as_policy_scan **policy_p,
+    as_policy_scan *config_scan_policy, as_dynamic_pool *dynamic_pool,
+    as_exp **exp_list_p, bool py_policy_also_supports_info_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -703,13 +701,11 @@ pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status
-pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                         PyObject *py_policy, as_policy_write *policy,
-                         as_policy_write **policy_p,
-                         as_policy_write *config_write_policy,
-                         bool py_policy_also_supports_info_policy_fields,
-                         as_dynamic_pool *dynamic_pool, as_exp **exp_list_p)
+as_status pyobject_to_policy_write(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_dynamic_pool *dynamic_pool,
+    as_exp **exp_list_p, bool py_policy_also_supports_info_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
