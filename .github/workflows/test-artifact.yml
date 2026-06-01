@@ -147,7 +147,7 @@ jobs:
 
         echo "ARTIFACT_FILE_NAME=${artifact_names[0]}" >> "$GITHUB_ENV"
       # For seeing how many artifacts were pulled from github
-      shell: bash -x {0}
+      shell: bash -ex {0}
 
     # Bare metal steps
 
