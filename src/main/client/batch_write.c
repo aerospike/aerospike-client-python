@@ -556,7 +556,7 @@ CLEANUP4:
 
     as_vector_destroy(unicodeStrVector);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);

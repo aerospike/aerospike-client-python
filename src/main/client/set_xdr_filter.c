@@ -178,7 +178,7 @@ CLEANUP:
         return NULL;
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     return py_response;
 }

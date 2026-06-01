@@ -247,7 +247,7 @@ CLEANUP:
         as_scan_destroy(&scan);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

@@ -167,7 +167,7 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, py_key, Py_None, py_module, py_function,

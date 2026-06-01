@@ -285,7 +285,7 @@ CLEANUP:
         as_vector_destroy(tmp_keys_p);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

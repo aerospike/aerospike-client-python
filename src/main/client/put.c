@@ -124,7 +124,7 @@ CLEANUP:
         as_record_destroy(&rec);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     self->is_client_put_serializer = false;
 

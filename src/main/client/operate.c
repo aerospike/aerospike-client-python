@@ -1051,7 +1051,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
@@ -1264,7 +1264,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

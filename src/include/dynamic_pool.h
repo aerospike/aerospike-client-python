@@ -243,12 +243,17 @@ static inline void as_dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
 }
 
 /**
- * Frees all the data from the table of the dynamic pool.
+ * Destroy the dynamic pool. Must be called before the dynamic_pool loses scope.
+ * Also frees all the data from the table of the dynamic pool.
  *
  * @param dynamic_pool Pointer to a dynamic pool. *
  */
-static inline void as_dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
+static inline void as_dynamic_pool_destroy(as_dynamic_pool *dynamic_pool)
 {
+    if (dynamic_pool->byte_group_table == NULL) {
+        return;
+    }
+
     // Set bytes_per_group back to minimum value to traverse byte pool from the front.
     dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
     // Free all previous byte groups.
@@ -273,15 +278,3 @@ static inline void as_dynamic_pool_free_table(as_dynamic_pool *dynamic_pool)
 #define BYTE_POOL_INIT_NULL(dynamic_pool)                                      \
     (dynamic_pool)->byte_group_table = NULL;                                   \
     (dynamic_pool)->allocate_buffers = false;
-
-/**
- * Destroy the dynamic pool. Must be called before the dynamic_pool loses scope.
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- */
-static inline void DESTROY_DYNAMIC_POOL(as_dynamic_pool *dynamic_pool)
-{
-    if (dynamic_pool->byte_group_table != NULL) {
-        as_dynamic_pool_free_table(dynamic_pool);
-    }
-}

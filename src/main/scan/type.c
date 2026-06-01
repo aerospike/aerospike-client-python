@@ -187,7 +187,7 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
     }
 
     if (self->dynamic_pool != NULL) {
-        DESTROY_DYNAMIC_POOL(self->dynamic_pool);
+        as_dynamic_pool_destroy(self->dynamic_pool);
         cf_free(self->dynamic_pool);
     }
 

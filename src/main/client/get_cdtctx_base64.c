@@ -123,7 +123,7 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

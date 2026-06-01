@@ -311,7 +311,7 @@ CLEANUP:
     as_vector_destroy(unicodeStrVector);
     as_operations_destroy(&ops);
     as_batch_destroy(&batch);
-    DESTROY_DYNAMIC_POOL(&dynamic_pool);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (tmp_keys_p) {
         as_vector_destroy(tmp_keys_p);

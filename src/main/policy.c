@@ -121,7 +121,7 @@
                 if (as_exp_new_from_pyobject(                                  \
                         self, py_exp_list, exp_list_p, err, false,             \
                         &stack_dynamic_pool) == AEROSPIKE_OK) {                \
-                    DESTROY_DYNAMIC_POOL(&stack_dynamic_pool);                 \
+                    as_dynamic_pool_destroy(&stack_dynamic_pool);              \
                 }                                                              \
                 else {                                                         \
                     return err->code;                                          \
