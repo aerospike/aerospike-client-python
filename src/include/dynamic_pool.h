@@ -83,7 +83,7 @@ as_dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
     // Allocate new groups each time the group iterator reaches a multiple of AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION
     bool allocate_more_groups =
         (group_iterator % AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION) == 0;
-    // Allocate using malloc if no groups have be allocated.
+    // Allocate using malloc if no groups have been allocated.
     bool allocate_first_group = (group_iterator) == 0;
     if (allocate_more_groups) {
         if (allocate_first_group) {
