@@ -665,6 +665,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 binop->op = AS_OPERATOR_APPEND;
                 initialize_bin_for_strictypes(self, err, py_value, binop, bin,
                                               dynamic_pool);
+                if (err->code != AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
             }
         }
         break;
@@ -726,6 +729,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 binop->op = AS_OPERATOR_PREPEND;
                 initialize_bin_for_strictypes(self, err, py_value, binop, bin,
                                               dynamic_pool);
+                if (err->code != AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
             }
         }
         break;
@@ -754,6 +760,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 binop->op = AS_OPERATOR_INCR;
                 initialize_bin_for_strictypes(self, err, py_value, binop, bin,
                                               dynamic_pool);
+                if (err->code != AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
             }
         }
         break;
