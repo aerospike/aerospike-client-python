@@ -16,10 +16,6 @@
 #include <aerospike/as_error.h>
 #include <citrusleaf/alloc.h>
 
-#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
-#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX 32768
-#define AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION 4
-
 /**
  * Pool of as_bytes that grows dynamically.
  *
@@ -36,6 +32,16 @@ typedef struct bytes_dynamic_pool {
     uint16_t bytes_per_group;
     bool allocate_buffers;
 } as_dynamic_pool;
+
+static inline void
+dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
+                                    as_error *err);
+static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
+                                             as_error *err);
+
+#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
+#define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX 32768
+#define AS_DYNAMIC_POOL_GROUPS_PER_ALLOCATION 4
 
 /**
  * Fully initializes a null intialized dynamic pool.
@@ -56,75 +62,6 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
     dynamic_pool_expand_table_if_needed(dynamic_pool, err);
 
     dynamic_pool_malloc_group(dynamic_pool, err);
-}
-
-/**
- * Fetches the address of the next as_byte in the pool.
- *
- * @param map_bytes Pointer to an as_bytes.
- * @param dynamic_pool Pointer to a dynamic pool.
- * @param err Pointer to an as_error
- */
-static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
-                                       as_error *err)
-{
-    as_bytes **table = dynamic_pool->byte_group_table;
-
-    if (table == NULL) {
-        dynamic_pool_init(dynamic_pool, err);
-    }
-    else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
-        dynamic_pool_add_group(dynamic_pool, err);
-    }
-
-    table = dynamic_pool->byte_group_table;
-    uint16_t group_iterator = dynamic_pool->group_iterator;
-    as_bytes *group = table[group_iterator];
-    uint16_t byte_iterator = dynamic_pool->byte_iterator++;
-
-    return &group[byte_iterator];
-}
-
-/**
- * Allocates a group of as_bytes to the table.
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- *
- */
-static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
-                                             as_error *err)
-{
-    // Table of groups of bytes.
-    as_bytes **table = dynamic_pool->byte_group_table;
-    // group number to allocate next.
-    uint16_t group_num_to_allocate = dynamic_pool->group_iterator;
-    // bytes number to allocate in the next group.
-    uint16_t num_bytes_to_allocate = dynamic_pool->bytes_per_group;
-
-    table[group_num_to_allocate] =
-        (as_bytes *)cf_malloc(num_bytes_to_allocate * sizeof(as_bytes));
-
-    // If allocation fails, throw an error.
-    if (table[group_num_to_allocate] == NULL) {
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Failed to allocated memory for a group of bytes");
-    }
-}
-
-/**
- * Manages and adjusts the number of bytes per group.
- *
- * bytes_per_group begins at AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN and cannot exceed AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- *
- */
-static inline void
-dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
-{
-    if (dynamic_pool->bytes_per_group < AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX) {
-        dynamic_pool->bytes_per_group <<= 1;
-    }
 }
 
 /**
@@ -175,6 +112,75 @@ dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
     else {
         // Reassign table back to dynamic_pool
         dynamic_pool->byte_group_table = table;
+    }
+}
+
+/**
+ * Allocates a group of as_bytes to the table.
+ *
+ * @param dynamic_pool Pointer to a dynamic pool.
+ *
+ */
+static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
+                                             as_error *err)
+{
+    // Table of groups of bytes.
+    as_bytes **table = dynamic_pool->byte_group_table;
+    // group number to allocate next.
+    uint16_t group_num_to_allocate = dynamic_pool->group_iterator;
+    // bytes number to allocate in the next group.
+    uint16_t num_bytes_to_allocate = dynamic_pool->bytes_per_group;
+
+    table[group_num_to_allocate] =
+        (as_bytes *)cf_malloc(num_bytes_to_allocate * sizeof(as_bytes));
+
+    // If allocation fails, throw an error.
+    if (table[group_num_to_allocate] == NULL) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Failed to allocated memory for a group of bytes");
+    }
+}
+
+/**
+ * Fetches the address of the next as_byte in the pool.
+ *
+ * @param map_bytes Pointer to an as_bytes.
+ * @param dynamic_pool Pointer to a dynamic pool.
+ * @param err Pointer to an as_error
+ */
+static inline as_bytes *GET_BYTES_POOL(as_dynamic_pool *dynamic_pool,
+                                       as_error *err)
+{
+    as_bytes **table = dynamic_pool->byte_group_table;
+
+    if (table == NULL) {
+        dynamic_pool_init(dynamic_pool, err);
+    }
+    else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
+        dynamic_pool_add_group(dynamic_pool, err);
+    }
+
+    table = dynamic_pool->byte_group_table;
+    uint16_t group_iterator = dynamic_pool->group_iterator;
+    as_bytes *group = table[group_iterator];
+    uint16_t byte_iterator = dynamic_pool->byte_iterator++;
+
+    return &group[byte_iterator];
+}
+
+/**
+ * Manages and adjusts the number of bytes per group.
+ *
+ * bytes_per_group begins at AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN and cannot exceed AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX
+ *
+ * @param dynamic_pool Pointer to a dynamic pool.
+ *
+ */
+static inline void
+dynamic_pool_shift_bytes_per_group_if_needed(as_dynamic_pool *dynamic_pool)
+{
+    if (dynamic_pool->bytes_per_group < AS_DYNAMIC_POOL_BYTES_PER_GROUP_MAX) {
+        dynamic_pool->bytes_per_group <<= 1;
     }
 }
 
