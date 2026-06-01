@@ -13,8 +13,7 @@ Constructing A Query
 --------------------
 
 The query object is used for executing queries over a secondary index of a specified set.
-It can be created by calling :meth:`aerospike.Client.query`. If the set is initialized to :py:obj:`None`,
-then the query will only apply to records without a set.
+It can be created by calling :meth:`aerospike.Client.query`.
 
 .. warning:: :meth:`aerospike.Query` should not be called directly to create a :class:`~aerospike.Query` object.
 
