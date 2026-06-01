@@ -1,35 +1,5 @@
 #include "dynamic_pool.h"
 
-/*
- *******************************************************************************************************
- * Dynamic pool maintained to avoid excessive runtime mallocs and efficiently use memory.
- *
- * The dynamic pool maintains a table composed of several groups of as_bytes buffers.
- * New groups are allocated dynamically after the current group is exhausted.
- * As more as_bytes are used, group sizes will grow to reduce malloc calls.
-
- * The dynamic pool does not allocate any memory unless bytes are used in a command.
- *
- *******************************************************************************************************
- */
-
-/**
- * Pool of as_bytes that grows dynamically.
- *
- * @attr byte_group_table Table which contains groups of as_bytes.
- * @attr group_iterator Group which is currently being filled
- * @attr byte_iterator Index of the next byte to be used
- * @attr bytes_per_group number of bytes in the current group.
- *
- */
-typedef struct as_dynamic_pool {
-    as_bytes **byte_group_table;
-    uint16_t group_iterator;
-    uint16_t byte_iterator;
-    uint16_t bytes_per_group;
-    bool allocate_buffers;
-} as_dynamic_pool;
-
 static inline void
 as_dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_pool,
                                        as_error *err);
