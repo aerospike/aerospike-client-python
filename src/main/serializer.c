@@ -214,7 +214,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             uint8_t *heap_b =
                 (uint8_t *)cf_calloc((uint32_t)len, sizeof(uint8_t));
             memcpy(heap_b, py_val, (uint32_t)len);
-            *bytes = GET_BYTES_POOL(dynamic_pool, error_p);
+            *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, error_p);
             if (error_p->code == AEROSPIKE_OK) {
                 as_bytes_init_wrap(*bytes, heap_b, (int32_t)len, true);
                 Py_DECREF(py_return);

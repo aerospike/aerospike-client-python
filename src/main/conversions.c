@@ -1301,7 +1301,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
-        as_bytes *bytes = GET_BYTES_POOL(dynamic_pool, err);
+        as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
 
         if (err->code == AEROSPIKE_OK) {
             uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
@@ -1339,7 +1339,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         *val = (as_val *)as_geojson_new(geo_value_cpy, true);
     }
     else if (PyByteArray_Check(py_obj)) {
-        as_bytes *bytes = GET_BYTES_POOL(dynamic_pool, err);
+        as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
 
         if (err->code == AEROSPIKE_OK) {
             uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
