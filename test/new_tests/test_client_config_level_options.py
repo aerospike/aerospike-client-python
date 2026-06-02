@@ -319,6 +319,7 @@ def test_config_level_misc_options():
     config["shm"]["max_namespaces"] = 8
     config["shm"]["max_nodes"] = 3
     config["shm"]["takeover_threshold_sec"] = 30
+    config["shm"]["shm_key"] = "1000"
     config["tls"]["crl_check"] = True
     config["tls"]["crl_check_all"] = True
     config["tls"]["log_session_info"] = True

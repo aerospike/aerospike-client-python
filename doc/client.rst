@@ -676,7 +676,7 @@ User Defined Functions
         This method blocks until the query is complete.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
+        :param str set: the set name. Should be :py:obj:`None` if you want to query all records in the *ns* including ones that don't belong to a set.
         :param tuple predicate: the `tuple` produced by one of the :mod:`aerospike.predicates` methods.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
@@ -943,6 +943,17 @@ Index Operations
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_set_create(ns, set, name, policy: dict = None)
+
+        Create a set index.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str name: the name of the index.
+        :param dict | None policy: optional :ref:`aerospike_info_policies`.
+
+        .. note:: Requires server version >= 18.2.0
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
