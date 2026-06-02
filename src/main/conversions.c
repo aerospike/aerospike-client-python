@@ -454,13 +454,13 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
 
     PyObject *py_user_dict = PyDict_New();
 
-    PyObject *py_roles = convert_nullable_array_to_py_optional_list(
+    PyObject *py_list_of_roles = convert_nullable_array_to_py_optional_list(
         err, user->roles, user->roles_size, 's');
-    if (!py_roles) {
+    if (!py_list_of_roles) {
         goto CLEANUP_ON_ERROR;
     }
-    int retval = PyDict_SetItemString(py_user_dict, "roles", py_roles);
-    Py_DECREF(py_roles);
+    int retval = PyDict_SetItemString(py_user_dict, "roles", py_list_of_roles);
+    Py_DECREF(py_list_of_roles);
     if (retval == -1) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to set %s in user dictionary.", "roles");
@@ -490,10 +490,19 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         }
     }
 
-    if (PyDict_SetItemString(py_user_dict, "conns_in_use",
-                             Py_BuildValue("i", user->conns_in_use)) == -1) {
+    PyObject *py_conns_in_use = Py_BuildValue("i", user->conns_in_use);
+    if (!py_conns_in_use) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_user_dict.", "conns_in_use");
+                        "Failed to convert conns_in_use in user dictionary.");
+        goto CLEANUP_ON_ERROR;
+    }
+
+    retval =
+        PyDict_SetItemString(py_user_dict, "conns_in_use", py_conns_in_use);
+    Py_DECREF(py_conns_in_use);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to set %s in user dictionary.", "conns_in_use");
         goto CLEANUP_ON_ERROR;
     }
 
