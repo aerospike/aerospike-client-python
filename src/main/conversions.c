@@ -421,7 +421,7 @@ static inline PyObject *convert_nullable_array_to_py_optional_list(
             break;
         }
         case 's': {
-            const char *element = (const char *)(array + i * AS_ROLE_SIZE);
+            const char *element = (const char *)array + i * AS_ROLE_SIZE;
             py_element = Py_BuildValue(format_str, element);
             break;
         }
