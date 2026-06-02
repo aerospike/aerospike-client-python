@@ -392,6 +392,10 @@ END:
 }
 
 // format_specifier: type casts each array element and converts it to the right Python type
+// This method makes certain assumptions if format_specifier is for converting a string:
+// 1. The array is a 2 dimensional array with the strings allocated in one long buffer.
+// 2. Each string is AS_ROLE_SIZE chars long.
+// TODO - Just refactor later when this helper function needs to handle more cases.
 static inline PyObject *convert_nullable_array_to_py_optional_list(
     as_error *err, void *array, int array_size, char format_specifier)
 {
@@ -411,13 +415,13 @@ static inline PyObject *convert_nullable_array_to_py_optional_list(
         char format_str[2];
         sprintf(format_str, "%c", format_specifier);
         switch (format_specifier) {
-        case 's':
-            // Here we assume each string is 64 bytes
-            py_element = Py_BuildValue(
-                format_str, (const char *)(array + i * AS_ROLE_SIZE));
-            break;
         case 'k':
-            py_element = Py_BuildValue(format_str, ((uint32_t *)array)[i]);
+            uint32_t element = ((uint32_t *)array)[i];
+            py_element = Py_BuildValue(format_str, element);
+            break;
+        case 's':
+            const char *element = (const char *)(array + i * AS_ROLE_SIZE);
+            py_element = Py_BuildValue(format_str, element);
             break;
         }
         if (!py_element) {
