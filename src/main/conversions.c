@@ -415,15 +415,18 @@ static inline PyObject *convert_nullable_array_to_py_optional_list(
         char format_str[2];
         sprintf(format_str, "%c", format_specifier);
         switch (format_specifier) {
-        case 'k':
+        case 'k': {
             uint32_t element = ((uint32_t *)array)[i];
             py_element = Py_BuildValue(format_str, element);
             break;
-        case 's':
+        }
+        case 's': {
             const char *element = (const char *)(array + i * AS_ROLE_SIZE);
             py_element = Py_BuildValue(format_str, element);
             break;
         }
+        }
+
         if (!py_element) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to get list item at index %" PRIu32, i);
