@@ -200,7 +200,7 @@ jobs:
             wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
             # sed -i "127,185s/###//" "$VALGRIND_SUPP_FILE"
 
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --num-callers=24 --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --num-callers=500 --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
