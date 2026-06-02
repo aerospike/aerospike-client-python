@@ -391,6 +391,7 @@ END:
     return err->code;
 }
 
+// format_specifier: type casts each array element and converts it to the right Python type
 static inline PyObject *convert_nullable_array_to_py_optional_list(
     as_error *err, void *array, int array_size, char format_specifier)
 {
