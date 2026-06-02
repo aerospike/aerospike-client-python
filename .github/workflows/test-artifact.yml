@@ -198,17 +198,21 @@ jobs:
             VALGRIND_ARGS+=(--tool=massif "--massif-out-file=./${MASSIF_REPORT_FILE_NAME}")
           else
             # Running memcheck
-            VALGRIND_ARGS+=("$VALGRIND_ARGS" --leak-check=full --errors-for-leak-kinds=none)
+            VALGRIND_ARGS+=(--leak-check=full --errors-for-leak-kinds=none)
 
             if [[ -f "$SUPP_PATH" ]]; then
               valgrind_supp_found=true
               VALGRIND_ARGS+=(--gen-suppressions=all)
             else
               valgrind_supp_found=false
+
+              VALGRIND_SUPP_FILE=valgrind-python.supp
+              wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
+              VALGRIND_ARGS+=("--suppressions=./$VALGRIND_SUPP_FILE")
             fi
           fi
-          echo VALGRIND_ARGS="$VALGRIND_ARGS" >> "$GITHUB_ENV"
-          echo "valgrind_supp_found=$valgrind_supp_found" >> $GITHUB_OUTPUT
+          echo VALGRIND_ARGS="${VALGRIND_ARGS[*]}" >> "$GITHUB_ENV"
+          echo "valgrind_supp_found=$valgrind_supp_found" >> "$GITHUB_OUTPUT"
         fi
       env:
         MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
