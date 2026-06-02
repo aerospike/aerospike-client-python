@@ -391,9 +391,8 @@ END:
     return err->code;
 }
 
-PyObject *convert_nullable_array_to_py_optional_list(as_error *err, void *array,
-                                                     int array_size,
-                                                     char format_specifier)
+static inline PyObject *convert_nullable_array_to_py_optional_list(
+    as_error *err, void *array, int array_size, char format_specifier)
 {
     if (array == NULL) {
         Py_RETURN_NONE;
