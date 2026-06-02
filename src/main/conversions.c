@@ -450,7 +450,7 @@ error:
 #define USER_DICTIONARY_FAILED_TO_SET "Failed to set %s in user dictionary"
 
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
-                                   PyObject **py_as_user)
+                                   PyObject **py_user_dict_ref)
 {
     as_error_reset(err);
 
@@ -507,7 +507,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         goto CLEANUP_ON_ERROR;
     }
 
-    *py_as_user = py_user_dict;
+    *py_user_dict_ref = py_user_dict;
 
 CLEANUP_ON_ERROR:
     if (err->code != AEROSPIKE_OK) {
