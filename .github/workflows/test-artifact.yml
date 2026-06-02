@@ -195,7 +195,12 @@ jobs:
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
             echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --num-callers=24 --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+            VALGRIND_SUPP_FILE=valgrind-python.supp
+
+            wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
+            # sed -i "127,185s/###//" "$VALGRIND_SUPP_FILE"
+
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --num-callers=24 --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
