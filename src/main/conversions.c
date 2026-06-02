@@ -447,6 +447,8 @@ error:
     return NULL;
 }
 
+#define USER_DICTIONARY_FAILED_TO_SET "Failed to set %s in user dictionary"
+
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
                                    PyObject **py_as_user)
 {
@@ -463,7 +465,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
     Py_DECREF(py_list_of_roles);
     if (retval == -1) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in user dictionary.", "roles");
+                        USER_DICTIONARY_FAILED_TO_SET, "roles");
         goto CLEANUP_ON_ERROR;
     }
 
@@ -484,8 +486,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
         Py_DECREF(py_optional_list_of_ints);
         if (retval == -1) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to set %s in user dictionary.",
-                            array_names[i]);
+                            USER_DICTIONARY_FAILED_TO_SET, array_names[i]);
             goto CLEANUP_ON_ERROR;
         }
     }
@@ -502,7 +503,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
     Py_DECREF(py_conns_in_use);
     if (retval == -1) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in user dictionary.", "conns_in_use");
+                        USER_DICTIONARY_FAILED_TO_SET, "conns_in_use");
         goto CLEANUP_ON_ERROR;
     }
 
