@@ -136,16 +136,17 @@ class HLLAdd(_BaseExpr):
             # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5',
             # 'key6']
             expr = exp.HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, exp.HLLBin("d")).compile()
+            expr_to_read = exp.HLLGetCount(exp.HLLBin("d")).compile()
             ops = [
                 expression_operations.expression_write("d", expr),
-                operations.read("d")
+                expression_operations.expression_read("d", expr_to_read)
             ]
             _, _, bins = client.operate(key, ops)
             print(bins["d"])
 
         .. testoutput::
 
-            HyperLogLog(...)
+            6
         """
         self._children = (
             list,
