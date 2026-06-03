@@ -1495,7 +1495,7 @@ class MapGetKeys(_BaseExpr):
     Return a list of keys from a map.
     """
 
-    _op = aerospike._AS_EXP_CODE_MAP_KEYS
+    _op = aerospike._AS_EXP_CODE_MAP_KEYS_IN
 
     def __init__(
         self,
@@ -1516,7 +1516,7 @@ class MapGetValues(_BaseExpr):
     Return a list of values from a map.
     """
 
-    _op = aerospike._AS_EXP_CODE_MAP_VALUES
+    _op = aerospike._AS_EXP_CODE_MAP_VALUES_IN
 
     def __init__(
         self,
