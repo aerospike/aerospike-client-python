@@ -35,7 +35,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@91bde550339d432d99123d871c7eee628aa39587
     id: setup-as-server
     with:
       server-container-repo: database-docker-virtual/aerospike-server${{ inputs.server-edition == 'enterprise' && '-enterprise' || '' }}

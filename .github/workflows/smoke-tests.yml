@@ -378,7 +378,7 @@ jobs:
     - run: python3 -m pip install ./*.whl
 
     - id: setup-aerospike-server
-      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@91bde550339d432d99123d871c7eee628aa39587
       with:
         enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
         num-nodes: 1
