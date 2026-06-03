@@ -52,7 +52,7 @@ The following table shows which Python types map directly to Aerospike server ty
   :class:`int`                             `integer`_
   :class:`bool`                            depends on send_bool_as
   :class:`str`                             `string`_
-  :class:`unicode`                         `string`_
+  :class:`str`                             `string`_
   :class:`float`                           `double`_
   :class:`dict`                            `map`_
   :class:`aerospike.KeyOrderedDict`        `key ordered map`_

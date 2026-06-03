@@ -317,7 +317,7 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
     case SERIALIZER_PYTHON: {
         /*
 				 * Serialize bytearray as is and store them into database with
-				 * type AS_BYTES_BLOB, unlike other values in case of 
+				 * type AS_BYTES_BLOB, unlike other values in case of
 				 * SERIALIZER_PYTHON.
 				 * This is a special case.
 				 * Refer: AER-3589 for more details.

@@ -38,8 +38,9 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+        :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+        containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -59,6 +60,8 @@ class BatchRecord:
 
 class Write(BatchRecord):
     """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
@@ -111,6 +114,9 @@ class Write(BatchRecord):
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
+        .. deprecated:: 19.1.0 Deprecated the ``"ttl"`` option in the ``meta`` parameter. Use the policy parameter in a
+            :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -121,7 +127,7 @@ class Read(BatchRecord):
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
             meta (dict): the metadata to set for this command
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
+            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
 

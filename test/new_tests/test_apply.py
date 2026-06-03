@@ -53,11 +53,11 @@ def add_indexes_and_udfs(client):
     """
     policy = {}
     try:
-        client.index_integer_create("test", "demo", "age", "age_index", policy)
+        client.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
     except e.IndexFoundError:
         pass
     try:
-        client.index_integer_create("test", "demo", "age1", "age_index1", policy)
+        client.index_single_value_create("test", "demo", "age1", aerospike.INDEX_NUMERIC, "age_index1", policy)
     except e.IndexFoundError:
         pass
 
