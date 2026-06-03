@@ -35,7 +35,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@91bde550339d432d99123d871c7eee628aa39587
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
     id: setup-as-server
     with:
       server-container-repo: database-docker-virtual/aerospike-server${{ inputs.server-edition == 'enterprise' && '-enterprise' || '' }}
