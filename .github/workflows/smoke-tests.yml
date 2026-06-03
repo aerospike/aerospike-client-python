@@ -12,7 +12,10 @@ on:
   # Using push instead of pull_request so that commits with no applicable code changes will not trigger a rebuild
   # This saves compute cost
   push:
+    # We have to use paths key to allow changes in the boilerplate code in doc/ to trigger doctest
+    # paths-ignore does not support ! operator
     paths:
+      - '**/*'
       # We run doctest in this workflow
       - '!doc/**/*'
       - 'doc/client-boilerplate.py'
