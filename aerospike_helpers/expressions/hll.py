@@ -350,9 +350,24 @@ class HLLDescribe(_BaseExpr):
         Example:
 
         .. testcode::
+            # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=16),
+                hll_operations.hll_add("d", ['key1', 'key2', 'key3'])
+            ]
+            client.operate(key, ops)
 
             # Get description of HLL bin "d".
             expr = exp.HLLDescribe(exp.HLLBin("d")).compile()
+            ops = [
+                expression_operations.expression_read("d", expr),
+            ]
+            _, _, bins = client.operate(key, ops)
+            print(bins["d"])
+
+        .. testoutput::
+
+            [8, 16]
         """
         self._children = (bin if isinstance(bin, _BaseExpr) else HLLBin(bin),)
 
