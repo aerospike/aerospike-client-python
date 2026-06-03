@@ -657,10 +657,6 @@ User Defined Functions
     .. note::
         To run this example, do not run the boilerplate code.
 
-    .. TODO - probably there is better syntax than using emphasize-lines with hardcoded numbers
-
-    .. :emphasize-lines: 5,9
-
     .. method:: udf_remove(module[, policy: dict])
 
         Remove a previously registered UDF module from the cluster.
