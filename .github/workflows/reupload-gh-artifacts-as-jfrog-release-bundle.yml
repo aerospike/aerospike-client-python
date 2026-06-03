@@ -34,7 +34,7 @@ jobs:
     needs: [
       reupload-artifacts-as-one-artifact-in-github
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@91bde550339d432d99123d871c7eee628aa39587
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
