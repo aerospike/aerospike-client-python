@@ -217,7 +217,7 @@ jobs:
         name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
         path: ./${{ env.COVERAGE_REPORT_DIR }}
 
-    - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+    - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
       with:
         directory: ${{ env.COVERAGE_REPORT_DIR }}
         verbose: true # optional (default = false)
@@ -378,7 +378,7 @@ jobs:
     - run: python3 -m pip install ./*.whl
 
     - id: setup-aerospike-server
-      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
         enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
         num-nodes: 1
