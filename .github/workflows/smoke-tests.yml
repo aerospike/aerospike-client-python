@@ -270,6 +270,7 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server
+        config-file: ./.github/workflows/aerospike-ce.conf
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
