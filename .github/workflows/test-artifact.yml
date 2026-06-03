@@ -75,7 +75,7 @@ jobs:
       REPO_DIR_NAME: aerospike-client-python
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
       with:
         egress-policy: audit
 
@@ -195,7 +195,12 @@ jobs:
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
             echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+            VALGRIND_SUPP_FILE=valgrind-python.supp
+
+            wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
+            # sed -i "127,185s/###//" "$VALGRIND_SUPP_FILE"
+
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
