@@ -24,7 +24,7 @@ jobs:
     outputs:
       artifact-name: ${{ env.ARTIFACT_NAME }}
     steps:
-    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@91bde550339d432d99123d871c7eee628aa39587
       with:
         # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
         # to change unexpectedly.
