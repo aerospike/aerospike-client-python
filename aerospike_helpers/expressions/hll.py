@@ -350,6 +350,7 @@ class HLLDescribe(_BaseExpr):
         Example:
 
         .. testcode::
+
             # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
             ops = [
                 hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=16),
