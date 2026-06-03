@@ -822,7 +822,7 @@ Info Operations
 
         :param str command: see `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
+        :rtype: :class:`dict` mapping the node name to a tuple with the second element being the info response string or :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. testcode::
