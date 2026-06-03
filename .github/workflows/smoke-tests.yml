@@ -232,6 +232,7 @@ jobs:
           stubtest,
           doctest
         ]
+      fail-fast: false
     needs: build
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
