@@ -417,7 +417,7 @@ static inline PyObject *convert_nullable_array_to_py_optional_list(
         switch (format_specifier) {
         case 'k': {
             uint32_t element = ((uint32_t *)array)[i];
-            py_element = Py_BuildValue(format_str, element);
+            py_element = Py_BuildValue(format_str, (unsigned long)element);
             break;
         }
         case 's': {
