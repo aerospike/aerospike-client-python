@@ -39,3 +39,9 @@ updates:
     schedule:
       interval: daily
     target-branch: "dev"
+
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: daily
+    target-branch: "dev"
