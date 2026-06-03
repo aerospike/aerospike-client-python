@@ -35,7 +35,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
     id: setup-as-server
     with:
       server-container-repo: database-docker-virtual/aerospike-server${{ inputs.server-edition == 'enterprise' && '-enterprise' || '' }}
@@ -51,6 +51,7 @@ runs:
       # Problem is the shared action is overriding the entrypoint script that parses this env var
       # env-vars: DEFAULT_TTL=2592000;
       config-file: ./.github/workflows/aerospike${{ inputs.server-edition == 'community' && '-ce' || '' }}.conf
+      enable-bash-trace-mode: "true"
 
   - name: Get config.conf
     run: |
