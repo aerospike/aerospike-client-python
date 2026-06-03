@@ -233,7 +233,10 @@ jobs:
           doctest
         ]
       fail-fast: false
-    needs: build
+    needs: [
+      get-env-vars,
+      build
+    ]
     env:
       SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION: 3.12
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
@@ -258,6 +261,15 @@ jobs:
 
     - name: Install client
       run: pip install ./*.whl
+
+    - if: ${{ matrix.test == 'doctest' }}
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+      with:
+        num-nodes: 1
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+        server-container-repo: database-docker-virtual/aerospike-server
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
