@@ -28,32 +28,16 @@ Boilerplate Code For Examples
 
 Assume every in-line example runs this code beforehand:
 
-.. warning::
-    Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
-
-
 .. testsetup::
 
-    # Imports
-    import aerospike
-    from aerospike import exception as ex
-    import sys
+    import runpy
+    runpy.run_path("client-boilerplate.py")
 
-    # Configure the client
-    config = {
-        'hosts': [ ('127.0.0.1', 3000)]
-    }
+.. include:: client-boilerplate.py
+    :code: python
 
-    # Create a client and connect it to the cluster
-    try:
-        client = aerospike.client(config)
-        client.truncate('test', "demo", 0)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
+.. warning::
+    Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
 Basic example:
 

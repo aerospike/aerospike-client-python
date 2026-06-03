@@ -19,27 +19,28 @@ Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_
 
 .. testsetup::
 
-    import aerospike
-    import aerospike_helpers.expressions as exp
-    from aerospike_helpers.operations import hll_operations
-
-    config = {"hosts": [("127.0.0.1", 3000)]}
-    client = aerospike.client(config)
-    key = ("test", "demo", 1)
+    {testsetup}
 
 Assume all inline code examples run this beforehand:
 
 .. code-block:: Python
 
-    import aerospike
-    import aerospike_helpers.expressions as exp
-    from aerospike_helpers.operations import hll_operations
-
-    config = {"hosts": [("127.0.0.1", 3000)]}
-    client = aerospike.client(config)
-    key = ("test", "demo", 1)
-
+    {testsetup}
 """
+
+if __doc__:
+    __doc__ = __doc__.format(
+        """
+        import aerospike
+        import aerospike_helpers.expressions as exp
+        from aerospike_helpers.operations import hll_operations
+
+        config = {"hosts": [("127.0.0.1", 3000)]}
+        client = aerospike.client(config)
+        key = ("test", "demo", 1)
+        """
+    )
+
 
 # from __future__ import annotations
 from typing import List, Union, Dict, Any
