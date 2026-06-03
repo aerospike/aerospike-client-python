@@ -13,8 +13,8 @@ on:
   # This saves compute cost
   push:
     paths-ignore:
-      # Only doc related changes
-      - doc/**/*
+      # Changes to code examples in API docs may affect doctest results
+      # - doc/**/*
       - .readthedocs.yml
       # Only for ignoring git commits when using 'git blame'
       - .git-blame-ignore-revs
