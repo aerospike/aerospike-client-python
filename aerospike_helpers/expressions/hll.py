@@ -19,13 +19,13 @@ Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_
 
 .. testsetup::
 
-    {testsetup}
+    {0}
 
 Assume all inline code examples run this beforehand:
 
 .. code-block:: Python
 
-    {testsetup}
+    {0}
 """
 
 if __doc__:
