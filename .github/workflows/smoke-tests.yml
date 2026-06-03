@@ -12,18 +12,16 @@ on:
   # Using push instead of pull_request so that commits with no applicable code changes will not trigger a rebuild
   # This saves compute cost
   push:
-    paths:
-      # We run doctest in this workflow
-      - '!doc/**/*'
-      - 'doc/client-boilerplate.py'
-      # Only for building docs
-      - '!.readthedocs.yml'
+    paths-ignore:
+      # Only doc related changes
+      - doc/**/*
+      - .readthedocs.yml
       # Only for ignoring git commits when using 'git blame'
-      - '!.git-blame-ignore-revs'
+      - .git-blame-ignore-revs
       # Only used by QE for building their own wheels
-      - '!.build.yml'
+      - .build.yml
       # Other misc files not related to source code changes
-      - '!benchmarks/**/*'
+      - benchmarks/**/*
     tags-ignore:
       - '**'
     # Have to add this or tags-ignore will cause workflow to never run
