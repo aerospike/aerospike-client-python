@@ -620,7 +620,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Take over tending if the cluster hasn't been checked for this many seconds
 
                 Default: ``30``
-            * **shm_key**
+            * **shm_key** (:class:`int`)
                 Explicitly set the shm key for this client.
 
                 If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
