@@ -443,6 +443,15 @@ Assume this boilerplate code is run before all examples below:
 
         .. testcode::
 
+            import aerospike
+            # Configure the client
+            config = {
+                'hosts': [('127.0.0.1', 3000)]
+            }
+
+            # Create a client and connect it to the cluster
+            client = aerospike.client(config)
+
             # Only read 2 records
 
             recordCount = 0
