@@ -481,14 +481,15 @@ String Operations
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
 
-        .. doctest::
+        .. testcode::
 
-            >>> client.put(keyTuple, {'bin1': 'Martin Luther King'})
-            0
-            >>> client.append(keyTuple, 'bin1', ' jr.')
-            0
-            >>> (_, _, bins) = client.get(keyTuple)
-            >>> print(bins)
+            client.put(keyTuple, {'bin1': 'Martin Luther King'})
+            client.append(keyTuple, 'bin1', ' jr.')
+            (_, _, bins) = client.get(keyTuple)
+            print(bins)
+
+        .. testoutput::
+
             {'bin1': 'Martin Luther King jr.'}
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
