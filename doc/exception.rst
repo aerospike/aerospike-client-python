@@ -28,7 +28,7 @@ This is a simple example on how to catch an exception thrown by the Aerospike cl
 
 .. testoutput::
 
-    TODO - need to set testoutput
+    Error: Failed to connect [-10]
 
 .. versionadded:: 1.0.44
 
@@ -756,11 +756,20 @@ In Doubt Status
 
   .. testcode::
 
-      key = 'test', 'demo', 1
-      record = {'some': 'thing'}
-      try:
+    import aerospike
+    from aerospike import exception as ex
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    key = 'test', 'demo', 1
+    record = {'some': 'thing'}
+    try:
         client.put(key, record)
-      except AerospikeError as exc:
+    except ex.AerospikeError as exc:
         print("The in doubt nature of the operation is: {}".format(exc.args[4]))
 
 .. versionadded:: 3.0.1
