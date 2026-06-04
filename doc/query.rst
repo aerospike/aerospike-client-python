@@ -184,7 +184,7 @@ Assume this boilerplate code is run before all examples below:
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
             results will query. See the example below.
 
-            .. code-block:: python
+            .. testcode::
 
                 # This is an example of querying partitions 1000 - 1003.
                 import aerospike
@@ -229,7 +229,7 @@ Assume this boilerplate code is run before all examples below:
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
          foreach will query. See the example below.
 
-         .. code-block:: python
+         .. testcode::
 
             # This is an example of querying partitions 1000 - 1003.
             import aerospike
@@ -328,7 +328,7 @@ Assume this boilerplate code is run before all examples below:
 
         :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
-        .. code-block:: python
+        .. testcode::
 
             # EXAMPLE 1: Increase everyone's score by 100
 
@@ -346,10 +346,6 @@ Assume this boilerplate code is run before all examples below:
             for key in keyTuples:
                 _, _, bins = client.get(key)
                 print(bins)
-            # {"score": 200, "elo": 1400}
-            # {"score": 120, "elo": 1500}
-            # {"score": 110, "elo": 1100}
-            # {"score": 300, "elo": 900}
 
             # EXAMPLE 2: Increase score by 100 again for those with elos > 1000
             # Use write policy to select players by elo
@@ -365,15 +361,22 @@ Assume this boilerplate code is run before all examples below:
             for i, key in enumerate(keyTuples):
                 _, _, bins = client.get(key)
                 print(bins)
-            # {"score": 300, "elo": 1400} <--
-            # {"score": 220, "elo": 1500} <--
-            # {"score": 210, "elo": 1100} <--
-            # {"score": 300, "elo": 900}
 
             # Cleanup and close the connection to the Aerospike cluster.
             for key in keyTuples:
                 client.remove(key)
             client.close()
+
+        .. testoutput::
+
+            {"score": 200, "elo": 1400}
+            {"score": 120, "elo": 1500}
+            {"score": 110, "elo": 1100}
+            {"score": 300, "elo": 900}
+            {"score": 300, "elo": 1400}
+            {"score": 220, "elo": 1500}
+            {"score": 210, "elo": 1100}
+            {"score": 300, "elo": 900}
 
     .. method:: paginate()
 
@@ -385,7 +388,7 @@ Assume this boilerplate code is run before all examples below:
             This can be retrieved later using .get_partitions_status(). This can also been done by
             using the partition_filter policy.
 
-        .. code-block:: python
+        .. testcode::
 
             # After inserting 4 records...
             # Query 3 pages of 2 records each.
@@ -409,14 +412,17 @@ Assume this boilerplate code is run before all examples below:
                 if query.is_done():
                     print("all done")
                     break
-            # got page: 0
-            # (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
-            # (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
-            # got page: 1
-            # (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
-            # (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
-            # got page: 2
-            # all done
+
+        .. testoutput::
+
+            got page: 0
+            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
+            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            got page: 1
+            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            got page: 2
+            all done
 
     .. method:: is_done()
 
@@ -435,7 +441,7 @@ Assume this boilerplate code is run before all examples below:
 
         :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
-        .. code-block:: python
+        .. testcode::
 
             # Only read 2 records
 
@@ -452,8 +458,6 @@ Assume this boilerplate code is run before all examples below:
             query = client.query("test", "demo")
             query.paginate()
             query.foreach(callback)
-            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
-            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
 
 
             # Use this to resume query where we left off
@@ -471,8 +475,13 @@ Assume this boilerplate code is run before all examples below:
             }
 
             query.foreach(resume_callback, policy)
-            # 1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
-            # 3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+
+        .. testoutput::
+
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
+            1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
 
 .. _aerospike_query_policies:
 

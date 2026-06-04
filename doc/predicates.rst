@@ -22,7 +22,7 @@ Bin Predicates
     :param int max: the maximum value to be matched with the between operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
@@ -45,7 +45,7 @@ Bin Predicates
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
@@ -75,7 +75,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -126,7 +126,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -163,7 +163,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -210,7 +210,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -255,7 +255,7 @@ Map and List Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
@@ -292,7 +292,7 @@ Map and List Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
