@@ -13,8 +13,8 @@ on:
   # This saves compute cost
   push:
     paths-ignore:
-      # Only doc related changes
-      - doc/**/*
+      # Changes to code examples in API docs may affect doctest results
+      # - doc/**/*
       - .readthedocs.yml
       # Only for ignoring git commits when using 'git blame'
       - .git-blame-ignore-revs
@@ -217,7 +217,7 @@ jobs:
         name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
         path: ./${{ env.COVERAGE_REPORT_DIR }}
 
-    - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+    - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
       with:
         directory: ${{ env.COVERAGE_REPORT_DIR }}
         verbose: true # optional (default = false)
@@ -225,8 +225,20 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  stubtest:
-    needs: build
+  stubtest-or-doctest:
+    strategy:
+      matrix:
+        test: [
+          stubtest,
+          doctest
+        ]
+      fail-fast: false
+    needs: [
+      get-env-vars,
+      build
+    ]
+    env:
+      SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION: 3.12
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -240,20 +252,40 @@ jobs:
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: ${{ env.SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
 
     - name: Install client
       run: pip install ./*.whl
 
-    - run: pip install mypy -c requirements.txt
-      working-directory: .github/workflows
+    - if: ${{ matrix.test == 'doctest' }}
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
+      with:
+        num-nodes: 1
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+        server-container-repo: database-docker-virtual/aerospike-server
+        config-file: ./.github/workflows/aerospike-ce.conf
 
-    - run: stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
+    - name: Install test dependencies
+      if: ${{ matrix.test == 'doctest' }}
+      run: |
+        pip install -r requirements.txt
+        sphinx-build -b doctest . doctest
+      working-directory: doc
+      shell: bash -ex {0}
+
+    - name: Validate type stubs
+      if: ${{ matrix.test == 'stubtest' }}
+      run: |
+        pip install mypy -c .github/workflows/requirements.txt
+        stubtest aerospike --allowlist stubtest-allowlist --ignore-disjoint-bases
+      shell: bash -ex {0}
 
   test-sanitizer:
     needs: get-env-vars
@@ -378,7 +410,7 @@ jobs:
     - run: python3 -m pip install ./*.whl
 
     - id: setup-aerospike-server
-      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+      uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
         enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
         num-nodes: 1

@@ -17,7 +17,9 @@
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as ex
@@ -51,7 +53,6 @@ Example::
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 200}
 
     # Example 2: add a new person and get their rating of Facebook
     cindy = {
@@ -76,11 +77,11 @@ Example::
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 4}
 
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
+    ctx_list_index = [cdt_ctx.cdt_ctx_list_index(0)]
     bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
 
     r = []
@@ -100,6 +101,11 @@ Example::
     # Cleanup
     client.remove(key)
     client.close()
+
+.. testoutput::
+
+    {'users': 200}
+    {'users': 4}
 
 .. _path_expressions_contexts:
 
