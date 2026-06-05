@@ -111,8 +111,87 @@ Methods
 
 Assume this boilerplate code is run before all examples below:
 
-.. include:: examples/query/boilerplate.py
-    :code: python
+.. testsetup::
+
+    import aerospike
+    import sys
+    from aerospike import exception as ex
+
+    config = {'hosts': [('127.0.0.1', 3000)]}
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Remove old indices
+    try:
+        client.index_remove("test", "scoreIndex")
+        client.index_remove("test", "eloIndex")
+    except ex.AerospikeError as e:
+        # Ignore if no indices found
+        pass
+
+    # Insert 4 records
+    keyTuples = [("test", "demo", f"player{i}") for i in range(4)]
+    bins = [
+        {"score": 100, "elo": 1400},
+        {"score": 20, "elo": 1500},
+        {"score": 10, "elo": 1100},
+        {"score": 200, "elo": 900}
+    ]
+    for keyTuple, bin in zip(keyTuples, bins):
+        client.put(keyTuple, bin)
+
+    query = client.query('test', 'demo')
+
+    # Queries require a secondary index for each bin name
+    client.index_integer_create("test", "demo", "score", "scoreIndex")
+    client.index_integer_create("test", "demo", "elo", "eloIndex")
+
+.. code-block:: Python
+
+    import aerospike
+    import sys
+    from aerospike import exception as ex
+
+    config = {'hosts': [('127.0.0.1', 3000)]}
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Remove old indices
+    try:
+        client.index_remove("test", "scoreIndex")
+        client.index_remove("test", "eloIndex")
+    except ex.AerospikeError as e:
+        # Ignore if no indices found
+        pass
+
+    # Insert 4 records
+    keyTuples = [("test", "demo", f"player{i}") for i in range(4)]
+    bins = [
+        {"score": 100, "elo": 1400},
+        {"score": 20, "elo": 1500},
+        {"score": 10, "elo": 1100},
+        {"score": 200, "elo": 900}
+    ]
+    for keyTuple, bin in zip(keyTuples, bins):
+        client.put(keyTuple, bin)
+
+    query = client.query('test', 'demo')
+
+    # Queries require a secondary index for each bin name
+    client.index_integer_create("test", "demo", "score", "scoreIndex")
+    client.index_integer_create("test", "demo", "elo", "eloIndex")
 
 .. class:: Query
     :noindex:
@@ -177,8 +256,17 @@ Assume this boilerplate code is run before all examples below:
         :param dict options: optional :ref:`aerospike_query_options`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. include:: examples/query/results.py
-            :code: python
+        .. testcode::
+
+            from aerospike import predicates
+
+            query.select('score')
+            query.where(predicates.equals('score', 100))
+
+            records = query.results()
+            # Matches one record
+            print(records)
+            # [(('test', 'demo', None, bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'score': 100})]
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -217,13 +305,52 @@ Assume this boilerplate code is run before all examples below:
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. include:: examples/query/foreach.py
-            :code: python
+        .. testcode::
+
+            # Callback function
+            # Calculates new elo for a player
+            def updateElo(record):
+                keyTuple, _, bins = record
+                # Add score to elo
+                bins["elo"] = bins["elo"] + bins["score"]
+                client.put(keyTuple, bins)
+
+            query.foreach(updateElo)
+
+            # Player elos should be updated
+            brs = client.batch_read(keyTuples)
+            for br in brs.batch_records:
+                # Print record bin
+                print(br.record[2])
+            # {'score': 100, 'elo': 1500}
+            # {'score': 20, 'elo': 1520}
+            # {'score': 10, 'elo': 1110}
+            # {'score': 200, 'elo': 1100}
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
-            .. include:: examples/query/foreachfalse.py
-                :code: python
+        .. testcode::
+
+            # Adds record keys from a stream to a list
+            # But limits the number of keys to "lim"
+            def limit(lim: int, result: list):
+                # Integers are immutable
+                # so a list (mutable) is used for the counter
+                c = [0]
+                def key_add(record):
+                    key, metadata, bins = record
+                    if c[0] < lim:
+                        result.append(key)
+                        c[0] = c[0] + 1
+                    else:
+                        return False
+                return key_add
+
+            from aerospike import predicates as p
+
+            keys = []
+            query.foreach(limit(2, keys))
+            print(len(keys)) # 2
 
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -284,8 +411,49 @@ Assume this boilerplate code is run before all examples below:
 
         Assume the example code above is in a file called "example.lua", and is the same folder as the following script.
 
-        .. include:: examples/lua/lua.py
-            :code: python
+        .. testcode::
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)],
+                        'lua': {'system_path':'/usr/local/aerospike/lua/',
+                                'user_path':'./'}}
+            client = aerospike.client(config)
+            client.udf_put("example.lua")
+
+            # Remove index if it already exists
+            from aerospike import exception as ex
+            try:
+                client.index_remove("test", "ageIndex")
+            except ex.IndexNotFound:
+                pass
+
+            bins = [
+                {"name": "Jeff", "age": 20},
+                {"name": "Derek", "age": 24},
+                {"name": "Derek", "age": 21},
+                {"name": "Derek", "age": 29},
+                {"name": "Jeff", "age": 29},
+            ]
+            keys = [("test", "users", f"user{i}") for i in range(len(bins))]
+            for key, recordBins in zip(keys, bins):
+                client.put(key, recordBins)
+
+            client.index_integer_create("test", "users", "age", "ageIndex")
+
+            query = client.query('test', 'users')
+            query.apply('example', 'group_count', ['name', 'age', 21])
+            names = query.results()
+
+            # we expect a dict (map) whose keys are names, each with a count value
+            print(names)
+            # One of the Jeffs is excluded because he is under 21
+            # [{'Derek': 3, 'Jeff': 1}]
+
+            # Cleanup
+            client.index_remove("test", "ageIndex")
+            client.batch_remove(keys)
+            client.close()
 
         With stream UDFs, the final reduce steps (which ties
         the results from the reducers of the cluster nodes) executes on the

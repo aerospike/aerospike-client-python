@@ -255,8 +255,84 @@ The following example shows the three modes of serialization:
 2. Class-level user functions
 3. Instance-level user functions
 
-.. include:: examples/serializer.py
-    :code: python
+.. testcode::
+
+    import aerospike
+    import marshal
+    import json
+
+    # Serializers and deserializers
+    # Both local and global serializers use json library
+    # Functions print which one is being used
+
+    def classSerializer(obj):
+        print("Using class serializer")
+        return json.dumps(obj)
+
+    def classDeserializer(bytes):
+        print("Using class deserializer")
+        return json.loads(bytes)
+
+    def localSerializer(obj):
+        print("Using local serializer")
+        return json.dumps(obj)
+
+    def localDeserializer(bytes):
+        print("Using local deserializer")
+        return json.loads(bytes)
+
+    # First client has class-level serializer set in aerospike module
+    aerospike.set_serializer(classSerializer)
+    aerospike.set_deserializer(classDeserializer)
+    config = {
+        'hosts': [('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    # Second client has instance-level serializer set in client config
+    config['serialization'] = (localSerializer, localDeserializer)
+    client2 = aerospike.client(config)
+
+    # Keys: foo1, foo2, foo3
+    keys = [('test', 'demo', f'foo{i}') for i in range(1, 4)]
+    # Tuple is an unsupported type
+    tupleBin = {'bin': (1, 2, 3)}
+
+    # Use the default, built-in serialization (cPickle)
+    client.put(keys[0], tupleBin)
+    (_, _, bins) = client.get(keys[0])
+    print(bins)
+
+    # Expected output:
+    # {'bin': (1, 2, 3)}
+
+    # First client uses class-level, user-defined serialization
+    # No instance-level serializer was declared
+    client.put(keys[1], tupleBin, serializer=aerospike.SERIALIZER_USER)
+    (_, _, bins) = client.get(keys[1])
+    # Notice that json-encoding a tuple produces a list
+    print(bins)
+
+    # Expected output:
+    # Using class serializer
+    # Using class deserializer
+    # {'bin': [1, 2, 3]}
+
+    # Second client uses instance-level, user-defined serialization
+    # Instance-level serializer overrides class-level serializer
+    client2.put(keys[2], tupleBin, serializer=aerospike.SERIALIZER_USER)
+    (_, _, bins) = client2.get(keys[2])
+    print(bins)
+
+    # Expected output:
+    # Using local serializer
+    # Using local deserializer
+    # {'bin': [1, 2, 3]}
+
+    # Cleanup
+    client.batch_remove(keys)
+    client.close()
+    client2.close()
 
 Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
 (record ``foo3`` uses the same encoding as ``foo2``)
@@ -301,8 +377,42 @@ By default:
 
 The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-.. include:: examples/log.py
-    :code: python
+.. testcode::
+
+    # Enable the logging at application start, before connecting to the server.
+    import aerospike
+
+    ## SETTING THE LOG HANDLER ##
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
+    # Set default log handler to print to the console
+    aerospike.set_log_handler()
+
+    def log_callback(level, func, path, line, msg):
+        print("[{}] {}".format(func, msg))
+
+    # Set log handler to custom callback function (defined above)
+    aerospike.set_log_handler(log_callback)
+
+
+    ## SETTING THE LOG LEVEL ##
+
+    # disables log handling
+    aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+
+    # Enables log handling and sets level to LOG_LEVEL_TRACE
+    aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+    # Create a client and connect it to the cluster
+    # This line will print use log_callback to print logs with a log level of TRACE
+    config = {
+        "hosts": [
+            ("127.0.0.1", 3000)
+        ]
+    }
+    client = aerospike.client(config)
 
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 

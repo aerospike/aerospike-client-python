@@ -447,8 +447,19 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/remove_bin.py
-            :code: python
+        .. testcode::
+
+            # Insert record
+            bins = {"bin1": 0, "bin2": 1}
+            client.put(keyTuple, bins)
+
+            # Remove bin1
+            client.remove_bin(keyTuple, ['bin1'])
+
+            # Only bin2 shold remain
+            (keyTuple, meta, bins) = client.get(keyTuple)
+            print(bins)
+            # {'bin2': 1}
 
     .. index::
         single: Batched Commands
@@ -492,8 +503,64 @@ Batched Commands
 
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_write.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.batch import records as br
+            from aerospike_helpers.operations import operations as op
+
+            # Keys
+            # Only insert two records with the first and second key
+            keyTuples = [
+                ('test', 'demo', 'Robert'),
+                ('test', 'demo', 'Daniel'),
+                ('test', 'demo', 'Patrick'),
+            ]
+            client.put(keyTuples[0], {'id': 100, 'balance': 400})
+            client.put(keyTuples[1], {'id': 101, 'balance': 200})
+            client.put(keyTuples[2], {'id': 102, 'balance': 300})
+
+            # Apply different operations to different keys
+            batchRecords = br.BatchRecords(
+                [
+                    # Remove Robert from system
+                    br.Remove(
+                        key = keyTuples[0],
+                    ),
+                    # Modify Daniel's ID and balance
+                    br.Write(
+                        key = keyTuples[1],
+                        ops = [
+                            op.write("id", 200),
+                            op.write("balance", 100),
+                            op.read("id"),
+                        ],
+                    ),
+                    # Read Patrick's ID
+                    br.Read(
+                        key = keyTuples[2],
+                        ops=[
+                            op.read("id")
+                        ],
+                        policy=None
+                    ),
+                ]
+            )
+
+            client.batch_write(batchRecords)
+
+            # batch_write modifies its BatchRecords argument.
+            # Results for each BatchRecord will be set in the result, record, and in_doubt fields.
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+            # Note how written bins return None if their values aren't read
+            # And removed records have an empty bins dictionary
+            # 0
+            # (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            # 0
+            # (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
+            # 0
+            # (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -539,8 +606,38 @@ Batched Commands
 
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_operate.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.operations import operations as op
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Increment ID by 100 and balance by 500 for all employees
+            ops = [
+                op.increment("id", 100),
+                op.increment("balance", 500),
+                op.read("balance")
+            ]
+
+            batchRecords = client.batch_operate(keys, ops)
+            print(batchRecords.result)
+            # 0
+
+            # Print each individual transaction's results
+            # and record if it was read from
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 700})
+            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 900})
+            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 800})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -558,8 +655,33 @@ Batched Commands
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_apply.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Apply a user defined function (UDF) to a batch
+            # of records using batch_apply.
+            client.udf_put("batch_apply.lua")
+
+            args = ["balance", 0.5, 100]
+            batchRecords = client.batch_apply(keys, "batch_apply", "tax", args)
+
+            print(batchRecords.result)
+            # 0
+
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
+            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
+            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
 
         .. include:: examples/batch_apply.lua
             :code: lua
@@ -578,8 +700,29 @@ Batched Commands
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_remove.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            batchRecords = client.batch_remove(keys)
+
+            # A result of 0 means success
+            print(batchRecords.result)
+            # 0
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
@@ -1001,8 +1144,16 @@ Info Operations
         :param TypeExpression expression: the compiled expression. See expressions at :py:mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_expression_base64.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers import expressions as exp
+
+            # Compile expression
+            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
+
+            base64 = client.get_expression_base64(expr)
+            print(base64)
+            # kwGTUQKkYmluMQY=
 
         .. versionchanged:: 7.0.0
 
@@ -1036,8 +1187,26 @@ Info Operations
 
         .. note:: Requires Aerospike server version >= 3.12
 
-        .. include:: examples/truncate.py
-            :code: python
+        .. testcode::
+
+            import time
+
+            client.put(("test", "demo", "key1"), {"bin": 4})
+
+            time.sleep(1)
+            # Take threshold time
+            current_time = time.time()
+            time.sleep(1)
+
+            client.put(("test", "demo", "key2"), {"bin": 5})
+
+            threshold_ns = int(current_time * 10**9)
+            # Remove all items in set `demo` created before threshold time
+            # Record using key1 should be removed
+            client.truncate('test', 'demo', threshold_ns)
+
+            # Remove all items in namespace
+            # client.truncate('test', None, 0)
 
     .. index::
         single: Index Operations
@@ -1160,8 +1329,19 @@ Index Operations
         :param list ctx: Aerospike CDT context: generated by aerospike CDT ctx helper :mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_cdtctx_base64.py
-            :code: python
+        .. testcode::
+
+            import aerospike
+            from aerospike_helpers import cdt_ctx
+
+            config = {'hosts': [('127.0.0.1', 3000)]}
+            client = aerospike.client(config)
+
+            ctxs = [cdt_ctx.cdt_ctx_list_index(0)]
+            ctxs_base64 = client.get_cdtctx_base64(ctxs)
+            print("Base64 encoding of ctxs:", ctxs_base64)
+
+            client.close()
 
         .. versionchanged:: 7.1.1
 
