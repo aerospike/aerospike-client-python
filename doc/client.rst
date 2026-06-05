@@ -2388,7 +2388,7 @@ Map Policies
             | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
             |
             | Values should be or'd together:
-            | :data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0.
 
