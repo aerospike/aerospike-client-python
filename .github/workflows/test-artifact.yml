@@ -249,8 +249,10 @@ jobs:
         # There's no way to tell unless we see the logs
         # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
 
+        MEASURE_TEST_DURATION_FLAGS="--durations=0"
+
         # shellcheck disable=SC2086
-        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
+        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest $MEASURE_TEST_DURATION_FLAGS -vvs --full-trace new_tests/$TEST_FILE \
           -W error::pytest.PytestUnraisableExceptionWarning \
           -W error::DeprecationWarning
 
