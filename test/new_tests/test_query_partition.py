@@ -5,8 +5,10 @@ from .test_base_class import TestBaseClass
 
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
+from aerospike_helpers.operations import operations
 from .as_status_codes import AerospikeStatus
 from aerospike import predicates as p
+from aerospike_helpers.batch import records as br
 
 
 import aerospike
@@ -49,9 +51,13 @@ def setup(request, as_connection):
 
     as_connection.truncate(request.cls.test_ns, None, 0)
 
+    brs = br.BatchRecords(batch_records=[])
+    keys = []
+
     for i in range(1, 100000):
         put = 0
         key = (request.cls.test_ns, request.cls.test_set, str(i))
+        keys.append(key)
         rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
 
         if rec_partition == 1000:
@@ -67,13 +73,16 @@ def setup(request, as_connection):
             request.cls.partition_1003_count += 1
             put = 1
         if put:
-            rec = {
-                "i": i,
-                "s": "xyz",
-                "l": [2, 4, 8, 16, 32, None, 128, 256],
-                "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
-            }
-            as_connection.put(key, rec)
+            br_write = br.Write(key, ops=[
+                operations.write("i", i),
+                operations.write("s", "xyz"),
+                operations.write("l", [2, 4, 8, 16, 32, None, 128, 256]),
+                operations.write("m", {"partition": rec_partition, "b": 4, "c": 8, "d": 16})
+            ])
+            brs.batch_records.append(br_write)
+
+    as_connection.batch_write(brs)
+
     # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
     #         {request.cls.partition_1001_count} records are put in partition 1001, \
     #         {request.cls.partition_1002_count} records are put in partition 1002, \
@@ -81,25 +90,7 @@ def setup(request, as_connection):
 
     yield
 
-    for i in range(1, 100000):
-        put = 0
-        key = ("test", "demo", str(i))
-        rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
-
-        if rec_partition == 1000:
-            request.cls.partition_1000_count += 1
-            put = 1
-        if rec_partition == 1001:
-            request.cls.partition_1001_count += 1
-            put = 1
-        if rec_partition == 1002:
-            request.cls.partition_1002_count += 1
-            put = 1
-        if rec_partition == 1003:
-            request.cls.partition_1003_count += 1
-            put = 1
-        if put:
-            as_connection.remove(key)
+    as_connection.batch_remove(keys)
 
     remove_sindex(as_connection)
 
