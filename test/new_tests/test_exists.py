@@ -120,7 +120,7 @@ class TestExists:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 20), {"name": "John"}, None, {"total_timeout": 5}),
+            (("test", "demo", 20), {"name": "John"}, None, {"total_timeout": 2}),
         ],
     )
     @pytest.mark.skip(reason="This test case can fail in test environments with e2e latency of more than 2ms")
