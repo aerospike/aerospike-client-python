@@ -4,6 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .conftest import check_user_dictionary
 
 import aerospike
 from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
@@ -57,10 +58,7 @@ class TestQueryUsersInfo(TestBaseClass):
 
         # Usage test; doesn't actually test if the server records user data
         user_details = user_details.get("example-test")
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
-        assert user_details.get("read_info") == 0
-        assert user_details.get("write_info") == 0
-        assert user_details.get("conns_in_use") == 0
+        check_user_dictionary(user_details)
 
     def test_query_users_info_with_invalid_timeout_policy_value(self):
 

@@ -412,3 +412,27 @@ def expect_earlier_than_server_version_to_fail(as_connection, request):
     else:
         # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
         request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+
+def check_user_dictionary(user: dict):
+    assert set(user["roles"]) == set([
+        "read",
+        "read-write",
+        "sys-admin"
+    ])
+
+
+    # The user has not read or written anything, so all r/w stats should be 0
+    # NOTE: we don't test the scenario where read_info / write_info is not 0
+    # because it takes time and a lot of transactions for the server to actually record non-zero values
+    dict_keys = [
+        "read_info",
+        "write_info"
+    ]
+    for key in dict_keys:
+        assert type(user[key]) == list
+        assert len(user[key]) == 4
+        for element in user[key]:
+            assert element == 0
+
+    # We assume no clients were logged in as this user
+    assert user.get("conns_in_use") == 0
