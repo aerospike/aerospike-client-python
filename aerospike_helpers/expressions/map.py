@@ -62,7 +62,9 @@ class MapPut(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Put {"key": 27} into map bin "b".
             expr = exp.MapPut(None, None, "key", 27, exp.MapBin("b")).compile()
@@ -100,7 +102,9 @@ class MapPutItems(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Put {27: 'key27', 28: 'key28'} into map bin "b".
             expr = exp.MapPutItems(None, None, {27: 'key27', 28: 'key28'}, exp.MapBin("b")).compile()
@@ -140,7 +144,9 @@ class MapIncrement(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Increment element at 'vageta' in map bin "b" by 9000.
             expr = exp.MapIncrement(None, None, 'vageta', 9000, exp.MapBin("b")).compile()
@@ -176,7 +182,9 @@ class MapClear(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Clear map bin "b".
             expr = exp.MapClear(None, exp.MapBin("b")).compile()
@@ -203,7 +211,9 @@ class MapRemoveByKey(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove element at key 1 in map bin "b".
             expr = exp.MapRemoveByKey(None, 1, exp.MapBin("b")).compile()
@@ -234,7 +244,9 @@ class MapRemoveByKeyList(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove elements at keys [1, 2] in map bin "b".
             expr = exp.MapRemoveByKeyList(None, [1, 2], exp.MapBin("b")).compile()
@@ -276,7 +288,9 @@ class MapRemoveByKeyRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove elements at keys between 1 and 10 in map bin "b".
             expr = exp.MapRemoveByKeyRange(None, 1, 10, exp.MapBin("b")).compile()
@@ -312,7 +326,9 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
             expr = exp.MapRemoveByKeyRelIndexRangeToEnd(None, "key2", 1, exp.MapBin("b")).compile()
@@ -355,7 +371,9 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove the next two items after key1
             # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
@@ -390,7 +408,9 @@ class MapRemoveByValue(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove {"key1": 1} from map bin "b".
             expr = exp.MapRemoveByValue(None, 1, exp.MapBin("b")).compile()
@@ -421,7 +441,9 @@ class MapRemoveByValueList(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove elements with values 1, 2, 3 from map bin "b".
             expr = exp.MapRemoveByValueList(None, [1, 2, 3], exp.MapBin("b")).compile()
@@ -463,7 +485,9 @@ class MapRemoveByValueRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove list of items with values >= 3 and < 7 from map bin "b".
             expr = exp.MapRemoveByValueRange(None, 3, 7, exp.MapBin("b")).compile()
@@ -502,7 +526,9 @@ class MapRemoveByValueRelRankRangeToEnd(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove all elements with values larger than 3 from map bin "b".
             expr = exp.MapRemoveByValueRelRankRangeToEnd(None, 3, 1, exp.MapBin("b")).compile()
@@ -546,7 +572,9 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove the key with a value just lower than 17
             expr = exp.MapRemoveByValueRelRankRange(None, 17, -1, 1, exp.MapBin("b")).compile()
@@ -578,7 +606,9 @@ class MapRemoveByIndex(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove element with smallest key from map bin "b".
             expr = exp.MapRemoveByIndex(None, 0, exp.MapBin("b")).compile()
@@ -609,7 +639,9 @@ class MapRemoveByIndexRangeToEnd(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove all elements starting from index 3 in map bin "b".
             expr = exp.MapRemoveByIndexRangeToEnd(None, 3, exp.MapBin("b")).compile()
@@ -648,7 +680,9 @@ class MapRemoveByIndexRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get size of map bin "b" after index 3, 4, and 5 have been removed.
             expr = exp.MapSize(None, exp.MapRemoveByIndexRange(None, 3, 3, exp.MapBin("b"))).compile()
@@ -679,7 +713,9 @@ class MapRemoveByRank(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove key with smallest value in map bin "b".
             expr = exp.MapRemoveByRank(None, 0, exp.MapBin("b")).compile()
@@ -710,7 +746,9 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove keys with 2 largest values from map bin "b".
             expr = exp.MapRemoveByRankRangeToEnd(None, -2, exp.MapBin("b")).compile()
@@ -749,7 +787,9 @@ class MapRemoveByRankRange(_BaseExpr):
 
         :return: Map expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove 3 keys with the smallest values from map bin "b".
             expr = exp.MapRemoveByRankRange(None, 0, 3, exp.MapBin("b")).compile()
@@ -784,7 +824,9 @@ class MapSize(_BaseExpr):
 
         :return: Integer expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #Take the size of map bin "b".
             expr = exp.MapSize(None, exp.MapBin("b")).compile()
@@ -816,7 +858,9 @@ class MapGetByKey(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the value at key "key0" in map bin "b". (assume the value at key0 is an integer)
             expr = exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "key0",
@@ -863,7 +907,9 @@ class MapGetByKeyRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements at keys "key3", "key4", "key5", "key6" in map bin "b".
             expr = exp.MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, "key3", "key7", exp.MapBin("b")).compile()
@@ -908,7 +954,9 @@ class MapGetByKeyList(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements at keys "key3", "key4", "key5" in map bin "b".
             expr = exp.MapGetByKeyList(None, aerospike.MAP_RETURN_VALUE, ["key3", "key4", "key5"],
@@ -955,7 +1003,9 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements with keys larger than "key2" from map bin "b".
             expr = exp.MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1,
@@ -1005,7 +1055,9 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             expr = exp.MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key2", 0, 2,
                 exp.MapBin("b")).compile()
@@ -1056,7 +1108,9 @@ class MapGetByValue(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the rank of the element with value, 3, in map bin "b".
             expr = exp.MapGetByValue(None, aerospike.MAP_RETURN_RANK, 3, exp.MapBin("b")).compile()
@@ -1101,7 +1155,9 @@ class MapGetByValueRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements with values between 3 and 7 from map bin "b".
             expr = exp.MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, 3, 7, exp.MapBin("b")).compile()
@@ -1145,7 +1201,9 @@ class MapGetByValueList(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the indexes of the the elements in map bin "b" with values [3, 6, 12].
             expr = exp.MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, [3, 6, 12], exp.MapBin("b")).compile()
@@ -1188,7 +1246,9 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the values of all elements in map bin "b" larger than 3.
             expr = exp.MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 3, 1, exp.MapBin("b")).compile()
@@ -1233,7 +1293,9 @@ class MapGetByValueRelRankRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
             # Get next two largest values greater than a value of 1
@@ -1276,7 +1338,9 @@ class MapGetByIndex(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the value at index 0 in map bin "b". (assume this value is an integer)
             expr = exp.MapGetByIndex(None, aerospike.MAP_RETURN_VALUE,
@@ -1316,7 +1380,9 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get element at index 5 to end from map bin "b".
             expr = exp.MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, exp.MapBin("b")).compile()
@@ -1359,7 +1425,9 @@ class MapGetByIndexRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements at indexes 3, 4, 5, 6 in map bin "b".
             expr = exp.MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, exp.MapBin("b")).compile()
@@ -1400,7 +1468,9 @@ class MapGetByRank(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the smallest element in map bin "b".
             expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0,
@@ -1433,10 +1503,12 @@ class MapGetByRankRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the three largest elements in map bin "b".
-            expr = exp.MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, MapBin("b")).compile()
+            expr = exp.MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, -3, exp.MapBin("b")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
@@ -1476,7 +1548,9 @@ class MapGetByRankRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the 3 smallest elements in map bin "b".
             expr = exp.MapGetByRankRange(None, aerospike.MAP_RETURN_VALUE, 0, 3, exp.MapBin("b")).compile()
@@ -1495,7 +1569,7 @@ class MapGetKeys(_BaseExpr):
     Return a list of keys from a map.
     """
 
-    _op = aerospike._AS_EXP_CODE_MAP_KEYS
+    _op = aerospike._AS_EXP_CODE_MAP_KEYS_IN
 
     def __init__(
         self,
@@ -1516,7 +1590,7 @@ class MapGetValues(_BaseExpr):
     Return a list of values from a map.
     """
 
-    _op = aerospike._AS_EXP_CODE_MAP_VALUES
+    _op = aerospike._AS_EXP_CODE_MAP_VALUES_IN
 
     def __init__(
         self,
