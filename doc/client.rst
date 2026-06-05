@@ -206,7 +206,7 @@ Record Commands
             print(key)
             print(meta)
 
-        .. testblock::
+        .. testcode::
 
             ('test', 'demo', 'key', bytearray(b'...'))
             None
