@@ -65,7 +65,7 @@ jobs:
       run: echo manylinux_base_image=quay.io/pypa/manylinux_2_28_${{ matrix.arch-and-runner-os[0] }}:2026.04.25-0 >> "$GITHUB_OUTPUT"
 
     - name: Log into internal JFrog registry
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+      uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
       with:
         registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
         username: ${{ steps.setup-jf.outputs.oidc-user }}
