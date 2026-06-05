@@ -79,7 +79,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_SUBTRACT:
     case OP_BIT_GET_INT:
     case OP_BIT_LSCAN:
-    case OP_BIT_RSCAN:
+    case OP_BIT_RSCAN: {
 
         char *bool_key = VALUE_KEY;
         switch (operation_code) {
@@ -95,6 +95,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             goto exit;
         }
         break;
+    }
     }
 
     as_bit_policy bit_policy;
@@ -191,7 +192,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     as_bit_overflow_action action = AS_BIT_OVERFLOW_FAIL;
     switch (operation_code) {
     case OP_BIT_ADD:
-    case OP_BIT_SUBTRACT:
+    case OP_BIT_SUBTRACT: {
         int64_t action_int64;
         if (get_int64_t(err, ACTION_KEY, op_dict, &action_int64) !=
             AEROSPIKE_OK) {
@@ -199,6 +200,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         }
         action = action_int64;
         break;
+    }
     }
 
     int64_t int64_value = 0;
