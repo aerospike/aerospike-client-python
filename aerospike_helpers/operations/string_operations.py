@@ -37,10 +37,9 @@ Python strings, but they cannot embedded NULL bytes.
 from enum import IntEnum
 import sys
 import inspect
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from aerospike_helpers.expressions.list import TypeCTX
+
+TypeCTX = list | None
 
 
 def strlen(bin_name: str, ctx: TypeCTX = None):
