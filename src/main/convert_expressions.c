@@ -452,42 +452,58 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [DEF] = EXP_SZ(as_exp_def("", NIL)),
         [VAR] = EXP_SZ(as_exp_var("")),
         [UNKNOWN] = EXP_SZ(as_exp_unknown()),
-        // TODO: exp sizes need to be filled out
-        [_AS_STRING_OP_STRLEN] = 0,
-        [_AS_STRING_OP_SUBSTR] = 0,
-        [_AS_STRING_OP_CHAR_AT] = 0,
-        [_AS_STRING_OP_FIND] = 0,
-        [_AS_STRING_OP_CONTAINS] = 0,
-        [_AS_STRING_OP_STARTS_WITH] = 0,
-        [_AS_STRING_OP_ENDS_WITH] = 0,
-        [_AS_STRING_OP_TO_INTEGER] = 0,
-        [_AS_STRING_OP_TO_DOUBLE] = 0,
-        [_AS_STRING_OP_BYTE_LENGTH] = 0,
-        [_AS_STRING_OP_IS_NUMERIC] = 0,
-        [_AS_STRING_OP_IS_UPPER] = 0,
-        [_AS_STRING_OP_IS_LOWER] = 0,
-        [_AS_STRING_OP_TO_BLOB] = 0,
-        [_AS_STRING_OP_SPLIT] = 0,
-        [_AS_STRING_OP_B64_DECODE] = 0,
-        [_AS_STRING_OP_REGEX_COMPARE] = 0,
-        [_AS_STRING_OP_INSERT] = 0,
-        [_AS_STRING_OP_OVERWRITE] = 0,
-        [_AS_STRING_OP_CONCAT] = 0,
-        [_AS_STRING_OP_SNIP] = 0,
-        [_AS_STRING_OP_REPLACE] = 0,
-        [_AS_STRING_OP_REPLACE_ALL] = 0,
-        [_AS_STRING_OP_UPPER] = 0,
-        [_AS_STRING_OP_LOWER] = 0,
-        [_AS_STRING_OP_CASE_FOLD] = 0,
-        [_AS_STRING_OP_NORMALIZE_NFC] = 0,
-        [_AS_STRING_OP_TRIM_START] = 0,
-        [_AS_STRING_OP_TRIM_END] = 0,
-        [_AS_STRING_OP_TRIM] = 0,
-        [_AS_STRING_OP_PAD_START] = 0,
-        [_AS_STRING_OP_PAD_END] = 0,
-        [_AS_STRING_OP_REPEAT] = 0,
-        [_AS_STRING_OP_REGEX_REPLACE] = 0,
-    };
+        [_AS_STRING_OP_STRLEN] = EXP_SZ(as_exp_string_strlen(NIL)),
+        // TODO: needs to be overloaded
+        [_AS_STRING_OP_SUBSTR] = EXP_SZ(as_exp_string_substr(0, NIL)),
+        [_AS_STRING_OP_CHAR_AT] = EXP_SZ(as_exp_string_char_at(0, NIL)),
+        // TODO: needs to be overloaded
+        [_AS_STRING_OP_FIND] = EXP_SZ(as_exp_string_find(0, NIL)),
+        // TODO: double check enough space is allocated for the string
+        [_AS_STRING_OP_CONTAINS] = EXP_SZ(as_exp_string_contains("", NIL)),
+        [_AS_STRING_OP_STARTS_WITH] =
+            EXP_SZ(as_exp_string_starts_with("", NIL)),
+        [_AS_STRING_OP_ENDS_WITH] = EXP_SZ(as_exp_string_ends_with("", NIL)),
+        [_AS_STRING_OP_TO_INTEGER] = EXP_SZ(as_exp_string_to_integer(NIL)),
+        [_AS_STRING_OP_TO_DOUBLE] = EXP_SZ(as_exp_string_to_double(NIL)),
+        [_AS_STRING_OP_BYTE_LENGTH] = EXP_SZ(as_exp_string_byte_length(NIL)),
+        // TODO: needs to be overloaded
+        [_AS_STRING_OP_IS_NUMERIC] = EXP_SZ(as_exp_string_is_numeric(NIL)),
+        [_AS_STRING_OP_IS_UPPER] = EXP_SZ(as_exp_string_is_upper(NIL)),
+        [_AS_STRING_OP_IS_LOWER] = EXP_SZ(as_exp_string_is_lower(NIL)),
+        [_AS_STRING_OP_TO_BLOB] = EXP_SZ(as_exp_string_to_blob(NIL)),
+        // TODO: overload
+        [_AS_STRING_OP_SPLIT] = EXP_SZ(as_exp_string_split(NIL)),
+        [_AS_STRING_OP_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
+        // TODO: overload. check space for string
+        [_AS_STRING_OP_REGEX_COMPARE] =
+            EXP_SZ(as_exp_string_regex_compare("", NIL)),
+        [_AS_STRING_OP_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
+        [_AS_STRING_OP_OVERWRITE] =
+            EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
+        // TODO: overload
+        [_AS_STRING_OP_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
+        [_AS_STRING_OP_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, NIL)),
+        [_AS_STRING_OP_REPLACE] =
+            EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
+        [_AS_STRING_OP_REPLACE_ALL] =
+            EXP_SZ(as_exp_string_replace_all(NULL, "", "", NIL)),
+        [_AS_STRING_OP_UPPER] = EXP_SZ(as_exp_string_upper(NULL, NIL)),
+        [_AS_STRING_OP_LOWER] = EXP_SZ(as_exp_string_lower(NULL, NIL)),
+        [_AS_STRING_OP_CASE_FOLD] = EXP_SZ(as_exp_string_case_fold(NULL, NIL)),
+        [_AS_STRING_OP_NORMALIZE_NFC] =
+            EXP_SZ(as_exp_string_normalize_nfc(NULL, NIL)),
+        [_AS_STRING_OP_TRIM_START] =
+            EXP_SZ(as_exp_string_trim_start(NULL, NIL)),
+        [_AS_STRING_OP_TRIM_END] = EXP_SZ(as_exp_string_trim_end(NULL, NIL)),
+        [_AS_STRING_OP_TRIM] = EXP_SZ(as_exp_string_trim(NULL, NIL)),
+        [_AS_STRING_OP_PAD_START] =
+            EXP_SZ(as_exp_string_pad_start(NULL, 1, "", NIL)),
+        [_AS_STRING_OP_PAD_END] =
+            EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
+        [_AS_STRING_OP_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
+        // TODO: check space for string. Do for the other ops
+        [_AS_STRING_OP_REGEX_REPLACE] =
+            EXP_SZ(as_exp_string_regex_replace("", "", 0, NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
