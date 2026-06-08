@@ -34,9 +34,7 @@ All string arguments (needle, value, separator, pattern, etc.) are passed as
 Python strings, but they cannot embedded NULL bytes.
 """
 
-from enum import IntEnum
-import sys
-import inspect
+from ..string_helpers import NumericType, RegexFlags, WriteFlags, __generate_docstrings
 
 
 TypeCTX = list | None
@@ -186,19 +184,6 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-class NumericType(IntEnum):
-    """
-    Numeric type filter for :meth:`is_numeric`.
-    """
-
-    #: Match either an integer or a floating-point number.
-    ANY = 0
-    #: Match only integers.
-    INT = 1
-    #: Match only floating-point numbers.
-    FLOAT = 2
-
-
 def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: TypeCTX = None):
     """
     Create string is_numeric operation that returns true if the bin contains a
@@ -279,28 +264,6 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-class RegexFlags(IntEnum):
-    """
-    Regex flags for string regex operations. Use bitwise OR to combine flags.
-    """
-
-    #: Default. No flags set.
-    DEFAULT = 0
-    #: Case insensitive matching.
-    CASE_INSENSITIVE = 1
-
-    MULTILINE = 2
-    """Treat input as a multi-line string. The ``^`` and ``$`` metacharacters match the
-            start and end of any line, not just the start and end of the input."""
-
-    #: The dot metacharacter matches line terminators.
-    DOTALL = 4
-    #: Treat only ``\n`` as a line terminator.
-    UNIX_LINES = 8
-    #: Replace all matches. Only applicable to :py:meth:`regex_replace`.
-    GLOBAL = 16
-
-
 def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFlags.DEFAULT, ctx: TypeCTX = None):
     """
     Create string regex_compare operation that matches an ICU regex pattern
@@ -314,21 +277,6 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
         {ctx}
     """
     return locals()
-
-
-class WriteFlags(IntEnum):
-    """
-    String operation policy write bit flags. Use bitwise OR to combine flags.
-    """
-
-    #: Default. Allow create or update.
-    DEFAULT = 0
-
-    NO_FAIL = 4
-    """
-    Do not raise an error if a modify operation cannot be applied because
-            the target bin does not exist. The record is left unchanged.
-    """
 
 
 class StringPolicy:
@@ -640,23 +588,17 @@ def to_string(bin_name: str):
 # These descriptions are shared across all the string operations
 
 
-current_module = sys.modules[__name__]
-functions = inspect.getmembers(current_module, predicate=inspect.isfunction)
-for name, function in functions:
-    kwargs = {
-        "bin_name": "bin_name (str): name of string bin.",
-        "start_get": "start (int): Starting codepoint index.",
-        "needle_get": "needle (int): the string to search for.",
-        "pattern": "pattern (str): the regex pattern to match against.",
-        "regex_flags": "regex_flags (:py:class:`RegexFlags`): The regex flags to use.",
-        "str_policy": "policy (:py:class:`StringPolicy`): String policy.",
-        "needle_to_replace": "needle (str): the string to replace.",
-        "replacement": "replacement (str): the string to replace with.",
-        "target_length": "target_length (int): the target length of the string.",
-        "pad_string": "pad_string (str): the string to pad with.",
-        "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
-    }
-
-    function.__doc__ = function.__doc__.format(
-        **kwargs
-    )
+kwargs = {
+    "bin_name": "bin_name (str): name of string bin.",
+    "start_get": "start (int): Starting codepoint index.",
+    "needle_get": "needle (int): the string to search for.",
+    "pattern": "pattern (str): the regex pattern to match against.",
+    "regex_flags": "regex_flags (:py:class:`RegexFlags`): The regex flags to use.",
+    "str_policy": "policy (:py:class:`StringPolicy`): String policy.",
+    "needle_to_replace": "needle (str): the string to replace.",
+    "replacement": "replacement (str): the string to replace with.",
+    "target_length": "target_length (int): the target length of the string.",
+    "pad_string": "pad_string (str): the string to pad with.",
+    "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
+}
+__generate_docstrings(kwargs)
