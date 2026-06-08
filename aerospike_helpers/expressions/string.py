@@ -52,7 +52,7 @@ class SubStr(_BaseExpr):
         """
         Args:
 
-            {start}
+            start: The starting index of the substring.
             length: The length of the substring.
             {bin}
 
