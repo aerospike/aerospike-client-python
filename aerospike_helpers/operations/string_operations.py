@@ -34,7 +34,7 @@ All string arguments (needle, value, separator, pattern, etc.) are passed as
 Python strings, but they cannot embedded NULL bytes.
 """
 
-from ..string_helpers import NumericType, RegexFlags, WriteFlags, __generate_docstrings
+from ..string_helpers import NumericType, RegexFlags, StringPolicy, __generate_docstrings
 import sys
 
 TypeCTX = list | None
@@ -277,15 +277,6 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
         {ctx}
     """
     return locals()
-
-
-class StringPolicy:
-    """
-    String operation policy.
-    """
-
-    def __init__(self, write_flags: WriteFlags):
-        self.write_flags = write_flags
 
 
 def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):

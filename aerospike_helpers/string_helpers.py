@@ -52,6 +52,15 @@ class NumericType(IntEnum):
     FLOAT = 2
 
 
+class StringPolicy:
+    """
+    String operation policy.
+    """
+
+    def __init__(self, write_flags: WriteFlags):
+        self.write_flags = write_flags
+
+
 def __generate_docstrings(object, kwargs: dict):
     functions = inspect.getmembers(object, predicate=inspect.isfunction)
     for _, function in functions:
