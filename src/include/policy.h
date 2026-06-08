@@ -28,6 +28,7 @@
 #include <aerospike/as_hll_operations.h>
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_string_operations.h>
 
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
@@ -167,8 +168,51 @@ enum {
     _AS_EXP_LOOPVAR_NIL,
     _AS_EXP_LOOPVAR_GEOJSON,
     _AS_EXP_LOOPVAR_HLL,
+    _AS_EXP_CODE_CALL,
     _AS_EXP_CODE_CALL_SELECT,
     _AS_EXP_CODE_CALL_APPLY,
+};
+
+#define STRING_OP_NAMES_EXCEPT_STRLEN                                          \
+    X(_AS_STRING_OP_SUBSTR)                                                    \
+    X(_AS_STRING_OP_CHAR_AT)                                                   \
+    X(_AS_STRING_OP_FIND)                                                      \
+    X(_AS_STRING_OP_CONTAINS)                                                  \
+    X(_AS_STRING_OP_STARTS_WITH)                                               \
+    X(_AS_STRING_OP_ENDS_WITH)                                                 \
+    X(_AS_STRING_OP_TO_INTEGER)                                                \
+    X(_AS_STRING_OP_TO_DOUBLE)                                                 \
+    X(_AS_STRING_OP_BYTE_LENGTH)                                               \
+    X(_AS_STRING_OP_IS_NUMERIC)                                                \
+    X(_AS_STRING_OP_IS_UPPER)                                                  \
+    X(_AS_STRING_OP_IS_LOWER)                                                  \
+    X(_AS_STRING_OP_TO_BLOB)                                                   \
+    X(_AS_STRING_OP_SPLIT)                                                     \
+    X(_AS_STRING_OP_B64_DECODE)                                                \
+    X(_AS_STRING_OP_REGEX_COMPARE)                                             \
+    X(_AS_STRING_OP_INSERT)                                                    \
+    X(_AS_STRING_OP_OVERWRITE)                                                 \
+    X(_AS_STRING_OP_CONCAT)                                                    \
+    X(_AS_STRING_OP_SNIP)                                                      \
+    X(_AS_STRING_OP_REPLACE)                                                   \
+    X(_AS_STRING_OP_REPLACE_ALL)                                               \
+    X(_AS_STRING_OP_UPPER)                                                     \
+    X(_AS_STRING_OP_LOWER)                                                     \
+    X(_AS_STRING_OP_CASE_FOLD)                                                 \
+    X(_AS_STRING_OP_NORMALIZE_NFC)                                             \
+    X(_AS_STRING_OP_TRIM_START)                                                \
+    X(_AS_STRING_OP_TRIM_END)                                                  \
+    X(_AS_STRING_OP_TRIM)                                                      \
+    X(_AS_STRING_OP_PAD_START)                                                 \
+    X(_AS_STRING_OP_PAD_END)                                                   \
+    X(_AS_STRING_OP_REPEAT)                                                    \
+    X(_AS_STRING_OP_REGEX_REPLACE)
+
+enum {
+    _AS_STRING_OP_STRLEN = 4000,
+#define X(op_name) op_name,
+    STRING_OP_NAMES_EXCEPT_STRLEN
+#undef X
 };
 
 // Can be either for select or apply

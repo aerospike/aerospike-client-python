@@ -585,6 +585,7 @@ static struct module_constant_name_to_value module_constants[] = {
 
     // C client uses the same expression code for these two expressions
     // so we define unique ones in the Python client code
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
 
@@ -597,6 +598,10 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_CTX_FILTER_EXPR_KEY),
+
+#define X(op_name) EXPOSE_MACRO(op_name),
+    X(_AS_STRING_OP_STRLEN) STRING_OP_NAMES_EXCEPT_STRLEN
+#undef X
 };
 
 struct submodule_name_to_creation_method {

@@ -20,7 +20,9 @@ these operations are from the standard :mod:`List API <aerospike_helpers.operati
 """
 
 
+import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.base import StrBin
 from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings
 import inspect
 import sys
@@ -34,6 +36,9 @@ TypeBinName = _BaseExpr | str
 
 
 class StrLen(_BaseExpr):
+
+    _op = aerospike._AS_STRING_OP_STRLEN
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -44,10 +49,15 @@ class StrLen(_BaseExpr):
 
             The length of the string in the bin.
         """
-        pass
+        self._children = (
+            bin if isinstance(bin, _BaseExpr) else StrBin(bin),
+        )
 
 
 class SubStr(_BaseExpr):
+
+    _op = aerospike._AS_STRING_OP_SUBSTR
+
     def __init__(self, start: int, length: int | None, bin: "TypeBinName"):
         """
         Args:
@@ -64,6 +74,8 @@ class SubStr(_BaseExpr):
 
 
 class CharAt(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_CHAR_AT
+
     def __init__(self, index: int, bin: "TypeBinName"):
         """
         Args:
@@ -79,6 +91,8 @@ class CharAt(_BaseExpr):
 
 
 class Find(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_FIND
+
     def __init__(self, needle: str, occurrence: int, bin: "TypeBinName"):
         """
         Args:
@@ -95,6 +109,8 @@ class Find(_BaseExpr):
 
 
 class Contains(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_CONTAINS
+
     def __init__(self, needle: str, bin: "TypeBinName"):
         """
         Args:
@@ -110,6 +126,8 @@ class Contains(_BaseExpr):
 
 
 class StartsWith(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_STARTS_WITH
+
     def __init__(self, prefix: str, bin: "TypeBinName"):
         """
         Args:
@@ -125,6 +143,8 @@ class StartsWith(_BaseExpr):
 
 
 class EndsWith(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_ENDS_WITH
+
     def __init__(self, suffix: str, bin: "TypeBinName"):
         """
         Args:
@@ -140,6 +160,8 @@ class EndsWith(_BaseExpr):
 
 
 class ToInteger(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TO_INTEGER
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -154,6 +176,8 @@ class ToInteger(_BaseExpr):
 
 
 class ToDouble(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TO_DOUBLE
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -168,6 +192,8 @@ class ToDouble(_BaseExpr):
 
 
 class ByteLength(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_BYTE_LENGTH
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -182,7 +208,9 @@ class ByteLength(_BaseExpr):
 
 
 class IsNumeric(_BaseExpr):
-    def __init__(self, numeric_type: NumericType, bin: "TypeBinName"):
+    _op = aerospike._AS_STRING_OP_IS_NUMERIC
+
+    def __init__(self, bin: "TypeBinName", numeric_type: NumericType = NumericType.ANY):
         """
         Args:
 
@@ -197,6 +225,8 @@ class IsNumeric(_BaseExpr):
 
 
 class IsUpper(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_IS_UPPER
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -211,6 +241,8 @@ class IsUpper(_BaseExpr):
 
 
 class IsLower(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_IS_LOWER
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -225,6 +257,8 @@ class IsLower(_BaseExpr):
 
 
 class ToBlob(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TO_BLOB
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -240,6 +274,8 @@ class ToBlob(_BaseExpr):
 
 # TODO: move optional args for the classes above.
 class Split(_BaseExpr):
+    _op = aerospike.AS_STRING_OP_SPLIT
+
     def __init__(self, bin: "TypeBinName", separator: str = " "):
         """
         Args:
@@ -255,6 +291,8 @@ class Split(_BaseExpr):
 
 
 class Base64Decode(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_B64_DECODE
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
@@ -269,6 +307,8 @@ class Base64Decode(_BaseExpr):
 
 
 class RegexCompare(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_REGEX_COMPARE
+
     def __init__(self, pattern: str, bin: "TypeBinName", regex_flags: RegexFlags = RegexFlags.DEFAULT):
         """
         Args:
@@ -285,6 +325,8 @@ class RegexCompare(_BaseExpr):
 
 
 class Insert(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_INSERT
+
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
         Args:
@@ -302,6 +344,8 @@ class Insert(_BaseExpr):
 
 
 class Overwrite(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_OVERWRITE
+
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
         Args:
@@ -319,6 +363,8 @@ class Overwrite(_BaseExpr):
 
 
 class Concat(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_CONCAT
+
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
         Args:
@@ -335,6 +381,8 @@ class Concat(_BaseExpr):
 
 
 class ConcatList(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_CONCAT
+
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
         Args:
@@ -351,6 +399,8 @@ class ConcatList(_BaseExpr):
 
 
 class Snip(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_SNIP
+
     def __init__(self, policy: StringPolicy, start: int, end: int | None, bin: "TypeBinName"):
         """
         Args:
@@ -368,6 +418,8 @@ class Snip(_BaseExpr):
 
 
 class Replace(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_REPLACE
+
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
         Args:
@@ -385,6 +437,8 @@ class Replace(_BaseExpr):
 
 
 class ReplaceAll(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_REPLACE_ALL
+
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
         Args:
@@ -402,6 +456,8 @@ class ReplaceAll(_BaseExpr):
 
 
 class Upper(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_UPPER
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -417,6 +473,8 @@ class Upper(_BaseExpr):
 
 
 class Lower(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_LOWER
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -432,6 +490,8 @@ class Lower(_BaseExpr):
 
 
 class CaseFold(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_CASE_FOLD
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -447,6 +507,8 @@ class CaseFold(_BaseExpr):
 
 
 class NormalizeNFC(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_NORMALIZE_NFC
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -462,6 +524,8 @@ class NormalizeNFC(_BaseExpr):
 
 
 class TrimStart(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TRIM_START
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -477,6 +541,8 @@ class TrimStart(_BaseExpr):
 
 
 class TrimEnd(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TRIM_END
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -492,6 +558,8 @@ class TrimEnd(_BaseExpr):
 
 
 class Trim(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_TRIM
+
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
@@ -507,6 +575,8 @@ class Trim(_BaseExpr):
 
 
 class PadStart(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_PAD_START
+
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
         Args:
@@ -524,6 +594,8 @@ class PadStart(_BaseExpr):
 
 
 class PadEnd(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_PAD_END
+
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
         Args:
@@ -541,6 +613,8 @@ class PadEnd(_BaseExpr):
 
 
 class Repeat(_BaseExpr):
+    _op = aerospike._AS_STRING_OP_REPEAT
+
     def __init__(self, policy: StringPolicy, count: int, bin: "TypeBinName"):
         """
         Args:
@@ -557,6 +631,8 @@ class Repeat(_BaseExpr):
 
 
 class RegexReplace(_BaseExpr):
+    _op = aerospike.AS_STRING_OP_REGEX_REPLACE
+
     def __init__(
             self,
             policy: StringPolicy,
@@ -582,6 +658,8 @@ class RegexReplace(_BaseExpr):
 
 
 class ToString(_BaseExpr):
+    _op = aerospike._AS_EXP_CODE_CALL
+
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
