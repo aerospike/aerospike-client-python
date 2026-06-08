@@ -642,7 +642,7 @@ def to_string(bin_name: str):
 current_module = sys.modules[__name__]
 functions = inspect.getmembers(current_module, predicate=inspect.isfunction)
 for name, function in functions:
-    function.__doc__.format(
+    function.__doc__ = function.__doc__.format(
         bin_name="Name of string bin.",
         start_get="Starting codepoint index.",
         needle_get="The string to search for.",
