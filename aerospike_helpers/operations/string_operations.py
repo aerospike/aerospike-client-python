@@ -150,7 +150,7 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
     Create string to_integer operation that parses the string as an unsigned 64-bit integer.
-    Raises :exc:`ParamError` if the bin cannot be parsed as an integer.
+    Raises :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as an integer.
 
     Args:
 
@@ -163,7 +163,7 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 def to_double(bin_name: str, ctx: TypeCTX = None):
     """
     Create string to_double operation that parses the string as a 64-bit float.
-    Returns :exc:`ParamError` if the bin cannot be parsed as a double.
+    Returns :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as a double.
 
     Args:
 
