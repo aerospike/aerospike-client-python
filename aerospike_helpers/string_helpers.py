@@ -56,6 +56,8 @@ class NumericType(IntEnum):
 def __generate_docstrings(object, kwargs: dict):
     functions = inspect.getmembers(object, predicate=inspect.isfunction)
     for _, function in functions:
+        if function.__doc__ is None:
+            continue
         function.__doc__ = function.__doc__.format(
             **kwargs
         )
