@@ -285,23 +285,22 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
 class RegexFlags(IntEnum):
     """
     Regex flags for string regex operations. Use bitwise OR to combine flags.
-
-    Attributes:
-
-        DEFAULT: Default. No flags set.
-        CASE_INSENSITIVE: Case insensitive matching.
-        MULTILINE: Treat input as a multi-line string. The ``^`` and ``$`` metacharacters match the
-            start and end of any line, not just the start and end of the input.
-        DOTALL: The dot metacharacter matches line terminators.
-        UNIX_LINES: Treat only ``\n`` as a line terminator.
-        GLOBAL: Replace all matches. Only applicable to regex_replace.
     """
 
+    #: Default. No flags set.
     DEFAULT = 0
+    #: Case insensitive matching.
     CASE_INSENSITIVE = 1
+
     MULTILINE = 2
+    """Treat input as a multi-line string. The ``^`` and ``$`` metacharacters match the
+            start and end of any line, not just the start and end of the input."""
+
+    #: The dot metacharacter matches line terminators.
     DOTALL = 4
+    #: Treat only ``\n`` as a line terminator.
     UNIX_LINES = 8
+    #: Replace all matches. Only applicable to :py:meth:`regex_replace`.
     GLOBAL = 16
 
 
