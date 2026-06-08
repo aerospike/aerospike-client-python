@@ -639,19 +639,24 @@ def to_string(bin_name: str):
 
 # These descriptions are shared across all the string operations
 
+
 current_module = sys.modules[__name__]
 functions = inspect.getmembers(current_module, predicate=inspect.isfunction)
 for name, function in functions:
+    kwargs = {
+        "bin_name": "bin_name (str): name of string bin.",
+        "start_get": "start (int): Starting codepoint index.",
+        "needle_get": "needle (int): the string to search for.",
+        "pattern": "pattern (str): the regex pattern to match against.",
+        "regex_flags": "regex_flags (:py:class:`RegexFlags`:): The regex flags to use.",
+        "str_policy": "policy (:py:class:`StringPolicy`): String policy.",
+        "needle_to_replace": "needle (str): the string to replace.",
+        "replacement": "replacement (str): the string to replace with.",
+        "target_length": "target_length (int): the target length of the string.",
+        "pad_string": "pad_string (str): the string to pad with.",
+        "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
+    }
+
     function.__doc__ = function.__doc__.format(
-        bin_name="Name of string bin.",
-        start_get="Starting codepoint index.",
-        needle_get="The string to search for.",
-        pattern="The regex pattern to match against.",
-        regex_flags="The regex flags to use.",
-        str_policy="String policy.",
-        needle_to_replace="The string to replace.",
-        replacement="The string to replace with.",
-        target_length="The target length of the string.",
-        pad_string="The string to pad with.",
-        ctx="Optional path into a string nested inside a list or map."
+        **kwargs
     )
