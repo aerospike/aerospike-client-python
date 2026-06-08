@@ -189,16 +189,13 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
 class NumericType(IntEnum):
     """
     Numeric type filter for :meth:`is_numeric`.
-
-    Attributes:
-
-        ANY: Match either an integer or a floating-point number.
-        INT: Match only integers.
-        FLOAT: Match only floating-point numbers.
     """
 
+    #: Match either an integer or a floating-point number.
     ANY = 0
+    #: Match only integers.
     INT = 1
+    #: Match only floating-point numbers.
     FLOAT = 2
 
 
@@ -322,16 +319,16 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 class WriteFlags(IntEnum):
     """
     String operation policy write bit flags. Use bitwise OR to combine flags.
-
-    Attributes:
-
-        DEFAULT: Default. Allow create or update.
-        NO_FAIL: Do not raise an error if a modify operation cannot be applied because
-            the target bin does not exist. The record is left unchanged.
     """
 
+    #: Default. Allow create or update.
     DEFAULT = 0
+
     NO_FAIL = 4
+    """
+    Do not raise an error if a modify operation cannot be applied because
+            the target bin does not exist. The record is left unchanged.
+    """
 
 
 class StringPolicy:
