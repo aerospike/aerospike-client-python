@@ -196,6 +196,7 @@ class NumericType(IntEnum):
         INT: Match only integers.
         FLOAT: Match only floating-point numbers.
     """
+
     ANY = 0
     INT = 1
     FLOAT = 2
@@ -295,6 +296,7 @@ class RegexFlags(IntEnum):
         UNIX_LINES: Treat only ``\n`` as a line terminator.
         GLOBAL: Replace all matches. Only applicable to regex_replace.
     """
+
     DEFAULT = 0
     CASE_INSENSITIVE = 1
     MULTILINE = 2
@@ -328,6 +330,7 @@ class WriteFlags(IntEnum):
         NO_FAIL: Do not raise an error if a modify operation cannot be applied because
             the target bin does not exist. The record is left unchanged.
     """
+
     DEFAULT = 0
     NO_FAIL = 4
 
@@ -336,6 +339,7 @@ class StringPolicy:
     """
     String operation policy.
     """
+
     def __init__(self, write_flags: WriteFlags):
         self.write_flags = write_flags
 
