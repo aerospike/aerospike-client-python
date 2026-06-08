@@ -648,7 +648,7 @@ for name, function in functions:
         "start_get": "start (int): Starting codepoint index.",
         "needle_get": "needle (int): the string to search for.",
         "pattern": "pattern (str): the regex pattern to match against.",
-        "regex_flags": "regex_flags (:py:class:`RegexFlags`:): The regex flags to use.",
+        "regex_flags": "regex_flags (:py:class:`RegexFlags`): The regex flags to use.",
         "str_policy": "policy (:py:class:`StringPolicy`): String policy.",
         "needle_to_replace": "needle (str): the string to replace.",
         "replacement": "replacement (str): the string to replace with.",
