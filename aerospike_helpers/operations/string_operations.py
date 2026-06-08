@@ -192,7 +192,7 @@ def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: 
     Args:
 
         {bin_name}
-        numeric_type (:py:class:`NumericType`): The numeric type to filter for.
+        numeric_type (:py:class:`~aerospike_helpers.string_helpers.NumericType`): The numeric type to filter for.
         {ctx}
     """
     return locals()
@@ -556,7 +556,7 @@ def regex_replace(
 ):
     """
     Create string regex_replace operation that replaces the first match of pattern
-    with replacement. Pass :py:attr:`RegexFlags.GLOBAL` to replace every match.
+    with replacement. Pass :py:attr:`~aerospike_helpers.string_helpers.RegexFlags.GLOBAL` to replace every match.
     This server operation accepts regex flags but not string policy flags.
 
     Args:
@@ -593,8 +593,8 @@ kwargs = {
     "start_get": "start (int): Starting codepoint index.",
     "needle_get": "needle (int): the string to search for.",
     "pattern": "pattern (str): the regex pattern to match against.",
-    "regex_flags": "regex_flags (:py:class:`RegexFlags`): The regex flags to use.",
-    "str_policy": "policy (:py:class:`StringPolicy`): String policy.",
+    "regex_flags": "regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.",
+    "str_policy": "policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.",
     "needle_to_replace": "needle (str): the string to replace.",
     "replacement": "replacement (str): the string to replace with.",
     "target_length": "target_length (int): the target length of the string.",

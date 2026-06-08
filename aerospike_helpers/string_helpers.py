@@ -20,7 +20,7 @@ class RegexFlags(IntEnum):
     DOTALL = 4
     #: Treat only ``\n`` as a line terminator.
     UNIX_LINES = 8
-    #: Replace all matches. Only applicable to :py:meth:`regex_replace`.
+    #: Replace all matches. Only applicable to :py:meth:`~aerospike_helpers.operations.string_operations.regex_replace`.
     GLOBAL = 16
 
 
