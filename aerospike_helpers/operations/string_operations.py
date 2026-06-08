@@ -35,7 +35,7 @@ Python strings, but they cannot embedded NULL bytes.
 """
 
 from ..string_helpers import NumericType, RegexFlags, WriteFlags, __generate_docstrings
-
+import sys
 
 TypeCTX = list | None
 
@@ -601,4 +601,4 @@ kwargs = {
     "pad_string": "pad_string (str): the string to pad with.",
     "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
 }
-__generate_docstrings(kwargs)
+__generate_docstrings(sys.modules[__name__], kwargs)

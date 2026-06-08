@@ -22,6 +22,8 @@ these operations are from the standard :mod:`List API <aerospike_helpers.operati
 
 from aerospike_helpers.expressions.resources import _BaseExpr
 from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings
+import inspect
+import sys
 
 
 TypeBinName = _BaseExpr | str
@@ -606,4 +608,9 @@ kwargs = {
     "target_length": "target_length (int): the target length of the string.",
     "pad_string": "pad_string (str): the string to pad with.",
 }
-__generate_docstrings(kwargs)
+
+
+__this_module = sys.modules[__name__]
+all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
+for _, cls_value in all_classes:
+    __generate_docstrings(cls_value, kwargs)

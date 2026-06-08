@@ -53,9 +53,8 @@ class NumericType(IntEnum):
     FLOAT = 2
 
 
-def __generate_docstrings(kwargs: dict):
-    current_module = sys.modules[__name__]
-    functions = inspect.getmembers(current_module, predicate=inspect.isfunction)
+def __generate_docstrings(object, kwargs: dict):
+    functions = inspect.getmembers(object, predicate=inspect.isfunction)
     for _, function in functions:
         function.__doc__ = function.__doc__.format(
             **kwargs
