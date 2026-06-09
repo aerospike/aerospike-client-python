@@ -97,3 +97,5 @@ codepoints
 substring
 metacharacter
 metacharacters
+uppercased
+lowercased
