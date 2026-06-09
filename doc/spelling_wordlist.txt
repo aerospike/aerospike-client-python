@@ -92,3 +92,5 @@ yaml
 suberror
 hardcoded
 recurse
+codepoint
+codepoints
