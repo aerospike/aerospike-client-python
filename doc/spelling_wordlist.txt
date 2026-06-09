@@ -94,3 +94,6 @@ hardcoded
 recurse
 codepoint
 codepoints
+substring
+metacharacter
+metacharacters
