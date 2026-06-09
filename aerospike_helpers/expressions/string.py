@@ -14,8 +14,8 @@
 # limitations under the License.
 ##########################################################################
 """
-String expressions contain expressions for reading and modifying Lists. Most of
-these operations are from the standard :mod:`List API <aerospike_helpers.operations.list_operations>`.
+String expressions contain expressions for reading and modifying strings. Most of
+these operations are from the standard :mod:`String API <aerospike_helpers.operations.string_operations>`.
 
 """
 
