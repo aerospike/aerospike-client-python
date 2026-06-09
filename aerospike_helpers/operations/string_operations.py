@@ -174,7 +174,7 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
 def byte_length(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``byte_length`` operation that returns the number of UTF-8 bytes in
-    the string as an unsigned 64-bit integer. This differs from strlen for non-ASCII text.
+    the string as an unsigned 64-bit integer. This differs from ``strlen`` for non-ASCII text.
 
     Args:
 

@@ -97,5 +97,9 @@ codepoints
 substring
 metacharacter
 metacharacters
+uppercases
 uppercased
+lowercases
 lowercased
+msgpack
+precomposed
