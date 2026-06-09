@@ -721,5 +721,5 @@ for _, cls_value in __all_classes:
         continue
 
     __generate_docstrings_for_all_func_members(cls_value, kwargs)
-    op_func = __exp_class_to_op_func[cls_value]
-    cls_value.__doc__ = f"Create an expression that performs a {op_func} operation."
+    op_func = __exp_class_to_op_func[cls_value].__qualname__
+    cls_value.__doc__ = f"Create an expression that performs a :py:meth:`~{op_func}` operation."
