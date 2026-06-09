@@ -1,5 +1,9 @@
 import pytest
+import base64
+
 from aerospike_helpers.operations import string_operations as str_ops
+from aerospike_helpers.string_helpers import NumericType
+from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 from .conftest import KEYS
 
@@ -7,12 +11,21 @@ from .conftest import KEYS
 KEY = KEYS[0]
 
 STR_BIN_NAME = "str"
+UPPERCASE_STR_BIN_NAME = "uppercase_str"
 NESTED_STR_BIN_NAME = "nested_str"
 STR_WITH_INT_BIN_NAME = "str_with_int"
+STR_WITH_DOUBLE_BIN_NAME = "str_with_double"
+MULTIBYTE_CODEPOINT_BIN_NAME = "multibyte"
+BASE64_ENCODED_BIN_NAME = "base64_enc"
 
 NEEDLE = "asdf"
 EXAMPLE_STR = NEEDLE * 2
+UPPERCASE_STR = EXAMPLE_STR.upper()
 NOT_IN_EXAMPLE_STR = STRING_WITH_INT = "1"
+STRING_WITH_DOUBLE = "2.3"
+MULTIBYTE_CODEPOINT = "ñ"
+BASE64_ENCODED_STR = "YXNkZgo="
+
 START_IDX = 1
 
 
@@ -24,10 +37,14 @@ class TestStringOperations:
             bins={
                 STR_BIN_NAME: EXAMPLE_STR,
                 STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
-                NESTED_STR_BIN_NAME: [EXAMPLE_STR]
+                NESTED_STR_BIN_NAME: [EXAMPLE_STR],
+                UPPERCASE_STR_BIN_NAME: UPPERCASE_STR,
+
             }
         )
+
         yield
+
         self.as_connection.remove(KEY)
 
     ctx_param = pytest.mark.parametrize(
@@ -171,4 +188,148 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == 1
+        assert bins[STR_BIN_NAME] == int(STRING_WITH_INT)
+
+    def test_to_integer_fail(self):
+        ops = [
+            str_ops.to_integer(bin_name=STR_BIN_NAME)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)
+
+    def test_to_double(self):
+        ops = [
+            str_ops.to_double(bin_name=STR_WITH_DOUBLE_BIN_NAME)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[STR_BIN_NAME] == float(STRING_WITH_DOUBLE)
+
+    def test_to_double_fail(self):
+        ops = [
+            str_ops.to_double(bin_name=STR_BIN_NAME)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)
+
+    # TODO: add case for multi-byte unicode codepoints
+    def test_byte_length(self, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.byte_length(bin_name=bin_name, **kwargs_with_ctx)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == len(EXAMPLE_STR)
+
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (STR_BIN_NAME, False),
+            (STR_WITH_INT_BIN_NAME, True),
+            (STR_WITH_DOUBLE_BIN_NAME, True),
+        ]
+    )
+    def test_is_numeric(self, bin_name: str, expected_result: bool):
+        ops = [
+            str_ops.is_numeric(bin_name=bin_name)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] is expected_result
+
+    @pytest.mark.parametrize(
+        "numeric_type, bin_name, expected_result",
+        [
+            # Positive test cases
+            (NumericType.INT, STR_WITH_INT_BIN_NAME, True),
+            (NumericType.FLOAT, STR_WITH_DOUBLE_BIN_NAME, True)
+            # Negative test cases
+            (NumericType.INT, STR_WITH_DOUBLE_BIN_NAME, False),
+            (NumericType.FLOAT, STR_WITH_INT_BIN_NAME, False)
+        ]
+    )
+    def test_numeric_type(self, numeric_type: NumericType, bin_name: str, expected_result: bool):
+        ops = [
+            str_ops.is_numeric(bin_name=bin_name, numeric_type=numeric_type)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] is expected_result
+
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (STR_BIN_NAME, False)
+            (UPPERCASE_STR_BIN_NAME, True)
+        ]
+    )
+    def test_is_upper(self, bin_name: str, expected_result: bool):
+        ops = [
+            str_ops.is_upper(bin_name=bin_name)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] is expected_result
+
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (STR_BIN_NAME, True)
+            (UPPERCASE_STR_BIN_NAME, False)
+        ]
+    )
+    def test_is_lower(self, bin_name: str, expected_result: bool):
+        ops = [
+            str_ops.is_lower(bin_name=bin_name)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] is expected_result
+
+    def test_to_blob(self, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.to_blob(bin_name=bin_name)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR
+
+    def test_split(self):
+        ops = [
+            str_ops.split(bin_name=STR_BIN_NAME)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[STR_BIN_NAME] == list(EXAMPLE_STR)
+
+    def test_split_with_separator(self):
+        ops = [
+            str_ops.split(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=".")
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[STR_WITH_DOUBLE_BIN_NAME] == STRING_WITH_DOUBLE.split('.')
+
+    def test_base64_decode(self):
+        ops = [
+            str_ops.base64_decode(bin_name=BASE64_ENCODED_BIN_NAME, separator=".")
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        expected_result = base64.b64decode(BASE64_ENCODED_STR)
+        assert bins[BASE64_ENCODED_BIN_NAME] == bytearray(expected_result)
+
+    @pytest.mark.parametrize(
+        "pattern, expected_result",
+        [
+            (MULTIBYTE_CODEPOINT, True),
+            ("π", False)
+        ]
+    )
+    def test_regex_compare(self, pattern: str, expected_result: bool):
+        ops = [
+            str_ops.regex_compare(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, pattern=pattern)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result

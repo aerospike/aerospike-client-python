@@ -237,15 +237,15 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def split(bin_name: str, separator: str, ctx: TypeCTX = None):
+def split(bin_name: str, separator: str = None, ctx: TypeCTX = None):
     """
-    Create string ``split`` operation that splits by Unicode codepoint. Each codepoint
-    becomes one string element in the returned list.
+    Create string ``split`` operation that splits by Unicode codepoint.
 
     Args:
 
         {bin_name}
-        separator (str): The separator to split by.
+        separator (str): The separator to split by. If this is :py:obj:`None`, Each codepoint
+            becomes one string element in the returned list.
         {ctx}
     """
     return locals()
