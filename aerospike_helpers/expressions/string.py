@@ -32,10 +32,6 @@ import sys
 TypeBinName = _BaseExpr | str
 
 
-# :py:meth:`~aerospike_helpers.operations.string_operations.strlen`
-# TODO: inject docstring for each class. They all follow the same format.
-
-
 class StrLen(_BaseExpr):
 
     _op = aerospike._AS_STRING_OP_STRLEN
@@ -675,13 +671,6 @@ class ToString(_BaseExpr):
         pass
 
 
-kwargs = {
-    "bin": "bin: A bin expression to apply this function to."
-}
-
-__this_module = sys.modules[__name__]
-__all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
-
 __exp_class_to_op_func = {
     StrLen: str_ops.strlen,
     SubStr: str_ops.substr,
@@ -721,7 +710,16 @@ __exp_class_to_op_func = {
     ToString: str_ops.to_string
 }
 
+__this_module = sys.modules[__name__]
+__all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
+kwargs = {
+    "bin": "bin: A bin expression to apply this function to."
+}
+
 for _, cls_value in __all_classes:
+    if cls_value.__module__ != __name__:
+        continue
+
     __generate_docstrings_for_all_func_members(cls_value, kwargs)
     op_func = __exp_class_to_op_func[cls_value]
     cls_value.__doc__ = f"Create an expression that performs a {op_func} operation."
