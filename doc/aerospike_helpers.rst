@@ -24,7 +24,7 @@ String Helpers
     :show-inheritance:
 
 Subpackages
-------------
+===========
 
 .. toctree::
 
