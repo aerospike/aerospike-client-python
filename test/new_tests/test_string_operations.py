@@ -1,7 +1,7 @@
 import pytest
 from aerospike_helpers.operations import string_operations as str_ops
 from aerospike_helpers import cdt_ctx
-from .conftest import KEYS, STR_BIN_NAME
+from .conftest import KEYS
 
 
 KEY = KEYS[0]
