@@ -2,7 +2,7 @@ import pytest
 import base64
 
 from aerospike_helpers.operations import string_operations as str_ops
-from aerospike_helpers.string_helpers import NumericType
+from aerospike_helpers.string_helpers import NumericType, StringPolicy, WriteFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 from .conftest import KEYS
@@ -10,6 +10,7 @@ from .conftest import KEYS
 
 KEY = KEYS[0]
 
+SINGLE_CHAR = "z"
 STR_BIN_NAME = "str"
 UPPERCASE_STR_BIN_NAME = "uppercase_str"
 NESTED_STR_BIN_NAME = "nested_str"
@@ -30,8 +31,8 @@ START_IDX = 1
 
 
 class TestStringOperations:
-    @pytest.fixture(autouse=True, scope="class")
-    def setup(self, as_connection):
+    @pytest.fixture(autouse=True)
+    def setup(self, request, as_connection):
         self.as_connection.put(
             key=KEY,
             bins={
@@ -333,3 +334,59 @@ class TestStringOperations:
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
+
+    # Write operations
+
+    kwargs_policy = pytest.mark.parametrize(
+        "policy",
+        [
+            {},
+            {"policy": None},
+            {"policy": StringPolicy()}
+        ]
+    )
+
+    @pytest.mark.parametrize(
+        "index, expected_value",
+        [
+            (1, EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]),
+            (-1, EXAMPLE_STR[:-1])
+        ]
+    )
+    def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == expected_value
+
+    # TODO: find way to combine kwarg parametrize decorators
+    @pytest.mark.parametrize(
+        "index, expected_value",
+        [
+            (1, EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]),
+            (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
+        ]
+    )
+    def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.overwrite(bin_name=bin_name, index=index, value=SINGLE_CHAR, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == expected_value
+
+    def test_overwrite_past_string_length(self):
+        NEW_STR = EXAMPLE_STR + "a"
+        ops = [
+            str_ops.overwrite(None, bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[STR_BIN_NAME] == NEW_STR
+
+    def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        pass
