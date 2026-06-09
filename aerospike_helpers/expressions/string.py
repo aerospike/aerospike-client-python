@@ -23,7 +23,8 @@ these operations are from the standard :mod:`String API <aerospike_helpers.opera
 import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.base import StrBin
-from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings
+from aerospike_helpers.operations import string_operations as str_ops
+from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings_for_all_func_members
 import inspect
 import sys
 
@@ -679,6 +680,48 @@ kwargs = {
 }
 
 __this_module = sys.modules[__name__]
-all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
-for _, cls_value in all_classes:
-    __generate_docstrings(cls_value, kwargs)
+__all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
+
+__exp_class_to_op_func = {
+    StrLen: str_ops.strlen,
+    SubStr: str_ops.substr,
+    CharAt: str_ops.char_at,
+    Find: str_ops.find,
+    Contains: str_ops.contains,
+    StartsWith: str_ops.starts_with,
+    EndsWith: str_ops.ends_with,
+    ToInteger: str_ops.to_integer,
+    ToDouble: str_ops.to_double,
+    ByteLength: str_ops.byte_length,
+    IsNumeric: str_ops.is_numeric,
+    IsUpper: str_ops.is_upper,
+    IsLower: str_ops.is_lower,
+    ToBlob: str_ops.to_blob,
+    Split: str_ops.split,
+    Base64Decode: str_ops.base64_decode,
+    RegexCompare: str_ops.regex_compare,
+    Insert: str_ops.insert,
+    Overwrite: str_ops.overwrite,
+    Concat: str_ops.concat,
+    ConcatList: str_ops.concat_list,
+    Snip: str_ops.snip,
+    Replace: str_ops.replace,
+    ReplaceAll: str_ops.replace_all,
+    Upper: str_ops.upper,
+    Lower: str_ops.lower,
+    CaseFold: str_ops.casefold,
+    NormalizeNFC: str_ops.normalize_nfc,
+    TrimStart: str_ops.trim_start,
+    TrimEnd: str_ops.trim_end,
+    Trim: str_ops.trim,
+    PadStart: str_ops.pad_start,
+    PadEnd: str_ops.pad_end,
+    Repeat: str_ops.repeat,
+    RegexReplace: str_ops.regex_replace,
+    ToString: str_ops.to_string
+}
+
+for _, cls_value in __all_classes:
+    __generate_docstrings_for_all_func_members(cls_value, kwargs)
+    op_func = __exp_class_to_op_func[cls_value]
+    cls_value.__doc__ = f"Create an expression that performs a {op_func} operation."

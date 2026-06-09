@@ -61,7 +61,7 @@ class StringPolicy:
         self.write_flags = write_flags
 
 
-def __generate_docstrings(object, kwargs: dict):
+def __generate_docstrings_for_all_func_members(object, kwargs: dict):
     kwargs |= {
         "pattern": "pattern (str): the regex pattern to match against.",
         "regex_flags": "regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.",

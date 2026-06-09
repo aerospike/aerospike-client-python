@@ -34,7 +34,7 @@ All string arguments (needle, value, separator, pattern, etc.) are passed as
 Python strings, but they cannot embedded NULL bytes.
 """
 
-from ..string_helpers import NumericType, RegexFlags, StringPolicy, __generate_docstrings
+from ..string_helpers import NumericType, RegexFlags, StringPolicy, __generate_docstrings_for_all_func_members
 import sys
 
 TypeCTX = list | None
@@ -583,4 +583,4 @@ kwargs = {
     "bin_name": "bin_name (str): name of string bin.",
     "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
 }
-__generate_docstrings(sys.modules[__name__], kwargs)
+__generate_docstrings_for_all_func_members(sys.modules[__name__], kwargs)
