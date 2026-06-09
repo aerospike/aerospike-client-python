@@ -343,8 +343,7 @@ def concat_list(policy: StringPolicy, bin_name: str, values: list[str], ctx: Typ
 
 def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
     """
-    Create string ``snip`` operation that removes codepoints from start through the
-    end of the string.
+    Create string ``snip`` operation that removes codepoints from start to end.
 
     Args:
 

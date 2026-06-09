@@ -337,6 +337,7 @@ class TestStringOperations:
 
     # Write operations
 
+    # TODO: find way to combine kwarg parametrize decorators
     kwargs_policy = pytest.mark.parametrize(
         "policy",
         [
@@ -346,6 +347,11 @@ class TestStringOperations:
         ]
     )
 
+    # @pytest.fixture
+    # def write_op_kwargs(kwargs_policy, kwargs_with_ctx):
+    #     kwargs_policy |= kwargs_with_ctx
+    #     yield kwargs_policy
+
     @pytest.mark.parametrize(
         "index, expected_value",
         [
@@ -354,7 +360,6 @@ class TestStringOperations:
         ]
     )
     def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
             str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy)
         ]
@@ -362,7 +367,6 @@ class TestStringOperations:
 
         assert bins[bin_name] == expected_value
 
-    # TODO: find way to combine kwarg parametrize decorators
     @pytest.mark.parametrize(
         "index, expected_value",
         [
@@ -389,4 +393,76 @@ class TestStringOperations:
         assert bins[STR_BIN_NAME] == NEW_STR
 
     def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        pass
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR + NEEDLE
+
+    @pytest.mark.parametrize(
+        "values",
+        [
+            [NEEDLE],
+            [NEEDLE, NEEDLE]
+        ]
+    )
+    def test_concat_list(self, values: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.concat_list(bin_name=bin_name, values=values, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR + str.join(values)
+
+    @pytest.mark.parametrize(
+        "end_kwargs",
+        [
+            {},
+            {"end": None},
+            {"end": len(EXAMPLE_STR) - 2}
+        ]
+    )
+    def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        end_kwargs |= kwargs_with_ctx
+        end_kwargs |= kwargs_policy
+
+        START_IDX = 1
+        ops = [
+            str_ops.snip(bin_name=bin_name, start=START_IDX, **end_kwargs)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        if "end" not in end_kwargs or end_kwargs["end"] is None:
+            assert bins[bin_name] == EXAMPLE_STR[:START_IDX]
+        else:
+            assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+
+    def test_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.replace(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR, count=1)
+
+    def test_replace_all(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
+
+    def test_upper(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_policy |= kwargs_with_ctx
+        ops = [
+            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
