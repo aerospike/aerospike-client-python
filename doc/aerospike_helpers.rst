@@ -15,6 +15,9 @@ This package contains:
     :undoc-members:
     :show-inheritance:
 
+String Helpers
+==============
+
 .. automodule:: aerospike_helpers.string_helpers
     :members:
     :undoc-members:
