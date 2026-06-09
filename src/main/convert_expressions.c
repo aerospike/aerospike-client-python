@@ -1774,6 +1774,56 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_CODE_REMOVE_RESULT:
             APPEND_ARRAY(0, as_exp_result_remove());
             break;
+
+            // String ops
+
+        case _AS_STRING_OP_STRLEN:
+            APPEND_ARRAY(1, as_exp_string_strlen(NIL));
+            break;
+        case _AS_STRING_OP_SUBSTR:
+            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            break;
+        case _AS_STRING_OP_CHAR_AT:
+            APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
+            break;
+        case _AS_STRING_OP_FIND:
+            APPEND_ARRAY(1,
+                         as_exp_string_find(temp_expr->val.val_string_p, NIL));
+            break;
+        case _AS_STRING_OP_CONTAINS:
+            APPEND_ARRAY(
+                1, as_exp_string_contains(temp_expr->val.val_string_p, NIL));
+            break;
+        case _AS_STRING_OP_STARTS_WITH:
+            APPEND_ARRAY(
+                1, as_exp_string_starts_with(temp_expr->val.val_string_p, NIL));
+            break;
+        case _AS_STRING_OP_ENDS_WITH:
+            APPEND_ARRAY(
+                1, as_exp_string_ends_with(temp_expr->val.val_string_p, NIL));
+            break;
+        case _AS_STRING_OP_TO_INTEGER:
+            APPEND_ARRAY(1, as_exp_string_to_integer(NIL));
+            break;
+        case _AS_STRING_OP_TO_DOUBLE:
+            APPEND_ARRAY(1, as_exp_string_to_double(NIL));
+            break;
+        case _AS_STRING_OP_BYTE_LENGTH:
+            APPEND_ARRAY(1, as_exp_string_byte_length(NIL));
+            break;
+        // TODO: needs to be overloaded
+        case _AS_STRING_OP_IS_NUMERIC:
+            APPEND_ARRAY(1, as_exp_string_is_numeric(NIL));
+            break;
+        case _AS_STRING_OP_IS_UPPER:
+            APPEND_ARRAY(1, as_exp_string_is_upper(NIL));
+            break;
+        case _AS_STRING_OP_IS_LOWER:
+            APPEND_ARRAY(1, as_exp_string_is_lower(NIL));
+            break;
+        case _AS_STRING_OP_TO_BLOB:
+            APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
+            break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Unrecognised expression op type.");
