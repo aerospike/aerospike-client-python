@@ -42,7 +42,7 @@ TypeCTX = list | None
 
 def strlen(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string strlen operation. The server returns the number of Unicode
+    Create string ``strlen`` operation. The server returns the number of Unicode
     codepoints in the string bin as an int64. This is not the number of UTF-8
     bytes and it is not a grapheme cluster count.
 
@@ -60,7 +60,7 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
 
 def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = None):
     """
-    Create string substr operation from start. If length is :py:obj:`None`,
+    Create string ``substr`` operation from start. If length is :py:obj:`None`,
     the operation will continue to the end of the string.
     Negative start indexes count from the end of the string.
 
@@ -76,7 +76,7 @@ def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = 
 
 def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
     """
-    Create string char_at operation that returns the codepoint at index as a
+    Create string ``char_at`` operation that returns the codepoint at index as a
     one-codepoint string. Negative indexes count from the end.
 
     Args:
@@ -90,7 +90,7 @@ def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
 
 def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     """
-    Create string find operation that returns the codepoint index of the first
+    Create string ``find`` operation that returns the codepoint index of the first
     occurrence of needle, or ``-1`` if not found.
 
     Args:
@@ -106,7 +106,7 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
 
 def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
     """
-    Create string contains operation that returns true if the bin contains needle.
+    Create string ``contains`` operation that returns true if the bin contains needle.
 
     Args:
 
@@ -119,7 +119,7 @@ def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
 
 def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
     """
-    Create string starts_with operation that returns true if the bin begins with
+    Create string ``starts_with`` operation that returns true if the bin begins with
     prefix.
 
     Args:
@@ -133,7 +133,7 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
 
 def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
     """
-    Create string ends_with operation that returns true if the bin ends with
+    Create string ``ends_with`` operation that returns true if the bin ends with
     suffix.
 
     Args:
@@ -147,7 +147,7 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 
 def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string to_integer operation that parses the string as an unsigned 64-bit integer.
+    Create string ``to_integer`` operation that parses the string as an unsigned 64-bit integer.
     Raises :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as an integer.
 
     Args:
@@ -160,7 +160,7 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 
 def to_double(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string to_double operation that parses the string as a 64-bit float.
+    Create string ``to_double`` operation that parses the string as a 64-bit float.
     Returns :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as a double.
 
     Args:
@@ -173,7 +173,7 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
 
 def byte_length(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string byte_length operation that returns the number of UTF-8 bytes in
+    Create string ``byte_length`` operation that returns the number of UTF-8 bytes in
     the string as an unsigned 64-bit integer. This differs from strlen for non-ASCII text.
 
     Args:
@@ -186,7 +186,7 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
 
 def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: TypeCTX = None):
     """
-    Create string is_numeric operation that returns true if the bin contains a
+    Create string ``is_numeric`` operation that returns true if the bin contains a
     valid integer or floating-point number.
 
     Args:
@@ -200,7 +200,7 @@ def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: 
 
 def is_upper(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string is_upper operation that returns true if every cased codepoint in
+    Create string ``is_upper`` operation that returns true if every cased codepoint in
     the bin is uppercase.
 
     Args:
@@ -213,7 +213,7 @@ def is_upper(bin_name: str, ctx: TypeCTX = None):
 
 def is_lower(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string is_lower operation that returns true if every cased codepoint in
+    Create string ``is_lower`` operation that returns true if every cased codepoint in
     the bin is lowercase.
 
     Args:
@@ -226,7 +226,7 @@ def is_lower(bin_name: str, ctx: TypeCTX = None):
 
 def to_blob(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string to_blob operation that returns the UTF-8 bytes of the string as
+    Create string ``to_blob`` operation that returns the UTF-8 bytes of the string as
     a blob.
 
     Args:
@@ -239,7 +239,7 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
 
 def split(bin_name: str, separator: str, ctx: TypeCTX = None):
     """
-    Create string split operation that splits by Unicode codepoint. Each codepoint
+    Create string ``split`` operation that splits by Unicode codepoint. Each codepoint
     becomes one string element in the returned list.
 
     Args:
@@ -253,7 +253,7 @@ def split(bin_name: str, separator: str, ctx: TypeCTX = None):
 
 def base64_decode(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string b64_decode operation that treats the bin as base64 text and
+    Create string ``b64_decode`` operation that treats the bin as base64 text and
     returns the decoded bytes as a blob.
 
     Args:
@@ -266,7 +266,7 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
 
 def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFlags.DEFAULT, ctx: TypeCTX = None):
     """
-    Create string regex_compare operation that matches an ICU regex pattern
+    Create string ``regex_compare`` operation that matches an ICU regex pattern
     against the bin and returns true on match.
 
     Args:
@@ -281,7 +281,7 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 
 def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
     """
-    Create string insert operation that splices value into the bin at codepoint
+    Create string ``insert`` operation that splices value into the bin at codepoint
     index. Negative indexes count from the end of the string.
 
     Args:
@@ -297,7 +297,7 @@ def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: Typ
 
 def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
     """
-    Create string overwrite operation that overwrites codepoints starting at index
+    Create string ``overwrite`` operation that overwrites codepoints starting at index
     with value. The result may grow beyond the original length when value extends
     past the end.
 
@@ -314,7 +314,7 @@ def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: 
 
 def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None):
     """
-    Create string concat operation that appends value to the bin.
+    Create string ``concat`` operation that appends value to the bin.
 
     Args:
 
@@ -328,7 +328,7 @@ def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None)
 
 def concat_list(policy: StringPolicy, bin_name: str, values: list[str], ctx: TypeCTX = None):
     """
-    Create string concat operation that appends each string element in values to
+    Create string ``concat`` operation that appends each string element in values to
     the bin in order.
 
     Args:
@@ -343,7 +343,7 @@ def concat_list(policy: StringPolicy, bin_name: str, values: list[str], ctx: Typ
 
 def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
     """
-    Create string snip operation that removes codepoints from start through the
+    Create string ``snip`` operation that removes codepoints from start through the
     end of the string.
 
     Args:
@@ -360,7 +360,7 @@ def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None
 
 def replace(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
     """
-    Create string replace operation that replaces the first occurrence of needle
+    Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
     Args:
@@ -376,7 +376,7 @@ def replace(policy: StringPolicy, bin_name: str, needle: str, replacement: str, 
 
 def replace_all(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
     """
-    Create string replace_all operation that replaces every occurrence of needle
+    Create string ``replace_all`` operation that replaces every occurrence of needle
     with replacement.
 
     Args:
@@ -392,7 +392,7 @@ def replace_all(policy: StringPolicy, bin_name: str, needle: str, replacement: s
 
 def upper(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string upper operation that uppercases the bin in place.
+    Create string ``upper`` operation that uppercases the bin in place.
 
     Args:
 
@@ -405,7 +405,7 @@ def upper(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string lower operation that lowercases the bin in place.
+    Create string ``lower`` operation that lowercases the bin in place.
 
     Args:
 
@@ -419,7 +419,7 @@ def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 # TODO: read up how this works
 def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string case_fold operation that applies locale-independent case folding
+    Create string ``case_fold`` operation that applies locale-independent case folding
     (lowercase) to the bin. This is useful for normalized comparison keys.
 
     Args:
@@ -434,7 +434,7 @@ def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 # TODO: read up how this works
 def normalize_nfc(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string normalize_nfc operation that normalizes the bin to Unicode NFC.
+    Create string ``normalize_nfc`` operation that normalizes the bin to Unicode NFC.
     Already-normalized strings are unchanged.
 
     Args:
@@ -448,7 +448,7 @@ def normalize_nfc(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 def trim_start(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string trim_start operation that removes whitespace from the start of
+    Create string ``trim_start`` operation that removes whitespace from the start of
     the bin.
 
     Args:
@@ -462,7 +462,7 @@ def trim_start(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 def trim_end(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string trim_end operation that removes whitespace from the end of the
+    Create string ``trim_end`` operation that removes whitespace from the end of the
     bin.
 
     Args:
@@ -476,7 +476,7 @@ def trim_end(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 def trim(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
     """
-    Create string trim operation that removes whitespace from both ends of the bin.
+    Create string ``trim`` operation that removes whitespace from both ends of the bin.
 
     Args:
 
@@ -489,8 +489,8 @@ def trim(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
     """
-    Create string pad_start operation that prepends pad_string repeatedly until
-    the bin reaches target_length codepoints. No-op when the bin is already at or
+    Create string ``pad_start`` operation that prepends ``pad_string`` repeatedly until
+    the bin reaches ``target_length`` codepoints. No-op when the bin is already at or
     above the target length.
 
     Args:
@@ -506,8 +506,8 @@ def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_strin
 
 def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
     """
-    Create string pad_end operation that appends pad_string repeatedly until the
-    bin reaches target_length codepoints. No-op when the bin is already at or
+    Create string ``pad_end`` operation that appends ``pad_string`` repeatedly until the
+    bin reaches ``target_length`` codepoints. No-op when the bin is already at or
     above the target length.
 
     Args:
@@ -523,7 +523,7 @@ def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string:
 
 def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None):
     """
-    Create string repeat operation that repeats the bin contents count times.
+    Create string ``repeat`` operation that repeats the bin contents count times.
 
     Args:
 
@@ -546,7 +546,7 @@ def regex_replace(
     ctx: TypeCTX = None
 ):
     """
-    Create string regex_replace operation that replaces the first match of pattern
+    Create string ``regex_replace`` operation that replaces the first match of pattern
     with replacement. Pass :py:attr:`~aerospike_helpers.string_helpers.RegexFlags.GLOBAL` to replace every match.
     This server operation accepts regex flags but not string policy flags.
 
@@ -564,7 +564,7 @@ def regex_replace(
 
 def to_string(bin_name: str):
     """
-    Create to_string operation that converts an integer, double, string, or blob
+    Create ``to_string`` operation that converts an integer, double, string, or blob
     bin to its string representation. Raises :exc:`~aerospike.exception.BinIncompatibleType` for
     any other bin type. This top-level operation does not accept ctx and does not
     send a msgpack payload.
