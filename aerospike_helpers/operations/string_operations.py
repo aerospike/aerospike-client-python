@@ -67,7 +67,7 @@ def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = 
     Args:
 
         {bin_name}
-        {start_get}
+        start (int): Starting codepoint index.
         length (int): Number of codepoints to return.
         {ctx}
     """
@@ -581,15 +581,6 @@ def to_string(bin_name: str):
 
 kwargs = {
     "bin_name": "bin_name (str): name of string bin.",
-    "start_get": "start (int): Starting codepoint index.",
-    "needle_get": "needle (int): the string to search for.",
-    "pattern": "pattern (str): the regex pattern to match against.",
-    "regex_flags": "regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.",
-    "str_policy": "policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.",
-    "needle_to_replace": "needle (str): the string to replace.",
-    "replacement": "replacement (str): the string to replace with.",
-    "target_length": "target_length (int): the target length of the string.",
-    "pad_string": "pad_string (str): the string to pad with.",
     "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
 }
 __generate_docstrings(sys.modules[__name__], kwargs)
