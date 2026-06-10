@@ -678,8 +678,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_CONCAT_LIST:
         // TODO: test negative test case where a non-str value is in as_list
-        success = as_operations_string_concat_list(ops, bin, ctx_ref,
-                                                   &str_policy, val1);
+        success = as_operations_string_concat_list(
+            ops, bin, ctx_ref, &str_policy, (as_list *)val1);
         break;
     case OP_STRING_SNIP:
         if (end_found) {
