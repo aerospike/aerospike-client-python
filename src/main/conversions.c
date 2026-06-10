@@ -2473,6 +2473,28 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
 }
 
+as_cdt_ctx *as_cdt_ctx_create_from_pyobject(AerospikeClient *self,
+                                            as_error *err,
+                                            PyObject *py_ctx_list,
+                                            as_static_pool *static_pool,
+                                            int serializer_type)
+{
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
+        return NULL;
+    }
+
+    as_cdt_ctx *cdt_ctx = cf_malloc(sizeof(as_cdt_ctx));
+
+    as_cdt_ctx_init_from_pyobject(self, err, cdt_ctx, py_ctx_list, static_pool,
+                                  serializer_type);
+    if (err->code != AEROSPIKE_OK) {
+        cf_free(cdt_ctx);
+        return NULL;
+    }
+
+    return cdt_ctx;
+}
+
 as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
                                        as_cdt_ctx *cdt_ctx,
                                        PyObject *py_cdt_ctx,
@@ -2676,32 +2698,28 @@ RETURN:
     return status;
 }
 
-// This function converts a list of cdt_ctx from aerospike_helpers.ctx to
-// an as_cdt_ctx object for use with the c-client. the cdt_ctx parameter should be an uninitialized as_cdt_ctx
-// object. This function will initilaise it, and free it IF an error occurs, otherwise, the caller must destroy
-// the as_cdt_ctx when it is done.
-as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
-                      PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type)
+as_cdt_ctx *as_cdt_ctx_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                          as_cdt_ctx *cdt_ctx,
+                                          PyObject *py_ctx_list,
+                                          as_static_pool *static_pool,
+                                          int serializer_type)
 {
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
+        goto RETURN_NULL;
+    }
+    else if (!PyList_Check(py_ctx_list)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                        CTX_KEY);
+        goto RETURN_NULL;
+    }
+
     as_status status = AEROSPIKE_OK;
-    PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
-
-    if (!py_ctx_list) {
-        goto RETURN;
-    }
-
-    if (!PyList_Check(py_ctx_list)) {
-        status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                 "Failed to convert %s", CTX_KEY);
-        goto RETURN;
-    }
 
     Py_ssize_t py_list_size = PyList_Size(py_ctx_list);
     if (!PyList_Check(py_ctx_list)) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert %s", CTX_KEY);
-        goto RETURN;
+        goto RETURN_NULL;
     }
 
     as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
@@ -2721,15 +2739,13 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         }
     }
 
-    *ctx_in_use = true;
-
 CLEANUP_ON_ERROR:
     if (status != AEROSPIKE_OK) {
         as_cdt_ctx_destroy(cdt_ctx);
     }
 
-RETURN:
-    return status;
+RETURN_NULL:
+    return NULL;
 }
 
 /*
