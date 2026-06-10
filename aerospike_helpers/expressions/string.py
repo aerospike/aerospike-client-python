@@ -34,7 +34,7 @@ TypeBinName = _BaseExpr | str
 
 class StrLen(_BaseExpr):
 
-    _op = aerospike._AS_STRING_OP_STRLEN
+    _op = aerospike._OP_STRING_STRLEN
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -53,7 +53,7 @@ class StrLen(_BaseExpr):
 
 class SubStr(_BaseExpr):
 
-    _op = aerospike._AS_STRING_OP_SUBSTR
+    _op = aerospike._OP_STRING_SUBSTR
 
     def __init__(self, start: int, length: int | None, bin: "TypeBinName"):
         """
@@ -71,7 +71,7 @@ class SubStr(_BaseExpr):
 
 
 class CharAt(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_CHAR_AT
+    _op = aerospike._OP_STRING_CHAR_AT
 
     def __init__(self, index: int, bin: "TypeBinName"):
         """
@@ -88,7 +88,7 @@ class CharAt(_BaseExpr):
 
 
 class Find(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_FIND
+    _op = aerospike._OP_STRING_FIND
 
     def __init__(self, needle: str, occurrence: int, bin: "TypeBinName"):
         """
@@ -106,7 +106,7 @@ class Find(_BaseExpr):
 
 
 class Contains(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_CONTAINS
+    _op = aerospike._OP_STRING_CONTAINS
 
     def __init__(self, needle: str, bin: "TypeBinName"):
         """
@@ -123,7 +123,7 @@ class Contains(_BaseExpr):
 
 
 class StartsWith(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_STARTS_WITH
+    _op = aerospike._OP_STRING_STARTS_WITH
 
     def __init__(self, prefix: str, bin: "TypeBinName"):
         """
@@ -140,7 +140,7 @@ class StartsWith(_BaseExpr):
 
 
 class EndsWith(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_ENDS_WITH
+    _op = aerospike._OP_STRING_ENDS_WITH
 
     def __init__(self, suffix: str, bin: "TypeBinName"):
         """
@@ -157,7 +157,7 @@ class EndsWith(_BaseExpr):
 
 
 class ToInteger(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TO_INTEGER
+    _op = aerospike._OP_STRING_TO_INTEGER
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -173,7 +173,7 @@ class ToInteger(_BaseExpr):
 
 
 class ToDouble(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TO_DOUBLE
+    _op = aerospike._OP_STRING_TO_DOUBLE
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -189,7 +189,7 @@ class ToDouble(_BaseExpr):
 
 
 class ByteLength(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_BYTE_LENGTH
+    _op = aerospike._OP_STRING_BYTE_LENGTH
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -205,7 +205,7 @@ class ByteLength(_BaseExpr):
 
 
 class IsNumeric(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_IS_NUMERIC
+    _op = aerospike._OP_STRING_IS_NUMERIC
 
     def __init__(self, bin: "TypeBinName", numeric_type: NumericType = NumericType.ANY):
         """
@@ -222,7 +222,7 @@ class IsNumeric(_BaseExpr):
 
 
 class IsUpper(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_IS_UPPER
+    _op = aerospike._OP_STRING_IS_UPPER
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -238,7 +238,7 @@ class IsUpper(_BaseExpr):
 
 
 class IsLower(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_IS_LOWER
+    _op = aerospike._OP_STRING_IS_LOWER
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -254,7 +254,7 @@ class IsLower(_BaseExpr):
 
 
 class ToBlob(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TO_BLOB
+    _op = aerospike._OP_STRING_TO_BLOB
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -288,7 +288,7 @@ class Split(_BaseExpr):
 
 
 class Base64Decode(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_B64_DECODE
+    _op = aerospike._OP_STRING_B64_DECODE
 
     def __init__(self, bin: "TypeBinName"):
         """
@@ -304,7 +304,7 @@ class Base64Decode(_BaseExpr):
 
 
 class RegexCompare(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_REGEX_COMPARE
+    _op = aerospike._OP_STRING_REGEX_COMPARE
 
     def __init__(self, pattern: str, bin: "TypeBinName", regex_flags: RegexFlags = RegexFlags.DEFAULT):
         """
@@ -322,7 +322,7 @@ class RegexCompare(_BaseExpr):
 
 
 class Insert(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_INSERT
+    _op = aerospike._OP_STRING_INSERT
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
@@ -341,7 +341,7 @@ class Insert(_BaseExpr):
 
 
 class Overwrite(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_OVERWRITE
+    _op = aerospike._OP_STRING_OVERWRITE
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
@@ -360,7 +360,7 @@ class Overwrite(_BaseExpr):
 
 
 class Concat(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_CONCAT
+    _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
@@ -378,7 +378,7 @@ class Concat(_BaseExpr):
 
 
 class ConcatList(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_CONCAT
+    _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
@@ -396,7 +396,7 @@ class ConcatList(_BaseExpr):
 
 
 class Snip(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_SNIP
+    _op = aerospike._OP_STRING_SNIP
 
     def __init__(self, policy: StringPolicy, start: int, end: int | None, bin: "TypeBinName"):
         """
@@ -415,7 +415,7 @@ class Snip(_BaseExpr):
 
 
 class Replace(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_REPLACE
+    _op = aerospike._OP_STRING_REPLACE
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
@@ -434,7 +434,7 @@ class Replace(_BaseExpr):
 
 
 class ReplaceAll(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_REPLACE_ALL
+    _op = aerospike._OP_STRING_REPLACE_ALL
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
@@ -453,7 +453,7 @@ class ReplaceAll(_BaseExpr):
 
 
 class Upper(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_UPPER
+    _op = aerospike._OP_STRING_UPPER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -470,7 +470,7 @@ class Upper(_BaseExpr):
 
 
 class Lower(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_LOWER
+    _op = aerospike._OP_STRING_LOWER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -487,7 +487,7 @@ class Lower(_BaseExpr):
 
 
 class CaseFold(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_CASE_FOLD
+    _op = aerospike._OP_STRING_CASE_FOLD
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -504,7 +504,7 @@ class CaseFold(_BaseExpr):
 
 
 class NormalizeNFC(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_NORMALIZE_NFC
+    _op = aerospike._OP_STRING_NORMALIZE_NFC
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -521,7 +521,7 @@ class NormalizeNFC(_BaseExpr):
 
 
 class TrimStart(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TRIM_START
+    _op = aerospike._OP_STRING_TRIM_START
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -538,7 +538,7 @@ class TrimStart(_BaseExpr):
 
 
 class TrimEnd(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TRIM_END
+    _op = aerospike._OP_STRING_TRIM_END
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -555,7 +555,7 @@ class TrimEnd(_BaseExpr):
 
 
 class Trim(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_TRIM
+    _op = aerospike._OP_STRING_TRIM
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
@@ -572,7 +572,7 @@ class Trim(_BaseExpr):
 
 
 class PadStart(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_PAD_START
+    _op = aerospike._OP_STRING_PAD_START
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
@@ -591,7 +591,7 @@ class PadStart(_BaseExpr):
 
 
 class PadEnd(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_PAD_END
+    _op = aerospike._OP_STRING_PAD_END
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
@@ -610,7 +610,7 @@ class PadEnd(_BaseExpr):
 
 
 class Repeat(_BaseExpr):
-    _op = aerospike._AS_STRING_OP_REPEAT
+    _op = aerospike._OP_STRING_REPEAT
 
     def __init__(self, policy: StringPolicy, count: int, bin: "TypeBinName"):
         """
