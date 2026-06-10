@@ -160,7 +160,7 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] is True
+        assert bins[bin_name] is True
 
     def test_contains_not_found(self):
         ops = [
@@ -177,7 +177,7 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] is True
+        assert bins[bin_name] is True
 
     def test_starts_with_returns_false(self):
         ops = [
@@ -194,7 +194,7 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] is True
+        assert bins[bin_name] is True
 
     def test_ends_with_returns_false(self):
         ops = [
@@ -210,13 +210,13 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == int(STRING_WITH_INT)
+        assert bins[STR_WITH_INT_BIN_NAME] == int(STRING_WITH_INT)
 
     def test_to_integer_fail(self):
         ops = [
             str_ops.to_integer(bin_name=STR_BIN_NAME)
         ]
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(KEY, ops)
 
     def test_to_double(self):
@@ -225,13 +225,13 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == float(STRING_WITH_DOUBLE)
+        assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
     def test_to_double_fail(self):
         ops = [
             str_ops.to_double(bin_name=STR_BIN_NAME)
         ]
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(KEY, ops)
 
     # TODO: add case for multi-byte unicode codepoints
@@ -316,7 +316,7 @@ class TestStringOperations:
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == bytes(EXAMPLE_STR)
+        assert bins[bin_name] == bytes(EXAMPLE_STR, encoding="utf-8")
 
     @root_level_and_nested_str
     def test_split(self, bin_name: str, kwargs_with_ctx: dict):
