@@ -77,7 +77,7 @@ class StringPolicy:
     String operation policy.
     """
 
-    def __init__(self, write_flags: WriteFlags):
+    def __init__(self, write_flags: WriteFlags = WriteFlags.DEFAULT):
         self.write_flags = write_flags
 
 
