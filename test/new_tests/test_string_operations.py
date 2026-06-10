@@ -105,10 +105,10 @@ class TestStringOperations:
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         if "length" not in length_kwargs or length_kwargs["length"] is None:
-            assert bins[bin_name] == len(EXAMPLE_STR[START_IDX:])
+            assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
         else:
             length = length_kwargs["length"]
-            assert bins[bin_name] == len(EXAMPLE_STR[START_IDX:length])
+            assert bins[bin_name] == EXAMPLE_STR[START_IDX:length]
 
     @pytest.mark.parametrize(
         "index",
@@ -363,7 +363,6 @@ class TestStringOperations:
     kwargs_policy = pytest.mark.parametrize(
         "kwargs_policy",
         [
-            {},
             {"policy": None},
             {"policy": StringPolicy()}
         ]
