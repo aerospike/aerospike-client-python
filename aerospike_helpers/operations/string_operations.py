@@ -261,7 +261,8 @@ def split(bin_name: str, separator: str | None = None, ctx: TypeCTX = None):
 
         {bin_name}
         separator (str): The separator to split by. If this is :py:obj:`None`, Each codepoint
-            becomes one string element in the returned list.
+            becomes one string element in the returned list. If the separator is not found,
+            the server returns a singleton list containing the whole string.
         {ctx}
     """
     op = aerospike._OP_STRING_SPLIT

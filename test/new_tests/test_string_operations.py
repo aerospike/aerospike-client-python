@@ -343,7 +343,7 @@ class TestStringOperations:
         if separator == ".":
             assert bins[STR_WITH_DOUBLE_BIN_NAME] == STRING_WITH_DOUBLE.split(separator)
         else:
-            assert bins[STR_WITH_DOUBLE_BIN_NAME] == list(STRING_WITH_DOUBLE)
+            assert bins[STR_WITH_DOUBLE_BIN_NAME] == [STRING_WITH_DOUBLE]
 
     def test_base64_decode(self):
         ops = [
