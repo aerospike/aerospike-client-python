@@ -145,7 +145,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
 {
     *found = false;
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
-    if (!py_val) {
+    if (!py_val || Py_IsNone(py_val)) {
         return AEROSPIKE_OK;
     }
 
