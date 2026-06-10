@@ -96,7 +96,7 @@ class TestStringOperations:
     )
     @root_level_and_nested_str
     def test_substr(self, length_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx |= length_kwargs
+        kwargs_with_ctx = kwargs_with_ctx | length_kwargs
         ops = [
             str_ops.substr(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
         ]
@@ -134,7 +134,7 @@ class TestStringOperations:
     )
     @root_level_and_nested_str
     def test_find(self, occurrence_kwargs: dict, expected_idx: int, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx |= occurrence_kwargs
+        kwargs_with_ctx = kwargs_with_ctx | occurrence_kwargs
         ops = [
             str_ops.find(bin_name=bin_name, needle=NEEDLE, **kwargs_with_ctx)
         ]
