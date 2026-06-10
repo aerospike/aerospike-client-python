@@ -533,8 +533,6 @@ def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None)
     """
     return locals()
 
-# TODO: regex flags enum
-
 
 def regex_replace(
     policy: StringPolicy,

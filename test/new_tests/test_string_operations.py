@@ -2,7 +2,7 @@ import pytest
 import base64
 
 from aerospike_helpers.operations import string_operations as str_ops
-from aerospike_helpers.string_helpers import NumericType, StringPolicy, WriteFlags
+from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 from .conftest import KEYS
@@ -279,7 +279,7 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
-            (STR_BIN_NAME, False)
+            (STR_BIN_NAME, False),
             (UPPERCASE_STR_BIN_NAME, True)
         ]
     )
@@ -294,7 +294,7 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
-            (STR_BIN_NAME, True)
+            (STR_BIN_NAME, True),
             (UPPERCASE_STR_BIN_NAME, False)
         ]
     )
