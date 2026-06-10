@@ -59,6 +59,7 @@ class TestStringOperations:
 
         self.as_connection.remove(KEY)
 
+    # TODO: ctx can also be None.
     root_level_and_nested_str = pytest.mark.parametrize(
         "bin_name, kwargs_with_ctx",
         [
