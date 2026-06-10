@@ -17,15 +17,20 @@ STR_WITH_INT_BIN_NAME = "str_with_int"
 STR_WITH_DOUBLE_BIN_NAME = "str_with_double"
 MULTIBYTE_CODEPOINT_BIN_NAME = "multibyte"
 BASE64_ENCODED_BIN_NAME = "base64_enc"
+MULTI_CODEPOINT_CHAR_BIN_NAME = "multicode"
+SURROUNDING_WHITESPACE_BIN_NAME = "whitespace"
 
+PAD_STRING = " "
 SINGLE_CHAR = "z"
 NEEDLE = "asdf"
 EXAMPLE_STR = NEEDLE * 2
+EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE = " " + EXAMPLE_STR
 UPPERCASE_STR = EXAMPLE_STR.upper()
 NOT_IN_EXAMPLE_STR = STRING_WITH_INT = "1"
 STRING_WITH_DOUBLE = "2.3"
-MULTIBYTE_CODEPOINT = "ñ"
+MULTIBYTE_CODEPOINT = "ß"
 BASE64_ENCODED_STR = "YXNkZgo="
+MULTI_CODEPOINT_CHAR = "ñ"
 
 BINS = {
     STR_BIN_NAME: EXAMPLE_STR,
@@ -34,7 +39,9 @@ BINS = {
     STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
     STR_WITH_DOUBLE_BIN_NAME: STRING_WITH_DOUBLE,
     MULTIBYTE_CODEPOINT_BIN_NAME: MULTIBYTE_CODEPOINT,
-    BASE64_ENCODED_BIN_NAME: BASE64_ENCODED_STR
+    BASE64_ENCODED_BIN_NAME: BASE64_ENCODED_STR,
+    MULTI_CODEPOINT_CHAR_BIN_NAME: MULTI_CODEPOINT_CHAR,
+    SURROUNDING_WHITESPACE_BIN_NAME: EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE,
 }
 
 START_IDX = 1
@@ -477,8 +484,132 @@ class TestStringOperations:
     @kwargs_policy
     def test_upper(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.upper(bin_name=bin_name, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
+        assert bins[bin_name] == EXAMPLE_STR.upper()
+
+    @kwargs_policy
+    def test_lower(self, kwargs_policy: dict):
+        ops = [
+            str_ops.lower(bin_name=UPPERCASE_STR_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[UPPERCASE_STR_BIN_NAME] == UPPERCASE_STR.lower()
+
+    # TODO: add test case showing this char cannot be converted to ss with .lower()
+    @kwargs_policy
+    def test_casefold(self, kwargs_policy: dict):
+        ops = [
+            str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+
+    # TODO
+    @kwargs_policy
+    def test_normalize_nfc(self, kwargs_policy):
+        ops = [
+            str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert False
+        assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+
+    @kwargs_policy
+    def test_trim_start(self, kwargs_policy):
+        ops = [
+            str_ops.trim_start(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
+
+    @kwargs_policy
+    def test_trim_end(self, kwargs_policy):
+        ops = [
+            str_ops.trim_end(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[:-1]
+
+
+    @kwargs_policy
+    def test_trim(self, kwargs_policy):
+        ops = [
+            str_ops.trim(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
+
+    # TODO: add no-op test case
+    @kwargs_policy
+    @root_level_and_nested_str
+    @pytest.mark.parametrize(
+        "target_length, expected_results",
+        [
+            (len(EXAMPLE_STR) + 2, 2 * PAD_STRING + EXAMPLE_STR),
+            (len(EXAMPLE_STR), EXAMPLE_STR),
+            (len(EXAMPLE_STR) - 1, EXAMPLE_STR)
+        ]
+    )
+    def test_pad_start(self, target_length: int, expected_results: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.pad_start(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == expected_results
+
+    @kwargs_policy
+    @root_level_and_nested_str
+    @pytest.mark.parametrize(
+        "target_length, expected_results",
+        [
+            (len(EXAMPLE_STR) + 2, EXAMPLE_STR + 2 * PAD_STRING),
+            (len(EXAMPLE_STR), EXAMPLE_STR),
+            (len(EXAMPLE_STR) - 1, EXAMPLE_STR)
+        ]
+    )
+    def test_pad_end(self, target_length: int, expected_results: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.pad_end(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == expected_results
+
+    @kwargs_policy
+    @root_level_and_nested_str
+    @pytest.mark.parametrize(
+        "count",
+        [
+            1,
+            2,
+        ]
+    )
+    def test_repeat(self, count: int, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.repeat(bin_name=bin_name, count=count, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == EXAMPLE_STR * count
+
+    @kwargs_policy
+    @root_level_and_nested_str
+    def test_regex_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        PATTERN = "asdf.*"
+        NEW_STR = "1234"
+        ops = [
+            str_ops.regex_replace(bin_name=bin_name, pattern=PATTERN, replacement=NEW_STR, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[bin_name] == NEW_STR + "asdf"
