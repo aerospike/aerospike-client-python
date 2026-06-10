@@ -52,23 +52,22 @@ class TestStringOperations:
 
         self.as_connection.remove(KEY)
 
-    pytestmark = [
-        pytest.mark.parametrize(
-            "bin_name, kwargs_with_ctx",
-            [
-                pytest.param(STR_BIN_NAME, {}),
-                pytest.param(
-                    NESTED_STR_BIN_NAME,
-                    {
-                        "ctx": [
-                            cdt_ctx.cdt_ctx_list_index(0)
-                        ]
-                    }
-                )
-            ]
-        )
-    ]
+    root_level_and_nested_str = pytest.mark.parametrize(
+        "bin_name, kwargs_with_ctx",
+        [
+            pytest.param(STR_BIN_NAME, {}),
+            pytest.param(
+                NESTED_STR_BIN_NAME,
+                {
+                    "ctx": [
+                        cdt_ctx.cdt_ctx_list_index(0)
+                    ]
+                }
+            )
+        ]
+    )
 
+    @root_level_and_nested_str
     def test_strlen(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.strlen(bin_name=bin_name, **kwargs_with_ctx)
@@ -88,6 +87,7 @@ class TestStringOperations:
             }
         ]
     )
+    @root_level_and_nested_str
     def test_substr(self, length_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
         kwargs_with_ctx |= length_kwargs
         ops = [
@@ -108,6 +108,7 @@ class TestStringOperations:
             -1
         ]
     )
+    @root_level_and_nested_str
     def test_char_at(self, index: int, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.char_at(bin_name=bin_name, index=index, **kwargs_with_ctx)
@@ -124,6 +125,7 @@ class TestStringOperations:
             ({"occurrence": 2}, 4)
         ]
     )
+    @root_level_and_nested_str
     def test_find(self, occurrence_kwargs: dict, expected_idx: int, bin_name: str, kwargs_with_ctx: dict):
         kwargs_with_ctx |= occurrence_kwargs
         ops = [
@@ -141,6 +143,7 @@ class TestStringOperations:
 
         assert bins[STR_BIN_NAME] == -1
 
+    @root_level_and_nested_str
     def test_contains(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.contains(bin_name=bin_name, needle=NEEDLE, **kwargs_with_ctx)
@@ -157,6 +160,7 @@ class TestStringOperations:
 
         assert bins[STR_BIN_NAME] is False
 
+    @root_level_and_nested_str
     def test_starts_with(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.starts_with(bin_name=bin_name, prefix=NEEDLE, **kwargs_with_ctx)
@@ -173,6 +177,7 @@ class TestStringOperations:
 
         assert bins[STR_BIN_NAME] is False
 
+    @root_level_and_nested_str
     def test_ends_with(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.ends_with(bin_name=bin_name, suffix=NEEDLE, **kwargs_with_ctx)
@@ -220,6 +225,7 @@ class TestStringOperations:
             self.as_connection.operate(KEY, ops)
 
     # TODO: add case for multi-byte unicode codepoints
+    @root_level_and_nested_str
     def test_byte_length(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.byte_length(bin_name=bin_name, **kwargs_with_ctx)
@@ -293,21 +299,23 @@ class TestStringOperations:
 
         assert bins[bin_name] is expected_result
 
+    @root_level_and_nested_str
     def test_to_blob(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.to_blob(bin_name=bin_name)
+            str_ops.to_blob(bin_name=bin_name, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR
+        assert bins[bin_name] == bytes(EXAMPLE_STR)
 
-    def test_split(self):
+    @root_level_and_nested_str
+    def test_split(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.split(bin_name=STR_BIN_NAME)
+            str_ops.split(bin_name=bin_name, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == list(EXAMPLE_STR)
+        assert bins[bin_name] == list(EXAMPLE_STR)
 
     def test_split_with_separator(self):
         ops = [
@@ -359,10 +367,11 @@ class TestStringOperations:
             (-1, EXAMPLE_STR[:-1])
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
     def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy)
+            str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
@@ -375,6 +384,7 @@ class TestStringOperations:
             (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
     def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -384,7 +394,6 @@ class TestStringOperations:
 
         assert bins[bin_name] == expected_value
 
-    @kwargs_policy
     def test_overwrite_past_string_length(self):
         NEW_STR = EXAMPLE_STR + "a"
         ops = [
@@ -394,6 +403,7 @@ class TestStringOperations:
 
         assert bins[STR_BIN_NAME] == NEW_STR
 
+    @root_level_and_nested_str
     @kwargs_policy
     def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -410,6 +420,7 @@ class TestStringOperations:
             [NEEDLE, NEEDLE]
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
     def test_concat_list(self, values: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -427,6 +438,7 @@ class TestStringOperations:
             {"end": len(EXAMPLE_STR) - 2}
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
     def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
 
@@ -441,6 +453,7 @@ class TestStringOperations:
         else:
             assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
 
+    @root_level_and_nested_str
     @kwargs_policy
     def test_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -450,6 +463,7 @@ class TestStringOperations:
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR, count=1)
 
+    @root_level_and_nested_str
     @kwargs_policy
     def test_replace_all(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -459,6 +473,7 @@ class TestStringOperations:
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
 
+    @root_level_and_nested_str
     @kwargs_policy
     def test_upper(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
