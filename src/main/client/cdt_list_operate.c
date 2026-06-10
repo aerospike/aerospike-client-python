@@ -37,7 +37,7 @@ typedef struct {
 
 const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
-    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND
+    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND, STRING_OP_NAMES
 #undef X
 };
 

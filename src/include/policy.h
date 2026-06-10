@@ -63,15 +63,30 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
         X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
 
-enum Aerospike_list_operations {
+#define STRING_OP_NAMES                                                        \
+    X(STRING_STRLEN), X(STRING_SUBSTR), X(STRING_CHAR_AT), X(STRING_FIND),     \
+        X(STRING_CONTAINS), X(STRING_STARTS_WITH), X(STRING_ENDS_WITH),        \
+        X(STRING_TO_INTEGER), X(STRING_TO_DOUBLE), X(STRING_BYTE_LENGTH),      \
+        X(STRING_IS_NUMERIC), X(STRING_IS_UPPER), X(STRING_IS_LOWER),          \
+        X(STRING_TO_BLOB), X(STRING_SPLIT), X(STRING_B64_DECODE),              \
+        X(STRING_REGEX_COMPARE), X(STRING_INSERT), X(STRING_OVERWRITE),        \
+        X(STRING_CONCAT), X(STRING_SNIP), X(STRING_REPLACE),                   \
+        X(STRING_REPLACE_ALL), X(STRING_UPPER), X(STRING_LOWER),               \
+        X(STRING_CASE_FOLD), X(STRING_NORMALIZE_NFC), X(STRING_TRIM_START),    \
+        X(STRING_TRIM_END), X(STRING_TRIM), X(STRING_PAD_START),               \
+        X(STRING_PAD_END), X(STRING_REPEAT), X(STRING_REGEX_REPLACE)
+
+enum {
 #define X(op_name) OP_##op_name
     X(LIST_APPEND) = 1001,
-    LIST_OP_NAMES_EXCEPT_LIST_APPEND
+    LIST_OP_NAMES_EXCEPT_LIST_APPEND,
+    STRING_OP_NAMES
 #undef X
 };
 
 enum Aerospike_map_operations {
-    OP_MAP_SET_POLICY = 1101,
+    // Make sure all the op codes are unique
+    OP_MAP_SET_POLICY = OP_STRING_REGEX_REPLACE + 1,
     OP_MAP_PUT,
     OP_MAP_PUT_ITEMS,
     OP_MAP_INCREMENT,
@@ -170,48 +185,6 @@ enum {
     _AS_EXP_LOOPVAR_HLL,
     _AS_EXP_CODE_CALL_SELECT,
     _AS_EXP_CODE_CALL_APPLY,
-};
-
-#define STRING_OP_NAMES_EXCEPT_STRLEN                                          \
-    X(_AS_STRING_OP_SUBSTR)                                                    \
-    X(_AS_STRING_OP_CHAR_AT)                                                   \
-    X(_AS_STRING_OP_FIND)                                                      \
-    X(_AS_STRING_OP_CONTAINS)                                                  \
-    X(_AS_STRING_OP_STARTS_WITH)                                               \
-    X(_AS_STRING_OP_ENDS_WITH)                                                 \
-    X(_AS_STRING_OP_TO_INTEGER)                                                \
-    X(_AS_STRING_OP_TO_DOUBLE)                                                 \
-    X(_AS_STRING_OP_BYTE_LENGTH)                                               \
-    X(_AS_STRING_OP_IS_NUMERIC)                                                \
-    X(_AS_STRING_OP_IS_UPPER)                                                  \
-    X(_AS_STRING_OP_IS_LOWER)                                                  \
-    X(_AS_STRING_OP_TO_BLOB)                                                   \
-    X(_AS_STRING_OP_SPLIT)                                                     \
-    X(_AS_STRING_OP_B64_DECODE)                                                \
-    X(_AS_STRING_OP_REGEX_COMPARE)                                             \
-    X(_AS_STRING_OP_INSERT)                                                    \
-    X(_AS_STRING_OP_OVERWRITE)                                                 \
-    X(_AS_STRING_OP_CONCAT)                                                    \
-    X(_AS_STRING_OP_SNIP)                                                      \
-    X(_AS_STRING_OP_REPLACE)                                                   \
-    X(_AS_STRING_OP_REPLACE_ALL)                                               \
-    X(_AS_STRING_OP_UPPER)                                                     \
-    X(_AS_STRING_OP_LOWER)                                                     \
-    X(_AS_STRING_OP_CASE_FOLD)                                                 \
-    X(_AS_STRING_OP_NORMALIZE_NFC)                                             \
-    X(_AS_STRING_OP_TRIM_START)                                                \
-    X(_AS_STRING_OP_TRIM_END)                                                  \
-    X(_AS_STRING_OP_TRIM)                                                      \
-    X(_AS_STRING_OP_PAD_START)                                                 \
-    X(_AS_STRING_OP_PAD_END)                                                   \
-    X(_AS_STRING_OP_REPEAT)                                                    \
-    X(_AS_STRING_OP_REGEX_REPLACE)
-
-enum {
-    _AS_STRING_OP_STRLEN = 4000,
-#define X(op_name) op_name,
-    STRING_OP_NAMES_EXCEPT_STRLEN
-#undef X
 };
 
 // Can be either for select or apply

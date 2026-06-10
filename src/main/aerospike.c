@@ -599,8 +599,8 @@ static struct module_constant_name_to_value module_constants[] = {
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_CTX_FILTER_EXPR_KEY),
 
-#define X(op_name) EXPOSE_MACRO(op_name),
-    X(_AS_STRING_OP_STRLEN) STRING_OP_NAMES_EXCEPT_STRLEN
+#define X(op_name) EXPOSE_MACRO(OP_##op_name)
+    STRING_OP_NAMES
 #undef X
 };
 
