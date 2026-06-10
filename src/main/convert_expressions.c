@@ -451,7 +451,55 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [LET] = EXP_SZ(as_exp_let(NIL)),
         [DEF] = EXP_SZ(as_exp_def("", NIL)),
         [VAR] = EXP_SZ(as_exp_var("")),
-        [UNKNOWN] = EXP_SZ(as_exp_unknown())};
+        [UNKNOWN] = EXP_SZ(as_exp_unknown()),
+        [OP_STRING_STRLEN] = EXP_SZ(as_exp_string_strlen(NIL)),
+        // TODO: needs to be overloaded
+        [OP_STRING_SUBSTR] = EXP_SZ(as_exp_string_substr(0, NIL)),
+        [OP_STRING_CHAR_AT] = EXP_SZ(as_exp_string_char_at(0, NIL)),
+        // TODO: needs to be overloaded
+        [OP_STRING_FIND] = EXP_SZ(as_exp_string_find(0, NIL)),
+        // TODO: double check enough space is allocated for the string
+        [OP_STRING_CONTAINS] = EXP_SZ(as_exp_string_contains("", NIL)),
+        [OP_STRING_STARTS_WITH] = EXP_SZ(as_exp_string_starts_with("", NIL)),
+        [OP_STRING_ENDS_WITH] = EXP_SZ(as_exp_string_ends_with("", NIL)),
+        [OP_STRING_TO_INTEGER] = EXP_SZ(as_exp_string_to_integer(NIL)),
+        [OP_STRING_TO_DOUBLE] = EXP_SZ(as_exp_string_to_double(NIL)),
+        [OP_STRING_BYTE_LENGTH] = EXP_SZ(as_exp_string_byte_length(NIL)),
+        // TODO: needs to be overloaded
+        [OP_STRING_IS_NUMERIC] = EXP_SZ(as_exp_string_is_numeric(NIL)),
+        [OP_STRING_IS_UPPER] = EXP_SZ(as_exp_string_is_upper(NIL)),
+        [OP_STRING_IS_LOWER] = EXP_SZ(as_exp_string_is_lower(NIL)),
+        [OP_STRING_TO_BLOB] = EXP_SZ(as_exp_string_to_blob(NIL)),
+        // TODO: overload
+        [OP_STRING_SPLIT] = EXP_SZ(as_exp_string_split(NIL)),
+        [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
+        // TODO: overload. check space for string
+        [OP_STRING_REGEX_COMPARE] =
+            EXP_SZ(as_exp_string_regex_compare("", NIL)),
+        [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
+        [OP_STRING_OVERWRITE] =
+            EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
+        // TODO: overload
+        [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
+        [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, NIL)),
+        [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
+        [OP_STRING_REPLACE_ALL] =
+            EXP_SZ(as_exp_string_replace_all(NULL, "", "", NIL)),
+        [OP_STRING_UPPER] = EXP_SZ(as_exp_string_upper(NULL, NIL)),
+        [OP_STRING_LOWER] = EXP_SZ(as_exp_string_lower(NULL, NIL)),
+        [OP_STRING_CASE_FOLD] = EXP_SZ(as_exp_string_case_fold(NULL, NIL)),
+        [OP_STRING_NORMALIZE_NFC] =
+            EXP_SZ(as_exp_string_normalize_nfc(NULL, NIL)),
+        [OP_STRING_TRIM_START] = EXP_SZ(as_exp_string_trim_start(NULL, NIL)),
+        [OP_STRING_TRIM_END] = EXP_SZ(as_exp_string_trim_end(NULL, NIL)),
+        [OP_STRING_TRIM] = EXP_SZ(as_exp_string_trim(NULL, NIL)),
+        [OP_STRING_PAD_START] =
+            EXP_SZ(as_exp_string_pad_start(NULL, 1, "", NIL)),
+        [OP_STRING_PAD_END] = EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
+        [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
+        // TODO: check space for string. Do for the other ops
+        [OP_STRING_REGEX_REPLACE] =
+            EXP_SZ(as_exp_string_regex_replace("", "", 0, NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
@@ -1721,6 +1769,56 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case _AS_EXP_CODE_REMOVE_RESULT:
             APPEND_ARRAY(0, as_exp_result_remove());
+            break;
+
+            // String ops
+
+        case OP_STRING_STRLEN:
+            APPEND_ARRAY(1, as_exp_string_strlen(NIL));
+            break;
+        case OP_STRING_SUBSTR:
+            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            break;
+        case OP_STRING_CHAR_AT:
+            APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
+            break;
+        case OP_STRING_FIND:
+            APPEND_ARRAY(1,
+                         as_exp_string_find(temp_expr->val.val_string_p, NIL));
+            break;
+        case OP_STRING_CONTAINS:
+            APPEND_ARRAY(
+                1, as_exp_string_contains(temp_expr->val.val_string_p, NIL));
+            break;
+        case OP_STRING_STARTS_WITH:
+            APPEND_ARRAY(
+                1, as_exp_string_starts_with(temp_expr->val.val_string_p, NIL));
+            break;
+        case OP_STRING_ENDS_WITH:
+            APPEND_ARRAY(
+                1, as_exp_string_ends_with(temp_expr->val.val_string_p, NIL));
+            break;
+        case OP_STRING_TO_INTEGER:
+            APPEND_ARRAY(1, as_exp_string_to_integer(NIL));
+            break;
+        case OP_STRING_TO_DOUBLE:
+            APPEND_ARRAY(1, as_exp_string_to_double(NIL));
+            break;
+        case OP_STRING_BYTE_LENGTH:
+            APPEND_ARRAY(1, as_exp_string_byte_length(NIL));
+            break;
+        // TODO: needs to be overloaded
+        case OP_STRING_IS_NUMERIC:
+            APPEND_ARRAY(1, as_exp_string_is_numeric(NIL));
+            break;
+        case OP_STRING_IS_UPPER:
+            APPEND_ARRAY(1, as_exp_string_is_upper(NIL));
+            break;
+        case OP_STRING_IS_LOWER:
+            APPEND_ARRAY(1, as_exp_string_is_lower(NIL));
+            break;
+        case OP_STRING_TO_BLOB:
+            APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
             break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,

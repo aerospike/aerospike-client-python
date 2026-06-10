@@ -46,7 +46,7 @@
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
-static inline bool isListOp(int op);
+static inline bool is_list_or_string_op(int op);
 static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
 static inline bool isHllOp(int op);
@@ -201,7 +201,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     return 0;
 }
 
-static inline bool isListOp(int op)
+static inline bool is_list_or_string_op(int op)
 {
     return (
         op == OP_LIST_APPEND || op == OP_LIST_APPEND_ITEMS ||
@@ -219,7 +219,8 @@ static inline bool isListOp(int op)
         op == OP_LIST_REMOVE_BY_VALUE_LIST ||
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE);
+        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_REGEX_REPLACE));
 }
 
 static inline bool isNewMapOp(int op)
@@ -354,8 +355,8 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
-    if (isListOp(operation)) {
-        return add_list_op(
+    if (is_list_or_string_op(operation)) {
+        return add_list_or_string_op(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
