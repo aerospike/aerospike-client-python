@@ -492,7 +492,7 @@ class TestStringOperations:
         self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, count=1)
+        assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)
 
     @root_level_and_nested_str
     @kwargs_policy
