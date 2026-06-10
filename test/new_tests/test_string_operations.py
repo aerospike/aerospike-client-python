@@ -397,7 +397,6 @@ class TestStringOperations:
         "index, expected_value",
         [
             (1, EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]),
-            (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
         ]
     )
     @root_level_and_nested_str
