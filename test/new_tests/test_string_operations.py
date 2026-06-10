@@ -262,7 +262,7 @@ class TestStringOperations:
         [
             # Positive test cases
             (NumericType.INT, STR_WITH_INT_BIN_NAME, True),
-            (NumericType.FLOAT, STR_WITH_DOUBLE_BIN_NAME, True)
+            (NumericType.FLOAT, STR_WITH_DOUBLE_BIN_NAME, True),
             # Negative test cases
             (NumericType.INT, STR_WITH_DOUBLE_BIN_NAME, False),
             (NumericType.FLOAT, STR_WITH_INT_BIN_NAME, False)
