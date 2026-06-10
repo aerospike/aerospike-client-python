@@ -10,7 +10,6 @@ from .conftest import KEYS
 
 KEY = KEYS[0]
 
-SINGLE_CHAR = "z"
 STR_BIN_NAME = "str"
 UPPERCASE_STR_BIN_NAME = "uppercase_str"
 NESTED_STR_BIN_NAME = "nested_str"
@@ -19,6 +18,7 @@ STR_WITH_DOUBLE_BIN_NAME = "str_with_double"
 MULTIBYTE_CODEPOINT_BIN_NAME = "multibyte"
 BASE64_ENCODED_BIN_NAME = "base64_enc"
 
+SINGLE_CHAR = "z"
 NEEDLE = "asdf"
 EXAMPLE_STR = NEEDLE * 2
 UPPERCASE_STR = EXAMPLE_STR.upper()
@@ -26,6 +26,16 @@ NOT_IN_EXAMPLE_STR = STRING_WITH_INT = "1"
 STRING_WITH_DOUBLE = "2.3"
 MULTIBYTE_CODEPOINT = "ñ"
 BASE64_ENCODED_STR = "YXNkZgo="
+
+BINS = {
+    STR_BIN_NAME: EXAMPLE_STR,
+    UPPERCASE_STR_BIN_NAME: UPPERCASE_STR,
+    NESTED_STR_BIN_NAME: [EXAMPLE_STR],
+    STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
+    STR_WITH_DOUBLE_BIN_NAME: STRING_WITH_DOUBLE,
+    MULTIBYTE_CODEPOINT_BIN_NAME: MULTIBYTE_CODEPOINT,
+    BASE64_ENCODED_BIN_NAME: BASE64_ENCODED_STR
+}
 
 START_IDX = 1
 
@@ -35,13 +45,7 @@ class TestStringOperations:
     def setup(self, request, as_connection):
         self.as_connection.put(
             key=KEY,
-            bins={
-                STR_BIN_NAME: EXAMPLE_STR,
-                STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
-                NESTED_STR_BIN_NAME: [EXAMPLE_STR],
-                UPPERCASE_STR_BIN_NAME: UPPERCASE_STR,
-
-            }
+            bins=BINS
         )
 
         yield
