@@ -333,7 +333,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     char *str_attr_value1 = NULL;
     const char *str_attr_key = NULL;
-    bool str_attr_required = true;
+    bool is_str_attr_optional = false;
     switch (operation_code) {
     case OP_STRING_FIND:
     case OP_STRING_CONTAINS:
@@ -365,7 +365,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         case OP_STRING_SPLIT:
             str_attr_key = "separator";
-            str_attr_required = false;
+            is_str_attr_optional = true;
             break;
         case OP_STRING_REGEX_COMPARE:
             str_attr_key = "pattern";
@@ -383,7 +383,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
         // TODO: review what unicodeStrVector is for.
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value1, str_attr_required) != AEROSPIKE_OK) {
+                    &str_attr_value1, is_str_attr_optional) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
