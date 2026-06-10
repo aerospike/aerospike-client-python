@@ -707,7 +707,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_lower(ops, bin, ctx_ref, &str_policy);
         break;
     case OP_STRING_CASE_FOLD:
-        success = as_operations_string_casefold(ops, bin, ctx_ref, &str_policy);
+        success =
+            as_operations_string_case_fold(ops, bin, ctx_ref, &str_policy);
         break;
     case OP_STRING_NORMALIZE_NFC:
         success =
