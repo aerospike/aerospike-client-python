@@ -136,6 +136,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_INDEX:
     case OP_LIST_REMOVE_BY_INDEX_RANGE:
     case OP_STRING_CHAR_AT:
+    case OP_STRING_INSERT:
+    case OP_STRING_OVERWRITE:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             goto exit;
@@ -195,6 +197,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
+    case OP_STRING_CONCAT_LIST:
         list_values_key = AS_PY_VALUES_KEY;
         break;
     case OP_LIST_APPEND_ITEMS:
@@ -208,6 +211,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE_LIST:
     case OP_LIST_APPEND_ITEMS:
     case OP_LIST_INSERT_ITEMS:
+    case OP_STRING_CONCAT_LIST:
         if (get_val_list(self, err, list_values_key, op_dict, (as_list **)&val1,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
@@ -234,17 +238,52 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     // Attributes only found in string operations
 
     int64_t start;
+    switch (operation_code) {
+    case OP_STRING_SUBSTR:
+    case OP_STRING_SNIP:
+        if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &start) !=
+            AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+    }
+
     uint64_t length = 0;
     bool length_found = false;
     switch (operation_code) {
     case OP_STRING_SUBSTR:
-        if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &index) !=
-            AEROSPIKE_OK) {
+    case OP_STRING_PAD_START:
+    case OP_STRING_PAD_END: {
+        const char *length_key = NULL;
+        switch (operation_code) {
+        case OP_STRING_PAD_START:
+        case OP_STRING_PAD_END:
+            length_key = "target_length";
+            break;
+        default:
+            length_key = "length";
+            break;
+        }
+
+        as_status status = get_optional_uint64_t(err, length_key, op_dict,
+                                                 &length, &length_found);
+        if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
 
-        as_status status = get_optional_uint64_t(err, "length", op_dict,
-                                                 &length, &length_found);
+        if (!length_found && operation_code == OP_STRING_PAD_START) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "length argument is required for pad_start");
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+    }
+    }
+
+    int64_t end = 0;
+    bool end_found = false;
+    switch (operation_code) {
+    case OP_STRING_SNIP:
+        as_status status =
+            get_optional_uint64_t(err, "end", op_dict, &end, &end_found);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
@@ -283,7 +322,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     }
     }
 
-    char *str_attr_value = NULL;
+    char *str_attr_value1 = NULL;
     const char *str_attr_key = NULL;
     switch (operation_code) {
     case OP_STRING_FIND:
@@ -292,9 +331,20 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_ENDS_WITH:
     case OP_STRING_SPLIT:
     case OP_STRING_REGEX_COMPARE:
+    case OP_STRING_INSERT:
+    case OP_STRING_OVERWRITE:
+    case OP_STRING_CONCAT:
+    case OP_STRING_REPLACE:
+    case OP_STRING_REPLACE_ALL:
+    case OP_STRING_PAD_START:
+    case OP_STRING_PAD_END:
+    case OP_STRING_REGEX_REPLACE:
         switch (operation_code) {
         case OP_STRING_FIND:
         case OP_STRING_CONTAINS:
+        case OP_STRING_REPLACE:
+        case OP_STRING_REPLACE_ALL:
+        case OP_STRING_REGEX_REPLACE:
             str_attr_key = NEEDLE_OP_START_KEY;
             break;
         case OP_STRING_STARTS_WITH:
@@ -309,13 +359,50 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         case OP_STRING_REGEX_COMPARE:
             str_attr_key = "pattern";
             break;
+        case OP_STRING_INSERT:
+        case OP_STRING_OVERWRITE:
+        case OP_STRING_CONCAT:
+            str_attr_key = "value";
+            break;
+        case OP_STRING_PAD_START:
+        case OP_STRING_PAD_END:
+            str_attr_key = "pad_string";
+            break;
         }
 
         // TODO: review what unicodeStrVector is for.
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value) != AEROSPIKE_OK) {
+                    &str_attr_value1) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
+    }
+
+    char *str_attr_value2 = NULL;
+    switch (operation_code) {
+    case OP_STRING_REPLACE:
+    case OP_STRING_REPLACE_ALL:
+    case OP_STRING_REGEX_REPLACE:
+        if (get_str(err, "replacement", op_dict, unicodeStrVector,
+                    &str_attr_value2) != AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+    }
+
+    as_string_policy str_policy;
+    switch (operation_code) {
+    case OP_STRING_INSERT: {
+        PyObject *py_str_policy = PyDict_GetItemString(op_dict, "policy");
+        if (!py_str_policy) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+
+        as_status status = as_string_policy_init_from_pyobject(err, &str_policy,
+                                                               py_str_policy);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+        break;
+    }
     }
 
     bool success = false;
@@ -530,19 +617,19 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_FIND:
         success = as_operations_string_find_occurrence(
-            ops, bin, ctx_ref, str_attr_value, occurrence);
+            ops, bin, ctx_ref, str_attr_value1, occurrence);
         break;
     case OP_STRING_CONTAINS:
         success =
-            as_operations_string_contains(ops, bin, ctx_ref, str_attr_value);
+            as_operations_string_contains(ops, bin, ctx_ref, str_attr_value1);
         break;
     case OP_STRING_STARTS_WITH:
-        success =
-            as_operations_string_starts_with(ops, bin, ctx_ref, str_attr_value);
+        success = as_operations_string_starts_with(ops, bin, ctx_ref,
+                                                   str_attr_value1);
         break;
     case OP_STRING_ENDS_WITH:
         success =
-            as_operations_string_ends_with(ops, bin, ctx_ref, str_attr_value);
+            as_operations_string_ends_with(ops, bin, ctx_ref, str_attr_value1);
         break;
     case OP_STRING_TO_INTEGER:
         success = as_operations_string_to_integer(ops, bin, ctx_ref);
@@ -568,16 +655,90 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_SPLIT:
         success = as_operations_string_split_separator(ops, bin, ctx_ref,
-                                                       str_attr_value);
+                                                       str_attr_value1);
         break;
     case OP_STRING_B64_DECODE:
         success = as_operations_string_b64_decode(ops, bin, ctx_ref);
         break;
     case OP_STRING_REGEX_COMPARE:
         success = as_operations_string_regex_compare_flags(
-            ops, bin, ctx_ref, str_attr_value, regex_flags);
+            ops, bin, ctx_ref, str_attr_value1, regex_flags);
         break;
-
+    case OP_STRING_INSERT:
+        success = as_operations_string_insert(ops, bin, ctx_ref, &str_policy,
+                                              index, str_attr_value1);
+        break;
+    case OP_STRING_OVERWRITE:
+        success = as_operations_string_overwrite(ops, bin, ctx_ref, &str_policy,
+                                                 index, str_attr_value1);
+        break;
+    case OP_STRING_CONCAT:
+        success = as_operations_string_concat(ops, bin, ctx_ref, &str_policy,
+                                              str_attr_value1);
+        break;
+    case OP_STRING_CONCAT_LIST:
+        // TODO: test negative test case where a non-str value is in as_list
+        success = as_operations_string_concat_list(ops, bin, ctx_ref,
+                                                   &str_policy, val1);
+        break;
+    case OP_STRING_SNIP:
+        if (end_found) {
+            success = as_operations_string_snip_range(ops, bin, ctx_ref,
+                                                      &str_policy, start, end);
+        }
+        else {
+            success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,
+                                                start);
+        }
+        break;
+    case OP_STRING_REPLACE:
+        success = as_operations_string_replace(
+            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
+        break;
+    case OP_STRING_REPLACE_ALL:
+        success = as_operations_string_replace_all(
+            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
+        break;
+    // TODO: thinking of making an array mapping op codes to op methods with the same params
+    case OP_STRING_UPPER:
+        success = as_operations_string_upper(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_LOWER:
+        success = as_operations_string_lower(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_CASE_FOLD:
+        success = as_operations_string_casefold(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_NORMALIZE_NFC:
+        success =
+            as_operations_string_normalize_nfc(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_TRIM_START:
+        success =
+            as_operations_string_trim_start(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_TRIM_END:
+        success = as_operations_string_trim_end(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_TRIM:
+        success = as_operations_string_trim(ops, bin, ctx_ref, &str_policy);
+        break;
+    case OP_STRING_PAD_START:
+        success = as_operations_string_pad_start(ops, bin, ctx_ref, &str_policy,
+                                                 length, str_attr_value1);
+        break;
+    case OP_STRING_PAD_END:
+        success = as_operations_string_pad_end(ops, bin, ctx_ref, &str_policy,
+                                               length, str_attr_value1);
+        break;
+    case OP_STRING_REPEAT:
+        success = as_operations_string_repeat(ops, bin, ctx_ref, &str_policy,
+                                              (uint64_t)count);
+        break;
+    case OP_STRING_REGEX_REPLACE:
+        success = as_operations_string_replace(
+            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
+        break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");

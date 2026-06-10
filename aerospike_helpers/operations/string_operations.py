@@ -326,7 +326,7 @@ def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None)
     return locals()
 
 
-def concat_list(policy: StringPolicy, bin_name: str, values: list[str], ctx: TypeCTX = None):
+def concat_list(policy: StringPolicy, bin_name: str, value_list: list[str], ctx: TypeCTX = None):
     """
     Create string ``concat`` operation that appends each string element in values to
     the bin in order.
@@ -335,7 +335,7 @@ def concat_list(policy: StringPolicy, bin_name: str, values: list[str], ctx: Typ
 
         {str_policy}
         {bin_name}
-        values (str): The list of values to append.
+        value_list (str): The list of values to append.
         {ctx}
     """
     pass
@@ -539,6 +539,7 @@ def regex_replace(
     bin_name: str,
     pattern: str,
     replacement: str,
+    # TODO: should have default value?
     regex_flags: RegexFlags,
     ctx: TypeCTX = None
 ):
