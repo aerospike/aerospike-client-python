@@ -327,13 +327,23 @@ class TestStringOperations:
 
         assert bins[bin_name] == list(EXAMPLE_STR)
 
-    def test_split_with_separator(self):
+    @pytest.mark.parametrize(
+        "separator",
+        [
+            ".",
+            ","
+        ]
+    )
+    def test_split_with_separator(self, separator: str):
         ops = [
-            str_ops.split(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=".")
+            str_ops.split(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_WITH_DOUBLE_BIN_NAME] == STRING_WITH_DOUBLE.split('.')
+        if separator == ".":
+            assert bins[STR_WITH_DOUBLE_BIN_NAME] == STRING_WITH_DOUBLE.split(separator)
+        else:
+            assert bins[STR_WITH_DOUBLE_BIN_NAME] == list(STRING_WITH_DOUBLE)
 
     def test_base64_decode(self):
         ops = [

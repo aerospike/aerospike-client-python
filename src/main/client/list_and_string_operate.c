@@ -665,8 +665,13 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_to_blob(ops, bin, ctx_ref);
         break;
     case OP_STRING_SPLIT:
-        success = as_operations_string_split_separator(ops, bin, ctx_ref,
-                                                       str_attr_value1);
+        if (str_attr_value1) {
+            success = as_operations_string_split_separator(ops, bin, ctx_ref,
+                                                           str_attr_value1);
+        }
+        else {
+            success = as_operations_string_split(ops, bin, ctx_ref);
+        }
         break;
     case OP_STRING_B64_DECODE:
         success = as_operations_string_b64_decode(ops, bin, ctx_ref);
