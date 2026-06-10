@@ -464,7 +464,7 @@ class TestStringOperations:
         [
             {},
             {"end": None},
-            {"end": len(EXAMPLE_STR) - 2}
+            {"end": len(EXAMPLE_STR) - 1}
         ]
     )
     @root_level_and_nested_str
