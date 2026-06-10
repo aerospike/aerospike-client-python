@@ -48,20 +48,22 @@ class TestStringOperations:
 
         self.as_connection.remove(KEY)
 
-    ctx_param = pytest.mark.parametrize(
-        "bin_name, kwargs_with_ctx",
-        [
-            pytest.param(STR_BIN_NAME, {}),
-            pytest.param(
-                NESTED_STR_BIN_NAME,
-                {
-                    "ctx": [
-                        cdt_ctx.cdt_ctx_list_index(0)
-                    ]
-                }
-            )
-        ]
-    )
+    pytestmark = [
+        pytest.mark.parametrize(
+            "bin_name, kwargs_with_ctx",
+            [
+                pytest.param(STR_BIN_NAME, {}),
+                pytest.param(
+                    NESTED_STR_BIN_NAME,
+                    {
+                        "ctx": [
+                            cdt_ctx.cdt_ctx_list_index(0)
+                        ]
+                    }
+                )
+            ]
+        )
+    ]
 
     def test_strlen(self, bin_name: str, kwargs_with_ctx: dict):
         ops = [
