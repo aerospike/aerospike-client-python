@@ -343,16 +343,10 @@ class TestStringOperations:
         "kwargs_policy",
         [
             {},
+            {"policy": None},
+            {"policy": StringPolicy()}
         ]
     )
-
-    @pytest.fixture(params=[
-        {},
-        {"policy": None},
-        {"policy": StringPolicy()}
-    ])
-    def get_combined_kwargs(self):
-        pass
 
     @pytest.mark.parametrize(
         "index, expected_value",
