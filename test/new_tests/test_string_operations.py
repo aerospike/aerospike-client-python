@@ -479,9 +479,9 @@ class TestStringOperations:
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         if "end" not in end_kwargs or end_kwargs["end"] is None:
-            assert bins[bin_name] == EXAMPLE_STR[:START_IDX]
+            assert bins[bin_name] == EXAMPLE_STR[:(START_IDX - 1)]
         else:
-            assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+            assert bins[bin_name] == EXAMPLE_STR[:(START_IDX - 1)] + EXAMPLE_STR[-1]
 
     @root_level_and_nested_str
     @kwargs_policy
