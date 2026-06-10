@@ -347,7 +347,7 @@ class TestStringOperations:
 
     def test_base64_decode(self):
         ops = [
-            str_ops.base64_decode(bin_name=BASE64_ENCODED_BIN_NAME, separator=".")
+            str_ops.base64_decode(bin_name=BASE64_ENCODED_BIN_NAME)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
