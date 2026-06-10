@@ -43,7 +43,7 @@ as_status get_str(as_error *err, const char *key, PyObject *op_dict,
 {
     PyObject *intermediateUnicode = NULL;
 
-    PyObject *py_bin = PyDict_GetItemString(op_dict, AS_PY_BIN_KEY);
+    PyObject *py_bin = PyDict_GetItemString(op_dict, key);
 
     if (!py_bin) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
