@@ -1,7 +1,8 @@
 import pytest
 import base64
 
-from aerospike_helpers.operations import string_operations as str_ops
+import aerospike
+from aerospike_helpers.operations import string_operations as str_ops, operations, list_operations as list_ops
 from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
@@ -360,6 +361,13 @@ class TestStringOperations:
 
     # Write operations
 
+    def add_read_op(self, ops, bin_name):
+        if bin_name == STR_BIN_NAME:
+            op = operations.read(bin_name=bin_name)
+        else:
+            op = list_ops.list_get_by_index(bin_name, 0, aerospike.LIST_RETURN_VALUE)
+        ops.append(op)
+
     kwargs_policy = pytest.mark.parametrize(
         "kwargs_policy",
         [
@@ -375,14 +383,13 @@ class TestStringOperations:
             (-1, EXAMPLE_STR[:-1])
         ]
     )
-    @root_level_and_nested_str
     @kwargs_policy
-    def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_insert(self, index: int, expected_value: str, ops: list, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
-
         assert bins[bin_name] == expected_value
 
     @pytest.mark.parametrize(
@@ -392,12 +399,12 @@ class TestStringOperations:
             (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
         ]
     )
-    @root_level_and_nested_str
     @kwargs_policy
     def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.overwrite(bin_name=bin_name, index=index, value=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == expected_value
@@ -407,6 +414,7 @@ class TestStringOperations:
         ops = [
             str_ops.overwrite(None, bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
         ]
+        self.add_read_op(ops, STR_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[STR_BIN_NAME] == NEW_STR
@@ -417,6 +425,7 @@ class TestStringOperations:
         ops = [
             str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR + NEEDLE
@@ -434,6 +443,7 @@ class TestStringOperations:
         ops = [
             str_ops.concat_list(bin_name=bin_name, values=values, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR + str.join(values)
@@ -454,6 +464,7 @@ class TestStringOperations:
         ops = [
             str_ops.snip(bin_name=bin_name, start=START_IDX, **end_kwargs, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         if "end" not in end_kwargs or end_kwargs["end"] is None:
@@ -467,6 +478,7 @@ class TestStringOperations:
         ops = [
             str_ops.replace(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR, count=1)
@@ -477,6 +489,7 @@ class TestStringOperations:
         ops = [
             str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
@@ -487,6 +500,7 @@ class TestStringOperations:
         ops = [
             str_ops.upper(bin_name=bin_name, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR.upper()
@@ -496,6 +510,7 @@ class TestStringOperations:
         ops = [
             str_ops.lower(bin_name=UPPERCASE_STR_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, UPPERCASE_STR_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[UPPERCASE_STR_BIN_NAME] == UPPERCASE_STR.lower()
@@ -506,6 +521,7 @@ class TestStringOperations:
         ops = [
             str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
@@ -526,6 +542,7 @@ class TestStringOperations:
         ops = [
             str_ops.trim_start(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, SURROUNDING_WHITESPACE_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
@@ -535,6 +552,7 @@ class TestStringOperations:
         ops = [
             str_ops.trim_end(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, SURROUNDING_WHITESPACE_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[:-1]
