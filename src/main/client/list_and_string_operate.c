@@ -613,7 +613,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_strlen(ops, bin, ctx_ref);
         break;
     case OP_STRING_SUBSTR:
-        if (length_found) {
+        if (!length_found) {
             success = as_operations_string_substr(ops, bin, ctx_ref, start);
         }
         else {
