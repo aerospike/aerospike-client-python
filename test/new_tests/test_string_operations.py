@@ -442,7 +442,7 @@ class TestStringOperations:
         assert bins[bin_name] == EXAMPLE_STR + NEEDLE
 
     @pytest.mark.parametrize(
-        "values",
+        "value_list",
         [
             [NEEDLE],
             [NEEDLE, NEEDLE]
@@ -450,14 +450,14 @@ class TestStringOperations:
     )
     @root_level_and_nested_str
     @kwargs_policy
-    def test_concat_list(self, values: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_concat_list(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.concat_list(bin_name=bin_name, values=values, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.concat_list(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR + str.join(values)
+        assert bins[bin_name] == EXAMPLE_STR + "".join(value_list)
 
     @pytest.mark.parametrize(
         "end_kwargs",

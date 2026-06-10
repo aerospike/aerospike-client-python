@@ -412,7 +412,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
-        break;
     }
 
     bool success = false;
