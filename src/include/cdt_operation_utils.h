@@ -50,7 +50,8 @@ as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
                   char **binName);
 
 as_status get_str(as_error *err, const char *key, PyObject *op_dict,
-                  as_vector *unicodeStrVector, char **str_ref);
+                  as_vector *unicodeStrVector, char **str_ref,
+                  bool is_optional);
 
 as_status get_asval(AerospikeClient *self, as_error *err, char *key,
                     PyObject *op_dict, as_val **val,

@@ -30,7 +30,8 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
 as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
                   char **binName)
 {
-    return get_str(err, AS_PY_BIN_KEY, op_dict, unicodeStrVector, binName);
+    return get_str(err, AS_PY_BIN_KEY, op_dict, unicodeStrVector, binName,
+                   true);
 }
 
 /*
@@ -39,15 +40,21 @@ held by Python, or is added to the list of chars to free later.
 */
 
 as_status get_str(as_error *err, const char *key, PyObject *op_dict,
-                  as_vector *unicodeStrVector, char **str_ref)
+                  as_vector *unicodeStrVector, char **str_ref, bool is_optional)
 {
     PyObject *intermediateUnicode = NULL;
 
     PyObject *py_bin = PyDict_GetItemString(op_dict, key);
 
-    if (!py_bin) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"bin\" entry");
+    if (!py_bin || Py_IsNone(py_bin)) {
+        if (is_optional) {
+            return AEROSPIKE_OK;
+        }
+        else {
+            // TODO: this error message uses an outdated key
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation must contain a \"bin\" entry");
+        }
     }
 
     if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, str_ref,

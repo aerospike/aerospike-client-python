@@ -252,7 +252,8 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def split(bin_name: str, separator: str = None, ctx: TypeCTX = None):
+# TODO: all values with default of None need to be marked with type optional
+def split(bin_name: str, separator: str | None = None, ctx: TypeCTX = None):
     """
     Create string ``split`` operation that splits by Unicode codepoint.
 
