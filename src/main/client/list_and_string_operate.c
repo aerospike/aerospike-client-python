@@ -283,7 +283,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_STRING_SNIP:
         as_status status =
-            get_optional_uint64_t(err, "end", op_dict, &end, &end_found);
+            get_optional_int64_t(err, "end", op_dict, &end, &end_found);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
