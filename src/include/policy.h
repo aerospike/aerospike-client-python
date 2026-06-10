@@ -85,6 +85,11 @@ enum {
 #undef X
 };
 
+static inline bool is_list_op(int op_code)
+{
+    return op_code >= OP_LIST_APPEND && op_code <= OP_LIST_CREATE;
+}
+
 enum Aerospike_map_operations {
     // Make sure all the op codes are unique
     OP_MAP_SET_POLICY = OP_STRING_REGEX_REPLACE + 1,
