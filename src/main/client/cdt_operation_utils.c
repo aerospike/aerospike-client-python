@@ -27,13 +27,19 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
+as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
+                  char **binName)
+{
+    return get_str(err, AS_PY_BIN_KEY, op_dict, unicodeStrVector, binName);
+}
+
 /*
 The caller of this does not own the pointer to binName, and should not free it. It is either
 held by Python, or is added to the list of chars to free later.
 */
 
-as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
-                  char **binName)
+as_status get_str(as_error *err, const char *key, PyObject *op_dict,
+                  as_vector *unicodeStrVector, char **str_ref)
 {
     PyObject *intermediateUnicode = NULL;
 

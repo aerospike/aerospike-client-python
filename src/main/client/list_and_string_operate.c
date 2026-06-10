@@ -41,10 +41,16 @@ const char *op_code_to_names[] = {
 #undef X
 };
 
-as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
-                      as_vector *unicodeStrVector, as_static_pool *static_pool,
-                      as_operations *ops, long operation_code, long *ret_type,
-                      int serializer_type)
+// String operation dictionary keys
+
+#define STRING_OP_START_KEY "start"
+#define NEEDLE_OP_START_KEY "needle"
+
+as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
+                                PyObject *op_dict, as_vector *unicodeStrVector,
+                                as_static_pool *static_pool, as_operations *ops,
+                                long operation_code, long *ret_type,
+                                int serializer_type)
 
 {
     // as_operations_add_* API methods can take ownership of heap allocated as_val
@@ -55,6 +61,8 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
     if (get_bin(err, op_dict, unicodeStrVector, &bin) != AEROSPIKE_OK) {
         goto exit;
     }
+
+    // Specific to list operations
 
     as_list_policy list_policy;
     as_list_policy *list_policy_ref = NULL;
@@ -127,6 +135,7 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
     case OP_LIST_GET_BY_INDEX_RANGE:
     case OP_LIST_REMOVE_BY_INDEX:
     case OP_LIST_REMOVE_BY_INDEX_RANGE:
+    case OP_STRING_CHAR_AT:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             goto exit;
@@ -220,6 +229,28 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
             goto CLEANUP_VAL1_ON_ERROR;
         }
         break;
+    }
+
+    int64_t start;
+    switch (operation_code) {
+    case OP_STRING_SUBSTR:
+        if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &index) !=
+            AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+    }
+
+    char *needle = NULL;
+    uint64_t length = 0;
+    switch (operation_code) {
+    case OP_STRING_FIND:
+        // TODO: review what unicodeStrVector is for.
+        if (get_str(err, NEEDLE_OP_START_KEY, op_dict, unicodeStrVector,
+                    &needle) != AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+
+        if (get_uint64_t)
     }
 
     bool success = false;
@@ -416,6 +447,27 @@ as_status add_list_op(AerospikeClient *self, as_error *err, PyObject *op_dict,
             success = as_operations_list_remove_by_value_rel_rank_range_to_end(
                 ops, bin, ctx_ref, val1, rank, return_type);
         }
+        break;
+    case OP_STRING_STRLEN:
+        success = as_operations_string_strlen(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_SUBSTR:
+        if (true) {
+            success = as_operations_string_substr(ops, bin, ctx_ref, start);
+        }
+        else {
+            success = as_operations_string_substr_range(ops, bin, ctx_ref,
+                                                        start, length);
+        }
+        break;
+    case OP_STRING_CHAR_AT:
+        success = as_operations_string_char_at(ops, bin, ctx_ref, index);
+        break;
+    case OP_STRING_FIND:
+        success = as_operations_string_find(ops, bin, ctx_ref, needle);
+        break;
+    case OP_STRING_:
+        success = as_operations_string_find(ops, bin, ctx_ref, needle);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
