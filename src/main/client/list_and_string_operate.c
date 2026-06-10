@@ -66,7 +66,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         bin_key = "bin_name";
     }
 
-    if (get_str(err, bin_key, op_dict, unicodeStrVector, &bin) !=
+    if (get_str(err, bin_key, op_dict, unicodeStrVector, &bin, true) !=
         AEROSPIKE_OK) {
         goto exit;
     }
