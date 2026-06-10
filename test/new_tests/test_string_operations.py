@@ -380,11 +380,12 @@ class TestStringOperations:
         "index, expected_value",
         [
             (1, EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]),
-            (-1, EXAMPLE_STR[:-1])
+            (-1, EXAMPLE_STR[:-1] + NEEDLE + EXAMPLE_STR[-1:])
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
-    def test_insert(self, index: int, expected_value: str, ops: list, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
@@ -399,6 +400,7 @@ class TestStringOperations:
             (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
         ]
     )
+    @root_level_and_nested_str
     @kwargs_policy
     def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
@@ -481,7 +483,7 @@ class TestStringOperations:
         self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR, count=1)
+        assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, count=1)
 
     @root_level_and_nested_str
     @kwargs_policy
@@ -492,7 +494,7 @@ class TestStringOperations:
         self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
+        assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)
 
     @root_level_and_nested_str
     @kwargs_policy
