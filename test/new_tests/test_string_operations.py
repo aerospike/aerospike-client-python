@@ -339,20 +339,20 @@ class TestStringOperations:
 
     # Write operations
 
-    # TODO: find way to combine kwarg parametrize decorators
     kwargs_policy = pytest.mark.parametrize(
-        "policy",
+        "kwargs_policy",
         [
             {},
-            {"policy": None},
-            {"policy": StringPolicy()}
         ]
     )
 
-    # @pytest.fixture
-    # def write_op_kwargs(kwargs_policy, kwargs_with_ctx):
-    #     kwargs_policy |= kwargs_with_ctx
-    #     yield kwargs_policy
+    @pytest.fixture(params=[
+        {},
+        {"policy": None},
+        {"policy": StringPolicy()}
+    ])
+    def get_combined_kwargs(self):
+        pass
 
     @pytest.mark.parametrize(
         "index, expected_value",
@@ -361,6 +361,7 @@ class TestStringOperations:
             (-1, EXAMPLE_STR[:-1])
         ]
     )
+    @kwargs_policy
     def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy)
@@ -376,15 +377,16 @@ class TestStringOperations:
             (len(EXAMPLE_STR), SINGLE_CHAR + EXAMPLE_STR[1:])
         ]
     )
+    @kwargs_policy
     def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.overwrite(bin_name=bin_name, index=index, value=SINGLE_CHAR, **kwargs_policy)
+            str_ops.overwrite(bin_name=bin_name, index=index, value=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == expected_value
 
+    @kwargs_policy
     def test_overwrite_past_string_length(self):
         NEW_STR = EXAMPLE_STR + "a"
         ops = [
@@ -394,10 +396,10 @@ class TestStringOperations:
 
         assert bins[STR_BIN_NAME] == NEW_STR
 
+    @kwargs_policy
     def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy)
+            str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
@@ -410,10 +412,10 @@ class TestStringOperations:
             [NEEDLE, NEEDLE]
         ]
     )
+    @kwargs_policy
     def test_concat_list(self, values: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.concat_list(bin_name=bin_name, values=values, **kwargs_policy)
+            str_ops.concat_list(bin_name=bin_name, values=values, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
@@ -427,13 +429,12 @@ class TestStringOperations:
             {"end": len(EXAMPLE_STR) - 2}
         ]
     )
+    @kwargs_policy
     def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        end_kwargs |= kwargs_with_ctx
-        end_kwargs |= kwargs_policy
 
         START_IDX = 1
         ops = [
-            str_ops.snip(bin_name=bin_name, start=START_IDX, **end_kwargs)
+            str_ops.snip(bin_name=bin_name, start=START_IDX, **end_kwargs, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
@@ -442,28 +443,28 @@ class TestStringOperations:
         else:
             assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
 
+    @kwargs_policy
     def test_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.replace(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+            str_ops.replace(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR, count=1)
 
+    @kwargs_policy
     def test_replace_all(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR.replace(old=NEEDLE, new=SINGLE_CHAR)
 
+    @kwargs_policy
     def test_upper(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_policy |= kwargs_with_ctx
         ops = [
-            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy)
+            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
