@@ -34,6 +34,7 @@ All string arguments (needle, value, separator, pattern, etc.) are passed as
 Python strings, but they cannot embedded NULL bytes.
 """
 
+import aerospike
 from ..string_helpers import NumericType, RegexFlags, StringPolicy, __generate_docstrings_for_all_func_members
 import sys
 
@@ -55,6 +56,7 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_STRLEN
     return locals()
 
 
@@ -71,6 +73,7 @@ def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = 
         length (int): Number of codepoints to return.
         {ctx}
     """
+    op = aerospike._OP_STRING_SUBSTR
     return locals()
 
 
@@ -85,6 +88,7 @@ def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
         index (int): Index of the codepoint to return.
         {ctx}
     """
+    op = aerospike._OP_STRING_CHAR_AT
     return locals()
 
 
@@ -101,6 +105,7 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
         index (int): Index of the codepoint to return.
         {ctx}
     """
+    op = aerospike._OP_STRING_FIND
     return locals()
 
 
@@ -114,6 +119,7 @@ def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
         {needle_get}
         {ctx}
     """
+    op = aerospike._OP_STRING_CONTAINS
     return locals()
 
 
@@ -128,6 +134,7 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
         prefix (str): The string to search for.
         {ctx}
     """
+    op = aerospike._OP_STRING_STARTS_WITH
     return locals()
 
 
@@ -142,6 +149,7 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
         suffix (str): The string to search for.
         {ctx}
     """
+    op = aerospike._OP_STRING_ENDS_WITH
     return locals()
 
 
@@ -155,6 +163,7 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TO_INTEGER
     return locals()
 
 
@@ -168,6 +177,7 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TO_DOUBLE
     return locals()
 
 
@@ -181,6 +191,7 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_BYTE_LENGTH
     return locals()
 
 
@@ -195,6 +206,7 @@ def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: 
         numeric_type (:py:class:`~aerospike_helpers.string_helpers.NumericType`): The numeric type to filter for.
         {ctx}
     """
+    op = aerospike._OP_STRING_IS_NUMERIC
     return locals()
 
 
@@ -208,6 +220,7 @@ def is_upper(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_IS_UPPER
     return locals()
 
 
@@ -221,6 +234,7 @@ def is_lower(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_IS_LOWER
     return locals()
 
 
@@ -234,6 +248,7 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TO_BLOB
     return locals()
 
 
@@ -248,6 +263,7 @@ def split(bin_name: str, separator: str = None, ctx: TypeCTX = None):
             becomes one string element in the returned list.
         {ctx}
     """
+    op = aerospike._OP_STRING_SPLIT
     return locals()
 
 
@@ -261,6 +277,7 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_B64_DECODE
     return locals()
 
 
@@ -276,6 +293,7 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
         {regex_flags}
         {ctx}
     """
+    op = aerospike._OP_STRING_REGEX_COMPARE
     return locals()
 
 
@@ -292,6 +310,7 @@ def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: Typ
         value (str): The value to insert.
         {ctx}
     """
+    op = aerospike._OP_STRING_INSERT
     return locals()
 
 
@@ -309,6 +328,7 @@ def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: 
         value (str): The value to overwrite.
         {ctx}
     """
+    op = aerospike._OP_STRING_OVERWRITE
     return locals()
 
 
@@ -323,6 +343,7 @@ def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None)
         value (str): The value to append.
         {ctx}
     """
+    op = aerospike._OP_STRING_CONCAT
     return locals()
 
 
@@ -338,7 +359,8 @@ def concat_list(policy: StringPolicy, bin_name: str, value_list: list[str], ctx:
         value_list (str): The list of values to append.
         {ctx}
     """
-    pass
+    op = aerospike._OP_STRING_CONCAT_LIST
+    return locals()
 
 
 def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
@@ -354,6 +376,7 @@ def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None
             remove from start through the end of the string.
         {ctx}
     """
+    op = aerospike._OP_STRING_SNIP
     return locals()
 
 
@@ -370,6 +393,7 @@ def replace(policy: StringPolicy, bin_name: str, needle: str, replacement: str, 
         {replacement}
         {ctx}
     """
+    op = aerospike._OP_STRING_REPLACE
     return locals()
 
 
@@ -386,6 +410,7 @@ def replace_all(policy: StringPolicy, bin_name: str, needle: str, replacement: s
         {replacement}
         {ctx}
     """
+    op = aerospike._OP_STRING_REPLACE_ALL
     return locals()
 
 
@@ -399,6 +424,7 @@ def upper(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_UPPER
     return locals()
 
 
@@ -412,6 +438,7 @@ def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_LOWER
     return locals()
 
 
@@ -427,6 +454,7 @@ def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_CASE_FOLD
     return locals()
 
 
@@ -442,6 +470,7 @@ def normalize_nfc(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_NORMALIZE_NFC
     return locals()
 
 
@@ -456,6 +485,7 @@ def trim_start(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TRIM_START
     return locals()
 
 
@@ -470,6 +500,7 @@ def trim_end(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TRIM_END
     return locals()
 
 
@@ -483,6 +514,7 @@ def trim(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
         {bin_name}
         {ctx}
     """
+    op = aerospike._OP_STRING_TRIM
     return locals()
 
 
@@ -500,6 +532,7 @@ def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_strin
         {pad_string}
         {ctx}
     """
+    op = aerospike._OP_STRING_PAD_START
     return locals()
 
 
@@ -517,6 +550,7 @@ def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string:
         {pad_string}
         {ctx}
     """
+    op = aerospike._OP_STRING_PAD_END
     return locals()
 
 
@@ -531,6 +565,7 @@ def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None)
         count (int): The number of times to repeat the string. Must be non-negative.
         {ctx}
     """
+    op = aerospike._OP_STRING_REPEAT
     return locals()
 
 
@@ -557,6 +592,7 @@ def regex_replace(
         {regex_flags}
         {ctx}
     """
+    op = aerospike._OP_STRING_REGEX_REPLACE
     return locals()
 
 
@@ -571,6 +607,7 @@ def to_string(bin_name: str):
 
         {bin_name}
     """
+    op = aerospike._OP_STRING_TO_STRING
     return locals()
 
 
