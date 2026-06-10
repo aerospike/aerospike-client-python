@@ -231,26 +231,91 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     }
 
+    // Attributes only found in string operations
+
     int64_t start;
+    uint64_t length = 0;
+    bool length_found = false;
     switch (operation_code) {
     case OP_STRING_SUBSTR:
         if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
-    }
 
-    char *needle = NULL;
-    uint64_t length = 0;
-    switch (operation_code) {
-    case OP_STRING_FIND:
-        // TODO: review what unicodeStrVector is for.
-        if (get_str(err, NEEDLE_OP_START_KEY, op_dict, unicodeStrVector,
-                    &needle) != AEROSPIKE_OK) {
+        as_status status = get_optional_uint64_t(err, "length", op_dict,
+                                                 &length, &length_found);
+        if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
+    }
 
-        if (get_uint64_t)
+    int64_t occurrence = 0;
+    switch (operation_code) {
+    case OP_STRING_FIND:
+        if (get_int64_t(err, "occurrence", op_dict, &occurrence) !=
+            AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+    }
+
+    // Handle enum attributes
+
+    as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
+    as_string_regex_flags regex_flags = AS_STRING_REGEX_FLAGS_NONE;
+    int64_t tmp_value;
+    switch (operation_code) {
+    case OP_STRING_IS_NUMERIC: {
+        if (get_int64_t(err, "numeric_type", op_dict, &tmp_value) !=
+            AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+        numeric_type = (as_string_numeric_type)tmp_value;
+        break;
+    }
+    case OP_STRING_REGEX_COMPARE: {
+        if (get_int64_t(err, "regex_flags", op_dict, &tmp_value) !=
+            AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+        regex_flags = (as_string_regex_flags)tmp_value;
+        break;
+    }
+    }
+
+    char *str_attr_value = NULL;
+    const char *str_attr_key = NULL;
+    switch (operation_code) {
+    case OP_STRING_FIND:
+    case OP_STRING_CONTAINS:
+    case OP_STRING_STARTS_WITH:
+    case OP_STRING_ENDS_WITH:
+    case OP_STRING_SPLIT:
+    case OP_STRING_REGEX_COMPARE:
+        switch (operation_code) {
+        case OP_STRING_FIND:
+        case OP_STRING_CONTAINS:
+            str_attr_key = NEEDLE_OP_START_KEY;
+            break;
+        case OP_STRING_STARTS_WITH:
+            str_attr_key = "prefix";
+            break;
+        case OP_STRING_ENDS_WITH:
+            str_attr_key = "suffix";
+            break;
+        case OP_STRING_SPLIT:
+            str_attr_key = "separator";
+            break;
+        case OP_STRING_REGEX_COMPARE:
+            str_attr_key = "pattern";
+            break;
+        }
+
+        // TODO: review what unicodeStrVector is for.
+        if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
+                    &str_attr_value) != AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
     }
 
     bool success = false;
@@ -452,7 +517,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_strlen(ops, bin, ctx_ref);
         break;
     case OP_STRING_SUBSTR:
-        if (true) {
+        if (length_found) {
             success = as_operations_string_substr(ops, bin, ctx_ref, start);
         }
         else {
@@ -464,11 +529,55 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_char_at(ops, bin, ctx_ref, index);
         break;
     case OP_STRING_FIND:
-        success = as_operations_string_find(ops, bin, ctx_ref, needle);
+        success = as_operations_string_find_occurrence(
+            ops, bin, ctx_ref, str_attr_value, occurrence);
         break;
-    case OP_STRING_:
-        success = as_operations_string_find(ops, bin, ctx_ref, needle);
+    case OP_STRING_CONTAINS:
+        success =
+            as_operations_string_contains(ops, bin, ctx_ref, str_attr_value);
         break;
+    case OP_STRING_STARTS_WITH:
+        success =
+            as_operations_string_starts_with(ops, bin, ctx_ref, str_attr_value);
+        break;
+    case OP_STRING_ENDS_WITH:
+        success =
+            as_operations_string_ends_with(ops, bin, ctx_ref, str_attr_value);
+        break;
+    case OP_STRING_TO_INTEGER:
+        success = as_operations_string_to_integer(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_TO_DOUBLE:
+        success = as_operations_string_to_double(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_BYTE_LENGTH:
+        success = as_operations_string_byte_length(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_IS_NUMERIC:
+        success = as_operations_string_is_numeric_type(ops, bin, ctx_ref,
+                                                       numeric_type);
+        break;
+    case OP_STRING_IS_UPPER:
+        success = as_operations_string_is_upper(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_IS_LOWER:
+        success = as_operations_string_is_lower(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_TO_BLOB:
+        success = as_operations_string_to_blob(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_SPLIT:
+        success = as_operations_string_split_separator(ops, bin, ctx_ref,
+                                                       str_attr_value);
+        break;
+    case OP_STRING_B64_DECODE:
+        success = as_operations_string_b64_decode(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_REGEX_COMPARE:
+        success = as_operations_string_regex_compare_flags(
+            ops, bin, ctx_ref, str_attr_value, regex_flags);
+        break;
+
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");

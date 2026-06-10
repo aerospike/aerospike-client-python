@@ -50,7 +50,7 @@ as_status get_str(as_error *err, const char *key, PyObject *op_dict,
                                "Operation must contain a \"bin\" entry");
     }
 
-    if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, binName,
+    if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, str_ref,
                                        err) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -61,8 +61,8 @@ as_status get_str(as_error *err, const char *key, PyObject *op_dict,
             then decref'ing the item itself.
             and storing the char* on a list of items to delete.
             */
-        char *dupStr = strdup(*binName);
-        *binName = dupStr;
+        char *dupStr = strdup(*str_ref);
+        *str_ref = dupStr;
         as_vector_append(unicodeStrVector, dupStr);
         Py_DECREF(intermediateUnicode);
     }
@@ -148,6 +148,35 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     }
 
     *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
+                                   key);
+        }
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
+    }
+
+    *found = true;
+    return AEROSPIKE_OK;
+}
+
+as_status get_optional_uint64_t(as_error *err, const char *key,
+                                PyObject *op_dict, uint64_t *ui64_valptr,
+                                bool *found)
+{
+    *found = false;
+    PyObject *py_val = PyDict_GetItemString(op_dict, key);
+    if (!py_val) {
+        return AEROSPIKE_OK;
+    }
+
+    if (!PyLong_Check(py_val)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s must be an integer", key);
+    }
+
+    *ui64_valptr = (uint64_t)PyLong_AsUnsignedLongLong(py_val);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
