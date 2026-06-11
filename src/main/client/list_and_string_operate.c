@@ -356,7 +356,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         case OP_STRING_CONTAINS:
         case OP_STRING_REPLACE:
         case OP_STRING_REPLACE_ALL:
-        case OP_STRING_REGEX_REPLACE:
             str_attr_key = NEEDLE_OP_START_KEY;
             break;
         case OP_STRING_STARTS_WITH:
@@ -370,6 +369,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             is_str_attr_optional = true;
             break;
         case OP_STRING_REGEX_COMPARE:
+        case OP_STRING_REGEX_REPLACE:
             str_attr_key = "pattern";
             break;
         case OP_STRING_INSERT:
