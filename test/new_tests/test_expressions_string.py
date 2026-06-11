@@ -93,3 +93,24 @@ class TestExpressions(TestBaseClass):
         ]
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(KEY, ops)
+
+    # TODO: need to reuse StringPolicy parameters
+
+    @pytest.mark.parametrize(
+        "expr, expected_result",
+        [
+            (
+                str_expr.Insert(policy=None, index=1, value=NEEDLE, bin_name=STR_BIN_NAME),
+                EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]
+            )
+        ]
+    )
+    def test_expression_write(self, expr, expected_result):
+        compiled_expr = expr.compile()
+        ops = [
+            expr_ops.expression_write(STR_BIN_NAME, compiled_expr),
+            expr_ops.expression_read(STR_BIN_NAME)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+
+        assert bins[STR_BIN_NAME] == expected_result
