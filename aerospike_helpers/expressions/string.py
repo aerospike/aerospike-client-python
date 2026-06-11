@@ -53,7 +53,7 @@ class StrLen(_BaseExpr):
             The length of the string in the bin.
         """
         self._children = (
-            _convert_bin_name_to_expr(bin)
+            _convert_bin_name_to_expr(bin),
         )
 
 
