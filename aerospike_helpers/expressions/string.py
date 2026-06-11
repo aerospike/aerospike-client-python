@@ -250,7 +250,12 @@ class IsNumeric(_BaseExpr):
 
             true if the string is a numeric value, false otherwise.
         """
-        self._children = (_convert_bin_name_to_expr(bin),)
+        self._fixed = {
+            aerospike._STR_EXP_NUMERIC_TYPE_KEY: numeric_type
+        }
+        self._children = (
+            _convert_bin_name_to_expr(bin),
+        )
 
 
 class IsUpper(_BaseExpr):

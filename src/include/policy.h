@@ -216,6 +216,7 @@ enum {
 #define _STR_EXP_PAD_STRING_KEY "pad_string"
 #define _STR_EXP_OCCURRENCE_KEY "occurrence"
 #define _STR_EXP_COUNT_KEY "count"
+#define _STR_EXP_NUMERIC_TYPE_KEY "numeric_type"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,

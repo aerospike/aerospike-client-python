@@ -1865,7 +1865,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_IS_NUMERIC: {
             as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
             int64_t tmp_value;
-            if (get_int64_t(err, "numeric_type", temp_expr->pydict,
+            if (get_int64_t(err, _STR_EXP_NUMERIC_TYPE_KEY, temp_expr->pydict,
                             &tmp_value) != AEROSPIKE_OK) {
                 // TODO: wondering if this can cause a memory leak?
                 return err->code;
