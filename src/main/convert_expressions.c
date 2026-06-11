@@ -2022,9 +2022,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 }
 
                 char *pad_string = NULL;
-                as_status status =
-                    get_str(err, _STR_EXP_PAD_STRING_KEY, temp_expr->pydict,
-                            NULL, &pad_string, false);
+                status = get_str(err, _STR_EXP_PAD_STRING_KEY,
+                                 temp_expr->pydict, NULL, &pad_string, false);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
