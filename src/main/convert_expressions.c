@@ -1862,10 +1862,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_BYTE_LENGTH:
             APPEND_ARRAY(1, as_exp_string_byte_length(NIL));
             break;
-        // TODO: needs to be overloaded
-        case OP_STRING_IS_NUMERIC:
-            APPEND_ARRAY(1, as_exp_string_is_numeric(NIL));
+        case OP_STRING_IS_NUMERIC: {
+            as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
+            int64_t tmp_value;
+            if (get_int64_t(err, "numeric_type", temp_expr->pydict,
+                            &tmp_value) != AEROSPIKE_OK) {
+                // TODO: wondering if this can cause a memory leak?
+                return err->code;
+            }
+            numeric_type = (as_string_numeric_type)tmp_value;
+
+            APPEND_ARRAY(1, as_exp_string_is_numeric_type(numeric_type, NIL));
             break;
+        }
         case OP_STRING_IS_UPPER:
             APPEND_ARRAY(1, as_exp_string_is_upper(NIL));
             break;
