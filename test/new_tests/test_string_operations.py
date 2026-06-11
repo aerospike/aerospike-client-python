@@ -72,7 +72,7 @@ class TestStringOperations:
             assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
         else:
             length = length_kwargs["length"]
-            assert bins[bin_name] == EXAMPLE_STR[START_IDX:length]
+            assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + length)]
 
     @pytest.mark.parametrize(
         "index",
