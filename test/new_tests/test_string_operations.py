@@ -25,7 +25,7 @@ PAD_STRING = " "
 SINGLE_CHAR = "z"
 NEEDLE = "asdf"
 EXAMPLE_STR = NEEDLE * 2
-EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE = " " + EXAMPLE_STR
+EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE = " " + EXAMPLE_STR + " "
 UPPERCASE_STR = EXAMPLE_STR.upper()
 NOT_IN_EXAMPLE_STR = STRING_WITH_INT = "1"
 STRING_WITH_DOUBLE = "2.3"
@@ -540,6 +540,7 @@ class TestStringOperations:
 
     # TODO
     @kwargs_policy
+    @pytest.mark.skip("Not implemented.")
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
             str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
@@ -575,6 +576,7 @@ class TestStringOperations:
         ops = [
             str_ops.trim(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, SURROUNDING_WHITESPACE_BIN_NAME)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
@@ -594,6 +596,7 @@ class TestStringOperations:
         ops = [
             str_ops.pad_start(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == expected_results
@@ -612,6 +615,7 @@ class TestStringOperations:
         ops = [
             str_ops.pad_end(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == expected_results
@@ -629,6 +633,7 @@ class TestStringOperations:
         ops = [
             str_ops.repeat(bin_name=bin_name, count=count, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == EXAMPLE_STR * count
@@ -636,11 +641,12 @@ class TestStringOperations:
     @kwargs_policy
     @root_level_and_nested_str
     def test_regex_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        PATTERN = "asdf.*"
+        PATTERN = "asdf"
         NEW_STR = "1234"
         ops = [
             str_ops.regex_replace(bin_name=bin_name, pattern=PATTERN, replacement=NEW_STR, **kwargs_policy, **kwargs_with_ctx)
         ]
+        self.add_read_op(ops, bin_name)
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[bin_name] == NEW_STR + "asdf"
