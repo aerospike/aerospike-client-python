@@ -40,7 +40,7 @@ class TestExpressions(TestBaseClass):
             (str_expr.EndsWith(suffix=NEEDLE, bin=STR_BIN_NAME), True),
             (str_expr.EndsWith(suffix=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
             (str_expr.ToInteger(bin=STR_WITH_INT_BIN_NAME), int(STRING_WITH_INT)),
-            (str_expr.ToDouble(bin=STR_WITH_DOUBLE_BIN_NAME), int(STRING_WITH_DOUBLE)),
+            (str_expr.ToDouble(bin=STR_WITH_DOUBLE_BIN_NAME), float(STRING_WITH_DOUBLE)),
             (str_expr.ByteLength(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
             (str_expr.IsNumeric(bin=STR_BIN_NAME), False),
             (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME), True),
@@ -82,8 +82,8 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "expr",
         [
-            str_expr.ToInteger(bin_name=STR_BIN_NAME),
-            str_expr.ToDouble(bin_name=STR_BIN_NAME)
+            str_expr.ToInteger(bin=STR_BIN_NAME),
+            str_expr.ToDouble(bin=STR_BIN_NAME)
         ]
     )
     def test_expression_read_fail(self, expr):
@@ -100,7 +100,7 @@ class TestExpressions(TestBaseClass):
         "expr, expected_result",
         [
             (
-                str_expr.Insert(policy=None, index=1, value=NEEDLE, bin_name=STR_BIN_NAME),
+                str_expr.Insert(policy=None, index=1, value=NEEDLE, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]
             )
         ]
