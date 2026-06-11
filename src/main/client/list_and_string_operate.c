@@ -322,7 +322,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         numeric_type = (as_string_numeric_type)tmp_value;
         break;
     }
-    case OP_STRING_REGEX_COMPARE: {
+    case OP_STRING_REGEX_COMPARE:
+    case OP_STRING_REGEX_REPLACE: {
         if (get_int64_t(err, "regex_flags", op_dict, &tmp_value) !=
             AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
@@ -752,8 +753,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
                                               (uint64_t)count);
         break;
     case OP_STRING_REGEX_REPLACE:
-        success = as_operations_string_replace(
-            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
+        success = as_operations_string_regex_replace(
+            ops, bin, ctx_ref, str_attr_value1, str_attr_value2, regex_flags);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.

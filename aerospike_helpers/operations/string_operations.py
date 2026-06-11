@@ -576,8 +576,7 @@ def regex_replace(
     bin_name: str,
     pattern: str,
     replacement: str,
-    # TODO: should have default value?
-    regex_flags: RegexFlags,
+    regex_flags: RegexFlags = RegexFlags.DEFAULT,
     ctx: TypeCTX = None
 ):
     """
