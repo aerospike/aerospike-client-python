@@ -1870,8 +1870,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             int64_t tmp_regex_flags;
-            as_status status = get_int64_t(err, _STR_EXP_REGEX_FLAGS_KEY,
-                                           temp_expr->pydict, &tmp_regex_flags);
+            status = get_int64_t(err, _STR_EXP_REGEX_FLAGS_KEY,
+                                 temp_expr->pydict, &tmp_regex_flags);
             if (status != AEROSPIKE_OK) {
                 return status;
             }
@@ -1882,9 +1882,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             else {
                 char *replacement = NULL;
-                as_status status =
-                    get_str(err, _STR_EXP_REPLACEMENT_KEY, temp_expr->pydict,
-                            NULL, &pattern, false);
+                status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
+                                 temp_expr->pydict, NULL, &pattern, false);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
