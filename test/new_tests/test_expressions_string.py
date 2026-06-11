@@ -3,6 +3,7 @@ import base64
 
 from aerospike_helpers.expressions import string as str_expr
 from aerospike_helpers.operations import expression_operations as expr_ops
+from aerospike_helpers.operations import operations
 from aerospike_helpers.string_helpers import NumericType
 from aerospike import exception as e
 
@@ -27,7 +28,7 @@ class TestExpressions(TestBaseClass):
         [
             (str_expr.StrLen(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
             (str_expr.SubStr(start=START_IDX, length=None, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:]),
-            (str_expr.SubStr(start=START_IDX, length=2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
+            (str_expr.SubStr(start=START_IDX, length=START_IDX + 2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
             (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX]),
             (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), EXAMPLE_STR[-1]),
             (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), EXAMPLE_STR.find(NEEDLE)),
@@ -54,8 +55,8 @@ class TestExpressions(TestBaseClass):
             (str_expr.IsLower(bin=UPPERCASE_STR_BIN_NAME), False),
             (str_expr.ToBlob(bin=STR_BIN_NAME), bytes(EXAMPLE_STR, encoding="utf-8")),
             (str_expr.Split(bin=STR_BIN_NAME), list(EXAMPLE_STR)),
-            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator='.'), STR_WITH_DOUBLE_BIN_NAME.split('.')),
-            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator=','), [STR_WITH_DOUBLE_BIN_NAME]),
+            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator='.'), STRING_WITH_DOUBLE.split('.')),
+            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator=','), [STRING_WITH_DOUBLE]),
             (
                 str_expr.Base64Decode(bin=BASE64_ENCODED_BIN_NAME),
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
@@ -109,7 +110,7 @@ class TestExpressions(TestBaseClass):
         compiled_expr = expr.compile()
         ops = [
             expr_ops.expression_write(STR_BIN_NAME, compiled_expr),
-            expr_ops.expression_read(STR_BIN_NAME)
+            operations.read(STR_BIN_NAME)
         ]
         _, _, bins = self.as_connection.operate(KEY, ops)
 
