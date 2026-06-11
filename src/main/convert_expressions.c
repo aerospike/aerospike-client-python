@@ -481,6 +481,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
         // TODO: overload
         [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
+        [OP_STRING_CONCAT_LIST] =
+            EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
         [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
@@ -1776,9 +1778,26 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_STRLEN:
             APPEND_ARRAY(1, as_exp_string_strlen(NIL));
             break;
-        case OP_STRING_SUBSTR:
-            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+        case OP_STRING_SUBSTR: {
+            if (get_int64_t(err, "start", temp_expr->pydict, &lval1) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            bool length_found = false;
+            if (get_optional_int64_t(err, "length", temp_expr->pydict, &lval2,
+                                     &length_found) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!length_found) {
+                APPEND_ARRAY(2, as_exp_string_substr(lval1, NIL));
+            }
+            else {
+                APPEND_ARRAY(3, as_exp_string_substr_range(lval1, lval2, NIL));
+            }
             break;
+        }
         case OP_STRING_CHAR_AT:
             APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
             break;
@@ -1820,6 +1839,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_TO_BLOB:
             APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
             break;
+        case OP_STRING_SPLIT: {
+            if APPEND_ARRAY (1, as_exp_string_split(NIL))
+                ;
+            break;
+        }
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Unrecognised expression op type.");

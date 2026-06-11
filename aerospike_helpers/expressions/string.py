@@ -21,7 +21,7 @@ these operations are from the standard :mod:`String API <aerospike_helpers.opera
 
 
 import aerospike
-from aerospike_helpers.expressions.resources import _BaseExpr
+from aerospike_helpers.expressions.resources import _BaseExpr, _Keys
 from aerospike_helpers.expressions.base import StrBin
 from aerospike_helpers.operations import string_operations as str_ops
 from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings_for_all_func_members
@@ -73,10 +73,12 @@ class SubStr(_BaseExpr):
 
             The substring of the string in the bin.
         """
+        self._fixed = {
+            aerospike._STR_EXP_START_KEY: start,
+            aerospike._STR_EXP_LENGTH_KEY: length
+        }
         self._children = (
             _convert_bin_name_to_expr(bin),
-            start,
-            length
         )
 
 
@@ -94,9 +96,11 @@ class CharAt(_BaseExpr):
 
             The codepoint at the index in the string in the bin.
         """
+        self._fixed = {
+            aerospike._STR_EXP_INDEX_KEY: index
+        }
         self._children = (
             _convert_bin_name_to_expr(bin),
-            index
         )
 
 
@@ -115,6 +119,10 @@ class Find(_BaseExpr):
 
             The index of the occurrence of the string in the bin.
         """
+        self._fixed = {
+            aerospike._STR_EXP_NEEDLE_KEY: needle,
+            aerospike._STR_EXP_OCCURRENCE_KEY: occurrence
+        }
         self._children = (
             _convert_bin_name_to_expr(bin)
         )
@@ -134,6 +142,9 @@ class Contains(_BaseExpr):
 
             true if the string contains the string, false otherwise.
         """
+        self._fixed = {
+            aerospike._STR_EXP_NEEDLE_KEY: needle,
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -151,6 +162,9 @@ class StartsWith(_BaseExpr):
 
             true if the string starts with the string, false otherwise.
         """
+        self._fixed = {
+            aerospike._STR_EXP_PREFIX_KEY: prefix,
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -168,6 +182,9 @@ class EndsWith(_BaseExpr):
 
             true if the string ends with the string, false otherwise.
         """
+        self._fixed = {
+            aerospike._STR_EXP_SUFFIX_KEY: suffix,
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -299,6 +316,9 @@ class Split(_BaseExpr):
 
             The list of strings in the bin.
         """
+        self._fixed = {
+            aerospike._STR_EXP_SEPARATOR_KEY: separator
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -333,6 +353,10 @@ class RegexCompare(_BaseExpr):
 
             true if the pattern matches, false otherwise.
         """
+        self._fixed = {
+            aerospike._STR_EXP_PATTERN_KEY: pattern,
+            aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -352,6 +376,12 @@ class Insert(_BaseExpr):
 
             The string in the bin with the value inserted.
         """
+        self._fixed = {
+            # TODO: share this line
+            aerospike._STR_EXP_POLICY_KEY: policy,
+            aerospike._STR_EXP_INDEX_KEY: index,
+            _Keys.VALUE_TYPE_KEY: value
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -371,6 +401,10 @@ class Overwrite(_BaseExpr):
 
             The string in the bin with the value overwritten.
         """
+        self._fixed = {
+            aerospike._STR_EXP_INDEX_KEY: index,
+            _Keys.VALUE_TYPE_KEY: value
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -389,11 +423,14 @@ class Concat(_BaseExpr):
 
             The string in the bin with the value appended.
         """
+        self._fixed = {
+            _Keys.VALUE_TYPE_KEY: value
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
 class ConcatList(_BaseExpr):
-    _op = aerospike._OP_STRING_CONCAT
+    _op = aerospike._OP_STRING_CONCAT_LIST
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
@@ -407,7 +444,7 @@ class ConcatList(_BaseExpr):
 
             The string in the bin with the values appended.
         """
-        self._children = (_convert_bin_name_to_expr(bin))
+        self._children = (values, _convert_bin_name_to_expr(bin))
 
 
 class Snip(_BaseExpr):
@@ -426,6 +463,10 @@ class Snip(_BaseExpr):
 
             The string in the bin with the value snipped.
         """
+        self._fixed = {
+            aerospike._STR_EXP_START_KEY: start,
+            aerospike._STR_EXP_END_KEY: end
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -445,6 +486,10 @@ class Replace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
+        self._fixed = {
+            aerospike._STR_EXP_NEEDLE_KEY: needle,
+            aerospike._STR_EXP_REPLACEMENT_KEY: replacement
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -464,6 +509,10 @@ class ReplaceAll(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
+        self._fixed = {
+            aerospike._STR_EXP_NEEDLE_KEY: needle,
+            aerospike._STR_EXP_REPLACEMENT_KEY: replacement
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -602,6 +651,10 @@ class PadStart(_BaseExpr):
 
             The string in the bin with the value padded.
         """
+        self._fixed = {
+            aerospike._STR_EXP_TARGET_LENGTH_KEY: target_length,
+            aerospike._STR_EXP_PAD_STRING_KEY: pad_string
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -621,6 +674,10 @@ class PadEnd(_BaseExpr):
 
             The string in the bin with the value padded.
         """
+        self._fixed = {
+            aerospike._STR_EXP_TARGET_LENGTH_KEY: target_length,
+            aerospike._STR_EXP_PAD_STRING_KEY: pad_string
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -639,6 +696,9 @@ class Repeat(_BaseExpr):
 
             The string in the bin with the value repeated.
         """
+        self._fixed = {
+            aerospike._STR_EXP_COUNT_KEY: count,
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
@@ -666,6 +726,11 @@ class RegexReplace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
+        self._fixed = {
+            aerospike._STR_EXP_PATTERN_KEY: pattern,
+            aerospike._STR_EXP_REPLACEMENT_KEY: replacement,
+            aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
+        }
         self._children = (_convert_bin_name_to_expr(bin))
 
 
