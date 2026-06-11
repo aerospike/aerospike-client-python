@@ -372,10 +372,10 @@ class TestStringOperations:
     # Write operations
 
     def add_read_op(self, ops, bin_name):
-        if bin_name == STR_BIN_NAME:
-            op = operations.read(bin_name=bin_name)
-        else:
+        if bin_name == NESTED_STR_BIN_NAME:
             op = list_ops.list_get_by_index(bin_name, 0, aerospike.LIST_RETURN_VALUE)
+        else:
+            op = operations.read(bin_name=bin_name)
         ops.append(op)
 
     kwargs_policy = pytest.mark.parametrize(
