@@ -1,10 +1,12 @@
 import pytest
+import base64
 
 from aerospike_helpers.expressions import string as str_expr
 from aerospike_helpers.operations import expression_operations as expr_ops
+from aerospike_helpers.string_helpers import NumericType
+from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
-from .conftest import KEYS
 from .string_helpers import *
 
 
@@ -19,10 +21,53 @@ class TestExpressions(TestBaseClass):
 
         yield
 
+    # TODO: should use hashmap that maps bin names to values.
     @pytest.mark.parametrize(
         "expr, expected_result",
         [
-            (str_expr.StrLen(STR_BIN_NAME), len(EXAMPLE_STR))
+            (str_expr.StrLen(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
+            (str_expr.SubStr(start=START_IDX, length=None, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:]),
+            (str_expr.SubStr(start=START_IDX, length=2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
+            (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX]),
+            (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), EXAMPLE_STR[-1]),
+            (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), EXAMPLE_STR.find(NEEDLE)),
+            (str_expr.Find(needle=NEEDLE, occurrence=2, bin=STR_BIN_NAME), 4),
+            (str_expr.Find(needle=NOT_IN_EXAMPLE_STR, occurrence=1, bin=STR_BIN_NAME), -1),
+            (str_expr.Contains(needle=NEEDLE, bin=STR_BIN_NAME), True),
+            (str_expr.Contains(needle=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
+            (str_expr.StartsWith(prefix=NEEDLE, bin=STR_BIN_NAME), True),
+            (str_expr.StartsWith(prefix=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
+            (str_expr.EndsWith(suffix=NEEDLE, bin=STR_BIN_NAME), True),
+            (str_expr.EndsWith(suffix=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
+            (str_expr.ToInteger(bin=STR_WITH_INT_BIN_NAME), int(STRING_WITH_INT)),
+            (str_expr.ToDouble(bin=STR_WITH_DOUBLE_BIN_NAME), int(STRING_WITH_DOUBLE)),
+            (str_expr.ByteLength(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
+            (str_expr.IsNumeric(bin=STR_BIN_NAME), False),
+            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME), True),
+            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME, numeric_type=NumericType.INT), True),
+            (str_expr.IsNumeric(bin=STR_WITH_DOUBLE_BIN_NAME, numeric_type=NumericType.FLOAT), True),
+            (str_expr.IsNumeric(bin=STR_WITH_DOUBLE_BIN_NAME, numeric_type=NumericType.INT), False),
+            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME, numeric_type=NumericType.FLOAT), False),
+            (str_expr.IsUpper(bin=STR_BIN_NAME), False),
+            (str_expr.IsUpper(bin=UPPERCASE_STR_BIN_NAME), True),
+            (str_expr.IsLower(bin=STR_BIN_NAME), True),
+            (str_expr.IsLower(bin=UPPERCASE_STR_BIN_NAME), False),
+            (str_expr.ToBlob(bin=STR_BIN_NAME), bytes(EXAMPLE_STR, encoding="utf-8")),
+            (str_expr.Split(bin=STR_BIN_NAME), list(EXAMPLE_STR)),
+            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator='.'), STR_WITH_DOUBLE_BIN_NAME.split('.')),
+            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator=','), [STR_WITH_DOUBLE_BIN_NAME]),
+            (
+                str_expr.Base64Decode(bin=BASE64_ENCODED_BIN_NAME),
+                bytearray(base64.b64decode(BASE64_ENCODED_STR))
+            ),
+            (
+                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                True
+            ),
+            (
+                str_expr.RegexCompare(pattern="π", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                False
+            )
         ]
     )
     def test_reading_str_bins(self, expr, expected_result):
@@ -33,3 +78,18 @@ class TestExpressions(TestBaseClass):
         _, _, bins = self.as_connection.operate(KEY, ops)
 
         assert bins[STR_BIN_NAME] == expected_result
+
+    @pytest.mark.parametrize(
+        "expr",
+        [
+            str_expr.ToInteger(bin_name=STR_BIN_NAME),
+            str_expr.ToDouble(bin_name=STR_BIN_NAME)
+        ]
+    )
+    def test_expression_read_fail(self, expr):
+        compiled_expr = expr.compile()
+        ops = [
+            expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
+        ]
+        with pytest.raises(e.OpNotApplicable):
+            self.as_connection.operate(KEY, ops)

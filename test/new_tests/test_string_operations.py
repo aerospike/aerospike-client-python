@@ -11,9 +11,6 @@ from .conftest import KEYS
 from .string_helpers import *
 
 
-START_IDX = 1
-
-
 class TestStringOperations:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

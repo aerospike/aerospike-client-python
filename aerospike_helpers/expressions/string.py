@@ -277,7 +277,7 @@ class ToBlob(_BaseExpr):
 class Split(_BaseExpr):
     _op = aerospike._OP_STRING_SPLIT
 
-    def __init__(self, bin: "TypeBinName", separator: str = " "):
+    def __init__(self, bin: "TypeBinName", separator: str | None = None):
         """
         Args:
 
