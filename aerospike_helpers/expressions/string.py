@@ -53,7 +53,7 @@ class StrLen(_BaseExpr):
             The length of the string in the bin.
         """
         self._children = (
-            _convert_bin_name_to_expr(bin),
+            _convert_bin_name_to_expr(bin)
         )
 
 
@@ -75,6 +75,8 @@ class SubStr(_BaseExpr):
         """
         self._children = (
             _convert_bin_name_to_expr(bin),
+            start,
+            length
         )
 
 
@@ -92,7 +94,10 @@ class CharAt(_BaseExpr):
 
             The codepoint at the index in the string in the bin.
         """
-        self._children = (_convert_bin_name_to_expr(bin))
+        self._children = (
+            _convert_bin_name_to_expr(bin),
+            index
+        )
 
 
 class Find(_BaseExpr):
@@ -110,7 +115,9 @@ class Find(_BaseExpr):
 
             The index of the occurrence of the string in the bin.
         """
-        self._children = (_convert_bin_name_to_expr(bin))
+        self._children = (
+            _convert_bin_name_to_expr(bin)
+        )
 
 
 class Contains(_BaseExpr):
