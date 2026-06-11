@@ -1942,6 +1942,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
             switch (temp_expr->op) {
             case OP_STRING_INSERT:
                 APPEND_ARRAY(1,
@@ -2049,6 +2051,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             }
             }
+#pragma GCC diagnostic pop
         }
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
