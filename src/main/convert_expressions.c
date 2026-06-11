@@ -2094,6 +2094,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             }
             }
+            break;
 #pragma GCC diagnostic pop
         }
         default:
