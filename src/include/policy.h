@@ -213,6 +213,7 @@ enum {
 #define _STR_EXP_REGEX_FLAGS_KEY "regex_flags"
 #define _STR_EXP_POLICY_KEY "str_policy"
 #define _STR_EXP_TARGET_LENGTH_KEY "target_length"
+#define _STR_EXP_PAD_STRING_KEY "pad_string"
 #define _STR_EXP_OCCURRENCE_KEY "occurrence"
 #define _STR_EXP_COUNT_KEY "count"
 

@@ -380,7 +380,7 @@ class Insert(_BaseExpr):
             # TODO: share this line
             aerospike._STR_EXP_POLICY_KEY: policy,
             aerospike._STR_EXP_INDEX_KEY: index,
-            _Keys.VALUE_TYPE_KEY: value
+            _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin))
 
