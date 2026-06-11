@@ -1779,13 +1779,14 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_string_strlen(NIL));
             break;
         case OP_STRING_SUBSTR: {
-            if (get_int64_t(err, "start", temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
             bool length_found = false;
-            if (get_optional_int64_t(err, "length", temp_expr->pydict, &lval2,
+            if (get_optional_int64_t(err, _STR_EXP_LENGTH_KEY,
+                                     temp_expr->pydict, &lval2,
                                      &length_found) != AEROSPIKE_OK) {
                 return err->code;
             }
@@ -1798,25 +1799,60 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             break;
         }
-        case OP_STRING_CHAR_AT:
+        case OP_STRING_CHAR_AT: {
+            if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
             APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
             break;
-        case OP_STRING_FIND:
-            APPEND_ARRAY(1,
-                         as_exp_string_find(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_FIND: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_int64_t(err, _STR_EXP_OCCURRENCE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_find_occurrence(needle, lval1, NIL));
             break;
-        case OP_STRING_CONTAINS:
-            APPEND_ARRAY(
-                1, as_exp_string_contains(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_CONTAINS: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_contains(needle, NIL));
             break;
-        case OP_STRING_STARTS_WITH:
-            APPEND_ARRAY(
-                1, as_exp_string_starts_with(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_STARTS_WITH: {
+            char *prefix = NULL;
+            if (get_str(err, _STR_EXP_PREFIX_KEY, temp_expr->pydict, NULL,
+                        &prefix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_starts_with(prefix, NIL));
             break;
-        case OP_STRING_ENDS_WITH:
-            APPEND_ARRAY(
-                1, as_exp_string_ends_with(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_ENDS_WITH: {
+            char *suffix = NULL;
+            if (get_str(err, _STR_EXP_SUFFIX_KEY, temp_expr->pydict, NULL,
+                        &suffix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_ends_with(suffix, NIL));
             break;
+        }
         case OP_STRING_TO_INTEGER:
             APPEND_ARRAY(1, as_exp_string_to_integer(NIL));
             break;
