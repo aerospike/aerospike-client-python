@@ -1791,10 +1791,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             if (!length_found) {
-                APPEND_ARRAY(2, as_exp_string_substr(lval1, NIL));
+                APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
             }
             else {
-                APPEND_ARRAY(3, as_exp_string_substr_range(lval1, lval2, NIL));
+                APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
             }
             break;
         }
