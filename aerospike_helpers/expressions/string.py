@@ -275,7 +275,7 @@ class ToBlob(_BaseExpr):
 
 # TODO: move optional args for the classes above.
 class Split(_BaseExpr):
-    _op = aerospike.AS_STRING_OP_SPLIT
+    _op = aerospike._OP_STRING_SPLIT
 
     def __init__(self, bin: "TypeBinName", separator: str = " "):
         """
@@ -632,7 +632,7 @@ class Repeat(_BaseExpr):
 
 
 class RegexReplace(_BaseExpr):
-    _op = aerospike.AS_STRING_OP_REGEX_REPLACE
+    _op = aerospike._OP_STRING_REGEX_REPLACE
 
     def __init__(
             self,
