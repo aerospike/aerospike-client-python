@@ -34,6 +34,10 @@ TypeBinName = _BaseExpr | str
 # TODO: use decorator to automatically convert each class's constructor bin from a string to StrBin
 
 
+def __convert_bin_name_to_expr(bin: "TypeBinName"):
+    return bin if isinstance(bin, _BaseExpr) else StrBin(bin)
+
+
 class StrLen(_BaseExpr):
 
     _op = aerospike._OP_STRING_STRLEN
@@ -49,7 +53,7 @@ class StrLen(_BaseExpr):
             The length of the string in the bin.
         """
         self._children = (
-            bin if isinstance(bin, _BaseExpr) else StrBin(bin),
+            __convert_bin_name_to_expr(bin),
         )
 
 
@@ -70,7 +74,7 @@ class SubStr(_BaseExpr):
             The substring of the string in the bin.
         """
         self._children = (
-            bin if isinstance(bin, _BaseExpr) else StrBin(bin),
+            __convert_bin_name_to_expr(bin),
         )
 
 
@@ -88,7 +92,7 @@ class CharAt(_BaseExpr):
 
             The codepoint at the index in the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Find(_BaseExpr):
@@ -106,7 +110,7 @@ class Find(_BaseExpr):
 
             The index of the occurrence of the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Contains(_BaseExpr):
@@ -123,7 +127,7 @@ class Contains(_BaseExpr):
 
             true if the string contains the string, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class StartsWith(_BaseExpr):
@@ -140,7 +144,7 @@ class StartsWith(_BaseExpr):
 
             true if the string starts with the string, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class EndsWith(_BaseExpr):
@@ -157,7 +161,7 @@ class EndsWith(_BaseExpr):
 
             true if the string ends with the string, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ToInteger(_BaseExpr):
@@ -173,7 +177,7 @@ class ToInteger(_BaseExpr):
 
             The integer value of the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ToDouble(_BaseExpr):
@@ -189,7 +193,7 @@ class ToDouble(_BaseExpr):
 
             The double value of the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ByteLength(_BaseExpr):
@@ -205,7 +209,7 @@ class ByteLength(_BaseExpr):
 
             The number of bytes in the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class IsNumeric(_BaseExpr):
@@ -222,7 +226,7 @@ class IsNumeric(_BaseExpr):
 
             true if the string is a numeric value, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class IsUpper(_BaseExpr):
@@ -238,7 +242,7 @@ class IsUpper(_BaseExpr):
 
             true if the string is uppercase, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class IsLower(_BaseExpr):
@@ -254,7 +258,7 @@ class IsLower(_BaseExpr):
 
             true if the string is lowercase, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ToBlob(_BaseExpr):
@@ -270,7 +274,7 @@ class ToBlob(_BaseExpr):
 
             The blob value of the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 # TODO: move optional args for the classes above.
@@ -288,7 +292,7 @@ class Split(_BaseExpr):
 
             The list of strings in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Base64Decode(_BaseExpr):
@@ -304,7 +308,7 @@ class Base64Decode(_BaseExpr):
 
             The blob value of the string in the bin.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class RegexCompare(_BaseExpr):
@@ -322,7 +326,7 @@ class RegexCompare(_BaseExpr):
 
             true if the pattern matches, false otherwise.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Insert(_BaseExpr):
@@ -341,7 +345,7 @@ class Insert(_BaseExpr):
 
             The string in the bin with the value inserted.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Overwrite(_BaseExpr):
@@ -360,7 +364,7 @@ class Overwrite(_BaseExpr):
 
             The string in the bin with the value overwritten.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Concat(_BaseExpr):
@@ -378,7 +382,7 @@ class Concat(_BaseExpr):
 
             The string in the bin with the value appended.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ConcatList(_BaseExpr):
@@ -396,7 +400,7 @@ class ConcatList(_BaseExpr):
 
             The string in the bin with the values appended.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Snip(_BaseExpr):
@@ -415,7 +419,7 @@ class Snip(_BaseExpr):
 
             The string in the bin with the value snipped.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Replace(_BaseExpr):
@@ -434,7 +438,7 @@ class Replace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ReplaceAll(_BaseExpr):
@@ -453,7 +457,7 @@ class ReplaceAll(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Upper(_BaseExpr):
@@ -470,7 +474,7 @@ class Upper(_BaseExpr):
 
             The string in the bin with the value uppercased.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Lower(_BaseExpr):
@@ -487,7 +491,7 @@ class Lower(_BaseExpr):
 
             The string in the bin with the value lowercased.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class CaseFold(_BaseExpr):
@@ -504,7 +508,7 @@ class CaseFold(_BaseExpr):
 
             The string in the bin with the value case folded.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class NormalizeNFC(_BaseExpr):
@@ -521,7 +525,7 @@ class NormalizeNFC(_BaseExpr):
 
             The string in the bin with the value normalized.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class TrimStart(_BaseExpr):
@@ -538,7 +542,7 @@ class TrimStart(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class TrimEnd(_BaseExpr):
@@ -555,7 +559,7 @@ class TrimEnd(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Trim(_BaseExpr):
@@ -572,7 +576,7 @@ class Trim(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class PadStart(_BaseExpr):
@@ -591,7 +595,7 @@ class PadStart(_BaseExpr):
 
             The string in the bin with the value padded.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class PadEnd(_BaseExpr):
@@ -610,7 +614,7 @@ class PadEnd(_BaseExpr):
 
             The string in the bin with the value padded.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class Repeat(_BaseExpr):
@@ -628,7 +632,7 @@ class Repeat(_BaseExpr):
 
             The string in the bin with the value repeated.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class RegexReplace(_BaseExpr):
@@ -655,7 +659,7 @@ class RegexReplace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 class ToString(_BaseExpr):
@@ -672,7 +676,7 @@ class ToString(_BaseExpr):
             The string in the bin with the value converted to a string.
 
         """
-        self._children = (bin if isinstance(bin, _BaseExpr) else StrBin(bin))
+        self._children = (__convert_bin_name_to_expr(bin))
 
 
 __exp_class_to_op_func = {
