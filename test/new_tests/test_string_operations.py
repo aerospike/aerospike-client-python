@@ -6,44 +6,10 @@ from aerospike_helpers.operations import string_operations as str_ops, operation
 from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+
 from .conftest import KEYS
+from .string_helpers import *
 
-
-KEY = KEYS[0]
-
-STR_BIN_NAME = "str"
-UPPERCASE_STR_BIN_NAME = "uppercase_str"
-NESTED_STR_BIN_NAME = "nested_str"
-STR_WITH_INT_BIN_NAME = "str_with_int"
-STR_WITH_DOUBLE_BIN_NAME = "str_with_double"
-MULTIBYTE_CODEPOINT_BIN_NAME = "multibyte"
-BASE64_ENCODED_BIN_NAME = "base64_enc"
-MULTI_CODEPOINT_CHAR_BIN_NAME = "multicode"
-SURROUNDING_WHITESPACE_BIN_NAME = "whitespace"
-
-PAD_STRING = " "
-SINGLE_CHAR = "z"
-NEEDLE = "asdf"
-EXAMPLE_STR = NEEDLE * 2
-EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE = " " + EXAMPLE_STR + " "
-UPPERCASE_STR = EXAMPLE_STR.upper()
-NOT_IN_EXAMPLE_STR = STRING_WITH_INT = "1"
-STRING_WITH_DOUBLE = "2.3"
-MULTIBYTE_CODEPOINT = "ß"
-BASE64_ENCODED_STR = "YXNkZgo="
-MULTI_CODEPOINT_CHAR = "ñ"
-
-BINS = {
-    STR_BIN_NAME: EXAMPLE_STR,
-    UPPERCASE_STR_BIN_NAME: UPPERCASE_STR,
-    NESTED_STR_BIN_NAME: [EXAMPLE_STR],
-    STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
-    STR_WITH_DOUBLE_BIN_NAME: STRING_WITH_DOUBLE,
-    MULTIBYTE_CODEPOINT_BIN_NAME: MULTIBYTE_CODEPOINT,
-    BASE64_ENCODED_BIN_NAME: BASE64_ENCODED_STR,
-    MULTI_CODEPOINT_CHAR_BIN_NAME: MULTI_CODEPOINT_CHAR,
-    SURROUNDING_WHITESPACE_BIN_NAME: EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE,
-}
 
 START_IDX = 1
 
