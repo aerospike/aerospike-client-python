@@ -110,6 +110,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_RANK_RANGE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_STRING_REPEAT:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
             goto exit;
