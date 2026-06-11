@@ -1974,17 +1974,16 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 }
                 break;
             }
+            }
 
-                switch (temp_expr->op) {
-                case OP_STRING_INSERT:
-                case OP_STRING_OVERWRITE: {
-                    if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
-                                    &lval1) != AEROSPIKE_OK) {
-                        return err->code;
-                    }
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+            case OP_STRING_OVERWRITE: {
+                if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                                &lval1) != AEROSPIKE_OK) {
+                    return err->code;
                 }
-                }
-                break;
+            }
             }
 
 #pragma GCC diagnostic push
