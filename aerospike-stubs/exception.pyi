@@ -1,7 +1,25 @@
+"""Exceptions raised by the Aerospike Python client (``aerospike.exception``).
+
+Catch ``AerospikeError`` (or subclasses) for client and server failures. Each
+exception exposes ``code``, ``msg``, ``file``, ``line``, and ``in_doubt`` where
+applicable; see the client documentation for status codes and the in-doubt flag.
+
+Full reference: https://aerospike-python-client.readthedocs.io/en/latest/exception.html
+"""
+
 from typing import Union
 
 class AerospikeError(Exception):
-    # When attributes are first assigned to exception class, they have an initial value of None
+    """Parent class of all exceptions raised by the Aerospike client.
+
+    Attributes:
+        code: Associated status code.
+        msg: Human-readable error message.
+        file: Source file where the exception was raised (when available).
+        line: Source line number (when available).
+        in_doubt: True if the command may have succeeded on the server (see client docs).
+    """
+
     code: Union[int, None]
     msg: Union[str, None]
     file: Union[str, None]
@@ -9,186 +27,189 @@ class AerospikeError(Exception):
     in_doubt: Union[bool, None]
 
 class TimeoutError(AerospikeError):
-     pass
+    """Raised when an operation exceeds its timeout."""
 
 class ClientError(AerospikeError):
-    pass
+    """Client-side errors, often due to misconfiguration or invalid API use (code ``-1``)."""
 
 class InvalidHostError(ClientError):
-    pass
+    """Host name could not be resolved (code ``-4``)."""
 
 class ParamError(ClientError):
-    pass
+    """Invalid parameters were supplied (code ``-2``)."""
 
 class TransactionFailed(ClientError):
-    pass
+    """Transaction failed (code ``-17``)."""
 
 class TransactionAlreadyAborted(ClientError):
-    pass
+    """Abort called but the transaction was already aborted (code ``-19``)."""
 
 class TransactionAlreadyCommitted(ClientError):
-    pass
+    """Commit called but the transaction was already committed (code ``-18``)."""
 
 class ServerError(AerospikeError):
-    pass
+    """Parent class for errors returned from the cluster (positive server codes)."""
 
 class InvalidRequest(ServerError):
-    pass
+    """Invalid request or protocol field (code ``4``)."""
 
 class OpNotApplicable(ServerError):
-    pass
+    """The operation cannot be applied to the current bin value (code ``26``)."""
 
 class FilteredOut(ServerError):
-    pass
+    """The command was not performed because an expression evaluated false (code ``27``)."""
 
 class ServerFull(ServerError):
-    pass
+    """The node is low on memory or storage reserved for the namespace (code ``8``)."""
 
 class AlwaysForbidden(ServerError):
-    pass
+    """Operation not allowed in the current configuration (code ``10``)."""
 
 class UnsupportedFeature(ServerError):
-    pass
+    """Unimplemented server feature (code ``16``)."""
 
 class DeviceOverload(ServerError):
-    pass
+    """Storage devices cannot keep up with the write load (code ``18``)."""
 
 class NamespaceNotFound(ServerError):
-    pass
+    """Namespace not found on the server (code ``20``)."""
 
 class ForbiddenError(ServerError):
-    pass
+    """Operation not allowed at this time (code ``22``)."""
 
 class ElementExistsError(ServerError):
-    pass
+    """Map key already exists under a create-only policy (code ``23``)."""
 
 class ElementNotFoundError(ServerError):
-    pass
+    """Map key missing under an update-only policy (code ``24``)."""
 
 class RecordError(ServerError):
+    """Base class for record/bin errors during read or write operations."""
+
     key: Union[tuple, None]
     bin: Union[str, None]
 
 class RecordKeyMismatch(RecordError):
-    pass
+    """Key sent with the command did not match the key stored on the server (code ``19``)."""
 
 class RecordNotFound(RecordError):
-    pass
+    """Record does not exist (code ``2``)."""
 
 class RecordGenerationError(RecordError):
-    pass
+    """Record generation does not satisfy the write policy (code ``3``)."""
 
 class RecordExistsError(RecordError):
-    pass
+    """Record already exists for a create-only write (code ``5``)."""
 
 class RecordBusy(RecordError):
-    pass
+    """Too many concurrent operations on one record (code ``14``)."""
 
 class RecordTooBig(RecordError):
-    pass
+    """Record cannot fit in a storage write block (code ``13``)."""
 
 class BinNameError(RecordError):
-    pass
+    """Invalid bin name length or bin name quota exceeded (code ``21``)."""
 
 class BinIncompatibleType(RecordError):
-    pass
+    """Bin operation incompatible with the existing bin type (code ``12``)."""
 
 class IndexError(ServerError):
+    """Base class for secondary index errors (code ``204`` on the parent)."""
+
     name: Union[str, None]
 
 class IndexNotFound(IndexError):
-    pass
+    """Index not found (code ``201``)."""
 
 class IndexFoundError(IndexError):
-    pass
+    """Index already exists (code ``200``)."""
 
 class IndexOOM(IndexError):
-    pass
+    """Index is out of memory (code ``202``)."""
 
 class IndexNotReadable(IndexError):
-    pass
+    """Index is not readable (code ``203``)."""
 
 class IndexNameMaxLen(IndexError):
-    pass
+    """Index name is too long (code ``205``)."""
 
 class IndexNameMaxCount(IndexError):
-    pass
+    """Maximum number of indexes reached (code ``206``)."""
 
 class QueryError(AerospikeError):
-    pass
+    """Query-related errors (server code ``213`` on the generic case)."""
 
 class QueryQueueFull(QueryError):
-    pass
+    """Query processing queue is full (code ``211``)."""
 
 class QueryTimeout(QueryError):
-    pass
+    """Secondary index query timed out on the server (code ``212``)."""
 
 class ClusterError(AerospikeError):
-    pass
+    """Cluster discovery and connection errors (code ``11`` on the generic case)."""
 
 class ClusterChangeError(ClusterError):
-    pass
+    """Cluster state changed during the request (code ``7``)."""
 
 class AdminError(ServerError):
-    pass
+    """Base class for security / administration API errors."""
 
 class ExpiredPassword(AdminError):
-	pass
+    """Password has expired (code ``63``)."""
 
 class ForbiddenPassword(AdminError):
-	pass
+    """Password is not allowed (code ``64``)."""
 
 class IllegalState(AdminError):
-	pass
+    """Security protocol not followed (code ``56``)."""
 
 class InvalidCommand(AdminError):
-	pass
+    """Invalid administration command (code ``54``)."""
 
 class InvalidCredential(AdminError):
-	pass
-
-class InvalidField(AdminError):
-	pass
+    """Invalid security credential (code ``65``)."""
 
 class InvalidPassword(AdminError):
-	pass
+    """Invalid password (code ``62``)."""
 
 class InvalidPrivilege(AdminError):
-	pass
+    """Invalid privilege (code ``72``)."""
 
 class InvalidRole(AdminError):
-	pass
+    """Invalid role name (code ``70``)."""
 
 class InvalidUser(AdminError):
-	pass
+    """Invalid user name (code ``60``)."""
 
 class NotAuthenticated(AdminError):
-	pass
+    """User must authenticate before database operations (code ``80``)."""
 
 class RoleExistsError(AdminError):
-	pass
+    """Role already exists (code ``71``)."""
 
 class RoleViolation(AdminError):
-	pass
+    """User lacks the required role (code ``81``)."""
 
 class SecurityNotEnabled(AdminError):
-	pass
+    """Security is not enabled on the server (code ``52``)."""
 
 class SecurityNotSupported(AdminError):
-	pass
+    """Security is not supported by the connected server (code ``51``)."""
 
 class SecuritySchemeNotSupported(AdminError):
-	pass
+    """Security scheme is not supported (code ``53``)."""
 
 class UserExistsError(AdminError):
-	pass
+    """User already exists (code ``61``)."""
 
 class UDFError(ServerError):
+    """Base class for UDF-related errors."""
+
     module: Union[str, None]
     func: Union[str, None]
 
 class UDFNotFound(UDFError):
-    pass
+    """UDF module does not exist (code ``1301``)."""
 
 class LuaFileNotFound(UDFError):
-    pass
+    """Lua source file not found (code ``1302``)."""
