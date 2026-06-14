@@ -9,18 +9,11 @@ from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 
 # TODO: verify that subclassing is correct behavior
 class TestExpressions(TestBaseClass):
-    expect_server_version_earlier_than_8_1_3_to_fail = pytest.mark.parametrize(
-        "expect_earlier_than_server_version_to_fail",
-        [
-            (8, 1, 3)
-        ],
-        indirect=True
-    )
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
         self.as_connection.put(
