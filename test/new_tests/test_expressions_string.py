@@ -13,8 +13,15 @@ from .string_helpers import *
 
 # TODO: verify that subclassing is correct behavior
 class TestExpressions(TestBaseClass):
+    @pytest.mark.parametrize(
+        "expect_earlier_than_server_version_to_fail",
+        [
+            (8, 1, 3)
+        ],
+        indirect=True
+    )
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, as_connection, expect_server_version_earlier_than_8_1_3_to_fail):
         self.as_connection.put(
             key=KEY,
             bins=BINS
@@ -76,9 +83,10 @@ class TestExpressions(TestBaseClass):
         ops = [
             expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == expected_result
+            assert bins[STR_BIN_NAME] == expected_result
 
     @pytest.mark.parametrize(
         "expr",
@@ -92,7 +100,12 @@ class TestExpressions(TestBaseClass):
         ops = [
             expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
         ]
-        with pytest.raises(e.OpNotApplicable):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
+            expected_exc = e.OpNotApplicable
+        else:
+            expected_exc = e.InvalidRequest
+
+        with pytest.raises(expected_exc):
             self.as_connection.operate(KEY, ops)
 
     # TODO: need to reuse StringPolicy parameters
@@ -112,6 +125,7 @@ class TestExpressions(TestBaseClass):
             expr_ops.expression_write(STR_BIN_NAME, compiled_expr),
             operations.read(STR_BIN_NAME)
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_BIN_NAME] == expected_result
+            assert bins[STR_BIN_NAME] == expected_result
