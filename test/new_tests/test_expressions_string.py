@@ -13,15 +13,16 @@ from .string_helpers import *
 
 # TODO: verify that subclassing is correct behavior
 class TestExpressions(TestBaseClass):
-    @pytest.mark.parametrize(
+    expect_server_version_earlier_than_8_1_3_to_fail = pytest.mark.parametrize(
         "expect_earlier_than_server_version_to_fail",
         [
             (8, 1, 3)
         ],
         indirect=True
     )
+
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection, expect_server_version_earlier_than_8_1_3_to_fail):
+    def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
         self.as_connection.put(
             key=KEY,
             bins=BINS
@@ -78,6 +79,7 @@ class TestExpressions(TestBaseClass):
             )
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_reading_str_bins(self, expr, expected_result):
         compiled_expr = expr.compile()
         ops = [
@@ -119,6 +121,7 @@ class TestExpressions(TestBaseClass):
             )
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_expression_write(self, expr, expected_result):
         compiled_expr = expr.compile()
         ops = [
