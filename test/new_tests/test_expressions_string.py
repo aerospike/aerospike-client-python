@@ -9,7 +9,7 @@ from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, NEW_STR
 
 
 # TODO: verify that subclassing is correct behavior
@@ -108,9 +108,25 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, expected_result",
         [
+            # TODO: maybe have a place to share expected results for both string ops and exprs.
             (
                 str_expr.Insert(policy=None, index=1, value=NEEDLE, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]
+            ),
+            (
+                str_expr.Insert(policy=None, index=-1, value=NEEDLE, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:-1] + NEEDLE + EXAMPLE_STR[-1:]
+            ),
+            (
+                str_expr.Overwrite(policy=None, index=1, value=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]
+            ),
+            (
+                str_expr.Overwrite(policy=None, index=0, value=NEW_STR, bin=STR_BIN_NAME),
+                NEW_STR
+            ),
+            (
+                str_expr.Concat(policy=None, value=NEEDLE, bin=STR_BIN_NAME)
             )
         ]
     )
