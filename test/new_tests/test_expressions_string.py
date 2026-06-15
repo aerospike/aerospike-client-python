@@ -122,17 +122,17 @@ class TestExpressions(TestBaseClass):
                 EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]
             ),
             (
-                str_expr.Overwrite(policy=None, index=0, value=NEW_STR, bin=STR_BIN_NAME),
-                NEW_STR
+                str_expr.Overwrite(policy=None, index=0, value=EXAMPLE_STR + "a", bin=STR_BIN_NAME),
+                EXAMPLE_STR + "a"
             ),
             # TODO: add test case for append and prepend.
             (
                 str_expr.ConcatList(policy=None, value=[NEEDLE], bin=STR_BIN_NAME),
-                NEW_STR + NEEDLE
+                EXAMPLE_STR + NEEDLE
             ),
             (
                 str_expr.ConcatList(policy=None, value=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
-                NEW_STR + NEEDLE + NEEDLE
+                EXAMPLE_STR + NEEDLE + NEEDLE
             ),
             (
                 str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
@@ -218,7 +218,7 @@ class TestExpressions(TestBaseClass):
             ),
             (
                 str_expr.RegexReplace(policy=None, pattern="asdf", replacement="1234", bin=STR_BIN_NAME),
-                NEW_STR + "asdf"
+                "1234asdf"
             ),
         ]
     )
