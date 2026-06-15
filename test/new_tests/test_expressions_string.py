@@ -160,7 +160,7 @@ class TestExpressions(TestBaseClass):
             ),
             (
                 str_expr.Lower(policy=None, bin=UPPERCASE_STR_BIN_NAME),
-                UPPERCASE_STR_BIN_NAME.lower()
+                UPPERCASE_STR.lower()
             ),
             (
                 str_expr.CaseFold(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
@@ -174,15 +174,15 @@ class TestExpressions(TestBaseClass):
             # ),
             (
                 str_expr.TrimStart(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
-                SURROUNDING_WHITESPACE_BIN_NAME[1:]
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
             ),
             (
                 str_expr.TrimEnd(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
-                SURROUNDING_WHITESPACE_BIN_NAME[:-1]
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[:-1]
             ),
             (
                 str_expr.Trim(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
-                SURROUNDING_WHITESPACE_BIN_NAME[1:-1]
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
             ),
             (
                 str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) + 2, pad_string=PAD_STRING, bin=STR_BIN_NAME),
