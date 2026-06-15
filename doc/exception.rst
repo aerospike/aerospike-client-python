@@ -40,6 +40,13 @@ Base Class
 
         The associated status code.
 
+    .. py:attribute:: subcode
+
+        Server error detail subcode. When ``error_detail_verbosity`` is greater than or equal to ``1`` on the command's
+        base policy and the server returns structured error details, this field contains the numeric subcode.
+
+        Set to ``0`` when no subcode was returned.
+
     .. py:attribute:: msg
 
         The human-readable error message.
