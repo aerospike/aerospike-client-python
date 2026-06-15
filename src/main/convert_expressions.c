@@ -1928,7 +1928,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             else {
                 char *replacement = NULL;
                 status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
-                                 temp_expr->pydict, NULL, &pattern, false);
+                                 temp_expr->pydict, NULL, &replacement, false);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }

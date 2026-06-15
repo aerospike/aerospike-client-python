@@ -4,7 +4,7 @@ import base64
 from aerospike_helpers.expressions import string as str_expr
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.operations import operations
-from aerospike_helpers.string_helpers import NumericType
+from aerospike_helpers.string_helpers import NumericType, RegexFlags
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
@@ -63,11 +63,11 @@ class TestExpressions(TestBaseClass):
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
             ),
             (
-                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 True
             ),
             (
-                str_expr.RegexCompare(pattern="π", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 False
             )
         ]
@@ -108,10 +108,118 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, expected_result",
         [
+            # TODO: maybe have a place to share expected results for both string ops and exprs.
             (
                 str_expr.Insert(policy=None, index=1, value=NEEDLE, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]
-            )
+            ),
+            (
+                str_expr.Insert(policy=None, index=-1, value=NEEDLE, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:-1] + NEEDLE + EXAMPLE_STR[-1:]
+            ),
+            (
+                str_expr.Overwrite(policy=None, index=1, value=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]
+            ),
+            (
+                str_expr.Overwrite(policy=None, index=0, value=EXAMPLE_STR + "a", bin=STR_BIN_NAME),
+                EXAMPLE_STR + "a"
+            ),
+            # TODO: add test case for append and prepend.
+            (
+                str_expr.ConcatList(policy=None, values=[NEEDLE], bin=STR_BIN_NAME),
+                EXAMPLE_STR + NEEDLE
+            ),
+            (
+                str_expr.ConcatList(policy=None, values=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
+                EXAMPLE_STR + NEEDLE + NEEDLE
+            ),
+#            (
+#                str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
+#                EXAMPLE_STR[:START_IDX]
+#            ),
+#            (
+#                str_expr.Snip(policy=None, start=START_IDX, end=None, bin=STR_BIN_NAME),
+#                EXAMPLE_STR[:START_IDX]
+#            ),
+            (
+                str_expr.Snip(policy=None, start=START_IDX, end=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+            ),
+            (
+                str_expr.Replace(policy=None, needle=NEEDLE, replacement=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)
+            ),
+            (
+                str_expr.ReplaceAll(policy=None, needle=NEEDLE, replacement=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)
+            ),
+            (
+                str_expr.Upper(policy=None, bin=STR_BIN_NAME),
+                EXAMPLE_STR.upper()
+            ),
+            (
+                str_expr.Lower(policy=None, bin=UPPERCASE_STR_BIN_NAME),
+                UPPERCASE_STR.lower()
+            ),
+            (
+                str_expr.CaseFold(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                # TODO: dynamically get expected result
+                "ss"
+            ),
+            # TODO: this test case needs to be corrected
+            # (
+            #     str_expr.NormalizeNFC(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            #     "ss"
+            # ),
+            (
+                str_expr.TrimStart(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
+            ),
+            (
+                str_expr.TrimEnd(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[:-1]
+            ),
+            (
+                str_expr.Trim(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) + 2, pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                2 * PAD_STRING + EXAMPLE_STR
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR), pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) - 1, pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) + 2, pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                EXAMPLE_STR + 2 * PAD_STRING
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR), pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) - 1, pad_string=PAD_STRING, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.Repeat(policy=None, count=1, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.Repeat(policy=None, count=2, bin=STR_BIN_NAME),
+                EXAMPLE_STR * 2
+            ),
+            (
+                str_expr.RegexReplace(policy=None, pattern="asdf", replacement="1234", regex_flags=RegexFlags.DEFAULT, bin=STR_BIN_NAME),
+                "1234asdf"
+            ),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
