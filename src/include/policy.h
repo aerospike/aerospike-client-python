@@ -85,6 +85,11 @@ enum {
 #undef X
 };
 
+static inline bool is_list_op(int op_code)
+{
+    return op_code >= OP_LIST_APPEND && op_code <= OP_LIST_CREATE;
+}
+
 enum Aerospike_map_operations {
     // Make sure all the op codes are unique
     OP_MAP_SET_POLICY = OP_STRING_REGEX_REPLACE + 1,
@@ -192,6 +197,26 @@ enum {
 #define _CDT_FLAGS_KEY "cdt_flags"
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
+
+// TODO: can use a macro to define these.
+#define _STR_EXP_START_KEY "start"
+#define _STR_EXP_END_KEY "end"
+#define _STR_EXP_LENGTH_KEY "length"
+#define _STR_EXP_INDEX_KEY "index"
+#define _STR_EXP_NEEDLE_KEY "needle"
+#define _STR_EXP_REPLACEMENT_KEY "replacement"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_PREFIX_KEY "prefix"
+#define _STR_EXP_SUFFIX_KEY "suffix"
+#define _STR_EXP_SEPARATOR_KEY "separator"
+#define _STR_EXP_PATTERN_KEY "pattern"
+#define _STR_EXP_REGEX_FLAGS_KEY "regex_flags"
+#define _STR_EXP_POLICY_KEY "str_policy"
+#define _STR_EXP_TARGET_LENGTH_KEY "target_length"
+#define _STR_EXP_PAD_STRING_KEY "pad_string"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_COUNT_KEY "count"
+#define _STR_EXP_NUMERIC_TYPE_KEY "numeric_type"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,

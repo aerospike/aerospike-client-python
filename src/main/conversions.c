@@ -2726,7 +2726,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     as_status status = AEROSPIKE_OK;
     PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
 
-    if (!py_ctx_list) {
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
         goto RETURN;
     }
 

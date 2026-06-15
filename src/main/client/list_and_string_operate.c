@@ -58,7 +58,16 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     bool has_as_operations_taken_ownership_of_as_val_objs = false;
     char *bin = NULL;
 
-    if (get_bin(err, op_dict, unicodeStrVector, &bin) != AEROSPIKE_OK) {
+    const char *bin_key = NULL;
+    if (is_list_op(operation_code)) {
+        bin_key = "bin";
+    }
+    else {
+        bin_key = "bin_name";
+    }
+
+    if (get_str(err, bin_key, op_dict, unicodeStrVector, &bin, true) !=
+        AEROSPIKE_OK) {
         goto exit;
     }
 
@@ -101,6 +110,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_RANK_RANGE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_STRING_REPEAT:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
             goto exit;
@@ -281,12 +291,13 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     int64_t end = 0;
     bool end_found = false;
     switch (operation_code) {
-    case OP_STRING_SNIP:
+    case OP_STRING_SNIP: {
         as_status status =
             get_optional_int64_t(err, "end", op_dict, &end, &end_found);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
+    }
     }
 
     int64_t occurrence = 0;
@@ -312,7 +323,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         numeric_type = (as_string_numeric_type)tmp_value;
         break;
     }
-    case OP_STRING_REGEX_COMPARE: {
+    case OP_STRING_REGEX_COMPARE:
+    case OP_STRING_REGEX_REPLACE: {
         if (get_int64_t(err, "regex_flags", op_dict, &tmp_value) !=
             AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
@@ -324,6 +336,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     char *str_attr_value1 = NULL;
     const char *str_attr_key = NULL;
+    bool is_str_attr_optional = false;
     switch (operation_code) {
     case OP_STRING_FIND:
     case OP_STRING_CONTAINS:
@@ -344,7 +357,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         case OP_STRING_CONTAINS:
         case OP_STRING_REPLACE:
         case OP_STRING_REPLACE_ALL:
-        case OP_STRING_REGEX_REPLACE:
             str_attr_key = NEEDLE_OP_START_KEY;
             break;
         case OP_STRING_STARTS_WITH:
@@ -355,8 +367,10 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         case OP_STRING_SPLIT:
             str_attr_key = "separator";
+            is_str_attr_optional = true;
             break;
         case OP_STRING_REGEX_COMPARE:
+        case OP_STRING_REGEX_REPLACE:
             str_attr_key = "pattern";
             break;
         case OP_STRING_INSERT:
@@ -372,7 +386,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
         // TODO: review what unicodeStrVector is for.
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value1) != AEROSPIKE_OK) {
+                    &str_attr_value1, is_str_attr_optional) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -383,14 +397,14 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_REPLACE_ALL:
     case OP_STRING_REGEX_REPLACE:
         if (get_str(err, "replacement", op_dict, unicodeStrVector,
-                    &str_attr_value2) != AEROSPIKE_OK) {
+                    &str_attr_value2, true) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
 
     as_string_policy str_policy;
-    switch (operation_code) {
-    case OP_STRING_INSERT: {
+    if (operation_code >= OP_STRING_INSERT &&
+        operation_code <= OP_STRING_REGEX_REPLACE) {
         PyObject *py_str_policy = PyDict_GetItemString(op_dict, "policy");
         if (!py_str_policy) {
             goto CLEANUP_VAL2_ON_ERROR;
@@ -401,8 +415,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
-        break;
-    }
     }
 
     bool success = false;
@@ -604,7 +616,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_strlen(ops, bin, ctx_ref);
         break;
     case OP_STRING_SUBSTR:
-        if (length_found) {
+        if (!length_found) {
             success = as_operations_string_substr(ops, bin, ctx_ref, start);
         }
         else {
@@ -654,8 +666,13 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_to_blob(ops, bin, ctx_ref);
         break;
     case OP_STRING_SPLIT:
-        success = as_operations_string_split_separator(ops, bin, ctx_ref,
-                                                       str_attr_value1);
+        if (str_attr_value1) {
+            success = as_operations_string_split_separator(ops, bin, ctx_ref,
+                                                           str_attr_value1);
+        }
+        else {
+            success = as_operations_string_split(ops, bin, ctx_ref);
+        }
         break;
     case OP_STRING_B64_DECODE:
         success = as_operations_string_b64_decode(ops, bin, ctx_ref);
@@ -737,8 +754,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
                                               (uint64_t)count);
         break;
     case OP_STRING_REGEX_REPLACE:
-        success = as_operations_string_replace(
-            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
+        success = as_operations_string_regex_replace(
+            ops, bin, ctx_ref, str_attr_value1, str_attr_value2, regex_flags);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.

@@ -481,6 +481,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
         // TODO: overload
         [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
+        [OP_STRING_CONCAT_LIST] =
+            EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
         [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
@@ -1776,28 +1778,81 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_STRLEN:
             APPEND_ARRAY(1, as_exp_string_strlen(NIL));
             break;
-        case OP_STRING_SUBSTR:
-            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+        case OP_STRING_SUBSTR: {
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            bool length_found = false;
+            if (get_optional_int64_t(err, _STR_EXP_LENGTH_KEY,
+                                     temp_expr->pydict, &lval2,
+                                     &length_found) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (!length_found) {
+                APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            }
+            else {
+                APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
+            }
             break;
-        case OP_STRING_CHAR_AT:
+        }
+        case OP_STRING_CHAR_AT: {
+            if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
             APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
             break;
-        case OP_STRING_FIND:
-            APPEND_ARRAY(1,
-                         as_exp_string_find(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_FIND: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_int64_t(err, _STR_EXP_OCCURRENCE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_find_occurrence(needle, lval1, NIL));
             break;
-        case OP_STRING_CONTAINS:
-            APPEND_ARRAY(
-                1, as_exp_string_contains(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_CONTAINS: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_contains(needle, NIL));
             break;
-        case OP_STRING_STARTS_WITH:
-            APPEND_ARRAY(
-                1, as_exp_string_starts_with(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_STARTS_WITH: {
+            char *prefix = NULL;
+            if (get_str(err, _STR_EXP_PREFIX_KEY, temp_expr->pydict, NULL,
+                        &prefix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_starts_with(prefix, NIL));
             break;
-        case OP_STRING_ENDS_WITH:
-            APPEND_ARRAY(
-                1, as_exp_string_ends_with(temp_expr->val.val_string_p, NIL));
+        }
+        case OP_STRING_ENDS_WITH: {
+            char *suffix = NULL;
+            if (get_str(err, _STR_EXP_SUFFIX_KEY, temp_expr->pydict, NULL,
+                        &suffix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_ends_with(suffix, NIL));
             break;
+        }
         case OP_STRING_TO_INTEGER:
             APPEND_ARRAY(1, as_exp_string_to_integer(NIL));
             break;
@@ -1807,10 +1862,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_BYTE_LENGTH:
             APPEND_ARRAY(1, as_exp_string_byte_length(NIL));
             break;
-        // TODO: needs to be overloaded
-        case OP_STRING_IS_NUMERIC:
-            APPEND_ARRAY(1, as_exp_string_is_numeric(NIL));
+        case OP_STRING_IS_NUMERIC: {
+            as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
+            int64_t tmp_value;
+            if (get_int64_t(err, _STR_EXP_NUMERIC_TYPE_KEY, temp_expr->pydict,
+                            &tmp_value) != AEROSPIKE_OK) {
+                // TODO: wondering if this can cause a memory leak?
+                return err->code;
+            }
+            numeric_type = (as_string_numeric_type)tmp_value;
+
+            APPEND_ARRAY(1, as_exp_string_is_numeric_type(numeric_type, NIL));
             break;
+        }
         case OP_STRING_IS_UPPER:
             APPEND_ARRAY(1, as_exp_string_is_upper(NIL));
             break;
@@ -1820,6 +1884,218 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_TO_BLOB:
             APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
             break;
+        case OP_STRING_SPLIT: {
+            char *separator = NULL;
+            as_status status =
+                get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
+                        &separator, true);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            if (separator == NULL) {
+                APPEND_ARRAY(1, as_exp_string_split(NIL));
+            }
+            else {
+                APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            }
+            break;
+        }
+        case OP_STRING_B64_DECODE:
+            APPEND_ARRAY(1, as_exp_string_b64_decode(NIL));
+            break;
+        case OP_STRING_REGEX_REPLACE:
+        case OP_STRING_REGEX_COMPARE: {
+            char *pattern = NULL;
+            as_status status =
+                get_str(err, _STR_EXP_PATTERN_KEY, temp_expr->pydict, NULL,
+                        &pattern, false);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            int64_t tmp_regex_flags;
+            status = get_int64_t(err, _STR_EXP_REGEX_FLAGS_KEY,
+                                 temp_expr->pydict, &tmp_regex_flags);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            if (temp_expr->op == OP_STRING_REGEX_COMPARE) {
+                APPEND_ARRAY(1, as_exp_string_regex_compare_flags(
+                                    pattern, tmp_regex_flags, NIL));
+            }
+            else {
+                char *replacement = NULL;
+                status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
+                                 temp_expr->pydict, NULL, &pattern, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                APPEND_ARRAY(1,
+                             as_exp_string_regex_replace(pattern, replacement,
+                                                         tmp_regex_flags, NIL));
+            }
+            break;
+        }
+
+        case OP_STRING_INSERT:
+        case OP_STRING_OVERWRITE:
+        case OP_STRING_CONCAT:
+        case OP_STRING_CONCAT_LIST:
+        case OP_STRING_SNIP:
+        case OP_STRING_REPLACE:
+        case OP_STRING_REPLACE_ALL:
+        case OP_STRING_UPPER:
+        case OP_STRING_LOWER:
+        case OP_STRING_CASE_FOLD:
+        case OP_STRING_NORMALIZE_NFC:
+        case OP_STRING_TRIM_START:
+        case OP_STRING_TRIM_END:
+        case OP_STRING_TRIM:
+        case OP_STRING_PAD_START:
+        case OP_STRING_PAD_END:
+        case OP_STRING_REPEAT: {
+            PyObject *py_str_policy =
+                PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
+            as_string_policy policy;
+            as_string_policy_init_from_pyobject(err, &policy, py_str_policy);
+
+            char *value = NULL;
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+            case OP_STRING_OVERWRITE:
+            case OP_STRING_CONCAT: {
+                as_status status = get_str(
+                    err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+                break;
+            }
+            }
+
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+            case OP_STRING_OVERWRITE: {
+                if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                                &lval1) != AEROSPIKE_OK) {
+                    return err->code;
+                }
+            }
+            }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+                APPEND_ARRAY(1,
+                             as_exp_string_insert(&policy, lval1, value, NIL));
+                break;
+            case OP_STRING_OVERWRITE:
+                APPEND_ARRAY(
+                    1, as_exp_string_overwrite(&policy, lval1, value, NIL));
+                break;
+            case OP_STRING_CONCAT:
+                APPEND_ARRAY(1, as_exp_string_concat(&policy, value, NIL));
+                break;
+            case OP_STRING_CONCAT_LIST:
+                APPEND_ARRAY(2, as_exp_string_concat_list(&policy, NIL, NIL));
+                break;
+            case OP_STRING_SNIP:
+                if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                                &lval1)) {
+                    return err->code;
+                }
+                APPEND_ARRAY(1, as_exp_string_snip(&policy, lval1, NIL));
+                break;
+            case OP_STRING_REPLACE:
+            case OP_STRING_REPLACE_ALL: {
+                char *needle = NULL;
+                as_status status =
+                    get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                            &needle, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                char *replacement = NULL;
+                status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
+                                 temp_expr->pydict, NULL, &replacement, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                if (temp_expr->op == OP_STRING_REPLACE) {
+                    APPEND_ARRAY(1, as_exp_string_replace(&policy, needle,
+                                                          replacement, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1, as_exp_string_replace_all(
+                                        &policy, needle, replacement, NIL));
+                }
+            } break;
+            case OP_STRING_UPPER:
+                APPEND_ARRAY(1, as_exp_string_upper(&policy, NIL));
+                break;
+            case OP_STRING_LOWER:
+                APPEND_ARRAY(1, as_exp_string_lower(&policy, NIL));
+                break;
+            case OP_STRING_CASE_FOLD:
+                APPEND_ARRAY(1, as_exp_string_case_fold(&policy, NIL));
+                break;
+            case OP_STRING_NORMALIZE_NFC:
+                APPEND_ARRAY(1, as_exp_string_normalize_nfc(&policy, NIL));
+                break;
+            case OP_STRING_TRIM_START:
+                APPEND_ARRAY(1, as_exp_string_trim_start(&policy, NIL));
+                break;
+            case OP_STRING_TRIM_END:
+                APPEND_ARRAY(1, as_exp_string_trim_end(&policy, NIL));
+                break;
+            case OP_STRING_TRIM:
+                APPEND_ARRAY(1, as_exp_string_trim(&policy, NIL));
+                break;
+            case OP_STRING_PAD_START:
+            case OP_STRING_PAD_END: {
+                as_status status = get_int64_t(err, _STR_EXP_TARGET_LENGTH_KEY,
+                                               temp_expr->pydict, &lval1);
+                if (status != AEROSPIKE_OK) {
+                    return err->code;
+                }
+
+                char *pad_string = NULL;
+                status = get_str(err, _STR_EXP_PAD_STRING_KEY,
+                                 temp_expr->pydict, NULL, &pad_string, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                if (temp_expr->op == OP_STRING_PAD_START) {
+                    APPEND_ARRAY(1, as_exp_string_pad_start(&policy, lval1,
+                                                            pad_string, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1, as_exp_string_pad_end(&policy, lval1,
+                                                          pad_string, NIL));
+                }
+                break;
+            }
+            case OP_STRING_REPEAT: {
+                as_status status = get_int64_t(err, _STR_EXP_COUNT_KEY,
+                                               temp_expr->pydict, &lval1);
+                if (status != AEROSPIKE_OK) {
+                    return err->code;
+                }
+
+                APPEND_ARRAY(1, as_exp_string_repeat(&policy, lval1, NIL));
+                break;
+            }
+            }
+            break;
+#pragma GCC diagnostic pop
+        }
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Unrecognised expression op type.");

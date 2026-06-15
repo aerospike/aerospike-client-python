@@ -252,7 +252,8 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def split(bin_name: str, separator: str = None, ctx: TypeCTX = None):
+# TODO: all values with default of None need to be marked with type optional
+def split(bin_name: str, separator: str | None = None, ctx: TypeCTX = None):
     """
     Create string ``split`` operation that splits by Unicode codepoint.
 
@@ -260,7 +261,8 @@ def split(bin_name: str, separator: str = None, ctx: TypeCTX = None):
 
         {bin_name}
         separator (str): The separator to split by. If this is :py:obj:`None`, Each codepoint
-            becomes one string element in the returned list.
+            becomes one string element in the returned list. If the separator is not found,
+            the server returns a singleton list containing the whole string.
         {ctx}
     """
     op = aerospike._OP_STRING_SPLIT
@@ -574,8 +576,7 @@ def regex_replace(
     bin_name: str,
     pattern: str,
     replacement: str,
-    # TODO: should have default value?
-    regex_flags: RegexFlags,
+    regex_flags: RegexFlags = RegexFlags.DEFAULT,
     ctx: TypeCTX = None
 ):
     """
