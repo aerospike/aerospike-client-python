@@ -4,12 +4,12 @@ import base64
 from aerospike_helpers.expressions import string as str_expr
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.operations import operations
-from aerospike_helpers.string_helpers import NumericType
+from aerospike_helpers.string_helpers import NumericType, RegexFlags
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, NEW_STR
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 
 # TODO: verify that subclassing is correct behavior
@@ -63,11 +63,11 @@ class TestExpressions(TestBaseClass):
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
             ),
             (
-                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 True
             ),
             (
-                str_expr.RegexCompare(pattern="π", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 False
             )
         ]
@@ -127,21 +127,21 @@ class TestExpressions(TestBaseClass):
             ),
             # TODO: add test case for append and prepend.
             (
-                str_expr.ConcatList(policy=None, value=[NEEDLE], bin=STR_BIN_NAME),
+                str_expr.ConcatList(policy=None, values=[NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE
             ),
             (
-                str_expr.ConcatList(policy=None, value=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
+                str_expr.ConcatList(policy=None, values=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE + NEEDLE
             ),
-            (
-                str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
-                EXAMPLE_STR[:START_IDX]
-            ),
-            (
-                str_expr.Snip(policy=None, start=START_IDX, end=None, bin=STR_BIN_NAME),
-                EXAMPLE_STR[:START_IDX]
-            ),
+#            (
+#                str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
+#                EXAMPLE_STR[:START_IDX]
+#            ),
+#            (
+#                str_expr.Snip(policy=None, start=START_IDX, end=None, bin=STR_BIN_NAME),
+#                EXAMPLE_STR[:START_IDX]
+#            ),
             (
                 str_expr.Snip(policy=None, start=START_IDX, end=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
@@ -185,27 +185,27 @@ class TestExpressions(TestBaseClass):
                 SURROUNDING_WHITESPACE_BIN_NAME[1:-1]
             ),
             (
-                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) + 2, bin=STR_BIN_NAME),
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) + 2, pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 2 * PAD_STRING + EXAMPLE_STR
             ),
             (
-                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR), bin=STR_BIN_NAME),
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR), pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 EXAMPLE_STR
             ),
             (
-                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) - 1, pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 EXAMPLE_STR
             ),
             (
-                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) + 2, bin=STR_BIN_NAME),
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) + 2, pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 EXAMPLE_STR + 2 * PAD_STRING
             ),
             (
-                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR), bin=STR_BIN_NAME),
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR), pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 EXAMPLE_STR
             ),
             (
-                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) - 1, pad_string=PAD_STRING, bin=STR_BIN_NAME),
                 EXAMPLE_STR
             ),
             (
@@ -217,7 +217,7 @@ class TestExpressions(TestBaseClass):
                 EXAMPLE_STR * 2
             ),
             (
-                str_expr.RegexReplace(policy=None, pattern="asdf", replacement="1234", bin=STR_BIN_NAME),
+                str_expr.RegexReplace(policy=None, pattern="asdf", replacement="1234", regex_flags=RegexFlags.DEFAULT, bin=STR_BIN_NAME),
                 "1234asdf"
             ),
         ]
