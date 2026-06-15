@@ -125,9 +125,101 @@ class TestExpressions(TestBaseClass):
                 str_expr.Overwrite(policy=None, index=0, value=NEW_STR, bin=STR_BIN_NAME),
                 NEW_STR
             ),
+            # TODO: add test case for append and prepend.
             (
-                str_expr.Concat(policy=None, value=NEEDLE, bin=STR_BIN_NAME)
-            )
+                str_expr.ConcatList(policy=None, value=[NEEDLE], bin=STR_BIN_NAME),
+                NEW_STR + NEEDLE
+            ),
+            (
+                str_expr.ConcatList(policy=None, value=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
+                NEW_STR + NEEDLE + NEEDLE
+            ),
+            (
+                str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:START_IDX]
+            ),
+            (
+                str_expr.Snip(policy=None, start=START_IDX, end=None, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:START_IDX]
+            ),
+            (
+                str_expr.Snip(policy=None, start=START_IDX, end=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+            ),
+            (
+                str_expr.Replace(policy=None, needle=NEEDLE, replacement=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)
+            ),
+            (
+                str_expr.ReplaceAll(policy=None, needle=NEEDLE, replacement=SINGLE_CHAR, bin=STR_BIN_NAME),
+                EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)
+            ),
+            (
+                str_expr.Upper(policy=None, bin=STR_BIN_NAME),
+                EXAMPLE_STR.upper()
+            ),
+            (
+                str_expr.Lower(policy=None, bin=UPPERCASE_STR_BIN_NAME),
+                UPPERCASE_STR_BIN_NAME.lower()
+            ),
+            (
+                str_expr.CaseFold(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                # TODO: dynamically get expected result
+                "ss"
+            ),
+            # TODO: this test case needs to be corrected
+            # (
+            #     str_expr.NormalizeNFC(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            #     "ss"
+            # ),
+            (
+                str_expr.TrimStart(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                SURROUNDING_WHITESPACE_BIN_NAME[1:]
+            ),
+            (
+                str_expr.TrimEnd(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                SURROUNDING_WHITESPACE_BIN_NAME[:-1]
+            ),
+            (
+                str_expr.Trim(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
+                SURROUNDING_WHITESPACE_BIN_NAME[1:-1]
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) + 2, bin=STR_BIN_NAME),
+                2 * PAD_STRING + EXAMPLE_STR
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR), bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadStart(policy=None, target_length=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) + 2, bin=STR_BIN_NAME),
+                EXAMPLE_STR + 2 * PAD_STRING
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR), bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.PadEnd(policy=None, target_length=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.Repeat(policy=None, count=1, bin=STR_BIN_NAME),
+                EXAMPLE_STR
+            ),
+            (
+                str_expr.Repeat(policy=None, count=2, bin=STR_BIN_NAME),
+                EXAMPLE_STR * 2
+            ),
+            (
+                str_expr.RegexReplace(policy=None, pattern="asdf", replacement="1234", bin=STR_BIN_NAME),
+                NEW_STR + "asdf"
+            ),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
