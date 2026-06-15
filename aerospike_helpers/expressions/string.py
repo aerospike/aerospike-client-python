@@ -408,7 +408,7 @@ class Overwrite(_BaseExpr):
         """
         self._fixed = {
             aerospike._STR_EXP_INDEX_KEY: index,
-            _Keys.VALUE_TYPE_KEY: value
+            _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
@@ -429,7 +429,7 @@ class Concat(_BaseExpr):
             The string in the bin with the value appended.
         """
         self._fixed = {
-            _Keys.VALUE_TYPE_KEY: value
+            _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
