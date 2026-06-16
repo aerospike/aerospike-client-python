@@ -50,3 +50,10 @@ class TestExceptionSubcode:
             # There should be a message before the subcode
             SUBCODE_IN_QUOTES = "({})".format(SUBCODE_IN_MESSAGE)
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
+
+    def test_invalid_verbosity(self):
+        policy = {
+            ERROR_DETAIL_VERBOSITY_SETTING: 3
+        }
+        with pytest.raises(e.ServerError):
+            self.as_connection.operate(KEYS[0], OPS, policy=policy)
