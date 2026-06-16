@@ -226,9 +226,10 @@ class TestStringOperations:
         ops = [
             str_ops.to_double(bin_name=STR_WITH_DOUBLE_BIN_NAME)
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
+            assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
     # TODO: add case for multi-byte unicode codepoints
     @root_level_and_nested_str
@@ -332,9 +333,10 @@ class TestStringOperations:
         ops = [
             str_ops.split(bin_name=bin_name, **kwargs_with_ctx)
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
 
-        assert bins[bin_name] == list(EXAMPLE_STR)
+            assert bins[bin_name] == list(EXAMPLE_STR)
 
     @pytest.mark.parametrize(
         "separator",
