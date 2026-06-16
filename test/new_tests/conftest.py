@@ -326,7 +326,7 @@ def expect_earlier_than_server_version_to_fail(as_connection, request):
 expect_server_version_earlier_than_8_1_3_to_fail = pytest.mark.parametrize(
     "expect_earlier_than_server_version_to_fail",
     [
-        (8, 1, 2)
+        (8, 1, 3)
     ],
     indirect=True
 )
