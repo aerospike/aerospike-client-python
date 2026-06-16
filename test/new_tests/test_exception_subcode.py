@@ -3,6 +3,7 @@ from .conftest import KEYS, BIN_NAME
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops
+from .test_base_class import TestBaseClass
 from . import as_errors
 
 
@@ -36,7 +37,16 @@ class TestExceptionSubcode:
 
         # Make sure there's no regression with the parent error code
         assert excinfo.value.code == as_errors.AEROSPIKE_ERR_OP_NOT_APPLICABLE
-        err_verbosity_is_zero = ERROR_DETAIL_VERBOSITY_SETTING not in policy or policy[ERROR_DETAIL_VERBOSITY_SETTING] == 0
+
+        err_verbosity_is_zero = (
+            ERROR_DETAIL_VERBOSITY_SETTING not in policy
+            or
+            policy[ERROR_DETAIL_VERBOSITY_SETTING] == 0
+            or
+            # If running against a unsupported version, we expect subcode to always return 0
+            # (and no undefined behavior)
+            (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3)
+        )
         if err_verbosity_is_zero:
             assert excinfo.value.subcode == 0
         else:
