@@ -1,5 +1,6 @@
 import pytest
-from .conftest import KEYS
+from .conftest import KEYS, BIN_NAME
+import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops
 from . import as_errors
@@ -7,7 +8,7 @@ from . import as_errors
 
 KEY = KEYS[0]
 OPS = [
-    list_ops.list_get_by_index(99)
+    list_ops.list_get_by_index(BIN_NAME, index=99, return_type=aerospike.LIST_RETURN_VALUE)
 ]
 ERROR_DETAIL_VERBOSITY_SETTING = "error_detail_verbosity"
 
@@ -15,7 +16,7 @@ ERROR_DETAIL_VERBOSITY_SETTING = "error_detail_verbosity"
 class TestExceptionSubcode:
     # TODO: need to reuse fixture in conftest.py using indirect params to set num of records
     def setup(self):
-        self.as_connection.put(KEY, bins={"a": []})
+        self.as_connection.put(KEY, bins={BIN_NAME: []})
         yield
         self.as_connection.remove(KEY)
 
