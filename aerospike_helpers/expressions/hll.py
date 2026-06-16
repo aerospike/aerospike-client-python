@@ -17,7 +17,30 @@
 HyperLogLog expressions contain expressions for performing HLL operations.
 Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_helpers.operations.hll_operations>`.
 
+.. testsetup::
+
+    {0}
+
+Assume all inline code examples run this beforehand:
+
+.. code-block:: Python
+
+    {0}
 """
+
+if __doc__:
+    __doc__ = __doc__.format(
+        """
+        import aerospike
+        import aerospike_helpers.expressions as exp
+        from aerospike_helpers.operations import hll_operations
+
+        config = {"hosts": [("127.0.0.1", 3000)]}
+        client = aerospike.client(config)
+        key = ("test", "demo", 1)
+        """
+    )
+
 
 # from __future__ import annotations
 from typing import List, Union, Dict, Any
@@ -61,7 +84,9 @@ class HLLInit(_BaseExpr):
 
         :return: Returns the resulting hll.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create an HLL with 12 index bits and 24 min hash bits.
             expr = exp.HLLInit(None, 12, 24, exp.HLLBin("my_hll"))
@@ -96,12 +121,33 @@ class HLLAdd(_BaseExpr):
 
         :return: Returns the resulting hll bin after adding elements from list.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key1', 'key2', 'key3'])
+            ]
+            client.operate(key, ops)
+
+            from aerospike_helpers.operations import expression_operations
+            from aerospike_helpers.operations import operations
             # Add ['key4', 'key5', 'key6'] so that the returned value is ['key1', 'key2', 'key3', 'key4', 'key5',
             # 'key6']
             expr = exp.HLLAdd(None, ['key4', 'key5', 'key6'], 8, 8, exp.HLLBin("d")).compile()
+            expr_to_read = exp.HLLGetCount(exp.HLLBin("d")).compile()
+            ops = [
+                expression_operations.expression_write("d", expr),
+                expression_operations.expression_read("d", expr_to_read)
+            ]
+            _, _, bins = client.operate(key, ops)
+            print(bins["d"])
+
+        .. testoutput::
+
+            6
         """
         self._children = (
             list,
@@ -128,7 +174,9 @@ class HLLGetCount(_BaseExpr):
 
         :return: Integer bin, the estimated number of unique elements in an HLL.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get count from HLL bin "d".
             expr = exp.HLLGetCount(exp.HLLBin("d")).compile()
@@ -148,9 +196,22 @@ class HLLGetUnion(_BaseExpr):
 
         :return: HLL bin representing the set union.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Let values be a list containing HLL objects retrieved from the aerospike database.
             # Find the union of HLL bin "d" and all HLLs in values.
             expr = exp.HLLGetUnion(values, exp.HLLBin("d")).compile()
@@ -173,10 +234,23 @@ class HLLGetUnionCount(_BaseExpr):
 
         :return: Integer bin, estimated number of elements in the set union.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the count of keys in the union of HLL bin "d" and all HLLs in values. (Should be around 15000)
             expr = exp.HLLGetUnionCount(values, exp.HLLBin("d")).compile()
         """
@@ -198,10 +272,23 @@ class HLLGetIntersectCount(_BaseExpr):
 
         :return: Integer bin, estimated number of elements in the set intersection.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the count of keys in the intersection of HLL bin "d" and all HLLs in values. (Should be around 5000)
             expr = exp.HLLGetIntersectCount(values, exp.HLLBin("d")).compile()
         """
@@ -223,10 +310,23 @@ class HLLGetSimilarity(_BaseExpr):
 
         :return: Float bin, estimated similarity between 0.0 and 1.0.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let HLLBin "d" contain keys ['key%s' % str(i) for i in range(10000)].
             # Let values be a list containing one HLL object with keys ['key%s' % str(i) for i in range(5000, 15000)].
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("d", ['key%s' % str(i) for i in range(10000)]),
+                hll_operations.hll_init("e", index_bit_count=8, mh_bit_count=8),
+                hll_operations.hll_add("e", ['key%s' % str(i) for i in range(5000, 15000)])
+            ]
+            client.operate(key, ops)
+
+            _, _, bins = client.get(key)
+            values = [bins["e"]]
+
             # Find the similarity the HLL in values to HLL bin "d". (Should be around 0.33)
             # Note that similarity is defined as intersect(A, B, ...) / union(A, B, ...).
             expr = exp.HLLGetSimilarity(values, exp.HLLBin("d")).compile()
@@ -248,10 +348,28 @@ class HLLDescribe(_BaseExpr):
 
         :return: List bin, a list containing the index_bit_count and minhash_bit_count.
 
-        Example::
+        Example:
+
+        .. testcode::
+
+            # Let HLL bin "d" have the following elements, ['key1', 'key2', 'key3'], index_bits 8, mh_bits 8.
+            ops = [
+                hll_operations.hll_init("d", index_bit_count=8, mh_bit_count=16),
+                hll_operations.hll_add("d", ['key1', 'key2', 'key3'])
+            ]
+            client.operate(key, ops)
 
             # Get description of HLL bin "d".
             expr = exp.HLLDescribe(exp.HLLBin("d")).compile()
+            ops = [
+                expression_operations.expression_read("d", expr),
+            ]
+            _, _, bins = client.operate(key, ops)
+            print(bins["d"])
+
+        .. testoutput::
+
+            [8, 16]
         """
         self._children = (bin if isinstance(bin, _BaseExpr) else HLLBin(bin),)
 
@@ -274,7 +392,9 @@ class HLLMayContain(_BaseExpr):
 
         :return: 1 if bin may contain any key in list, 0 otherwise.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if HLL bin "d" may contain any of the keys in `list`.
             expr = exp.HLLMayContain(["key1", "key2", "key3"], exp.HLLBin("d")).compile()
