@@ -54,11 +54,15 @@
 #define PY_KEYT_KEY 2
 #define PY_KEYT_DIGEST 3
 
-#define PY_EXCEPTION_CODE 0
-#define PY_EXCEPTION_MSG 1
-#define PY_EXCEPTION_FILE 2
-#define PY_EXCEPTION_LINE 3
-#define AS_PY_EXCEPTION_IN_DOUBT 4
+enum {
+    PY_EXCEPTION_CODE = 0,
+    PY_EXCEPTION_MSG,
+    PY_EXCEPTION_FILE,
+    PY_EXCEPTION_LINE,
+    AS_PY_EXCEPTION_IN_DOUBT,
+    PY_EXCEPTION_SUBCODE,
+    EXCEPTION_TUPLE_MEMBER_COUNT
+};
 
 #define CTX_KEY "ctx"
 #define CDT_CTX_ORDER_KEY "order_key"
@@ -2287,12 +2291,15 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
     Py_INCREF(py_in_doubt);
 
-    PyObject *py_err = PyTuple_New(5);
+    PyObject *py_subcode = PyLong_FromLong(err->subcode);
+
+    PyObject *py_err = PyTuple_New(EXCEPTION_TUPLE_MEMBER_COUNT);
     PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
     PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
     PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
     PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
     PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
+    PyTuple_SetItem(py_err, PY_EXCEPTION_SUBCODE, py_subcode);
     *obj = py_err;
 }
 

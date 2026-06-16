@@ -68,8 +68,8 @@ struct exception_def {
 #define NO_ERROR_CODE 0
 
 // Same order as the tuple of args passed into the exception
-const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
-                                           "line", "in_doubt", NULL};
+const char *const aerospike_err_attrs[] = {
+    "code", "msg", "file", "line", "in_doubt", "subcode", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
