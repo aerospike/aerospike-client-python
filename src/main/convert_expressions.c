@@ -483,7 +483,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
         [OP_STRING_CONCAT_LIST] =
             EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
-        [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, NIL)),
+        [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
             EXP_SZ(as_exp_string_replace_all(NULL, "", "", NIL)),
@@ -501,7 +501,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
         // TODO: check space for string. Do for the other ops
         [OP_STRING_REGEX_REPLACE] =
-            EXP_SZ(as_exp_string_regex_replace("", "", 0, NIL))};
+            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
