@@ -4,7 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import operations, string_operations
 from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
@@ -503,7 +503,7 @@ class TestConfigTTL:
         scan = self.client.scan("test", "demo")
         scan.ttl = aerospike.TTL_CLIENT_DEFAULT
         ops = [
-            operations.append("bin", "a")
+            string_operations.append("bin", "a")
         ]
         scan.add_ops(ops)
         job_id = scan.execute_background()
@@ -518,7 +518,7 @@ class TestConfigTTL:
         query = self.client.query("test", "demo")
         query.ttl = aerospike.TTL_CLIENT_DEFAULT
         ops = [
-            operations.append("bin", "a")
+            string_operations.append("bin", "a")
         ]
         query.add_ops(ops)
         job_id = query.execute_background()
