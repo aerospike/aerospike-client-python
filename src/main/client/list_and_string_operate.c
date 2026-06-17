@@ -747,7 +747,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_REGEX_REPLACE:
         success = as_operations_string_regex_replace(
-            ops, bin, ctx_ref, str_attr_value1, str_attr_value2, regex_flags);
+            ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
+            regex_flags);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
