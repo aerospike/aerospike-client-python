@@ -60,7 +60,6 @@ enum {
     PY_EXCEPTION_FILE,
     PY_EXCEPTION_LINE,
     AS_PY_EXCEPTION_IN_DOUBT,
-    PY_EXCEPTION_SUBCODE,
     EXCEPTION_TUPLE_MEMBER_COUNT
 };
 
@@ -2299,7 +2298,6 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
     PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
     PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
-    PyTuple_SetItem(py_err, PY_EXCEPTION_SUBCODE, py_subcode);
     *obj = py_err;
 }
 

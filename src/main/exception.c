@@ -470,9 +470,12 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         goto CHAIN_PREV_EXC_AND_RETURN;
     }
 
-    for (unsigned long i = 0;
-         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
-         i++) {
+    Py_ssize_t tuple_size = PyTuple_Size(py_err_tuple);
+    if (tuple_size == -1) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    for (Py_ssize_t i = 0; i < tuple_size; i++) {
         // Here, we are assuming the number of attrs is the same as the number of tuple members
         PyObject *py_arg = PyTuple_GetItem(py_err_tuple, i);
         if (py_arg == NULL) {
@@ -483,6 +486,17 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         if (retval == -1) {
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
+    }
+
+    PyObject *py_subcode = PyLong_FromUInt32(err->subcode);
+    if (!py_subcode) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    int retval = PyObject_SetAttrString(
+        py_exc_class, aerospike_err_attrs[tuple_size], py_subcode);
+    if (retval == -1) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
     }
 
     // Raise exception
