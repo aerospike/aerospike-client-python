@@ -465,7 +465,7 @@ class TestStringOperations:
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.append(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
 
@@ -486,7 +486,7 @@ class TestStringOperations:
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_concat_list(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.concat_list(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.concat(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
 

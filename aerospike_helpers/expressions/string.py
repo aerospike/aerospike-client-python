@@ -455,8 +455,8 @@ class Prepend(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ConcatList(_BaseExpr):
-    _op = aerospike._OP_STRING_CONCAT_LIST
+class Concat(_BaseExpr):
+    _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
@@ -481,8 +481,8 @@ class Snip(_BaseExpr):
         Args:
 
             {str_policy}
-            start: The index of the codepoint to remove from.
-            end: The index of the codepoint to remove to.
+            start: First codepoint to remove, inclusive.
+            end: One past the last codepoint to remove, exclusive.
             {bin}
 
         Returns:
@@ -732,17 +732,16 @@ class RegexReplace(_BaseExpr):
     _op = aerospike._OP_STRING_REGEX_REPLACE
 
     def __init__(
-            self,
-            policy: StringPolicy,
-            pattern: str,
-            replacement: int,
-            regex_flags: RegexFlags,
-            bin: "TypeBinName"
+        self,
+        policy: StringPolicy,
+        pattern: str,
+        replacement: int,
+        regex_flags: RegexFlags,
+        bin: "TypeBinName"
     ):
         """
         Args:
 
-            {str_policy}
             {pattern}
             {replacement}
             {regex_flags}
@@ -753,7 +752,6 @@ class RegexReplace(_BaseExpr):
             The string in the bin with the value replaced.
         """
         self._fixed = {
-            aerospike._STR_EXP_POLICY_KEY: policy,
             aerospike._STR_EXP_PATTERN_KEY: pattern,
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement,
             aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
@@ -798,8 +796,9 @@ __exp_class_to_op_func = {
     RegexCompare: str_ops.regex_compare,
     Insert: str_ops.insert,
     Overwrite: str_ops.overwrite,
-    Append: str_ops.concat,
-    ConcatList: str_ops.concat_list,
+    Append: str_ops.append,
+    Prepend: str_ops.prepend,
+    Concat: str_ops.concat,
     Snip: str_ops.snip,
     Replace: str_ops.replace,
     ReplaceAll: str_ops.replace_all,

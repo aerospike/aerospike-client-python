@@ -60,17 +60,17 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = None):
+def substr(bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
     """
-    Create string ``substr`` operation from start. If length is :py:obj:`None`,
-    the operation will continue to the end of the string.
-    Negative start indexes count from the end of the string.
+    Create string ``substr`` operation that returns the half-open codepoint range ``[start, end)``.
+        Negative indexes count from the end of the string.
+        If end is :py:obj:`None`, the operation will continue to the end of the string.
 
     Args:
 
         {bin_name}
-        start (int): Starting codepoint index.
-        length (int): Number of codepoints to return.
+        start (int): Starting codepoint index, inclusive.
+        end (int | None): Ending codepoint index, exclusive.
         {ctx}
     """
     op = aerospike._OP_STRING_SUBSTR
@@ -334,9 +334,11 @@ def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: 
     return locals()
 
 
-def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None):
+def append(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None):
     """
-    Create string ``concat`` operation that appends value to the bin.
+    Create string ``append`` operation that appends value to the end of the bin.
+    Unlike :func:`~aerospike_helpers.operations.operations.append`, this string-package operation
+    uses Unicode codepoint semantics and supports string policy and ctx.
 
     Args:
 
@@ -349,7 +351,24 @@ def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None)
     return locals()
 
 
-def concat_list(policy: StringPolicy, bin_name: str, value_list: list[str], ctx: TypeCTX = None):
+def prepend(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None):
+    """
+    Create string ``prepend`` operation that prepend value to the start of the bin.
+    Unlike :func:`~aerospike_helpers.operations.operations.prepend`, this string-package operation
+    uses Unicode codepoint semantics and supports string policy and ctx.
+
+    Args:
+
+        {str_policy}
+        {bin_name}
+        value (str): The value to prepend.
+        {ctx}
+    """
+    op = aerospike._OP_STRING_PREPEND
+    return locals()
+
+
+def concat(policy: StringPolicy, bin_name: str, value_list: list[str], ctx: TypeCTX = None):
     """
     Create string ``concat`` operation that appends each string element in values to
     the bin in order.
@@ -361,11 +380,11 @@ def concat_list(policy: StringPolicy, bin_name: str, value_list: list[str], ctx:
         value_list (str): The list of values to append.
         {ctx}
     """
-    op = aerospike._OP_STRING_CONCAT_LIST
+    op = aerospike._OP_STRING_CONCAT
     return locals()
 
 
-def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
+def snip(policy: StringPolicy, bin_name: str, start: int, end: int, ctx: TypeCTX = None):
     """
     Create string ``snip`` operation that removes codepoints from start to end.
 
@@ -373,9 +392,8 @@ def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None
 
         {str_policy}
         {bin_name}
-        start (int): The index of the codepoint to remove from.
-        end (int | None): The index of the codepoint to remove to. If set to :py:obj:`None`,
-            remove from start through the end of the string.
+        start (int): First codepoint to remove, inclusive.
+        end (int): One past the last codepoint to remove, exclusive.
         {ctx}
     """
     op = aerospike._OP_STRING_SNIP

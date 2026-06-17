@@ -127,11 +127,11 @@ class TestExpressions(TestBaseClass):
             ),
             # TODO: add test case for append and prepend.
             (
-                str_expr.ConcatList(policy=None, values=[NEEDLE], bin=STR_BIN_NAME),
+                str_expr.Concat(policy=None, values=[NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE
             ),
             (
-                str_expr.ConcatList(policy=None, values=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
+                str_expr.Concat(policy=None, values=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE + NEEDLE
             ),
 #            (
