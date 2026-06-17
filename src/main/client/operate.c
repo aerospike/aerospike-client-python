@@ -310,10 +310,6 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-#define DEPRECATED_PREPEND_NAME                                                \
-    "aerospike_helpers.operations.operations.prepend"
-#define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
-
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
                  as_static_pool *static_pool, as_operations *ops, long *op,
@@ -619,17 +615,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
-            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                          DEPRECATION_MESSAGE_TEMPLATE,
-                                          DEPRECATED_APPEND_NAME);
-            if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       DEPRECATION_MESSAGE_TEMPLATE,
-                                       DEPRECATED_APPEND_NAME);
-            }
-
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_append_str(ops, bin, val);
@@ -663,17 +648,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_PREPEND:
         if (PyUnicode_Check(py_value)) {
-            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                          DEPRECATION_MESSAGE_TEMPLATE,
-                                          DEPRECATED_PREPEND_NAME);
-            if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       DEPRECATION_MESSAGE_TEMPLATE,
-                                       DEPRECATED_PREPEND_NAME);
-            }
-
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_prepend_str(ops, bin, val);
