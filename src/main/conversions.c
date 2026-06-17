@@ -2290,8 +2290,6 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
     Py_INCREF(py_in_doubt);
 
-    PyObject *py_subcode = PyLong_FromLong(err->subcode);
-
     PyObject *py_err = PyTuple_New(EXCEPTION_TUPLE_MEMBER_COUNT);
     PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
     PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
