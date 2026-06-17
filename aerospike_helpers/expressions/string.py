@@ -61,12 +61,12 @@ class SubStr(_BaseExpr):
 
     _op = aerospike._OP_STRING_SUBSTR
 
-    def __init__(self, start: int, length: int | None, bin: "TypeBinName"):
+    def __init__(self, start: int, end: int | None, bin: "TypeBinName"):
         """
         Args:
 
-            start: The starting index of the substring.
-            length: The length of the substring.
+            start: Starting codepoint index, inclusive.
+            end: Ending codepoint index, exclusive.
             {bin}
 
         Returns:
@@ -75,7 +75,7 @@ class SubStr(_BaseExpr):
         """
         self._fixed = {
             aerospike._STR_EXP_START_KEY: start,
-            aerospike._STR_EXP_LENGTH_KEY: length
+            aerospike._STR_EXP_END_KEY: end
         }
         self._children = (
             _convert_bin_name_to_expr(bin),
@@ -413,8 +413,8 @@ class Overwrite(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Concat(_BaseExpr):
-    _op = aerospike._OP_STRING_CONCAT
+class Append(_BaseExpr):
+    _op = aerospike._OP_STRING_APPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
@@ -427,6 +427,27 @@ class Concat(_BaseExpr):
         Returns:
 
             The string in the bin with the value appended.
+        """
+        self._fixed = {
+            _Keys.VALUE_KEY: value
+        }
+        self._children = (_convert_bin_name_to_expr(bin),)
+
+
+class Prepend(_BaseExpr):
+    _op = aerospike._OP_STRING_PREPEND
+
+    def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
+        """
+        Args:
+
+            {str_policy}
+            value: The value to prepend.
+            {bin}
+
+        Returns:
+
+            The string in the bin with the value prepended.
         """
         self._fixed = {
             _Keys.VALUE_KEY: value
@@ -732,6 +753,7 @@ class RegexReplace(_BaseExpr):
             The string in the bin with the value replaced.
         """
         self._fixed = {
+            aerospike._STR_EXP_POLICY_KEY: policy,
             aerospike._STR_EXP_PATTERN_KEY: pattern,
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement,
             aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
@@ -776,7 +798,7 @@ __exp_class_to_op_func = {
     RegexCompare: str_ops.regex_compare,
     Insert: str_ops.insert,
     Overwrite: str_ops.overwrite,
-    Concat: str_ops.concat,
+    Append: str_ops.concat,
     ConcatList: str_ops.concat_list,
     Snip: str_ops.snip,
     Replace: str_ops.replace,

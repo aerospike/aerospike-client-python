@@ -345,7 +345,7 @@ def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None)
         value (str): The value to append.
         {ctx}
     """
-    op = aerospike._OP_STRING_CONCAT
+    op = aerospike._OP_STRING_APPEND
     return locals()
 
 

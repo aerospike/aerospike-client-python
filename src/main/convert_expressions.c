@@ -1784,14 +1784,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            bool length_found = false;
-            if (get_optional_int64_t(err, _STR_EXP_LENGTH_KEY,
-                                     temp_expr->pydict, &lval2,
-                                     &length_found) != AEROSPIKE_OK) {
+            bool end_found = false;
+            if (get_optional_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
+                                     &lval2, &end_found) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            if (!length_found) {
+            if (!end_found) {
                 APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
             }
             else {
@@ -1986,8 +1985,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waddress"
             switch (temp_expr->op) {
             case OP_STRING_INSERT:
                 APPEND_ARRAY(1,
@@ -2094,7 +2091,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             }
             break;
-#pragma GCC diagnostic pop
         }
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,

@@ -201,7 +201,6 @@ enum {
 // TODO: can use a macro to define these.
 #define _STR_EXP_START_KEY "start"
 #define _STR_EXP_END_KEY "end"
-#define _STR_EXP_LENGTH_KEY "length"
 #define _STR_EXP_INDEX_KEY "index"
 #define _STR_EXP_NEEDLE_KEY "needle"
 #define _STR_EXP_REPLACEMENT_KEY "replacement"
