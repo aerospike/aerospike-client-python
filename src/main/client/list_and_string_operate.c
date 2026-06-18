@@ -344,7 +344,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_INSERT:
     case OP_STRING_OVERWRITE:
-    case OP_STRING_CONCAT:
     case OP_STRING_REPLACE:
     case OP_STRING_REPLACE_ALL:
     case OP_STRING_PAD_START:
