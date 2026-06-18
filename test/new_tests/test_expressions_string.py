@@ -134,14 +134,6 @@ class TestExpressions(TestBaseClass):
                 str_expr.Concat(policy=None, values=[NEEDLE, NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE + NEEDLE
             ),
-#            (
-#                str_expr.Snip(policy=None, start=START_IDX, bin=STR_BIN_NAME),
-#                EXAMPLE_STR[:START_IDX]
-#            ),
-#            (
-#                str_expr.Snip(policy=None, start=START_IDX, end=None, bin=STR_BIN_NAME),
-#                EXAMPLE_STR[:START_IDX]
-#            ),
             (
                 str_expr.Snip(policy=None, start=START_IDX, end=len(EXAMPLE_STR) - 1, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
