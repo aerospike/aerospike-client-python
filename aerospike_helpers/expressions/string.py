@@ -847,7 +847,7 @@ kwargs = {
 }
 
 for _, cls_value in __all_classes:
-    if cls_value.__module__ != __name__:
+    if cls_value.__module__ != __name__ or cls_value == WriteOp:
         continue
 
     __generate_docstrings_for_all_func_members(cls_value, kwargs)
