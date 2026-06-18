@@ -258,31 +258,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     }
 
     uint64_t length = 0;
-    bool length_found = false;
     switch (operation_code) {
-    case OP_STRING_SUBSTR:
     case OP_STRING_PAD_START:
     case OP_STRING_PAD_END: {
-        const char *length_key = NULL;
-        switch (operation_code) {
-        case OP_STRING_PAD_START:
-        case OP_STRING_PAD_END:
-            length_key = "target_length";
-            break;
-        default:
-            length_key = "length";
-            break;
-        }
-
-        as_status status = get_optional_uint64_t(err, length_key, op_dict,
-                                                 &length, &length_found);
+        as_status status = get_uint64_t(err, "target_length", op_dict, &length);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP_VAL2_ON_ERROR;
-        }
-
-        if (!length_found && operation_code == OP_STRING_PAD_START) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "length argument is required for pad_start");
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -290,6 +270,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     int64_t end = 0;
     switch (operation_code) {
+    case OP_STRING_SUBSTR_RANGE:
     case OP_STRING_SNIP: {
         as_status status = get_int64_t(err, "end", op_dict, &end);
         if (status != AEROSPIKE_OK) {
@@ -349,6 +330,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_PAD_START:
     case OP_STRING_PAD_END:
     case OP_STRING_REGEX_REPLACE:
+    case OP_STRING_APPEND:
+    case OP_STRING_PREPEND:
         switch (operation_code) {
         case OP_STRING_FIND:
         case OP_STRING_CONTAINS:
@@ -372,6 +355,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         case OP_STRING_INSERT:
         case OP_STRING_OVERWRITE:
+        case OP_STRING_APPEND:
+        case OP_STRING_PREPEND:
             str_attr_key = "value";
             break;
         case OP_STRING_PAD_START:
@@ -611,14 +596,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_strlen(ops, bin, ctx_ref);
         break;
     case OP_STRING_SUBSTR:
-        if (!length_found) {
-            success = as_operations_string_substr(ops, bin, ctx_ref, start);
-        }
-        else {
-            success = as_operations_string_substr_range(ops, bin, ctx_ref,
-                                                        start, length);
-        }
+        success = as_operations_string_substr(ops, bin, ctx_ref, start);
         break;
+    case OP_STRING_SUBSTR_RANGE:
+        success =
+            as_operations_string_substr_range(ops, bin, ctx_ref, start, length);
     case OP_STRING_CHAR_AT:
         success = as_operations_string_char_at(ops, bin, ctx_ref, index);
         break;
@@ -740,6 +722,14 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_regex_replace(
             ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
             regex_flags);
+        break;
+    case OP_STRING_APPEND:
+        success = as_operations_string_append(ops, bin, ctx_ref, &str_policy,
+                                              str_attr_value1);
+        break;
+    case OP_STRING_PREPEND:
+        success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
+                                               str_attr_value1);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
