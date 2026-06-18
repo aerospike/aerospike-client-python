@@ -199,7 +199,6 @@ enum {
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
 
-// TODO: can use a macro to define these.
 #define _STR_EXP_START_KEY "start"
 #define _STR_EXP_END_KEY "end"
 #define _STR_EXP_INDEX_KEY "index"
