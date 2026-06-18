@@ -61,19 +61,20 @@ class TestStringOperations:
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_substr(self, bin_name: str, kwargs_with_ctx: dict, op: dict):
+        kwargs = kwargs_with_ctx.copy()
         if op == str_ops.substr_range:
-            kwargs_with_ctx |= {"end": 2}
+            kwargs = kwargs_with_ctx | {"end": 2}
 
         ops = [
-            op(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
+            op(bin_name=bin_name, start=START_IDX, **kwargs)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "end" not in kwargs_with_ctx:
+            if "end" not in kwargs:
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
             else:
-                end = kwargs_with_ctx["end"]
+                end = kwargs["end"]
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + end)]
 
     @pytest.mark.parametrize(
