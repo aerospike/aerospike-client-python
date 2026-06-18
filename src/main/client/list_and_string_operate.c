@@ -380,7 +380,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         }
 
-        // TODO: review what unicodeStrVector is for.
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
                     &str_attr_value1, is_str_attr_optional) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
