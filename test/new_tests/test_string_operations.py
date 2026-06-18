@@ -24,11 +24,11 @@ class TestStringOperations:
 
         self.as_connection.remove(KEY)
 
-    # TODO: ctx can also be None.
     root_level_and_nested_str = pytest.mark.parametrize(
         "bin_name, kwargs_with_ctx",
         [
             pytest.param(STR_BIN_NAME, {}, id="no_ctx_arg"),
+            pytest.param(STR_BIN_NAME, {"ctx": None}, id="ctx_is_none"),
             pytest.param(
                 NESTED_STR_BIN_NAME,
                 {
