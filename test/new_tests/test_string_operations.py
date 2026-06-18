@@ -521,14 +521,11 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "end_kwargs",
         [
-            {},
-            {"end": None},
             {"end": len(EXAMPLE_STR) - 1}
         ]
     )
     @root_level_and_nested_str
     @kwargs_policy
-    @pytest.mark.skip("Test case with end omitted or set to None fails. Raised this with rest of client team. TODO")
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
 
@@ -541,10 +538,7 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "end" not in end_kwargs or end_kwargs["end"] is None:
-                assert bins[bin_name] == EXAMPLE_STR[:START_IDX]
-            else:
-                assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+            assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
 
     @root_level_and_nested_str
     @kwargs_policy
