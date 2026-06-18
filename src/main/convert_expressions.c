@@ -1958,7 +1958,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             switch (temp_expr->op) {
             case OP_STRING_INSERT:
             case OP_STRING_OVERWRITE:
-            case OP_STRING_APPEND: {
+            case OP_STRING_APPEND:
+            case OP_STRING_PREPEND: {
                 as_status status = get_str(
                     err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
                 if (status != AEROSPIKE_OK) {
