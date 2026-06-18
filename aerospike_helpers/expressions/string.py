@@ -31,8 +31,6 @@ import sys
 
 TypeBinName = _BaseExpr | str
 
-# TODO: use decorator to automatically convert each class's constructor bin from a string to StrBin
-
 
 def _convert_bin_name_to_expr(bin: "TypeBinName"):
     return bin if isinstance(bin, _BaseExpr) else StrBin(bin)
@@ -61,7 +59,30 @@ class SubStr(_BaseExpr):
 
     _op = aerospike._OP_STRING_SUBSTR
 
-    def __init__(self, start: int, end: int | None, bin: "TypeBinName"):
+    def __init__(self, start: int, bin: "TypeBinName"):
+        """
+        Args:
+
+            start: The starting index of the substring.
+            {bin}
+
+        Returns:
+
+            The substring of the string in the bin.
+        """
+        self._fixed = {
+            aerospike._STR_EXP_START_KEY: start,
+        }
+        self._children = (
+            _convert_bin_name_to_expr(bin),
+        )
+
+
+class SubStrRange(_BaseExpr):
+
+    _op = aerospike._OP_STRING_SUBSTR_RANGE
+
+    def __init__(self, start: int, end: int, bin: "TypeBinName"):
         """
         Args:
 
@@ -306,11 +327,26 @@ class ToBlob(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-# TODO: move optional args for the classes above.
 class Split(_BaseExpr):
     _op = aerospike._OP_STRING_SPLIT
 
-    def __init__(self, bin: "TypeBinName", separator: str | None = None):
+    def __init__(self, bin: "TypeBinName"):
+        """
+        Args:
+
+            {bin}
+
+        Returns:
+
+            The list of strings in the bin.
+        """
+        self._children = (_convert_bin_name_to_expr(bin),)
+
+
+class SplitSeparator(_BaseExpr):
+    _op = aerospike._OP_STRING_SPLIT_SEPARATOR
+
+    def __init__(self, bin: "TypeBinName", separator: str):
         """
         Args:
 
@@ -803,6 +839,7 @@ class ToString(WriteOp):
 __exp_class_to_op_func = {
     StrLen: str_ops.strlen,
     SubStr: str_ops.substr,
+    SubStrRange: str_ops.substr_range,
     CharAt: str_ops.char_at,
     Find: str_ops.find,
     Contains: str_ops.contains,
@@ -816,6 +853,7 @@ __exp_class_to_op_func = {
     IsLower: str_ops.is_lower,
     ToBlob: str_ops.to_blob,
     Split: str_ops.split,
+    SplitSeparator: str_ops.split_separator,
     Base64Decode: str_ops.base64_decode,
     RegexCompare: str_ops.regex_compare,
     Insert: str_ops.insert,

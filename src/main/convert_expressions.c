@@ -470,8 +470,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_IS_UPPER] = EXP_SZ(as_exp_string_is_upper(NIL)),
         [OP_STRING_IS_LOWER] = EXP_SZ(as_exp_string_is_lower(NIL)),
         [OP_STRING_TO_BLOB] = EXP_SZ(as_exp_string_to_blob(NIL)),
-        // TODO: overload
         [OP_STRING_SPLIT] = EXP_SZ(as_exp_string_split(NIL)),
+        [OP_STRING_SPLIT_SEPARATOR] =
+            EXP_SZ(as_exp_string_split_separator("", NIL)),
         [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
         // TODO: overload. check space for string
         [OP_STRING_REGEX_COMPARE] =
@@ -1880,21 +1881,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_TO_BLOB:
             APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
             break;
-        case OP_STRING_SPLIT: {
+        case OP_STRING_SPLIT:
+            APPEND_ARRAY(1, as_exp_string_split(NIL));
+            break;
+        case OP_STRING_SPLIT_SEPARATOR: {
             char *separator = NULL;
             as_status status =
                 get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
-                        &separator, true);
+                        &separator, false);
             if (status != AEROSPIKE_OK) {
                 return status;
             }
 
-            if (separator == NULL) {
-                APPEND_ARRAY(1, as_exp_string_split(NIL));
-            }
-            else {
-                APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
-            }
+            APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
             break;
         }
         case OP_STRING_B64_DECODE:

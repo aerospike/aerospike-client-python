@@ -156,8 +156,7 @@ class TestExpressions(TestBaseClass):
             ),
             (
                 str_expr.CaseFold(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-                # TODO: dynamically get expected result
-                "ss"
+                MULTIBYTE_CODEPOINT.casefold()
             ),
             (
                 str_expr.NormalizeNFC(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),

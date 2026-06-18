@@ -60,20 +60,34 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def substr(bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
+def substr(bin_name: str, start: int, ctx: TypeCTX = None):
+    """
+    Create string ``substr`` operation from start to the end of the string.
+        Negative indexes count from the end of the string.
+
+    Args:
+
+        {bin_name}
+        start (int): Starting codepoint index.
+        {ctx}
+    """
+    op = aerospike._OP_STRING_SUBSTR
+    return locals()
+
+
+def substr_range(bin_name: str, start: int, end: int, ctx: TypeCTX = None):
     """
     Create string ``substr`` operation that returns the half-open codepoint range ``[start, end)``.
         Negative indexes count from the end of the string.
-        If end is :py:obj:`None`, the operation will continue to the end of the string.
 
     Args:
 
         {bin_name}
         start (int): Starting codepoint index, inclusive.
-        end (int | None): Ending codepoint index, exclusive.
+        end (int): Ending codepoint index, exclusive.
         {ctx}
     """
-    op = aerospike._OP_STRING_SUBSTR
+    op = aerospike._OP_STRING_SUBSTR_RANGE
     return locals()
 
 
@@ -252,20 +266,35 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-# TODO: all values with default of None need to be marked with type optional
-def split(bin_name: str, separator: str | None = None, ctx: TypeCTX = None):
+def split(bin_name: str, ctx: TypeCTX = None):
     """
-    Create string ``split`` operation that splits by Unicode codepoint.
+    Create string ``split`` operation that splits by Unicode codepoint. Each codepoint
+    becomes one string element in the returned list.
 
     Args:
 
         {bin_name}
-        separator (str): The separator to split by. If this is :py:obj:`None`, Each codepoint
-            becomes one string element in the returned list. If the separator is not found,
-            the server returns a singleton list containing the whole string.
         {ctx}
     """
     op = aerospike._OP_STRING_SPLIT
+    return locals()
+
+
+# We define a separate function for this op instead of overloading the above one
+# since the expressions as_exp_string_split and as_exp_string_split_separator take up different
+# sizes.
+def split_separator(bin_name: str, separator: str, ctx: TypeCTX = None):
+    """
+    Create string split operation that splits by separator. If separator is not
+    found, the server returns a singleton list containing the whole string.
+
+    Args:
+
+        {bin_name}
+        separator (str): The separator to split by.
+        {ctx}
+    """
+    op = aerospike._OP_STRING_SPLIT_SEPARATOR
     return locals()
 
 
@@ -462,7 +491,6 @@ def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
     return locals()
 
 
-# TODO: read up how this works
 def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``case_fold`` operation that applies locale-independent case folding

@@ -604,7 +604,7 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
 
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
