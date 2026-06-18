@@ -28,8 +28,8 @@ class TestExpressions(TestBaseClass):
         "expr, expected_result",
         [
             (str_expr.StrLen(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
-            (str_expr.SubStr(start=START_IDX, length=None, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:]),
-            (str_expr.SubStr(start=START_IDX, length=START_IDX + 2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
+            (str_expr.SubStr(start=START_IDX, end=None, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:]),
+            (str_expr.SubStr(start=START_IDX, end=START_IDX + 2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
             (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX]),
             (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), EXAMPLE_STR[-1]),
             (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), EXAMPLE_STR.find(NEEDLE)),
