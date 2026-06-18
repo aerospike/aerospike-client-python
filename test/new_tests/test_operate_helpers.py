@@ -1005,7 +1005,7 @@ class TestOperate(object):
         """
         Invoke operate() with empty string key
         """
-        llist = [choose_server_compat_str_prepend"name", "ram")]
+        llist = [choose_server_compat_str_prepend("name", "ram")]
         with pytest.raises(e.ParamError):
             self.as_connection.operate("", llist)
 
@@ -1015,7 +1015,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 180000}
-        llist = [choose_server_compat_str_prepend"name", "ram")]
+        llist = [choose_server_compat_str_prepend("name", "ram")]
         with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")
 
@@ -1024,7 +1024,7 @@ class TestOperate(object):
         Invoke operate() with policy is string
         """
         key = ("test", "demo", 1)
-        llist = [choose_server_compat_str_prepend"name", "ram")]
+        llist = [choose_server_compat_str_prepend("name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
         assert excinfo.value.code == -2
@@ -1033,7 +1033,7 @@ class TestOperate(object):
         """
         Invoke operate() with key is none
         """
-        llist = [choose_server_compat_str_prepend"name", "ram")]
+        llist = [choose_server_compat_str_prepend("name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
         assert excinfo.value.code == -2
@@ -1055,7 +1055,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
-        llist = [choose_server_compat_str_prepend"name", "ram")]
+        llist = [choose_server_compat_str_prepend("name", "ram")]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)
