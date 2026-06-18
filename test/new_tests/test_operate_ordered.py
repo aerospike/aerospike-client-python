@@ -554,7 +554,7 @@ class TestOperateOrdered(object):
         max_length = "a" * 21
 
         llist = [
-            string_operations.prepend("name", "ram")
+            string_operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
         ]
 
