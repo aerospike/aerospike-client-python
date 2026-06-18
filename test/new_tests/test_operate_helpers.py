@@ -5,7 +5,7 @@ from aerospike_helpers.operations import list_operations, operations, string_ope
 
 import aerospike
 from aerospike import exception as e
-from .conftest import choose_server_compat_str_append
+from .conftest import choose_server_compat_str_append, choose_server_compat_str_prepend
 import warnings
 
 # OPERATIONS
@@ -130,7 +130,7 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", 1),
-                [string_operations.prepend(None, "name", "ram"), operations.increment("age", 3), operations.read("name")],
+                [choose_server_compat_str_prepend(None, "name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
             ),
             (
@@ -145,7 +145,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", 1),  # with_bin_bytearray
-                [string_operations.prepend(None, "asd[;asjk", "ram"), operations.read("asd[;asjk")],
+                [choose_server_compat_str_prepend(None, "asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
             ),
             (
@@ -411,7 +411,7 @@ class TestOperate(object):
         Invoke operate() with non-existent key
         """
         new_key = ("test", "demo", "key11")
-        llist = [string_operations.prepend("loc", "mumbai"), operations.read("loc")]
+        llist = [choose_server_compat_str_prepend("loc", "mumbai"), operations.read("loc")]
         _, _, bins = self.as_connection.operate(new_key, llist)
 
         assert bins == {"loc": "mumbai"}
@@ -560,7 +560,7 @@ class TestOperate(object):
 
         max_length = "a" * 21
 
-        llist = [string_operations.prepend("name", "ram"), operations.increment(max_length, 3)]
+        llist = [choose_server_compat_str_prepend("name", "ram"), operations.increment(max_length, 3)]
 
         TestOperate.client_no_typechecks.operate(key, llist)
 
@@ -995,7 +995,7 @@ class TestOperate(object):
 
         max_length = "a" * 21
 
-        llist = [string_operations.prepend("name", "ram"), operations.increment(max_length, 3)]
+        llist = [choose_server_compat_str_prepend("name", "ram"), operations.increment(max_length, 3)]
 
         with pytest.raises(e.BinNameError) as excinfo:
             self.as_connection.operate(key, llist)
@@ -1005,7 +1005,7 @@ class TestOperate(object):
         """
         Invoke operate() with empty string key
         """
-        llist = [string_operations.prepend("name", "ram")]
+        llist = [choose_server_compat_str_prepend"name", "ram")]
         with pytest.raises(e.ParamError):
             self.as_connection.operate("", llist)
 
@@ -1015,7 +1015,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 180000}
-        llist = [string_operations.prepend("name", "ram")]
+        llist = [choose_server_compat_str_prepend"name", "ram")]
         with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")
 
@@ -1024,7 +1024,7 @@ class TestOperate(object):
         Invoke operate() with policy is string
         """
         key = ("test", "demo", 1)
-        llist = [string_operations.prepend("name", "ram")]
+        llist = [choose_server_compat_str_prepend"name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
         assert excinfo.value.code == -2
@@ -1033,7 +1033,7 @@ class TestOperate(object):
         """
         Invoke operate() with key is none
         """
-        llist = [string_operations.prepend("name", "ram")]
+        llist = [choose_server_compat_str_prepend"name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
         assert excinfo.value.code == -2
@@ -1055,7 +1055,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
-        llist = [string_operations.prepend("name", "ram")]
+        llist = [choose_server_compat_str_prepend"name", "ram")]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)

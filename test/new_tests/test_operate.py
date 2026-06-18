@@ -5,7 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import string_operations
-from .conftest import choose_server_compat_str_append
+from .conftest import choose_server_compat_str_append, choose_server_compat_str_prepend
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -124,7 +124,7 @@ class TestOperate(object):
             (
                 ("test", "demo", 1),
                 [
-                    string_operations.prepend("name", "ram"),
+                    choose_server_compat_str_prepend("name", "ram"),
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
@@ -466,7 +466,7 @@ class TestOperate(object):
         """
         key1 = ("test", "demo", "key11")
         llist = [
-            string_operations.prepend("loc", "mumbai"),
+            choose_server_compat_str_prepend("loc", "mumbai"),
             {"op": aerospike.OPERATOR_READ, "bin": "loc"},
         ]
         _, _, bins = self.as_connection.operate(key1, llist)
@@ -524,7 +524,7 @@ class TestOperate(object):
         client1 = aerospike.client(config)
         client1.close()
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -684,7 +684,7 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
         ]
 
@@ -701,7 +701,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1088,7 +1088,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1108,7 +1108,7 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1123,7 +1123,7 @@ class TestOperate(object):
         Invoke operate() with empty string key
         """
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate("", llist)
@@ -1136,7 +1136,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            string_operations.prepend("name", "ram")
+            choose_server_compat_str_prepend("name", "ram")
         ]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate(key, llist, {}, policy, "")
@@ -1149,7 +1149,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [
-            string_operations.prepend("name", "ram")
+            choose_server_compat_str_prepend("name", "ram")
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
@@ -1160,7 +1160,7 @@ class TestOperate(object):
         Invoke operate() with key is none
         """
         llist = [
-            string_operations.prepend("name", "ram")
+            choose_server_compat_str_prepend("name", "ram")
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
@@ -1233,7 +1233,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1249,7 +1249,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            string_operations.prepend("name", "ram"),
+            choose_server_compat_str_prepend("name", "ram"),
             choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},

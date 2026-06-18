@@ -360,3 +360,9 @@ def choose_server_compat_str_append(bin: str, val: str):
         return operations.append(bin, val)
     else:
         return string_operations.append(bin, val)
+
+def choose_server_compat_str_prepend(bin: str, val: str):
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        return operations.prepend(bin, val)
+    else:
+        return string_operations.prepend(bin, val)
