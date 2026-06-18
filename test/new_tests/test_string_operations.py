@@ -231,7 +231,6 @@ class TestStringOperations:
 
             assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
-    # TODO: add case for multi-byte unicode codepoints
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_byte_length(self, bin_name: str, kwargs_with_ctx: dict):
@@ -242,6 +241,16 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == len(EXAMPLE_STR)
+
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_byte_length_for_multibyte_codepoint(self):
+        ops = [
+            str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == len(BINS[MULTIBYTE_CODEPOINT_BIN_NAME].encode('utf-8'))
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
