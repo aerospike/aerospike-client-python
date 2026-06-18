@@ -757,6 +757,7 @@ class TestStringOperations:
             (STR_BIN_NAME, RegexFlags.GLOBAL, "asdf", NEW_STR * 2)
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_flags(self, bin_name: str, regex_flags: RegexFlags, pattern: str, expected_results: str):
         ops = [
             str_ops.regex_replace(bin_name=bin_name, pattern=pattern, replacement=NEW_STR, regex_flags=regex_flags)
