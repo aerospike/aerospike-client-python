@@ -130,7 +130,7 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", 1),
-                [choose_server_compat_str_prepend(None, "name", "ram"), operations.increment("age", 3), operations.read("name")],
+                [choose_server_compat_str_prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
             ),
             (
@@ -145,7 +145,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", 1),  # with_bin_bytearray
-                [choose_server_compat_str_prepend(None, "asd[;asjk", "ram"), operations.read("asd[;asjk")],
+                [choose_server_compat_str_prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
             ),
             (
