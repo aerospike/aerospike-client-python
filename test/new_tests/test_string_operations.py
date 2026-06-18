@@ -52,31 +52,28 @@ class TestStringOperations:
             assert bins[bin_name] == len(EXAMPLE_STR)
 
     @pytest.mark.parametrize(
-        "end_kwargs",
+        "op",
         [
-            {},
-            {
-                "end": None
-            },
-            {
-                "end": 2
-            }
+            str_ops.substr,
+            str_ops.substr_range
         ]
     )
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_substr(self, end_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx = kwargs_with_ctx | end_kwargs
+    def test_substr(self, bin_name: str, kwargs_with_ctx: dict, op: dict):
+        if op == str_ops.substr_range:
+            kwargs_with_ctx |= {"end": 2}
+
         ops = [
-            str_ops.substr(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
+            op(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "end" not in end_kwargs or end_kwargs["end"] is None:
+            if "end" not in kwargs_with_ctx:
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
             else:
-                end = end_kwargs["end"]
+                end = kwargs_with_ctx["end"]
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + end)]
 
     @pytest.mark.parametrize(

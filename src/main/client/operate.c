@@ -220,7 +220,7 @@ static inline bool is_list_or_string_op(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
-        (op >= OP_STRING_STRLEN && op <= OP_STRING_REGEX_REPLACE));
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_PREPEND));
 }
 
 static inline bool isNewMapOp(int op)
