@@ -38,8 +38,9 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+        :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+        containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -60,6 +61,8 @@ class BatchRecord:
 class Write(BatchRecord):
     """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -78,11 +81,13 @@ class Write(BatchRecord):
         self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Write
 
             bin_name = "a"
@@ -111,6 +116,9 @@ class Write(BatchRecord):
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
+        .. deprecated:: 19.1.0 Deprecated the ``"ttl"`` option in the ``meta`` parameter. Use the policy parameter in a
+            :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
+
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -121,7 +129,7 @@ class Read(BatchRecord):
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
             meta (dict): the metadata to set for this command
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
+            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
 
@@ -134,11 +142,13 @@ class Read(BatchRecord):
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Read to read bin "a" from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Read
 
             bin_name = "a"
@@ -186,12 +196,15 @@ class Apply(BatchRecord):
         self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
             # Assume that "test_func" takes a bin name string as an argument.
             # Assume the appropriate UDF module has already been registered.
             import aerospike_helpers.operations as op
+            from aerospike_helpers.batch.records import Apply
 
 
             module = "my_lua"
@@ -234,7 +247,9 @@ class Remove(BatchRecord):
 
     def __init__(self, key: tuple, policy: "TypeBatchPolicyRemove" = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Remove to remove the record.
             import aerospike_helpers.operations as op
@@ -245,7 +260,7 @@ class Remove(BatchRecord):
             user_key = 1
             key = (namespace, set, user_key)
 
-            br = Remove(key, ops)
+            br = Remove(key)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
@@ -272,7 +287,9 @@ class BatchRecords:
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             import aerospike
             import aerospike_helpers.operations.operations as op
@@ -322,12 +339,15 @@ class BatchRecords:
             for br in brs.batch_records:
                 print(br.result)
                 print(br.record)
-            # 0
-            # (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0
-            # (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
-            # 0
-            # (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 1, bytearray(b'...')), {...}, {})
+            0
+            (('test', 'demo', 2, bytearray(b'...')), {...}, {'id': 100})
+            0
+            (('test', 'demo', 3, bytearray(b'...')), {...}, {'id': 1})
         """
 
         if batch_records is None:

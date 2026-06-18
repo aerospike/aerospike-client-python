@@ -87,23 +87,23 @@ try:
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-     
+
     try:
 
         policy = {}
         user = "foo-example"
         roles = ["user-admin", "read"]
         roles_size = len(roles)
-    	
+
         client.admin_revoke_roles(user, roles, policy)
-        
+
         print("OK, roles revoked from 1 user")
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
         print("In case of invalid user first create user using create_user.py")
         exitCode = 2
-    
+
     # ----------------------------------------------------------------------------
     # Close Connection to Cluster
     # ----------------------------------------------------------------------------

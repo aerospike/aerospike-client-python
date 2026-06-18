@@ -104,28 +104,19 @@ struct module_constant_name_to_value {
 
 #define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
     macro_name_without_prefix)                                                 \
-    {                                                                          \
-        #macro_name_without_prefix,                                            \
-            .value.integer = AS_##macro_name_without_prefix                    \
-    }
+    {#macro_name_without_prefix,                                               \
+     .value.integer = AS_##macro_name_without_prefix}
 
 #define STRINGIFY(X) #X
 
 #define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
-    {                                                                          \
-        STRINGIFY(_##macro_name_without_prefix),                               \
-            .value.integer = macro_name_without_prefix                         \
-    }
+    {STRINGIFY(_##macro_name_without_prefix),                                  \
+     .value.integer = macro_name_without_prefix}
 
-#define EXPOSE_MACRO(macro_name)                                               \
-    {                                                                          \
-        #macro_name, .value.integer = macro_name                               \
-    }
+#define EXPOSE_MACRO(macro_name) {#macro_name, .value.integer = macro_name}
 
 #define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
-    {                                                                          \
-        #macro_name, .is_str_value = true, .value.string = macro_name          \
-    }
+    {#macro_name, .is_str_value = true, .value.string = macro_name}
 
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
@@ -456,9 +447,11 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_INDEX", .value.integer = AS_CDT_CTX_MAP_INDEX},
     {"CDT_CTX_MAP_RANK", .value.integer = AS_CDT_CTX_MAP_RANK},
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_MAP_KEYS_IN),
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
     EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
+    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_AND),
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
@@ -525,7 +518,7 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_QUERY_DURATION_LONG_RELAX_AP},
     {"QUERY_DURATION_SHORT", .value.integer = AS_QUERY_DURATION_SHORT},
 
-    {"LOG_LEVEL_OFF", .value.integer = -1},
+    {"LOG_LEVEL_OFF", .value.integer = LOG_LEVEL_OFF},
     {"LOG_LEVEL_ERROR", .value.integer = AS_LOG_LEVEL_ERROR},
     {"LOG_LEVEL_WARN", .value.integer = AS_LOG_LEVEL_WARN},
     {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
@@ -594,7 +587,11 @@ static struct module_constant_name_to_value module_constants[] = {
     // so we define unique ones in the Python client code
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
-    EXPOSE_MACRO(_AS_EXP_CODE_RESULT_REMOVE),
+
+    EXPOSE_MACRO(_AS_EXP_CODE_REMOVE_RESULT),
+    EXPOSE_MACRO(_AS_EXP_CODE_IN_LIST),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_KEYS_IN),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_VALUES_IN),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
@@ -670,7 +667,9 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "batch_parent_write", "info", "admin", "txn_verify",
                          "txn_roll", "total_timeout", "auth_mode",
                          "login_timeout_ms", "key", "exists", "max_retries",
-                         "replica", "commit_level", "metrics", NULL)
+                         "replica", "commit_level", "metrics", "read_mode_ap",
+                         "max_threads", "thread_pool_size", "socket_timeout",
+                         NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",
@@ -800,10 +799,7 @@ struct py_set_name_to_str_list {
     const char **valid_keys;
 };
 
-#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
-    {                                                                          \
-        &py_##array_name, array_name                                           \
-    }
+#define PY_SET_NAME_TO_STR_LIST(array_name) {&py_##array_name, array_name}
 
 static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),

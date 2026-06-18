@@ -20,9 +20,12 @@ In the Python client, Aerospike expressions are built using a series of classes 
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
 such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
-while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
+while passing them other expressions and constants as arguments, and finally calling the
+:meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
 
-Example::
+Example:
+
+.. testcode::
 
     # See if integer bin "bin_name" contains a value equal to 10.
     from aerospike_helpers import expressions as exp
@@ -156,7 +159,14 @@ The following documentation uses type aliases that map to standard Python types.
 
 .. note:: Requires server version >= 5.2.0
 
-Assume all in-line examples run this code beforehand::
+Assume all in-line examples run this code beforehand:
+
+.. testsetup::
+
+    import aerospike
+    import aerospike_helpers.expressions as exp
+
+.. code-block:: Python
 
     import aerospike
     import aerospike_helpers.expressions as exp
@@ -168,6 +178,7 @@ aerospike\_helpers\.expressions\.base module
     :members:
     :special-members:
     :show-inheritance:
+    :private-members: _Key
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------
@@ -215,9 +226,12 @@ aerospike\_helpers\.expressions\.bitwise_operators module
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
-.. automodule:: aerospike_helpers.expressions.resources
+.. autodata:: aerospike_helpers.expressions.resources.TypeExpression
 
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+.. autoclass:: aerospike_helpers.expressions.resources.ResultType
+  :members:
+  :undoc-members:
+
+.. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
+
+.. automethod:: aerospike_helpers.expressions.resources._BaseExpr.compile

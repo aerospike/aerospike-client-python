@@ -17,7 +17,9 @@
 Helper functions to generate complex data type context (cdt_ctx) objects for use with operations on nested CDTs (list,
 map, etc).
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as ex
@@ -51,7 +53,6 @@ Example::
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 200}
 
     # Example 2: add a new person and get their rating of Facebook
     cindy = {
@@ -76,11 +77,11 @@ Example::
 
     _, _, result = client.operate(key, ops)
     print(result)
-    # {'users': 4}
 
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
+    ctx_list_index = [cdt_ctx.cdt_ctx_list_index(0)]
     bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
 
     r = []
@@ -100,9 +101,29 @@ Example::
     # Cleanup
     client.remove(key)
     client.close()
+
+.. testoutput::
+
+    {'users': 200}
+    {'users': 4}
+
+.. _path_expressions_contexts:
+
+Path Expressions Contexts
+-------------------------
+
+These :py:class:`_cdt_ctx` methods are meant to be used with path expressions:
+
+- :py:meth:`cdt_ctx_all_children`
+- :py:meth:`cdt_ctx_all_children_with_filter`
+- :py:meth:`cdt_ctx_map_keys_in`
+- :py:meth:`cdt_ctx_and_filter`
 """
 import aerospike
 
+# Somehow sphinx-autodoc-typehints isn't setting TYPE_CHECKING to true, so there's a
+# NameError when using Any
+from typing import Any
 
 def index_type_string(index_type):
     """
@@ -287,7 +308,7 @@ def cdt_ctx_map_value(value):
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_VALUE, value=value)
 
 
-def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
+def cdt_ctx_map_key_create(key: Any, order: int = 0) -> _cdt_ctx:
     """
     Create a map with the given sort order at the given key.
 
@@ -300,6 +321,8 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
+
+# Path expressions
 
 def cdt_ctx_all_children() -> _cdt_ctx:
     """
@@ -326,3 +349,48 @@ def cdt_ctx_all_children_with_filter(expression: "TypeExpression") -> _cdt_ctx:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
+
+def cdt_ctx_and_filter(expression: "TypeExpression") -> _cdt_ctx:
+    """
+    Add a boolean expression filter AND-combined with a previous :meth:`cdt_ctx_map_keys_in`.
+
+    This applies the expression at the same level as the previous path context.
+
+    Restrictions:
+
+    Only one :meth:`cdt_ctx_and_filter` is allowed per context level. Multiple :meth:`cdt_ctx_and_filter`
+    calls cannot be chained. To combine multiple conditions, use :class:`~aerospike_helpers.expressions.base.And` within
+    a single :meth:`cdt_ctx_and_filter`.
+
+    The preceding context entry must not be an expression type (i.e. :meth:`cdt_ctx_and_filter`
+    cannot follow :meth:`cdt_ctx_all_children_with_filter` or :meth:`cdt_ctx_all_children`).
+
+    :meth:`cdt_ctx_and_filter` cannot be the first entry in the context chain.
+
+    Args:
+        expression: Compiled expression. This expression must return a boolean.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_AND | aerospike._AS_CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_FILTER_EXPR_KEY: expression})
+
+def cdt_ctx_map_keys_in(keys: list):
+    """
+    Restrict map context to the given list of keys, provided they exist.
+
+    For example, if a map ``{"A": 1, "B": 2, "C": 3}`` exists, and you pass
+    keys ``["A", "C", "D"]`` in as the list of keys, the result will only
+    include ``{"A": 1, "C": 3}``, since element "D" does not exist in the map.
+
+    This can be followed by :meth:`cdt_ctx_and_filter` to filter out the remaining map entries.
+
+    This can only be used by path expressions.
+
+    Args:
+        keys (list): The keys to look for in the map.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike._AS_CDT_CTX_MAP_KEYS_IN, value=keys)
