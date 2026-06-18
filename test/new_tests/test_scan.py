@@ -4,7 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
-from aerospike_helpers.operations import string_operations
+from aerospike_helpers.operations import string_operations, operations
 from .as_status_codes import AerospikeStatus
 
 import aerospike
@@ -24,7 +24,7 @@ class TestScan(TestBaseClass):
         key = ("test", "demo", 122)
         self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
         llist = [
-            string_operations.append(self.bytearray_bin, value="john")
+            operations.write("asd;adk", "john")
         ]
         # Creates a record with the key 122, with one bytearray key.
         as_connection.operate(key, llist)
