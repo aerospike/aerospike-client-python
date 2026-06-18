@@ -63,7 +63,7 @@ class TestStringOperations:
     def test_substr(self, bin_name: str, kwargs_with_ctx: dict, op: dict):
         kwargs = kwargs_with_ctx.copy()
         if op == str_ops.substr_range:
-            kwargs = kwargs_with_ctx | {"end": 2}
+            kwargs = kwargs_with_ctx | {"end": START_IDX + 2}
 
         ops = [
             op(bin_name=bin_name, start=START_IDX, **kwargs)
@@ -75,7 +75,7 @@ class TestStringOperations:
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
             else:
                 end = kwargs["end"]
-                assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + end)]
+                assert bins[bin_name] == EXAMPLE_STR[START_IDX:end]
 
     @pytest.mark.parametrize(
         "index",
@@ -355,7 +355,7 @@ class TestStringOperations:
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_split_with_separator(self, separator: str):
         ops = [
-            str_ops.split(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
+            str_ops.split_separator(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
         ]
 
         with self.expected_context_for_pos_tests:
