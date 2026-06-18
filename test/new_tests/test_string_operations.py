@@ -52,32 +52,30 @@ class TestStringOperations:
             assert bins[bin_name] == len(EXAMPLE_STR)
 
     @pytest.mark.parametrize(
-        "end_kwargs",
+        "op",
         [
-            {},
-            {
-                "end": None
-            },
-            {
-                "end": 2
-            }
+            str_ops.substr,
+            str_ops.substr_range
         ]
     )
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_substr(self, end_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx = kwargs_with_ctx | end_kwargs
+    def test_substr(self, bin_name: str, kwargs_with_ctx: dict, op: dict):
+        kwargs = kwargs_with_ctx.copy()
+        if op == str_ops.substr_range:
+            kwargs = kwargs_with_ctx | {"end": START_IDX + 2}
+
         ops = [
-            str_ops.substr(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
+            op(bin_name=bin_name, start=START_IDX, **kwargs)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "end" not in end_kwargs or end_kwargs["end"] is None:
+            if "end" not in kwargs:
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
             else:
-                end = end_kwargs["end"]
-                assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + end)]
+                end = kwargs["end"]
+                assert bins[bin_name] == EXAMPLE_STR[START_IDX:end]
 
     @pytest.mark.parametrize(
         "index",
@@ -357,7 +355,7 @@ class TestStringOperations:
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_split_with_separator(self, separator: str):
         ops = [
-            str_ops.split(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
+            str_ops.split_separator(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
         ]
 
         with self.expected_context_for_pos_tests:
@@ -451,7 +449,7 @@ class TestStringOperations:
     def test_overwrite_past_string_length(self):
         NEW_STR = EXAMPLE_STR + "a"
         ops = [
-            str_ops.overwrite(None, bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
+            str_ops.overwrite(bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
         ]
         self.add_read_op(ops, STR_BIN_NAME)
 
@@ -621,6 +619,8 @@ class TestStringOperations:
         ops = [
             str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
@@ -736,7 +736,6 @@ class TestStringOperations:
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         PATTERN = "asdf"
-        NEW_STR = "1234"
         ops = [
             str_ops.regex_replace(bin_name=bin_name, pattern=PATTERN, replacement=NEW_STR, **kwargs_policy, **kwargs_with_ctx)
         ]
@@ -746,3 +745,26 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == NEW_STR + "asdf"
+
+    @pytest.mark.parametrize(
+        "bin_name, regex_flags, pattern, expected_results",
+        [
+            (STR_BIN_NAME, RegexFlags.CASE_INSENSITIVE, "ASDF", NEW_STR + "asdf"),
+            (MULTILINE_STR_BIN_NAME, RegexFlags.MULTILINE, "^a$", NEW_STR + "\na"),
+            (MULTILINE_STR_BIN_NAME, RegexFlags.DOTALL, ".*", NEW_STR),
+            # Carriage return should be ignored
+            (MULTILINE_STR_WITH_CR_BIN_NAME, RegexFlags.MULTILINE | RegexFlags.UNIX_LINES, "^.*$", NEW_STR),
+            (STR_BIN_NAME, RegexFlags.GLOBAL, "asdf", NEW_STR * 2)
+        ]
+    )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_regex_flags(self, bin_name: str, regex_flags: RegexFlags, pattern: str, expected_results: str):
+        ops = [
+            str_ops.regex_replace(bin_name=bin_name, pattern=pattern, replacement=NEW_STR, regex_flags=regex_flags)
+        ]
+        self.add_read_op(ops, bin_name)
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[bin_name] == expected_results

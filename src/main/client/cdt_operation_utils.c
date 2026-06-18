@@ -168,14 +168,13 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     return AEROSPIKE_OK;
 }
 
-as_status get_optional_uint64_t(as_error *err, const char *key,
-                                PyObject *op_dict, uint64_t *ui64_valptr,
-                                bool *found)
+as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
+                       uint64_t *ui64_valptr)
 {
-    *found = false;
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
-    if (!py_val || Py_IsNone(py_val)) {
-        return AEROSPIKE_OK;
+    if (!py_val) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Operation missing required entry %s", key);
     }
 
     if (!PyLong_Check(py_val)) {
@@ -193,7 +192,6 @@ as_status get_optional_uint64_t(as_error *err, const char *key,
                                key);
     }
 
-    *found = true;
     return AEROSPIKE_OK;
 }
 

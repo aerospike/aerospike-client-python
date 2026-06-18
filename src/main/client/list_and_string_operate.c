@@ -250,6 +250,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     int64_t start;
     switch (operation_code) {
     case OP_STRING_SUBSTR:
+    case OP_STRING_SUBSTR_RANGE:
     case OP_STRING_SNIP:
         if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &start) !=
             AEROSPIKE_OK) {
@@ -258,31 +259,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     }
 
     uint64_t length = 0;
-    bool length_found = false;
     switch (operation_code) {
-    case OP_STRING_SUBSTR:
     case OP_STRING_PAD_START:
     case OP_STRING_PAD_END: {
-        const char *length_key = NULL;
-        switch (operation_code) {
-        case OP_STRING_PAD_START:
-        case OP_STRING_PAD_END:
-            length_key = "target_length";
-            break;
-        default:
-            length_key = "length";
-            break;
-        }
-
-        as_status status = get_optional_uint64_t(err, length_key, op_dict,
-                                                 &length, &length_found);
+        as_status status = get_uint64_t(err, "target_length", op_dict, &length);
         if (status != AEROSPIKE_OK) {
-            goto CLEANUP_VAL2_ON_ERROR;
-        }
-
-        if (!length_found && operation_code == OP_STRING_PAD_START) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "length argument is required for pad_start");
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -290,6 +271,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     int64_t end = 0;
     switch (operation_code) {
+    case OP_STRING_SUBSTR_RANGE:
     case OP_STRING_SNIP: {
         as_status status = get_int64_t(err, "end", op_dict, &end);
         if (status != AEROSPIKE_OK) {
@@ -334,13 +316,12 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     char *str_attr_value1 = NULL;
     const char *str_attr_key = NULL;
-    bool is_str_attr_optional = false;
     switch (operation_code) {
     case OP_STRING_FIND:
     case OP_STRING_CONTAINS:
     case OP_STRING_STARTS_WITH:
     case OP_STRING_ENDS_WITH:
-    case OP_STRING_SPLIT:
+    case OP_STRING_SPLIT_SEPARATOR:
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_INSERT:
     case OP_STRING_OVERWRITE:
@@ -349,6 +330,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_PAD_START:
     case OP_STRING_PAD_END:
     case OP_STRING_REGEX_REPLACE:
+    case OP_STRING_APPEND:
+    case OP_STRING_PREPEND:
         switch (operation_code) {
         case OP_STRING_FIND:
         case OP_STRING_CONTAINS:
@@ -362,9 +345,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         case OP_STRING_ENDS_WITH:
             str_attr_key = "suffix";
             break;
-        case OP_STRING_SPLIT:
+        case OP_STRING_SPLIT_SEPARATOR:
             str_attr_key = "separator";
-            is_str_attr_optional = true;
             break;
         case OP_STRING_REGEX_COMPARE:
         case OP_STRING_REGEX_REPLACE:
@@ -372,6 +354,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         case OP_STRING_INSERT:
         case OP_STRING_OVERWRITE:
+        case OP_STRING_APPEND:
+        case OP_STRING_PREPEND:
             str_attr_key = "value";
             break;
         case OP_STRING_PAD_START:
@@ -381,7 +365,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         }
 
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value1, is_str_attr_optional) != AEROSPIKE_OK) {
+                    &str_attr_value1, false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -399,7 +383,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     as_string_policy str_policy;
     if (operation_code >= OP_STRING_INSERT &&
-        operation_code <= OP_STRING_REGEX_REPLACE) {
+        operation_code <= OP_STRING_PREPEND) {
         PyObject *py_str_policy = PyDict_GetItemString(op_dict, "policy");
         if (!py_str_policy) {
             goto CLEANUP_VAL2_ON_ERROR;
@@ -611,13 +595,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_strlen(ops, bin, ctx_ref);
         break;
     case OP_STRING_SUBSTR:
-        if (!length_found) {
-            success = as_operations_string_substr(ops, bin, ctx_ref, start);
-        }
-        else {
-            success = as_operations_string_substr_range(ops, bin, ctx_ref,
-                                                        start, length);
-        }
+        success = as_operations_string_substr(ops, bin, ctx_ref, start);
+        break;
+    case OP_STRING_SUBSTR_RANGE:
+        success =
+            as_operations_string_substr_range(ops, bin, ctx_ref, start, end);
         break;
     case OP_STRING_CHAR_AT:
         success = as_operations_string_char_at(ops, bin, ctx_ref, index);
@@ -661,13 +643,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_to_blob(ops, bin, ctx_ref);
         break;
     case OP_STRING_SPLIT:
-        if (str_attr_value1) {
-            success = as_operations_string_split_separator(ops, bin, ctx_ref,
-                                                           str_attr_value1);
-        }
-        else {
-            success = as_operations_string_split(ops, bin, ctx_ref);
-        }
+        success = as_operations_string_split(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_SPLIT_SEPARATOR:
+        success = as_operations_string_split_separator(ops, bin, ctx_ref,
+                                                       str_attr_value1);
         break;
     case OP_STRING_B64_DECODE:
         success = as_operations_string_b64_decode(ops, bin, ctx_ref);
@@ -740,6 +720,14 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_regex_replace(
             ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
             regex_flags);
+        break;
+    case OP_STRING_APPEND:
+        success = as_operations_string_append(ops, bin, ctx_ref, &str_policy,
+                                              str_attr_value1);
+        break;
+    case OP_STRING_PREPEND:
+        success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
+                                               str_attr_value1);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.

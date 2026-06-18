@@ -495,7 +495,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_PAD_END] = EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
         [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
         [OP_STRING_REGEX_REPLACE] =
-            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL))};
+            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL)),
+        [OP_STRING_APPEND] = EXP_SZ(as_exp_string_append(NULL, "", NIL)),
+        [OP_STRING_PREPEND] = EXP_SZ(as_exp_string_prepend(NULL, "", NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
@@ -1772,26 +1774,27 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_STRLEN:
             APPEND_ARRAY(1, as_exp_string_strlen(NIL));
             break;
-        case OP_STRING_SUBSTR: {
+        case OP_STRING_SUBSTR:
             if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            bool end_found = false;
-            if (get_optional_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
-                                     &lval2, &end_found) != AEROSPIKE_OK) {
+            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            break;
+        case OP_STRING_SUBSTR_RANGE:
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            if (!end_found) {
-                APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
+                return err->code;
             }
-            else {
-                APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
-            }
+
+            APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
             break;
-        }
         case OP_STRING_CHAR_AT: {
             if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
@@ -1945,7 +1948,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_TRIM:
         case OP_STRING_PAD_START:
         case OP_STRING_PAD_END:
-        case OP_STRING_REPEAT: {
+        case OP_STRING_REPEAT:
+        case OP_STRING_APPEND:
+        case OP_STRING_PREPEND: {
             PyObject *py_str_policy =
                 PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
             as_string_policy policy;
@@ -1955,7 +1960,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             switch (temp_expr->op) {
             case OP_STRING_INSERT:
             case OP_STRING_OVERWRITE:
-            case OP_STRING_APPEND: {
+            case OP_STRING_APPEND:
+            case OP_STRING_PREPEND: {
                 as_status status = get_str(
                     err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
                 if (status != AEROSPIKE_OK) {
