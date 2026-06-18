@@ -449,7 +449,7 @@ class TestStringOperations:
     def test_overwrite_past_string_length(self):
         NEW_STR = EXAMPLE_STR + "a"
         ops = [
-            str_ops.overwrite(None, bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
+            str_ops.overwrite(bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
         ]
         self.add_read_op(ops, STR_BIN_NAME)
 
