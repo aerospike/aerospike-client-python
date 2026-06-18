@@ -478,7 +478,6 @@ def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
     return locals()
 
 
-# TODO: read up how this works
 def normalize_nfc(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``normalize_nfc`` operation that normalizes the bin to Unicode NFC.

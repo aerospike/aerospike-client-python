@@ -606,9 +606,7 @@ class TestStringOperations:
 
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
 
-    # TODO
     @kwargs_policy
-    @pytest.mark.skip("Not implemented.")
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
@@ -617,8 +615,7 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert False
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
 
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail

@@ -159,11 +159,10 @@ class TestExpressions(TestBaseClass):
                 # TODO: dynamically get expected result
                 "ss"
             ),
-            # TODO: this test case needs to be corrected
-            # (
-            #     str_expr.NormalizeNFC(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            #     "ss"
-            # ),
+            (
+                str_expr.NormalizeNFC(policy=None, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                NORMALIZED_CODEPOINT
+            ),
             (
                 str_expr.TrimStart(policy=None, bin=SURROUNDING_WHITESPACE_BIN_NAME),
                 EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
