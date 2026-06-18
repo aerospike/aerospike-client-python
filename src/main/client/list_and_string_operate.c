@@ -250,6 +250,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     int64_t start;
     switch (operation_code) {
     case OP_STRING_SUBSTR:
+    case OP_STRING_SUBSTR_RANGE:
     case OP_STRING_SNIP:
         if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &start) !=
             AEROSPIKE_OK) {
