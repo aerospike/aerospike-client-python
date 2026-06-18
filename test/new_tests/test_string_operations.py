@@ -24,11 +24,11 @@ class TestStringOperations:
 
         self.as_connection.remove(KEY)
 
-    # TODO: ctx can also be None.
     root_level_and_nested_str = pytest.mark.parametrize(
         "bin_name, kwargs_with_ctx",
         [
             pytest.param(STR_BIN_NAME, {}, id="no_ctx_arg"),
+            pytest.param(STR_BIN_NAME, {"ctx": None}, id="ctx_is_none"),
             pytest.param(
                 NESTED_STR_BIN_NAME,
                 {
@@ -231,7 +231,6 @@ class TestStringOperations:
 
             assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
-    # TODO: add case for multi-byte unicode codepoints
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_byte_length(self, bin_name: str, kwargs_with_ctx: dict):
@@ -242,6 +241,16 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == len(EXAMPLE_STR)
+
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_byte_length_for_multibyte_codepoint(self):
+        ops = [
+            str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == len(BINS[MULTIBYTE_CODEPOINT_BIN_NAME].encode('utf-8'))
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
@@ -397,14 +406,6 @@ class TestStringOperations:
             op = operations.read(bin_name=bin_name)
         ops.append(op)
 
-    kwargs_policy = pytest.mark.parametrize(
-        "kwargs_policy",
-        [
-            {"policy": None},
-            {"policy": StringPolicy()}
-        ]
-    )
-
     @pytest.mark.parametrize(
         "index, expected_value",
         [
@@ -509,17 +510,22 @@ class TestStringOperations:
 
             assert bins[bin_name] == EXAMPLE_STR + "".join(value_list)
 
+    def test_concat_with_non_str_in_list(self):
+        ops = [
+            str_ops.concat(bin_name=STR_BIN_NAME, value_list=[1])
+        ]
+
+        with pytest.raises(e.ServerError):
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
     @pytest.mark.parametrize(
         "end_kwargs",
         [
-            {},
-            {"end": None},
             {"end": len(EXAMPLE_STR) - 1}
         ]
     )
     @root_level_and_nested_str
     @kwargs_policy
-    @pytest.mark.skip("Test case with end omitted or set to None fails. Raised this with rest of client team. TODO")
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
 
@@ -532,10 +538,7 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "end" not in end_kwargs or end_kwargs["end"] is None:
-                assert bins[bin_name] == EXAMPLE_STR[:START_IDX]
-            else:
-                assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
+            assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
 
     @root_level_and_nested_str
     @kwargs_policy
@@ -579,20 +582,26 @@ class TestStringOperations:
 
             assert bins[bin_name] == EXAMPLE_STR.upper()
 
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (UPPERCASE_STR_BIN_NAME, UPPERCASE_STR.lower()),
+            (MULTIBYTE_CODEPOINT_BIN_NAME, MULTIBYTE_CODEPOINT)
+        ]
+    )
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_lower(self, kwargs_policy: dict):
+    def test_lower(self, kwargs_policy: dict, bin_name: str, expected_result: str):
         ops = [
-            str_ops.lower(bin_name=UPPERCASE_STR_BIN_NAME, **kwargs_policy)
+            str_ops.lower(bin_name=bin_name, **kwargs_policy)
         ]
-        self.add_read_op(ops, UPPERCASE_STR_BIN_NAME)
+        self.add_read_op(ops, bin_name)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[UPPERCASE_STR_BIN_NAME] == UPPERCASE_STR.lower()
+            assert bins[bin_name] == expected_result
 
-    # TODO: add test case showing this char cannot be converted to ss with .lower()
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_casefold(self, kwargs_policy: dict):
@@ -604,11 +613,9 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
 
-    # TODO
     @kwargs_policy
-    @pytest.mark.skip("Not implemented.")
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
@@ -617,8 +624,7 @@ class TestStringOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert False
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == "ss"
+            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
 
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
@@ -660,7 +666,6 @@ class TestStringOperations:
 
             assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
 
-    # TODO: add no-op test case
     @kwargs_policy
     @root_level_and_nested_str
     @pytest.mark.parametrize(

@@ -64,11 +64,12 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
 
 #define STRING_OP_NAMES                                                        \
-    X(STRING_STRLEN), X(STRING_SUBSTR), X(STRING_CHAR_AT), X(STRING_FIND),     \
-        X(STRING_CONTAINS), X(STRING_STARTS_WITH), X(STRING_ENDS_WITH),        \
-        X(STRING_TO_INTEGER), X(STRING_TO_DOUBLE), X(STRING_BYTE_LENGTH),      \
-        X(STRING_IS_NUMERIC), X(STRING_IS_UPPER), X(STRING_IS_LOWER),          \
-        X(STRING_TO_BLOB), X(STRING_SPLIT), X(STRING_B64_DECODE),              \
+    X(STRING_STRLEN), X(STRING_SUBSTR), X(STRING_SUBSTR_RANGE),                \
+        X(STRING_CHAR_AT), X(STRING_FIND), X(STRING_CONTAINS),                 \
+        X(STRING_STARTS_WITH), X(STRING_ENDS_WITH), X(STRING_TO_INTEGER),      \
+        X(STRING_TO_DOUBLE), X(STRING_BYTE_LENGTH), X(STRING_IS_NUMERIC),      \
+        X(STRING_IS_UPPER), X(STRING_IS_LOWER), X(STRING_TO_BLOB),             \
+        X(STRING_SPLIT), X(STRING_SPLIT_SEPARATOR), X(STRING_B64_DECODE),      \
         X(STRING_REGEX_COMPARE), X(STRING_INSERT), X(STRING_OVERWRITE),        \
         X(STRING_CONCAT), X(STRING_SNIP), X(STRING_REPLACE),                   \
         X(STRING_REPLACE_ALL), X(STRING_UPPER), X(STRING_LOWER),               \
@@ -198,7 +199,6 @@ enum {
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
 
-// TODO: can use a macro to define these.
 #define _STR_EXP_START_KEY "start"
 #define _STR_EXP_END_KEY "end"
 #define _STR_EXP_INDEX_KEY "index"

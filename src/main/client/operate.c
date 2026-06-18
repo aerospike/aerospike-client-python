@@ -623,8 +623,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                           DEPRECATION_MESSAGE_TEMPLATE,
                                           DEPRECATED_APPEND_NAME);
             if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
                 return as_error_update(err, AEROSPIKE_ERR,
                                        DEPRECATION_MESSAGE_TEMPLATE,
                                        DEPRECATED_APPEND_NAME);
@@ -667,8 +665,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                           DEPRECATION_MESSAGE_TEMPLATE,
                                           DEPRECATED_PREPEND_NAME);
             if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
                 return as_error_update(err, AEROSPIKE_ERR,
                                        DEPRECATION_MESSAGE_TEMPLATE,
                                        DEPRECATED_PREPEND_NAME);

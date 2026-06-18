@@ -190,8 +190,6 @@ as_status as_string_policy_init_from_pyobject(as_error *err,
         return AEROSPIKE_OK;
     }
 
-    // TODO: adding class check here may be expensive
-
     PyObject *py_write_flags =
         PyObject_GetAttrString(py_string_policy, "write_flags");
     if (!py_write_flags) {

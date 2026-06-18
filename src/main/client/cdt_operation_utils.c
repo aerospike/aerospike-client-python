@@ -51,9 +51,9 @@ as_status get_str(as_error *err, const char *key, PyObject *op_dict,
             return AEROSPIKE_OK;
         }
         else {
-            // TODO: this error message uses an outdated key
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation must contain a \"bin\" entry");
+                                   "Operation must contain a \"%s\" entry",
+                                   key);
         }
     }
 
