@@ -601,6 +601,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_SUBSTR_RANGE:
         success =
             as_operations_string_substr_range(ops, bin, ctx_ref, start, length);
+        break;
     case OP_STRING_CHAR_AT:
         success = as_operations_string_char_at(ops, bin, ctx_ref, index);
         break;
