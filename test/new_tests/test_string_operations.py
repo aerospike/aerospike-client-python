@@ -619,6 +619,8 @@ class TestStringOperations:
         ops = [
             str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
+        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
