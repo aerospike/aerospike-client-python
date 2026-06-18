@@ -1772,26 +1772,27 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_STRLEN:
             APPEND_ARRAY(1, as_exp_string_strlen(NIL));
             break;
-        case OP_STRING_SUBSTR: {
+        case OP_STRING_SUBSTR:
             if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            bool end_found = false;
-            if (get_optional_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
-                                     &lval2, &end_found) != AEROSPIKE_OK) {
+            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            break;
+        case OP_STRING_SUBSTR_RANGE:
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            if (!end_found) {
-                APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
+                return err->code;
             }
-            else {
-                APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
-            }
+
+            APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
             break;
-        }
         case OP_STRING_CHAR_AT: {
             if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
