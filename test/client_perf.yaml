@@ -1,6 +1,6 @@
 build:
   repo: citrusleaf/aerospike-server
-  ref: 
+  ref:
     - 8.0.0.8
 
   script: enterprise
