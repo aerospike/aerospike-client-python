@@ -463,7 +463,7 @@ class TestStringOperations:
     @root_level_and_nested_str
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_append(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.append(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
@@ -473,6 +473,20 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == EXAMPLE_STR + NEEDLE
+
+    @root_level_and_nested_str
+    @kwargs_policy
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_prepend(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.prepend(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        self.add_read_op(ops, bin_name)
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[bin_name] == NEEDLE + EXAMPLE_STR
 
     @pytest.mark.parametrize(
         "value_list",
@@ -484,7 +498,7 @@ class TestStringOperations:
     @root_level_and_nested_str
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_concat_list(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_concat(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             str_ops.concat(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
         ]

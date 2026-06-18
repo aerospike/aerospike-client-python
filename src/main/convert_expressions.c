@@ -479,10 +479,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
-        // TODO: overload
-        [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat(NULL, "", NIL)),
-        [OP_STRING_CONCAT_LIST] =
-            EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
+        [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
         [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
@@ -1942,7 +1939,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_INSERT:
         case OP_STRING_OVERWRITE:
         case OP_STRING_CONCAT:
-        case OP_STRING_CONCAT_LIST:
         case OP_STRING_SNIP:
         case OP_STRING_REPLACE:
         case OP_STRING_REPLACE_ALL:
@@ -1965,7 +1961,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             switch (temp_expr->op) {
             case OP_STRING_INSERT:
             case OP_STRING_OVERWRITE:
-            case OP_STRING_CONCAT: {
+            case OP_STRING_APPEND: {
                 as_status status = get_str(
                     err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
                 if (status != AEROSPIKE_OK) {
@@ -1995,10 +1991,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     1, as_exp_string_overwrite(&policy, lval1, value, NIL));
                 break;
             case OP_STRING_CONCAT:
-                APPEND_ARRAY(1, as_exp_string_concat(&policy, value, NIL));
-                break;
-            case OP_STRING_CONCAT_LIST:
                 APPEND_ARRAY(2, as_exp_string_concat_list(&policy, NIL, NIL));
+                break;
+            case OP_STRING_APPEND:
+                APPEND_ARRAY(1, as_exp_string_append(&policy, value, NIL));
+                break;
+            case OP_STRING_PREPEND:
+                APPEND_ARRAY(1, as_exp_string_prepend(&policy, value, NIL));
                 break;
             case OP_STRING_SNIP:
                 if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
