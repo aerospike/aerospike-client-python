@@ -582,20 +582,26 @@ class TestStringOperations:
 
             assert bins[bin_name] == EXAMPLE_STR.upper()
 
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (UPPERCASE_STR_BIN_NAME, UPPERCASE_STR.lower()),
+            (MULTIBYTE_CODEPOINT_BIN_NAME, MULTIBYTE_CODEPOINT)
+        ]
+    )
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_lower(self, kwargs_policy: dict):
+    def test_lower(self, kwargs_policy: dict, bin_name: str, expected_result: str):
         ops = [
-            str_ops.lower(bin_name=UPPERCASE_STR_BIN_NAME, **kwargs_policy)
+            str_ops.lower(bin_name=bin_name, **kwargs_policy)
         ]
-        self.add_read_op(ops, UPPERCASE_STR_BIN_NAME)
+        self.add_read_op(ops, bin_name)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[UPPERCASE_STR_BIN_NAME] == UPPERCASE_STR.lower()
+            assert bins[bin_name] == expected_result
 
-    # TODO: add test case showing this char cannot be converted to ss with .lower()
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
     def test_casefold(self, kwargs_policy: dict):
@@ -660,7 +666,6 @@ class TestStringOperations:
 
             assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:-1]
 
-    # TODO: add no-op test case
     @kwargs_policy
     @root_level_and_nested_str
     @pytest.mark.parametrize(
