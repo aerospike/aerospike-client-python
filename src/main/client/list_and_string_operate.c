@@ -383,7 +383,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     as_string_policy str_policy;
     if (operation_code >= OP_STRING_INSERT &&
-        operation_code <= OP_STRING_REGEX_REPLACE) {
+        operation_code <= OP_STRING_PREPEND) {
         PyObject *py_str_policy = PyDict_GetItemString(op_dict, "policy");
         if (!py_str_policy) {
             goto CLEANUP_VAL2_ON_ERROR;
