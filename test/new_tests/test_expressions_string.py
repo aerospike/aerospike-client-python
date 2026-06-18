@@ -26,8 +26,8 @@ class TestExpressions:
         "expr, expected_result",
         [
             (str_expr.StrLen(bin=STR_BIN_NAME), len(BINS[STR_BIN_NAME])),
-            (str_expr.SubStr(start=START_IDX, end=None, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:]),
-            (str_expr.SubStr(start=START_IDX, end=START_IDX + 2, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:(START_IDX + 2)]),
+            (str_expr.SubStr(start=START_IDX, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:]),
+            (str_expr.SubStrRange(start=START_IDX, end=START_IDX + 2, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:(START_IDX + 2)]),
             (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX]),
             (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][-1]),
             (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), BINS[STR_BIN_NAME].find(NEEDLE)),
