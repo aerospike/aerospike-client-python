@@ -316,13 +316,12 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
 
     char *str_attr_value1 = NULL;
     const char *str_attr_key = NULL;
-    bool is_str_attr_optional = false;
     switch (operation_code) {
     case OP_STRING_FIND:
     case OP_STRING_CONTAINS:
     case OP_STRING_STARTS_WITH:
     case OP_STRING_ENDS_WITH:
-    case OP_STRING_SPLIT:
+    case OP_STRING_SPLIT_SEPARATOR:
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_INSERT:
     case OP_STRING_OVERWRITE:
@@ -346,9 +345,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         case OP_STRING_ENDS_WITH:
             str_attr_key = "suffix";
             break;
-        case OP_STRING_SPLIT:
+        case OP_STRING_SPLIT_SEPARATOR:
             str_attr_key = "separator";
-            is_str_attr_optional = true;
             break;
         case OP_STRING_REGEX_COMPARE:
         case OP_STRING_REGEX_REPLACE:
@@ -367,7 +365,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         }
 
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value1, is_str_attr_optional) != AEROSPIKE_OK) {
+                    &str_attr_value1, false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -645,13 +643,11 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_to_blob(ops, bin, ctx_ref);
         break;
     case OP_STRING_SPLIT:
-        if (str_attr_value1) {
-            success = as_operations_string_split_separator(ops, bin, ctx_ref,
-                                                           str_attr_value1);
-        }
-        else {
-            success = as_operations_string_split(ops, bin, ctx_ref);
-        }
+        success = as_operations_string_split(ops, bin, ctx_ref);
+        break;
+    case OP_STRING_SPLIT_SEPARATOR:
+        success = as_operations_string_split_separator(ops, bin, ctx_ref,
+                                                       str_attr_value1);
         break;
     case OP_STRING_B64_DECODE:
         success = as_operations_string_b64_decode(ops, bin, ctx_ref);
