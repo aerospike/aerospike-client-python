@@ -495,7 +495,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_PAD_END] = EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
         [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
         [OP_STRING_REGEX_REPLACE] =
-            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL))};
+            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL)),
+        [OP_STRING_APPEND] = EXP_SZ(as_exp_string_append(NULL, "", NIL)),
+        [OP_STRING_PREPEND] = EXP_SZ(as_exp_string_prepend(NULL, "", NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
