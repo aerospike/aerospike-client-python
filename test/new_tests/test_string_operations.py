@@ -397,14 +397,6 @@ class TestStringOperations:
             op = operations.read(bin_name=bin_name)
         ops.append(op)
 
-    kwargs_policy = pytest.mark.parametrize(
-        "kwargs_policy",
-        [
-            {"policy": None},
-            {"policy": StringPolicy()}
-        ]
-    )
-
     @pytest.mark.parametrize(
         "index, expected_value",
         [

@@ -1,5 +1,7 @@
 from .conftest import KEYS
 import unicodedata
+import pytest
+from aerospike_helpers.string_helpers import StringPolicy
 
 
 KEY = KEYS[0]
@@ -39,3 +41,11 @@ BINS = {
 }
 
 START_IDX = 1
+
+kwargs_policy = pytest.mark.parametrize(
+    "kwargs_policy",
+    [
+        {"policy": None},
+        {"policy": StringPolicy()}
+    ]
+)
