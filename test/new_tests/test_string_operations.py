@@ -52,32 +52,32 @@ class TestStringOperations:
             assert bins[bin_name] == len(EXAMPLE_STR)
 
     @pytest.mark.parametrize(
-        "length_kwargs",
+        "end_kwargs",
         [
             {},
             {
-                "length": None
+                "end": None
             },
             {
-                "length": 2
+                "end": 2
             }
         ]
     )
     @root_level_and_nested_str
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_substr(self, length_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx = kwargs_with_ctx | length_kwargs
+    def test_substr(self, end_kwargs: dict, bin_name: str, kwargs_with_ctx: dict):
+        kwargs_with_ctx = kwargs_with_ctx | end_kwargs
         ops = [
             str_ops.substr(bin_name=bin_name, start=START_IDX, **kwargs_with_ctx)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            if "length" not in length_kwargs or length_kwargs["length"] is None:
+            if "end" not in end_kwargs or end_kwargs["end"] is None:
                 assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
             else:
-                length = length_kwargs["length"]
-                assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + length)]
+                end = end_kwargs["end"]
+                assert bins[bin_name] == EXAMPLE_STR[START_IDX:(START_IDX + end)]
 
     @pytest.mark.parametrize(
         "index",
@@ -463,9 +463,9 @@ class TestStringOperations:
     @root_level_and_nested_str
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_concat(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_append(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.concat(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.append(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
 
@@ -473,6 +473,20 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == EXAMPLE_STR + NEEDLE
+
+    @root_level_and_nested_str
+    @kwargs_policy
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_prepend(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+        ops = [
+            str_ops.prepend(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
+        ]
+        self.add_read_op(ops, bin_name)
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[bin_name] == NEEDLE + EXAMPLE_STR
 
     @pytest.mark.parametrize(
         "value_list",
@@ -484,9 +498,9 @@ class TestStringOperations:
     @root_level_and_nested_str
     @kwargs_policy
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_concat_list(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_concat(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.concat_list(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
+            str_ops.concat(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
 

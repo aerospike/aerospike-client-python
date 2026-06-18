@@ -9,7 +9,7 @@ except ImportError:
     from counter26 import Counter
 
 import aerospike
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import operations, string_operations
 
 
 class TestCompress:
@@ -82,7 +82,7 @@ class TestCompress:
         }
 
         llist = [
-            operations.append("name", "aa"),
+            string_operations.append("name", "aa"),
             operations.increment("age", 3),
             operations.read("name")
         ]

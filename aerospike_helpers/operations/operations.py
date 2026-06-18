@@ -73,10 +73,21 @@ def delete():
     }
 
 
+_DEPRECATION_TEMPLATE = "Using {} with a string argument is deprecated. " \
+    "This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not " \
+    "support string policy or ctx. " \
+    "This function will not support strings in the next major client release"
+
+
 def append(bin_name, append_item):
     """Create an append operation dictionary.
 
     The append operation appends `append_item` to the value in bin_name.
+
+    .. deprecated:: 19.3.0 Passing a string argument to ``append_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
+        This function will not support strings in the next major client release.
 
     Args:
         bin_name (str): The name of the bin to be used.
@@ -84,6 +95,12 @@ def append(bin_name, append_item):
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
+    if isinstance(append_item, str):
+        warnings.warn(
+            _DEPRECATION_TEMPLATE.format("aerospike_helpers.operations.operations.append"),
+            DeprecationWarning
+        )
+
     return {"op": aerospike.OPERATOR_APPEND, "bin": bin_name, "val": append_item}
 
 
@@ -92,12 +109,23 @@ def prepend(bin_name, prepend_item):
 
     The prepend operation prepends `prepend_item` to the value in bin_name.
 
+    .. deprecated:: 19.3.0 Passing a string argument to ``prepend_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
+        This function will not support strings in the next major client release.
+
     Args:
         bin_name (str): The name of the bin to be used.
         prepend_item: The value which will be prepended to the item contained in the specified bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
+    if isinstance(prepend_item, str):
+        warnings.warn(
+            _DEPRECATION_TEMPLATE.format("aerospike_helpers.operations.operations.prepend"),
+            DeprecationWarning
+        )
+
     return {"op": aerospike.OPERATOR_PREPEND, "bin": bin_name, "val": prepend_item}
 
 

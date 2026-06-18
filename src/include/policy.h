@@ -70,12 +70,12 @@ enum Aerospike_send_bool_as_values {
         X(STRING_IS_NUMERIC), X(STRING_IS_UPPER), X(STRING_IS_LOWER),          \
         X(STRING_TO_BLOB), X(STRING_SPLIT), X(STRING_B64_DECODE),              \
         X(STRING_REGEX_COMPARE), X(STRING_INSERT), X(STRING_OVERWRITE),        \
-        X(STRING_CONCAT), X(STRING_CONCAT_LIST), X(STRING_SNIP),               \
-        X(STRING_REPLACE), X(STRING_REPLACE_ALL), X(STRING_UPPER),             \
-        X(STRING_LOWER), X(STRING_CASE_FOLD), X(STRING_NORMALIZE_NFC),         \
-        X(STRING_TRIM_START), X(STRING_TRIM_END), X(STRING_TRIM),              \
-        X(STRING_PAD_START), X(STRING_PAD_END), X(STRING_REPEAT),              \
-        X(STRING_REGEX_REPLACE)
+        X(STRING_CONCAT), X(STRING_SNIP), X(STRING_REPLACE),                   \
+        X(STRING_REPLACE_ALL), X(STRING_UPPER), X(STRING_LOWER),               \
+        X(STRING_CASE_FOLD), X(STRING_NORMALIZE_NFC), X(STRING_TRIM_START),    \
+        X(STRING_TRIM_END), X(STRING_TRIM), X(STRING_PAD_START),               \
+        X(STRING_PAD_END), X(STRING_REPEAT), X(STRING_REGEX_REPLACE),          \
+        X(STRING_APPEND), X(STRING_PREPEND)
 
 enum {
 #define X(op_name) OP_##op_name
@@ -201,7 +201,6 @@ enum {
 // TODO: can use a macro to define these.
 #define _STR_EXP_START_KEY "start"
 #define _STR_EXP_END_KEY "end"
-#define _STR_EXP_LENGTH_KEY "length"
 #define _STR_EXP_INDEX_KEY "index"
 #define _STR_EXP_NEEDLE_KEY "needle"
 #define _STR_EXP_REPLACEMENT_KEY "replacement"

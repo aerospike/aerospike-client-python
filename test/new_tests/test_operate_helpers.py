@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 from .test_base_class import TestBaseClass
-from aerospike_helpers.operations import list_operations, operations
+from aerospike_helpers.operations import list_operations, operations, string_operations
 
 import aerospike
 from aerospike import exception as e
@@ -129,7 +129,7 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", 1),
-                [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
+                [string_operations.prepend(None, "name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
             ),
             (
@@ -144,7 +144,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", 1),  # with_bin_bytearray
-                [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
+                [string_operations.prepend(None, "asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
             ),
             (
@@ -209,7 +209,6 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters
         """
-
         key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == expected
@@ -263,7 +262,7 @@ class TestOperate(object):
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
 
         _, _, bins = self.as_connection.operate(key, llist, {}, policy)
 
@@ -283,7 +282,7 @@ class TestOperate(object):
                     "ttl": 1200
                 },
                 {"gen": 10},
-                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
             ),
         ],
     )
@@ -306,7 +305,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen}
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
         (key, meta, bins) = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
@@ -345,7 +344,7 @@ class TestOperate(object):
             "gen": gen + 5,
         }
         llist = [
-            operations.append("name", "aa"),
+            string_operations.append("name", "aa"),
             operations.increment("age", 3),
         ]
 
@@ -366,7 +365,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen}
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3)]
+        llist = [string_operations.append("name", "aa"), operations.increment("age", 3)]
 
         with pytest.raises(e.RecordGenerationError):
             self.as_connection.operate(key, llist, meta, policy)
@@ -401,7 +400,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
         _, _, bins = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
@@ -411,7 +410,7 @@ class TestOperate(object):
         Invoke operate() with non-existent key
         """
         new_key = ("test", "demo", "key11")
-        llist = [operations.prepend("loc", "mumbai"), operations.read("loc")]
+        llist = [string_operations.prepend("loc", "mumbai"), operations.read("loc")]
         _, _, bins = self.as_connection.operate(new_key, llist)
 
         assert bins == {"loc": "mumbai"}
@@ -422,7 +421,7 @@ class TestOperate(object):
         Invoke operate() with non-existent bin
         """
         key = ("test", "demo", 1)
-        llist = [operations.append("addr", "pune"), operations.read("addr")]
+        llist = [string_operations.append("addr", "pune"), operations.read("addr")]
         _, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {"addr": "pune"}
@@ -560,7 +559,7 @@ class TestOperate(object):
 
         max_length = "a" * 21
 
-        llist = [operations.prepend("name", "ram"), operations.increment(max_length, 3)]
+        llist = [string_operations.prepend("name", "ram"), operations.increment(max_length, 3)]
 
         TestOperate.client_no_typechecks.operate(key, llist)
 
@@ -995,7 +994,7 @@ class TestOperate(object):
 
         max_length = "a" * 21
 
-        llist = [operations.prepend("name", "ram"), operations.increment(max_length, 3)]
+        llist = [string_operations.prepend("name", "ram"), operations.increment(max_length, 3)]
 
         with pytest.raises(e.BinNameError) as excinfo:
             self.as_connection.operate(key, llist)
@@ -1005,7 +1004,7 @@ class TestOperate(object):
         """
         Invoke operate() with empty string key
         """
-        llist = [operations.prepend("name", "ram")]
+        llist = [string_operations.prepend("name", "ram")]
         with pytest.raises(e.ParamError):
             self.as_connection.operate("", llist)
 
@@ -1015,7 +1014,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 180000}
-        llist = [operations.prepend("name", "ram")]
+        llist = [string_operations.prepend("name", "ram")]
         with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")
 
@@ -1024,7 +1023,7 @@ class TestOperate(object):
         Invoke operate() with policy is string
         """
         key = ("test", "demo", 1)
-        llist = [operations.prepend("name", "ram")]
+        llist = [string_operations.prepend("name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
         assert excinfo.value.code == -2
@@ -1033,7 +1032,7 @@ class TestOperate(object):
         """
         Invoke operate() with key is none
         """
-        llist = [operations.prepend("name", "ram")]
+        llist = [string_operations.prepend("name", "ram")]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
         assert excinfo.value.code == -2
@@ -1055,7 +1054,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
-        llist = [operations.prepend("name", "ram")]
+        llist = [string_operations.prepend("name", "ram")]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)

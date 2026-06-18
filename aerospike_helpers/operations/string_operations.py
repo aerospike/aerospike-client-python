@@ -60,17 +60,17 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
     return locals()
 
 
-def substr(bin_name: str, start: int, length: int | None = None, ctx: TypeCTX = None):
+def substr(bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
     """
-    Create string ``substr`` operation from start. If length is :py:obj:`None`,
-    the operation will continue to the end of the string.
-    Negative start indexes count from the end of the string.
+    Create string ``substr`` operation that returns the half-open codepoint range ``[start, end)``.
+        Negative indexes count from the end of the string.
+        If end is :py:obj:`None`, the operation will continue to the end of the string.
 
     Args:
 
         {bin_name}
-        start (int): Starting codepoint index.
-        length (int): Number of codepoints to return.
+        start (int): Starting codepoint index, inclusive.
+        end (int | None): Ending codepoint index, exclusive.
         {ctx}
     """
     op = aerospike._OP_STRING_SUBSTR
@@ -299,24 +299,24 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
     return locals()
 
 
-def insert(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
+def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``insert`` operation that splices value into the bin at codepoint
     index. Negative indexes count from the end of the string.
 
     Args:
 
-        {str_policy}
         {bin_name}
         index (int): Index of the codepoint to insert at.
         value (str): The value to insert.
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_INSERT
     return locals()
 
 
-def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: TypeCTX = None):
+def overwrite(bin_name: str, index: int, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``overwrite`` operation that overwrites codepoints starting at index
     with value. The result may grow beyond the original length when value extends
@@ -324,120 +324,138 @@ def overwrite(policy: StringPolicy, bin_name: str, index: int, value: str, ctx: 
 
     Args:
 
-        {str_policy}
         {bin_name}
         index (int): Index of the codepoint to overwrite at.
         value (str): The value to overwrite.
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_OVERWRITE
     return locals()
 
 
-def concat(policy: StringPolicy, bin_name: str, value: str, ctx: TypeCTX = None):
+def append(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
-    Create string ``concat`` operation that appends value to the bin.
+    Create string ``append`` operation that appends value to the end of the bin.
+    Unlike :func:`~aerospike_helpers.operations.operations.append`, this string-package operation
+    uses Unicode codepoint semantics and supports string policy and ctx.
 
     Args:
 
-        {str_policy}
         {bin_name}
         value (str): The value to append.
+        {str_policy}
         {ctx}
     """
-    op = aerospike._OP_STRING_CONCAT
+    op = aerospike._OP_STRING_APPEND
     return locals()
 
 
-def concat_list(policy: StringPolicy, bin_name: str, value_list: list[str], ctx: TypeCTX = None):
+def prepend(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
+    """
+    Create string ``prepend`` operation that prepend value to the start of the bin.
+    Unlike :func:`~aerospike_helpers.operations.operations.prepend`, this string-package operation
+    uses Unicode codepoint semantics and supports string policy and ctx.
+
+    Args:
+
+        {bin_name}
+        value (str): The value to prepend.
+        {str_policy}
+        {ctx}
+    """
+    op = aerospike._OP_STRING_PREPEND
+    return locals()
+
+
+def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``concat`` operation that appends each string element in values to
     the bin in order.
 
     Args:
 
-        {str_policy}
         {bin_name}
         value_list (str): The list of values to append.
+        {str_policy}
         {ctx}
     """
-    op = aerospike._OP_STRING_CONCAT_LIST
+    op = aerospike._OP_STRING_CONCAT
     return locals()
 
 
-def snip(policy: StringPolicy, bin_name: str, start: int, end: int | None = None, ctx: TypeCTX = None):
+def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``snip`` operation that removes codepoints from start to end.
 
     Args:
 
-        {str_policy}
         {bin_name}
-        start (int): The index of the codepoint to remove from.
-        end (int | None): The index of the codepoint to remove to. If set to :py:obj:`None`,
-            remove from start through the end of the string.
+        start (int): First codepoint to remove, inclusive.
+        end (int): One past the last codepoint to remove, exclusive.
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_SNIP
     return locals()
 
 
-def replace(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
+def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
     Args:
 
-        {str_policy}
         {bin_name}
         {needle_to_replace}
         {replacement}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_REPLACE
     return locals()
 
 
-def replace_all(policy: StringPolicy, bin_name: str, needle: str, replacement: str, ctx: TypeCTX = None):
+def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``replace_all`` operation that replaces every occurrence of needle
     with replacement.
 
     Args:
 
-        {str_policy}
         {bin_name}
         {needle_to_replace}
         {replacement}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_REPLACE_ALL
     return locals()
 
 
-def upper(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def upper(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``upper`` operation that uppercases the bin in place.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_UPPER
     return locals()
 
 
-def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``lower`` operation that lowercases the bin in place.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_LOWER
@@ -445,15 +463,15 @@ def lower(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 
 # TODO: read up how this works
-def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``case_fold`` operation that applies locale-independent case folding
     (lowercase) to the bin. This is useful for normalized comparison keys.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_CASE_FOLD
@@ -461,66 +479,72 @@ def casefold(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
 
 
 # TODO: read up how this works
-def normalize_nfc(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def normalize_nfc(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``normalize_nfc`` operation that normalizes the bin to Unicode NFC.
     Already-normalized strings are unchanged.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_NORMALIZE_NFC
     return locals()
 
 
-def trim_start(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def trim_start(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``trim_start`` operation that removes whitespace from the start of
     the bin.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_TRIM_START
     return locals()
 
 
-def trim_end(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def trim_end(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``trim_end`` operation that removes whitespace from the end of the
     bin.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_TRIM_END
     return locals()
 
 
-def trim(policy: StringPolicy, bin_name: str, ctx: TypeCTX = None):
+def trim(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``trim`` operation that removes whitespace from both ends of the bin.
 
     Args:
 
-        {str_policy}
         {bin_name}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_TRIM
     return locals()
 
 
-def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
+def pad_start(
+    bin_name: str,
+    target_length: int,
+    pad_string: str,
+    policy: StringPolicy | None = None,
+    ctx: TypeCTX = None
+):
     """
     Create string ``pad_start`` operation that prepends ``pad_string`` repeatedly until
     the bin reaches ``target_length`` codepoints. No-op when the bin is already at or
@@ -528,17 +552,23 @@ def pad_start(policy: StringPolicy, bin_name: str, target_length: int, pad_strin
 
     Args:
 
-        {str_policy}
         {bin_name}
         {target_length}
         {pad_string}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_PAD_START
     return locals()
 
 
-def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string: str, ctx: TypeCTX = None):
+def pad_end(
+    bin_name: str,
+    target_length: int,
+    pad_string: str,
+    policy: StringPolicy | None = None,
+    ctx: TypeCTX = None
+):
     """
     Create string ``pad_end`` operation that appends ``pad_string`` repeatedly until the
     bin reaches ``target_length`` codepoints. No-op when the bin is already at or
@@ -546,25 +576,25 @@ def pad_end(policy: StringPolicy, bin_name: str, target_length: int, pad_string:
 
     Args:
 
-        {str_policy}
         {bin_name}
         {target_length}
         {pad_string}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_PAD_END
     return locals()
 
 
-def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None):
+def repeat(bin_name: str, count: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``repeat`` operation that repeats the bin contents count times.
 
     Args:
 
-        {str_policy}
         {bin_name}
         count (int): The number of times to repeat the string. Must be non-negative.
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_REPEAT
@@ -572,11 +602,11 @@ def repeat(policy: StringPolicy, bin_name: str, count: int, ctx: TypeCTX = None)
 
 
 def regex_replace(
-    policy: StringPolicy,
     bin_name: str,
     pattern: str,
     replacement: str,
     regex_flags: RegexFlags = RegexFlags.DEFAULT,
+    policy: StringPolicy | None = None,
     ctx: TypeCTX = None
 ):
     """
@@ -586,11 +616,11 @@ def regex_replace(
 
     Args:
 
-        {str_policy}
         {bin_name}
         {pattern}
         {replacement}
         {regex_flags}
+        {str_policy}
         {ctx}
     """
     op = aerospike._OP_STRING_REGEX_REPLACE

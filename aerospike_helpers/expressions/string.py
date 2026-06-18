@@ -61,12 +61,12 @@ class SubStr(_BaseExpr):
 
     _op = aerospike._OP_STRING_SUBSTR
 
-    def __init__(self, start: int, length: int | None, bin: "TypeBinName"):
+    def __init__(self, start: int, end: int | None, bin: "TypeBinName"):
         """
         Args:
 
-            start: The starting index of the substring.
-            length: The length of the substring.
+            start: Starting codepoint index, inclusive.
+            end: Ending codepoint index, exclusive.
             {bin}
 
         Returns:
@@ -75,7 +75,7 @@ class SubStr(_BaseExpr):
         """
         self._fixed = {
             aerospike._STR_EXP_START_KEY: start,
-            aerospike._STR_EXP_LENGTH_KEY: length
+            aerospike._STR_EXP_END_KEY: end
         }
         self._children = (
             _convert_bin_name_to_expr(bin),
@@ -365,7 +365,14 @@ class RegexCompare(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Insert(_BaseExpr):
+class WriteOp(_BaseExpr):
+    def __init__(self, policy: StringPolicy):
+        self._fixed = {
+            aerospike._STR_EXP_POLICY_KEY: policy
+        }
+
+
+class Insert(WriteOp):
     _op = aerospike._OP_STRING_INSERT
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
@@ -381,16 +388,15 @@ class Insert(_BaseExpr):
 
             The string in the bin with the value inserted.
         """
-        self._fixed = {
-            # TODO: share this line
-            aerospike._STR_EXP_POLICY_KEY: policy,
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_INDEX_KEY: index,
             _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Overwrite(_BaseExpr):
+class Overwrite(WriteOp):
     _op = aerospike._OP_STRING_OVERWRITE
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
@@ -406,15 +412,16 @@ class Overwrite(_BaseExpr):
 
             The string in the bin with the value overwritten.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_INDEX_KEY: index,
             _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Concat(_BaseExpr):
-    _op = aerospike._OP_STRING_CONCAT
+class Append(WriteOp):
+    _op = aerospike._OP_STRING_APPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
@@ -428,14 +435,37 @@ class Concat(_BaseExpr):
 
             The string in the bin with the value appended.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             _Keys.VALUE_KEY: value
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ConcatList(_BaseExpr):
-    _op = aerospike._OP_STRING_CONCAT_LIST
+class Prepend(WriteOp):
+    _op = aerospike._OP_STRING_PREPEND
+
+    def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
+        """
+        Args:
+
+            {str_policy}
+            value: The value to prepend.
+            {bin}
+
+        Returns:
+
+            The string in the bin with the value prepended.
+        """
+        super().__init__(policy)
+        self._fixed |= {
+            _Keys.VALUE_KEY: value
+        }
+        self._children = (_convert_bin_name_to_expr(bin),)
+
+
+class Concat(WriteOp):
+    _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
@@ -449,33 +479,35 @@ class ConcatList(_BaseExpr):
 
             The string in the bin with the values appended.
         """
+        super().__init__(policy)
         self._children = (values, _convert_bin_name_to_expr(bin),)
 
 
-class Snip(_BaseExpr):
+class Snip(WriteOp):
     _op = aerospike._OP_STRING_SNIP
 
-    def __init__(self, policy: StringPolicy, start: int, end: int | None, bin: "TypeBinName"):
+    def __init__(self, policy: StringPolicy, start: int, end: int, bin: "TypeBinName"):
         """
         Args:
 
             {str_policy}
-            start: The index of the codepoint to remove from.
-            end: The index of the codepoint to remove to.
+            start: First codepoint to remove, inclusive.
+            end: One past the last codepoint to remove, exclusive.
             {bin}
 
         Returns:
 
             The string in the bin with the value snipped.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_START_KEY: start,
             aerospike._STR_EXP_END_KEY: end
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Replace(_BaseExpr):
+class Replace(WriteOp):
     _op = aerospike._OP_STRING_REPLACE
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
@@ -491,14 +523,15 @@ class Replace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_NEEDLE_KEY: needle,
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ReplaceAll(_BaseExpr):
+class ReplaceAll(WriteOp):
     _op = aerospike._OP_STRING_REPLACE_ALL
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
@@ -514,14 +547,15 @@ class ReplaceAll(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_NEEDLE_KEY: needle,
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Upper(_BaseExpr):
+class Upper(WriteOp):
     _op = aerospike._OP_STRING_UPPER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -535,10 +569,11 @@ class Upper(_BaseExpr):
 
             The string in the bin with the value uppercased.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Lower(_BaseExpr):
+class Lower(WriteOp):
     _op = aerospike._OP_STRING_LOWER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -552,10 +587,11 @@ class Lower(_BaseExpr):
 
             The string in the bin with the value lowercased.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class CaseFold(_BaseExpr):
+class CaseFold(WriteOp):
     _op = aerospike._OP_STRING_CASE_FOLD
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -569,10 +605,11 @@ class CaseFold(_BaseExpr):
 
             The string in the bin with the value case folded.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class NormalizeNFC(_BaseExpr):
+class NormalizeNFC(WriteOp):
     _op = aerospike._OP_STRING_NORMALIZE_NFC
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -586,10 +623,11 @@ class NormalizeNFC(_BaseExpr):
 
             The string in the bin with the value normalized.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimStart(_BaseExpr):
+class TrimStart(WriteOp):
     _op = aerospike._OP_STRING_TRIM_START
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -603,10 +641,11 @@ class TrimStart(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimEnd(_BaseExpr):
+class TrimEnd(WriteOp):
     _op = aerospike._OP_STRING_TRIM_END
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -620,10 +659,11 @@ class TrimEnd(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Trim(_BaseExpr):
+class Trim(WriteOp):
     _op = aerospike._OP_STRING_TRIM
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -637,10 +677,11 @@ class Trim(_BaseExpr):
 
             The string in the bin with the value trimmed.
         """
+        super().__init__(policy)
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadStart(_BaseExpr):
+class PadStart(WriteOp):
     _op = aerospike._OP_STRING_PAD_START
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
@@ -656,14 +697,15 @@ class PadStart(_BaseExpr):
 
             The string in the bin with the value padded.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_TARGET_LENGTH_KEY: target_length,
             aerospike._STR_EXP_PAD_STRING_KEY: pad_string
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadEnd(_BaseExpr):
+class PadEnd(WriteOp):
     _op = aerospike._OP_STRING_PAD_END
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
@@ -679,14 +721,15 @@ class PadEnd(_BaseExpr):
 
             The string in the bin with the value padded.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_TARGET_LENGTH_KEY: target_length,
             aerospike._STR_EXP_PAD_STRING_KEY: pad_string
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Repeat(_BaseExpr):
+class Repeat(WriteOp):
     _op = aerospike._OP_STRING_REPEAT
 
     def __init__(self, policy: StringPolicy, count: int, bin: "TypeBinName"):
@@ -701,27 +744,27 @@ class Repeat(_BaseExpr):
 
             The string in the bin with the value repeated.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_COUNT_KEY: count,
         }
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class RegexReplace(_BaseExpr):
+class RegexReplace(WriteOp):
     _op = aerospike._OP_STRING_REGEX_REPLACE
 
     def __init__(
-            self,
-            policy: StringPolicy,
-            pattern: str,
-            replacement: int,
-            regex_flags: RegexFlags,
-            bin: "TypeBinName"
+        self,
+        policy: StringPolicy,
+        pattern: str,
+        replacement: int,
+        regex_flags: RegexFlags,
+        bin: "TypeBinName"
     ):
         """
         Args:
 
-            {str_policy}
             {pattern}
             {replacement}
             {regex_flags}
@@ -731,7 +774,8 @@ class RegexReplace(_BaseExpr):
 
             The string in the bin with the value replaced.
         """
-        self._fixed = {
+        super().__init__(policy)
+        self._fixed |= {
             aerospike._STR_EXP_PATTERN_KEY: pattern,
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement,
             aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
@@ -739,7 +783,7 @@ class RegexReplace(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ToString(_BaseExpr):
+class ToString(WriteOp):
     _op = aerospike._AS_EXP_CODE_CALL
 
     def __init__(self, bin: "TypeBinName"):
@@ -776,8 +820,9 @@ __exp_class_to_op_func = {
     RegexCompare: str_ops.regex_compare,
     Insert: str_ops.insert,
     Overwrite: str_ops.overwrite,
+    Append: str_ops.append,
+    Prepend: str_ops.prepend,
     Concat: str_ops.concat,
-    ConcatList: str_ops.concat_list,
     Snip: str_ops.snip,
     Replace: str_ops.replace,
     ReplaceAll: str_ops.replace_all,
@@ -802,7 +847,7 @@ kwargs = {
 }
 
 for _, cls_value in __all_classes:
-    if cls_value.__module__ != __name__:
+    if cls_value.__module__ != __name__ or cls_value == WriteOp:
         continue
 
     __generate_docstrings_for_all_func_members(cls_value, kwargs)

@@ -207,7 +207,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_GET_BY_VALUE_LIST:
     case OP_LIST_REMOVE_BY_VALUE_LIST:
-    case OP_STRING_CONCAT_LIST:
+    case OP_STRING_CONCAT:
         list_values_key = AS_PY_VALUES_KEY;
         break;
     case OP_LIST_APPEND_ITEMS:
@@ -221,7 +221,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE_LIST:
     case OP_LIST_APPEND_ITEMS:
     case OP_LIST_INSERT_ITEMS:
-    case OP_STRING_CONCAT_LIST:
+    case OP_STRING_CONCAT:
         if (get_val_list(self, err, list_values_key, op_dict, (as_list **)&val1,
                          static_pool, serializer_type) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
@@ -289,11 +289,9 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     }
 
     int64_t end = 0;
-    bool end_found = false;
     switch (operation_code) {
     case OP_STRING_SNIP: {
-        as_status status =
-            get_optional_int64_t(err, "end", op_dict, &end, &end_found);
+        as_status status = get_int64_t(err, "end", op_dict, &end);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
@@ -375,7 +373,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
             break;
         case OP_STRING_INSERT:
         case OP_STRING_OVERWRITE:
-        case OP_STRING_CONCAT:
             str_attr_key = "value";
             break;
         case OP_STRING_PAD_START:
@@ -690,23 +687,13 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
                                                  index, str_attr_value1);
         break;
     case OP_STRING_CONCAT:
-        success = as_operations_string_concat(ops, bin, ctx_ref, &str_policy,
-                                              str_attr_value1);
-        break;
-    case OP_STRING_CONCAT_LIST:
         // TODO: test negative test case where a non-str value is in as_list
         success = as_operations_string_concat_list(
             ops, bin, ctx_ref, &str_policy, (as_list *)val1);
         break;
     case OP_STRING_SNIP:
-        if (end_found) {
-            success = as_operations_string_snip_range(ops, bin, ctx_ref,
-                                                      &str_policy, start, end);
-        }
-        else {
-            success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,
-                                                start);
-        }
+        success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,
+                                            start, end);
         break;
     case OP_STRING_REPLACE:
         success = as_operations_string_replace(
@@ -755,7 +742,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_REGEX_REPLACE:
         success = as_operations_string_regex_replace(
-            ops, bin, ctx_ref, str_attr_value1, str_attr_value2, regex_flags);
+            ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
+            regex_flags);
         break;
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
