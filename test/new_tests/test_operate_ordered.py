@@ -4,7 +4,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import operations, string_operations
 import warnings
 
 
@@ -77,7 +77,7 @@ class TestOperateOrdered(object):
             (
                 ("test", "demo", 1),
                 [
-                    operations.prepend("name", "ram"),
+                    string_operations.prepend("name", "ram"),
                     operations.increment("age", 3),
                     operations.read("name")
                 ],
