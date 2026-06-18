@@ -509,6 +509,14 @@ class TestStringOperations:
 
             assert bins[bin_name] == EXAMPLE_STR + "".join(value_list)
 
+    def test_concat_with_non_str_in_list(self):
+        ops = [
+            str_ops.concat(bin_name=STR_BIN_NAME, value_list=[1])
+        ]
+
+        with pytest.raises(e.ServerError):
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
     @pytest.mark.parametrize(
         "end_kwargs",
         [

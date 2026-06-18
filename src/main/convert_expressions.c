@@ -453,20 +453,18 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [VAR] = EXP_SZ(as_exp_var("")),
         [UNKNOWN] = EXP_SZ(as_exp_unknown()),
         [OP_STRING_STRLEN] = EXP_SZ(as_exp_string_strlen(NIL)),
-        // TODO: needs to be overloaded
         [OP_STRING_SUBSTR] = EXP_SZ(as_exp_string_substr(0, NIL)),
+        [OP_STRING_SUBSTR_RANGE] =
+            EXP_SZ(as_exp_string_substr_range(0, 0, NIL)),
         [OP_STRING_CHAR_AT] = EXP_SZ(as_exp_string_char_at(0, NIL)),
-        // TODO: needs to be overloaded
-        [OP_STRING_FIND] = EXP_SZ(as_exp_string_find(0, NIL)),
-        // TODO: double check enough space is allocated for the string
+        [OP_STRING_FIND] = EXP_SZ(as_exp_string_find_occurrence("", 0, NIL)),
         [OP_STRING_CONTAINS] = EXP_SZ(as_exp_string_contains("", NIL)),
         [OP_STRING_STARTS_WITH] = EXP_SZ(as_exp_string_starts_with("", NIL)),
         [OP_STRING_ENDS_WITH] = EXP_SZ(as_exp_string_ends_with("", NIL)),
         [OP_STRING_TO_INTEGER] = EXP_SZ(as_exp_string_to_integer(NIL)),
         [OP_STRING_TO_DOUBLE] = EXP_SZ(as_exp_string_to_double(NIL)),
         [OP_STRING_BYTE_LENGTH] = EXP_SZ(as_exp_string_byte_length(NIL)),
-        // TODO: needs to be overloaded
-        [OP_STRING_IS_NUMERIC] = EXP_SZ(as_exp_string_is_numeric(NIL)),
+        [OP_STRING_IS_NUMERIC] = EXP_SZ(as_exp_string_is_numeric_type(0, NIL)),
         [OP_STRING_IS_UPPER] = EXP_SZ(as_exp_string_is_upper(NIL)),
         [OP_STRING_IS_LOWER] = EXP_SZ(as_exp_string_is_lower(NIL)),
         [OP_STRING_TO_BLOB] = EXP_SZ(as_exp_string_to_blob(NIL)),
@@ -474,9 +472,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_SPLIT_SEPARATOR] =
             EXP_SZ(as_exp_string_split_separator("", NIL)),
         [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
-        // TODO: overload. check space for string
         [OP_STRING_REGEX_COMPARE] =
-            EXP_SZ(as_exp_string_regex_compare("", NIL)),
+            EXP_SZ(as_exp_string_regex_compare_flags("", 0, NIL)),
         [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
@@ -497,7 +494,6 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_string_pad_start(NULL, 1, "", NIL)),
         [OP_STRING_PAD_END] = EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
         [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
-        // TODO: check space for string. Do for the other ops
         [OP_STRING_REGEX_REPLACE] =
             EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL))};
 
@@ -1864,7 +1860,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             int64_t tmp_value;
             if (get_int64_t(err, _STR_EXP_NUMERIC_TYPE_KEY, temp_expr->pydict,
                             &tmp_value) != AEROSPIKE_OK) {
-                // TODO: wondering if this can cause a memory leak?
                 return err->code;
             }
             numeric_type = (as_string_numeric_type)tmp_value;

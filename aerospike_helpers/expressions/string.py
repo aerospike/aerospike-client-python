@@ -260,7 +260,7 @@ class ByteLength(_BaseExpr):
 class IsNumeric(_BaseExpr):
     _op = aerospike._OP_STRING_IS_NUMERIC
 
-    def __init__(self, bin: "TypeBinName", numeric_type: NumericType = NumericType.ANY):
+    def __init__(self, numeric_type: NumericType, bin: "TypeBinName"):
         """
         Args:
 

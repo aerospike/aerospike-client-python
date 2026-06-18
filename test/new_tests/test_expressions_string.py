@@ -12,8 +12,7 @@ from .string_helpers import *
 from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 
-# TODO: verify that subclassing is correct behavior
-class TestExpressions(TestBaseClass):
+class TestExpressions:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
         self.as_connection.put(
@@ -23,16 +22,15 @@ class TestExpressions(TestBaseClass):
 
         yield
 
-    # TODO: should use hashmap that maps bin names to values.
     @pytest.mark.parametrize(
         "expr, expected_result",
         [
-            (str_expr.StrLen(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
-            (str_expr.SubStr(start=START_IDX, end=None, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:]),
-            (str_expr.SubStr(start=START_IDX, end=START_IDX + 2, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX:(START_IDX + 2)]),
-            (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), EXAMPLE_STR[START_IDX]),
-            (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), EXAMPLE_STR[-1]),
-            (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), EXAMPLE_STR.find(NEEDLE)),
+            (str_expr.StrLen(bin=STR_BIN_NAME), len(BINS[STR_BIN_NAME])),
+            (str_expr.SubStr(start=START_IDX, end=None, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:]),
+            (str_expr.SubStr(start=START_IDX, end=START_IDX + 2, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX:(START_IDX + 2)]),
+            (str_expr.CharAt(index=START_IDX, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][START_IDX]),
+            (str_expr.CharAt(index=-1, bin=STR_BIN_NAME), BINS[STR_BIN_NAME][-1]),
+            (str_expr.Find(needle=NEEDLE, occurrence=1, bin=STR_BIN_NAME), BINS[STR_BIN_NAME].find(NEEDLE)),
             (str_expr.Find(needle=NEEDLE, occurrence=2, bin=STR_BIN_NAME), 4),
             (str_expr.Find(needle=NOT_IN_EXAMPLE_STR, occurrence=1, bin=STR_BIN_NAME), -1),
             (str_expr.Contains(needle=NEEDLE, bin=STR_BIN_NAME), True),
@@ -41,29 +39,29 @@ class TestExpressions(TestBaseClass):
             (str_expr.StartsWith(prefix=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
             (str_expr.EndsWith(suffix=NEEDLE, bin=STR_BIN_NAME), True),
             (str_expr.EndsWith(suffix=NOT_IN_EXAMPLE_STR, bin=STR_BIN_NAME), False),
-            (str_expr.ToInteger(bin=STR_WITH_INT_BIN_NAME), int(STRING_WITH_INT)),
-            (str_expr.ToDouble(bin=STR_WITH_DOUBLE_BIN_NAME), float(STRING_WITH_DOUBLE)),
-            (str_expr.ByteLength(bin=STR_BIN_NAME), len(EXAMPLE_STR)),
-            (str_expr.IsNumeric(bin=STR_BIN_NAME), False),
-            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME), True),
-            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME, numeric_type=NumericType.INT), True),
-            (str_expr.IsNumeric(bin=STR_WITH_DOUBLE_BIN_NAME, numeric_type=NumericType.FLOAT), True),
-            (str_expr.IsNumeric(bin=STR_WITH_DOUBLE_BIN_NAME, numeric_type=NumericType.INT), False),
-            (str_expr.IsNumeric(bin=STR_WITH_INT_BIN_NAME, numeric_type=NumericType.FLOAT), False),
+            (str_expr.ToInteger(bin=STR_WITH_INT_BIN_NAME), int(BINS[STR_WITH_INT_BIN_NAME])),
+            (str_expr.ToDouble(bin=STR_WITH_DOUBLE_BIN_NAME), float(BINS[STR_WITH_DOUBLE_BIN_NAME])),
+            (str_expr.ByteLength(bin=STR_BIN_NAME), len(BINS[STR_BIN_NAME])),
+            (str_expr.IsNumeric(numeric_type=NumericType.ANY, bin=STR_BIN_NAME), False),
+            (str_expr.IsNumeric(numeric_type=NumericType.ANY, bin=STR_WITH_INT_BIN_NAME), True),
+            (str_expr.IsNumeric(numeric_type=NumericType.INT, bin=STR_WITH_INT_BIN_NAME), True),
+            (str_expr.IsNumeric(numeric_type=NumericType.FLOAT, bin=STR_WITH_DOUBLE_BIN_NAME), True),
+            (str_expr.IsNumeric(numeric_type=NumericType.INT, bin=STR_WITH_DOUBLE_BIN_NAME), False),
+            (str_expr.IsNumeric(numeric_type=NumericType.FLOAT, bin=STR_WITH_INT_BIN_NAME), False),
             (str_expr.IsUpper(bin=STR_BIN_NAME), False),
             (str_expr.IsUpper(bin=UPPERCASE_STR_BIN_NAME), True),
             (str_expr.IsLower(bin=STR_BIN_NAME), True),
             (str_expr.IsLower(bin=UPPERCASE_STR_BIN_NAME), False),
-            (str_expr.ToBlob(bin=STR_BIN_NAME), bytes(EXAMPLE_STR, encoding="utf-8")),
-            (str_expr.Split(bin=STR_BIN_NAME), list(EXAMPLE_STR)),
-            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator='.'), STRING_WITH_DOUBLE.split('.')),
-            (str_expr.Split(bin=STR_WITH_DOUBLE_BIN_NAME, separator=','), [STRING_WITH_DOUBLE]),
+            (str_expr.ToBlob(bin=STR_BIN_NAME), bytes(BINS[STR_BIN_NAME], encoding="utf-8")),
+            (str_expr.Split(bin=STR_BIN_NAME), list(BINS[STR_BIN_NAME])),
+            (str_expr.SplitSeparator(bin=STR_WITH_DOUBLE_BIN_NAME, separator='.'), BINS[STR_WITH_DOUBLE_BIN_NAME].split('.')),
+            (str_expr.SplitSeparator(bin=STR_WITH_DOUBLE_BIN_NAME, separator=','), [BINS[STR_WITH_DOUBLE_BIN_NAME]]),
             (
                 str_expr.Base64Decode(bin=BASE64_ENCODED_BIN_NAME),
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
             ),
             (
-                str_expr.RegexCompare(pattern=MULTIBYTE_CODEPOINT, regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern=BINS[MULTIBYTE_CODEPOINT_BIN_NAME], regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 True
             ),
             (
@@ -108,7 +106,6 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, expected_result",
         [
-            # TODO: maybe have a place to share expected results for both string ops and exprs.
             (
                 str_expr.Insert(policy=None, index=1, value=NEEDLE, bin=STR_BIN_NAME),
                 EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]
@@ -125,7 +122,14 @@ class TestExpressions(TestBaseClass):
                 str_expr.Overwrite(policy=None, index=0, value=EXAMPLE_STR + "a", bin=STR_BIN_NAME),
                 EXAMPLE_STR + "a"
             ),
-            # TODO: add test case for append and prepend.
+            (
+                str_expr.Append(policy=None, value=NEEDLE, bin=STR_BIN_NAME),
+                EXAMPLE_STR + NEEDLE
+            ),
+            (
+                str_expr.Prepend(policy=None, values=NEEDLE, bin=STR_BIN_NAME),
+                NEEDLE + EXAMPLE_STR
+            ),
             (
                 str_expr.Concat(policy=None, values=[NEEDLE], bin=STR_BIN_NAME),
                 EXAMPLE_STR + NEEDLE
