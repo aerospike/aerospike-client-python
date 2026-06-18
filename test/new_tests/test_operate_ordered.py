@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations, string_operations
+from .conftest import choose_server_compat_str_append
 import warnings
 
 
@@ -170,7 +171,7 @@ class TestOperateOrdered(object):
         }
 
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
         ]
@@ -189,7 +190,7 @@ class TestOperateOrdered(object):
         self.as_connection.put(key, rec)
 
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "age"},
@@ -213,7 +214,7 @@ class TestOperateOrdered(object):
                 },
                 {"gen": 10},
                 [
-                    string_operations.append("name", "aa"),
+                    choose_server_compat_str_append("name", "aa"),
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
@@ -239,7 +240,7 @@ class TestOperateOrdered(object):
         meta = {"gen": gen + 5}
 
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -602,7 +603,7 @@ class TestOperateOrdered(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -630,7 +631,7 @@ class TestOperateOrdered(object):
         meta = {"gen": gen}
 
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]

@@ -10,7 +10,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import operations, string_operations
 from aerospike_helpers.batch.records import BatchRecords, Write
 from contextlib import nullcontext
 
@@ -354,3 +354,9 @@ def check_user_dictionary(user: dict):
 
     # We assume no clients were logged in as this user
     assert user.get("conns_in_use") == 0
+
+def choose_server_compat_str_append(bin: str, val: str):
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        return operations.append(bin, val)
+    else:
+        return string_operations.append(bin, val)

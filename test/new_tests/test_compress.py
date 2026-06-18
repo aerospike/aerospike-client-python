@@ -10,6 +10,7 @@ except ImportError:
 
 import aerospike
 from aerospike_helpers.operations import operations, string_operations
+from .conftest import choose_server_compat_str_append
 
 
 class TestCompress:
@@ -82,7 +83,7 @@ class TestCompress:
         }
 
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             operations.increment("age", 3),
             operations.read("name")
         ]

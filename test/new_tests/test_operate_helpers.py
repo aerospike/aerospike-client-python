@@ -5,6 +5,7 @@ from aerospike_helpers.operations import list_operations, operations, string_ope
 
 import aerospike
 from aerospike import exception as e
+from .conftest import choose_server_compat_str_append
 import warnings
 
 # OPERATIONS
@@ -262,7 +263,7 @@ class TestOperate(object):
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3), operations.read("name")]
 
         _, _, bins = self.as_connection.operate(key, llist, {}, policy)
 
@@ -282,7 +283,7 @@ class TestOperate(object):
                     "ttl": 1200
                 },
                 {"gen": 10},
-                [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3), operations.read("name")],
             ),
         ],
     )
@@ -305,7 +306,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen}
 
-        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3), operations.read("name")]
         (key, meta, bins) = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
@@ -344,7 +345,7 @@ class TestOperate(object):
             "gen": gen + 5,
         }
         llist = [
-            string_operations.append("name", "aa"),
+            choose_server_compat_str_append("name", "aa"),
             operations.increment("age", 3),
         ]
 
@@ -365,7 +366,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen}
 
-        llist = [string_operations.append("name", "aa"), operations.increment("age", 3)]
+        llist = [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3)]
 
         with pytest.raises(e.RecordGenerationError):
             self.as_connection.operate(key, llist, meta, policy)
@@ -400,7 +401,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
 
-        llist = [string_operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3), operations.read("name")]
         _, _, bins = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
@@ -421,7 +422,7 @@ class TestOperate(object):
         Invoke operate() with non-existent bin
         """
         key = ("test", "demo", 1)
-        llist = [string_operations.append("addr", "pune"), operations.read("addr")]
+        llist = [choose_server_compat_str_append("addr", "pune"), operations.read("addr")]
         _, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == {"addr": "pune"}
