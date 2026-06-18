@@ -126,7 +126,7 @@ class TestExpressions:
                 EXAMPLE_STR + NEEDLE
             ),
             (
-                str_expr.Prepend, {"values": NEEDLE, "bin": STR_BIN_NAME},
+                str_expr.Prepend, {"value": NEEDLE, "bin": STR_BIN_NAME},
                 NEEDLE + EXAMPLE_STR
             ),
             (
