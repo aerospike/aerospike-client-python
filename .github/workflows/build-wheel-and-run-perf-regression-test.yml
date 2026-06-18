@@ -12,12 +12,11 @@ on:
 
 jobs:
   build-wheel-for-feature-branch:
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       # TODO: single source
       platform-tag: manylinux_x86_64
-      python-tags: '["cp310"]'
-      sha-to-build-and-test: ${{ github.sha }}
+      python-versions: '["3.10"]'
     secrets: inherit
 
   run-qe-test:
@@ -26,4 +25,7 @@ jobs:
     with:
       get-wheel-from-jfrog: false
       test-definition: ${{ inputs.test-definition }}
+      # CLIENT-4733-migrate-from-internal-ansible-api-to-ansible-runner-to-clean-up-technical-debt
+      test-code-revision: af16b3a63c8852760ad78c64301135adb55dfdeb
+      qe-docker-revision: cicd-client-performance-regression-tests-requirements-txt
     secrets: inherit
