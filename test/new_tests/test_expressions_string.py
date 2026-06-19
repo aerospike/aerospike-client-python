@@ -84,6 +84,29 @@ class TestExpressions:
     @pytest.mark.parametrize(
         "expr",
         [
+            str_expr.SubStr(start="1", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start="1", end=4, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start=1, end="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.CharAt(index="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Find(needle=bytearray('a'), occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Contains(needle=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.StartsWith(prefix=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.EndsWith(suffix=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=bytearray('a')),
+            str_expr.RegexCompare(pattern=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+        ]
+    )
+    def test_invalid_param(self, expr):
+        compiled_expr = expr.compile()
+        ops = [
+            expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)
+
+    @pytest.mark.parametrize(
+        "expr",
+        [
             str_expr.ToInteger(bin=STR_BIN_NAME),
             str_expr.ToDouble(bin=STR_BIN_NAME)
         ]
