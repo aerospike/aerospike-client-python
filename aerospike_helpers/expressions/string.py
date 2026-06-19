@@ -388,7 +388,7 @@ class RegexCompare(_BaseExpr):
 
             bin: A bin expression to apply this function to.
             regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
-            pattern": "pattern (str): the regex pattern to match against.
+            pattern (str): the regex pattern to match against.
 
         Returns:
 
@@ -801,7 +801,7 @@ class RegexReplace(WriteOp):
         """
         Args:
 
-            pattern": "pattern (str): the regex pattern to match against.
+            pattern (str): the regex pattern to match against.
             replacement (str): the string to replace with.
             regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
             bin: A bin expression to apply this function to.

@@ -384,7 +384,7 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
     Args:
 
         bin_name (str): name of string bin.
-        pattern": "pattern (str): the regex pattern to match against.
+        pattern (str): the regex pattern to match against.
         regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
         ctx (list | None): Optional path into a string nested inside a list or map.
     """
@@ -803,7 +803,7 @@ def regex_replace(
     Args:
 
         bin_name (str): name of string bin.
-        pattern": "pattern (str): the regex pattern to match against.
+        pattern (str): the regex pattern to match against.
         replacement (str): the string to replace with.
         regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
         policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
