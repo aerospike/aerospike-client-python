@@ -24,7 +24,7 @@ import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr, _Keys
 from aerospike_helpers.expressions.base import StrBin
 from aerospike_helpers.operations import string_operations as str_ops
-from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings_for_all_func_members
+from ..string_helpers import RegexFlags, StringPolicy, NumericType
 import inspect
 import sys
 
@@ -44,7 +44,7 @@ class StrLen(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -64,7 +64,7 @@ class SubStr(_BaseExpr):
         Args:
 
             start: The starting index of the substring.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -88,7 +88,7 @@ class SubStrRange(_BaseExpr):
 
             start: Starting codepoint index, inclusive.
             end: Ending codepoint index, exclusive.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -111,7 +111,7 @@ class CharAt(_BaseExpr):
         Args:
 
             index: the index of the codepoint to return.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -132,9 +132,9 @@ class Find(_BaseExpr):
         """
         Args:
 
-            {needle_get}
+            needle (int): the string to search for.
             occurrence: the occurrence of the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -156,8 +156,8 @@ class Contains(_BaseExpr):
         """
         Args:
 
-            {needle_get}
-            {bin}
+            needle (int): the string to search for.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -177,7 +177,7 @@ class StartsWith(_BaseExpr):
         Args:
 
             prefix: the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -197,7 +197,7 @@ class EndsWith(_BaseExpr):
         Args:
 
             suffix: the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -216,7 +216,7 @@ class ToInteger(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -232,7 +232,7 @@ class ToDouble(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -248,7 +248,7 @@ class ByteLength(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -265,7 +265,7 @@ class IsNumeric(_BaseExpr):
         Args:
 
             numeric_type: the numeric type to filter for.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -286,7 +286,7 @@ class IsUpper(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -302,7 +302,7 @@ class IsLower(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -318,7 +318,7 @@ class ToBlob(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -334,7 +334,7 @@ class Split(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -350,7 +350,7 @@ class SplitSeparator(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
             separator: The separator to split by.
 
         Returns:
@@ -370,7 +370,7 @@ class Base64Decode(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -386,9 +386,9 @@ class RegexCompare(_BaseExpr):
         """
         Args:
 
-            {bin}
-            {regex_flags}
-            {pattern}
+            bin: A bin expression to apply this function to
+            regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
+            pattern": "pattern (str): the regex pattern to match against.
 
         Returns:
 
@@ -415,10 +415,10 @@ class Insert(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             index: The index of the codepoint to insert at.
             value: The value to insert.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -439,10 +439,10 @@ class Overwrite(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             index: The index of the codepoint to insert at.
             value: The value to insert.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -463,9 +463,9 @@ class Append(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             value: The value to append.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -485,9 +485,9 @@ class Prepend(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             value: The value to prepend.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -507,9 +507,9 @@ class Concat(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             values: an expression that evaluates to the list of values to append.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -526,10 +526,10 @@ class Snip(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             start: First codepoint to remove, inclusive.
             end: One past the last codepoint to remove, exclusive.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -550,10 +550,10 @@ class Replace(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {needle_to_replace}
-            {replacement}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            needle (str): the string to replace.
+            replacement (str): the string to replace with.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -574,10 +574,10 @@ class ReplaceAll(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {needle_to_replace}
-            {replacement}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            needle (str): the string to replace.
+            replacement (str): the string to replace with.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -598,8 +598,8 @@ class Upper(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -616,8 +616,8 @@ class Lower(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -634,8 +634,8 @@ class CaseFold(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -652,8 +652,8 @@ class NormalizeNFC(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -670,8 +670,8 @@ class TrimStart(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -688,8 +688,8 @@ class TrimEnd(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -706,8 +706,8 @@ class Trim(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -724,10 +724,10 @@ class PadStart(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {target_length}
-            {pad_string}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            target_length (int): the target length of the string.
+            pad_string (str): the string to pad with.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -748,10 +748,10 @@ class PadEnd(WriteOp):
         """
         Args:
 
-            {str_policy}
-            {target_length}
-            {pad_string}
-            {bin}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+            target_length (int): the target length of the string.
+            pad_string (str): the string to pad with.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -772,9 +772,9 @@ class Repeat(WriteOp):
         """
         Args:
 
-            {str_policy}
+            policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
             count: the number of times to repeat the string.
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -801,10 +801,10 @@ class RegexReplace(WriteOp):
         """
         Args:
 
-            {pattern}
-            {replacement}
-            {regex_flags}
-            {bin}
+            pattern": "pattern (str): the regex pattern to match against.
+            replacement (str): the string to replace with.
+            regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -826,7 +826,7 @@ class ToString(WriteOp):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to
 
         Returns:
 
@@ -880,15 +880,11 @@ __exp_class_to_op_func = {
 
 __this_module = sys.modules[__name__]
 __all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
-kwargs = {
-    "bin": "bin: A bin expression to apply this function to."
-}
 
 for _, cls_value in __all_classes:
     if cls_value.__module__ != __name__ or cls_value == WriteOp:
         continue
 
-    __generate_docstrings_for_all_func_members(cls_value, kwargs)
     op_func = __exp_class_to_op_func[cls_value]
     cls_value.__doc__ = (
         "Create an expression that performs a "

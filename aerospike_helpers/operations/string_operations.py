@@ -35,8 +35,7 @@ Python strings, but they cannot embedded NULL bytes.
 """
 
 import aerospike
-from ..string_helpers import NumericType, RegexFlags, StringPolicy, __generate_docstrings_for_all_func_members
-import sys
+from ..string_helpers import NumericType, RegexFlags, StringPolicy
 
 TypeCTX = list | None
 
@@ -53,8 +52,8 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_STRLEN,
@@ -70,9 +69,9 @@ def substr(bin_name: str, start: int, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         start (int): Starting codepoint index.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_SUBSTR,
@@ -89,10 +88,10 @@ def substr_range(bin_name: str, start: int, end: int, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         start (int): Starting codepoint index, inclusive.
         end (int): Ending codepoint index, exclusive.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_SUBSTR_RANGE,
@@ -110,9 +109,9 @@ def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         index (int): Index of the codepoint to return.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_CHAR_AT,
@@ -129,11 +128,11 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {needle_get}
+        bin_name (str): name of string bin.
+        needle (int): the string to search for.
         occurrence (int): The occurrence of the string to search for.
         index (int): Index of the codepoint to return.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_FIND,
@@ -150,9 +149,9 @@ def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {needle_get}
-        {ctx}
+        bin_name (str): name of string bin.
+        needle (int): the string to search for.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_CONTAINS,
@@ -169,9 +168,9 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         prefix (str): The string to search for.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_STARTS_WITH,
@@ -188,9 +187,9 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         suffix (str): The string to search for.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_ENDS_WITH,
@@ -207,8 +206,8 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TO_INTEGER,
@@ -224,8 +223,8 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TO_DOUBLE,
@@ -241,8 +240,8 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_BYTE_LENGTH,
@@ -258,9 +257,9 @@ def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: 
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         numeric_type (:py:class:`~aerospike_helpers.string_helpers.NumericType`): The numeric type to filter for.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_IS_NUMERIC,
@@ -277,8 +276,8 @@ def is_upper(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_IS_UPPER,
@@ -294,8 +293,8 @@ def is_lower(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_IS_LOWER,
@@ -311,8 +310,8 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TO_BLOB,
@@ -328,8 +327,8 @@ def split(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_SPLIT,
@@ -348,9 +347,9 @@ def split_separator(bin_name: str, separator: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         separator (str): The separator to split by.
-        {ctx}
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_SPLIT_SEPARATOR,
@@ -367,8 +366,8 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
 
     Args:
 
-        {bin_name}
-        {ctx}
+        bin_name (str): name of string bin.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_B64_DECODE,
@@ -384,10 +383,10 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 
     Args:
 
-        {bin_name}
-        {pattern}
-        {regex_flags}
-        {ctx}
+        bin_name (str): name of string bin.
+        pattern": "pattern (str): the regex pattern to match against.
+        regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_REGEX_COMPARE,
@@ -405,11 +404,11 @@ def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = 
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         index (int): Index of the codepoint to insert at.
         value (str): The value to insert.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_INSERT,
@@ -429,11 +428,11 @@ def overwrite(bin_name: str, index: int, value: str, policy: StringPolicy | None
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         index (int): Index of the codepoint to overwrite at.
         value (str): The value to overwrite.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_OVERWRITE,
@@ -453,10 +452,10 @@ def append(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: T
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         value (str): The value to append.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_APPEND,
@@ -475,10 +474,10 @@ def prepend(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: 
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         value (str): The value to prepend.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_PREPEND,
@@ -496,10 +495,10 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         value_list (str): The list of values to append.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_CONCAT,
@@ -516,11 +515,11 @@ def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         start (int): First codepoint to remove, inclusive.
         end (int): One past the last codepoint to remove, exclusive.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_SNIP,
@@ -539,11 +538,11 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
 
     Args:
 
-        {bin_name}
-        {needle_to_replace}
-        {replacement}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        needle (str): the string to replace.
+        replacement (str): the string to replace with.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_REPLACE,
@@ -562,11 +561,11 @@ def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPoli
 
     Args:
 
-        {bin_name}
-        {needle_to_replace}
-        {replacement}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        needle (str): the string to replace.
+        replacement (str): the string to replace with.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_REPLACE_ALL,
@@ -584,9 +583,9 @@ def upper(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_UPPER,
@@ -602,9 +601,9 @@ def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_LOWER,
@@ -621,9 +620,9 @@ def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_CASE_FOLD,
@@ -640,9 +639,9 @@ def normalize_nfc(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCT
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_NORMALIZE_NFC,
@@ -659,9 +658,9 @@ def trim_start(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX =
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TRIM_START,
@@ -678,9 +677,9 @@ def trim_end(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TRIM_END,
@@ -696,9 +695,9 @@ def trim(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None)
 
     Args:
 
-        {bin_name}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_TRIM,
@@ -722,11 +721,11 @@ def pad_start(
 
     Args:
 
-        {bin_name}
-        {target_length}
-        {pad_string}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        target_length (int): the target length of the string.
+        pad_string (str): the string to pad with.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_PAD_START,
@@ -752,11 +751,11 @@ def pad_end(
 
     Args:
 
-        {bin_name}
-        {target_length}
-        {pad_string}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        target_length (int): the target length of the string.
+        pad_string (str): the string to pad with.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_PAD_END,
@@ -774,10 +773,10 @@ def repeat(bin_name: str, count: int, policy: StringPolicy | None = None, ctx: T
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
         count (int): The number of times to repeat the string. Must be non-negative.
-        {str_policy}
-        {ctx}
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_REPEAT,
@@ -803,12 +802,12 @@ def regex_replace(
 
     Args:
 
-        {bin_name}
-        {pattern}
-        {replacement}
-        {regex_flags}
-        {str_policy}
-        {ctx}
+        bin_name (str): name of string bin.
+        pattern": "pattern (str): the regex pattern to match against.
+        replacement (str): the string to replace with.
+        regex_flags (:py:class:`~aerospike_helpers.string_helpers.RegexFlags`): The regex flags to use.
+        policy (:py:class:`~aerospike_helpers.string_helpers.StringPolicy`): String policy.
+        ctx (list | None): Optional path into a string nested inside a list or map.
     """
     return {
         "op": aerospike._OP_STRING_REGEX_REPLACE,
@@ -830,18 +829,9 @@ def to_string(bin_name: str):
 
     Args:
 
-        {bin_name}
+        bin_name (str): name of string bin.
     """
     return {
         "op": aerospike._OP_STRING_TO_STRING,
         "bin_name": bin_name,
     }
-
-# These descriptions are shared across all the string operations
-
-
-kwargs = {
-    "bin_name": "bin_name (str): name of string bin.",
-    "ctx": "ctx (list | None): Optional path into a string nested inside a list or map."
-}
-__generate_docstrings_for_all_func_members(sys.modules[__name__], kwargs)
