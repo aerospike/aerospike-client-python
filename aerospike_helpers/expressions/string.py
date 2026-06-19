@@ -801,6 +801,7 @@ class RegexReplace(_WriteOp):
         """
         Args:
 
+            policy: No-op.
             pattern: the regex pattern to match against.
             replacement: the string to replace with.
             regex_flags: The regex flags to use.
