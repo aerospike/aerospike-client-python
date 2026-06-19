@@ -346,12 +346,12 @@ class Split(_BaseExpr):
 class SplitSeparator(_BaseExpr):
     _op = aerospike._OP_STRING_SPLIT_SEPARATOR
 
-    def __init__(self, bin: "TypeBinName", separator: str):
+    def __init__(self, separator: str, bin: "TypeBinName"):
         """
         Args:
 
-            bin: A bin expression to apply this function to.
             separator: The separator to split by.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
