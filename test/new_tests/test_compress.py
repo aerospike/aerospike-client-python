@@ -83,7 +83,7 @@ class TestCompress:
         }
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             operations.increment("age", 3),
             operations.read("name")
         ]

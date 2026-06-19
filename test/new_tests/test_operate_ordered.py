@@ -171,7 +171,7 @@ class TestOperateOrdered(object):
         }
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
         ]
@@ -190,7 +190,7 @@ class TestOperateOrdered(object):
         self.as_connection.put(key, rec)
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "age"},
@@ -240,7 +240,7 @@ class TestOperateOrdered(object):
         meta = {"gen": gen + 5}
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -255,7 +255,7 @@ class TestOperateOrdered(object):
         """
         key1 = ("test", "demo", "key11")
         llist = [
-            choose_server_compat_str_prepend("loc", "mumbai"),
+            operations.prepend("loc", "mumbai"),
             {"op": aerospike.OPERATOR_READ, "bin": "loc"},
         ]
         _, _, bins = self.as_connection.operate_ordered(key1, llist)
@@ -555,7 +555,7 @@ class TestOperateOrdered(object):
         max_length = "a" * 21
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
         ]
 
@@ -574,7 +574,7 @@ class TestOperateOrdered(object):
         key = ("test", "demo", 1)
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -603,7 +603,7 @@ class TestOperateOrdered(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -631,7 +631,7 @@ class TestOperateOrdered(object):
         meta = {"gen": gen}
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -658,7 +658,7 @@ class TestOperateOrdered(object):
         client1 = aerospike.client(config)
         client1.close()
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -724,7 +724,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with empty string key
         """
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered("", llist)
@@ -737,7 +737,7 @@ class TestOperateOrdered(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            choose_server_compat_str_prepend("name", "ram")
+            operations.prepend("name", "ram")
         ]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate_ordered(key, llist, {}, policy, "")
@@ -750,7 +750,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(key, llist, {}, "")
@@ -761,7 +761,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with key is none
         """
         llist = [
-            choose_server_compat_str_prepend("name", "ram")
+            operations.prepend("name", "ram")
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate_ordered(None, llist)
@@ -832,7 +832,7 @@ class TestOperateOrdered(object):
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]

@@ -230,7 +230,7 @@ class TestQueryApply(object):
         number_predicate = predicates.equals("number", 3)
         # query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
 
-        ops = [choose_server_compat_str_append(test_bin, "new_val")]
+        ops = [operations.append(test_bin, "new_val")]
 
         query.add_ops(ops)
         query.where(number_predicate)

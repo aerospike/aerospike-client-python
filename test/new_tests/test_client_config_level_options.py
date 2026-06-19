@@ -503,7 +503,7 @@ class TestConfigTTL:
         scan = self.client.scan("test", "demo")
         scan.ttl = aerospike.TTL_CLIENT_DEFAULT
         ops = [
-            choose_server_compat_str_append("bin", "a")
+            operations.append("bin", "a")
         ]
         scan.add_ops(ops)
         job_id = scan.execute_background()
@@ -518,7 +518,7 @@ class TestConfigTTL:
         query = self.client.query("test", "demo")
         query.ttl = aerospike.TTL_CLIENT_DEFAULT
         ops = [
-            choose_server_compat_str_append("bin", "a")
+            operations.append("bin", "a")
         ]
         query.add_ops(ops)
         job_id = query.execute_background()

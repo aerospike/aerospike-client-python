@@ -234,7 +234,7 @@ class TestOperate(object):
         }
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -264,7 +264,7 @@ class TestOperate(object):
         self.as_connection.put(key, rec)
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -321,7 +321,7 @@ class TestOperate(object):
         meta = {"gen": gen}
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -367,7 +367,7 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -395,7 +395,7 @@ class TestOperate(object):
         meta = {"gen": gen}
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -445,7 +445,7 @@ class TestOperate(object):
         meta = {"gen": gen + 5}
 
         llist = [
-            choose_server_compat_str_append("name", "aa"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -466,7 +466,7 @@ class TestOperate(object):
         """
         key1 = ("test", "demo", "key11")
         llist = [
-            choose_server_compat_str_prepend("loc", "mumbai"),
+            operations.prepend("loc", "mumbai"),
             {"op": aerospike.OPERATOR_READ, "bin": "loc"},
         ]
         _, _, bins = self.as_connection.operate(key1, llist)
@@ -480,7 +480,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [
-            choose_server_compat_str_append("addr", "pune"),
+            operations.append("addr", "pune"),
             {"op": aerospike.OPERATOR_READ, "bin": "addr"},
         ]
         key, _, bins = self.as_connection.operate(key, llist)
@@ -524,7 +524,7 @@ class TestOperate(object):
         client1 = aerospike.client(config)
         client1.close()
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -684,7 +684,7 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
         ]
 
@@ -701,7 +701,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1088,7 +1088,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1108,7 +1108,7 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1123,7 +1123,7 @@ class TestOperate(object):
         Invoke operate() with empty string key
         """
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate("", llist)
@@ -1136,7 +1136,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            choose_server_compat_str_prepend("name", "ram")
+            operations.prepend("name", "ram")
         ]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate(key, llist, {}, policy, "")
@@ -1149,7 +1149,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [
-            choose_server_compat_str_prepend("name", "ram")
+            operations.prepend("name", "ram")
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
@@ -1160,7 +1160,7 @@ class TestOperate(object):
         Invoke operate() with key is none
         """
         llist = [
-            choose_server_compat_str_prepend("name", "ram")
+            operations.prepend("name", "ram")
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
@@ -1233,7 +1233,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -1249,8 +1249,8 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            choose_server_compat_str_prepend("name", "ram"),
-            choose_server_compat_str_append("name", "aa"),
+            operations.prepend("name", "ram"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
