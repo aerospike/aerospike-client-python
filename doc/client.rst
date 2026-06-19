@@ -28,11 +28,57 @@ Boilerplate Code For Examples
 
 Assume every in-line example runs this code beforehand:
 
+.. Would prefer to have an external Python script to reduce code duplication here.
+.. But there's no way to call a Python script for testsetup
+
+.. testsetup::
+
+    # Imports
+    import aerospike
+    from aerospike import exception as ex
+    import sys
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Record key tuple: (namespace, set, key)
+    keyTuple = ('test', 'demo', 'key')
+
+.. code-block:: python
+
+    # Imports
+    import aerospike
+    from aerospike import exception as ex
+    import sys
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Record key tuple: (namespace, set, key)
+    keyTuple = ('test', 'demo', 'key')
+
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
-
-.. include:: examples/boilerplate.py
-    :code: python
 
 Basic example:
 
@@ -77,7 +123,7 @@ Connection
 
         Tests the connections between the client and the nodes of the cluster.
         If the result is ``False``, the client will require another call to
-        :meth:`~aerospike.connect`.
+        :meth:`~aerospike.Client.connect`.
 
         :rtype: :class:`bool`
 
@@ -264,7 +310,7 @@ Record Commands
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
 
         .. include:: ./deprecate_meta_ttl.rst
 
@@ -313,7 +359,7 @@ Batched Commands
         This method allows different sub-commands for each key in the batch.
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
-        :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A :class:`~aerospike_helpers.batch.records.BatchRecords` object used to specify the operations to carry out.
         :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
@@ -434,12 +480,17 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+
+        .. testcode::
 
             client.put(keyTuple, {'bin1': 'Martin Luther King'})
             client.append(keyTuple, 'bin1', ' jr.')
             (_, _, bins) = client.get(keyTuple)
-            print(bins) # Martin Luther King jr.
+            print(bins)
+
+        .. testoutput::
+
+            {'bin1': 'Martin Luther King jr.'}
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
@@ -455,12 +506,16 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             client.put(keyTuple, {'bin1': 'Freeman'})
-            client.prepend(keyTuple, 'bin1', ' Gordon ')
+            client.prepend(keyTuple, 'bin1', 'Gordon ')
             (_, _, bins) = client.get(keyTuple)
-            print(bins) # Gordon Freeman
+            print(bins)
+
+        .. testoutput::
+
+            {'bin1': 'Gordon Freeman'}
 
     .. index::
         single: Numeric Operations
@@ -486,7 +541,7 @@ Numeric Operations
         :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Start with 100 lives
             client.put(keyTuple, {'lives': 100})
@@ -494,12 +549,17 @@ Numeric Operations
             # Gain health
             client.increment(keyTuple, 'lives', 10)
             (key, meta, bins) = client.get(keyTuple)
-            print(bins) # 110
+            print("Lives:", bins["lives"])
 
             # Take damage
             client.increment(keyTuple, 'lives', -90)
             (key, meta, bins) = client.get(keyTuple)
-            print(bins) # 20
+            print("Lives:", bins["lives"])
+
+        .. testoutput::
+
+            Lives: 110
+            Lives: 20
 
     .. index::
         single: List Operations
@@ -527,7 +587,7 @@ Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: commit(transaction: aerospike.Transaction) -> int:
+    .. method:: commit(transaction: aerospike.Transaction) -> int
 
         Attempt to commit the given transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
@@ -539,7 +599,7 @@ Transactions
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
-    .. method:: abort(transaction: aerospike.Transaction) -> int:
+    .. method:: abort(transaction: aerospike.Transaction) -> int
 
         Abort and rollback the given transaction.
 
@@ -556,6 +616,30 @@ Transactions
 
 User Defined Functions
 ----------------------
+
+.. testcode:: udf
+
+    import aerospike
+
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)],
+        'lua': { 'user_path': '~/lua-scripts/'}
+    }
+    client = aerospike.client(config)
+    # Register the UDF module and copy it to the Lua 'user_path'
+    client.udf_put('./examples/scan/my_udf.lua')
+
+    print("Before remove:", client.udf_list())
+
+    client.udf_remove('my_udf.lua')
+    print("After remove:", client.udf_list())
+
+    client.close()
+
+.. testoutput:: udf
+
+    Before remove: [{'name': 'my_udf.lua', 'hash': bytearray(b'...'), 'type': 0, 'content': bytearray(b'...')}]
+    After remove: []
 
 .. class:: Client
     :noindex:
@@ -574,20 +658,6 @@ User Defined Functions
     .. note::
         To run this example, do not run the boilerplate code.
 
-    .. code-block:: python
-        :emphasize-lines: 5,9
-
-        import aerospike
-
-        config = {
-            'hosts': [ ('127.0.0.1', 3000)],
-            'lua': { 'user_path': '/path/to/lua/user_path'}
-        }
-        client = aerospike.client(config)
-        # Register the UDF module and copy it to the Lua 'user_path'
-        client.udf_put('/path/to/my_module.lua')
-        client.close()
-
     .. method:: udf_remove(module[, policy: dict])
 
         Remove a previously registered UDF module from the cluster.
@@ -598,10 +668,6 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            client.udf_remove('my_module.lua')
-
     .. method:: udf_list([policy: dict]) -> []
 
         Return the list of UDF modules registered with the cluster.
@@ -609,20 +675,6 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`list`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            print(client.udf_list())
-            # [
-            #    {'content': bytearray(b''),
-            #    'hash': bytearray(b'195e39ceb51c110950bd'),
-            #    'name': 'my_udf1.lua',
-            #    'type': 0},
-            #    {'content': bytearray(b''),
-            #    'hash': bytearray(b'8a2528e8475271877b3b'),
-            #    'name': 'stream_udf.lua',
-            #    'type': 0}
-            # ]
 
     .. method:: udf_get(module: str[, language: int = aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
@@ -676,7 +728,7 @@ User Defined Functions
         This method blocks until the query is complete.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
+        :param str set: the set name. Should be :py:obj:`None` if you want to query all records in the *ns* including ones that don't belong to a set.
         :param tuple predicate: the `tuple` produced by one of the :mod:`aerospike.predicates` methods.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
@@ -718,12 +770,15 @@ Info Operations
         :return: a :class:`list` of node info dictionaries.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Assuming two nodes
             nodes = client.get_node_names()
             print(nodes)
-            # [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+
+        .. testoutput::
+
+            [{'address': '...', 'port': ..., 'node_name': '...'}...]
 
         .. versionchanged:: 6.0.0
 
@@ -734,12 +789,15 @@ Info Operations
         :return: a :class:`list` of node address tuples.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Assuming two nodes
             nodes = client.get_nodes()
             print(nodes)
-            # [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
+
+        .. testoutput::
+
+            [('127.0.0.1', 3000)...]
 
         .. versionchanged:: 3.0.0
 
@@ -757,7 +815,7 @@ Info Operations
 
         .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
 
-    .. method:: info_all(command[, policy: dict]]) -> {}
+    .. method:: info_all(command[, policy: dict]]) -> dict
 
         Send an info command to all nodes in the cluster to which the client is connected.
 
@@ -765,14 +823,17 @@ Info Operations
 
         :param str command: see `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
+        :rtype: :class:`dict` mapping the node name to a tuple with the second element being the info response string or :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             response = client.info_all("namespaces")
             print(response)
-            # {'BB9020011AC4202': (None, 'test\n')}
+
+        .. testoutput::
+
+            {'...': (None, 'test\n')}
 
         .. versionadded:: 3.0.0
 
@@ -795,7 +856,7 @@ Info Operations
 
         :param str data_center: The data center to apply the filter to.
         :param str namespace: The namespace to apply the filter to.
-        :param AerospikeExpression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
+        :param TypeExpression expression_filter: The compiled expression filter to set. See expressions at :py:mod:`aerospike_helpers`.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -811,7 +872,7 @@ Info Operations
 
         See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
 
-        :param AerospikeExpression expression: the compiled expression.
+        :param TypeExpression expression: the compiled expression. See expressions at :py:mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/get_expression_base64.py
@@ -838,12 +899,13 @@ Info Operations
 
         :param str namespace: The namespace to truncate.
         :param str set: The set to truncate. Pass in :py:obj:`None` to truncate a namespace instead.
-        :param long nanos:  A cutoff threshold where records last updated before the threshold will be removed.
+        :param int nanos:  A cutoff threshold where records last updated before the threshold will be removed.
             Units are in nanoseconds since the UNIX epoch ``(1970-01-01)``.
             A value of ``0`` indicates that all records in the set should be truncated regardless of update time.
             The value must not be in the future.
         :param dict policy: See :ref:`aerospike_info_policies`.
-        :rtype: Status indicating the success of the operation.
+        :return: Status indicating the success of the operation.
+        :rtype: int
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires Aerospike server version >= 3.12
@@ -870,7 +932,7 @@ Index Operations
         :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
-        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
@@ -883,7 +945,7 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
@@ -896,7 +958,7 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
@@ -911,12 +973,12 @@ Index Operations
         :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :param optional dict ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
 
-        .. code-block:: python
+        .. testcode::
 
             import aerospike
 
@@ -942,6 +1004,17 @@ Index Operations
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_set_create(ns, set, name, policy: dict = None)
+
+        Create a set index.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str name: the name of the index.
+        :param dict | None policy: optional :ref:`aerospike_info_policies`.
+
+        .. note:: Requires server version >= 18.2.0
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
@@ -1026,9 +1099,7 @@ Index Operations
 
         .. note:: Requires server version >= 3.7.0
 
-        .. code-block:: python
-
-            import aerospike
+        .. testcode::
 
             client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
@@ -1165,7 +1236,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy: dict]) -> {}
+    .. method:: admin_get_role(role[, policy: dict]) -> dict
 
         Get a :class:`dict` of privileges, whitelist, and quotas associated with a role.
 
@@ -1176,7 +1247,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_roles([policy: dict]) -> {}
+    .. method:: admin_get_roles([policy: dict]) -> dict
 
         Get the names of all roles and their attributes.
 
@@ -1186,7 +1257,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_role(role[, policy: dict]) -> []
+    .. method:: admin_query_role(role[, policy: dict]) -> list
 
         Get the :class:`list` of privileges associated with a role.
 
@@ -1197,7 +1268,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_roles([policy: dict]) -> {}
+    .. method:: admin_query_roles([policy: dict]) -> dict
 
         Get all named roles and their privileges.
 
@@ -1365,35 +1436,35 @@ User Dictionary
 
 The user dictionary has the following key-value pairs:
 
-    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+    * ``"read_info"`` (:class:`list`): list of read statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: read quota in records per second
+       * 0: read quota in records per second (:class:`int`)
 
-       * 1: single record read command rate (TPS)
+       * 1: single record read command rate (TPS) (:class:`int`)
 
-       * 2: read scan/query record per second rate (RPS)
+       * 2: read scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless read scans/queries
+       * 3: number of limitless read scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
-    * ``"write_info"`` (:class:`list[int]`): list of write statistics.
+    * ``"write_info"`` (:class:`list`): list of write statistics.
       List may be :py:obj:`None`. Current statistics by offset are:
 
-       * 0: write quota in records per second
+       * 0: write quota in records per second (:class:`int`)
 
-       * 1: single record write command rate (TPS)
+       * 1: single record write command rate (TPS) (:class:`int`)
 
-       * 2: write scan/query record per second rate (RPS)
+       * 2: write scan/query record per second rate (RPS) (:class:`int`)
 
-       * 3: number of limitless write scans/queries
+       * 3: number of limitless write scans/queries (:class:`int`)
 
     Future server releases may add additional statistics.
 
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
-    * ``"roles"`` (:class:`list[str]`): list of assigned role names.
+    * ``"roles"`` (:class:`list`): list of assigned role names. Each role name is a :class:`str`.
 
 Tuples
 ======
@@ -1437,7 +1508,7 @@ Key Tuple
     * How to use the key tuple in a `put` operation
     * How to fetch the key tuple in a `get` operation
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
@@ -1453,7 +1524,7 @@ Key Tuple
         keyTuple = (namespaceName, setName, primaryKeyName)
 
         # Insert a record
-        recordBins = {'bin1':0, 'bin2':1}
+        recordBins = {'bin1': 0, 'bin2': 1}
         client.put(keyTuple, recordBins)
 
         # Now fetch that record
@@ -1464,12 +1535,13 @@ Key Tuple
         # and there is the record's digest
         print(key)
 
-        # Expected output:
-        # ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
-
         # Cleanup
         client.remove(keyTuple)
         client.close()
+
+    .. testoutput::
+
+        ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
 
     .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#keys-and-digests>`_.
 
@@ -1503,7 +1575,7 @@ Record Tuple
 
     We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from :meth:`~aerospike.Client.get()`:
 
-        .. code-block:: python
+        .. testcode::
 
             import aerospike
 
@@ -1518,24 +1590,26 @@ Record Tuple
             keyTuple = (namespaceName, setName, primaryKeyName)
 
             # Insert a record
-            recordBins = {'bin1':0, 'bin2':1}
+            recordBins = {'bin1': 0, 'bin2': 1}
             client.put(keyTuple, recordBins)
 
             # Now fetch that record
             (key, meta, bins) = client.get(keyTuple)
 
             # Generation is 1 because this is the first time we wrote the record
-            print(meta)
-
-            # Expected output:
-            # {'ttl': 2592000, 'gen': 1}
+            print("Metadata:", meta)
 
             # The bin-value pairs we inserted
-            print(bins)
-            {'bin1': 0, 'bin2': 1}
+            print("Bins:", bins)
 
             client.remove(keyTuple)
             client.close()
+
+        .. testoutput::
+
+            Metadata: {'ttl': 2592000, 'gen': 1}
+            Bins: {'bin1': 0, 'bin2': 1}
+
 
     .. seealso:: `Data Model: Records <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
@@ -1754,9 +1828,9 @@ Read Policies
             |
             | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1852,9 +1926,9 @@ Operate Policies
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1971,9 +2045,9 @@ Batch Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -2054,7 +2128,7 @@ Batch Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.Client.batch_write`, :meth:`~aerospike.Client.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2109,7 +2183,7 @@ Batch Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.Client.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2148,7 +2222,7 @@ Batch Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.Client.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2191,9 +2265,9 @@ Batch Read Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
         * **read_mode_sc**
             | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
@@ -2229,7 +2303,7 @@ Info Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.info_all`, :meth:`~aerospike.info_single_node`, :meth:`~aerospike.info_random_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
@@ -2288,7 +2362,7 @@ List Policies
 
     Example:
 
-     .. code-block:: python
+    .. testcode::
 
         list_policy = {
             "write_flags": aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED,
@@ -2333,7 +2407,7 @@ Map Policies
 
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         # Server >= 4.3.0
         map_policy = {
@@ -2363,7 +2437,7 @@ Bit Policies
 
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         bit_policy = {
             'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
@@ -2391,7 +2465,7 @@ HyperLogLog Policies
 
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         HLL_policy = {
             'flags': aerospike.HLL_WRITE_UPDATE_ONLY
@@ -2439,7 +2513,7 @@ Privilege Objects
 
             If not specified, the privilege applies to the entire namespace.
 
-    Example::
+    .. testcode::
 
         {'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}
 
@@ -2474,6 +2548,8 @@ Partition Objects
             Default: ``{}`` (all partitions)
 
     Default: ``{}`` (All partitions will be queried/scanned).
+
+    .. TODO more thorough example needed here.
 
     .. code-block:: python
 

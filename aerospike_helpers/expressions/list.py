@@ -59,7 +59,9 @@ class ListAppend(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if length of list bin "a" is > 5 after appending 1 item.
             listAppendedBy3 = exp.ListAppend(None, None, 3, exp.ListBin("a"))
@@ -97,7 +99,9 @@ class ListAppendItems(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if length of list bin "a" is > 5 after appending multiple items.
             listAppendedByTwoItems = exp.ListAppendItems(None, None, [3, 2], exp.ListBin("a"))
@@ -140,7 +144,9 @@ class ListInsert(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if list bin "a" has length > 5 after insert.
             listInsertedBy3At0 = exp.ListInsert(None, None, 0, 3, exp.ListBin("a"))
@@ -182,7 +188,9 @@ class ListInsertItems(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if list bin "a" has length > 5 after inserting items.
             listInsertedByTwoItems = exp.ListInsertItems(None, None, 0, [4, 7], exp.ListBin("a"))
@@ -224,11 +232,13 @@ class ListIncrement(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Check if incremented value in list bin "a" is the largest in the list.
             # Rank of -1 == largest element
-            largestListValue = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1)
+            largestListValue = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "a")
             listIncrementedAtIndex1 = exp.ListIncrement(None, None, 1, 5, exp.ListBin("a"))
             listItemAtIndex1 = exp.ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 1,
                 listIncrementedAtIndex1)
@@ -273,7 +283,9 @@ class ListSet(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get smallest element in list bin "a" after setting index 1 to 10.
             listSetAtIndex1 = exp.ListSet(None, None, 1, 10, exp.ListBin("a"))
@@ -311,7 +323,9 @@ class ListClear(_BaseExpr):
 
         :return: List expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Clear list value of list nested in list bin "a" index 1.
             from aerospike_helpers import cdt_ctx
@@ -341,7 +355,9 @@ class ListSort(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get value of sorted list bin "a".
             expr = exp.ListSort(None, aerospike.LIST_SORT_DEFAULT, "a").compile()
@@ -369,7 +385,9 @@ class ListRemoveByValue(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # See if list bin "a", with `3` removed, is equal to list bin "b".
             listRemoved3 = exp.ListRemoveByValue(None, 3, exp.ListBin("a"))
@@ -400,7 +418,9 @@ class ListRemoveByValueList(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove elements with values [1, 2, 3] from list bin "a".
             expr = exp.ListRemoveByValueList(None, [1, 2, 3], exp.ListBin("a")).compile()
@@ -441,7 +461,9 @@ class ListRemoveByValueRange(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove list of items with values >= 3 and < 7 from list bin "a".
             expr = exp.ListRemoveByValueRange(None, 3, 7, exp.ListBin("a")).compile()
@@ -482,7 +504,9 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove elements larger than 4 by relative rank in list bin "a".
             # Assume list in bin a is: [6, 12, 4, 21]
@@ -527,7 +551,9 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove 2 elements greater than 4
             # Assume list in bin a is: [6, 12, 4, 21]
@@ -558,7 +584,9 @@ class ListRemoveByIndex(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get size of list bin "a" after index 3 has been removed.
             expr = exp.ListSize(None, exp.ListRemoveByIndex(None, 3, exp.ListBin("a"))).compile()
@@ -586,7 +614,9 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove all elements starting from index 3 in list bin "a".
             expr = exp.ListRemoveByIndexRangeToEnd(None, 3, exp.ListBin("a")).compile()
@@ -624,7 +654,9 @@ class ListRemoveByIndexRange(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get size of list bin "a" after index 3, 4, and 5 have been removed.
             expr = exp.ListSize(None, exp.ListRemoveByIndexRange(None, 3, 3, exp.ListBin("a"))).compile()
@@ -653,7 +685,9 @@ class ListRemoveByRank(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove smallest value in list bin "a".
             expr = exp.ListRemoveByRank(None, 0, exp.ListBin("a")).compile()
@@ -681,7 +715,9 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove the 2 largest elements from List bin "a".
             # Assume list bin contains [6, 12, 4, 21]
@@ -721,7 +757,9 @@ class ListRemoveByRankRange(_BaseExpr):
 
         :return: list expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Remove the 3 smallest items from list bin "a".
             expr = exp.ListRemoveByRankRange(None, 0, 3, exp.ListBin("a")).compile()
@@ -754,7 +792,9 @@ class ListSize(_BaseExpr):
 
         :return: Integer expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #Take the size of list bin "a".
             expr = exp.ListSize(None, exp.ListBin("a")).compile()
@@ -793,7 +833,9 @@ class ListGetByValue(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the index of the element with value, 3, in list bin "a".
             expr = exp.ListGetByValue(None, aerospike.LIST_RETURN_INDEX, 3, exp.ListBin("a")).compile()
@@ -839,7 +881,9 @@ class ListGetByValueRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
             expr = exp.ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, exp.ListBin("a")).compile()
@@ -882,7 +926,9 @@ class ListGetByValueList(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the indexes of the the elements in list bin "a" with values [3, 6, 12].
             expr = exp.ListGetByValueList(None, aerospike.LIST_RETURN_INDEX, [3, 6, 12], exp.ListBin("a")).compile()
@@ -923,7 +969,9 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # [6, 12, 4, 21]
             expr = exp.ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 3, 1,
@@ -939,6 +987,27 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class InList(_BaseExpr):
+    """
+    Return :py:obj:`True` if value is contained in list. Otherwise return :py:obj:`False`.
+    """
+
+    _op = aerospike._AS_EXP_CODE_IN_LIST
+
+    def __init__(
+        self,
+        value: "TypeValue",
+        bin: "TypeBinName",
+    ):
+        """Args:
+            value (TypeValue): Value or value expression to look for.
+            bin (TypeBinName): list bin name or expression evaluating to a list.
+
+        :return: Expression.
+        """
+        self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
 
 
 class ListGetByValueRelRankRange(_BaseExpr):
@@ -972,7 +1041,9 @@ class ListGetByValueRelRankRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # [6, 12, 4, 21]
             expr = exp.ListGetByValueRelRankRange(None, aerospike.LIST_RETURN_VALUE, 3, 1, 2,
@@ -1018,7 +1089,9 @@ class ListGetByIndex(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the value at index 0 in list bin "a". (assume this value is an integer)
             expr = exp.ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0,
@@ -1058,7 +1131,9 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get element 5 to end from list bin "a".
             expr = exp.ListGetByIndexRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 5, exp.ListBin("a")).compile()
@@ -1101,7 +1176,9 @@ class ListGetByIndexRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get elements at indexes 3, 4, 5, 6 in list bin "a".
             expr = exp.ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 3, 4, exp.ListBin("a")).compile()
@@ -1142,7 +1219,9 @@ class ListGetByRank(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the smallest element in list bin "a".
             expr = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0,
@@ -1175,7 +1254,9 @@ class ListGetByRankRangeToEnd(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the three largest elements in list bin "a".
             expr = exp.ListGetByRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, -3, exp.ListBin("a")).compile()
@@ -1217,7 +1298,9 @@ class ListGetByRankRange(_BaseExpr):
 
         :return: Expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Get the 3 smallest elements in list bin "a".
             expr = exp.ListGetByRankRange(None, aerospike.LIST_RETURN_VALUE, 0, 3, exp.ListBin("a")).compile()
