@@ -401,14 +401,14 @@ class RegexCompare(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class WriteOp(_BaseExpr):
+class _WriteOp(_BaseExpr):
     def __init__(self, policy: StringPolicy):
         self._fixed = {
             aerospike._STR_EXP_POLICY_KEY: policy
         }
 
 
-class Insert(WriteOp):
+class Insert(_WriteOp):
     _op = aerospike._OP_STRING_INSERT
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
@@ -432,7 +432,7 @@ class Insert(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Overwrite(WriteOp):
+class Overwrite(_WriteOp):
     _op = aerospike._OP_STRING_OVERWRITE
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
@@ -456,7 +456,7 @@ class Overwrite(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Append(WriteOp):
+class Append(_WriteOp):
     _op = aerospike._OP_STRING_APPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
@@ -478,7 +478,7 @@ class Append(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Prepend(WriteOp):
+class Prepend(_WriteOp):
     _op = aerospike._OP_STRING_PREPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
@@ -500,7 +500,7 @@ class Prepend(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Concat(WriteOp):
+class Concat(_WriteOp):
     _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
@@ -519,7 +519,7 @@ class Concat(WriteOp):
         self._children = (values, _convert_bin_name_to_expr(bin),)
 
 
-class Snip(WriteOp):
+class Snip(_WriteOp):
     _op = aerospike._OP_STRING_SNIP
 
     def __init__(self, policy: StringPolicy, start: int, end: int, bin: "TypeBinName"):
@@ -543,7 +543,7 @@ class Snip(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Replace(WriteOp):
+class Replace(_WriteOp):
     _op = aerospike._OP_STRING_REPLACE
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
@@ -567,7 +567,7 @@ class Replace(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ReplaceAll(WriteOp):
+class ReplaceAll(_WriteOp):
     _op = aerospike._OP_STRING_REPLACE_ALL
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
@@ -591,7 +591,7 @@ class ReplaceAll(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Upper(WriteOp):
+class Upper(_WriteOp):
     _op = aerospike._OP_STRING_UPPER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -609,7 +609,7 @@ class Upper(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Lower(WriteOp):
+class Lower(_WriteOp):
     _op = aerospike._OP_STRING_LOWER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -627,7 +627,7 @@ class Lower(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class CaseFold(WriteOp):
+class CaseFold(_WriteOp):
     _op = aerospike._OP_STRING_CASE_FOLD
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -645,7 +645,7 @@ class CaseFold(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class NormalizeNFC(WriteOp):
+class NormalizeNFC(_WriteOp):
     _op = aerospike._OP_STRING_NORMALIZE_NFC
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -663,7 +663,7 @@ class NormalizeNFC(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimStart(WriteOp):
+class TrimStart(_WriteOp):
     _op = aerospike._OP_STRING_TRIM_START
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -681,7 +681,7 @@ class TrimStart(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimEnd(WriteOp):
+class TrimEnd(_WriteOp):
     _op = aerospike._OP_STRING_TRIM_END
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -699,7 +699,7 @@ class TrimEnd(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Trim(WriteOp):
+class Trim(_WriteOp):
     _op = aerospike._OP_STRING_TRIM
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
@@ -717,7 +717,7 @@ class Trim(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadStart(WriteOp):
+class PadStart(_WriteOp):
     _op = aerospike._OP_STRING_PAD_START
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
@@ -741,7 +741,7 @@ class PadStart(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadEnd(WriteOp):
+class PadEnd(_WriteOp):
     _op = aerospike._OP_STRING_PAD_END
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
@@ -765,7 +765,7 @@ class PadEnd(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Repeat(WriteOp):
+class Repeat(_WriteOp):
     _op = aerospike._OP_STRING_REPEAT
 
     def __init__(self, policy: StringPolicy, count: int, bin: "TypeBinName"):
@@ -787,7 +787,7 @@ class Repeat(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class RegexReplace(WriteOp):
+class RegexReplace(_WriteOp):
     _op = aerospike._OP_STRING_REGEX_REPLACE
 
     def __init__(
@@ -819,7 +819,7 @@ class RegexReplace(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ToString(WriteOp):
+class ToString(_WriteOp):
     _op = aerospike._AS_EXP_CODE_CALL
 
     def __init__(self, bin: "TypeBinName"):
@@ -882,7 +882,7 @@ __this_module = sys.modules[__name__]
 __all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
 
 for _, cls_value in __all_classes:
-    if cls_value.__module__ != __name__ or cls_value == WriteOp:
+    if cls_value.__module__ != __name__ or cls_value == _WriteOp:
         continue
 
     op_func = __exp_class_to_op_func[cls_value]
