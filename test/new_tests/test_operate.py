@@ -1259,3 +1259,18 @@ class TestOperate(object):
             self.as_connection.operate(key, llist, {}, policy)
         except e.InvalidRequest as exception:
             assert exception.code == 4
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            operations.prepend("name", "ram"),
+            operations.append("name", "ram")
+        ]
+    )
+    def test_deprecated_ops_raise_warning(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.warns(DeprecationWarning):
+            self.as_connection.operate(key, ops)
