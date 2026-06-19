@@ -650,6 +650,10 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     return err->code;
 }
 
+#define CMP_REGEX_DEPRECATION                                                  \
+    "CmpRegex expression is deprecated. Please use string expression "         \
+    "RegexCompare instead."
+
 /*
 * add_expr_macros
 * Converts each intermediate_expr struct in intermediate_expr_vector to as_exp_entries and copies them to expressions.
@@ -779,6 +783,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(2, as_exp_cmp_le(NIL, NIL));
             break;
         case CMP_REGEX:
+            int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                      CMP_REGEX_DEPRECATION, STACK_LEVEL);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                       CMP_REGEX_DEPRECATION);
+            }
+
             if (get_int64_t(err, REGEX_OPTIONS_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
