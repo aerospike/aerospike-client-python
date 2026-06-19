@@ -127,7 +127,8 @@ autodoc_type_aliases = {
 }
 nitpicky = True
 nitpick_ignore_regex = {
-    ("py:class", "Type.*")
+    ("py:class", "Type.*"),
+    ("py:class", "aerospike_helpers.expressions.string._WriteOp")
 }
 
 # -- Options for HTML output ---------------------------------------------------
