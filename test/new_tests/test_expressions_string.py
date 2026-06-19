@@ -81,6 +81,8 @@ class TestExpressions:
 
             assert bins[STR_BIN_NAME] == expected_result
 
+    BYTEARRAY_VAL = bytearray('a', encoding="utf-8")
+
     @pytest.mark.parametrize(
         "expr",
         [
@@ -88,12 +90,12 @@ class TestExpressions:
             str_expr.SubStrRange(start="1", end=4, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
             str_expr.SubStrRange(start=1, end="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
             str_expr.CharAt(index="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Find(needle=bytearray('a'), occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Contains(needle=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.StartsWith(prefix=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.EndsWith(suffix=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=bytearray('a')),
-            str_expr.RegexCompare(pattern=bytearray('a'), bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Contains(needle=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
+            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
         ]
     )
     def test_invalid_param(self, expr):
