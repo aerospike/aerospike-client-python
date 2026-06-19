@@ -132,7 +132,7 @@ class TestOperate(object):
                 ("test", "demo", 1),
                 [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
-                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.prepend:DeprecationWarning")
+                marks=pytest.mark.filterwarnings("ignore:aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -148,7 +148,7 @@ class TestOperate(object):
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
-                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.prepend:DeprecationWarning")
+                marks=pytest.mark.filterwarnings("ignore:aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
@@ -286,7 +286,7 @@ class TestOperate(object):
                 },
                 {"gen": 10},
                 [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
-                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.append:DeprecationWarning")
+                marks=pytest.mark.filterwarnings("ignore:aerospike_helpers.operations.operations.append:DeprecationWarning")
             ),
         ],
     )
