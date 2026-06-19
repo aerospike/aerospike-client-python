@@ -18,7 +18,6 @@
 Shared classes for both string operations and string expressions.
 """
 
-import inspect
 from enum import IntEnum
 
 
