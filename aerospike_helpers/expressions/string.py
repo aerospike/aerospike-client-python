@@ -881,12 +881,12 @@ __exp_class_to_op_func = {
 __this_module = sys.modules[__name__]
 __all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
 
-for _, cls_value in __all_classes:
-    if cls_value.__module__ != __name__ or cls_value == _WriteOp:
+for _, _cls_value in __all_classes:
+    if _cls_value.__module__ != __name__ or _cls_value == _WriteOp:
         continue
 
-    op_func = __exp_class_to_op_func[cls_value]
-    cls_value.__doc__ = (
+    op_func = __exp_class_to_op_func[_cls_value]
+    _cls_value.__doc__ = (
         "Create an expression that performs a "
         f":py:meth:`~{op_func.__module__}.{op_func.__qualname__}` operation."
     )
