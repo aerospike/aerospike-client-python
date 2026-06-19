@@ -885,8 +885,8 @@ for _, _cls_value in __all_classes:
     if _cls_value.__module__ != __name__ or _cls_value == _WriteOp:
         continue
 
-    op_func = __exp_class_to_op_func[_cls_value]
+    _op_func = __exp_class_to_op_func[_cls_value]
     _cls_value.__doc__ = (
         "Create an expression that performs a "
-        f":py:meth:`~{op_func.__module__}.{op_func.__qualname__}` operation."
+        f":py:meth:`~{_op_func.__module__}.{_op_func.__qualname__}` operation."
     )
