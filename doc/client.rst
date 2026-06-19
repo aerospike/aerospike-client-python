@@ -477,7 +477,6 @@ String Operations
             Passing a string value to ``val`` is deprecated.
             This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
             support string policy or ctx.
-            This function will not support strings in the next major client release.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -510,7 +509,6 @@ String Operations
             Passing a string value to ``val`` is deprecated.
             This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
             support string policy or ctx.
-            This function will not support strings in the next major client release.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
