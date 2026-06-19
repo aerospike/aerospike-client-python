@@ -339,7 +339,7 @@ def split(bin_name: str, ctx: TypeCTX = None):
 
 # We define a separate function for this op instead of overloading the above one
 # since the expressions as_exp_string_split and as_exp_string_split_separator take up different
-# sizes.
+# sizes. We create a one to one mapping of those expressions to operations in here.
 def split_separator(bin_name: str, separator: str, ctx: TypeCTX = None):
     """
     Create string split operation that splits by separator. If separator is not
