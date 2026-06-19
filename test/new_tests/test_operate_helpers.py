@@ -128,10 +128,11 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
-                [choose_server_compat_str_prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
+                [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
+                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -143,10 +144,11 @@ class TestOperate(object):
                 [operations.write("write_bin", {"no": 89}), operations.read("write_bin")],
                 {"write_bin": {"no": 89}},
             ),
-            (
+            pytest.param(
                 ("test", "demo", 1),  # with_bin_bytearray
-                [choose_server_compat_str_prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
+                [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
+                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
@@ -274,7 +276,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, policy, meta, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 {
                     "key": aerospike.POLICY_KEY_SEND,
@@ -283,7 +285,8 @@ class TestOperate(object):
                     "ttl": 1200
                 },
                 {"gen": 10},
-                [choose_server_compat_str_append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.append:DeprecationWarning")
             ),
         ],
     )

@@ -75,14 +75,15 @@ class TestOperateOrdered(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 [
-                    choose_server_compat_str_prepend("name", "ram"),
+                    operations.prepend("name", "ram"),
                     operations.increment("age", 3),
                     operations.read("name")
                 ],
                 [("name", "ramname1")],
+                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -204,7 +205,7 @@ class TestOperateOrdered(object):
     @pytest.mark.parametrize(
         "key, policy, meta, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 {
                     "key": aerospike.POLICY_KEY_SEND,
@@ -214,10 +215,11 @@ class TestOperateOrdered(object):
                 },
                 {"gen": 10},
                 [
-                    choose_server_compat_str_append("name", "aa"),
+                    operations.append("name", "aa"),
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
+                marks=pytest.mark.filterwarnings("ignore:.*aerospike_helpers.operations.operations.append:DeprecationWarning")
             ),
         ],
     )
