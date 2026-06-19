@@ -593,4 +593,5 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     "ParamError will be raised."
 
 #define DEPRECATION_MESSAGE_TEMPLATE                                           \
-    "%s is deprecated and will be removed in the next client major release"
+    "%s is deprecated for strings and support for them will be removed in "    \
+    "the next client major release"

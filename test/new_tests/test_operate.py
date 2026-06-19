@@ -129,7 +129,6 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
                 {"name": "ramname1"},
-                marks=pytest.mark.filterwarnings("ignore:aerospike_helpers.operations.operations.prepend:DeprecationWarning")
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -293,7 +292,6 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
-                marks=pytest.mark.filterwarnings("ignore:aerospike_helpers.operations.operations.append:DeprecationWarning")
             ),
         ],
     )
