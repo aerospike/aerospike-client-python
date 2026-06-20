@@ -9,8 +9,7 @@ except ImportError:
     from counter26 import Counter
 
 import aerospike
-from aerospike_helpers.operations import operations, string_operations
-from .conftest import choose_server_compat_str_append
+from aerospike_helpers.operations import operations
 
 
 class TestCompress:

@@ -4,9 +4,9 @@ import time
 
 import aerospike
 from aerospike import exception, predicates
-from aerospike_helpers.operations import operations, map_operations, string_operations
+from aerospike_helpers.operations import operations, map_operations
 from aerospike_helpers import expressions as exp
-from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME, choose_server_compat_str_append
+from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
 TEST_NS = "test"
 TEST_SET = "background_scan1"

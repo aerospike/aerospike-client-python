@@ -4,7 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import operations, string_operations
+from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
@@ -13,7 +13,7 @@ import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl, wait_for_job_completion, choose_server_compat_str_append
+from .conftest import verify_record_ttl, wait_for_job_completion
 import warnings
 
 gconfig = {}

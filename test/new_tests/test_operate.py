@@ -5,7 +5,6 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from .conftest import choose_server_compat_str_append, choose_server_compat_str_prepend
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE

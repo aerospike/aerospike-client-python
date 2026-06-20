@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 from .test_base_class import TestBaseClass
-from aerospike_helpers.operations import list_operations, operations, string_operations
+from aerospike_helpers.operations import list_operations, operations
 
 import aerospike
 from aerospike import exception as e
-from .conftest import choose_server_compat_str_append, choose_server_compat_str_prepend
 import warnings
 
 # OPERATIONS
