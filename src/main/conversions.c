@@ -2263,7 +2263,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
     return err->code;
 }
 
-void error_to_pyobject(const as_error *err, PyObject **obj)
+void create_py_tuple_from_as_error(const as_error *err, PyObject **obj)
 {
     PyObject *py_file = NULL;
     if (err->file) {

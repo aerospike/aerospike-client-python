@@ -465,7 +465,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     // Convert C error to Python exception
     PyObject *py_err_tuple = NULL;
-    error_to_pyobject(err, &py_err_tuple);
+    create_py_tuple_from_as_error(err, &py_err_tuple);
     if (!py_err_tuple) {
         goto CHAIN_PREV_EXC_AND_RETURN;
     }
@@ -493,6 +493,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         goto CHAIN_PREV_EXC_AND_RETURN;
     }
 
+    // Subcode is not included as last element in tuple
     int retval = PyObject_SetAttrString(
         py_exc_class, aerospike_err_attrs[tuple_size], py_subcode);
     if (retval == -1) {
