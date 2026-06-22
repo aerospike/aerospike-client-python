@@ -23,7 +23,7 @@ class TestExceptionSubcode:
         self.as_connection.remove(KEY)
 
     @pytest.mark.parametrize(
-        "policy",
+        "policy_w_verbosity_setting",
         [
             {},
             {ERROR_DETAIL_VERBOSITY_SETTING: 0},
@@ -31,17 +31,33 @@ class TestExceptionSubcode:
             {ERROR_DETAIL_VERBOSITY_SETTING: 2},
         ]
     )
-    def test_error_verbosity_levels(self, policy: dict):
+    @pytest.mark.parametrize(
+        "set_in_client_config",
+        [False, True]
+    )
+    def test_error_verbosity_levels(self, policy_w_verbosity_setting: dict, set_in_client_config: bool):
+        if set_in_client_config:
+            config = {
+                "policies": {
+                    "operate": policy_w_verbosity_setting
+                }
+            }
+            self.as_connection = TestBaseClass.get_new_connection(config)
+
         with pytest.raises(e.OpNotApplicable) as excinfo:
-            self.as_connection.operate(KEYS[0], OPS, policy=policy)
+            cmd_policy = {}
+            if not set_in_client_config:
+                cmd_policy |= policy_w_verbosity_setting
+
+            self.as_connection.operate(KEYS[0], OPS, policy=cmd_policy)
 
         # Make sure there's no regression with the parent error code
         assert excinfo.value.code == as_errors.AEROSPIKE_ERR_OP_NOT_APPLICABLE
 
         subcode_should_be_zero = (
-            ERROR_DETAIL_VERBOSITY_SETTING not in policy
+            ERROR_DETAIL_VERBOSITY_SETTING not in policy_w_verbosity_setting
             or
-            policy[ERROR_DETAIL_VERBOSITY_SETTING] == 0
+            policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == 0
             or
             # If running against a unsupported version, we expect subcode to always return 0
             # (and no undefined behavior)
@@ -55,7 +71,7 @@ class TestExceptionSubcode:
         EXPECTED_SUBCODE_IN_MESSAGE = "subcode="
         if excinfo.value.subcode == 0:
             assert EXPECTED_SUBCODE_IN_MESSAGE not in excinfo.value.msg
-        elif policy[ERROR_DETAIL_VERBOSITY_SETTING] == 1:
+        elif policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == 1:
             assert EXPECTED_SUBCODE_IN_MESSAGE in excinfo.value.msg
         else:
             # There should be a message before the subcode
