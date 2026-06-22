@@ -2001,9 +2001,20 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 APPEND_ARRAY(
                     1, as_exp_string_overwrite(&policy, lval1, value, NIL));
                 break;
-            case OP_STRING_CONCAT:
-                APPEND_ARRAY(2, as_exp_string_concat_list(&policy, NIL, NIL));
+            case OP_STRING_CONCAT: {
+                as_list *values = NULL;
+                as_status status =
+                    get_asval(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
+                              &values, static_pool, serializer_type, true);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+                as_exp_entry list_entry = as_exp_val(values);
+
+                APPEND_ARRAY(
+                    1, as_exp_string_concat_list(&policy, list_entry, NIL));
                 break;
+            }
             case OP_STRING_APPEND:
                 APPEND_ARRAY(1, as_exp_string_append(&policy, value, NIL));
                 break;

@@ -516,7 +516,10 @@ class Concat(_WriteOp):
             The string in the bin with the values appended.
         """
         super().__init__(policy)
-        self._children = (values, _convert_bin_name_to_expr(bin),)
+        self._fixed |= {
+            _Keys.VALUE_KEY: values
+        }
+        self._children = (_convert_bin_name_to_expr(bin),)
 
 
 class Snip(_WriteOp):
