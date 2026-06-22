@@ -591,7 +591,3 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     "Operations and bin names are mutually exclusive."                         \
     "In the next major client release, when this %s object is executed, a "    \
     "ParamError will be raised."
-
-#define DEPRECATION_MESSAGE_TEMPLATE                                           \
-    "%s is deprecated for strings and support for them will be removed in "    \
-    "the next client major release"
