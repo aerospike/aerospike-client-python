@@ -353,7 +353,6 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, NIL, NIL)),
         [_AS_EXP_CODE_MAP_KEYS_IN] = EXP_SZ(as_exp_map_keys_in(NIL)),
         [_AS_EXP_CODE_MAP_VALUES_IN] = EXP_SZ(as_exp_map_values_in(NIL)),
-        [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, NIL)),
         [OP_MAP_GET_BY_KEY_RANGE] =
             EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_GET_BY_KEY_LIST] =
