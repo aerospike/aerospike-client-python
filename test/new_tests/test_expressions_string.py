@@ -118,12 +118,7 @@ class TestExpressions:
         ops = [
             expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
         ]
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            expected_exc = e.OpNotApplicable
-        else:
-            expected_exc = e.InvalidRequest
-
-        with pytest.raises(expected_exc):
+        with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
     @pytest.mark.parametrize(

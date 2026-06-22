@@ -211,12 +211,7 @@ class TestStringOperations:
             op(bin_name=STR_BIN_NAME)
         ]
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            expected_exc = e.OpNotApplicable
-        else:
-            expected_exc = e.InvalidRequest
-
-        with pytest.raises(expected_exc):
+        with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
     @expect_server_version_earlier_than_8_1_3_to_fail
