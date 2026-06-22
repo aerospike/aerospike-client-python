@@ -2412,8 +2412,9 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         uint32_t ttl = 0;
         uint16_t gen = 0;
         if (py_ttl) {
-            int retval = PyErr_WarnEx(PyExc_DeprecationWarning, STACK_LEVEL,
-                                      META_TTL_DEPRECATION_MESSAGE);
+            int retval =
+                PyErr_WarnEx(PyExc_DeprecationWarning,
+                             META_TTL_DEPRECATION_MESSAGE, STACK_LEVEL);
             if (retval == -1) {
                 // This handles the codepath where warnings are converted into errors from pytest/python cli
                 // TODO: this does NOT handle the codepath where the warning mechanism itself fails
