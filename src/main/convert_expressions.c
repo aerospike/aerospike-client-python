@@ -2002,7 +2002,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     1, as_exp_string_overwrite(&policy, lval1, value, NIL));
                 break;
             case OP_STRING_CONCAT: {
-                as_list *values = NULL;
+                as_val *values = NULL;
                 as_status status =
                     get_asval(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
                               &values, static_pool, serializer_type, true);
