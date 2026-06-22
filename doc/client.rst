@@ -472,12 +472,6 @@ String Operations
 
         .. include:: ./deprecate_meta_ttl.rst
 
-        .. versionchanged:: 19.3.0
-
-            Passing a string value to ``val`` is deprecated.
-            This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
-            support string policy or ctx.
-
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
@@ -503,12 +497,6 @@ String Operations
         Prepend the string value in *bin* with the string *val*.
 
         .. include:: ./deprecate_meta_ttl.rst
-
-        .. versionchanged:: 19.3.0
-
-            Passing a string value to ``val`` is deprecated.
-            This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
-            support string policy or ctx.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
