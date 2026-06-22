@@ -57,7 +57,7 @@ def strlen(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_STRLEN,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -75,7 +75,7 @@ def substr(bin_name: str, start: int, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_SUBSTR,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "start": start,
         "ctx": ctx
     }
@@ -95,7 +95,7 @@ def substr_range(bin_name: str, start: int, end: int, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_SUBSTR_RANGE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "start": start,
         "end": end,
         "ctx": ctx
@@ -115,7 +115,7 @@ def char_at(bin_name: str, index: int, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_CHAR_AT,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "index": index,
         "ctx": ctx
     }
@@ -136,7 +136,7 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_FIND,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "needle": needle,
         "occurrence": occurrence,
         "ctx": ctx
@@ -155,7 +155,7 @@ def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_CONTAINS,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "needle": needle,
         "ctx": ctx
     }
@@ -174,7 +174,7 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_STARTS_WITH,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "prefix": prefix,
         "ctx": ctx
     }
@@ -193,7 +193,7 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_ENDS_WITH,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "suffix": suffix,
         "ctx": ctx
     }
@@ -211,7 +211,7 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_TO_INTEGER,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -228,7 +228,7 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_TO_DOUBLE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -245,7 +245,7 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_BYTE_LENGTH,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -264,7 +264,7 @@ def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: 
     return {
         "op": aerospike._OP_STRING_IS_NUMERIC,
         "numeric_type": numeric_type,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -281,7 +281,7 @@ def is_upper(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_IS_UPPER,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -298,7 +298,7 @@ def is_lower(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_IS_LOWER,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -315,7 +315,7 @@ def to_blob(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_TO_BLOB,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -332,7 +332,7 @@ def split(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_SPLIT,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -353,7 +353,7 @@ def split_separator(bin_name: str, separator: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_SPLIT_SEPARATOR,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "separator": separator,
         "ctx": ctx
     }
@@ -371,7 +371,7 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
     """
     return {
         "op": aerospike._OP_STRING_B64_DECODE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "ctx": ctx
     }
 
@@ -390,7 +390,7 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
     """
     return {
         "op": aerospike._OP_STRING_REGEX_COMPARE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "pattern": pattern,
         "regex_flags": regex_flags,
         "ctx": ctx
@@ -412,7 +412,7 @@ def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = 
     """
     return {
         "op": aerospike._OP_STRING_INSERT,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "index": index,
         "value": value,
         "policy": policy,
@@ -436,7 +436,7 @@ def overwrite(bin_name: str, index: int, value: str, policy: StringPolicy | None
     """
     return {
         "op": aerospike._OP_STRING_OVERWRITE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "index": index,
         "value": value,
         "policy": policy,
@@ -459,7 +459,7 @@ def append(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: T
     """
     return {
         "op": aerospike._OP_STRING_APPEND,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "value": value,
         "policy": policy,
         "ctx": ctx
@@ -481,7 +481,7 @@ def prepend(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: 
     """
     return {
         "op": aerospike._OP_STRING_PREPEND,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "value": value,
         "policy": policy,
         "ctx": ctx
@@ -502,7 +502,7 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
     """
     return {
         "op": aerospike._OP_STRING_CONCAT,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "value_list": value_list,
         "policy": policy,
         "ctx": ctx
@@ -523,7 +523,7 @@ def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None
     """
     return {
         "op": aerospike._OP_STRING_SNIP,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "start": start,
         "end": end,
         "policy": policy,
@@ -546,7 +546,7 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
     """
     return {
         "op": aerospike._OP_STRING_REPLACE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "needle": needle,
         "replacement": replacement,
         "policy": policy,
@@ -569,7 +569,7 @@ def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPoli
     """
     return {
         "op": aerospike._OP_STRING_REPLACE_ALL,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "needle": needle,
         "replacement": replacement,
         "policy": policy,
@@ -589,7 +589,7 @@ def upper(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
     """
     return {
         "op": aerospike._OP_STRING_UPPER,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -607,7 +607,7 @@ def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
     """
     return {
         "op": aerospike._OP_STRING_LOWER,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -626,7 +626,7 @@ def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
     """
     return {
         "op": aerospike._OP_STRING_CASE_FOLD,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -645,7 +645,7 @@ def normalize_nfc(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCT
     """
     return {
         "op": aerospike._OP_STRING_NORMALIZE_NFC,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -664,7 +664,7 @@ def trim_start(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX =
     """
     return {
         "op": aerospike._OP_STRING_TRIM_START,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -683,7 +683,7 @@ def trim_end(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
     """
     return {
         "op": aerospike._OP_STRING_TRIM_END,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -701,7 +701,7 @@ def trim(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None)
     """
     return {
         "op": aerospike._OP_STRING_TRIM,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -731,7 +731,7 @@ def pad_start(
         "op": aerospike._OP_STRING_PAD_START,
         "target_length": target_length,
         "pad_string": pad_string,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -761,7 +761,7 @@ def pad_end(
         "op": aerospike._OP_STRING_PAD_END,
         "target_length": target_length,
         "pad_string": pad_string,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "policy": policy,
         "ctx": ctx
     }
@@ -780,7 +780,7 @@ def repeat(bin_name: str, count: int, policy: StringPolicy | None = None, ctx: T
     """
     return {
         "op": aerospike._OP_STRING_REPEAT,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "count": count,
         "policy": policy,
         "ctx": ctx
@@ -811,7 +811,7 @@ def regex_replace(
     """
     return {
         "op": aerospike._OP_STRING_REGEX_REPLACE,
-        "bin_name": bin_name,
+        "bin": bin_name,
         "pattern": pattern,
         "replacement": replacement,
         "regex_flags": regex_flags,
@@ -833,5 +833,5 @@ def to_string(bin_name: str):
     """
     return {
         "op": aerospike._OP_STRING_TO_STRING,
-        "bin_name": bin_name,
+        "bin": bin_name,
     }

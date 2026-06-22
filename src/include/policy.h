@@ -113,11 +113,6 @@ enum {
 #undef X
 };
 
-static inline bool is_list_op(int op_code)
-{
-    return op_code >= OP_LIST_APPEND && op_code <= OP_LIST_CREATE;
-}
-
 enum Aerospike_map_operations {
     OP_MAP_SET_POLICY = 1101,
     OP_MAP_PUT,

@@ -58,13 +58,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     bool has_as_operations_taken_ownership_of_as_val_objs = false;
     char *bin = NULL;
 
-    const char *bin_key = NULL;
-    if (is_list_op(operation_code)) {
-        bin_key = "bin";
-    }
-    else {
-        bin_key = "bin_name";
-    }
+    const char *bin_key = "bin";
 
     if (get_str(err, bin_key, op_dict, unicodeStrVector, &bin, false) !=
         AEROSPIKE_OK) {
