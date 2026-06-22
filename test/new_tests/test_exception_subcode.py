@@ -53,7 +53,7 @@ class TestExceptionSubcode:
             assert excinfo.value.subcode > 0
 
         EXPECTED_SUBCODE_IN_MESSAGE = "subcode="
-        if subcode_should_be_zero:
+        if excinfo.value.subcode == 0:
             assert EXPECTED_SUBCODE_IN_MESSAGE not in excinfo.value.msg
         elif policy[ERROR_DETAIL_VERBOSITY_SETTING] == 1:
             assert EXPECTED_SUBCODE_IN_MESSAGE in excinfo.value.msg
