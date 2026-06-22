@@ -4,7 +4,7 @@ import time
 
 import aerospike
 from aerospike import exception, predicates
-from aerospike_helpers.operations import operations, map_operations, string_operations
+from aerospike_helpers.operations import operations, map_operations
 from aerospike_helpers import expressions as exp
 from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
@@ -253,7 +253,7 @@ class TestScanApply(object):
         number_predicate = predicates.equals("number", 3)
         # scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
 
-        ops = [string_operations.append(test_bin, "new_val")]
+        ops = [operations.append(test_bin, "new_val")]
 
         scan.add_ops(ops)
         scan.where(number_predicate)

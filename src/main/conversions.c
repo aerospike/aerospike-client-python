@@ -2373,7 +2373,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
-#define META_TTL_FOR_DEPRECATION_WARNING "meta[\"ttl\"]"
+#define META_TTL_DEPRECATION_MESSAGE                                           \
+    "meta[\"ttl\"] is deprecated and will be removed in "                      \
+    "the next client major release."
 
 /**
  *******************************************************************************************************
@@ -2413,15 +2415,14 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         uint32_t ttl = 0;
         uint16_t gen = 0;
         if (py_ttl) {
-            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                          DEPRECATION_MESSAGE_TEMPLATE,
-                                          META_TTL_FOR_DEPRECATION_WARNING);
+            int retval =
+                PyErr_WarnEx(PyExc_DeprecationWarning,
+                             META_TTL_DEPRECATION_MESSAGE, STACK_LEVEL);
             if (retval == -1) {
                 // This handles the codepath where warnings are converted into errors from pytest/python cli
                 // TODO: this does NOT handle the codepath where the warning mechanism itself fails
                 return as_error_update(err, AEROSPIKE_ERR,
-                                       DEPRECATION_MESSAGE_TEMPLATE,
-                                       META_TTL_FOR_DEPRECATION_WARNING);
+                                       META_TTL_DEPRECATION_MESSAGE);
             }
 
             if (PyLong_Check(py_ttl)) {

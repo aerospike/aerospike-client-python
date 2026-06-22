@@ -24,7 +24,7 @@ import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr, _Keys
 from aerospike_helpers.expressions.base import StrBin
 from aerospike_helpers.operations import string_operations as str_ops
-from ..string_helpers import RegexFlags, StringPolicy, NumericType, __generate_docstrings_for_all_func_members
+from ..string_helpers import RegexFlags, StringPolicy, NumericType
 import inspect
 import sys
 
@@ -44,7 +44,7 @@ class StrLen(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -64,7 +64,7 @@ class SubStr(_BaseExpr):
         Args:
 
             start: The starting index of the substring.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -88,7 +88,7 @@ class SubStrRange(_BaseExpr):
 
             start: Starting codepoint index, inclusive.
             end: Ending codepoint index, exclusive.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -111,7 +111,7 @@ class CharAt(_BaseExpr):
         Args:
 
             index: the index of the codepoint to return.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -132,9 +132,9 @@ class Find(_BaseExpr):
         """
         Args:
 
-            {needle_get}
+            needle: the string to search for.
             occurrence: the occurrence of the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -156,8 +156,8 @@ class Contains(_BaseExpr):
         """
         Args:
 
-            {needle_get}
-            {bin}
+            needle: the string to search for.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -177,7 +177,7 @@ class StartsWith(_BaseExpr):
         Args:
 
             prefix: the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -197,7 +197,7 @@ class EndsWith(_BaseExpr):
         Args:
 
             suffix: the string to search for.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -216,7 +216,7 @@ class ToInteger(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -232,7 +232,7 @@ class ToDouble(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -248,7 +248,7 @@ class ByteLength(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -265,7 +265,7 @@ class IsNumeric(_BaseExpr):
         Args:
 
             numeric_type: the numeric type to filter for.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -286,7 +286,7 @@ class IsUpper(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -302,7 +302,7 @@ class IsLower(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -318,7 +318,7 @@ class ToBlob(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -334,7 +334,7 @@ class Split(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -346,12 +346,12 @@ class Split(_BaseExpr):
 class SplitSeparator(_BaseExpr):
     _op = aerospike._OP_STRING_SPLIT_SEPARATOR
 
-    def __init__(self, bin: "TypeBinName", separator: str):
+    def __init__(self, separator: str, bin: "TypeBinName"):
         """
         Args:
 
-            {bin}
             separator: The separator to split by.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -370,7 +370,7 @@ class Base64Decode(_BaseExpr):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -386,9 +386,9 @@ class RegexCompare(_BaseExpr):
         """
         Args:
 
-            {bin}
-            {regex_flags}
-            {pattern}
+            bin: A bin expression to apply this function to.
+            regex_flags: The regex flags to use.
+            pattern: the regex pattern to match against.
 
         Returns:
 
@@ -401,24 +401,24 @@ class RegexCompare(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class WriteOp(_BaseExpr):
+class _WriteOp(_BaseExpr):
     def __init__(self, policy: StringPolicy):
         self._fixed = {
             aerospike._STR_EXP_POLICY_KEY: policy
         }
 
 
-class Insert(WriteOp):
+class Insert(_WriteOp):
     _op = aerospike._OP_STRING_INSERT
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             index: The index of the codepoint to insert at.
             value: The value to insert.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -432,17 +432,17 @@ class Insert(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Overwrite(WriteOp):
+class Overwrite(_WriteOp):
     _op = aerospike._OP_STRING_OVERWRITE
 
     def __init__(self, policy: StringPolicy, index: int, value: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             index: The index of the codepoint to insert at.
             value: The value to insert.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -456,16 +456,16 @@ class Overwrite(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Append(WriteOp):
+class Append(_WriteOp):
     _op = aerospike._OP_STRING_APPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             value: The value to append.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -478,16 +478,16 @@ class Append(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Prepend(WriteOp):
+class Prepend(_WriteOp):
     _op = aerospike._OP_STRING_PREPEND
 
     def __init__(self, policy: StringPolicy, value: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             value: The value to prepend.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -500,36 +500,39 @@ class Prepend(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Concat(WriteOp):
+class Concat(_WriteOp):
     _op = aerospike._OP_STRING_CONCAT
 
     def __init__(self, policy: StringPolicy, values: list[str], bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             values: an expression that evaluates to the list of values to append.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
             The string in the bin with the values appended.
         """
         super().__init__(policy)
-        self._children = (values, _convert_bin_name_to_expr(bin),)
+        self._fixed |= {
+            _Keys.VALUE_KEY: values
+        }
+        self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Snip(WriteOp):
+class Snip(_WriteOp):
     _op = aerospike._OP_STRING_SNIP
 
     def __init__(self, policy: StringPolicy, start: int, end: int, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             start: First codepoint to remove, inclusive.
             end: One past the last codepoint to remove, exclusive.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -543,17 +546,17 @@ class Snip(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Replace(WriteOp):
+class Replace(_WriteOp):
     _op = aerospike._OP_STRING_REPLACE
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {needle_to_replace}
-            {replacement}
-            {bin}
+            policy: String policy.
+            needle: the string to replace.
+            replacement: the string to replace with.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -567,17 +570,17 @@ class Replace(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ReplaceAll(WriteOp):
+class ReplaceAll(_WriteOp):
     _op = aerospike._OP_STRING_REPLACE_ALL
 
     def __init__(self, policy: StringPolicy, needle: str, replacement: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {needle_to_replace}
-            {replacement}
-            {bin}
+            policy: String policy.
+            needle: the string to replace.
+            replacement: the string to replace with.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -591,15 +594,15 @@ class ReplaceAll(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Upper(WriteOp):
+class Upper(_WriteOp):
     _op = aerospike._OP_STRING_UPPER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -609,15 +612,15 @@ class Upper(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Lower(WriteOp):
+class Lower(_WriteOp):
     _op = aerospike._OP_STRING_LOWER
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -627,15 +630,15 @@ class Lower(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class CaseFold(WriteOp):
+class CaseFold(_WriteOp):
     _op = aerospike._OP_STRING_CASE_FOLD
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -645,15 +648,15 @@ class CaseFold(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class NormalizeNFC(WriteOp):
+class NormalizeNFC(_WriteOp):
     _op = aerospike._OP_STRING_NORMALIZE_NFC
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -663,15 +666,15 @@ class NormalizeNFC(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimStart(WriteOp):
+class TrimStart(_WriteOp):
     _op = aerospike._OP_STRING_TRIM_START
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -681,15 +684,15 @@ class TrimStart(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class TrimEnd(WriteOp):
+class TrimEnd(_WriteOp):
     _op = aerospike._OP_STRING_TRIM_END
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -699,15 +702,15 @@ class TrimEnd(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Trim(WriteOp):
+class Trim(_WriteOp):
     _op = aerospike._OP_STRING_TRIM
 
     def __init__(self, policy: StringPolicy, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {bin}
+            policy: String policy.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -717,17 +720,17 @@ class Trim(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadStart(WriteOp):
+class PadStart(_WriteOp):
     _op = aerospike._OP_STRING_PAD_START
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {target_length}
-            {pad_string}
-            {bin}
+            policy: String policy.
+            target_length: the target length of the string.
+            pad_string: the string to pad with.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -741,17 +744,17 @@ class PadStart(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class PadEnd(WriteOp):
+class PadEnd(_WriteOp):
     _op = aerospike._OP_STRING_PAD_END
 
     def __init__(self, policy: StringPolicy, target_length: int, pad_string: str, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
-            {target_length}
-            {pad_string}
-            {bin}
+            policy: String policy.
+            target_length: the target length of the string.
+            pad_string: the string to pad with.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -765,16 +768,16 @@ class PadEnd(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class Repeat(WriteOp):
+class Repeat(_WriteOp):
     _op = aerospike._OP_STRING_REPEAT
 
     def __init__(self, policy: StringPolicy, count: int, bin: "TypeBinName"):
         """
         Args:
 
-            {str_policy}
+            policy: String policy.
             count: the number of times to repeat the string.
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -787,7 +790,7 @@ class Repeat(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class RegexReplace(WriteOp):
+class RegexReplace(_WriteOp):
     _op = aerospike._OP_STRING_REGEX_REPLACE
 
     def __init__(
@@ -801,10 +804,11 @@ class RegexReplace(WriteOp):
         """
         Args:
 
-            {pattern}
-            {replacement}
-            {regex_flags}
-            {bin}
+            policy: No-op.
+            pattern: the regex pattern to match against.
+            replacement: the string to replace with.
+            regex_flags: The regex flags to use.
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -819,14 +823,14 @@ class RegexReplace(WriteOp):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
-class ToString(WriteOp):
+class ToString(_WriteOp):
     _op = aerospike._AS_EXP_CODE_CALL
 
     def __init__(self, bin: "TypeBinName"):
         """
         Args:
 
-            {bin}
+            bin: A bin expression to apply this function to.
 
         Returns:
 
@@ -880,17 +884,13 @@ __exp_class_to_op_func = {
 
 __this_module = sys.modules[__name__]
 __all_classes = inspect.getmembers(__this_module, predicate=inspect.isclass)
-kwargs = {
-    "bin": "bin: A bin expression to apply this function to."
-}
 
-for _, cls_value in __all_classes:
-    if cls_value.__module__ != __name__ or cls_value == WriteOp:
+for _, _cls_value in __all_classes:
+    if _cls_value.__module__ != __name__ or _cls_value == _WriteOp:
         continue
 
-    __generate_docstrings_for_all_func_members(cls_value, kwargs)
-    op_func = __exp_class_to_op_func[cls_value]
-    cls_value.__doc__ = (
+    _op_func = __exp_class_to_op_func[_cls_value]
+    _cls_value.__doc__ = (
         "Create an expression that performs a "
-        f":py:meth:`~{op_func.__module__}.{op_func.__qualname__}` operation."
+        f":py:meth:`~{_op_func.__module__}.{_op_func.__qualname__}` operation."
     )

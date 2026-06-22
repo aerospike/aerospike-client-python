@@ -63,20 +63,47 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
         X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
 
+// clang-format off
 #define STRING_OP_NAMES                                                        \
-    X(STRING_STRLEN), X(STRING_SUBSTR), X(STRING_SUBSTR_RANGE),                \
-        X(STRING_CHAR_AT), X(STRING_FIND), X(STRING_CONTAINS),                 \
-        X(STRING_STARTS_WITH), X(STRING_ENDS_WITH), X(STRING_TO_INTEGER),      \
-        X(STRING_TO_DOUBLE), X(STRING_BYTE_LENGTH), X(STRING_IS_NUMERIC),      \
-        X(STRING_IS_UPPER), X(STRING_IS_LOWER), X(STRING_TO_BLOB),             \
-        X(STRING_SPLIT), X(STRING_SPLIT_SEPARATOR), X(STRING_B64_DECODE),      \
-        X(STRING_REGEX_COMPARE), X(STRING_INSERT), X(STRING_OVERWRITE),        \
-        X(STRING_CONCAT), X(STRING_SNIP), X(STRING_REPLACE),                   \
-        X(STRING_REPLACE_ALL), X(STRING_UPPER), X(STRING_LOWER),               \
-        X(STRING_CASE_FOLD), X(STRING_NORMALIZE_NFC), X(STRING_TRIM_START),    \
-        X(STRING_TRIM_END), X(STRING_TRIM), X(STRING_PAD_START),               \
-        X(STRING_PAD_END), X(STRING_REPEAT), X(STRING_REGEX_REPLACE),          \
-        X(STRING_APPEND), X(STRING_PREPEND)
+    X(STRING_STRLEN), \
+    X(STRING_SUBSTR), \
+    X(STRING_SUBSTR_RANGE), \
+    X(STRING_CHAR_AT), \
+    X(STRING_FIND), \
+    X(STRING_CONTAINS), \
+    X(STRING_STARTS_WITH), \
+    X(STRING_ENDS_WITH), \
+    X(STRING_TO_INTEGER), \
+    X(STRING_TO_DOUBLE), \
+    X(STRING_BYTE_LENGTH), \
+    X(STRING_IS_NUMERIC), \
+    X(STRING_IS_UPPER), \
+    X(STRING_IS_LOWER), \
+    X(STRING_TO_BLOB), \
+    X(STRING_SPLIT), \
+    X(STRING_SPLIT_SEPARATOR), \
+    X(STRING_B64_DECODE), \
+    X(STRING_REGEX_COMPARE), \
+    X(STRING_INSERT), \
+    X(STRING_OVERWRITE), \
+    X(STRING_CONCAT), \
+    X(STRING_SNIP), \
+    X(STRING_REPLACE), \
+    X(STRING_REPLACE_ALL), \
+    X(STRING_UPPER), \
+    X(STRING_LOWER), \
+    X(STRING_CASE_FOLD), \
+    X(STRING_NORMALIZE_NFC), \
+    X(STRING_TRIM_START), \
+    X(STRING_TRIM_END), \
+    X(STRING_TRIM), \
+    X(STRING_PAD_START), \
+    X(STRING_PAD_END), \
+    X(STRING_REPEAT), \
+    X(STRING_REGEX_REPLACE), \
+    X(STRING_APPEND), \
+    X(STRING_PREPEND)
+// clang-format on
 
 enum {
 #define X(op_name) OP_##op_name
@@ -86,14 +113,8 @@ enum {
 #undef X
 };
 
-static inline bool is_list_op(int op_code)
-{
-    return op_code >= OP_LIST_APPEND && op_code <= OP_LIST_CREATE;
-}
-
 enum Aerospike_map_operations {
-    // Make sure all the op codes are unique
-    OP_MAP_SET_POLICY = OP_STRING_PREPEND + 1,
+    OP_MAP_SET_POLICY = 1101,
     OP_MAP_PUT,
     OP_MAP_PUT_ITEMS,
     OP_MAP_INCREMENT,

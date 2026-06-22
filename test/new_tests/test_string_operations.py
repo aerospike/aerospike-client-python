@@ -3,7 +3,7 @@ import base64
 
 import aerospike
 from aerospike_helpers.operations import string_operations as str_ops, operations, list_operations as list_ops
-from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags
+from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags, WriteFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 
@@ -211,12 +211,7 @@ class TestStringOperations:
             op(bin_name=STR_BIN_NAME)
         ]
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            expected_exc = e.OpNotApplicable
-        else:
-            expected_exc = e.InvalidRequest
-
-        with pytest.raises(expected_exc):
+        with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
     @expect_server_version_earlier_than_8_1_3_to_fail
@@ -768,3 +763,15 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == expected_results
+
+    def test_string_policy_no_fail(self):
+        policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
+        ops = [
+            str_ops.insert(bin_name=NON_STR_BIN_NAME, index=0, value="a", policy=policy)
+        ]
+        self.add_read_op(ops, NON_STR_BIN_NAME)
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]

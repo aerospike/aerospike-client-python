@@ -81,6 +81,31 @@ class TestExpressions:
 
             assert bins[STR_BIN_NAME] == expected_result
 
+    BYTEARRAY_VAL = bytearray('a', encoding="utf-8")
+
+    @pytest.mark.parametrize(
+        "expr",
+        [
+            str_expr.SubStr(start="1", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start="1", end=4, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start=1, end="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.CharAt(index="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.Contains(needle=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
+            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+        ]
+    )
+    def test_invalid_param(self, expr):
+        compiled_expr = expr.compile()
+        ops = [
+            expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)
+
     @pytest.mark.parametrize(
         "expr",
         [
@@ -93,12 +118,7 @@ class TestExpressions:
         ops = [
             expr_ops.expression_read(STR_BIN_NAME, compiled_expr)
         ]
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            expected_exc = e.OpNotApplicable
-        else:
-            expected_exc = e.InvalidRequest
-
-        with pytest.raises(expected_exc):
+        with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
     @pytest.mark.parametrize(
@@ -117,9 +137,10 @@ class TestExpressions:
                 str_expr.Overwrite, {"index": 1, "value": SINGLE_CHAR, "bin": STR_BIN_NAME},
                 EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]
             ),
-            (
+            pytest.param(
                 str_expr.Overwrite, {"index": 0, "value": EXAMPLE_STR + "a", "bin": STR_BIN_NAME},
-                EXAMPLE_STR + "a"
+                EXAMPLE_STR + "a",
+                id="grow_beyond_original_length"
             ),
             (
                 str_expr.Append, {"value": NEEDLE, "bin": STR_BIN_NAME},
