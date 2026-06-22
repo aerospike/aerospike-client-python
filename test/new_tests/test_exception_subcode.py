@@ -38,7 +38,7 @@ class TestExceptionSubcode:
         # Make sure there's no regression with the parent error code
         assert excinfo.value.code == as_errors.AEROSPIKE_ERR_OP_NOT_APPLICABLE
 
-        err_verbosity_is_zero = (
+        subcode_should_be_zero = (
             ERROR_DETAIL_VERBOSITY_SETTING not in policy
             or
             policy[ERROR_DETAIL_VERBOSITY_SETTING] == 0
@@ -47,21 +47,19 @@ class TestExceptionSubcode:
             # (and no undefined behavior)
             (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3)
         )
-        if err_verbosity_is_zero:
+        if subcode_should_be_zero:
             assert excinfo.value.subcode == 0
         else:
             assert excinfo.value.subcode > 0
 
-        SUBCODE_IN_MESSAGE = "subcode="
-        if err_verbosity_is_zero:
-            assert SUBCODE_IN_MESSAGE not in excinfo.value.msg
+        EXPECTED_SUBCODE_IN_MESSAGE = "subcode="
+        if subcode_should_be_zero:
+            assert EXPECTED_SUBCODE_IN_MESSAGE not in excinfo.value.msg
         elif policy[ERROR_DETAIL_VERBOSITY_SETTING] == 1:
-            # Make sure there's no regression with the server error message
-            # with lower verbosity
-            assert SUBCODE_IN_MESSAGE in excinfo.value.msg
+            assert EXPECTED_SUBCODE_IN_MESSAGE in excinfo.value.msg
         else:
             # There should be a message before the subcode
-            SUBCODE_IN_QUOTES = "({}".format(SUBCODE_IN_MESSAGE)
+            SUBCODE_IN_QUOTES = "({}".format(EXPECTED_SUBCODE_IN_MESSAGE)
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
 
     def test_invalid_verbosity(self):
