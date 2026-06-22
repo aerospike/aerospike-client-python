@@ -6,6 +6,7 @@ from aerospike_helpers.string_helpers import StringPolicy
 
 KEY = KEYS[0]
 
+NON_STR_BIN_NAME = "nonstr"
 STR_BIN_NAME = "str"
 UPPERCASE_STR_BIN_NAME = "uppercase_str"
 NESTED_STR_BIN_NAME = "nested_str"
@@ -36,6 +37,7 @@ NEW_STR = "1234"
 
 BINS = {
     STR_BIN_NAME: EXAMPLE_STR,
+    NON_STR_BIN_NAME: 1,
     UPPERCASE_STR_BIN_NAME: UPPERCASE_STR,
     NESTED_STR_BIN_NAME: [EXAMPLE_STR],
     STR_WITH_INT_BIN_NAME: STRING_WITH_INT,
