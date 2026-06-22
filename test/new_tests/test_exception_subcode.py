@@ -31,7 +31,7 @@ class TestExceptionSubcode:
             {ERROR_DETAIL_VERBOSITY_SETTING: 2},
         ]
     )
-    def test_minimum_error_verbosity(self, policy: dict):
+    def test_error_verbosity_levels(self, policy: dict):
         with pytest.raises(e.OpNotApplicable) as excinfo:
             self.as_connection.operate(KEYS[0], OPS, policy=policy)
 
