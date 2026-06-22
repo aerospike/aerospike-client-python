@@ -119,8 +119,7 @@ static inline bool is_list_op(int op_code)
 }
 
 enum Aerospike_map_operations {
-    // Make sure all the op codes are unique
-    OP_MAP_SET_POLICY = OP_STRING_PREPEND + 1,
+    OP_MAP_SET_POLICY = 1101,
     OP_MAP_PUT,
     OP_MAP_PUT_ITEMS,
     OP_MAP_INCREMENT,
