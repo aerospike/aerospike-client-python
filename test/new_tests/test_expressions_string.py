@@ -137,9 +137,10 @@ class TestExpressions:
                 str_expr.Overwrite, {"index": 1, "value": SINGLE_CHAR, "bin": STR_BIN_NAME},
                 EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]
             ),
-            (
+            pytest.param(
                 str_expr.Overwrite, {"index": 0, "value": EXAMPLE_STR + "a", "bin": STR_BIN_NAME},
-                EXAMPLE_STR + "a"
+                EXAMPLE_STR + "a",
+                id="grow_beyond_original_length"
             ),
             (
                 str_expr.Append, {"value": NEEDLE, "bin": STR_BIN_NAME},
