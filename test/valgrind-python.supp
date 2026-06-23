@@ -496,3 +496,461 @@
    Memcheck:Addr4
    fun:PyUnicode_FSConverter
 }
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyFloat_FromDouble
+   fun:parsenumber_raw
+   fun:parsenumber
+   fun:_PyPegen_number_token
+   fun:atom_rule
+   fun:primary_raw
+   fun:primary_rule
+   fun:await_primary_rule
+   fun:power_rule
+   fun:factor_rule
+   fun:term_raw
+   fun:term_rule
+   fun:sum_raw
+   fun:sum_rule
+   fun:shift_expr_raw
+   fun:shift_expr_rule
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyLong_New
+   fun:PyLong_FromSsize_t
+   fun:long_mul
+   fun:long_pow
+   fun:ternary_op
+   fun:PyNumber_Power
+   fun:safe_power
+   fun:fold_binop
+   fun:astfold_expr
+   fun:astfold_expr
+   fun:astfold_stmt
+   fun:astfold_body
+   fun:astfold_stmt
+   fun:astfold_body
+   fun:astfold_mod
+   fun:_PyAST_Optimize
+   fun:_PyAST_Compile
+   fun:builtin_compile_impl
+   fun:builtin_compile.cold
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyUnicode_New
+   fun:unicode_decode_utf8
+   fun:_PyPegen_parsestr
+   fun:_PyPegen_concatenate_strings
+   fun:strings_rule
+   fun:atom_rule
+   fun:primary_raw
+   fun:primary_rule
+   fun:await_primary_rule
+   fun:power_rule
+   fun:factor_rule
+   fun:term_raw
+   fun:term_rule
+   fun:sum_raw
+   fun:sum_rule
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyDict_NewPresized
+   fun:_PyStack_AsDict
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_init
+   fun:type_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:new_dict_with_shared_keys
+   fun:_PyObjectDict_SetItem
+   fun:_PyObject_GenericSetAttrWithDict
+   fun:PyObject_GenericSetAttr
+   fun:PyObject_SetAttr
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_init
+   fun:type_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyDict_NewPresized
+   fun:_PyStack_AsDict
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:new_dict_with_shared_keys
+   fun:_PyObjectDict_SetItem
+   fun:_PyObject_GenericSetAttrWithDict
+   fun:PyObject_GenericSetAttr
+   fun:PyObject_SetAttr
+   fun:ast2obj_arguments
+   fun:ast2obj_stmt
+   fun:ast2obj_list
+   fun:ast2obj_mod
+   fun:PyAST_mod2obj
+   fun:Py_CompileStringObject
+   fun:builtin_compile_impl
+   fun:builtin_compile
+   fun:cfunction_vectorcall_FASTCALL_KEYWORDS
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyEval_MakeFrameVector
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyFunction_Vectorcall
+   fun:_PyObject_FastCallDictTstate
+   fun:_PyObject_Call_Prepend
+   fun:slot_tp_init
+   fun:type_call
+   fun:PyObject_Call
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyDict_NewPresized
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyObjectDict_SetItem
+   fun:_PyObject_GenericSetAttrWithDict
+   fun:PyObject_GenericSetAttr
+   fun:PyObject_SetAttr
+   fun:ast2obj_expr
+   fun:ast2obj_expr
+   fun:ast2obj_list
+   fun:ast2obj_expr
+   fun:ast2obj_expr.cold
+   fun:ast2obj_stmt.cold
+   fun:ast2obj_list
+   fun:ast2obj_stmt
+   fun:ast2obj_list
+   fun:ast2obj_mod
+   fun:PyAST_mod2obj
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyEval_MakeFrameVector
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyLong_New
+   fun:_PyLong_Init
+   fun:pycore_init_singletons
+   fun:pycore_interp_init
+   fun:pyinit_config
+   fun:pyinit_core.constprop.0
+   fun:Py_InitializeFromConfig
+   fun:pymain_init
+   fun:pymain_main
+   fun:Py_BytesMain
+   fun:(below main)
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:new_dict
+   fun:PyDict_New
+   fun:_PyDict_NewPresized
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:tuple_alloc
+   fun:PyTuple_New
+   fun:error_to_pyobject
+   fun:raise_exception_base
+   fun:AerospikeClient_Prepend
+   fun:method_vectorcall_VARARGS_KEYWORDS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:do_call_core
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyUnicode_New
+   fun:unicode_repeat
+   fun:unicode_repeat
+   fun:safe_multiply
+   fun:fold_binop
+   fun:astfold_expr
+   fun:astfold_expr
+   fun:astfold_keyword
+   fun:astfold_expr
+   fun:astfold_stmt
+   fun:astfold_body
+   fun:astfold_stmt
+   fun:astfold_body
+   fun:astfold_stmt
+   fun:astfold_body
+   fun:astfold_mod
+   fun:_PyAST_Optimize
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyUnicode_New
+   fun:_PyUnicode_JoinArray
+   fun:PyUnicode_Join
+   fun:join_list_unicode
+   fun:flush_accumulator
+   fun:_PyAccu_FinishAsList
+   fun:encoder_call
+   fun:_PyObject_MakeTpCall
+   fun:_PyObject_VectorcallTstate
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalFrame
+   fun:_PyEval_Vector
+   fun:_PyObject_VectorcallTstate
+   fun:method_vectorcall
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_Vectorcall
+   fun:call_function
+   fun:_PyEval_EvalFrameDefault
+}
