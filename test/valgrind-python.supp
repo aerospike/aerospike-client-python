@@ -1,3 +1,6 @@
+# Copyright (c) 2001 Python Software Foundation; All Rights Reserved
+#
+# Summary of changes: Added custom suppressions blocks for running the Python client integration tests
 #
 # This is a valgrind suppression file that should be used when using valgrind.
 #
