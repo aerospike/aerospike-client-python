@@ -370,9 +370,11 @@ def remove_sindex(client):
 @pytest.fixture(scope="class")
 def setup_many_records(request, as_connection):
     if request.cls.server_version < [6, 0]:
-        pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
+        # TODO: can send type of query as indirect parameter
+        pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
         pytest.xfail()
 
+    # TODO: this was used in test_query_partition.py but not in *_query_pagination.py
     add_sindex(as_connection)
     request.cls.test_ns = "test"
     request.cls.test_set = "demo"
@@ -404,6 +406,7 @@ def setup_many_records(request, as_connection):
             request.cls.partition_1003_count += 1
             put = 1
         if put:
+            # TODO: I see test_*_pagination.py has digest in key tuple but *_query_partition.py does not.
             key = (request.cls.test_ns, request.cls.test_set, str(i))
             keys.append(key)
 
