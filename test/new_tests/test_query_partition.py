@@ -56,8 +56,6 @@ def setup(request, as_connection):
 
     for i in range(1, 100000):
         put = 0
-        key = (request.cls.test_ns, request.cls.test_set, str(i))
-        keys.append(key)
         rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
 
         if rec_partition == 1000:
@@ -81,6 +79,8 @@ def setup(request, as_connection):
                 "l": [2, 4, 8, 16, 32, None, 128, 256],
                 "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
             }
+            key = (request.cls.test_ns, request.cls.test_set, str(i))
+            keys.append(key)
             as_connection.put(key, rec)
     # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
     #         {request.cls.partition_1001_count} records are put in partition 1001, \
