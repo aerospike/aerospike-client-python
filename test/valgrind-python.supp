@@ -500,6 +500,8 @@
    fun:PyUnicode_FSConverter
 }
 
+# Below are the custom suppressions for the Python client
+
 {
    <insert_a_suppression_name_here>
    Memcheck:Leak
