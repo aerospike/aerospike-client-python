@@ -51,7 +51,7 @@ def setup(request, as_connection):
 
     as_connection.truncate(request.cls.test_ns, None, 0)
 
-    # brs = br.BatchRecords(batch_records=[])
+    brs = br.BatchRecords(batch_records=[])
     keys = []
 
     for i in range(1, 100000):
@@ -71,17 +71,18 @@ def setup(request, as_connection):
             request.cls.partition_1003_count += 1
             put = 1
         if put:
-            # br_write = br.Write(key, )
-            # brs.batch_records.append(br_write)
-            ops=[
+            key = (request.cls.test_ns, request.cls.test_set, str(i))
+            keys.append(key)
+
+            br_write = br.Write(key, ops=[
                 operations.write("i", i),
                 operations.write("s", "xyz"),
                 operations.write("l", [2, 4, 8, 16, 32, None, 128, 256]),
                 operations.write("m", {"partition": rec_partition, "b": 4, "c": 8, "d": 16})
-            ]
-            key = (request.cls.test_ns, request.cls.test_set, str(i))
-            keys.append(key)
-            as_connection.operate(key, ops)
+            ])
+            brs.batch_records.append(br_write)
+
+    as_connection.batch_write(brs)
 
     # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
     #         {request.cls.partition_1001_count} records are put in partition 1001, \
