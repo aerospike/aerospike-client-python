@@ -196,7 +196,7 @@ jobs:
             echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
             VALGRIND_SUPP_FILE=valgrind-python.supp
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --gen-suppressions=all --suppressions=./$VALGRIND_SUPP_FILE --show-leak-kinds=definite --leak-check=full --errors-for-leak-kinds=definite" >> "$GITHUB_ENV"
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --gen-suppressions=all --num-callers=500 --show-leak-kinds=definite --leak-check=full --errors-for-leak-kinds=definite" >> "$GITHUB_ENV"
           fi
         fi
       env:
