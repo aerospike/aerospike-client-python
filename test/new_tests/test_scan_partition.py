@@ -6,7 +6,7 @@ from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
 
-@pytest.mark.usefixtures("setup_many_records")
+@pytest.mark.usefixtures("hydrate_partitions_1000_to_1003")
 class TestScanPartition(TestBaseClass):
     def test_scan_partition_with_existent_ns_and_set(self):
 

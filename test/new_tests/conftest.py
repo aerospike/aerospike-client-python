@@ -349,7 +349,7 @@ def check_user_dictionary(user: dict):
     assert user.get("conns_in_use") == 0
 
 @pytest.fixture(scope="class")
-def setup_many_records(request, as_connection):
+def hydrate_partitions_1000_to_1003(request, as_connection):
     if request.cls.server_version < [6, 0]:
         pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
         pytest.xfail()

@@ -13,7 +13,7 @@ from aerospike import predicates as p
 import aerospike
 
 
-@pytest.mark.usefixtures("setup_many_records")
+@pytest.mark.usefixtures("hydrate_partitions_1000_to_1003")
 class TestQueryPartition(TestBaseClass):
     def test_query_partition_with_existent_ns_and_set(self):
 
@@ -34,18 +34,18 @@ class TestQueryPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     @pytest.fixture(scope="function")
-    def add_sindex(setup_many_records):
+    def add_sindex(hydrate_partitions_1000_to_1003):
         """
         Load the sindex used in the tests
         """
         try:
-            setup_many_records.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
+            hydrate_partitions_1000_to_1003.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
         except e.IndexFoundError:
             pass
 
         yield
 
-        setup_many_records.index_remove("test", "string", {})
+        hydrate_partitions_1000_to_1003.index_remove("test", "string", {})
 
     def test_query_partition_with_where(self, add_sindex):
 

@@ -8,7 +8,7 @@ from .as_status_codes import AerospikeStatus
 import math
 
 
-@pytest.mark.usefixtures("setup_many_records")
+@pytest.mark.usefixtures("hydrate_partitions_1000_to_1003")
 class TestQueryPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_query_pagination_with_existent_ns_and_set(self):

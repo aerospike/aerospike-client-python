@@ -4,7 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 
 
-@pytest.mark.usefixtures("setup_many_records")
+@pytest.mark.usefixtures("hydrate_partitions_1000_to_1003")
 class TestQueryGetPartitionsStatus(TestBaseClass):
     def test_query_get_partitions_status_no_tracking(self):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
