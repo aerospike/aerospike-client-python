@@ -33,7 +33,20 @@ class TestQueryPartition(TestBaseClass):
 
         assert len(records) == self.partition_1000_count
 
-    def test_query_partition_with_where(self):
+    def add_sindex(setup_many_records):
+        """
+        Load the sindex used in the tests
+        """
+        try:
+            setup_many_records.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
+        except e.IndexFoundError:
+            pass
+
+        yield
+
+        setup_many_records.index_remove("test", "string", {})
+
+    def test_query_partition_with_where(self, add_sindex):
 
         records = []
         partition_filter = {"begin": 1000, "count": 1}
@@ -57,7 +70,7 @@ class TestQueryPartition(TestBaseClass):
         bval = part_stats[1000][4]
         assert bval != 0
 
-    def test_query_partition_with_short_query(self):
+    def test_query_partition_with_short_query(self, add_sindex):
 
         records = []
         partition_filter = {"begin": 1000, "count": 1}

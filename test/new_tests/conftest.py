@@ -348,33 +348,12 @@ def check_user_dictionary(user: dict):
     # We assume no clients were logged in as this user
     assert user.get("conns_in_use") == 0
 
-def add_sindex(client):
-    """
-    Load the sindex used in the tests
-    """
-    try:
-        client.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
-    except e.IndexFoundError:
-        pass
-
-
-def remove_sindex(client):
-    """
-    Remove the sindex created for these tests
-    """
-    try:
-        client.index_remove("test", "string", {})
-    except e.IndexNotFound:
-        pass
-
 @pytest.fixture(scope="class")
 def setup_many_records(request, as_connection):
     if request.cls.server_version < [6, 0]:
         pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
         pytest.xfail()
 
-    # TODO: this was used in test_query_partition.py but not in *_query_pagination.py
-    add_sindex(as_connection)
     request.cls.test_ns = "test"
     request.cls.test_set = "demo"
 
@@ -424,8 +403,6 @@ def setup_many_records(request, as_connection):
     #         {request.cls.partition_1002_count} records are put in partition 1002, \
     #         {request.cls.partition_1003_count} records are put in partition 1003")
 
-    yield
+    yield as_connection
 
     as_connection.batch_remove(keys)
-
-    remove_sindex(as_connection)
