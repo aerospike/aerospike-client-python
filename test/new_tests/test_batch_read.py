@@ -9,21 +9,21 @@ from . import as_errors
 
 
 class TestBatchRead(TestBaseClass):
-    @pytest.fixture(autouse=True, scope="class")
-    def setup(self, connection_with_config_funcs):
+    @pytest.fixture(autouse=True)
+    def setup(self, request, connection_with_config_funcs):
         as_connection = connection_with_config_funcs
 
-        if self.__class__.server_version < [6, 0]:
+        if self.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support batch read.")
             pytest.xfail()
 
-        self.__class__.test_ns = "test"
-        self.__class__.test_set = "demo"
-        self.__class__.keys = []
-        self.__class__.keys_to_expected_bins = {}
-        self.__class__.batch_size = 5
+        self.test_ns = "test"
+        self.test_set = "demo"
+        self.keys = []
+        self.keys_to_expected_bins = {}
+        self.batch_size = 5
 
-        for i in range(self.__class__.batch_size):
+        for i in range(self.batch_size):
             key = ("test", "demo", i)
             rec = {
                 "count": i,
@@ -40,14 +40,15 @@ class TestBatchRead(TestBaseClass):
                 },
             }
             as_connection.put(key, rec)
-            self.__class__.keys.append(key)
-            self.__class__.keys_to_expected_bins[key] = rec
+            self.keys.append(key)
+            self.keys_to_expected_bins[key] = rec
 
-        yield
+        def teardown():
+            for i in range(self.batch_size):
+                key = ("test", "demo", i)
+                as_connection.remove(key)
 
-        for i in range(self.__class__.batch_size):
-            key = ("test", "demo", i)
-            as_connection.remove(key)
+        request.addfinalizer(teardown)
 
     @pytest.mark.parametrize("bins", [
         None,

@@ -7,7 +7,6 @@ from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
-from .conftest import wait_for_job_completion
 import copy
 from contextlib import nullcontext
 import time
@@ -524,7 +523,7 @@ class TestConfigTTL:
         query.add_ops(ops)
         job_id = query.execute_background()
 
-        wait_for_job_completion(self.client, job_id, aerospike.JOB_QUERY)
+        wait_for_job_completion(self.client, job_id)
 
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
