@@ -34,18 +34,18 @@ class TestQueryPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     @pytest.fixture(scope="function")
-    def add_sindex(hydrate_partitions_1000_to_1003):
+    def add_sindex(self):
         """
         Load the sindex used in the tests
         """
         try:
-            hydrate_partitions_1000_to_1003.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
+            self.as_connection.index_single_value_create("test", "demo", "s", aerospike.INDEX_STRING, "string")
         except e.IndexFoundError:
             pass
 
         yield
 
-        hydrate_partitions_1000_to_1003.index_remove("test", "string", {})
+        self.as_connection.index_remove("test", "string", {})
 
     def test_query_partition_with_where(self, add_sindex):
 

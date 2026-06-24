@@ -402,6 +402,6 @@ def hydrate_partitions_1000_to_1003(request, as_connection):
     #         {request.cls.partition_1002_count} records are put in partition 1002, \
     #         {request.cls.partition_1003_count} records are put in partition 1003")
 
-    yield as_connection
+    yield
 
     as_connection.batch_remove(keys)
