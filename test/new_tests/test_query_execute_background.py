@@ -79,7 +79,7 @@ class TestQueryApply(object):
         job_id = query.execute_background()
         print(job_id)
 
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         key = (TEST_NS, TEST_SET, 4)
         _, meta = self.as_connection.exists(key)
@@ -99,8 +99,7 @@ class TestQueryApply(object):
         job_id = query.execute_background()
         # Give time for the query to finish
 
-        # time.sleep(5)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
@@ -128,8 +127,7 @@ class TestQueryApply(object):
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = query.execute_background(policy)
         # Give time for the query to finish
-        # time.sleep(5)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -158,8 +156,7 @@ class TestQueryApply(object):
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = query.execute_background(policy)
         # Give time for the query to finish
-        # time.sleep(5)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -192,7 +189,7 @@ class TestQueryApply(object):
         query.add_ops(ops)
         job_id = query.execute_background(policy=policy)
         # Give time for the query to finish
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -216,8 +213,7 @@ class TestQueryApply(object):
         query.add_ops(ops)
         job_id = query.execute_background()
         # Give time for the query to finish
-        # time.sleep(5)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
@@ -238,8 +234,7 @@ class TestQueryApply(object):
         query.where(number_predicate)
         job_id = query.execute_background()
         # Give time for the query to finish
-        # time.sleep(5)
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record.get(test_bin) is None
@@ -270,7 +265,7 @@ class TestQueryApply(object):
         query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = query.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
         # Give time for the query to finish
         keys = [(TEST_NS, TEST_SET, i) for i in range(500) if i != 5]
         validate_records(self.as_connection, keys, lambda rec: test_bin not in rec)
@@ -298,9 +293,8 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         job_id = query.execute_background(policy=policy)
-        wait_for_job_completion(self.as_connection, job_id)
         # Give time for the query to finish
-        # time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         # Records with number > 10 should not have had the UDF applied
         validate_records(self.as_connection, keys[10:], lambda rec: test_bin not in rec)
@@ -359,7 +353,7 @@ class TestQueryApply(object):
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
         job_id = query.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         records = query.results()
@@ -373,7 +367,7 @@ class TestQueryApply(object):
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
         job_id = query.execute_background()
-        wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         records = query.results()
