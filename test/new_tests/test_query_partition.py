@@ -33,6 +33,7 @@ class TestQueryPartition(TestBaseClass):
 
         assert len(records) == self.partition_1000_count
 
+    @pytest.fixture(scope="function")
     def add_sindex(setup_many_records):
         """
         Load the sindex used in the tests
