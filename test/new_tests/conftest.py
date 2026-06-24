@@ -370,7 +370,6 @@ def remove_sindex(client):
 @pytest.fixture(scope="class")
 def setup_many_records(request, as_connection):
     if request.cls.server_version < [6, 0]:
-        # TODO: can send type of query as indirect parameter
         pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
         pytest.xfail()
 
