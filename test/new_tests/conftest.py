@@ -384,7 +384,6 @@ def setup_many_records(request, as_connection):
             request.cls.partition_1003_count += 1
             put = 1
         if put:
-            # TODO: I see test_*_pagination.py has digest in key tuple but *_query_partition.py does not.
             key = (request.cls.test_ns, request.cls.test_set, str(i))
             keys.append(key)
 
