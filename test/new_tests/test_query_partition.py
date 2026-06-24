@@ -5,7 +5,6 @@ from .test_base_class import TestBaseClass
 
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
-from aerospike_helpers.operations import operations
 from .as_status_codes import AerospikeStatus
 from aerospike import predicates as p
 
