@@ -781,7 +781,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case LE:
             APPEND_ARRAY(2, as_exp_cmp_le(NIL, NIL));
             break;
-        case CMP_REGEX:
+        case CMP_REGEX: {
             int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
                                       CMP_REGEX_DEPRECATION, STACK_LEVEL);
             if (retval == -1) {
@@ -810,6 +810,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(1, as_exp_cmp_regex(lval1, regex_str, NIL));
             break;
+        }
         case CMP_GEO:
             APPEND_ARRAY(2, as_exp_cmp_geo(NIL, NIL));
             break;
