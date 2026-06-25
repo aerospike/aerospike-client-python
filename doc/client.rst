@@ -738,9 +738,9 @@ Batched Commands
         .. testoutput::
 
             0
-            0: (('test', 'demo', 'employee4', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
-            0: (('test', 'demo', 'employee5', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
-            0: (('test', 'demo', 'employee6', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
+            0: (('test', 'demo', 'employee4', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0.0})
+            0: (('test', 'demo', 'employee5', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100.0})
+            0: (('test', 'demo', 'employee6', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50.0})
 
         .. include:: examples/batch_apply.lua
             :code: lua
