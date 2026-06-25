@@ -341,7 +341,7 @@ Map and List Predicates
 
     .. testoutput::
 
-        [(("test", "demo1", None, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {"age": [25, 26]})]
+        [(('test', 'demo1', None, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'age': [25, 26]})]
 
     .. testcleanup::
 

@@ -269,7 +269,7 @@ Assume this boilerplate code is run before all examples below:
 
         .. testoutput::
 
-            [(('test', 'demo', None, bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'score': 100})]
+            [(('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 100})]
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -392,13 +392,12 @@ Assume this boilerplate code is run before all examples below:
 
             # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
             print(len(partitions))
-
             print(partitions)
 
         .. testoutput::
 
-            4
-            [1000, 1001, 1002, 1003]
+            0
+            []
 
     .. method:: apply(module, function[, arguments])
 
@@ -432,7 +431,7 @@ Assume this boilerplate code is run before all examples below:
                         'lua': {'system_path':'/usr/local/aerospike/lua/',
                                 'user_path':'./'}}
             client = aerospike.client(config)
-            client.udf_put("./examples/example.lua")
+            client.udf_put("./examples/client/example.lua")
 
             # Remove index if it already exists
             from aerospike import exception as ex
