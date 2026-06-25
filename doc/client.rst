@@ -206,7 +206,7 @@ Record Commands
             print(key)
             print(meta)
 
-        .. testcode::
+        .. testoutput::
 
             ('test', 'demo', 'key', bytearray(b'...'))
             None
@@ -239,9 +239,15 @@ Record Commands
             client.put(keyTuple, {'bin1': 4})
             (key, meta, bins) = client.get(keyTuple)
 
-            print(key) # ('test', 'demo', None, bytearray(b'...'))
-            print(meta) # {'ttl': 2592000, 'gen': 1}
-            print(bins) # {'bin1': 4}
+            print(key)
+            print(meta)
+            print(bins)
+
+        .. testoutput::
+
+            ('test', 'demo', None, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
 
         .. versionchanged:: 2.0.0
 
@@ -268,17 +274,25 @@ Record Commands
             (key, meta, bins) = client.select(keyTuple, ['bin1'])
 
             # Similar output to get()
-            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
-            print(meta) # {'ttl': 2592000, 'gen': 1}
-            print(bins) # {'bin1': 4}
+            print(key)
+            print(meta)
+            print(bins)
 
             # Get all bins
             (key, meta, bins) = client.select(keyTuple, ['bin1', 'bin2'])
-            print(bins) # {'bin1': 4, 'bin2': 3}
+            print(bins)
 
             # Get nonexistent bin
             (key, meta, bins) = client.select(keyTuple, ['bin3'])
-            print(bins) # {}
+            print(bins)
+
+        .. testoutput::
+
+            ('test', 'demo', 'key', bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
+            {'bin1': 4, 'bin2': 3}
+            {}
 
         .. versionchanged:: 2.0.0
 
@@ -317,12 +331,17 @@ Record Commands
             ]
             (key, meta, bins) = client.operate(key, ops)
 
-            print(key) # ('test', 'demo', None, bytearray(b'...'))
+            print(key)
             # The generation should only increment once
             # A transaction is *atomic*
-            print(meta) # {'ttl': 2592000, 'gen': 2}
+            print(meta)
             print(bins) # Will display all bins selected by read operations
-            # {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
+
+        .. testoutput::
+
+            ('test', 'demo', None, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 2}
+            {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
         .. note::
 
@@ -370,7 +389,10 @@ Record Commands
             # Same output for key and meta as operate()
             # But read operations are outputted as bin-value pairs
             print(bins)
-            # [('name': 'Phillip J. Fry'), ('career': 'delivery boy'), ('age': 1025)]
+
+        .. testoutput::
+
+            [('name': 'Phillip J. Fry'), ('career': 'delivery boy'), ('age': 1025)]
 
         .. versionchanged:: 2.1.3
 
@@ -566,12 +588,15 @@ Batched Commands
                 print(batchRecord.record)
             # Note how written bins return None if their values aren't read
             # And removed records have an empty bins dictionary
-            # 0
-            # (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0
-            # (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
-            # 0
-            # (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
+            0
+            (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
 
         .. note:: Requires server version >= 6.0.0.
 
