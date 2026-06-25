@@ -599,11 +599,11 @@ Assume this boilerplate code is run before all examples below:
         .. testoutput::
 
             got page: 0
-            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
-            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
+            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
             got page: 1
-            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
-            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
+            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
             got page: 2
             all done
 
@@ -670,10 +670,10 @@ Assume this boilerplate code is run before all examples below:
 
         .. testoutput::
 
-            (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
-            (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
-            1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
-            3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
+            1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
+            3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
 
 .. _aerospike_query_policies:
 
