@@ -180,7 +180,7 @@ class TestBaseClass(object):
             res = res.split(".")
             TestBaseClass.major_ver = int(res[0])
             TestBaseClass.minor_ver = int(res[1])
-            TestBaseClass.minor_ver = int(res[2])
+            TestBaseClass.patch_ver = int(res[2])
             # print("major_ver:", TestBaseClass.major_ver, "minor_ver:", TestBaseClass.minor_ver)
 
         return client
