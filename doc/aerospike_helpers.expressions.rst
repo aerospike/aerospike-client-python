@@ -36,6 +36,16 @@ the command will filter the results.
 
 Example:
 
+.. testsetup::
+
+  config = {"hosts": [("127.0.0.1", 3000)]}
+  client = aerospike.client(config)
+
+  keys = [("test", "demo", i) for i in range(1, 5)]
+  client.batch_remove(keys=keys)
+
+  client.close()
+
 .. testcode::
 
   import aerospike
@@ -89,13 +99,13 @@ Example:
 
 .. testoutput::
 
-  {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
-  {'user': 'Arbiter', 'scores': [5, 10, 5, 8], 'kd': 1.0}
+  {'kd': 1.2, 'scores': [6, 12, 4, 21], 'user': 'Chief'}
+  {'kd': 1.0, 'scores': [5, 10, 5, 8], 'user': 'Arbiter'}
   None
   None
-  {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
+  {'kd': 1.2, 'scores': [6, 12, 4, 21], 'user': 'Chief'}
   None
-  {'user': 'Johnson', 'scores': [8, 17, 20, 5], 'kd': 0.9}
+  {'kd': 0.9, 'scores': [8, 17, 20, 5], 'user': 'Johnson'}
   None
 
 
