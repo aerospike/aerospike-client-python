@@ -392,7 +392,7 @@ Record Commands
 
         .. testoutput::
 
-            [('name': 'Phillip J. Fry'), ('career': 'delivery boy'), ('age': 1025)]
+            [('name', 'Phillip J. Fry'), ('career', 'delivery boy'), ('age', 1025)]
 
         .. versionchanged:: 2.1.3
 
