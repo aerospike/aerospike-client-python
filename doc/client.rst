@@ -54,6 +54,8 @@ Assume every in-line example runs this code beforehand:
     # Record key tuple: (namespace, set, key)
     keyTuple = ('test', 'demo', 'key')
 
+    print("See if this is running...")
+
 .. code-block:: python
 
     # Imports
