@@ -67,10 +67,6 @@ Example:
   for br in brs.batch_records:
       # error code for FILTERED_OUT = 27
       pprint.pprint(br.record[2] if br.result != 27 else None)
-  # {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
-  # {'user': 'Arbiter', 'scores': [5, 10, 5, 8], 'kd': 1.0}
-  # None
-  # None
 
   # Example #2: Get player with scores higher than 20
   # By nesting expressions, we can create complicated filters
@@ -90,10 +86,18 @@ Example:
 
   for br in brs.batch_records:
       pprint.pprint(br.record[2] if br.result != 27 else None)
-  # {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
-  # None
-  # {'user': 'Johnson', 'scores': [8, 17, 20, 5], 'kd': 0.9}
-  # None
+
+.. testoutput::
+
+  {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
+  {'user': 'Arbiter', 'scores': [5, 10, 5, 8], 'kd': 1.0}
+  None
+  None
+  {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
+  None
+  {'user': 'Johnson', 'scores': [8, 17, 20, 5], 'kd': 0.9}
+  None
+
 
 Currently, Aerospike expressions are supported for:
   * Record commands
