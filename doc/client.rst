@@ -256,7 +256,7 @@ Record Commands
         .. testoutput::
 
             Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
-            ('test', 'demo', 4, bytearray(b'...'))
+            ('test', 'demo', None, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
             {'bin1': 4}
 
