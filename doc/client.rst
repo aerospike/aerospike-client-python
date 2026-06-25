@@ -765,9 +765,11 @@ Batched Commands
         .. testoutput::
 
             0
-            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
