@@ -310,6 +310,8 @@ Map and List Predicates
 
     .. note:: Requires server version >= 3.8.1
 
+    .. TODO - the actual output for this is wrong.
+
     .. testcode::
 
         import aerospike

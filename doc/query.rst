@@ -266,7 +266,10 @@ Assume this boilerplate code is run before all examples below:
             records = query.results()
             # Matches one record
             print(records)
-            # [(('test', 'demo', None, bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'score': 100})]
+
+        .. testoutput::
+
+            [(('test', 'demo', None, bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'score': 100})]
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -322,10 +325,13 @@ Assume this boilerplate code is run before all examples below:
             for br in brs.batch_records:
                 # Print record bin
                 print(br.record[2])
-            # {'score': 100, 'elo': 1500}
-            # {'score': 20, 'elo': 1520}
-            # {'score': 10, 'elo': 1110}
-            # {'score': 200, 'elo': 1100}
+
+        .. testoutput::
+
+            {'score': 100, 'elo': 1500}
+            {'score': 20, 'elo': 1520}
+            {'score': 10, 'elo': 1110}
+            {'score': 200, 'elo': 1100}
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
@@ -350,7 +356,11 @@ Assume this boilerplate code is run before all examples below:
 
             keys = []
             query.foreach(limit(2, keys))
-            print(len(keys)) # 2
+            print(len(keys))
+
+        .. testoutput::
+
+            2
 
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -381,11 +391,14 @@ Assume this boilerplate code is run before all examples below:
 
 
             # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
-            # should be 4
             print(len(partitions))
 
-            # should be [1000, 1001, 1002, 1003]
             print(partitions)
+
+        .. testoutput::
+
+            4
+            [1000, 1001, 1002, 1003]
 
     .. method:: apply(module, function[, arguments])
 
@@ -448,12 +461,15 @@ Assume this boilerplate code is run before all examples below:
             # we expect a dict (map) whose keys are names, each with a count value
             print(names)
             # One of the Jeffs is excluded because he is under 21
-            # [{'Derek': 3, 'Jeff': 1}]
 
             # Cleanup
             client.index_remove("test", "ageIndex")
             client.batch_remove(keys)
             client.close()
+
+        .. testoutput::
+
+            # [{'Derek': 3, 'Jeff': 1}]
 
         With stream UDFs, the final reduce steps (which ties
         the results from the reducers of the cluster nodes) executes on the
