@@ -431,7 +431,7 @@ Assume this boilerplate code is run before all examples below:
                         'lua': {'system_path':'/usr/local/aerospike/lua/',
                                 'user_path':'./'}}
             client = aerospike.client(config)
-            client.udf_put("./examples/client/example.lua")
+            client.udf_put("./examples/lua/example.lua")
 
             # Remove index if it already exists
             from aerospike import exception as ex
