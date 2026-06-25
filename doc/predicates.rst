@@ -147,6 +147,12 @@ GeoJSON Predicates
         print(records)
         client.close()
 
+    .. TODO this needs to be pretty printed...
+
+    .. testoutput::
+
+        [(('test', 'pads', None, bytearray(b']\xd6w\xa0i\x9d\xbbs\x1a~!\xd5h\x1d\xf0\x11\xee #\x8d')), {'ttl': 2592000, 'gen': 1}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
+
     .. versionadded:: 1.0.58
 
 .. py:function:: geo_contains_geojson_point(bin, point[, index_type])
@@ -191,6 +197,10 @@ GeoJSON Predicates
         records = query.results()
         print(records)
         client.close()
+
+    .. testoutput::
+
+        [(('test', 'pads', None, bytearray(b']\xd6w\xa0i\x9d\xbbs\x1a~!\xd5h\x1d\xf0\x11\xee #\x8d')), {'ttl': 2592000, 'gen': 2}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -237,6 +247,10 @@ GeoJSON Predicates
         print(records)
         client.close()
 
+    .. testoutput::
+
+        [(('test', 'launch_centers', None, bytearray(b'\x84\xc3\xeb\x0ei\x8f\xeaf8!\x8e2\xd7\r\x90?\x80\xcf\xfbP')), {'ttl': 2592000, 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
+
     .. versionadded:: 1.0.58
 
 Map and List Predicates
@@ -278,6 +292,10 @@ Map and List Predicates
         res = query.results()
         print(res)
         client.close()
+
+    .. testoutput::
+
+        [(('test', 'launch_centers', None, bytearray(b'\x84\xc3\xeb\x0ei\x8f\xeaf8!\x8e2\xd7\r\x90?\x80\xcf\xfbP')), {'ttl': 2592000, 'gen': 2}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
 
 .. py:function:: range(bin, index_type, min, max))
 

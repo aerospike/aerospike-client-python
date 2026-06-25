@@ -665,15 +665,18 @@ Batched Commands
 
             batchRecords = client.batch_operate(keys, ops)
             print(batchRecords.result)
-            # 0
 
             # Print each individual transaction's results
             # and record if it was read from
             for batchRecord in batchRecords.batch_records:
                 print(f"{batchRecord.result}: {batchRecord.record}")
-            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 700})
-            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 900})
-            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 800})
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 700})
+            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 900})
+            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 800})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -711,13 +714,16 @@ Batched Commands
             batchRecords = client.batch_apply(keys, "batch_apply", "tax", args)
 
             print(batchRecords.result)
-            # 0
 
             for batchRecord in batchRecords.batch_records:
                 print(f"{batchRecord.result}: {batchRecord.record}")
-            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
-            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
-            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
+            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
+            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
 
         .. include:: examples/batch_apply.lua
             :code: lua
@@ -752,13 +758,16 @@ Batched Commands
 
             # A result of 0 means success
             print(batchRecords.result)
-            # 0
             for batchRecord in batchRecords.batch_records:
                 print(batchRecord.result)
                 print(batchRecord.record)
-            # 0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
@@ -1189,7 +1198,10 @@ Info Operations
 
             base64 = client.get_expression_base64(expr)
             print(base64)
-            # kwGTUQKkYmluMQY=
+
+        .. testoutput::
+
+            kwGTUQKkYmluMQY=
 
         .. versionchanged:: 7.0.0
 
@@ -1378,6 +1390,10 @@ Index Operations
             print("Base64 encoding of ctxs:", ctxs_base64)
 
             client.close()
+
+        .. testoutput::
+
+            Base64 encoding of ctxs: khAA
 
         .. versionchanged:: 7.1.1
 
