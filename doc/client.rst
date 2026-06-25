@@ -423,10 +423,6 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. testsetup::
-
-            client.remove(keyTuple)
-
         .. testcode::
 
             # Insert a record
