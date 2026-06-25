@@ -735,6 +735,9 @@ Batched Commands
             for batchRecord in batchRecords.batch_records:
                 print(f"{batchRecord.result}: {batchRecord.record}")
 
+            # Cleanup
+            client.udf_remove('batch_apply.lua')
+
         .. testoutput::
 
             0
