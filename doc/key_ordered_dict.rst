@@ -56,9 +56,10 @@ This assists in matching key ordered maps through various read operations. See t
     client.remove(key)
     client.close()
 
-    # EXPECTED OUTPUT:
-    # {'map_list': [{'a': 1, 'b': 2, 'c': 3}, {'d': 4, 'e': 5, 'f': 6}, {'g': 7, 'h': 8, 'i': 9}]}
-    # {'map_list': 1}
+.. testoutput::
+
+    {'map_list': [{'a': 1, 'b': 2, 'c': 3}, {'d': 4, 'e': 5, 'f': 6}, {'g': 7, 'h': 8, 'i': 9}]}
+    {'map_list': 1}
 
 KeyOrderedDict inherits from :class:`dict` and has no extra functionality.
 The only difference is its mapping to a key ordered map.

@@ -394,7 +394,7 @@ Record Commands
             # Insert record and get its metadata
             client.put(keyTuple, bins = {"bin1": 4})
             (key, meta) = client.exists(keyTuple)
-            print(meta) # {'ttl': 2592000, 'gen': 1}
+            print(meta)
 
             # Explicitly set TTL to 120
             # and increment generation
@@ -402,7 +402,12 @@ Record Commands
 
             # Record metadata should be updated
             (key, meta) = client.exists(keyTuple)
-            print(meta) # {'ttl': 120, 'gen': 2}
+            print(meta)
+
+        .. testoutput::
+
+            {'ttl': 2592000, 'gen': 1}
+            {'ttl': 120, 'gen': 2}
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
@@ -418,6 +423,10 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. testsetup::
+
+            client.remove(keyTuple)
+
         .. testcode::
 
             # Insert a record
@@ -427,11 +436,14 @@ Record Commands
             try:
                 client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
             except ex.AerospikeError as e:
-                # Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
                 print("Error: {0} [{1}]".format(e.msg, e.code))
 
             # Remove it ignoring generation
             client.remove(keyTuple)
+
+        .. testoutput::
+
+            Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
@@ -459,7 +471,10 @@ Record Commands
             # Only bin2 shold remain
             (keyTuple, meta, bins) = client.get(keyTuple)
             print(bins)
-            # {'bin2': 1}
+
+        .. testoutput::
+
+            {'bin2': 1}
 
     .. index::
         single: Batched Commands

@@ -347,13 +347,15 @@ Methods
                 sys.exit(1)
             finally:
                 client.close()
-            # EXPECTED OUTPUT:
-            # {'number': 11}
-            # {'number': 12}
-            # {'number': 13}
 
-            .. include:: examples/scan/my_udf.lua
-                :code: lua
+        .. testoutput::
+
+            {'number': 11}
+            {'number': 12}
+            {'number': 13}
+
+        .. include:: examples/scan/my_udf.lua
+            :code: lua
 
     .. method:: paginate()
 

@@ -309,8 +309,6 @@ The following example shows the three modes of serialization:
     (_, _, bins) = client2.get(keys[2])
     print(bins)
 
-    # Expected output:
-
     # Cleanup
     client.batch_remove(keys)
     client.close()
