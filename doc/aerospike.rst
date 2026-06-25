@@ -258,7 +258,6 @@ The following example shows the three modes of serialization:
 .. testcode::
 
     import aerospike
-    import marshal
     import json
 
     # Serializers and deserializers
@@ -298,25 +297,11 @@ The following example shows the three modes of serialization:
     # Tuple is an unsupported type
     tupleBin = {'bin': (1, 2, 3)}
 
-    # Use the default, built-in serialization (cPickle)
-    client.put(keys[0], tupleBin)
+    # Use the aerospike module-level serializer
+    client.put(keys[0], tupleBin, serializer=aerospike.SERIALIZER_USER)
+
     (_, _, bins) = client.get(keys[0])
     print(bins)
-
-    # Expected output:
-    # {'bin': (1, 2, 3)}
-
-    # First client uses class-level, user-defined serialization
-    # No instance-level serializer was declared
-    client.put(keys[1], tupleBin, serializer=aerospike.SERIALIZER_USER)
-    (_, _, bins) = client.get(keys[1])
-    # Notice that json-encoding a tuple produces a list
-    print(bins)
-
-    # Expected output:
-    # Using class serializer
-    # Using class deserializer
-    # {'bin': [1, 2, 3]}
 
     # Second client uses instance-level, user-defined serialization
     # Instance-level serializer overrides class-level serializer
@@ -325,14 +310,21 @@ The following example shows the three modes of serialization:
     print(bins)
 
     # Expected output:
-    # Using local serializer
-    # Using local deserializer
-    # {'bin': [1, 2, 3]}
 
     # Cleanup
     client.batch_remove(keys)
     client.close()
     client2.close()
+
+.. testoutput::
+
+    Using class serializer
+    Using class deserializer
+    {'bin': [1, 2, 3]}
+    Using local serializer
+    Using local deserializer
+    {'bin': [1, 2, 3]}
+
 
 Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
 (record ``foo3`` uses the same encoding as ``foo2``)
