@@ -138,7 +138,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'pads2', 'loc', 'pads_loc_geo')
+        client.index_geo2dsphere_create('test', 'pads2', 'loc', 'pads_loc_geo1')
         bins = {'pad_id': 1,
                 'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
         client.put(('test', 'pads2', 'launchpad1'), bins)
@@ -232,7 +232,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'launch_centers2', 'area', 'launch_area_geo')
+        client.index_geo2dsphere_create('test', 'launch_centers2', 'area', 'launch_area_geo2')
         rect = GeoJSON({ 'type': "Polygon",
                          'coordinates': [
                           [[-80.590000, 28.60000],
