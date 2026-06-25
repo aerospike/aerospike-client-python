@@ -545,11 +545,6 @@ Assume this boilerplate code is run before all examples below:
                 _, _, bins = client.get(key)
                 print(bins)
 
-            # Cleanup and close the connection to the Aerospike cluster.
-            for key in keyTuples:
-                client.remove(key)
-            client.close()
-
         .. testoutput::
 
             {"score": 200, "elo": 1400}
@@ -634,6 +629,7 @@ Assume this boilerplate code is run before all examples below:
 
             # Create a client and connect it to the cluster
             client = aerospike.client(config)
+
 
             # Only read 2 records
 
