@@ -50,10 +50,6 @@ Assume this code runs before the code examples:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
 
-.. testcleanup::
-
-    client.truncate('test', "demo", 0)
-
 .. code-block:: python
 
     # Imports
@@ -75,6 +71,18 @@ Assume this code runs before the code examples:
 
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
+
+Code example cleanup:
+
+.. testcleanup::
+
+    client.truncate('test', "demo", 0)
+    client.close()
+
+.. code-block:: python
+
+    client.truncate('test', "demo", 0)
+    client.close()
 
 Basic example:
 
@@ -236,7 +244,6 @@ Record Commands
                 client.get(keyTuple)
             except ex.RecordNotFound as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
-                # Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
 
             # Get existing record
             client.put(keyTuple, {'bin1': 4})
@@ -248,6 +255,7 @@ Record Commands
 
         .. testoutput::
 
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
             ('test', 'demo', 4, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
             {'bin1': 4}
@@ -292,7 +300,7 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', None, bytearray(b'...'))
+            ('test', 'demo', 5, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
             {'bin1': 4}
             {'bin1': 4, 'bin2': 3}
@@ -334,7 +342,7 @@ Record Commands
                 operations.read("career"),
                 operations.read("age")
             ]
-            (key, meta, bins) = client.operate(key, ops)
+            (key, meta, bins) = client.operate(keyTuple, ops)
 
             print(key)
             # The generation should only increment once
@@ -344,7 +352,7 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', None, bytearray(b'...'))
+            ('test', 'demo', 6, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 2}
             {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
@@ -717,7 +725,7 @@ Batched Commands
 
             # Apply a user defined function (UDF) to a batch
             # of records using batch_apply.
-            client.udf_put("batch_apply.lua")
+            client.udf_put("./examples/batch_apply.lua")
 
             args = ["balance", 0.5, 100]
             batchRecords = client.batch_apply(keys, "batch_apply", "tax", args)
@@ -773,6 +781,7 @@ Batched Commands
 
         .. testoutput::
 
+            0
             0
             (('test', 'demo', 'employee7', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
             0
@@ -953,16 +962,16 @@ User Defined Functions
         'hosts': [ ('127.0.0.1', 3000)],
         'lua': { 'user_path': '~/lua-scripts/'}
     }
-    client = aerospike.client(config)
+    client2 = aerospike.client(config)
     # Register the UDF module and copy it to the Lua 'user_path'
-    client.udf_put('./examples/scan/my_udf.lua')
+    client2.udf_put('./examples/scan/my_udf.lua')
 
-    print("Before remove:", client.udf_list())
+    print("Before remove:", client2.udf_list())
 
-    client.udf_remove('my_udf.lua')
-    print("After remove:", client.udf_list())
+    client2.udf_remove('my_udf.lua')
+    print("After remove:", client2.udf_list())
 
-    client.close()
+    client2.close()
 
 .. testoutput:: udf
 
@@ -1339,15 +1348,12 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
             # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
 
     .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
 
@@ -1396,14 +1402,9 @@ Index Operations
             import aerospike
             from aerospike_helpers import cdt_ctx
 
-            config = {'hosts': [('127.0.0.1', 3000)]}
-            client = aerospike.client(config)
-
             ctxs = [cdt_ctx.cdt_ctx_list_index(0)]
             ctxs_base64 = client.get_cdtctx_base64(ctxs)
             print("Base64 encoding of ctxs:", ctxs_base64)
-
-            client.close()
 
         .. testoutput::
 
@@ -1473,9 +1474,7 @@ Index Operations
 
         .. testcode::
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
 
     .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
 
@@ -1909,7 +1908,6 @@ Key Tuple
 
         # Cleanup
         client.remove(keyTuple)
-        client.close()
 
     .. testoutput::
 
@@ -1975,7 +1973,6 @@ Record Tuple
             print("Bins:", bins)
 
             client.remove(keyTuple)
-            client.close()
 
         .. testoutput::
 
