@@ -158,7 +158,7 @@ GeoJSON Predicates
 
     .. testoutput::
 
-        [(('test', 'pads2', None, bytearray(b']\xd6w\xa0i\x9d\xbbs\x1a~!\xd5h\x1d\xf0\x11\xee #\x8d')), {'ttl': 2592000, 'gen': 2}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
+        [(('test', 'pads2', None, bytearray(b...)), {'ttl': 2592000, 'gen': 1}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -207,7 +207,7 @@ GeoJSON Predicates
 
     .. testoutput::
 
-        [(('test', 'pads', None, bytearray(b']\xd6w\xa0i\x9d\xbbs\x1a~!\xd5h\x1d\xf0\x11\xee #\x8d')), {'ttl': 2592000, 'gen': 2}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
+        [(('test', 'launch_centers1', None, bytearray(b'\x81LL9!\xa0\x00n\xb3x\xcc0\xc6\xad\xc5\xfdau.g')), {'ttl': 2592000, 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -256,7 +256,7 @@ GeoJSON Predicates
 
     .. testoutput::
 
-        [(('test', 'launch_centers2', None, bytearray(b'\x84\xc3\xeb\x0ei\x8f\xeaf8!\x8e2\xd7\r\x90?\x80\xcf\xfbP')), {'ttl': 2592000, 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
+        [(('test', 'launch_centers2', None, bytearray(b...)), {'ttl': 2592000, 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -302,7 +302,7 @@ Map and List Predicates
 
     .. testoutput::
 
-        [(('test', 'launch_centers', None, bytearray(b'\x84\xc3\xeb\x0ei\x8f\xeaf8!\x8e2\xd7\r\x90?\x80\xcf\xfbP')), {'ttl': 2592000, 'gen': 2}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
+        [(('test', 'demo', None, bytearray(b'\xd0\xd7c\xac\xef&\xe7A\xc0\xd3\x9d\x0b\x01\x17\xc1\xbepq>[')), {'ttl': 2592000, 'gen': 1}, {'age': 43, 'fav_movies': {'12 Monkeys': 1, 'Brasil': 2}})]
 
 .. py:function:: range(bin, index_type, min, max))
 
@@ -335,7 +335,6 @@ Map and List Predicates
         query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))
         res = query.results()
         print(res)
-        client.close()
 
     .. testcleanup::
 
