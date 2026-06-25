@@ -45,7 +45,7 @@ Example
     config = { 'hosts': [ ('127.0.0.1', 3000)]}
     client = aerospike.client(config)
 
-    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo3')
 
     # Create GeoJSON point using WGS84 coordinates.
     latitude = 28.608389
