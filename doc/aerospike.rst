@@ -413,6 +413,11 @@ The following example shows several different methods to configuring logging for
     [as_cluster_add_nodes_copy] Add node ... 127.0.0.1:3000
     [as_node_refresh_partitions] Update partition map for node 127.0.0.1:3000
 
+.. testcleanup::
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
     Set logging callback globally across all clients.
