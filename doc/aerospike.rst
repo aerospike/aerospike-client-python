@@ -326,33 +326,6 @@ The following example shows the three modes of serialization:
     {'bin': [1, 2, 3]}
 
 
-Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
-(record ``foo3`` uses the same encoding as ``foo2``)
-If we read the data for each record using ``aql``, it outputs the following data:
-
-.. code-block:: sql
-
-    aql> select bin from test.demo where PK='foo1'
-    +-------------------------------------------------------------+--------+
-    | bin                                                         | PK     |
-    +-------------------------------------------------------------+--------+
-    | 80 04 95 09 00 00 00 00 00 00 00 4B 01 4B 02 4B 03 87 94 2E | "foo1" |
-    +-------------------------------------------------------------+--------+
-    1 row in set (0.000 secs)
-
-    OK
-
-    aql> select bin from test.demo where PK='foo2'
-    +----------------------------+--------+
-    | bin                        | PK     |
-    +----------------------------+--------+
-    | 5B 31 2C 20 32 2C 20 33 5D | "foo2" |
-    +----------------------------+--------+
-    1 row in set (0.001 secs)
-
-    OK
-
-
 Logging
 -------
 
