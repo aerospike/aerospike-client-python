@@ -406,6 +406,13 @@ The following example shows several different methods to configuring logging for
     }
     client = aerospike.client(config)
 
+.. testoutput::
+
+    [AerospikeClient_Type_Init] Starting to create a new client...
+    [as_node_refresh_peers] Update peers for node 127.0.0.1:3000
+    [as_cluster_add_nodes_copy] Add node ... 127.0.0.1:3000
+    [as_node_refresh_partitions] Update partition map for node 127.0.0.1:3000
+
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
     Set logging callback globally across all clients.
