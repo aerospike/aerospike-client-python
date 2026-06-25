@@ -330,11 +330,18 @@ Map and List Predicates
         # create a secondary index for numeric values of test.demo1 records whose 'age' bin is a list
         client.index_list_create('test', 'demo1', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
 
+        key = ("test", "demo1", "list")
+        client.put(key, bins={"age": [25, 26]})
+
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
         query = client.query('test', 'demo1')
         query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))
         res = query.results()
         print(res)
+
+    .. testoutput::
+
+        [(("test", "demo1", None, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {"age": [25, 26]})]
 
     .. testcleanup::
 
