@@ -22,7 +22,9 @@ Bin Predicates
     :param int max: the maximum value to be matched with the between operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. testcode::
+    .. TODO - these code examples are not complete
+
+    .. code-block:: Python
 
         import aerospike
         from aerospike import predicates as p
@@ -44,7 +46,9 @@ Bin Predicates
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. testcode::
+    .. TODO - these code examples are not complete
+
+    .. code-block:: Python
 
         import aerospike
         from aerospike import predicates as p
