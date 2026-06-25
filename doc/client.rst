@@ -787,7 +787,7 @@ Batched Commands
             0
             (('test', 'demo', 'employee8', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
             0
-            (('test', 'demo', 'employee9', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 'employee9', bytearray(b"...")), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
