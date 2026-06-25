@@ -464,11 +464,10 @@ Assume this boilerplate code is run before all examples below:
             # Cleanup
             client.index_remove("test", "ageIndex")
             client.batch_remove(keys)
-            client.close()
 
         .. testoutput::
 
-            # [{'Derek': 3, 'Jeff': 1}]
+            [{'Derek': 3, 'Jeff': 1}]
 
         With stream UDFs, the final reduce steps (which ties
         the results from the reducers of the cluster nodes) executes on the
