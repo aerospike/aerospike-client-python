@@ -26,7 +26,7 @@ a cluster-tending thread.
 Boilerplate Code For Examples
 -----------------------------
 
-Assume every in-line example runs this code beforehand:
+Assume this code runs before the code examples:
 
 .. Would prefer to have an external Python script to reduce code duplication here.
 .. But there's no way to call a Python script for testsetup
@@ -46,13 +46,13 @@ Assume every in-line example runs this code beforehand:
     # Create a client and connect it to the cluster
     try:
         client = aerospike.client(config)
-        client.truncate('test', "demo", 0)
     except ex.ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
 
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
+.. testcleanup::
+
+    client.truncate('test', "demo", 0)
 
 .. code-block:: python
 
@@ -69,20 +69,18 @@ Assume every in-line example runs this code beforehand:
     # Create a client and connect it to the cluster
     try:
         client = aerospike.client(config)
-        client.truncate('test', "demo", 0)
     except ex.ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
-
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
 
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
 Basic example:
 
-::
+.. testcode::
+
+    keyTuple = ('test', 'demo', 1)
 
     # Write a record
     client.put(keyTuple, {'name': 'John Doe', 'age': 32})
@@ -164,6 +162,8 @@ Record Commands
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 2)
+
             # Insert a record with bin1
             client.put(keyTuple, {'bin1': 4})
 
@@ -193,6 +193,8 @@ Record Commands
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 3)
+
             # Check non-existent record
             (key, meta) = client.exists(keyTuple)
 
@@ -208,9 +210,9 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', 'key', bytearray(b'...'))
+            ('test', 'demo', 3, bytearray(b'...'))
             None
-            ('test', 'demo', 'key', bytearray(b'...'))
+            ('test', 'demo', 3, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
 
         .. versionchanged:: 2.0.3
@@ -229,6 +231,7 @@ Record Commands
         .. testcode::
 
             # Get nonexistent record
+            keyTuple = ('test', 'demo', 4)
             try:
                 client.get(keyTuple)
             except ex.RecordNotFound as e:
@@ -245,7 +248,7 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', None, bytearray(b'...'))
+            ('test', 'demo', 4, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
             {'bin1': 4}
 
@@ -268,6 +271,7 @@ Record Commands
         .. testcode::
 
             # Record to select from
+            keyTuple = ('test', 'demo', 5)
             client.put(keyTuple, {'bin1': 4, 'bin2': 3})
 
             # Only get bin1
@@ -288,7 +292,7 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', 'key', bytearray(b'...'))
+            ('test', 'demo', None, bytearray(b'...'))
             {'ttl': 2592000, 'gen': 1}
             {'bin1': 4}
             {'bin1': 4, 'bin2': 3}
@@ -319,6 +323,7 @@ Record Commands
             from aerospike_helpers.operations import operations
 
             # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 6)
             client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
             ops = [
                 operations.increment("age", 1000),
@@ -374,6 +379,7 @@ Record Commands
             from aerospike_helpers.operations import operations
 
             # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 7)
             client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
             ops = [
                 operations.increment("age", 1000),
@@ -414,6 +420,7 @@ Record Commands
         .. testcode::
 
             # Insert record and get its metadata
+            keyTuple = ('test', 'demo', 8)
             client.put(keyTuple, bins = {"bin1": 4})
             (key, meta) = client.exists(keyTuple)
             print(meta)
@@ -448,6 +455,7 @@ Record Commands
         .. testcode::
 
             # Insert a record
+            keyTuple = ('test', 'demo', 9)
             client.put(keyTuple, {"bin1": 4})
 
             # Try to remove it with the wrong generation
@@ -481,6 +489,7 @@ Record Commands
 
             # Insert record
             bins = {"bin1": 0, "bin2": 1}
+            keyTuple = ('test', 'demo', 10)
             client.put(keyTuple, bins)
 
             # Remove bin1
@@ -697,7 +706,7 @@ Batched Commands
         .. testcode::
 
             # Insert 3 records
-            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            keys = [("test", "demo", f"employee{i}") for i in range(4, 7)]
             bins = [
                 {"id": 100, "balance": 200},
                 {"id": 101, "balance": 400},
@@ -721,9 +730,9 @@ Batched Commands
         .. testoutput::
 
             0
-            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
-            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
-            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
+            0: (('test', 'demo', 'employee4', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0})
+            0: (('test', 'demo', 'employee5', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100})
+            0: (('test', 'demo', 'employee6', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50})
 
         .. include:: examples/batch_apply.lua
             :code: lua
@@ -745,7 +754,7 @@ Batched Commands
         .. testcode::
 
             # Insert 3 records
-            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            keys = [("test", "demo", f"employee{i}") for i in range(7, 10)]
             bins = [
                 {"id": 100, "balance": 200},
                 {"id": 101, "balance": 400},
@@ -765,11 +774,11 @@ Batched Commands
         .. testoutput::
 
             0
-            (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 'employee7', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
             0
-            (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 'employee8', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
             0
-            (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            (('test', 'demo', 'employee9', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
@@ -799,6 +808,7 @@ String Operations
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 11)
             client.put(keyTuple, {'bin1': 'Martin Luther King'})
             client.append(keyTuple, 'bin1', ' jr.')
             (_, _, bins) = client.get(keyTuple)
@@ -824,6 +834,7 @@ String Operations
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'bin1': 'Freeman'})
             client.prepend(keyTuple, 'bin1', 'Gordon ')
             (_, _, bins) = client.get(keyTuple)
@@ -860,6 +871,7 @@ Numeric Operations
         .. testcode::
 
             # Start with 100 lives
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'lives': 100})
 
             # Gain health
