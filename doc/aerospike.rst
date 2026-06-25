@@ -315,6 +315,7 @@ The following example shows the three modes of serialization:
     client.batch_remove(keys)
     client.close()
     client2.close()
+    aerospike.unset_serializers()
 
 .. testoutput::
 
@@ -324,7 +325,6 @@ The following example shows the three modes of serialization:
     Using local serializer
     Using local deserializer
     {'bin': [1, 2, 3]}
-
 
 Logging
 -------
