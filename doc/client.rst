@@ -352,7 +352,7 @@ Record Commands
 
         .. testoutput::
 
-            ('test', 'demo', 6, bytearray(b'...'))
+            ('test', 'demo', 6, bytearray(b"..."))
             {'ttl': 2592000, 'gen': 2}
             {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
