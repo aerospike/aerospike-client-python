@@ -551,6 +551,8 @@ Assume this boilerplate code is run before all examples below:
 
         :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
+        Continuing from the results of the :meth:`~aerospike.Query.foreach` code example:
+
         .. testcode::
 
             # EXAMPLE 1: Increase everyone's score by 100
@@ -587,14 +589,14 @@ Assume this boilerplate code is run before all examples below:
 
         .. testoutput::
 
-            {"score": 200, "elo": 1400}
-            {"score": 120, "elo": 1500}
-            {"score": 110, "elo": 1100}
-            {"score": 300, "elo": 900}
-            {"score": 300, "elo": 1400}
-            {"score": 220, "elo": 1500}
-            {"score": 210, "elo": 1100}
-            {"score": 300, "elo": 900}
+            {'score': 200, 'elo': 1500}
+            {'score': 120, 'elo': 1520}
+            {'score': 110, 'elo': 1110}
+            {'score': 300, 'elo': 1100}
+            {'score': 300, 'elo': 1500}
+            {'score': 220, 'elo': 1520}
+            {'score': 210, 'elo': 1110}
+            {'score': 400, 'elo': 1100}
 
     .. method:: paginate()
 
