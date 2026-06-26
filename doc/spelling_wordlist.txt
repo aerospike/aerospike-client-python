@@ -103,4 +103,5 @@ lowercases
 lowercased
 msgpack
 precomposed
+subcode
 DBCS
