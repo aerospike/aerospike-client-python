@@ -509,7 +509,7 @@ class TestStringOperations:
         ]
 
         with pytest.raises(e.ServerError):
-            _, _, bins = self.as_connection.operate(KEY, ops)
+            self.as_connection.operate(KEY, ops)
 
     @pytest.mark.parametrize(
         "end_kwargs",
