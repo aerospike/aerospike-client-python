@@ -558,7 +558,7 @@ Assume this boilerplate code is run before all examples below:
             import time
             def wait_for_job_completion(job_id):
                 while True:
-                    response = as_connection.job_info(job_id, job_module)
+                    response = client.job_info(job_id, job_module)
                     if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
                         break
                     time.sleep(0.1)
