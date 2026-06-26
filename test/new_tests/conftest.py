@@ -13,6 +13,7 @@ from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import BatchRecords, Write
 from contextlib import nullcontext
+from aerospike_helpers.batch import records as br
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -354,3 +355,61 @@ def check_user_dictionary(user: dict):
 
     # We assume no clients were logged in as this user
     assert user.get("conns_in_use") == 0
+
+@pytest.fixture(scope="class")
+def hydrate_partitions_1000_to_1003(request, as_connection):
+    if request.cls.server_version < [6, 0]:
+        pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
+        pytest.xfail()
+
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
+
+    request.cls.partition_1000_count = 0
+    request.cls.partition_1001_count = 0
+    request.cls.partition_1002_count = 0
+    request.cls.partition_1003_count = 0
+
+    as_connection.truncate(request.cls.test_ns, None, 0)
+
+    brs = br.BatchRecords(batch_records=[])
+    keys = []
+
+    for i in range(1, 100000):
+        put = 0
+        rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
+
+        if rec_partition == 1000:
+            request.cls.partition_1000_count += 1
+            put = 1
+        if rec_partition == 1001:
+            request.cls.partition_1001_count += 1
+            put = 1
+        if rec_partition == 1002:
+            request.cls.partition_1002_count += 1
+            put = 1
+        if rec_partition == 1003:
+            request.cls.partition_1003_count += 1
+            put = 1
+        if put:
+            key = (request.cls.test_ns, request.cls.test_set, str(i))
+            keys.append(key)
+
+            br_write = br.Write(key, ops=[
+                operations.write("i", i),
+                operations.write("s", "xyz"),
+                operations.write("l", [2, 4, 8, 16, 32, None, 128, 256]),
+                operations.write("m", {"partition": rec_partition, "b": 4, "c": 8, "d": 16})
+            ])
+            brs.batch_records.append(br_write)
+
+    as_connection.batch_write(brs)
+
+    # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
+    #         {request.cls.partition_1001_count} records are put in partition 1001, \
+    #         {request.cls.partition_1002_count} records are put in partition 1002, \
+    #         {request.cls.partition_1003_count} records are put in partition 1003")
+
+    yield
+
+    as_connection.batch_remove(keys)
