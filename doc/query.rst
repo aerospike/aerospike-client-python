@@ -555,6 +555,14 @@ Assume this boilerplate code is run before all examples below:
 
         .. testcode::
 
+            import time
+            def wait_for_job_completion(job_id):
+                while True:
+                    response = as_connection.job_info(job_id, job_module)
+                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.1)
+
             # EXAMPLE 1: Increase everyone's score by 100
 
             from aerospike_helpers.operations import operations
@@ -564,9 +572,7 @@ Assume this boilerplate code is run before all examples below:
             query.add_ops(ops)
             id = query.execute_background()
 
-            # Allow time for query to complete
-            import time
-            time.sleep(3)
+            wait_for_job_completion(id)
 
             for key in keyTuples:
                 _, _, bins = client.get(key)
@@ -581,7 +587,7 @@ Assume this boilerplate code is run before all examples below:
             }
             id = query.execute_background(policy=writePolicy)
 
-            time.sleep(3)
+            wait_for_job_completion(id)
 
             for i, key in enumerate(keyTuples):
                 _, _, bins = client.get(key)
