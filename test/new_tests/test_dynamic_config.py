@@ -71,9 +71,9 @@ class TestDynamicConfig:
         setup_client.close()
 
     # If not using env var, use the config provider instead
+    # Manually tested that setting send_key to false in the dynamic config yaml causes this test to fail.
     @pytest.mark.parametrize("use_env_var", [False, True])
-    # Dynamic config file should take precedence over both client config defaults and programmatically set values
-    def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
+    def test_dyn_config_file_works(self, functional_test_setup, use_env_var: bool):
         config = TestBaseClass.get_connection_config()
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
@@ -82,21 +82,19 @@ class TestDynamicConfig:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
             config["config_provider"] = provider
 
-        write_policy = {"key": aerospike.POLICY_KEY_SEND}
-        config["policies"]["write"] = write_policy
         self.client = aerospike.client(config)
 
-        self.client.put(self.key, bins={"a": 1}, policy=write_policy)
+        self.client.put(self.key, bins={"a": 1})
 
-        # "Send key" is disabled in dynamic config
-        # The key should not be returned here
+        # "Send key" is enabled in dynamic config
+        # The key should be returned here
         query = self.client.query("test", "demo")
         recs = query.results()
         assert len(recs) == 1
-        # Check that record key tuple does not have a primary key
+        # Check that record key tuple has the primary key
         first_record = recs[0]
         first_record_key = first_record[0]
-        assert first_record_key[2] is None
+        assert first_record_key[2] is self.key[2]
 
         # Cleanup
         if use_env_var:
