@@ -52,8 +52,10 @@ class TestDynamicConfig:
         for item in metrics_log_filenames:
             os.remove(item)
 
+    AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+
     @pytest.fixture
-    def functional_test_setup(self, show_more_logs, cleanup_metrics_logs):
+    def functional_test_setup(self, request, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
         setup_client = aerospike.client(config)
         self.key = ("test", "demo", 1)
@@ -62,7 +64,7 @@ class TestDynamicConfig:
         except e.RecordNotFound:
             pass
 
-        yield
+        yield request.param
 
         # Close file descriptors for metrics log files before removing the files
         self.client.close()
@@ -70,14 +72,17 @@ class TestDynamicConfig:
         setup_client.remove(self.key)
         setup_client.close()
 
+        if request.param is True:
+            del os.environ[self.AEROSPIKE_CLIENT_CONFIG_URL]
+
+    # Decide whether env var should be used or not to read dynamic config file.
     # If not using env var, use the config provider instead
     # Manually tested that setting send_key to false in the dynamic config yaml causes this test to fail.
-    @pytest.mark.parametrize("use_env_var", [False, True])
-    def test_dyn_config_file_works(self, functional_test_setup, use_env_var: bool):
+    @pytest.mark.parametrize("functional_test_setup", [False, True], indirect=True)
+    def test_dyn_config_file_works(self, functional_test_setup):
         config = TestBaseClass.get_connection_config()
-        if use_env_var:
-            AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
-            os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
+        if functional_test_setup is True:
+            os.environ[self.AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
             config["config_provider"] = provider
@@ -95,10 +100,6 @@ class TestDynamicConfig:
         first_record = recs[0]
         first_record_key = first_record[0]
         assert first_record_key[2] is self.key[2]
-
-        # Cleanup
-        if use_env_var:
-            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
