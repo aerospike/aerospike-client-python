@@ -53,7 +53,10 @@ class Add(_BaseExpr):
 
         :return: (integer or float value).
 
-        Example::
+        Example:
+
+        .. testcode::
+
 
             # Integer bin "a" + "b" == 11
             expr = exp.Eq(exp.Add(exp.IntBin("a"), exp.IntBin("b")), 11).compile()
@@ -86,7 +89,9 @@ class Sub(_BaseExpr):
 
         :return: (integer or float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" - "b" == 11
             expr = exp.Eq(exp.Sub(exp.IntBin("a"), exp.IntBin("b")), 11).compile()
@@ -117,7 +122,9 @@ class Mul(_BaseExpr):
 
         :return: (integer or float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" * "b" >= 11
             expr = exp.GE(exp.Mul(exp.IntBin("a"), exp.IntBin("b")), 11).compile()
@@ -150,7 +157,9 @@ class Div(_BaseExpr):
 
         :return: (integer or float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" / "b" / "c" >= 11
             expr = exp.GE(exp.Div(exp.IntBin("a"), exp.IntBin("b"), exp.IntBin("c")), 11).compile()
@@ -184,7 +193,9 @@ class Pow(_BaseExpr):
 
         :return: (float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Float bin "a" ** 2.0 == 16.0
             expr = exp.Eq(exp.Pow(exp.FloatBin("a"), 2.0), 16.0).compile()
@@ -212,7 +223,9 @@ class Log(_BaseExpr):
 
         :return: (float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # For float bin "a", log("a", 2.0) == 16.0
             expr = exp.Eq(exp.Log(exp.FloatBin("a"), 2.0), 16.0).compile()
@@ -240,7 +253,9 @@ class Mod(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # For int bin "a" % 10 == 0
             expr = exp.Eq(exp.Mod(exp.IntBin("a"), 10), 0).compile()
@@ -270,7 +285,9 @@ class Abs(_BaseExpr):
 
         :return: (number value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # For int bin "a", abs("a") == 1
             expr = exp.Eq(exp.Abs(exp.IntBin("a")), 1).compile()
@@ -300,7 +317,9 @@ class Floor(_BaseExpr):
 
         :return: (float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Floor(2.25) == 2.0
             expr = exp.Eq(exp.Floor(2.25), 2.0).compile()
@@ -331,7 +350,9 @@ class Ceil(_BaseExpr):
 
         :return: (float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Ceil(2.25) == 3.0
             expr = exp.Eq(exp.Ceil(2.25), 3.0).compile()
@@ -357,7 +378,9 @@ class ToInt(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #For float bin "a", int(exp.FloatBin("a")) == 2
             expr = exp.Eq(exp.ToInt(exp.FloatBin("a")), 2).compile()
@@ -379,7 +402,9 @@ class ToFloat(_BaseExpr):
 
         :return: (float value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #For int bin "a", float(exp.IntBin("a")) == 2
             expr = exp.Eq(exp.ToFloat(exp.IntBin("a")), 2).compile()
@@ -400,11 +425,13 @@ class Min(_BaseExpr):
     def __init__(self, *args: "TypeNumber"):
         """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
-            minimum value.
+                minimum value.
 
         :return: (integer or float value).
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for integer bins a, b, c, min(a, b, c) > 0
             expr = exp.GT(exp.Min(exp.IntBin("a"), exp.IntBin("b"), exp.IntBin("c")), 0).compile()
@@ -424,11 +451,13 @@ class Max(_BaseExpr):
     def __init__(self, *args: "TypeNumber"):
         """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
-            maximum value.
+                maximum value.
 
         :return: (integer or float value).
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for integer bins a, b, c, max(a, b, c) > 100
             expr = exp.GT(exp.Max(exp.IntBin("a"), exp.IntBin("b"), exp.IntBin("c")), 100).compile()

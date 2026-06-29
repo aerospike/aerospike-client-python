@@ -584,11 +584,9 @@ class TestOperate(object):
 
         llist = [operations.prepend("no", aerospike.null()), operations.read("no")]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate(key, llist)
-
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        assert excinfo.value.code == 4
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
@@ -1027,22 +1025,18 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_key_is_none(self):
         """
         Invoke operate() with key is none
         """
         llist = [operations.prepend("name", "ram")]
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_append_value_integer(self):
         """
@@ -1051,10 +1045,9 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         llist = [operations.append("name", 12)]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist)
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_with_incorrect_polic(self):
         """
@@ -1066,3 +1059,35 @@ class TestOperate(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_insert_items("a", 0, "nonlist")
+        ]
+    )
+    def test_list_operations_with_nonlist_parameters(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
+
+    TOO_LONG_BIN_NAME = "a" * 16
+
+    # We are testing the entire range of list operation codes here
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_append(TOO_LONG_BIN_NAME, 0),
+            list_operations.list_create(TOO_LONG_BIN_NAME, aerospike.LIST_ORDERED, False, False)
+        ]
+    )
+    def test_list_operations_with_bin_name_too_long(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(key, ops)

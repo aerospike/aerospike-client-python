@@ -6,13 +6,9 @@ on:
         type: boolean
         default: true
         required: false
-      sha_to_build:
-        type: string
-        required: true
 
 env:
   STATUS_CHECK_MESSAGE: "Build source distribution"
-  COMMIT_SHA_TO_BUILD: ${{ inputs.is_workflow_call == true && inputs.sha_to_build || github.sha }}
 
 jobs:
   build-sdist:
@@ -20,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
       with:
         egress-policy: audit
 
@@ -33,13 +29,12 @@ jobs:
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        sha: ${{ github.sha }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD }}
         fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
@@ -49,10 +44,10 @@ jobs:
       run: python3 -m build --sdist
 
     - name: Upload source distribution to GitHub
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         path: ./dist/*.tar.gz
-        name: sdist.build
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
@@ -60,6 +55,6 @@ jobs:
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        sha: ${{ github.sha }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}

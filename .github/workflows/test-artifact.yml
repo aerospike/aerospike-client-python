@@ -1,0 +1,347 @@
+on:
+  workflow_call:
+    inputs:
+      runner-os-json-string:
+        required: true
+        type: string
+        description: 'Runner OS to use. Can be a JSON list or raw string'
+      run-tests-in-container:
+        type: boolean
+        required: false
+        default: false
+      container-image-name:
+        required: false
+        type: string
+      build-from-tar-gz:
+        required: false
+        default: false
+        description: 'If false, download wheel artifact from Github'
+        type: boolean
+      # For downloading the correct wheel from upstream jobs
+      python-version:
+        required: true
+        type: string
+        description: 'Python wheel version to test'
+      server-tag:
+        required: true
+        type: string
+        description: 'Only used if running integration tests'
+      run-integration-tests:
+        type: boolean
+        required: false
+        default: true
+        description: 'If false, only run import test'
+      # How to run integration tests
+      rev-of-integration-tests:
+        type: string
+        required: false
+      test-ce:
+        type: boolean
+        required: false
+        default: false
+        description: 'Only used if running integration tests. If false, run EE server'
+      test-file:
+        required: false
+        type: string
+        description: 'Only used if running integration tests'
+      use-sanitizer-wheel:
+        required: false
+        type: boolean
+        default: false
+        description: 'If testing wheel, should workflow use sanitizer build'
+      run-with-valgrind:
+        required: false
+        type: boolean
+        default: false
+      run-valgrind-with-massif:
+        required: false
+        type: boolean
+        default: false
+        description: If false, run memcheck
+      validate-keys:
+        required: false
+        type: boolean
+        default: true
+        description: 'If running integration tests, validate dictionary keys?'
+
+jobs:
+  test-artifact:
+    runs-on: ${{ fromJson(inputs.runner-os-json-string) }}
+    env:
+      PYTHON_VERSION: ${{ inputs.python-version }}
+      MASSIF_REPORT_FILE_NAME: massif.out
+      # Used by steps to test from inside container
+      LINUX_DISTRO_CONTAINER_NAME: linux-distro
+      REPO_DIR_NAME: aerospike-client-python
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - name: Get artifact name for status message and to download artifact
+      run: |
+        if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
+          echo GH_ARTIFACT_NAME_SUFFIX_PATTERN=sdist >> "$GITHUB_ENV"
+          exit 0
+        fi
+
+        # Get platform tag of wheel
+        os=$(uname -s)
+        arch=$(uname -m)
+        if [[ $os =~ Darwin* ]]; then
+          GH_ARTIFACT_NAME_SUFFIX_PATTERN="macosx_$arch"
+        elif [[ $os =~ CYGWIN* || $os =~ MINGW* ]]; then
+          GH_ARTIFACT_NAME_SUFFIX_PATTERN=win_amd64
+        elif [[ $os =~ Linux* ]]; then
+          GH_ARTIFACT_NAME_SUFFIX_PATTERN="*linux_*$arch"
+        fi
+
+        if [[ "$DOWNLOAD_SANITIZER_WHEEL" == "true" ]]; then
+          GH_ARTIFACT_NAME_SUFFIX_PATTERN="${GH_ARTIFACT_NAME_SUFFIX_PATTERN}-sanitizer"
+        fi
+        echo "GH_ARTIFACT_NAME_SUFFIX_PATTERN=${PYTHON_VERSION}-${GH_ARTIFACT_NAME_SUFFIX_PATTERN}" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        DOWNLOAD_SANITIZER_WHEEL: ${{ inputs.use-sanitizer-wheel }}
+
+    - name: Create status check message
+      run: |
+        echo STATUS_CHECK_MESSAGE="Run tests ($GH_ARTIFACT_NAME_SUFFIX_PATTERN)" >> "$GITHUB_ENV"
+      shell: bash
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ github.sha }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        ref: ${{ inputs.rev-of-integration-tests }}
+        # Make sure we don't accidentally build from source via the repo
+        sparse-checkout: |
+          test
+          .github
+
+    # Steps to download wheel
+
+    - run: echo "GH_ARTIFACT_PATTERN=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$GH_ARTIFACT_NAME_SUFFIX_PATTERN" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        pattern: ${{ env.GH_ARTIFACT_PATTERN }}
+        path: ./
+
+    - name: Sanity test that only one wheel was pulled
+      run: |
+        # Get real artifact names
+        # Make sure if no files are matched, the glob pattern itself doesn't get stored in the array
+        shopt -s nullglob
+        artifact_names=( *.whl *.tar.gz )
+        test "${#artifact_names[@]}" = "1"
+
+        echo "ARTIFACT_FILE_NAME=${artifact_names[0]}" >> "$GITHUB_ENV"
+      # For seeing how many artifacts were pulled from github
+      shell: bash -ex {0}
+
+    # Bare metal steps
+
+    - name: 'Bare metal: set up python to install wheel'
+      if: ${{ !inputs.run-tests-in-container }}
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - if: ${{ !inputs.run-tests-in-container }}
+      name: 'Bare metal: install wheel and perform extra test setup steps'
+      run: |
+        pip install "./$ARTIFACT_FILE_NAME"
+
+        if [[ ${{ inputs.run-integration-tests }} == false ]]; then
+          exit 0
+        fi
+
+        if [[ $GH_ARTIFACT_NAME_SUFFIX_PATTERN =~ macosx_arm64 ]]; then
+          # Need to be able to save Docker registry credentials to keychain
+          # Unable to do this via the ansible script for self hosted mac m1 runners
+          security unlock-keychain -p "$MAC_M1_SELF_HOSTED_RUNNER_PW"
+        elif [[ $GH_ARTIFACT_NAME_SUFFIX_PATTERN =~ macosx_x86_64 ]]; then
+          # Install Docker Engine
+          brew install colima
+          # Install Docker client
+          brew install docker
+          # Start Docker Engine
+          colima start
+        fi
+
+        # Set required env vars for running libasan
+        # We can already detect leaks using valgrind
+        # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
+        if [[ ${{ inputs.use-sanitizer-wheel }} == true ]]; then
+          echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> "$GITHUB_ENV"
+          echo "LD_PRELOAD=$(gcc --print-file-name=libasan.so)" >> "$GITHUB_ENV"
+        fi
+
+        if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
+          sudo apt-get update
+          sudo apt-get install -y valgrind
+          VALGRIND_ARGS="valgrind --error-exitcode=1"
+
+          if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
+          else
+            VALGRIND_SUPP_FILE=valgrind-python.supp
+
+            wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
+            # sed -i "127,185s/###//" "$VALGRIND_SUPP_FILE"
+
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+          fi
+        fi
+      env:
+        MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+        SERVER_TAG: ${{ inputs.server-tag }}
+      shell: bash -ex {0}
+
+    - if: ${{ inputs.run-integration-tests }}
+      id: test-config
+      name: Decide how to connect to server
+      run: |
+        if [[ ${{ inputs.run-tests-in-container }} == true ]]; then
+          echo where_is_client_connecting_from=separate-docker-container >> "$GITHUB_OUTPUT"
+        elif [[ ${{ contains(env.GH_ARTIFACT_NAME_SUFFIX_PATTERN, 'win_amd64') }} == true ]]; then
+          echo where_is_client_connecting_from=remote-connection >> "$GITHUB_OUTPUT"
+        else
+          echo where_is_client_connecting_from=docker-host >> "$GITHUB_OUTPUT"
+        fi
+      shell: bash -ex {0}
+
+    - if: ${{ inputs.run-integration-tests }}
+      id: run-server
+      uses: ./.github/actions/setup-server-and-tests
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-edition: ${{ inputs.test-ce && 'community' || 'enterprise' }}
+        features-content: ${{ !inputs.test-ce && secrets.FEATURES_CONTENT || '' }}
+        server-tag: ${{ inputs.server-tag }}
+        where-is-client-connecting-from: ${{ steps.test-config.outputs.where_is_client_connecting_from }}
+
+    - name: Run tests on bare metal
+      if: ${{ !inputs.run-tests-in-container }}
+      run: |
+        if [[ ${{ inputs.run-integration-tests }} == false ]]; then
+          python3 -c "import aerospike"
+          exit 0
+        fi
+
+        if [[ ${{ inputs.validate-keys }} == false ]]; then
+          crudini --existing=param --set config.conf input-validation validate_keys false
+        fi
+        pip install -r requirements.txt
+
+        # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
+        # There's no way to tell unless we see the logs
+        # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
+
+        # shellcheck disable=SC2086
+        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
+          -W error::pytest.PytestUnraisableExceptionWarning \
+          -W error::DeprecationWarning
+
+        if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == true ]]; then
+          ms_print "./$MASSIF_REPORT_FILE_NAME"
+        fi
+      working-directory: test
+      shell: bash -ex {0}
+      env:
+        TEST_FILE: ${{ inputs.test-file }}
+
+    # Steps for testing inside container
+
+    - if: ${{ inputs.run-tests-in-container && contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
+      name: Log into JFrog to pull custom manylinux image
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
+        JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      with:
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    - if: ${{ inputs.run-tests-in-container && contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
+      name: Log into internal JFrog Docker registry
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+      with:
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
+
+    - if: ${{ inputs.run-tests-in-container }}
+      run: |
+        docker run -d --network "${{ steps.run-server.outputs.container-network }}" -v /:/host:ro --name "$LINUX_DISTRO_CONTAINER_NAME" "$CONTAINER_IMAGE_NAME" tail -f /dev/null
+        docker cp "../$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME:/"
+        if [[ "$IS_DISTRO_CONTAINER_DNF_BASED" == "true" ]]; then
+          docker exec "$LINUX_DISTRO_CONTAINER_NAME" dnf install -y python3.11
+        fi
+        if [[ "$IS_CONTAINER_UBUNTU" == "true" ]]; then
+          # Ubuntu: Install python 3 that comes by default (step 1)
+          docker exec "$LINUX_DISTRO_CONTAINER_NAME" apt-get update
+          docker exec "$LINUX_DISTRO_CONTAINER_NAME" apt-get install python3 python3-pip -y
+        else
+          # This is good to check in general, so we run for all distros
+          # Ubuntu doesn't have this by default though, but it's fine since it has pip already
+          docker exec "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m ensurepip
+        fi
+
+        PIP_INSTALL_COMMAND='pip install'
+        if [[ "$CONTAINER_IMAGE_NAME" == "ubuntu:24.04" ]]; then
+          # Python 3.12+ fails to install packages to the system directory by default
+          PIP_INSTALL_COMMAND="$PIP_INSTALL_COMMAND --break-system-packages"
+        fi
+
+        if [[ "${{ inputs.build-from-tar-gz }}" == "true" ]]; then
+          docker exec "$LINUX_DISTRO_CONTAINER_NAME" dnf install -y libyaml-devel \
+            openssl-devel \
+            glibc-devel \
+            autoconf \
+            automake \
+            libtool \
+            zlib-devel \
+            openssl-devel \
+            python3.11-devel
+        fi
+
+        # Here we assume only one file is present (we already did a sanity check above)
+        # shellcheck disable=SC2086
+        docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "./$ARTIFACT_FILE_NAME"
+        # shellcheck disable=SC2086
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
+      shell: bash -ex {0}
+      env:
+        IS_DISTRO_CONTAINER_DNF_BASED: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
+        IS_CONTAINER_UBUNTU: ${{ startsWith(inputs.container-image-name, 'ubuntu') }}
+        CONTAINER_IMAGE_NAME: ${{ inputs.container-image-name }}
+        TEST_FILE: ${{ inputs.test-file }}
+
+    - name: Show server logs to debug test results
+      if: ${{ always() && inputs.run-integration-tests && steps.run-server.conclusion == 'success' }}
+      run: docker logs "$CONTAINER_NAME"
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ steps.run-server.outputs.container-name }}
+
+    - name: Show job status for commit
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
+      with:
+        sha: ${{ github.sha }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}

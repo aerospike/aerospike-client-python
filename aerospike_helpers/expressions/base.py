@@ -33,6 +33,7 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
+import warnings
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -84,7 +85,9 @@ class Unknown(_BaseExpr):
     def __init__(self):
         """:return: (unknown value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             from aerospike_helpers.expressions.arithmetic import Add
 
@@ -121,7 +124,9 @@ class KeyInt(_Key):
     def __init__(self):
         """:return: (integer value): Integer value of the key if the key is an integer.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer record key >= 10000.
             expr = exp.GE(exp.KeyInt(), 10000).compile()
@@ -139,7 +144,9 @@ class KeyStr(_Key):
     def __init__(self):
         """:return: (string value): string value of the key if the key is an string.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # string record key == "aaa".
             expr = exp.Eq(exp.KeyStr(), "aaa").compile()
@@ -157,7 +164,9 @@ class KeyBlob(_Key):
     def __init__(self):
         """:return: (blob value): Blob value of the key if the key is a blob.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # blob record key <= bytearray([0x65, 0x65]).
             expr = exp.GE(exp.KeyBlob(), bytearray([0x65, 0x65])).compile()
@@ -177,7 +186,9 @@ class KeyExists(_BaseExpr):
     def __init__(self):
         """:return: (boolean value): True if the record has a stored key, false otherwise.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Key exists in record meta data.
             expr = exp.KeyExists().compile()
@@ -204,7 +215,9 @@ class BoolBin(_BaseExpr):
 
         :return: (boolean bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Boolean bin "a" is True.
             expr = exp.BoolBin("a").compile()
@@ -226,7 +239,9 @@ class IntBin(_BaseExpr):
 
         :return: (integer bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" == 200.
             expr = exp.Eq(exp.IntBin("a"), 200).compile()
@@ -248,7 +263,9 @@ class StrBin(_BaseExpr):
 
         :return: (string bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # String bin "a" == "xyz".
             expr = exp.Eq(exp.StrBin("a"), "xyz").compile()
@@ -270,7 +287,9 @@ class FloatBin(_BaseExpr):
 
         :return: (float bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Float bin "a" > 2.71.
             expr = exp.GT(exp.FloatBin("a"), 2.71).compile()
@@ -292,7 +311,9 @@ class BlobBin(_BaseExpr):
 
         :return: (blob bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #. Blob bin "a" == bytearray([0x65, 0x65])
             expr = exp.Eq(exp.BlobBin("a"), bytearray([0x65, 0x65])).compile()
@@ -314,10 +335,12 @@ class GeoBin(_BaseExpr):
 
         :return: (GeoJSON bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #GeoJSON bin "a" contained by GeoJSON bin "b".
-            expr = exp.CmpGeo(GeoBin("a"), exp.GeoBin("b")).compile()
+            expr = exp.CmpGeo(exp.GeoBin("a"), exp.GeoBin("b")).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 
@@ -336,7 +359,9 @@ class ListBin(_BaseExpr):
 
         :return: (list bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             from aerospike_helpers.expressions import list as list_exprs
 
@@ -366,7 +391,9 @@ class MapBin(_BaseExpr):
 
         :return: (map bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             from aerospike_helpers.expressions import map as map_exprs
 
@@ -390,7 +417,9 @@ class HLLBin(_BaseExpr):
 
         :return: (HyperLogLog bin)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Does HLL bin "a" have a hll_count > 1000000.
             from aerospike_helpers.expressions import hll
@@ -412,7 +441,9 @@ class BinExists(_BaseExpr):
 
         :return: (boolean value): True if bin exists, False otherwise.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             #Bin "a" exists in record.
             expr = exp.BinExists("a").compile()
@@ -434,7 +465,9 @@ class BinType(_BaseExpr):
 
         :return: (integer value): returns the bin type.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # bin "a" == type string.
             expr = exp.Eq(exp.BinType("a"), aerospike.AS_BYTES_STRING).compile()
@@ -459,7 +492,9 @@ class SetName(_BaseExpr):
     def __init__(self):
         """:return: (string value): Name of the set this record belongs to.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record set name == "myset".
             expr = exp.Eq(exp.SetName(), "myset").compile()
@@ -485,7 +520,9 @@ class DeviceSize(_BaseExpr):
     def __init__(self):
         """:return: (integer value): Uncompressed storage size of the record.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record device size >= 100 KB.
             expr = exp.GE(exp.DeviceSize(), 100 * 1024).compile()
@@ -542,7 +579,9 @@ class LastUpdateTime(_BaseExpr):
     def __init__(self):
         """:return: (integer value): When the record was last updated.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record last update time >= 2020-01-15.
             expr = exp.GE(exp.LastUpdateTime(), 1577836800).compile()
@@ -561,7 +600,9 @@ class SinceUpdateTime(_BaseExpr):
     def __init__(self):
         """:return: (integer value): Number of milliseconds since last updated.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record last updated more than 2 hours ago.
             expr = exp.GT(exp.SinceUpdateTime(), 2 * 60 * 60 * 1000).compile()
@@ -580,7 +621,9 @@ class VoidTime(_BaseExpr):
     def __init__(self):
         """:return: (integer value): Expiration time in nanoseconds since 1970-01-01.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record expires on 2021-01-01.
             expr = exp.And(
@@ -602,7 +645,9 @@ class TTL(_BaseExpr):
         """:return: (integer value): Number of seconds till the record will expire,
                                 returns -1 if the record never expires.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Record expires in less than 1 hour.
             expr = exp.LT(exp.TTL(), 60 * 60).compile()
@@ -622,7 +667,9 @@ class IsTombstone(_BaseExpr):
     def __init__(self):
         """:return: (boolean value): True if the record is a tombstone, false otherwise.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Detect deleted records that are in tombstone state.
             expr = exp.IsTombstone().compile()
@@ -642,7 +689,9 @@ class DigestMod(_BaseExpr):
 
         :return: (integer value): Value in range 0 and mod (exclusive).
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Records that have digest(key) % 3 == 1.
             expr = exp.Eq(exp.DigestMod(3), 1).compile()
@@ -667,7 +716,9 @@ class Eq(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" == 11
             expr = exp.Eq(exp.IntBin("a"), 11).compile()
@@ -687,7 +738,9 @@ class NE(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" not == 13.
             expr = exp.NE(exp.IntBin("a"), 13).compile()
@@ -707,7 +760,9 @@ class GT(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" > 8.
             expr = exp.GT(exp.IntBin("a"), 8).compile()
@@ -727,7 +782,9 @@ class GE(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" >= 88.
             expr = exp.GE(exp.IntBin("a"), 88).compile()
@@ -747,7 +804,9 @@ class LT(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" < 1000.
             expr = exp.LT(exp.IntBin("a"), 1000).compile()
@@ -767,7 +826,9 @@ class LE(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Integer bin "a" <= 1.
             expr = exp.LE(exp.IntBin("a"), 1).compile()
@@ -788,7 +849,9 @@ class CmpRegex(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Select string bin "a" that starts with "prefix" and ends with "suffix".
             # Ignore case and do not match newline.
@@ -812,7 +875,9 @@ class CmpGeo(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Geo bin "point" is within geo bin "region".
             expr = exp.CmpGeo(exp.GeoBin("point"), exp.GeoBin("region")).compile()
@@ -836,7 +901,9 @@ class Not(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # not (a == 0 or a == 10)
             expr = exp.Not(exp.Or(
@@ -857,7 +924,9 @@ class And(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # (a > 5 || a == 0) && b < 3
             expr = exp.And(
@@ -880,7 +949,9 @@ class Or(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # (a == 0 || b == 0)
             expr = exp.Or(
@@ -901,7 +972,9 @@ class Exclusive(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # exclusive(a == 0, b == 0)
             expr = exp.Exclusive(
@@ -941,7 +1014,9 @@ class Cond(_BaseExpr):
 
         :return: (boolean value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             from aerospike_helpers.expressions.arithmetic import Add, Sub, Mul
 
@@ -980,14 +1055,18 @@ class Cond(_BaseExpr):
             ]
             record = client.operate(keyTuple, ops)
             print(record)
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
 
             client.put(keyTuple, {"operation": "divide"})
 
             record = client.operate(keyTuple, ops)
             print(record)
             # Divide isn't supported, so we get -1
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
+
+        .. testoutput::
+
+            (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
+            (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
+
         """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -1005,11 +1084,13 @@ class Let(_BaseExpr):
     def __init__(self, *exprs: _BaseExpr):
         """Args:
             `*exprs` (_BaseExpr): Variable number of :class:`~aerospike_helpers.expressions.base.Def` expressions
-            followed by a scoped expression.
+                followed by a scoped expression.
 
         :return: (result of scoped expression)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", 5 < a < 10
             expr = exp.Let(exp.Def("x", exp.IntBin("a")),
@@ -1035,7 +1116,9 @@ class Def(_BaseExpr):
 
         :return: (a variable name expression pair)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", 5 < a < 10
             expr = exp.Let(exp.Def("x", exp.IntBin("a")),
@@ -1061,7 +1144,9 @@ class Var(_BaseExpr):
 
         :return: (value stored in variable)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", 5 < a < 10
             expr = exp.Let(exp.Def("x", exp.IntBin("a")),
@@ -1136,9 +1221,14 @@ class RemoveResult(_BaseExpr):
     """
     Indicates entry deletion for :py:class:`ModifyByPath`.
     """
-    _op = aerospike._AS_EXP_CODE_RESULT_REMOVE
+    _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
+        warnings.warn(
+            "This expression will be renamed to RemoveResult in the next major client release",
+            DeprecationWarning
+        )
+
         """
         :return: (result_remove)
         """
@@ -1155,7 +1245,8 @@ class SelectByPath(_BaseExpr):
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Return type specifier.
             flags: See :ref:`exp_path_select_flags` for possible values.
             bin: Bin expression to which this expression applies.
@@ -1182,7 +1273,8 @@ class ModifyByPath(_BaseExpr):
     def __init__(self, ctx: list[_cdt_ctx], value_type: ResultType, mod_exp, flags: int, bin: _BaseExpr):
         """
         Args:
-            ctx: list of CDT contexts. This cannot be None or an empty list.
+            ctx: list of CDT contexts. This cannot be None or an empty list. See :ref:`path_expressions_contexts`
+                for possible contexts.
             value_type: Value type specifier.
             mod_exp: Compiled expression to apply.
             flags: See :ref:`exp_path_modify_flags` for possible values.
