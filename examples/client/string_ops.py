@@ -15,4 +15,6 @@ config = {
 client = aerospike.client(config)
 
 key = ("test", "demo", 1)
+client.put(key, bins={"mybin": "old"})
+
 _, _, bins = client.operate(key, ops)
