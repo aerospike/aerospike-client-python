@@ -612,7 +612,7 @@ class TestPathExprOperations:
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
     @expect_server_version_earlier_than_8_1_1_to_fail
-    def test_expr_result_remove(self):
+    def test_expr_remove_result(self):
         ops = [
             operations.modify_by_path(
                 bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,

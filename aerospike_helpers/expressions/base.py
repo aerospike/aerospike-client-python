@@ -1224,7 +1224,7 @@ class RemoveResult(_BaseExpr):
 
     def __init__(self):
         """
-        :return: (result_remove)
+        :return: (remove_result)
         """
         pass
 
