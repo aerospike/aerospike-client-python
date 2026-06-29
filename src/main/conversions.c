@@ -178,43 +178,6 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
     return err->code;
 }
 
-as_status as_string_policy_init_from_pyobject(as_error *err,
-                                              as_string_policy *policy,
-                                              PyObject *py_string_policy)
-{
-    as_string_policy_init(policy);
-    if (!py_string_policy || Py_IsNone(py_string_policy)) {
-        return AEROSPIKE_OK;
-    }
-
-    PyObject *py_write_flags =
-        PyObject_GetAttrString(py_string_policy, "write_flags");
-    if (!py_write_flags) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Unable to get write flags from string policy");
-    }
-
-    if (!PyLong_Check(py_write_flags)) {
-        Py_DECREF(py_write_flags);
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "Write flags in string policy must be an integer value");
-    }
-
-    long long tmp_value = PyLong_AsLongLong(py_write_flags);
-    Py_DECREF(py_write_flags);
-    if (PyErr_Occurred()) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Unable to convert write flags in string policy "
-                               "to as_string_write_flags");
-    }
-    as_string_write_flags write_flags = (as_string_write_flags)tmp_value;
-
-    policy->flags = write_flags;
-
-    return AEROSPIKE_OK;
-}
-
 /**
  *******************************************************************************************************
  * Convert a PyObject list of privilege dicts to an array of as_privilege.
@@ -2724,7 +2687,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     as_status status = AEROSPIKE_OK;
     PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
 
-    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
+    if (!py_ctx_list) {
         goto RETURN;
     }
 

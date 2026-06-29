@@ -222,12 +222,6 @@ aerospike\_helpers\.expressions\.bitwise_operators module
     :members:
     :special-members:
 
-aerospike\_helpers\.expressions\.string module
-----------------------------------------------
-
-.. automodule:: aerospike_helpers.expressions.string
-    :members:
-    :special-members:
 
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------

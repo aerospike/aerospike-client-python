@@ -92,15 +92,3 @@ yaml
 suberror
 hardcoded
 recurse
-codepoint
-codepoints
-substring
-metacharacter
-metacharacters
-uppercases
-uppercased
-lowercases
-lowercased
-msgpack
-precomposed
-DBCS

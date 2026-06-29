@@ -49,10 +49,6 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
 as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
                   char **binName);
 
-as_status get_str(as_error *err, const char *key, PyObject *op_dict,
-                  as_vector *unicodeStrVector, char **str_ref,
-                  bool is_optional);
-
 as_status get_asval(AerospikeClient *self, as_error *err, char *key,
                     PyObject *op_dict, as_val **val,
                     as_static_pool *static_pool, int serializer_type,
@@ -68,9 +64,6 @@ as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
 as_status get_optional_int64_t(as_error *err, const char *key,
                                PyObject *op_dict, int64_t *i64_valptr,
                                bool *found);
-
-as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
-                       uint64_t *ui64_valptr);
 
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *op_dict, int *int_pointer);

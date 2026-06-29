@@ -207,10 +207,7 @@ class TestQueryExpressions(object):
 
     def test_string_regex(self):
         expr = exp.CmpRegex(aerospike.REGEX_ICASE, ".*O.*", exp.StrBin("name"))
-
-        with pytest.warns(DeprecationWarning):
-            results = self.query.results(policy={"expressions": expr.compile()})
-
+        results = self.query.results(policy={"expressions": expr.compile()})
         assert len(results) == 50
         assert_each_record_bins(results, lambda b: b["name"] in ("Bob", "John"))
 

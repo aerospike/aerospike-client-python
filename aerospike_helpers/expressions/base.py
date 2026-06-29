@@ -837,18 +837,11 @@ class LE(_BaseExpr):
 
 
 class CmpRegex(_BaseExpr):
-    """
-    .. deprecated:: 19.3.0 :py:class:`~aerospike_helpers.expressions.string.RegexCompare` should be used instead.
-        This legacy expression uses POSIX regex and is not Unicode/DBCS-aware; the string-package equivalent
-        uses ICU regex.
-
-    Create an expression that performs a regex match on a string bin or value expression.
-    """
+    """Create an expression that performs a regex match on a string bin or value expression."""
 
     _op = _ExprOp.CMP_REGEX
 
     def __init__(self, options: int, regex_str: str, cmp_str: Union[_BaseExpr, str]):
-
         """Args:
             options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
             regex_str (str): POSIX regex string.
