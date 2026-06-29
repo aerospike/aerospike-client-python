@@ -267,7 +267,7 @@ jobs:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        server-tag: ${{ matrix.test == 'code-examples' && '8.1.3.0-20260629155323' || needs.get-env-vars.outputs.server-tag }}
+        server-tag: ${{ matrix.test == 'code-examples' && '8.1.3.0-35-20260629033923' || needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server
         config-file: ./.github/workflows/aerospike-ce.conf
 
