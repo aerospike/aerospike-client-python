@@ -1943,6 +1943,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+
         case OP_STRING_INSERT:
         case OP_STRING_OVERWRITE:
         case OP_STRING_CONCAT:
@@ -2115,6 +2118,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         }
     }
+#pragma GCC diagnostic pop
 
     return err->code;
 }
