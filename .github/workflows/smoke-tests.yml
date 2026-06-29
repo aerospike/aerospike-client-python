@@ -228,7 +228,8 @@ jobs:
       matrix:
         test: [
           stubtest,
-          doctest
+          doctest,
+          code-examples
         ]
       fail-fast: false
     needs: [
@@ -260,7 +261,7 @@ jobs:
     - name: Install client
       run: pip install ./*.whl
 
-    - if: ${{ matrix.test == 'doctest' }}
+    - if: ${{ matrix.test == 'doctest' || matrix.test == 'code-examples' }}
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
         num-nodes: 1
@@ -269,6 +270,10 @@ jobs:
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server
         config-file: ./.github/workflows/aerospike-ce.conf
+
+    - if: ${{ matrix.test == 'code-examples' }}
+      run: python3 string_ops.py
+      working-directory: examples/client
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
