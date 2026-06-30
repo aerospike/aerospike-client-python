@@ -1975,7 +1975,7 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
 
 .. data:: SUB_PARAM_BITS_RESIZE_EXCEEDED
 
-    Blob resize would exceed RECORD_MAX_BLOB_SIZE.
+    Blob resize would exceed the max blob size allowed for a record.
 
     App use: backpressure or partition the dynamically-sized blob.
 
@@ -2015,7 +2015,7 @@ Subcodes paired with :py:exc:`~aerospike.exception.UnsupportedFeature`
 
     Requested feature is unsupported in this context (generic).
 
-    App use: same dispatch as MRT_REQUIRES_STRONG_CONSISTENCY; kept
+    App use: same dispatch as :py:data:`~aerospike.SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY`; kept
     distinct to preserve the sole live emit (MRT-monitor AP check).
 
 Subcodes paired with :py:exc:`~aerospike.exception.BinNotFound`
@@ -2126,14 +2126,14 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
 
     Union needs to reduce index_bits but folding isn't allowed.
 
-    App use: retry with ALLOW_FOLD, or fold sources to the smaller
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or fold sources to the smaller
     precision first.
 
 .. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS
 
     As above, for the minhash dimension.
 
-    App use: retry with ALLOW_FOLD, or align sources first.
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or align sources first.
 
 .. data:: SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH
 
@@ -2166,7 +2166,7 @@ Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
 
     Record filtered out by a bin-reading filter expression.
 
-    App use: as META; split out to meter metadata-vs-bin misses.
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META`; split out to meter metadata-vs-bin misses.
 
 .. data:: SUB_FILTERED_META_EVAL_FAILED
 
@@ -2178,7 +2178,7 @@ Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
 
     A bin filter expression failed to evaluate.
 
-    App use: as META_EVAL_FAILED.
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META_EVAL_FAILED`.
 
 Subcodes paired with server error code ``AEROSPIKE_MRT_BLOCKED``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
