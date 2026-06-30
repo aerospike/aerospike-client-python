@@ -662,7 +662,6 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_CONCAT:
         success = as_operations_string_concat_list(
             ops, bin, ctx_ref, &str_policy, (as_list *)val1);
-        as_val_destroy(val1);
         break;
     case OP_STRING_SNIP:
         success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,

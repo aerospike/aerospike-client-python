@@ -102,7 +102,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_REPEAT), \
     X(STRING_REGEX_REPLACE), \
     X(STRING_APPEND), \
-    X(STRING_PREPEND)
+    X(STRING_PREPEND),
 // clang-format on
 
 enum {
