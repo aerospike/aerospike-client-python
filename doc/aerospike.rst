@@ -1923,6 +1923,8 @@ Path Expression Loop Variable Metadata
 
     The index if this element was part of a list.
 
+.. _error_detail_verbosity_levels:
+
 Error Detail Verbosity Levels
 -----------------------------
 
@@ -1939,6 +1941,8 @@ Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
 .. data:: ERROR_DETAIL_MESSAGE
 
     Request subcode and human-readable message from the server on error responses.
+
+.. _subcodes:
 
 Subcodes
 --------
