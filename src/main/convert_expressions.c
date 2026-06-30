@@ -2006,7 +2006,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 // because the values parameter in the C client expression
                 // is not placed second last before bin.
                 as_list *values = NULL;
-                // TODO: error message for this helper is inaccurate
                 as_status status =
                     get_val_list(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
                                  &values, static_pool, serializer_type);
