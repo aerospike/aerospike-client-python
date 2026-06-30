@@ -1922,3 +1922,238 @@ Path Expression Loop Variable Metadata
 .. data:: EXP_LOOPVAR_INDEX
 
     The index if this element was part of a list.
+
+Error Detail Verbosity Levels
+-----------------------------
+
+Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
+
+.. data:: ERROR_DETAIL_NONE
+
+    No error details requested (default).
+
+.. data:: ERROR_DETAIL_SUBCODE
+
+    Request subcode only from the server on error responses.
+
+.. data:: ERROR_DETAIL_MESSAGE
+
+    Request subcode and human-readable message from the server on error responses.
+
+Subcodes
+--------
+
+.. data:: SUB_NONE
+
+    No dispatchable subcode. Used when the parent status alone fully identifies
+    the condition. Reserved as 0 across all status families.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_PARAM_TTL_INVALID
+
+    Per-record TTL exceeds the namespace's max-ttl.
+    App use: clamp the TTL to the namespace max and retry.
+
+.. data:: SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE
+
+    Bit op offset lands past the blob (or above the proto cap).
+    App use: refresh the bin size, recompute the offset, retry.
+
+.. data:: SUB_PARAM_BITS_SIZE_OUT_OF_RANGE
+
+    Bit op size is out of range (e.g. zero, or too large).
+    App use: clamp the size dimension (vs. offset) and retry.
+
+.. data:: SUB_PARAM_BITS_RESIZE_EXCEEDED
+
+    Blob resize would exceed RECORD_MAX_BLOB_SIZE.
+    App use: backpressure or partition the dynamically-sized blob.
+
+.. data:: SUB_PARAM_BIN_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit.
+    App use: prune least-valuable bins and retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED
+
+    Cluster is still resolving initial partition balance at startup.
+    App use: wait a fixed backoff (~1s) and retry; failing over is
+    pointless since every node is unresolved at once.
+
+.. data:: SUB_UNAVAIL_REPLICA_UNAVAILABLE
+
+    A needed replica is unavailable (likely a partition split).
+    App use: an SC reader may downgrade to read-mode=any if safe, or
+    back off longer than for transient unavailability.
+
+Subcodes paired with :py:exc:`~aerospike.exception.UnsupportedFeature`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY
+
+    MRT attempted against a non-SC (AP) namespace.
+    App use: route the MRT to an SC namespace, or use a non-MRT path.
+
+.. data:: SUB_UNSUPP_FEAT_GENERIC
+
+    Requested feature is unsupported in this context (generic).
+    App use: same dispatch as MRT_REQUIRES_STRONG_CONSISTENCY; kept
+    distinct to preserve the sole live emit (MRT-monitor AP check).
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNotFound`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP
+
+    HLL op needs an existing bin and can't auto-create one.
+    App use: dispatch a one-time init op with default index_bits,
+    then retry the count/fold.
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNameError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NAME_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit (UDF path).
+    App use: prune least-valuable bins and retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ForbiddenError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FORBID_XDR_FILTER_BLOCKED
+
+    Write bounced by an XDR ship filter at the destination.
+    App use: suppress retry; optionally record the digest for audit.
+
+.. data:: SUB_FORBID_SET_COUNT_STOP_WRITES
+
+    Set-level record-count stop-writes limit reached.
+    App use: route new records to another set, or archive old ones.
+
+.. data:: SUB_FORBID_SET_SIZE_STOP_WRITES
+
+    Set-level size stop-writes limit reached.
+    App use: backpressure or route to a different set (not ns-wide).
+
+.. data:: SUB_FORBID_CLOCK_SKEW_STOP_WRITES
+
+    Writes stopped due to cluster clock skew.
+    App use: page on-call to investigate NTP / time-source drift.
+
+.. data:: SUB_FORBID_REPLACE_CONFLICT_RESOLVING
+
+    REPLACE / CREATE_OR_REPLACE forbidden while resolving conflicts.
+    App use: back off and retry once the cluster stabilizes.
+
+.. data:: SUB_FORBID_TRUNCATED
+
+    Write forbidden because the set/namespace is mid-truncate.
+    App use: retry shortly after the truncate completes (transient).
+
+.. data:: SUB_FORBID_MASKING_POLICY_BLOCKED
+
+    Access blocked by a data-masking policy.
+    App use: elevate role / impersonate, or route to an admin queue.
+
+.. data:: SUB_FORBID_DURABILITY_VIOLATION
+
+    Non-durable delete forbidden (would violate durability).
+    App use: upgrade the delete to durable, or skip the shortcut.
+
+.. data:: SUB_FORBID_MASKING_ROLE_VIOLATION
+
+    Caller's role lacks unmasked access.
+    App use: prompt the user to escalate / switch role (distinct
+    from auth not configured).
+
+Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS
+
+    List index is outside the current element range.
+    App use: refresh the cached list size, clamp the index, retry.
+
+.. data:: SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS
+
+    Requested rank is past the current population.
+    App use: clamp top-N rank to the element count and retry.
+
+.. data:: SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW
+
+    Insert would exceed an ordered+bounded list's cap.
+    App use: roll to a fresh bin/key partition, or apply backpressure.
+
+.. data:: SUB_OPNOT_HLL_INDEX_BITS_UNSET
+
+    HLL op needs index_bits but the sketch has none set.
+    App use: dispatch a one-time init with default index_bits, retry.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS
+
+    Union needs to reduce index_bits but folding isn't allowed.
+    App use: retry with ALLOW_FOLD, or fold sources to the smaller
+    precision first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS
+
+    As above, for the minhash dimension.
+    App use: retry with ALLOW_FOLD, or align sources first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH
+
+    Fold blocked because the sketch carries minhash bits.
+    App use: switch to a strip-minhash-then-fold path.
+
+.. data:: SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE
+
+    Fold target index_bits >= current (fold can only reduce).
+    App use: clamp target to current-1 and retry, or skip the fold.
+
+.. data:: SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH
+
+    Intersect inputs have mismatched minhash parameters.
+    App use: harmonize sketches (fold/strip minhash) before retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FILTERED_META
+
+    Record filtered out by a metadata-only filter expression.
+    App use: treat as a normal expected miss (no-op).
+
+.. data:: SUB_FILTERED_BINS
+
+    Record filtered out by a bin-reading filter expression.
+    App use: as META; split out to meter metadata-vs-bin misses.
+
+.. data:: SUB_FILTERED_META_EVAL_FAILED
+
+    A metadata filter expression failed to evaluate.
+    App use: treat as an expression bug - log digest, alert, no retry.
+
+.. data:: SUB_FILTERED_BINS_EVAL_FAILED
+
+    A bin filter expression failed to evaluate.
+    App use: as META_EVAL_FAILED.
+
+Subcodes paired with server error code ``AEROSPIKE_MRT_BLOCKED``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_MRT_BLOCKED_RECORD_LOCKED
+
+    Record is provisionally locked by another MRT.
+    App use: a non-MRT writer backs off with jittered retry until the
+    MRT commits or expires.
+
+.. data:: SUB_MRT_BLOCKED_ID_MISMATCH
+
+    Op belongs to a different MRT than the one holding the lock.
+    App use: abort the whole MRT - retrying this op alone can never
+    succeed within the current MRT.
