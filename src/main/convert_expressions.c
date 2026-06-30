@@ -2368,6 +2368,9 @@ CLEANUP:
             if (c_expr_entries[i].op == _AS_EXP_CODE_MERGE) {
                 as_exp_destroy(c_expr_entries[i].v.expr);
             }
+            if (c_expr_entries[i].op == _AS_EXP_CODE_AS_VAL) {
+                as_val_destroy(c_expr_entries[i].v.val);
+            }
         }
 
         free(c_expr_entries);
