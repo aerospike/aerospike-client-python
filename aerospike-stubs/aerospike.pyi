@@ -324,6 +324,10 @@ EXP_LOOPVAR_KEY: Literal[0]
 EXP_LOOPVAR_VALUE: Literal[1]
 EXP_LOOPVAR_INDEX: Literal[2]
 
+ERROR_DETAIL_NONE: Literal[0]
+ERROR_DETAIL_SUBCODE: Literal[1]
+ERROR_DETAIL_MESSAGE: Literal[2]
+
 
 @final
 class CDTInfinite:
