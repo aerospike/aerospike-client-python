@@ -33,7 +33,6 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
-import warnings
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1217,20 +1216,15 @@ class LoopVarHLL(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_HLL
 
 
-class ResultRemove(_BaseExpr):
+class RemoveResult(_BaseExpr):
     """
     Indicates entry deletion for :py:class:`ModifyByPath`.
     """
     _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
-        warnings.warn(
-            "This expression will be renamed to RemoveResult in the next major client release",
-            DeprecationWarning
-        )
-
         """
-        :return: (result_remove)
+        :return: (remove_result)
         """
         pass
 

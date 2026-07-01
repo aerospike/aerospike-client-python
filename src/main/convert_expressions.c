@@ -206,7 +206,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
-        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_result_remove()),
+        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_remove_result()),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
@@ -1720,7 +1720,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             break;
         case _AS_EXP_CODE_REMOVE_RESULT:
-            APPEND_ARRAY(0, as_exp_result_remove());
+            APPEND_ARRAY(0, as_exp_remove_result());
             break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
