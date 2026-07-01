@@ -28,6 +28,7 @@
 #include <aerospike/as_hll_operations.h>
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_string_operations.h>
 
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
@@ -62,10 +63,53 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
         X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
 
-enum Aerospike_list_operations {
+// clang-format off
+#define STRING_OP_NAMES                                                        \
+    X(STRING_STRLEN), \
+    X(STRING_SUBSTR), \
+    X(STRING_SUBSTR_RANGE), \
+    X(STRING_CHAR_AT), \
+    X(STRING_FIND), \
+    X(STRING_CONTAINS), \
+    X(STRING_STARTS_WITH), \
+    X(STRING_ENDS_WITH), \
+    X(STRING_TO_INTEGER), \
+    X(STRING_TO_DOUBLE), \
+    X(STRING_BYTE_LENGTH), \
+    X(STRING_IS_NUMERIC), \
+    X(STRING_IS_UPPER), \
+    X(STRING_IS_LOWER), \
+    X(STRING_TO_BLOB), \
+    X(STRING_SPLIT), \
+    X(STRING_SPLIT_SEPARATOR), \
+    X(STRING_B64_DECODE), \
+    X(STRING_REGEX_COMPARE), \
+    X(STRING_INSERT), \
+    X(STRING_OVERWRITE), \
+    X(STRING_CONCAT), \
+    X(STRING_SNIP), \
+    X(STRING_REPLACE), \
+    X(STRING_REPLACE_ALL), \
+    X(STRING_UPPER), \
+    X(STRING_LOWER), \
+    X(STRING_CASE_FOLD), \
+    X(STRING_NORMALIZE_NFC), \
+    X(STRING_TRIM_START), \
+    X(STRING_TRIM_END), \
+    X(STRING_TRIM), \
+    X(STRING_PAD_START), \
+    X(STRING_PAD_END), \
+    X(STRING_REPEAT), \
+    X(STRING_REGEX_REPLACE), \
+    X(STRING_APPEND), \
+    X(STRING_PREPEND)
+// clang-format on
+
+enum {
 #define X(op_name) OP_##op_name
     X(LIST_APPEND) = 1001,
-    LIST_OP_NAMES_EXCEPT_LIST_APPEND
+    LIST_OP_NAMES_EXCEPT_LIST_APPEND,
+    STRING_OP_NAMES
 #undef X
 };
 
@@ -175,6 +219,24 @@ enum {
 #define _CDT_FLAGS_KEY "cdt_flags"
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
+
+#define _STR_EXP_START_KEY "start"
+#define _STR_EXP_END_KEY "end"
+#define _STR_EXP_INDEX_KEY "index"
+#define _STR_EXP_NEEDLE_KEY "needle"
+#define _STR_EXP_REPLACEMENT_KEY "replacement"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_PREFIX_KEY "prefix"
+#define _STR_EXP_SUFFIX_KEY "suffix"
+#define _STR_EXP_SEPARATOR_KEY "separator"
+#define _STR_EXP_PATTERN_KEY "pattern"
+#define _STR_EXP_REGEX_FLAGS_KEY "regex_flags"
+#define _STR_EXP_POLICY_KEY "str_policy"
+#define _STR_EXP_TARGET_LENGTH_KEY "target_length"
+#define _STR_EXP_PAD_STRING_KEY "pad_string"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_COUNT_KEY "count"
+#define _STR_EXP_NUMERIC_TYPE_KEY "numeric_type"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,

@@ -236,3 +236,7 @@ const char *convert_pyobject_to_str(PyObject *py_obj);
 PyObject *
 create_py_cluster_stats_from_as_cluster_stats(as_error *err,
                                               as_cluster_stats *stats);
+
+as_status as_string_policy_init_from_pyobject(as_error *err,
+                                              as_string_policy *policy,
+                                              PyObject *py_string_policy);
