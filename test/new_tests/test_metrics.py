@@ -349,7 +349,10 @@ class TestMetrics:
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
-        assert excinfo.value.msg == f"MetricsPolicy.{field_name} must be a {expected_field_type} type"
+        if 2**8 == policy.latency_shift:
+            assert excinfo.value.msg == f"MetricsPolicy.latency_shift must be a unsigned 8-bit integer type -> integer value for latency must be between 0 and UINT8_MAX"
+        else:
+            assert excinfo.value.msg == f"MetricsPolicy.{field_name} must be a {expected_field_type} type"
 
     def test_metrics_policy_report_dir_too_long(self):
         policy = MetricsPolicy(

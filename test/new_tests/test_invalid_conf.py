@@ -4,6 +4,8 @@ from aerospike import exception as e
 import aerospike
 from .test_base_class import TestBaseClass
 
+import sys
+
 # This is for test_validate_keys
 # INVALID_OPTION_KEY cannot be read for the client-config policies test case as a class variable,
 # so these were made global
@@ -60,7 +62,13 @@ class TestInvalidClientConfig(object):
     def test_negative_threshold_value(self):
         with pytest.raises(e.ParamError) as err:
             aerospike.client({"hosts": [("localhost", 3000)], "compression_threshold": -1})
-        assert "Compression value must not be negative" in err.value.msg
+        # Starting in 3.14, Python does not return Overflow error, causing a different error message to return
+        if sys.version_info >= (3, 14):
+            # expect ValueError
+            assert "Failed to convert integer value for config.policy.write.compression_threshold to uint32_t" in err.value.msg
+        else:
+            # expect OverflowError
+            assert "integer value for config.policy.write.compression_threshold must be between 0 and UINT32_MAX" in err.value.msg
 
     @pytest.mark.parametrize("policy", ["read", "write", "operate", "batch", "scan", "query", "apply", "remove"])
     @pytest.mark.parametrize(
