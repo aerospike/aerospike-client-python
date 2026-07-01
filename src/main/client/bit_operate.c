@@ -206,9 +206,17 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     int64_t int64_value = 0;
     switch (operation_code) {
     case OP_BIT_SET_INT:
+        if (get_int64_t(err, VALUE_KEY, op_dict, &int64_value) !=
+            AEROSPIKE_OK) {
+            goto exit;
+        }
+    }
+
+    uint64_t uint64_value = 0;
+    switch (operation_code) {
     case OP_BIT_ADD:
     case OP_BIT_SUBTRACT:
-        if (get_int64_t(err, VALUE_KEY, op_dict, &int64_value) !=
+        if (get_uint64_t(err, VALUE_KEY, op_dict, &uint64_value) !=
             AEROSPIKE_OK) {
             goto exit;
         }
@@ -258,10 +266,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         success = as_operations_bit_count(ops, bin, NULL, bit_offset, bit_size);
         break;
     case OP_BIT_ADD:
-        // TODO: value argument is wrong type. This problem exists in dev
         success =
             as_operations_bit_add(ops, bin, NULL, &bit_policy, bit_offset,
-                                  bit_size, int64_value, bool_value, action);
+                                  bit_size, uint64_value, bool_value, action);
         break;
     case OP_BIT_AND:
         success =
@@ -306,9 +313,8 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                                            bit_offset, bit_size, shift);
         break;
     case OP_BIT_SUBTRACT:
-        // TODO: value argument is wrong type. This problem exists in dev
         success = as_operations_bit_subtract(ops, bin, NULL, &bit_policy,
-                                             bit_offset, bit_size, int64_value,
+                                             bit_offset, bit_size, uint64_value,
                                              bool_value, action);
         break;
     case OP_BIT_XOR:
