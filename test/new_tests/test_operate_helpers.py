@@ -127,7 +127,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
@@ -142,7 +142,7 @@ class TestOperate(object):
                 [operations.write("write_bin", {"no": 89}), operations.read("write_bin")],
                 {"write_bin": {"no": 89}},
             ),
-            (
+            pytest.param(
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
@@ -209,7 +209,6 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters
         """
-
         key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == expected
@@ -274,7 +273,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, policy, meta, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 {
                     "key": aerospike.POLICY_KEY_SEND,
@@ -283,7 +282,7 @@ class TestOperate(object):
                     "ttl": 1200
                 },
                 {"gen": 10},
-                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
             ),
         ],
     )
@@ -1059,3 +1058,35 @@ class TestOperate(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(key, llist, {}, policy)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_insert_items("a", 0, "nonlist")
+        ]
+    )
+    def test_list_operations_with_nonlist_parameters(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, ops)
+
+    TOO_LONG_BIN_NAME = "a" * 16
+
+    # We are testing the entire range of list operation codes here
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_append(TOO_LONG_BIN_NAME, 0),
+            list_operations.list_create(TOO_LONG_BIN_NAME, aerospike.LIST_ORDERED, False, False)
+        ]
+    )
+    def test_list_operations_with_bin_name_too_long(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(key, ops)

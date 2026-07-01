@@ -144,30 +144,6 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
-                                        char str_array_ptr[][AS_ROLE_SIZE],
-                                        PyObject *py_list)
-{
-    as_error_reset(err);
-
-    char *str;
-
-    for (int i = 0; i < num_elements; i++) {
-        str = str_array_ptr[i];
-        PyObject *py_str = Py_BuildValue("s", str);
-        if (py_str == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to build string value from %s.", str);
-            break;
-        }
-
-        PyList_Append(py_list, py_str);
-        Py_DECREF(py_str);
-    }
-
-    return err->code;
-}
-
 as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
                                          PyObject **py_as_users, int users_size)
 {
@@ -200,6 +176,43 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
     *py_as_users = py_users;
 
     return err->code;
+}
+
+as_status as_string_policy_init_from_pyobject(as_error *err,
+                                              as_string_policy *policy,
+                                              PyObject *py_string_policy)
+{
+    as_string_policy_init(policy);
+    if (!py_string_policy || Py_IsNone(py_string_policy)) {
+        return AEROSPIKE_OK;
+    }
+
+    PyObject *py_write_flags =
+        PyObject_GetAttrString(py_string_policy, "write_flags");
+    if (!py_write_flags) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unable to get write flags from string policy");
+    }
+
+    if (!PyLong_Check(py_write_flags)) {
+        Py_DECREF(py_write_flags);
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "Write flags in string policy must be an integer value");
+    }
+
+    long long tmp_value = PyLong_AsLongLong(py_write_flags);
+    Py_DECREF(py_write_flags);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unable to convert write flags in string policy "
+                               "to as_string_write_flags");
+    }
+    as_string_write_flags write_flags = (as_string_write_flags)tmp_value;
+
+    policy->flags = write_flags;
+
+    return AEROSPIKE_OK;
 }
 
 /**
@@ -415,62 +428,132 @@ END:
     return err->code;
 }
 
+// format_specifier: type casts each array element and converts it to the right Python type
+// This method makes certain assumptions if format_specifier is for converting a string:
+// 1. The array is a 2 dimensional array with the strings allocated in one long buffer.
+// 2. Each string is AS_ROLE_SIZE chars long.
+// TODO - Just refactor later when this helper function needs to handle more cases.
+static inline PyObject *convert_nullable_array_to_py_optional_list(
+    as_error *err, void *array, int array_size, char format_specifier)
+{
+    if (array == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    PyObject *py_list = PyList_New(0);
+    if (!py_list) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to create python list");
+        goto error;
+    }
+
+    for (int i = 0; i < array_size; i++) {
+        PyObject *py_element = NULL;
+        char format_str[2];
+        sprintf(format_str, "%c", format_specifier);
+        switch (format_specifier) {
+        case 'k': {
+            uint32_t element = ((uint32_t *)array)[i];
+            py_element = Py_BuildValue(format_str, (unsigned long)element);
+            break;
+        }
+        case 's': {
+            const char *element = (const char *)array + i * AS_ROLE_SIZE;
+            py_element = Py_BuildValue(format_str, element);
+            break;
+        }
+        }
+
+        if (!py_element) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get list item at index %" PRIu32, i);
+            goto CLEANUP_ON_ERROR;
+        }
+
+        int retval = PyList_Append(py_list, py_element);
+        Py_DECREF(py_element);
+        if (retval == -1) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to append list item at index %" PRIu32, i);
+            goto CLEANUP_ON_ERROR;
+        }
+    }
+
+    return py_list;
+
+CLEANUP_ON_ERROR:
+    Py_DECREF(py_list);
+error:
+    return NULL;
+}
+
+#define USER_DICTIONARY_FAILED_TO_SET "Failed to set %s in user dictionary"
+
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
-                                   PyObject **py_as_user)
+                                   PyObject **py_user_dict_ref)
 {
     as_error_reset(err);
 
-    PyObject *py_info = PyDict_New();
-    PyObject *py_roles = PyList_New(0);
+    PyObject *py_user_dict = PyDict_New();
 
-    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
+    PyObject *py_list_of_roles = convert_nullable_array_to_py_optional_list(
+        err, user->roles, user->roles_size, 's');
+    if (!py_list_of_roles) {
+        goto CLEANUP_ON_ERROR;
+    }
+    int retval = PyDict_SetItemString(py_user_dict, "roles", py_list_of_roles);
+    Py_DECREF(py_list_of_roles);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        USER_DICTIONARY_FAILED_TO_SET, "roles");
+        goto CLEANUP_ON_ERROR;
+    }
+
+    uint32_t *arrays[] = {user->read_info, user->write_info};
+    const char *array_names[] = {"read_info", "write_info"};
+    int array_sizes[] = {user->read_info_size, user->write_info_size};
+
+    for (unsigned long i = 0; i < sizeof(arrays) / sizeof(arrays[0]); i++) {
+        PyObject *py_optional_list_of_ints =
+            convert_nullable_array_to_py_optional_list(err, arrays[i],
+                                                       array_sizes[i], 'k');
+        if (!py_optional_list_of_ints) {
+            goto CLEANUP_ON_ERROR;
+        }
+
+        int retval = PyDict_SetItemString(py_user_dict, array_names[i],
+                                          py_optional_list_of_ints);
+        Py_DECREF(py_optional_list_of_ints);
+        if (retval == -1) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            USER_DICTIONARY_FAILED_TO_SET, array_names[i]);
+            goto CLEANUP_ON_ERROR;
+        }
+    }
+
+    PyObject *py_conns_in_use = Py_BuildValue("i", user->conns_in_use);
+    if (!py_conns_in_use) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to convert conns_in_use in user dictionary.");
+        goto CLEANUP_ON_ERROR;
+    }
+
+    retval =
+        PyDict_SetItemString(py_user_dict, "conns_in_use", py_conns_in_use);
+    Py_DECREF(py_conns_in_use);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        USER_DICTIONARY_FAILED_TO_SET, "conns_in_use");
+        goto CLEANUP_ON_ERROR;
+    }
+
+    *py_user_dict_ref = py_user_dict;
+
+CLEANUP_ON_ERROR:
     if (err->code != AEROSPIKE_OK) {
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
+        Py_DECREF(py_user_dict);
     }
 
-    if (PyDict_SetItemString(
-            py_info, "read_info",
-            Py_BuildValue("i", (user->read_info ? *(user->read_info) : 0))) ==
-        -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "read_info");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-    if (PyDict_SetItemString(
-            py_info, "write_info",
-            Py_BuildValue("i", (user->write_info ? *(user->write_info) : 0))) ==
-        -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "write_info");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-    if (PyDict_SetItemString(py_info, "conns_in_use",
-                             Py_BuildValue("i", user->conns_in_use)) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "conns_in_use");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-    if (PyDict_SetItemString(py_info, "roles", py_roles) == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set %s in py_info.", "roles");
-        Py_DECREF(py_roles);
-        Py_DECREF(py_info);
-        goto END;
-    }
-
-    Py_DECREF(py_roles);
-
-    *py_as_user = py_info;
-
-END:
     return err->code;
 }
 
@@ -2629,7 +2712,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     as_status status = AEROSPIKE_OK;
     PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
 
-    if (!py_ctx_list) {
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
         goto RETURN;
     }
 
