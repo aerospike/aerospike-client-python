@@ -181,6 +181,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"INDEX_NUMERIC", .value.integer = AS_INDEX_NUMERIC},
     {"INDEX_GEO2DSPHERE", .value.integer = AS_INDEX_GEO2DSPHERE},
     {"INDEX_BLOB", .value.integer = AS_INDEX_BLOB},
+    {"INDEX_INTEGER", .value.integer = AS_INDEX_INTEGER},
+
     {"INDEX_TYPE_DEFAULT", .value.integer = AS_INDEX_TYPE_DEFAULT},
     {"INDEX_TYPE_LIST", .value.integer = AS_INDEX_TYPE_LIST},
     {"INDEX_TYPE_MAPKEYS", .value.integer = AS_INDEX_TYPE_MAPKEYS},

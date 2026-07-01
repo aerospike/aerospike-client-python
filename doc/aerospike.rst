@@ -1633,6 +1633,10 @@ Index data types
 
     An index whose values are of the aerospike GeoJSON data type.
 
+.. data:: INDEX_INTEGER
+
+    An index whose values are of the aerospike integer data type.
+
 .. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
 .. _aerospike_index_types:
