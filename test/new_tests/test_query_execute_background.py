@@ -26,7 +26,7 @@ def drop_test_udf(client):
 
 def add_indexes_to_client(client):
     try:
-        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_NUMERIC, "test_background_number_idx")
+        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_INTEGER, "test_background_number_idx")
     except exception.IndexFoundError:
         pass
 
