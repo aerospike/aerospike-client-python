@@ -619,6 +619,126 @@ static struct module_constant_name_to_value module_constants[] = {
 #define X(op_name) EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_##op_name)
     STRING_OP_NAMES
 #undef X
+
+        EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_SUBCODE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_MESSAGE),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_SUBCODE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_MESSAGE),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_NONE),
+
+    //------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_PARAM (ERR_PARAMETER)
+    //------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_PARAM_TTL_INVALID),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_SIZE_OUT_OF_RANGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_RESIZE_EXCEEDED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BIN_COUNT_TOO_LARGE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_CLUSTER (ERR_UNAVAILABLE)
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNAVAIL_REPLICA_UNAVAILABLE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_UNSUPPORTED_FEATURE
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_UNSUPP_FEAT_GENERIC),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_BIN_NOT_FOUND
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_BIN_NAME
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_BIN_NAME_COUNT_TOO_LARGE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_FAIL_FORBIDDEN
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_XDR_FILTER_BLOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_SET_COUNT_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_SET_SIZE_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_CLOCK_SKEW_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_REPLACE_CONFLICT_RESOLVING),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FORBID_TRUNCATED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_MASKING_POLICY_BLOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_DURABILITY_VIOLATION),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_MASKING_ROLE_VIOLATION),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_OP_NOT_APPLICABLE
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_INDEX_BITS_UNSET),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_FILTERED_OUT
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FILTERED_META),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FILTERED_BINS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FILTERED_META_EVAL_FAILED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FILTERED_BINS_EVAL_FAILED),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_MRT_BLOCKED
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_MRT_BLOCKED_RECORD_LOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_MRT_BLOCKED_ID_MISMATCH),
 };
 
 struct submodule_name_to_creation_method {
@@ -703,7 +823,8 @@ DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
 
 #define BASE_POLICY_KEYS                                                       \
     "total_timeout", "socket_timeout", "max_retries", "sleep_between_retries", \
-        "compress", "txn", "expressions", "connect_timeout", "timeout_delay"
+        "compress", "txn", "expressions", "connect_timeout", "timeout_delay",  \
+        "error_detail_verbosity"
 
 DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
                          "commit_level", "durable_delete", "ttl",

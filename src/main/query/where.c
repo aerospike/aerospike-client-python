@@ -281,7 +281,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // If it ain't supported, raise and error
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
         PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        create_py_tuple_from_as_error(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
         goto CLEANUP_AS_VALUES_ON_ERROR;
     }
