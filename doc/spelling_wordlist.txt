@@ -103,4 +103,12 @@ lowercases
 lowercased
 msgpack
 precomposed
+subcode
 DBCS
+Subcodes
+dispatchable
+proto
+backpressure
+MRT
+ns
+jittered

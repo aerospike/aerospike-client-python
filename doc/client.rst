@@ -1751,6 +1751,13 @@ Base Policies
 
             Default: :py:obj:`None`
 
+        * **error_detail_verbosity** (:class:`int`)
+
+            Request server error detail fields in responses. Use one of :ref:`error_detail_verbosity_levels`.
+
+            When enabled and the server returns error details, :py:attr:`aerospike.exception.AerospikeError.subcode` will contain the
+            numeric subcode and :py:attr:`aerospike.exception.AerospikeError.msg` will contain the server-authored message.
+
 .. _aerospike_write_policies:
 
 Write Policies

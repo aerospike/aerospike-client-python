@@ -1647,3 +1647,37 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([0] * 5)
         assert bins[self.test_bin_zeroes] == expected_result
+
+    BIN_NAME_FOR_INVALID_PARAMS = "bitwise0"
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            pytest.param(
+                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign="true", action=aerospike.BIT_OVERFLOW_WRAP),
+                id="invalid sign"
+            ),
+            pytest.param(
+                bitwise_operations.bit_resize(BIN_NAME_FOR_INVALID_PARAMS, 7, policy=None, resize_flags={}),
+                id="invalid resize flags"
+            ),
+            pytest.param(
+                bitwise_operations.bit_add(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, 1, sign=True, action="invalid action"),
+                id="invalid action"
+            ),
+            pytest.param(
+                bitwise_operations.bit_lshift(BIN_NAME_FOR_INVALID_PARAMS, 7, 8, shift=None),
+                id="invalid shift"
+            ),
+            pytest.param(
+                bitwise_operations.bit_insert(BIN_NAME_FOR_INVALID_PARAMS, byte_offset="1", value_byte_size=1, value=1),
+                id="invalid byte offset"
+            ),
+        ]
+    )
+    def test_invalid_args(self, op):
+        ops = [
+            op
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, ops)
