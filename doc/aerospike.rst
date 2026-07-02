@@ -1623,6 +1623,8 @@ Index data types
 
 .. data:: INDEX_NUMERIC
 
+    .. deprecated:: 19.3.0 Use :py:data:`~aerospike.INDEX_INTEGER` instead.
+
     An index whose values are of the aerospike integer data type.
 
 .. data:: INDEX_BLOB
@@ -1632,6 +1634,10 @@ Index data types
 .. data:: INDEX_GEO2DSPHERE
 
     An index whose values are of the aerospike GeoJSON data type.
+
+.. data:: INDEX_INTEGER
+
+    An index whose values are of the aerospike integer data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
