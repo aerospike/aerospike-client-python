@@ -173,12 +173,12 @@ enum Aerospike_map_operations {
     X(BIT_RSHIFT), \
     X(BIT_ADD), \
     X(BIT_SUBTRACT), \
+    X(BIT_GET_INT), \
     X(BIT_SET_INT), \
     X(BIT_GET), \
     X(BIT_COUNT), \
     X(BIT_LSCAN), \
-    X(BIT_RSCAN), \
-    X(BIT_GET_INT),
+    X(BIT_RSCAN)
 // clang-format on
 
 enum aerospike_bitwise_operations {

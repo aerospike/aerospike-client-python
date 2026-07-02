@@ -234,7 +234,7 @@ static inline bool isNewMapOp(int op)
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_GET_INT;
+    int bit_end = OP_BIT_RSCAN;
     return (op >= bit_start && op <= bit_end);
 }
 
