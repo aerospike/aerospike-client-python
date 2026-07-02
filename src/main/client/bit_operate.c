@@ -99,7 +99,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     }
 
     as_bit_policy bit_policy;
-    if (operation_code >= OP_BIT_INSERT && operation_code <= OP_BIT_SET_INT &&
+    if (operation_code >= OP_BIT_RESIZE && operation_code <= OP_BIT_SET_INT &&
         get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
             AEROSPIKE_OK) {
         goto exit;
