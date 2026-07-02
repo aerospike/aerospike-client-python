@@ -101,20 +101,18 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     as_bit_policy bit_policy;
     switch (operation_code) {
     case OP_BIT_RESIZE:
-    case OP_BIT_SET:
-    case OP_BIT_SET_INT:
-    case OP_BIT_REMOVE:
-    case OP_BIT_ADD:
-    case OP_BIT_AND:
-    case OP_BIT_GET:
-    case OP_BIT_GET_INT:
     case OP_BIT_INSERT:
-    case OP_BIT_LSHIFT:
-    case OP_BIT_NOT:
+    case OP_BIT_REMOVE:
+    case OP_BIT_SET:
     case OP_BIT_OR:
-    case OP_BIT_RSHIFT:
-    case OP_BIT_SUBTRACT:
     case OP_BIT_XOR:
+    case OP_BIT_AND:
+    case OP_BIT_NOT:
+    case OP_BIT_LSHIFT:
+    case OP_BIT_RSHIFT:
+    case OP_BIT_ADD:
+    case OP_BIT_SUBTRACT:
+    case OP_BIT_SET_INT:
         if (get_bit_policy(err, op_dict, &bit_policy, self->validate_keys) !=
             AEROSPIKE_OK) {
             goto exit;
