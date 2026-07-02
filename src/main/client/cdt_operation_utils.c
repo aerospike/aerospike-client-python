@@ -113,7 +113,8 @@ as_status get_val_list(AerospikeClient *self, as_error *err,
     PyObject *py_val = PyDict_GetItemString(op_dict, list_key);
     if (!py_val) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"values\" entry");
+                               "Operation must contain a \"%s\" entry",
+                               list_key);
     }
     if (!PyList_Check(py_val)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,

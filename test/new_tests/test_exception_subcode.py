@@ -26,9 +26,9 @@ class TestExceptionSubcode:
         "policy_w_verbosity_setting",
         [
             {},
-            {ERROR_DETAIL_VERBOSITY_SETTING: 0},
-            {ERROR_DETAIL_VERBOSITY_SETTING: 1},
-            {ERROR_DETAIL_VERBOSITY_SETTING: 2},
+            {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_NONE},
+            {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_SUBCODE},
+            {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE},
         ]
     )
     @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ class TestExceptionSubcode:
         subcode_should_be_zero = (
             ERROR_DETAIL_VERBOSITY_SETTING not in policy_w_verbosity_setting
             or
-            policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == 0
+            policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == aerospike.ERROR_DETAIL_NONE
             or
             # If running against a unsupported version, we expect subcode to always return 0
             # (and no undefined behavior)
@@ -71,7 +71,7 @@ class TestExceptionSubcode:
         EXPECTED_SUBCODE_IN_MESSAGE = "subcode="
         if excinfo.value.subcode == 0:
             assert EXPECTED_SUBCODE_IN_MESSAGE not in excinfo.value.msg
-        elif policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == 1:
+        elif policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == aerospike.ERROR_DETAIL_SUBCODE:
             assert EXPECTED_SUBCODE_IN_MESSAGE in excinfo.value.msg
         else:
             # There should be a message before the subcode

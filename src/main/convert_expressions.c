@@ -206,7 +206,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
-        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_result_remove()),
+        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_remove_result()),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
@@ -1777,7 +1777,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
             break;
         case _AS_EXP_CODE_REMOVE_RESULT:
-            APPEND_ARRAY(0, as_exp_result_remove());
+            APPEND_ARRAY(0, as_exp_remove_result());
             break;
 
             // String ops
@@ -2005,14 +2005,17 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 // For this op, we don't pass the values list as a child expression
                 // because the values parameter in the C client expression
                 // is not placed second last before bin.
-                as_val *values = NULL;
+                as_list *values = NULL;
                 as_status status =
-                    get_asval(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
-                              &values, static_pool, serializer_type, true);
+                    get_val_list(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
+                                 &values, static_pool, serializer_type);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
+
                 as_exp_entry list_entry = as_exp_val(values);
+                temp_expr->val.val_list_p = values;
+                temp_expr->val_flag = VAL_LIST_P_ACTIVE;
 
                 APPEND_ARRAY(
                     1, as_exp_string_concat_list(&policy, list_entry, NIL));
