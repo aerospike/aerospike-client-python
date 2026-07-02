@@ -215,6 +215,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         }
     }
 
+    // TODO: These operations take in an int for byte_offset,
+    // so these values can get truncated.
+    // but this is addressed in another PR
     int64_t byte_offset = 0;
     switch (operation_code) {
     case OP_BIT_REMOVE:
