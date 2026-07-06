@@ -528,6 +528,7 @@ Assume this boilerplate code is run before all examples below:
             ops = [
                 operations.increment("score", 100)
             ]
+            query = client.query("test", "demo")
             query.add_ops(ops)
             id = query.execute_background()
 
