@@ -582,6 +582,7 @@ Assume this boilerplate code is run before all examples below:
             pages = 3
             page_size = 2
 
+            query = client.query("test", "demo")
             query.max_records = 2
             query.paginate()
 
