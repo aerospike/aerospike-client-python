@@ -600,7 +600,7 @@ Assume this boilerplate code is run before all examples below:
                     print("all done")
                     break
 
-        .. testoutput::
+        .. testoutput:: paginate
 
             got page: 0
             (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
