@@ -111,7 +111,7 @@ Methods
 
 Assume this boilerplate code is run before all examples below:
 
-.. testsetup:: default,paginate
+.. testsetup:: default,paginate,get_partitions_status
 
     import aerospike
     import sys
@@ -628,7 +628,7 @@ Assume this boilerplate code is run before all examples below:
 
         :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
-        .. testcode::
+        .. testcode:: get_partitions_status
 
             import aerospike
             # Configure the client
@@ -673,7 +673,7 @@ Assume this boilerplate code is run before all examples below:
 
             query.foreach(resume_callback, policy)
 
-        .. testoutput::
+        .. testoutput:: get_partitions_status
 
             (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
             (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
