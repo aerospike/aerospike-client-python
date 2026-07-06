@@ -111,7 +111,7 @@ Methods
 
 Assume this boilerplate code is run before all examples below:
 
-.. testsetup::
+.. testsetup:: default,paginate
 
     import aerospike
     import sys
@@ -574,7 +574,7 @@ Assume this boilerplate code is run before all examples below:
             This can be retrieved later using .get_partitions_status(). This can also been done by
             using the partition_filter policy.
 
-        .. testcode::
+        .. testcode:: paginate
 
             # After inserting 4 records...
             # Query 3 pages of 2 records each.
