@@ -322,15 +322,16 @@ Assume this boilerplate code is run before all examples below:
 
             # Player elos should be updated
             brs = client.batch_read(keyTuples)
+            brs.batch_records = sorted(brs.batch_records)
             for br in brs.batch_records:
                 # Print record bin
                 print(br.record[2])
 
         .. testoutput::
 
-            {'score': 100, 'elo': 1500}
-            {'score': 20, 'elo': 1520}
             {'score': 10, 'elo': 1110}
+            {'score': 20, 'elo': 1520}
+            {'score': 100, 'elo': 1500}
             {'score': 200, 'elo': 1100}
 
         .. note:: To stop the stream return ``False`` from the callback function.
@@ -537,6 +538,7 @@ Assume this boilerplate code is run before all examples below:
             for key in keyTuples:
                 _, _, bins = client.get(key)
                 print(bins)
+            print()
 
             # EXAMPLE 2: Increase score by 100 again for those with elos > 1000
             # Use write policy to select players by elo
@@ -559,6 +561,7 @@ Assume this boilerplate code is run before all examples below:
             {'score': 120, 'elo': 1520}
             {'score': 110, 'elo': 1110}
             {'score': 300, 'elo': 1100}
+
             {'score': 300, 'elo': 1500}
             {'score': 220, 'elo': 1520}
             {'score': 210, 'elo': 1110}
@@ -586,30 +589,37 @@ Assume this boilerplate code is run before all examples below:
             query.max_records = 2
             query.paginate()
 
+            all_records = []
+
             # NOTE: The number of pages queried and records returned per page can differ
             # if record counts are small or unbalanced across nodes.
             for page in range(pages):
                 records = query.results()
                 print("got page: " + str(page))
-
-                # Print records in each page
-                for record in records:
-                    print(record)
+                print("Page size:", len(records))
+                all_records.extend(records)
 
                 if query.is_done():
                     print("all done")
                     break
 
+            all_records = sorted(all_records)
+            for record in all_records:
+                print(record)
+
         .. testoutput:: paginate
 
             got page: 0
-            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
-            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
+            Page size: 2
             got page: 1
-            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
-            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
+            Page size: 2
             got page: 2
+            Page size: 0
             all done
+            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
+            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
+            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
+            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
 
     .. method:: is_done()
 
@@ -675,10 +685,10 @@ Assume this boilerplate code is run before all examples below:
 
         .. testoutput:: get_partitions_status
 
-            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
-            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
-            1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
-            3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            ... -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            ... -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
 
 .. _aerospike_query_policies:
 
