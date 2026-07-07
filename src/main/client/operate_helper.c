@@ -53,11 +53,13 @@ const char *op_code_to_names[] = {
 #define STRING_OP_START_KEY "start"
 #define NEEDLE_OP_START_KEY "needle"
 
-as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
-                                PyObject *op_dict, as_vector *unicodeStrVector,
-                                as_static_pool *static_pool, as_operations *ops,
-                                long operation_code, long *ret_type,
-                                int serializer_type)
+as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                          PyObject *op_dict,
+                                          as_vector *unicodeStrVector,
+                                          as_static_pool *static_pool,
+                                          as_operations *ops,
+                                          long operation_code, long *ret_type,
+                                          int serializer_type)
 
 {
     // as_operations_add_* API methods can take ownership of heap allocated as_val
