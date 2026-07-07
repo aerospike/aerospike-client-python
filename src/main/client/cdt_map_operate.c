@@ -97,19 +97,19 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
+    as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
     switch (operation_code) {
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (count_present) {
             if (!as_operations_map_remove_by_value_rel_rank_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                    (uint64_t)count, return_type)) {
+                    ops, bin, ctx_ref, value, rank, (uint64_t)count,
+                    return_type)) {
             }
         }
         else {
             if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                    return_type)) {
+                    ops, bin, ctx_ref, value, rank, return_type)) {
             }
         }
     }
@@ -117,14 +117,13 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
     case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL: {
         if (count_present) {
             if (!as_operations_map_get_by_value_rel_rank_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                    (uint64_t)count, return_type)) {
+                    ops, bin, ctx_ref, value, rank, (uint64_t)count,
+                    return_type)) {
             }
         }
         else {
             if (!as_operations_map_get_by_value_rel_rank_range_to_end(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                    return_type)) {
+                    ops, bin, ctx_ref, value, rank, return_type)) {
             }
         }
     }
@@ -132,13 +131,12 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
         if (count_present) {
             if (!as_operations_map_remove_by_value_rel_rank_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                    (uint64_t)count, return_type)) {
+                    ops, bin, ctx_ref, value, rank, (uint64_t)count,
+                    return_type)) {
             }
             else {
                 if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
-                        ops, bin, (ctx_in_use ? &ctx : NULL), value, rank,
-                        return_type)) {
+                        ops, bin, ctx_ref, value, rank, return_type)) {
                 }
             }
         }
@@ -147,14 +145,13 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
     case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
         if (count_present) {
             if (!as_operations_map_get_by_key_rel_index_range(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), key, rank,
-                    (uint64_t)count, return_type)) {
+                    ops, bin, ctx_ref, key, rank, (uint64_t)count,
+                    return_type)) {
             }
         }
         else {
             if (!as_operations_map_get_by_key_rel_index_range_to_end(
-                    ops, bin, (ctx_in_use ? &ctx : NULL), key, rank,
-                    return_type)) {
+                    ops, bin, ctx_ref, key, rank, return_type)) {
             }
         }
     }
