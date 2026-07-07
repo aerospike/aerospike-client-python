@@ -223,7 +223,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL:
     case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
-        const char *val1_key = NULL;
+        char *val1_key = NULL;
         if (operation_code == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
             operation_code == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL) {
             val1_key = AS_PY_MAP_KEY_KEY;
