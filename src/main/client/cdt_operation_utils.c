@@ -263,8 +263,8 @@ as_status get_list_policy(as_error *err, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_map_return_type(as_error *err, PyObject *op_dict,
-                                     int *return_type)
+as_status get_map_return_type(as_error *err, PyObject *op_dict,
+                              int *return_type)
 {
     int64_t int64_return_type;
     int py_bool_val = -1;
