@@ -764,62 +764,51 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
+
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
-            if (!as_operations_map_remove_by_value_rel_rank_range(
-                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
-                    return_type)) {
-            }
+            success = as_operations_map_remove_by_value_rel_rank_range(
+                ops, bin, ctx_ref, val1, rank, (uint64_t)count, return_type);
         }
         else {
-            if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
-                    ops, bin, ctx_ref, val1, rank, return_type)) {
-            }
+            success = as_operations_map_remove_by_value_rel_rank_range_to_end(
+                ops, bin, ctx_ref, val1, rank, return_type);
         }
         break;
     }
 
     case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
-            if (!as_operations_map_get_by_value_rel_rank_range(
-                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
-                    return_type)) {
-            }
+            success = as_operations_map_get_by_value_rel_rank_range(
+                ops, bin, ctx_ref, val1, rank, (uint64_t)count, return_type);
         }
         else {
-            if (!as_operations_map_get_by_value_rel_rank_range_to_end(
-                    ops, bin, ctx_ref, val1, rank, return_type)) {
-            }
+            success = as_operations_map_get_by_value_rel_rank_range_to_end(
+                ops, bin, ctx_ref, val1, rank, return_type);
         }
         break;
     }
 
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
         if (range_specified) {
-            if (!as_operations_map_remove_by_value_rel_rank_range(
-                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
-                    return_type)) {
-            }
-            else {
-                if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
-                        ops, bin, ctx_ref, val1, rank, return_type)) {
-                }
-            }
+            success = as_operations_map_remove_by_value_rel_rank_range(
+                ops, bin, ctx_ref, val1, rank, (uint64_t)count, return_type);
+        }
+        else {
+            success = as_operations_map_remove_by_value_rel_rank_range_to_end(
+                ops, bin, ctx_ref, val1, rank, return_type);
         }
         break;
     }
 
     case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
         if (range_specified) {
-            if (!as_operations_map_get_by_key_rel_index_range(
-                    ops, bin, ctx_ref, val1, count, (uint64_t)count,
-                    return_type)) {
-            }
+            success = as_operations_map_get_by_key_rel_index_range(
+                ops, bin, ctx_ref, val1, count, (uint64_t)count, return_type);
         }
         else {
-            if (!as_operations_map_get_by_key_rel_index_range_to_end(
-                    ops, bin, ctx_ref, val1, count, return_type)) {
-            }
+            success = as_operations_map_get_by_key_rel_index_range_to_end(
+                ops, bin, ctx_ref, val1, count, return_type);
         }
         break;
     }
