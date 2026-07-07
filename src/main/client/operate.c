@@ -311,10 +311,12 @@ bool opRequiresKey(int op)
 #define DEPRECATION_MESSAGE_TEMPLATE                                           \
     "%s is deprecated for strings in server 8.1.3 or higher."
 
-as_status add_op(AerospikeClient *self, as_error *err,
-                 PyObject *py_operation_dict, as_vector *unicodeStrVector,
-                 as_static_pool *static_pool, as_operations *ops, long *op,
-                 long *ret_type)
+as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                          PyObject *py_operation_dict,
+                                          as_vector *unicodeStrVector,
+                                          as_static_pool *static_pool,
+                                          as_operations *ops, long *op,
+                                          long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -357,7 +359,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
 
     if (use_operate_conversion_helper(operation)) {
-        return as_operations_add_from_pyobject(
+        return as_operations_add_from_pyobject_helper(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
