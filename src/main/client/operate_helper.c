@@ -37,8 +37,14 @@
 // Total memory usage is about 0.056 MB per client
 const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
-    X(LIST_APPEND), LIST_OP_NAMES_EXCEPT_LIST_APPEND,
-    STRING_OP_NAMES X(BIT_RESIZE), BIT_OP_NAMES_EXCEPT_RESIZE
+    X(LIST_APPEND),
+    LIST_OP_NAMES_EXCEPT_LIST_APPEND,
+    STRING_OP_NAMES X(BIT_RESIZE),
+    BIT_OP_NAMES_EXCEPT_RESIZE,
+    X(MAP_REMOVE_BY_KEY_INDEX_RANGE_REL),
+    X(MAP_REMOVE_BY_VALUE_RANK_RANGE_REL),
+    X(MAP_GET_BY_VALUE_RANK_RANGE_REL),
+    X(MAP_GET_BY_KEY_INDEX_RANGE_REL),
 #undef X
 };
 
@@ -64,6 +70,18 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     if (get_str(err, bin_key, op_dict, unicodeStrVector, &bin, false) !=
         AEROSPIKE_OK) {
         goto exit;
+    }
+
+    int return_type = AS_MAP_RETURN_VALUE;
+    switch (operation_code) {
+    case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL:
+    case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL:
+        if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
+            return err->code;
+        }
+        break;
     }
 
     // Specific to list operations
@@ -106,6 +124,10 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
     case OP_STRING_REPEAT:
+    case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL:
+    case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL:
         if (get_optional_int64_t(err, AS_PY_COUNT_KEY, op_dict, &count,
                                  &range_specified) != AEROSPIKE_OK) {
             goto exit;
@@ -113,7 +135,7 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         break;
     }
 
-    int return_type = AS_LIST_RETURN_VALUE;
+    return_type = AS_LIST_RETURN_VALUE;
     if ((operation_code >= OP_LIST_GET_BY_INDEX &&
          operation_code <= OP_LIST_REMOVE_BY_VALUE_RANGE) ||
         (operation_code >= OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL &&
@@ -143,6 +165,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_STRING_CHAR_AT:
     case OP_STRING_INSERT:
     case OP_STRING_OVERWRITE:
+    case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL:
+    case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL:
         if (get_int64_t(err, AS_PY_INDEX_KEY, op_dict, &index) !=
             AEROSPIKE_OK) {
             goto exit;
@@ -157,6 +181,8 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_RANK_RANGE:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
         if (get_int64_t(err, AS_PY_RANK_KEY, op_dict, &rank) != AEROSPIKE_OK) {
             goto exit;
         }
@@ -191,11 +217,25 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
     case OP_LIST_REMOVE_BY_VALUE:
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL:
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
-        if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val1, static_pool,
+    case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
+    case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL:
+    case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
+        const char *val1_key = NULL;
+        if (operation_code == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
+            operation_code == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL) {
+            val1_key = AS_PY_MAP_KEY_KEY;
+        }
+        else {
+            val1_key = AS_PY_VAL_KEY;
+        }
+
+        if (get_asval(self, err, val1_key, op_dict, &val1, static_pool,
                       serializer_type, true) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
         break;
+    }
     }
 
     const char *list_values_key = NULL;
@@ -724,6 +764,65 @@ as_status add_list_or_string_op(AerospikeClient *self, as_error *err,
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
+    case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
+        if (range_specified) {
+            if (!as_operations_map_remove_by_value_rel_rank_range(
+                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
+                    return_type)) {
+            }
+        }
+        else {
+            if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
+                    ops, bin, ctx_ref, val1, rank, return_type)) {
+            }
+        }
+        break;
+    }
+
+    case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL: {
+        if (range_specified) {
+            if (!as_operations_map_get_by_value_rel_rank_range(
+                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
+                    return_type)) {
+            }
+        }
+        else {
+            if (!as_operations_map_get_by_value_rel_rank_range_to_end(
+                    ops, bin, ctx_ref, val1, rank, return_type)) {
+            }
+        }
+        break;
+    }
+
+    case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
+        if (range_specified) {
+            if (!as_operations_map_remove_by_value_rel_rank_range(
+                    ops, bin, ctx_ref, val1, rank, (uint64_t)count,
+                    return_type)) {
+            }
+            else {
+                if (!as_operations_map_remove_by_value_rel_rank_range_to_end(
+                        ops, bin, ctx_ref, val1, rank, return_type)) {
+                }
+            }
+        }
+        break;
+    }
+
+    case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
+        if (range_specified) {
+            if (!as_operations_map_get_by_key_rel_index_range(
+                    ops, bin, ctx_ref, val1, count, (uint64_t)count,
+                    return_type)) {
+            }
+        }
+        else {
+            if (!as_operations_map_get_by_key_rel_index_range_to_end(
+                    ops, bin, ctx_ref, val1, count, return_type)) {
+            }
+        }
+        break;
+    }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");

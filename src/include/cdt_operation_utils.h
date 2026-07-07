@@ -25,6 +25,7 @@
 
 #define AS_PY_BIN_KEY "bin"
 #define AS_PY_VAL_KEY "val"
+#define AS_PY_MAP_KEY_KEY "key"
 #define AS_PY_VALUES_KEY "value_list"
 #define AS_PY_VAL_BEGIN_KEY "value_begin"
 #define AS_PY_VAL_END_KEY "value_end"
