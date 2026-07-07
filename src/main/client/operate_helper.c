@@ -137,11 +137,11 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     }
 
-    return_type = AS_LIST_RETURN_VALUE;
     if ((operation_code >= OP_LIST_GET_BY_INDEX &&
          operation_code <= OP_LIST_REMOVE_BY_VALUE_RANGE) ||
         (operation_code >= OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL &&
          operation_code <= OP_LIST_GET_BY_VALUE_RANK_RANGE_REL)) {
+        return_type = AS_LIST_RETURN_VALUE;
         if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
             goto exit;
         }
