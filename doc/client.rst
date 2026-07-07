@@ -1772,10 +1772,7 @@ Write Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **exists**
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
@@ -1887,10 +1884,7 @@ Operate Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1974,10 +1968,7 @@ Apply Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2011,10 +2002,7 @@ Remove Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2140,10 +2128,7 @@ Batch Write Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2195,10 +2180,7 @@ Batch Apply Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2234,10 +2216,7 @@ Batch Remove Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
