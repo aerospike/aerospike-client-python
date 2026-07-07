@@ -793,11 +793,11 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
         if (range_specified) {
-            success = as_operations_map_remove_by_value_rel_rank_range(
+            success = as_operations_map_remove_by_key_rel_index_range(
                 ops, bin, ctx_ref, val1, rank, (uint64_t)count, return_type);
         }
         else {
-            success = as_operations_map_remove_by_value_rel_rank_range_to_end(
+            success = as_operations_map_remove_by_key_rel_index_range_to_end(
                 ops, bin, ctx_ref, val1, rank, return_type);
         }
         break;
