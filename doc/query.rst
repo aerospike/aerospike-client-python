@@ -328,10 +328,10 @@ Assume this boilerplate code is run before all examples below:
 
         .. testoutput::
 
-            {"score": 100, "elo": 1500}
-            {"score": 20, "elo": 1520}
-            {"score": 10, "elo": 1110}
-            {"score": 200, "elo": 1100}
+            {'score': 100, 'elo': 1500}
+            {'score': 20, 'elo': 1520}
+            {'score': 10, 'elo': 1110}
+            {'score': 200, 'elo': 1100}
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
