@@ -27,24 +27,37 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
+as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
+                  char **binName)
+{
+    return get_str(err, AS_PY_BIN_KEY, op_dict, unicodeStrVector, binName,
+                   true);
+}
+
 /*
 The caller of this does not own the pointer to binName, and should not free it. It is either
 held by Python, or is added to the list of chars to free later.
 */
 
-as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
-                  char **binName)
+as_status get_str(as_error *err, const char *key, PyObject *op_dict,
+                  as_vector *unicodeStrVector, char **str_ref, bool is_optional)
 {
     PyObject *intermediateUnicode = NULL;
 
-    PyObject *py_bin = PyDict_GetItemString(op_dict, AS_PY_BIN_KEY);
+    PyObject *py_bin = PyDict_GetItemString(op_dict, key);
 
-    if (!py_bin) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"bin\" entry");
+    if (!py_bin || Py_IsNone(py_bin)) {
+        if (is_optional) {
+            return AEROSPIKE_OK;
+        }
+        else {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation must contain a \"%s\" entry",
+                                   key);
+        }
     }
 
-    if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, binName,
+    if (string_and_pyuni_from_pystring(py_bin, &intermediateUnicode, str_ref,
                                        err) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -55,8 +68,8 @@ as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
             then decref'ing the item itself.
             and storing the char* on a list of items to delete.
             */
-        char *dupStr = strdup(*binName);
-        *binName = dupStr;
+        char *dupStr = strdup(*str_ref);
+        *str_ref = dupStr;
         as_vector_append(unicodeStrVector, dupStr);
         Py_DECREF(intermediateUnicode);
     }
@@ -100,7 +113,8 @@ as_status get_val_list(AerospikeClient *self, as_error *err,
     PyObject *py_val = PyDict_GetItemString(op_dict, list_key);
     if (!py_val) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain a \"values\" entry");
+                               "Operation must contain a \"%s\" entry",
+                               list_key);
     }
     if (!PyList_Check(py_val)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -132,7 +146,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
 {
     *found = false;
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
-    if (!py_val) {
+    if (!py_val || Py_IsNone(py_val)) {
         return AEROSPIKE_OK;
     }
     if (!PyLong_Check(py_val)) {
@@ -145,6 +159,33 @@ as_status get_optional_int64_t(as_error *err, const char *key,
         return err->code;
     }
     *found = true;
+    return AEROSPIKE_OK;
+}
+
+as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
+                       uint64_t *ui64_valptr)
+{
+    PyObject *py_val = PyDict_GetItemString(op_dict, key);
+    if (!py_val) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Operation missing required entry %s", key);
+    }
+
+    if (!PyLong_Check(py_val)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s must be an integer", key);
+    }
+
+    *ui64_valptr = (uint64_t)PyLong_AsUnsignedLongLong(py_val);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
+                                   key);
+        }
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -210,6 +251,35 @@ as_status get_list_policy(as_error *err, PyObject *op_dict,
         }
         /* We succesfully converted the policy*/
         *found = true;
+    }
+
+    return AEROSPIKE_OK;
+}
+
+as_status get_map_return_type(as_error *err, PyObject *op_dict,
+                              int *return_type)
+{
+    int64_t int64_return_type;
+    int py_bool_val = -1;
+
+    if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, op_dict, &int64_return_type) !=
+        AEROSPIKE_OK) {
+        return err->code;
+    }
+    *return_type = int64_return_type;
+    PyObject *py_inverted = PyDict_GetItemString(
+        op_dict, AS_PY_RETURN_INVERTED_KEY); //NOT A MAGIC STRING
+
+    if (py_inverted) {
+        py_bool_val = PyObject_IsTrue(py_inverted);
+        /* Essentially bool(py_bool_val) failed, so we raise an exception */
+        if (py_bool_val == -1) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Invalid inverted option");
+        }
+        if (py_bool_val == 1) {
+            *return_type |= AS_MAP_RETURN_INVERTED;
+        }
     }
 
     return AEROSPIKE_OK;

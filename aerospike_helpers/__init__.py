@@ -16,12 +16,32 @@
 
 class HyperLogLog(bytes):
     """
-    Represents a HyperLogLog value. This can be returned from the server or created in order to be sent to the server.
+    Represents a HyperLogLog value. This can be returned from or sent to the server.
 
-    The constructor takes in any argument that the :class:`bytes` constructor takes in.
+    .. testcode::
 
-    >>> h = HyperLogLog([1, 2, 3])
-    >>> client.put(key, {"hyperloglog": h})
+        from aerospike_helpers.operations import hll_operations
+        import aerospike
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+
+        BIN_NAME="hll"
+        ops = [
+            hll_operations.hll_init(BIN_NAME, index_bit_count=4, mh_bit_count=4)
+        ]
+        keyTuple = ("test", "demo", 1)
+        client.operate(keyTuple, ops)
+        _, _, bins = client.get(keyTuple)
+        print(bins[BIN_NAME])
+
+        client.put(keyTuple, bins)
+        _, _, bins = client.get(keyTuple)
+        print(bins[BIN_NAME])
+
+    .. testoutput::
+
+        HyperLogLog(...)
+        HyperLogLog(...)
     """
     def __new__(cls, o) -> "HyperLogLog":
         return super().__new__(cls, o)

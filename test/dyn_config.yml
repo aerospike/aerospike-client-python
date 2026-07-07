@@ -3,7 +3,7 @@ dynamic:
   metrics:
     enable: true
   write:
-    send_key: false
+    send_key: true
 static:
   client:
     config_interval: 1000
