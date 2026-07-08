@@ -13,17 +13,22 @@ Example
 
 This is a simple example on how to catch an exception thrown by the Aerospike client:
 
-.. code-block:: python
+.. testcode::
 
     import aerospike
     from aerospike import exception as ex
 
     try:
-        config = { 'hosts': [ ('127.0.0.1', 3000)], 'policies': { 'total_timeout': 1200}}
+        # Invalid port number
+        config = { 'hosts': [ ('127.0.0.1', 5000)], 'policies': { 'total_timeout': 1200}}
         client = aerospike.client(config)
         client.close()
     except ex.AerospikeError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
+
+.. testoutput::
+
+    Error: Failed to connect [-10]
 
 .. versionadded:: 1.0.44
 
@@ -756,13 +761,22 @@ In Doubt Status
 ---------------
   The ``in-doubt`` status of a caught exception can be checked by looking at the 5th element of its `args` tuple:
 
-  .. code-block:: python
+  .. testcode::
 
-      key = 'test', 'demo', 1
-      record = {'some': 'thing'}
-      try:
+    import aerospike
+    from aerospike import exception as ex
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    key = 'test', 'demo', 1
+    record = {'some': 'thing'}
+    try:
         client.put(key, record)
-      except AerospikeError as exc:
-        print("The in doubt nature of the operation is: {}".format(exc.args[4])
+    except ex.AerospikeError as exc:
+        print("The in doubt nature of the operation is: {}".format(exc.args[4]))
 
 .. versionadded:: 3.0.1
