@@ -273,11 +273,10 @@ jobs:
 
     - if: ${{ matrix.test == 'code-examples' }}
       run: |
-        script_names=('string_expressions.py' 'string_ops.py')
-        for script_name in "${script_names[@]}"; do
+        for script_name in *; do
           python3 "$script_name"
         done
-      working-directory: examples/client
+      working-directory: examples/string_ops
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
