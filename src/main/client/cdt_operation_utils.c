@@ -140,6 +140,8 @@ as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
+#define OVERFLOW_DEPRECATION_WARNING "Received out of bounds value for int64_t"
+
 as_status get_optional_int64_t(as_error *err, const char *key,
                                PyObject *op_dict, int64_t *i64_valptr,
                                bool *found)
@@ -156,17 +158,28 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     }
 
     *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
-    if (PyErr_Occurred()) {
-        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
-                                   key);
+    PyObject *py_err_occurred = PyErr_Occurred();
+    int overflow_happened =
+        py_err_occurred && PyErr_ExceptionMatches(PyExc_OverflowError);
+
+    if (!py_err_occurred || overflow_happened) {
+        if (overflow_happened) {
+            PyErr_Clear();
+            int retval =
+                PyErr_WarnEx(PyExc_DeprecationWarning,
+                             OVERFLOW_DEPRECATION_WARNING, STACK_LEVEL);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       OVERFLOW_DEPRECATION_WARNING);
+            }
         }
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key);
+
+        *found = true;
+        return AEROSPIKE_OK;
     }
 
-    *found = true;
-    return AEROSPIKE_OK;
+    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                           key);
 }
 
 as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
