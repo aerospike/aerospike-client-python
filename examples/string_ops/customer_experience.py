@@ -37,11 +37,11 @@ print(records)
 
 # Partial extraction
 
-from aerospike_helpers.expressions.resources import ResultType
-
 _, _, record = client.get(key)
 domain = record["email"].split("@")[1]
 print(domain)
+
+from aerospike_helpers.expressions.resources import ResultType
 
 get_domain_expr = exp.ListGetByIndex(
     ctx=None,
