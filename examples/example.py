@@ -26,3 +26,8 @@ class StringOperations(Example):
         ]
         _, _, bins = client.operate(key, ops)
         print(f"strlen(\"hello world\") = {bins[BIN_NAME]}")
+
+
+if __name__ == "__main__":
+    str_ops_example = StringOperations()
+    str_ops_example.run()

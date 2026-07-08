@@ -271,13 +271,20 @@ jobs:
         server-container-repo: database-docker-virtual/aerospike-server
         config-file: ./.github/workflows/aerospike-ce.conf
 
-    - if: ${{ matrix.test == 'code-examples' }}
+    - name: Run PRD quick start code examples
+      if: ${{ matrix.test == 'code-examples' }}
       run: |
         script_names=('string_expressions.py' 'string_ops.py')
         for script_name in "${script_names[@]}"; do
           python3 "$script_name"
         done
       working-directory: examples/client
+
+    - name: Run aerospike.com code examples
+      if: ${{ matrix.test == 'code-examples' }}
+      run: |
+        python3 example.py
+      working-directory: examples
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
