@@ -262,3 +262,32 @@ as_status get_list_policy(as_error *err, PyObject *op_dict,
 
     return AEROSPIKE_OK;
 }
+
+as_status get_map_return_type(as_error *err, PyObject *op_dict,
+                              int *return_type)
+{
+    int64_t int64_return_type;
+    int py_bool_val = -1;
+
+    if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, op_dict, &int64_return_type) !=
+        AEROSPIKE_OK) {
+        return err->code;
+    }
+    *return_type = int64_return_type;
+    PyObject *py_inverted = PyDict_GetItemString(
+        op_dict, AS_PY_RETURN_INVERTED_KEY); //NOT A MAGIC STRING
+
+    if (py_inverted) {
+        py_bool_val = PyObject_IsTrue(py_inverted);
+        /* Essentially bool(py_bool_val) failed, so we raise an exception */
+        if (py_bool_val == -1) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Invalid inverted option");
+        }
+        if (py_bool_val == 1) {
+            *return_type |= AS_MAP_RETURN_INVERTED;
+        }
+    }
+
+    return AEROSPIKE_OK;
+}
