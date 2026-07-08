@@ -33,3 +33,8 @@ query = client.query("test", "users")
 records = query.results(policy={"expressions": expr})
 
 print(records)
+
+# Partial extraction
+
+_, _, record = client.get(key)
+domain = record["email"].split("@")[1]
