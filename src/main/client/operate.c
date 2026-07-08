@@ -46,8 +46,6 @@
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
-static inline bool is_list_or_string_op(int op);
-static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
 static inline bool isHllOp(int op);
 static inline bool isExprOp(int op);
@@ -201,7 +199,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     return 0;
 }
 
-static inline bool is_list_or_string_op(int op)
+static inline bool use_operate_conversion_helper(int op)
 {
     return (
         op == OP_LIST_APPEND || op == OP_LIST_APPEND_ITEMS ||
@@ -220,15 +218,11 @@ static inline bool is_list_or_string_op(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
-        (op >= OP_STRING_STRLEN && op <= OP_STRING_PREPEND));
-}
-
-static inline bool isNewMapOp(int op)
-{
-    return (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
-            op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL);
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_PREPEND) ||
+        (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
+         op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL));
 }
 
 static inline bool isBitOp(int op)
@@ -361,18 +355,11 @@ as_status add_op(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    /* Handle the list operations with a helper in the cdt_list_operate.c file */
-    if (is_list_or_string_op(operation)) {
-        return add_list_or_string_op(
+    if (use_operate_conversion_helper(operation)) {
+        return as_operations_add_from_pyobject(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
-    }
-
-    if (isNewMapOp(operation)) {
-        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector,
-                              static_pool, ops, operation, ret_type,
-                              SERIALIZER_PYTHON);
     }
 
     if (isBitOp(operation)) {
