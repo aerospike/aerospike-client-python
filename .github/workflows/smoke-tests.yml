@@ -223,7 +223,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  stubtest-or-doctest:
+  test-stubs-or-code-examples:
     strategy:
       matrix:
         test: [
