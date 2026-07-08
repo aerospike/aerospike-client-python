@@ -273,7 +273,11 @@ jobs:
 
     - if: ${{ matrix.test == 'code-examples' }}
       run: |
-        for script_name in *; do
+        shopt -s globstar
+        # Force unmatching globs to expand to nothing instead of the literal string
+        shopt -s nullglob
+
+        for script_name in **/*; do
           python3 "$script_name"
         done
       working-directory: examples/string_ops
