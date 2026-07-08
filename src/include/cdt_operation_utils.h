@@ -24,7 +24,9 @@
 #include "types.h"
 
 #define AS_PY_BIN_KEY "bin"
+#define AS_PY_RETURN_INVERTED_KEY "inverted"
 #define AS_PY_VAL_KEY "val"
+#define AS_PY_MAP_KEY_KEY "key"
 #define AS_PY_VALUES_KEY "value_list"
 #define AS_PY_VAL_BEGIN_KEY "value_begin"
 #define AS_PY_VAL_END_KEY "value_end"
@@ -81,3 +83,6 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
 as_status get_list_policy(as_error *err, PyObject *op_dict,
                           as_list_policy *policy, bool *found,
                           bool validate_keys);
+
+as_status get_map_return_type(as_error *err, PyObject *op_dict,
+                              int *return_type);
