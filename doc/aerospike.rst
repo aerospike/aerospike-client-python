@@ -1841,6 +1841,11 @@ Transaction Abort Status
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
 
+.. data:: ABORT_COMMIT_FAILED
+
+    Abort was refused because a commit failed in-doubt and may still advance.
+    Retry the commit to resolve the transaction safely.
+
 .. _mrt_state:
 
 Transaction State
@@ -1853,6 +1858,11 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. data:: TXN_STATE_COMMIT_FAILED
+
+    A commit failed in-doubt and may still advance, so abort is not allowed
+    in this state. Retry the commit to resolve the transaction safely.
 
 .. _exp_path_select_flags:
 
