@@ -1047,7 +1047,7 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
     int tmp_value;
     if (get_enum_from_py_dict(err, BIT_WRITE_FLAGS_KEY, py_policy, &tmp_value,
                               AS_BIT_WRITE_DEFAULT, AS_BIT_WRITE_PARTIAL,
-                              false) != AEROSPIKE_OK) {
+                              true) != AEROSPIKE_OK) {
         return err->code;
     }
 
