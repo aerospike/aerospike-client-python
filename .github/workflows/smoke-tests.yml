@@ -272,8 +272,11 @@ jobs:
         config-file: ./.github/workflows/aerospike-ce.conf
 
     - if: ${{ matrix.test == 'code-examples' }}
-      run: python3 -m run_all_examples
-      working-directory: examples/string_ops
+      # We cannot run this module with the cwd being string_ops
+      # Otherwise we will get relative import errors
+      # https://stackoverflow.com/a/47030746
+      run: python3 -m string_ops.run_all_examples
+      working-directory: examples
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}
