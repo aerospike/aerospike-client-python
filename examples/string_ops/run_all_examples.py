@@ -3,14 +3,13 @@ from .customer_experience.partial_extraction import PartialExtraction
 from .quickstart.string_expressions import StringExpressions
 from .quickstart.string_ops import StringOps
 
-if __name__ == "__main__":
-    example_classes = [
-        EmailNormalization,
-        PartialExtraction,
-        StringExpressions,
-        StringOps
-    ]
+example_classes = [
+    EmailNormalization,
+    PartialExtraction,
+    StringExpressions,
+    StringOps
+]
 
-    for cls in example_classes:
-        example = cls()
-        example.run()
+for cls in example_classes:
+    example = cls()
+    example.run()

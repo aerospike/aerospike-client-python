@@ -272,7 +272,7 @@ jobs:
         config-file: ./.github/workflows/aerospike-ce.conf
 
     - if: ${{ matrix.test == 'code-examples' }}
-      run: python3 run_all_examples.py
+      run: python3 -m run_all_examples
       working-directory: examples/string_ops
 
     - name: Install test dependencies
