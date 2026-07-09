@@ -1,5 +1,5 @@
 import aerospike
-from . import Example
+from .. import Example
 
 class PartialExtraction(Example):
     def run(self):
