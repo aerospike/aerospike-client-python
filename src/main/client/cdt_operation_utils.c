@@ -209,7 +209,7 @@ as_status get_bounded_int_from_py_dict(as_error *err, const char *key,
 {
     int64_t int64_to_return = -1;
     bool found = false;
-    if (get_optional_int64_t(err, key, op_dict, &int64_to_return, found) !=
+    if (get_optional_int64_t(err, key, op_dict, &int64_to_return, &found) !=
         AEROSPIKE_OK) {
         return err->code;
     }
