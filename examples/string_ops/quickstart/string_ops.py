@@ -1,20 +1,18 @@
-import aerospike
-from aerospike_helpers.operations import string_operations as so
+from .. import Example
 
-ops = [
-    so.strlen("mybin"),
-    so.upper("mybin"),
-    so.replace("mybin", "old", "new"),
-]
+class StringOps(Example):
+    def run(self):
+        client = self.client
 
-config = {
-    "hosts": [
-        ("127.0.0.1", 3000)
-    ]
-}
-client = aerospike.client(config)
+        from aerospike_helpers.operations import string_operations as so
 
-key = ("test", "demo", 1)
-client.put(key, bins={"mybin": "old"})
+        ops = [
+            so.strlen("mybin"),
+            so.upper("mybin"),
+            so.replace("mybin", "old", "new"),
+        ]
 
-_, _, bins = client.operate(key, ops)
+        key = ("test", "demo", 1)
+        client.put(key, bins={"mybin": "old"})
+
+        _, _, bins = client.operate(key, ops)

@@ -272,14 +272,7 @@ jobs:
         config-file: ./.github/workflows/aerospike-ce.conf
 
     - if: ${{ matrix.test == 'code-examples' }}
-      run: |
-        shopt -s globstar
-        # Force unmatching globs to expand to nothing instead of the literal string
-        shopt -s nullglob
-
-        for script_name in **/*; do
-          [[ -f "$script_name" ]] && python3 "$script_name"
-        done
+      run: python3 run_all_examples.py
       working-directory: examples/string_ops
 
     - name: Install test dependencies
