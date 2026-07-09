@@ -6,6 +6,7 @@ import aerospike
 
 @pytest.mark.usefixtures("as_connection")
 class TestInvalidOptions:
+    @pytest.fixture(autouse=True)
     def setup(self):
         self.key = KEYS[0]
         self.as_connection.put(
