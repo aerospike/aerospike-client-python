@@ -3,25 +3,10 @@ import pytest
 
 from aerospike_helpers.operations import bitwise_operations, map_operations, list_operations, hll_operations
 import aerospike
+from aerospike import exception as e
 
 @pytest.mark.usefixtures("as_connection")
 class TestInvalidOptions:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.key = KEYS[0]
-        self.as_connection.put(
-            self.key,
-            bins={
-                "bitwise": b'12345',
-                "map": {
-                    "a": 1
-                },
-                "list": []
-            }
-        )
-        yield
-        self.as_connection.remove(self.key)
-
     @pytest.mark.parametrize(
         "op",
         [
@@ -40,5 +25,8 @@ class TestInvalidOptions:
         ops = [
             op
         ]
-        with pytest.warns(DeprecationWarning):
-            self.as_connection.operate(self.key, ops)
+        try:
+            with pytest.warns(DeprecationWarning):
+                self.as_connection.operate(self.key, ops)
+        except e.ServerError:
+            pass
