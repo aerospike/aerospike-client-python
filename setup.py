@@ -68,6 +68,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
+    '-Winline',
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
     '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
