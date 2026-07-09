@@ -278,7 +278,7 @@ jobs:
         shopt -s nullglob
 
         for script_name in **/*; do
-          python3 "$script_name"
+          [[ -f "$script_name" ]] && python3 "$script_name"
         done
       working-directory: examples/string_ops
 
