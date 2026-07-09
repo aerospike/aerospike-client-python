@@ -2,8 +2,6 @@ from .. import Example
 
 class StringOps(Example):
     def run(self):
-        client = self.client
-
         from aerospike_helpers.operations import string_operations as so
 
         ops = [
@@ -13,6 +11,6 @@ class StringOps(Example):
         ]
 
         key = ("test", "demo", 1)
-        client.put(key, bins={"mybin": "old"})
+        self.client.put(key, bins={"mybin": "old"})
 
-        _, _, bins = client.operate(key, ops)
+        _, _, bins = self.client.operate(key, ops)

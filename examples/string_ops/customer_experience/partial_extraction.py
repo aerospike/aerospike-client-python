@@ -1,15 +1,13 @@
 import aerospike
-from .. import Example
+from . import Example
 
 class PartialExtraction(Example):
     def run(self):
-        client = self.client
-
         # Old
 
         user_id = 1
         key = ("test", "users", user_id)
-        _, _, record = client.get(key)
+        _, _, record = self.client.get(key)
         domain = record["email"].split("@")[1]
         print(domain)
 
@@ -34,5 +32,5 @@ class PartialExtraction(Example):
             )
         ]
 
-        _, _, bins = client.operate(key, ops)
+        _, _, bins = self.client.operate(key, ops)
         print(bins["domain"])
