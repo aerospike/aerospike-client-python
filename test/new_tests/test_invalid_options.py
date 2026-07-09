@@ -32,7 +32,7 @@ class TestInvalidOptions:
             map_operations.map_set_policy(bin_name="map", policy={"map_write_flags": aerospike.MAP_WRITE_PARTIAL * 2}),
             list_operations.list_append(bin_name="list", value=1, policy={"list_order": aerospike.LIST_ORDERED + 1}),
             list_operations.list_append(bin_name="list", value=1, policy={"write_flags": aerospike.LIST_WRITE_PARTIAL * 2}),
-            hll_operations.hll_add(bin_name="hll", policy={"flags": aerospike.HLL_WRITE_ALLOW_FOLD * 2}),
+            hll_operations.hll_add(bin_name="hll", values=[1], policy={"flags": aerospike.HLL_WRITE_ALLOW_FOLD * 2}),
         ]
     )
     def test_invalid_enum_values_emits_warning(self, op):
