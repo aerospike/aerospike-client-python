@@ -191,14 +191,17 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     }
 
-    int64_t order_type_int;
+    as_list_order list_order;
+    int tmp_value;
     switch (operation_code) {
     case OP_LIST_SET_ORDER:
     case OP_LIST_CREATE:
-        if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
-            AEROSPIKE_OK) {
+        if (get_bounded_int_from_py_dict(
+                err, AS_PY_LIST_ORDER, op_dict, &tmp_value, AS_LIST_UNORDERED,
+                AS_LIST_ORDERED, false, true) != AEROSPIKE_OK) {
             goto exit;
         }
+        list_order = (as_list_order)tmp_value;
     }
 
     bool ctx_in_use = false;
@@ -330,11 +333,11 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
     as_string_regex_flags regex_flags = AS_STRING_REGEX_FLAGS_NONE;
-    int64_t tmp_value;
     switch (operation_code) {
     case OP_STRING_IS_NUMERIC: {
-        if (get_int64_t(err, "numeric_type", op_dict, &tmp_value) !=
-            AEROSPIKE_OK) {
+        if (get_bounded_int_from_py_dict(
+                err, "numeric_type", op_dict, &tmp_value, AS_STRING_NUMERIC_ANY,
+                AS_STRING_NUMERIC_FLOAT, false, true) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         numeric_type = (as_string_numeric_type)tmp_value;
@@ -342,8 +345,10 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_REGEX_REPLACE: {
-        if (get_int64_t(err, "regex_flags", op_dict, &tmp_value) !=
-            AEROSPIKE_OK) {
+        if (get_bounded_int_from_py_dict(err, "regex_flags", op_dict,
+                                         &tmp_value, AS_STRING_REGEX_FLAGS_NONE,
+                                         AS_STRING_REGEX_FLAGS_GLOBAL, false,
+                                         true) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         regex_flags = (as_string_regex_flags)tmp_value;
@@ -557,16 +562,18 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             ops, bin, ctx_ref, val1, val2, return_type);
         break;
     case OP_LIST_SET_ORDER:
-        success = as_operations_list_set_order(ops, bin, ctx_ref,
-                                               (as_list_order)order_type_int);
+        success = as_operations_list_set_order(ops, bin, ctx_ref, list_order);
         break;
     case OP_LIST_SORT: {
-        int64_t sort_flags;
+        as_list_sort_flags sort_flags;
 
-        if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
-            AEROSPIKE_OK) {
+        if (get_bounded_int_from_py_dict(err, AS_PY_LIST_SORT_FLAGS, op_dict,
+                                         &tmp_value, AS_LIST_SORT_DEFAULT,
+                                         AS_LIST_SORT_DROP_DUPLICATES, false,
+                                         true) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
+        sort_flags = (as_list_sort_flags)tmp_value;
         success = as_operations_list_sort(ops, bin, ctx_ref,
                                           (as_list_sort_flags)sort_flags);
         break;
@@ -593,8 +600,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             goto CLEANUP_VAL2_ON_ERROR;
         }
 
-        success = as_operations_list_create_all(ops, bin, ctx_ref,
-                                                (as_list_order)order_type_int,
+        success = as_operations_list_create_all(ops, bin, ctx_ref, list_order,
                                                 pad, persist_index);
         break;
     }

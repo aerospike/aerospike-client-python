@@ -74,6 +74,12 @@ as_status get_optional_int64_t(as_error *err, const char *key,
 as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
                        uint64_t *ui64_valptr);
 
+as_status get_bounded_int_from_py_dict(as_error *err, const char *key,
+                                       PyObject *op_dict, int *int_pointer,
+                                       int min_bound, int max_bound,
+                                       bool is_optional,
+                                       bool warn_if_out_of_bounds);
+
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *op_dict, int *int_pointer);
 

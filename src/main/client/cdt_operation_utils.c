@@ -196,22 +196,55 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-as_status get_int_from_py_dict(as_error *err, const char *key,
-                               PyObject *op_dict, int *int_pointer)
+#define OUT_OF_BOUNDS_MESSAGE "%s must be between %d and %d."
+
+// In C99, enum values can be between INT_MIN and INT_MAX
+// So we define our min and max bound parameters as integer types
+// https://stackoverflow.com/a/366033
+as_status get_bounded_int_from_py_dict(as_error *err, const char *key,
+                                       PyObject *op_dict, int *int_pointer,
+                                       int min_bound, int max_bound,
+                                       bool is_optional,
+                                       bool warn_if_out_of_bounds)
 {
     int64_t int64_to_return = -1;
-
-    if (get_int64_t(err, key, op_dict, &int64_to_return) != AEROSPIKE_OK) {
+    bool found = false;
+    if (get_optional_int64_t(err, key, op_dict, &int64_to_return, found) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
+    if (!found && !is_optional) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s too large for C int.", key);
+                               "Operation missing required entry %s", key);
     }
-    *int_pointer = int64_to_return;
 
+    if (int64_to_return >= min_bound || int64_to_return <= max_bound) {
+        goto return_int;
+    }
+
+    if (warn_if_out_of_bounds) {
+        int retval =
+            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                             OUT_OF_BOUNDS_MESSAGE, key, min_bound, max_bound);
+        if (retval == 0) {
+            goto return_int;
+        }
+    }
+
+    return as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
+                           min_bound, max_bound);
+
+return_int:
+    *int_pointer = int64_to_return;
     return AEROSPIKE_OK;
+}
+
+as_status get_int_from_py_dict(as_error *err, const char *key,
+                               PyObject *op_dict, int *int_pointer)
+{
+    return get_bounded_int_from_py_dict(err, key, op_dict, int_pointer, INT_MIN,
+                                        INT_MAX, false, false);
 }
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
