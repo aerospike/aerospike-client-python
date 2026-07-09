@@ -78,11 +78,9 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
 // In C99, enum values can be between INT_MIN and INT_MAX
 // So we define our min and max bound parameters as integer types
 // https://stackoverflow.com/a/366033
-as_status get_bounded_int_from_py_dict(as_error *err, const char *key,
-                                       PyObject *py_dict, int *int_pointer,
-                                       int min_bound, int max_bound,
-                                       bool is_optional,
-                                       bool warn_if_out_of_bounds);
+as_status get_enum_from_py_dict(as_error *err, const char *key,
+                                PyObject *py_dict, int *int_pointer,
+                                int min_bound, int max_bound, bool is_optional);
 
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *op_dict, int *int_pointer);

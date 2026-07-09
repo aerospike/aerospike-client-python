@@ -742,10 +742,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case OP_MAP_CREATE:;
         int tmp_value;
-        if (get_bounded_int_from_py_dict(err, "map_order", py_operation_dict,
-                                         &tmp_value, AS_MAP_UNORDERED,
-                                         AS_MAP_KEY_VALUE_ORDERED, false,
-                                         true) != AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(err, "map_order", py_operation_dict,
+                                  &tmp_value, AS_MAP_UNORDERED,
+                                  AS_MAP_KEY_VALUE_ORDERED,
+                                  false) != AEROSPIKE_OK) {
             return err->code;
         }
         as_map_order order = (as_map_order)tmp_value;

@@ -1045,10 +1045,9 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
     }
 
     int tmp_value;
-    if (get_bounded_int_from_py_dict(err, BIT_WRITE_FLAGS_KEY, py_policy,
-                                     &tmp_value, AS_BIT_WRITE_DEFAULT,
-                                     AS_BIT_WRITE_PARTIAL, false,
-                                     true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(err, BIT_WRITE_FLAGS_KEY, py_policy, &tmp_value,
+                              AS_BIT_WRITE_DEFAULT, AS_BIT_WRITE_PARTIAL,
+                              false) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1082,9 +1081,9 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
 
     as_map_order map_order = AS_MAP_UNORDERED;
     int tmp_value;
-    if (get_bounded_int_from_py_dict(err, "map_order", py_policy, &tmp_value,
-                                     AS_MAP_UNORDERED, AS_MAP_KEY_VALUE_ORDERED,
-                                     false, true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(err, "map_order", py_policy, &tmp_value,
+                              AS_MAP_UNORDERED, AS_MAP_KEY_VALUE_ORDERED,
+                              false) != AEROSPIKE_OK) {
         return err->code;
     }
     map_order = (as_map_order)tmp_value;
@@ -1140,17 +1139,17 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     int tmp_value;
     as_list_order list_order = AS_LIST_UNORDERED;
 
-    if (get_bounded_int_from_py_dict(err, "list_order", py_policy, &tmp_value,
-                                     AS_LIST_UNORDERED, AS_LIST_ORDERED, true,
-                                     true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(err, "list_order", py_policy, &tmp_value,
+                              AS_LIST_UNORDERED, AS_LIST_ORDERED,
+                              true) != AEROSPIKE_OK) {
         return err->code;
     }
     list_order = (as_list_order)tmp_value;
 
     as_list_write_flags flags = AS_LIST_WRITE_DEFAULT;
-    if (get_bounded_int_from_py_dict(
-            err, "write_flags", py_policy, &tmp_value, AS_LIST_WRITE_DEFAULT,
-            AS_LIST_WRITE_PARTIAL, true, true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(err, "write_flags", py_policy, &tmp_value,
+                              AS_LIST_WRITE_DEFAULT, AS_LIST_WRITE_PARTIAL,
+                              true) != AEROSPIKE_OK) {
         return err->code;
     }
     flags = (as_list_write_flags)tmp_value;
@@ -1189,9 +1188,9 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 
     int tmp_value;
     as_hll_write_flags flags;
-    if (get_bounded_int_from_py_dict(
-            err, "flags", py_policy, &tmp_value, AS_HLL_WRITE_DEFAULT,
-            AS_HLL_WRITE_ALLOW_FOLD, true, true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(err, "flags", py_policy, &tmp_value,
+                              AS_HLL_WRITE_DEFAULT, AS_HLL_WRITE_ALLOW_FOLD,
+                              true) != AEROSPIKE_OK) {
         return err->code;
     }
 
