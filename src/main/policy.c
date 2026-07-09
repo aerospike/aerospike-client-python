@@ -1083,7 +1083,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     int tmp_value;
     if (get_enum_from_py_dict(err, "map_order", py_policy, &tmp_value,
                               AS_MAP_UNORDERED, AS_MAP_KEY_VALUE_ORDERED,
-                              false) != AEROSPIKE_OK) {
+                              true) != AEROSPIKE_OK) {
         return err->code;
     }
     map_order = (as_map_order)tmp_value;
