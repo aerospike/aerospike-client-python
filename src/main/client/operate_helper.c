@@ -574,8 +574,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             goto CLEANUP_VAL2_ON_ERROR;
         }
         sort_flags = (as_list_sort_flags)tmp_value;
-        success = as_operations_list_sort(ops, bin, ctx_ref,
-                                          (as_list_sort_flags)sort_flags);
+        success = as_operations_list_sort(ops, bin, ctx_ref, sort_flags);
         break;
     }
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
