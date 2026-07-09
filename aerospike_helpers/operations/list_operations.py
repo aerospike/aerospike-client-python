@@ -147,8 +147,8 @@ def list_insert(bin_name: str, index, value, policy: Optional[dict] = None, ctx:
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index (int): The index at which to insert an item. The value may be positive to use
-            zero based indexing or negative to index from the end of the list.
+        index (int): The index at which to insert an item. (64-bit signed integer) The value may be
+            positive to use zero based indexing or negative to index from the end of the list.
         value: The value to be inserted into the list.
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -177,8 +177,8 @@ def list_insert_items(bin_name: str, index, values, policy: Optional[dict] = Non
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index (int): The index at which to insert the items. The value may be positive to use
-            zero based indexing or negative to index from the end of the list.
+        index (int): The index at which to insert the items. (64-bit signed integer) The value may be
+            positive to use zero based indexing or negative to index from the end of the list.
         values (list): The values to be inserted into the list.
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -207,7 +207,7 @@ def list_increment(bin_name: str, index, value, policy: Optional[dict] = None, c
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index (int): The index of the list item to increment.
+        index (int): The index of the list item to increment. (64-bit signed integer)
         value (int, float) : The value to be added to the list item.
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -236,7 +236,7 @@ def list_pop(bin_name: str, index, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index (int): The index of the item to be removed.
+        index (int): The index of the item to be removed. (64-bit signed integer)
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -260,7 +260,7 @@ def list_pop_range(bin_name: str, index, count, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index (int): The index of the first item to be removed.
+        index (int): The index of the first item to be removed. (64-bit signed integer)
         count (int): A positive number indicating how many items, including the first, to be removed and returned
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
@@ -285,7 +285,7 @@ def list_remove(bin_name: str, index, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin containing the item to be removed.
-        index (int): The index at which to remove the item.
+        index (int): The index at which to remove the item. (64-bit signed integer)
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -309,7 +309,7 @@ def list_remove_range(bin_name: str, index, count, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin containing the items to be removed.
-        index (int): The index of the first item to remove.
+        index (int): The index of the first item to remove. (64-bit signed integer)
         count (int): A positive number representing the number of items to be removed.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
@@ -355,7 +355,7 @@ def list_set(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Op
 
     Args:
         bin_name (str): The name of the bin containing the list to be operated on.
-        index (int): The index of the item to be set.
+        index (int): The index of the item to be set. (64-bit signed integer)
         value: The value to be assigned to the list item.
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -382,7 +382,7 @@ def list_get(bin_name: str, index, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        index (int): The index of the item to be returned.
+        index (int): The index of the item to be returned. (64-bit signed integer)
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
 
@@ -405,7 +405,7 @@ def list_get_range(bin_name: str, index, count, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        index (int): The index of the item to be returned.
+        index (int): The index of the item to be returned. (64-bit signed integer)
         count (int): A positive number of items to be returned.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
@@ -429,7 +429,7 @@ def list_trim(bin_name: str, index, count, ctx: Optional[list] = None):
 
     Args:
         bin_name (str): The name of the bin containing the list to be trimmed.
-        index (int): The index of the items to be kept.
+        index (int): The index of the items to be kept. (64-bit signed integer)
         count (int): A positive number of items to be kept.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
@@ -479,7 +479,7 @@ def list_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = N
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        index (int): The index of the item to be returned.
+        index (int): The index of the item to be returned. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -510,7 +510,7 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        index (int): The index of the first item to be returned.
+        index (int): The index of the first item to be returned. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
         count (int): The number of list items to be selected.
@@ -549,7 +549,7 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = Non
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch a value from.
-        rank (int): The rank of the item to be fetched.
+        rank (int): The rank of the item to be fetched. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -575,7 +575,7 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        rank (int): The rank of the first items to be returned.
+        rank (int): The rank of the first items to be returned. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.  This should be one of the
             :ref:`list_return_types` values
         count (int): A positive number indicating number of items to be returned.
@@ -730,7 +730,7 @@ def list_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] 
 
     Args:
         bin_name (str): The name of the bin containing the list to remove an item from.
-        index (int): The index of the item to be removed.
+        index (int): The index of the item to be removed. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -768,7 +768,7 @@ def list_remove_by_index_range(
 
     Args:
         bin_name (str): The name of the bin containing the list to remove items from.
-        index (int): The index of the first item to be removed.
+        index (int): The index of the first item to be removed. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
         count (int): The number of items to be removed
@@ -807,7 +807,7 @@ def list_remove_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = 
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch a value from.
-        rank (int): The rank of the item to be removed.
+        rank (int): The rank of the item to be removed. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -838,7 +838,7 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        rank (int): The rank of the first item to removed.
+        rank (int): The rank of the first item to removed. (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         count (int): A positive number indicating number of items to be removed.
@@ -1040,7 +1040,8 @@ def list_get_by_value_rank_range_relative(
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
-        offset (int): Begin returning items with rank == rank(found_item) + offset
+        offset (int): Begin returning items with rank == rank(found_item) + offset.
+            (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         count (int): If specified, the number of items to return. If None,
@@ -1118,7 +1119,8 @@ def list_remove_by_value_rank_range_relative(
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
-        offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        offset (int): Begin removing and returning items with rank == rank(found_item) + offset.
+            (64-bit signed integer)
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
         count (int): If specified, the number of items to remove and return. If None,
