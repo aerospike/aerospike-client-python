@@ -191,7 +191,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     }
 
-    as_list_order list_order;
+    as_list_order list_order = AS_LIST_UNORDERED;
     int tmp_value;
     switch (operation_code) {
     case OP_LIST_SET_ORDER:
