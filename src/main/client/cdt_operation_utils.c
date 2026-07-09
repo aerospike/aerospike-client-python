@@ -215,7 +215,7 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
                                "Operation missing required entry %s", key);
     }
 
-    if (int64 >= min_bound || int64 <= max_bound) {
+    if (int64 >= min_bound && int64 <= max_bound) {
         goto return_int;
     }
 
