@@ -1,4 +1,4 @@
-from conftest import KEYS
+from .conftest import KEYS
 import pytest
 
 from aerospike_helpers.operations import bitwise_operations, map_operations, list_operations, hll_operations
