@@ -197,7 +197,8 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
 }
 
 #define OUT_OF_BOUNDS_MESSAGE                                                  \
-    "%s must be between %d and %d, but received %" PRId64 " instead."
+    "%s must be inclusively between %d and %d, but received %" PRId64          \
+    " instead."
 
 static inline as_status
 get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
