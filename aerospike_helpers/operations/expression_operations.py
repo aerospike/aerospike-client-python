@@ -43,27 +43,33 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
         bin_name: The name of the bin to read from. Even if no bin is being read from, the value will be returned
             with this bin name.
         expression: A compiled Aerospike expression, see :ref:`aerospike_operation_helpers.expressions`.
-        expression_read_flags: :ref:`aerospike_expression_read_flags` (default ``aerospike.EXP_READ_DEFAULT``)
+        expression_read_flags: :ref:`aerospike_expression_read_flags`
+            (default :py:data:`aerospike.EXP_READ_DEFAULT`)
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
-    Example::
+    Example:
 
-        # Read the value of int bin "balance".
-        # Let 'client' be a connected aerospike client.
-        # Let int bin 'balance' == 50.
+        .. testcode::
 
-        from aerospike_helpers.operations import expression_operations as expressions
-        from aerospike_helpers.expressions import *
+            from aerospike_helpers.operations import expression_operations as expressions
+            from aerospike_helpers.expressions import *
 
-        expr = IntBin("balance").compile()
-        ops = [
-            expressions.expression_read("balance", expr)
-        ]
-        _, _, res = client.operate(self.key, ops)
-       print(res)
+            # Read the value of int bin "balance".
+            # Let 'client' be a connected aerospike client.
+            client.put(key, bins={'balance': 50})
 
-       # EXPECTED OUTPUT: {"balance": 50}
+            expr = IntBin("balance").compile()
+            ops = [
+                expressions.expression_read("balance", expr)
+            ]
+            _, _, bins = client.operate(key, ops)
+            print(bins['balance'])
+
+        .. testoutput::
+
+            50
+
     """
 
     op_dict = {
@@ -84,29 +90,35 @@ def expression_write(bin_name: str, expression: resources._BaseExpr, expression_
     Args:
         bin_name: The name of the bin to write to.
         expression: A compiled Aerospike expression, see :ref:`aerospike_operation_helpers.expressions`.
-        expression_write_flags: :ref:`aerospike_expression_write_flags` such as ``aerospike.EXP_WRITE_UPDATE_ONLY
-            | aerospike.EXP_WRITE_POLICY_NO_FAIL``   (default ``aerospike.EXP_WRITE_DEFAULT``).
+        expression_write_flags: :ref:`aerospike_expression_write_flags` such as
+            :py:data:`aerospike.EXP_WRITE_UPDATE_ONLY` | :py:data:`aerospike.EXP_WRITE_POLICY_NO_FAIL`
+            (default :py:data:`aerospike.EXP_WRITE_DEFAULT`).
     Returns:
         A dictionary to be passed to operate or operate_ordered.
 
-    Example::
+    Example:
 
-        # Write the value of int bin "balance" + 50 back to "balance".
-        # Let 'client' be a connected aerospike client.
-        # Let int bin 'balance' == 50.
+        .. testcode::
 
-        from aerospike_helpers.operations import expression_operations as expressions
-        from aerospike_helpers.expressions import *
+            from aerospike_helpers.operations import expression_operations as expr_ops
+            from aerospike_helpers.expressions import *
 
-        expr = Add(IntBin("balance"), 50).compile()
-        ops = [
-            expressions.expression_write("balance", expr)
-        ]
-        client.operate(self.key, ops)
-        _, _, res = client.get(self.key)
-       print(res)
+            # Write the value of int bin "balance" + 50 back to "balance".
+            # Let 'client' be a connected aerospike client.
+            client.put(key, bins={'balance': 50})
 
-       # EXPECTED OUTPUT: {"balance": 100}
+            expr = Add(IntBin("balance"), 50).compile()
+            ops = [
+                expr_ops.expression_write("balance", expr)
+            ]
+            client.operate(key, ops)
+            _, _, bins = client.get(key)
+            print(bins['balance'])
+
+        .. testoutput::
+
+            100
+
     """
 
     op_dict = {

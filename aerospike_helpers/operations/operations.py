@@ -78,6 +78,10 @@ def append(bin_name: str, append_item: Any) -> dict:
 
     The append operation appends `append_item` to the value in bin_name.
 
+    .. deprecated:: 19.3.0 Passing a string argument to ``append_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
+
     Args:
         bin_name: The name of the bin to be used.
         append_item: The value which will be appended to the item contained in the specified bin.
@@ -91,6 +95,10 @@ def prepend(bin_name: str, prepend_item: Any) -> dict:
     """Create a prepend operation dictionary.
 
     The prepend operation prepends `prepend_item` to the value in bin_name.
+
+    .. deprecated:: 19.3.0 Passing a string argument to ``prepend_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
 
     Args:
         bin_name: The name of the bin to be used.

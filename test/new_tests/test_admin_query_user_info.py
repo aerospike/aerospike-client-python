@@ -4,6 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .conftest import check_user_dictionary
 
 import aerospike
 
@@ -59,18 +60,8 @@ class TestQueryUserInfo(TestBaseClass):
 
         time.sleep(2)
         user_details = self.client.admin_query_user_info(self.user)
-        assert user_details.get("roles") == [
-            "read",
-            "read-write",
-            "sys-admin"
-        ]
-        # The user has not read or written anything, so all r/w stats should be 0
-        # NOTE: we don't test the scenario where read_info / write_info is not 0
-        # because it takes time and a lot of transactions for the server to actually record non-zero values
-        assert user_details.get("read_info") == 0
-        assert user_details.get("write_info") == 0
-        # No clients were logged in as this user
-        assert user_details.get("conns_in_use") == 0
+
+        check_user_dictionary(user_details)
 
     def test_query_user_info_with_invalid_timeout_policy_value(self):
         policy = {"timeout": 0.1}

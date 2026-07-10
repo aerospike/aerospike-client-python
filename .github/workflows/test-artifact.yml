@@ -147,13 +147,13 @@ jobs:
 
         echo "ARTIFACT_FILE_NAME=${artifact_names[0]}" >> "$GITHUB_ENV"
       # For seeing how many artifacts were pulled from github
-      shell: bash -x {0}
+      shell: bash -ex {0}
 
     # Bare metal steps
 
     - name: 'Bare metal: set up python to install wheel'
       if: ${{ !inputs.run-tests-in-container }}
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
       with:
         python-version: ${{ inputs.python-version }}
 
@@ -195,7 +195,12 @@ jobs:
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
             echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
           else
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
+            VALGRIND_SUPP_FILE=valgrind-python.supp
+
+            wget -P test "https://raw.githubusercontent.com/python/cpython/$PYTHON_VERSION/Misc/$VALGRIND_SUPP_FILE"
+            # sed -i "127,185s/###//" "$VALGRIND_SUPP_FILE"
+
+            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --leak-check=full --errors-for-leak-kinds=none" >> "$GITHUB_ENV"
           fi
         fi
       env:
@@ -246,8 +251,7 @@ jobs:
 
         # shellcheck disable=SC2086
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
-          -W error::pytest.PytestUnraisableExceptionWarning \
-          -W error::DeprecationWarning
+          -W error::pytest.PytestUnraisableExceptionWarning
 
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == true ]]; then
           ms_print "./$MASSIF_REPORT_FILE_NAME"
