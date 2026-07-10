@@ -347,7 +347,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_STRING_REGEX_REPLACE: {
         if (get_enum_from_py_dict(err, "regex_flags", op_dict, &tmp_value,
                                   AS_STRING_REGEX_FLAGS_NONE,
-                                  AS_STRING_REGEX_FLAGS_GLOBAL,
+                                  AS_STRING_REGEX_FLAGS_GLOBAL * 2 - 1,
                                   false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }

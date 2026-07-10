@@ -196,7 +196,8 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-#define OUT_OF_BOUNDS_MESSAGE "%s must be between %d and %d."
+#define OUT_OF_BOUNDS_MESSAGE                                                  \
+    "%s must be between %d and %d, but received %" PRId64 " instead."
 
 static inline as_status
 get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
@@ -207,33 +208,39 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
     bool found = false;
     if (get_optional_int64_t(err, key, py_dict, &int64, &found) !=
         AEROSPIKE_OK) {
-        return err->code;
+        goto return_without_setting;
     }
 
-    if (!found && !is_optional) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation missing required entry %s", key);
+    if (!found) {
+        if (!is_optional) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Operation missing required entry %s", key);
+        }
+        else {
+            goto return_without_setting;
+        }
     }
 
-    if (int64 >= min_bound || int64 <= max_bound) {
-        goto return_int;
+    if (int64 >= min_bound && int64 <= max_bound) {
+        goto set_int_and_return;
     }
 
     if (warn_if_out_of_bounds) {
-        int retval =
-            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                             OUT_OF_BOUNDS_MESSAGE, key, min_bound, max_bound);
+        int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                      OUT_OF_BOUNDS_MESSAGE, key, min_bound,
+                                      max_bound, int64);
         if (retval == 0) {
-            goto return_int;
+            goto set_int_and_return;
         }
     }
 
     return as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
-                           min_bound, max_bound);
+                           min_bound, max_bound, int64);
 
-return_int:
+set_int_and_return:
     *int_pointer = int64;
-    return AEROSPIKE_OK;
+return_without_setting:
+    return err->code;
 }
 
 as_status get_enum_from_py_dict(as_error *err, const char *key,
