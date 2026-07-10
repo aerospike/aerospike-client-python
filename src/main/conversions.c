@@ -2665,8 +2665,9 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     case CDT_CTX_LIST_INDEX_CREATE:;
         int list_order = 0;
         int pad = 0;
-        status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                                      &list_order);
+        status = get_enum_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
+                                       &list_order, AS_LIST_UNORDERED,
+                                       AS_LIST_ORDERED, false);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }

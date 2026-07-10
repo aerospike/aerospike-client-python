@@ -1048,15 +1048,18 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_list_clear(temp_expr->ctx,
                                               NIL)); // -1 for bin
             break;
-        case OP_LIST_SORT:
-            if (get_int64_t(err, LIST_ORDER_KEY, temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+        case OP_LIST_SORT: {
+            int tmp_value;
+            if (get_enum_from_py_dict(err, LIST_ORDER_KEY, temp_expr->pydict,
+                                      &tmp_value, AS_LIST_UNORDERED,
+                                      AS_LIST_ORDERED, false) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, lval1,
+            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, tmp_value,
                                              NIL)); // -1 for bin
             break;
+        }
         case OP_LIST_REMOVE_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
