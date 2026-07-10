@@ -196,7 +196,8 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-#define OUT_OF_BOUNDS_MESSAGE "%s must be between %d and %d."
+#define OUT_OF_BOUNDS_MESSAGE                                                  \
+    "%s must be between %d and %d, but received %" PRId64 " instead."
 
 static inline as_status
 get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
@@ -225,16 +226,16 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
     }
 
     if (warn_if_out_of_bounds) {
-        int retval =
-            PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                             OUT_OF_BOUNDS_MESSAGE, key, min_bound, max_bound);
+        int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                      OUT_OF_BOUNDS_MESSAGE, key, min_bound,
+                                      max_bound, int64);
         if (retval == 0) {
             goto set_int_and_return;
         }
     }
 
     return as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
-                           min_bound, max_bound);
+                           min_bound, max_bound, int64);
 
 set_int_and_return:
     *int_pointer = int64;
