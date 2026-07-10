@@ -209,7 +209,7 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
     bool found = false;
     if (get_optional_int64_t(err, key, py_dict, &int64, &found) !=
         AEROSPIKE_OK) {
-        goto return_without_setting;
+        goto exit_without_returning_int;
     }
 
     if (!found) {
@@ -218,12 +218,12 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
                                    "Operation missing required entry %s", key);
         }
         else {
-            goto return_without_setting;
+            goto exit_without_returning_int;
         }
     }
 
     if (int64 >= min_bound && int64 <= max_bound) {
-        goto set_int_and_return;
+        goto return_int;
     }
 
     if (warn_if_out_of_bounds) {
@@ -231,16 +231,16 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
                                       OUT_OF_BOUNDS_MESSAGE, key, min_bound,
                                       max_bound, int64);
         if (retval == 0) {
-            goto set_int_and_return;
+            goto return_int;
         }
     }
 
     return as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
                            min_bound, max_bound, int64);
 
-set_int_and_return:
+return_int:
     *int_pointer = int64;
-return_without_setting:
+exit_without_returning_int:
     return err->code;
 }
 
