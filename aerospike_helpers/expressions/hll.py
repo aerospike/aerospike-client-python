@@ -26,6 +26,17 @@ Assume all inline code examples run this beforehand:
 .. code-block:: Python
 
     {0}
+
+.. testcleanup::
+
+    {1}
+
+Cleanup after code examples:
+
+.. code-block:: Python
+
+    {1}
+
 """
 
 if __doc__:
@@ -38,6 +49,10 @@ if __doc__:
         config = {"hosts": [("127.0.0.1", 3000)]}
         client = aerospike.client(config)
         key = ("test", "demo", 1)
+        """,
+        """
+        client.remove(key)
+        client.close()
         """
     )
 
