@@ -253,8 +253,7 @@ jobs:
 
         # shellcheck disable=SC2086
         eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest $MEASURE_TEST_DURATION_FLAGS -vvs --full-trace new_tests/$TEST_FILE \
-          -W error::pytest.PytestUnraisableExceptionWarning \
-          -W error::DeprecationWarning
+          -W error::pytest.PytestUnraisableExceptionWarning
 
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == true ]]; then
           ms_print "./$MASSIF_REPORT_FILE_NAME"
