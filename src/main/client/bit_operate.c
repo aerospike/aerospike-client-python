@@ -346,9 +346,9 @@ static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
     int tmp_value;
     *resize_flags = AS_BIT_RESIZE_DEFAULT;
 
-    if (get_enum_from_py_dict(err, RESIZE_FLAGS_KEY, op_dict, &tmp_value,
-                              AS_BIT_RESIZE_DEFAULT, AS_BIT_RESIZE_SHRINK_ONLY,
-                              true) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(
+            err, RESIZE_FLAGS_KEY, op_dict, &tmp_value, AS_BIT_RESIZE_DEFAULT,
+            AS_BIT_RESIZE_SHRINK_ONLY * 2 - 1, true) != AEROSPIKE_OK) {
         return err->code;
     }
     *resize_flags = (as_bit_resize_flags)tmp_value;
