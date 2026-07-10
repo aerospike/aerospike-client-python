@@ -109,9 +109,9 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     }
 
     // Convert python policy object to as_policy_scan
-    pyobject_to_policy_scan(
-        self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list_p, false);
+    pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy,
+                            &scan_policy_p,
+                            &self->client->as->config.policies.scan, false);
     if (err.code != AEROSPIKE_OK) {
         as_error_update(&err, err.code, NULL);
         goto CLEANUP;
