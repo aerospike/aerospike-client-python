@@ -253,9 +253,9 @@ as_status get_enum_from_py_dict(as_error *err, const char *key,
 }
 
 as_status get_int_from_py_dict(as_error *err, const char *key,
-                               PyObject *op_dict, int *int_pointer)
+                               PyObject *py_dict, int *int_pointer)
 {
-    return get_bound_int_from_py_dict(err, key, op_dict, int_pointer, INT_MIN,
+    return get_bound_int_from_py_dict(err, key, py_dict, int_pointer, INT_MIN,
                                       INT_MAX, false, false);
 }
 
