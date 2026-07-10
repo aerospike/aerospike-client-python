@@ -877,7 +877,7 @@ Numeric Operations
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. testcode::
@@ -1055,7 +1055,7 @@ User Defined Functions
         :param dict policy: optional dictionary that takes in both :ref:`aerospike_scan_policies` and :ref:`aerospike_info_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_SCAN`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
@@ -1072,7 +1072,7 @@ User Defined Functions
         :param list args: the arguments to the UDF.
         :param dict policy: optional dictionary that takes in both :ref:`aerospike_write_policies` and :ref:`aerospike_info_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_QUERY`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: job_info(job_id, module[, policy: dict]) -> dict
@@ -2240,7 +2240,7 @@ Read Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_operate_policies:
 
@@ -2404,7 +2404,7 @@ Remove Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_batch_policies:
 
@@ -2723,12 +2723,12 @@ List Policies
 
         * **write_flags**
             | Write flags for the operation.
-            | One of the :ref:`aerospike_list_write_flag` values such as :data:`aerospike.LIST_WRITE_DEFAULT`
+            | One of the :ref:`aerospike_list_write_flag` values.
             |
             | Default: :data:`aerospike.LIST_WRITE_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
         * **list_order**
             | Ordering to maintain for the list.
@@ -2764,7 +2764,7 @@ Map Policies
             | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0.
 

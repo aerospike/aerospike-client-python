@@ -11,7 +11,7 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters.
+:py:mod:`aerospike` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
@@ -1349,11 +1349,11 @@ List Sort Flags
 
 Flags used by list sort.
 
-.. data:: aerospike.LIST_SORT_DEFAULT
+.. data:: LIST_SORT_DEFAULT
 
     Default. Preserve duplicates when sorting the list.
 
-.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+.. data:: LIST_SORT_DROP_DUPLICATES
 
     Drop duplicate values when sorting the list.
 

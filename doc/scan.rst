@@ -298,7 +298,7 @@ Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the :py:data:`aerospike.JOB_SCAN`, as it runs in the background.
 
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
@@ -529,7 +529,7 @@ Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
         * **ttl** (:class:`int`)
             The default time-to-live (expiration) of the record in seconds. This field will only be used on
             background scan writes if :py:attr:`aerospike.Scan.ttl` is set to

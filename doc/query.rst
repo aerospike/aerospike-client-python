@@ -508,7 +508,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the :py:data:`aerospike.JOB_QUERY` , as it runs in the background.
 
         Continuing from the results of the :meth:`~aerospike.Query.foreach` code example:
 
@@ -746,7 +746,7 @@ Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_query_options:
 
