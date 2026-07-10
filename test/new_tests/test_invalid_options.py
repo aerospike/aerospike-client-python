@@ -27,6 +27,6 @@ class TestInvalidOptions:
         ]
         try:
             with pytest.warns(DeprecationWarning):
-                self.as_connection.operate(self.key, ops)
+                self.as_connection.operate(KEYS[0], ops)
         except e.ServerError:
             pass
