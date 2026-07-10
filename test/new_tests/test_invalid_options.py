@@ -10,7 +10,6 @@ class TestInvalidOptions:
     @pytest.mark.parametrize(
         "op",
         [
-            # Use fixture with correct bins
             bitwise_operations.bit_lshift(bin_name="bitwise", bit_offset=0, bit_size=2, shift=1, policy={"bit_write_flags": -1}),
             bitwise_operations.bit_resize(bin_name="bitwise", byte_size=1, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY * 2),
             map_operations.map_put(bin_name="map", key=1, value=1, map_policy={"map_order": aerospike.MAP_KEY_VALUE_ORDERED + 1}),
@@ -26,5 +25,6 @@ class TestInvalidOptions:
         try:
             with pytest.warns(DeprecationWarning):
                 self.as_connection.operate(KEYS[0], ops)
+        # We only care about the client printing the DeprecationWarning; this is not an end to end test
         except e.ServerError:
             pass
