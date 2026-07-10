@@ -15,7 +15,7 @@ class TestInvalidOptions:
             # TODO: aerospike.BIT_WRITE_PARTIAL <= x < aerospike.BIT_WRITE_PARTIAL * 2 may be valid
             bitwise_operations.bit_resize(bin_name="bitwise", byte_size=1, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY * 2),
             # TODO: same issue as above
-            map_operations.map_set_policy(bin_name="map", policy={"map_write_flags": aerospike.MAP_WRITE_PARTIAL * 2}),
+            map_operations.map_put(bin_name="map", key=1, value=1, map_policy={"map_order": aerospike.MAP_KEY_VALUE_ORDERED + 1}),
             list_operations.list_append(bin_name="list", value=1, policy={"list_order": aerospike.LIST_ORDERED + 1}),
             list_operations.list_append(bin_name="list", value=1, policy={"write_flags": aerospike.LIST_WRITE_PARTIAL * 2}),
             hll_operations.hll_add(bin_name="hll", values=[1], policy={"flags": aerospike.HLL_WRITE_ALLOW_FOLD * 2}),
