@@ -1,4 +1,4 @@
-from .. import Example
+from ... import Example
 
 class CustomerExperienceExample(Example):
     def __init__(self):
