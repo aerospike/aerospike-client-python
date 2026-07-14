@@ -471,8 +471,8 @@ class TestStringOperations:
             (str_ops.concat, {"value_list": [NEEDLE]}),
             (str_ops.overwrite, {"index": 0, "value": NEEDLE}),
             (str_ops.insert, {"index": 0, "value": NEEDLE}),
-            (str_ops.pad_start, {"target_length": 1, "pad_string": NEEDLE[0]}),
-            (str_ops.pad_end, {"target_length": 1, "pad_string": NEEDLE[0]}),
+            (str_ops.pad_start, {"target_length": 4, "pad_string": NEEDLE}),
+            (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}),
             (str_ops.repeat, {"count": 2}),
         ]
     )
