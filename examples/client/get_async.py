@@ -29,39 +29,9 @@ from optparse import OptionParser
 
 usage = "usage: %prog [options]"
 
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string",  default="ram", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", default="ram", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="as-s1.as-network.com", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
 optparser.add_option(
     "--timeout", dest="timeout", type="int", default=1000, metavar="<MS>",
     help="Client timeout")
-
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Namespace of database.")
-
-optparser.add_option(
-    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Set to use within namespace of database.")
 
 optparser.add_option(
     "-c", "--test_count", dest="test_count", type="int", default=128, metavar="<TEST_COUNT>",

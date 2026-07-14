@@ -322,24 +322,6 @@ def main():
     will be created.
     '''
 
-    optparser = argparse.ArgumentParser()
-
-    optparser.add_argument(
-        "--host", type=str, default="127.0.0.1", metavar="<ADDRESS>",
-        help="Address of Aerospike server.")
-
-    optparser.add_argument(
-        "--port", type=int, default=3000, metavar="<PORT>",
-        help="Port of the Aerospike server.")
-
-    optparser.add_argument(
-        "--namespace", type=str, default="test", metavar="<NS>",
-        help="Namespace to use for this example")
-
-    optparser.add_argument(
-        "-s", "--set", type=str, default="demo", metavar="<SET>",
-        help="Set to use for this example")
-
     optparser.add_argument(
         "-i", "--items", type=int, default=1000, metavar="<ITEMS>",
         help="Number of items to store into the big list")

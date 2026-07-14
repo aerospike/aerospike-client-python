@@ -35,33 +35,6 @@ def scan_callback(option, opt, value, parser):
 
 optparser = OptionParser(usage=usage, add_help_option=False)
 
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
 
 optparser.add_option(
     "-m", "--module", dest="module", type="string",
