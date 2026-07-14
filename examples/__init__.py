@@ -36,3 +36,5 @@ class ExampleWithRecord(Example):
 
     def __del__(self):
         self.client.remove(self.key)
+
+        super().__del__(self)
