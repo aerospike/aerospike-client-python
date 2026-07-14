@@ -24,3 +24,15 @@ class Example:
 
     def __del__(self):
         self.client.close()
+
+# TODO: I'm wondering if pytest can be used since
+# it has fixtures as a built-in feature
+class ExampleWithRecord(Example):
+    def __init__(self):
+        super().__init__(self)
+
+        self.key = (self.namespace, self.set_name, "docreadkey")
+        self.client.put(self.key, bins={"a": 1})
+
+    def __del__(self):
+        self.client.remove(self.key)
