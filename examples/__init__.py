@@ -29,7 +29,7 @@ class Example:
 # it has fixtures as a built-in feature
 class ExampleWithRecord(Example):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
 
         self.key = (self.namespace, self.set_name, "docreadkey")
         self.client.put(self.key, bins={"a": 1})
@@ -37,4 +37,4 @@ class ExampleWithRecord(Example):
     def __del__(self):
         self.client.remove(self.key)
 
-        super().__del__(self)
+        super().__del__()
