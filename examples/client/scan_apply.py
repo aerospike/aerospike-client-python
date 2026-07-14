@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 ##########################################################################
 # Copyright 2013-2021 Aerospike, Inc.
 #
@@ -15,7 +15,6 @@
 # limitations under the License.
 ##########################################################################
 
-from __future__ import print_function
 
 import aerospike
 import json

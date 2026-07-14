@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 ##########################################################################
 # Copyright 2013-2021 Aerospike, Inc.
 #
@@ -25,7 +25,6 @@
 # This test is meant to run on an Aerospike 2.x or 3.x server, so the
 # records that it writes have only primitive types for bin values.
 
-from __future__ import print_function
 
 import aerospike
 import sys
