@@ -15,160 +15,32 @@
 # limitations under the License.
 ##########################################################################
 
-from __future__ import print_function
-import sys
-from optparse import OptionParser
+from .. import Example
 
-import aerospike
 from aerospike_helpers.operations import operations as op_helpers
 
 
-##########################################################################
-# Option Parsing
-##########################################################################
-
-usage = "usage: %prog [options] key"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "--gen", dest="gen", type="int", default=10, metavar="<GEN>",
-    help="Generation of the record being written.")
-
-optparser.add_option(
-    "--ttl", dest="ttl", type="int", default=1000, metavar="<TTL>",
-    help="TTL of the record being written.")
-
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) != 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        setname = options.set if options.set and options.set != 'None' else None
-        key = args.pop()
-        record_key = (namespace, setname, key)
-
+class Operate(Example):
+    def run(self):
         record = {
             'example_name': 'John',
             'example_age': 1
         }
 
-        meta = {'ttl': options.ttl, 'gen': options.gen}
+        meta = {'ttl': 1000, 'gen': 10}
         policy = None
+        self.client.put(self.key, record, meta, policy)
 
-        # invoke operation
+        _, _, bins = self.client.get(self.key)
+        print("Before operation:", bins)
 
-        client.put(record_key, record, meta, policy)
-
-        print("---")
-        print("OK, 1 record written.")
-
-        _, _, bins = client.get(record_key)
-
-        print("---")
-        print("Before operate operation")
-        print(bins)
-
-        operation_list = [
+        ops = [
             op_helpers.prepend("example_name", "Mr "),
             op_helpers.increment("example_age", 3),
             op_helpers.read("example_name")
         ]
+        _, _, bins = self.client.operate(self.key, ops, meta, policy)
+        print("Record returned by operate():", bins)
 
-        _, _, bins = client.operate(
-            record_key, operation_list, meta, policy)
-        print("---")
-        print("Record returned on operate completion")
-        print(bins)
-
-        _, _, bins = client.get(record_key)
-
-        print("---")
-        print("After operate operation")
-        print(bins)
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+        _, _, bins = self.client.get(self.key)
+        print("After operation:", bins)

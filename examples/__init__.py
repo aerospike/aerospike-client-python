@@ -21,6 +21,7 @@ class Example:
         self.client = client
         self.namespace = namespace
         self.set_name = set_name
+        self.key = (self.namespace, self.set_name, "docreadkey")
 
     def __del__(self):
         self.client.close()
@@ -31,7 +32,6 @@ class ExampleWithRecord(Example):
     def __init__(self):
         super().__init__()
 
-        self.key = (self.namespace, self.set_name, "docreadkey")
         self.client.put(self.key, bins={"a": 1})
 
     def __del__(self):
