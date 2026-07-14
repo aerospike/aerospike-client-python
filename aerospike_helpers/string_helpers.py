@@ -48,13 +48,29 @@ class WriteFlags(IntEnum):
     String operation policy write bit flags. Use bitwise OR to combine flags.
     """
 
-    #: Default. Allow create or update.
     DEFAULT = 0
+    """
+    TODO - what about string expressions
+
+    Default. These additive string operations will create a new bin:
+
+        - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.concat`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.append`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.prepend`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.pad_start`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.pad_end`
+        - :py:meth:`~aerospike_helpers.operations.string_operations.repeat`
+
+    All other string operations will be no-ops.
+    """
 
     NO_FAIL = 4
     """
-    Do not raise an error if a modify operation cannot be applied because
-            the target bin does not exist. The record is left unchanged.
+    Suppress an operation failure with the bin unchanged.
+
+    Does not suppress wrong-type errors.
     """
 
 
