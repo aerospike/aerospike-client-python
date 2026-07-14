@@ -462,3 +462,31 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]
+
+    @pytest.mark.parametrize(
+        "op, kwargs",
+        [
+            (str_ops.append, {"value": NEEDLE}),
+            (str_ops.prepend, {"value": NEEDLE}),
+            (str_ops.concat, {"value_list": [NEEDLE]}),
+            (str_ops.overwrite, {"index": 0, "value": NEEDLE}),
+            (str_ops.insert, {"index": 0, "value": NEEDLE}),
+            (str_ops.pad_start, {"target_length": 1, "pad_string": NEEDLE}),
+            (str_ops.pad_end, {"target_length": 1, "pad_string": NEEDLE}),
+            (str_ops.repeat, {"count": 2}),
+        ]
+    )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_string_ops_on_nonexistent_bin_creates_it(self, op, kwargs: dict):
+        ops = [
+            op(bin_name=NON_EXISTENT_BIN_NAME, **kwargs),
+            operations.read(NON_EXISTENT_BIN_NAME)
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            if op == str_ops.repeat:
+                assert bins[NON_EXISTENT_BIN_NAME] == ""
+            else:
+                assert bins[NON_EXISTENT_BIN_NAME] == NEEDLE
