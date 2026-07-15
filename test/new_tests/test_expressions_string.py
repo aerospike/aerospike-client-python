@@ -67,6 +67,10 @@ class TestExpressions:
             (
                 str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
                 False
+            ),
+            (
+                str_expr.ToString(bin=INT_BIN_NAME),
+                str(BINS[INT_BIN_NAME])
             )
         ]
     )

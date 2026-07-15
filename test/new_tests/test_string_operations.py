@@ -271,6 +271,17 @@ class TestStringOperations:
 
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
 
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_to_string(self):
+        ops = [
+            str_ops.to_string(bin_name=INT_BIN_NAME)
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[INT_BIN_NAME] == str(BINS[INT_BIN_NAME])
+
     # Write operations
 
     def add_read_op(self, ops, bin_name):
@@ -488,6 +499,7 @@ class TestStringOperations:
             (str_ops.trim_end, {}, False),
             (str_ops.trim, {}, False),
             (str_ops.regex_replace, {"pattern": "a", "replacement": "b"}, False),
+            (str_ops.to_string, {}, False),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail

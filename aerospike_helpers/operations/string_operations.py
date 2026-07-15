@@ -397,6 +397,25 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
     }
 
 
+def to_string(bin_name: str):
+    """
+    Create ``to_string`` operation that converts an integer, double, string, or blob
+    bin to its string representation.
+
+    Raises :exc:`~aerospike.exception.BinIncompatibleType` for
+    any other bin type. This top-level operation does not accept ctx and does not
+    send a msgpack payload.
+
+    Args:
+
+        bin_name: name of string bin.
+    """
+    return {
+        "op": aerospike._OP_STRING_TO_STRING,
+        "bin": bin_name,
+    }
+
+
 def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``insert`` operation that splices value into the bin at codepoint
@@ -857,21 +876,4 @@ def regex_replace(
         "regex_flags": regex_flags,
         "policy": policy,
         "ctx": ctx
-    }
-
-
-def to_string(bin_name: str):
-    """
-    Create ``to_string`` operation that converts an integer, double, string, or blob
-    bin to its string representation. Raises :exc:`~aerospike.exception.BinIncompatibleType` for
-    any other bin type. This top-level operation does not accept ctx and does not
-    send a msgpack payload.
-
-    Args:
-
-        bin_name: name of string bin.
-    """
-    return {
-        "op": aerospike._OP_STRING_TO_STRING,
-        "bin": bin_name,
     }
