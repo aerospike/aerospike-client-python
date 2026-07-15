@@ -1,7 +1,7 @@
 import pytest
 import base64
 
-from aerospike_helpers.expressions import string as str_expr
+from aerospike_helpers.expressions import string as str_expr, IntBin, FloatBin, BlobBin
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.operations import operations
 from aerospike_helpers.string_helpers import NumericType, RegexFlags
@@ -69,11 +69,11 @@ class TestExpressions:
                 False
             ),
             (
-                str_expr.ToString(bin=INT_BIN_NAME),
+                str_expr.ToString(bin=IntBin(INT_BIN_NAME)),
                 str(BINS[INT_BIN_NAME])
             ),
             (
-                str_expr.ToString(bin=DOUBLE_BIN_NAME),
+                str_expr.ToString(bin=FloatBin(DOUBLE_BIN_NAME)),
                 str(BINS[INT_BIN_NAME])
             ),
             (
@@ -81,7 +81,7 @@ class TestExpressions:
                 str(BINS[STR_BIN_NAME])
             ),
             (
-                str_expr.ToString(bin=BLOB_BIN_NAME),
+                str_expr.ToString(bin=BlobBin(BLOB_BIN_NAME)),
                 bytes.decode(BINS[BLOB_BIN_NAME])
             ),
         ]
