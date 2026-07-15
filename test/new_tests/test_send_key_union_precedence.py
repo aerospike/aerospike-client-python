@@ -6,24 +6,20 @@ from aerospike_helpers.operations import operations
 
 
 config = TestBaseClass.get_connection_config()
+KEY = KEYS[0]
 
 
-# TODO: is this applied properly?
 @pytest.mark.parametrize(
     "clean_test_background",
     [1],
     indirect=True
 )
+@pytest.mark.usefixtures("clean_test_background")
 class TestSendKeyUnionPrecedence:
-    @pytest.fixture(autouse=True)
-    def setup(self, clean_test_background):
-        pass
-
     def test_client_config_overrides_command_level_write_policy(self):
         config["policies"]["write"]["key"] = True
         client = aerospike.client(config)
 
-        KEY = KEYS[0]
         client.put(KEY, bins={BIN_NAME: "a"})
 
         expect_records_to_have_user_key_stored(client, KEY[2])
@@ -32,7 +28,6 @@ class TestSendKeyUnionPrecedence:
         config["policies"]["operate"]["key"] = True
         client = aerospike.client(config)
 
-        KEY = KEYS[0]
         ops = [
             operations.write(BIN_NAME, "a")
         ]
@@ -40,13 +35,12 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
-    def test_client_config_overrides_command_level_apply_policy(self):
+    udf_to_load = "example.lua"
+
+    def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
         config["policies"]["apply"]["key"] = True
         client = aerospike.client(config)
-        # TODO: this needs to be set in a fixture...
-        client.udf_put("query_apply.lua")
 
-        KEY = KEYS[0]
 
         client.apply(KEY, "query_apply", "mark_as_applied_one_arg", ["a"])
 
@@ -58,7 +52,6 @@ class TestSendKeyUnionPrecedence:
         }
         client = aerospike.client(config)
 
-        KEY = KEYS[0]
         ops = [
             operations.write(BIN_NAME, "a")
         ]
@@ -66,14 +59,11 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
-    def test_client_config_overrides_command_level_batch_apply_policy(self):
+    def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
         config["policies"]["batch_apply"] = {
             "key": True
         }
         client = aerospike.client(config)
-        client.udf_put("query_apply.lua")
-
-        KEY = KEYS[0]
 
         client.batch_apply([KEY], "query_apply", "mark_as_applied_one_arg", ["a"])
 
