@@ -464,20 +464,24 @@ class TestStringOperations:
             assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]
 
     @pytest.mark.parametrize(
-        "op, kwargs",
+        "op, kwargs, creates_bin",
         [
-            (str_ops.append, {"value": NEEDLE}),
-            (str_ops.prepend, {"value": NEEDLE}),
-            (str_ops.concat, {"value_list": [NEEDLE]}),
-            (str_ops.overwrite, {"index": 0, "value": NEEDLE}),
-            (str_ops.insert, {"index": 0, "value": NEEDLE}),
-            (str_ops.pad_start, {"target_length": 4, "pad_string": NEEDLE}),
-            (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}),
-            (str_ops.repeat, {"count": 2}),
+            (str_ops.append, {"value": NEEDLE}, True),
+            (str_ops.prepend, {"value": NEEDLE}, True),
+            (str_ops.concat, {"value_list": [NEEDLE]}, True),
+            (str_ops.overwrite, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.insert, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.pad_start, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            (str_ops.snip, {"start": 0, "end": 1}, False),
+            (str_ops.replace, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.replace_all, {"needle": "a", "replacement": "b"}, False),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_string_ops_on_nonexistent_bin_creates_it(self, op, kwargs: dict):
+    def test_string_ops_on_nonexistent_bin(self, op, kwargs: dict, creates_bin: bool):
         ops = [
             op(bin_name=NON_EXISTENT_BIN_NAME, **kwargs),
             operations.read(NON_EXISTENT_BIN_NAME)
@@ -485,6 +489,12 @@ class TestStringOperations:
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
+
+            if creates_bin is False:
+                assert NON_EXISTENT_BIN_NAME not in bins
+                return
+
+            assert NON_EXISTENT_BIN_NAME in bins
 
             if op == str_ops.repeat:
                 assert bins[NON_EXISTENT_BIN_NAME] == ""
