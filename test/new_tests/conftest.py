@@ -427,3 +427,6 @@ def hydrate_partitions_1000_to_1003(request, as_connection):
     yield
 
     as_connection.batch_remove(keys)
+
+AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+DYN_CONFIG_PATH = "./dyn_config.yml"

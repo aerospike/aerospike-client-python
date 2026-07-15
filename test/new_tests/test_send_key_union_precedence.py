@@ -1,11 +1,11 @@
 import pytest
 from .test_base_class import TestBaseClass
 import aerospike
-from .conftest import KEYS, BIN_NAME, expect_records_to_have_user_key_stored
+from .conftest import KEYS, BIN_NAME, expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH
 from aerospike_helpers.operations import operations
+import os
 
 
-config = TestBaseClass.get_connection_config()
 KEY = KEYS[0]
 
 
@@ -15,18 +15,34 @@ KEY = KEYS[0]
     indirect=True
 )
 @pytest.mark.usefixtures("insert_records")
+@pytest.mark.parametrize("override_dynamic_config", [False, True])
 class TestSendKeyUnionPrecedence:
+    @pytest.fixture(autouse=True)
+    def set_key_option(self, request, override_dynamic_config: bool):
+        self.config = TestBaseClass.get_connection_config()
+        if override_dynamic_config:
+            os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
+        else:
+            if request.param not in self.config["policies"]:
+                self.config["policies"][request.param] = {}
+            self.config["policies"][request.param]["key"] = True
+
+        yield
+
+        if override_dynamic_config:
+            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
+
+    @pytest.mark.parametrize("set_key_option", ["write"], indirect=True)
     def test_client_config_overrides_command_level_write_policy(self):
-        config["policies"]["write"]["key"] = True
-        client = aerospike.client(config)
+        client = aerospike.client(self.config)
 
         client.put(KEY, bins={BIN_NAME: "a"})
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
+    @pytest.mark.parametrize("set_key_option", ["operate"], indirect=True)
     def test_client_config_overrides_command_level_operate_policy(self):
-        config["policies"]["operate"]["key"] = True
-        client = aerospike.client(config)
+        client = aerospike.client(self.config)
 
         ops = [
             operations.write(BIN_NAME, "a")
@@ -37,20 +53,17 @@ class TestSendKeyUnionPrecedence:
 
     udf_to_load = "example.lua"
 
+    @pytest.mark.parametrize("set_key_option", ["apply"], indirect=True)
     def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
-        config["policies"]["apply"]["key"] = True
-        client = aerospike.client(config)
-
+        client = aerospike.client(self.config)
 
         client.apply(KEY, "query_apply", "mark_as_applied_one_arg", ["a"])
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
+    @pytest.mark.parametrize("set_key_option", ["batch_write"], indirect=True)
     def test_client_config_overrides_command_level_batch_write_policy(self):
-        config["policies"]["batch_write"] = {
-            "key": True
-        }
-        client = aerospike.client(config)
+        client = aerospike.client(self.config)
 
         ops = [
             operations.write(BIN_NAME, "a")
@@ -59,11 +72,9 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
+    @pytest.mark.parametrize("set_key_option", ["batch_apply"], indirect=True)
     def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
-        config["policies"]["batch_apply"] = {
-            "key": True
-        }
-        client = aerospike.client(config)
+        client = aerospike.client(self.config)
 
         client.batch_apply([KEY], "query_apply", "mark_as_applied_one_arg", ["a"])
 

@@ -4,6 +4,14 @@ dynamic:
     enable: true
   write:
     send_key: true
+  apply:
+    send_key: true
+  operate:
+    send_key: true
+  batch_write:
+    send_key: true
+  batch_apply:
+    send_key: true
 static:
   client:
     config_interval: 1000
