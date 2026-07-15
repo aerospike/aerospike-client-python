@@ -276,8 +276,7 @@ expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
-# TODO: improve fixture naming
-def clean_test_background(request, as_connection):
+def insert_records(request, as_connection):
     if hasattr(request, "param") and isinstance(request.param, int):
         num_keys = request.param
     else:
@@ -322,7 +321,7 @@ WRITE_OPS = [
 NON_EXISTENT_BIN_NAME = "asdf"
 
 @pytest.fixture()
-def query(request, clean_test_background, as_connection):
+def query(request, insert_records, as_connection):
     if not hasattr(request, "param"):
         query = as_connection.query(TEST_NS, TEST_SET)
     else:

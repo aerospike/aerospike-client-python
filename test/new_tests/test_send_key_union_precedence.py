@@ -10,11 +10,11 @@ KEY = KEYS[0]
 
 
 @pytest.mark.parametrize(
-    "clean_test_background",
+    "insert_records",
     [1],
     indirect=True
 )
-@pytest.mark.usefixtures("clean_test_background")
+@pytest.mark.usefixtures("insert_records")
 class TestSendKeyUnionPrecedence:
     def test_client_config_overrides_command_level_write_policy(self):
         config["policies"]["write"]["key"] = True
