@@ -50,20 +50,7 @@ class WriteFlags(IntEnum):
 
     DEFAULT = 0
     """
-    TODO - what about string expressions
-
-    Default. These additive string operations will create a new bin:
-
-        - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.concat`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.append`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.prepend`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.pad_start`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.pad_end`
-        - :py:meth:`~aerospike_helpers.operations.string_operations.repeat`
-
-    All other string operations will be no-ops.
+    Default. Create or replace.
     """
 
     NO_FAIL = 4

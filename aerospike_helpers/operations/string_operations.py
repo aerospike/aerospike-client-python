@@ -400,7 +400,10 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``insert`` operation that splices value into the bin at codepoint
-    index. Negative indexes count from the end of the string.
+    index.
+
+    Negative indexes count from the end of the string.
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -423,8 +426,10 @@ def insert(bin_name: str, index: int, value: str, policy: StringPolicy | None = 
 def overwrite(bin_name: str, index: int, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``overwrite`` operation that overwrites codepoints starting at index
-    with value. The result may grow beyond the original length when value extends
-    past the end.
+    with value.
+
+    The result may grow beyond the original length when value extends past the end.
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -447,8 +452,10 @@ def overwrite(bin_name: str, index: int, value: str, policy: StringPolicy | None
 def append(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``append`` operation that appends value to the end of the bin.
+
     Unlike :func:`~aerospike_helpers.operations.operations.append`, this string-package operation
     uses Unicode codepoint semantics and supports string policy and ctx.
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -469,8 +476,10 @@ def append(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: T
 def prepend(bin_name: str, value: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``prepend`` operation that prepend value to the start of the bin.
+
     Unlike :func:`~aerospike_helpers.operations.operations.prepend`, this string-package operation
     uses Unicode codepoint semantics and supports string policy and ctx.
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -493,6 +502,8 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
     Create string ``concat`` operation that appends each string element in values to
     the bin in order.
 
+    If the bin doesn't exist, this operation will create a new bin.
+
     Args:
 
         bin_name: name of string bin.
@@ -512,6 +523,8 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
 def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``snip`` operation that removes codepoints from start to end.
+
+    If the bin doesn't exist, this operation will be a no-op.
 
     Args:
 
@@ -536,6 +549,8 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
     Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -559,6 +574,8 @@ def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPoli
     Create string ``replace_all`` operation that replaces every occurrence of needle
     with replacement.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -581,6 +598,8 @@ def upper(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
     """
     Create string ``upper`` operation that uppercases the bin in place.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -599,6 +618,8 @@ def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
     """
     Create string ``lower`` operation that lowercases the bin in place.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -616,7 +637,10 @@ def lower(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None
 def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``case_fold`` operation that applies locale-independent case folding
-    (lowercase) to the bin. This is useful for normalized comparison keys.
+    (lowercase) to the bin.
+
+    This is useful for normalized comparison keys.
+    If the bin doesn't exist, this operation will be a no-op.
 
     Args:
 
@@ -635,7 +659,9 @@ def casefold(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
 def normalize_nfc(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``normalize_nfc`` operation that normalizes the bin to Unicode NFC.
+
     Already-normalized strings are unchanged.
+    If the bin doesn't exist, this operation will be a no-op.
 
     Args:
 
@@ -656,6 +682,8 @@ def trim_start(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX =
     Create string ``trim_start`` operation that removes whitespace from the start of
     the bin.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -675,6 +703,8 @@ def trim_end(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
     Create string ``trim_end`` operation that removes whitespace from the end of the
     bin.
 
+    If the bin doesn't exist, this operation will be a no-op.
+
     Args:
 
         bin_name: name of string bin.
@@ -692,6 +722,8 @@ def trim_end(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = N
 def trim(bin_name: str, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``trim`` operation that removes whitespace from both ends of the bin.
+
+    If the bin doesn't exist, this operation will be a no-op.
 
     Args:
 
@@ -718,6 +750,8 @@ def pad_start(
     Create string ``pad_start`` operation that prepends ``pad_string`` repeatedly until
     the bin reaches ``target_length`` codepoints. No-op when the bin is already at or
     above the target length.
+
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -749,6 +783,8 @@ def pad_end(
     bin reaches ``target_length`` codepoints. No-op when the bin is already at or
     above the target length.
 
+    If the bin doesn't exist, this operation will create a new bin.
+
     Args:
 
         bin_name: name of string bin.
@@ -770,6 +806,8 @@ def pad_end(
 def repeat(bin_name: str, count: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``repeat`` operation that repeats the bin contents count times.
+
+    If the bin doesn't exist, this operation will create a new bin.
 
     Args:
 
@@ -799,6 +837,8 @@ def regex_replace(
     Create string ``regex_replace`` operation that replaces the first match of pattern
     with replacement. Pass :py:attr:`~aerospike_helpers.string_helpers.RegexFlags.GLOBAL` to replace every match.
     This server operation accepts regex flags but not string policy flags.
+
+    If the bin doesn't exist, this operation will be a no-op.
 
     Args:
 
