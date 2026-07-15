@@ -402,7 +402,7 @@ class RegexCompare(_BaseExpr):
 
 
 class ToString(_BaseExpr):
-    _op = aerospike._AS_EXP_CODE_CALL
+    _op = aerospike._AS_EXP_TO_STRING
 
     def __init__(self, bin: "TypeBinName"):
         """

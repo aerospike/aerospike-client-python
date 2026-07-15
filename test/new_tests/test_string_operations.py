@@ -272,15 +272,24 @@ class TestStringOperations:
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
 
     @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_to_string(self):
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (INT_BIN_NAME, str(BINS[INT_BIN_NAME])),
+            (DOUBLE_BIN_NAME, str(BINS[INT_BIN_NAME])),
+            (STR_BIN_NAME, BINS[STR_BIN_NAME]),
+            (BLOB_BIN_NAME, bytes.decode(BINS[BLOB_BIN_NAME]))
+        ]
+    )
+    def test_to_string(self, bin_name: str, expected_result: str):
         ops = [
-            str_ops.to_string(bin_name=INT_BIN_NAME)
+            str_ops.to_string(bin_name=bin_name)
         ]
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[INT_BIN_NAME] == str(BINS[INT_BIN_NAME])
+            assert bins[bin_name] == expected_result
 
     # Write operations
 
@@ -465,14 +474,14 @@ class TestStringOperations:
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.insert(bin_name=NON_STR_BIN_NAME, index=0, value="a", policy=policy)
+            str_ops.insert(bin_name=INT_BIN_NAME, index=0, value="a", policy=policy)
         ]
-        self.add_read_op(ops, NON_STR_BIN_NAME)
+        self.add_read_op(ops, INT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]
+            assert bins[INT_BIN_NAME] == BINS[INT_BIN_NAME]
 
     @pytest.mark.parametrize(
         "op, kwargs, creates_bin",

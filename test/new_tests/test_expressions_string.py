@@ -71,7 +71,19 @@ class TestExpressions:
             (
                 str_expr.ToString(bin=INT_BIN_NAME),
                 str(BINS[INT_BIN_NAME])
-            )
+            ),
+            (
+                str_expr.ToString(bin=DOUBLE_BIN_NAME),
+                str(BINS[INT_BIN_NAME])
+            ),
+            (
+                str_expr.ToString(bin=STR_BIN_NAME),
+                str(BINS[STR_BIN_NAME])
+            ),
+            (
+                str_expr.ToString(bin=BLOB_BIN_NAME),
+                bytes.decode(BINS[BLOB_BIN_NAME])
+            ),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail

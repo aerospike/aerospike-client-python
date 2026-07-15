@@ -589,11 +589,12 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_GEOJSON),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_HLL),
 
-    // C client uses the same expression code for these two expressions
+    // C client uses the same expression code for some expressions
     // so we define unique ones in the Python client code
     EXPOSE_MACRO(_AS_EXP_CODE_CALL),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+    EXPOSE_MACRO(_AS_EXP_TO_STRING),
 
     EXPOSE_MACRO(_AS_EXP_CODE_REMOVE_RESULT),
     EXPOSE_MACRO(_AS_EXP_CODE_IN_LIST),
