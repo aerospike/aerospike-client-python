@@ -466,6 +466,7 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "op, kwargs, creates_bin",
         [
+            # Positive
             (str_ops.append, {"value": NEEDLE}, True),
             (str_ops.prepend, {"value": NEEDLE}, True),
             (str_ops.concat, {"value_list": [NEEDLE]}, True),
@@ -475,9 +476,18 @@ class TestStringOperations:
             (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}, True),
             (str_ops.repeat, {"count": 2}, True),
             (str_ops.repeat, {"count": 2}, True),
+            # Negative
             (str_ops.snip, {"start": 0, "end": 1}, False),
             (str_ops.replace, {"needle": "a", "replacement": "b"}, False),
             (str_ops.replace_all, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.upper, {}, False),
+            (str_ops.lower, {}, False),
+            (str_ops.casefold, {}, False),
+            (str_ops.normalize_nfc, {}, False),
+            (str_ops.trim_start, {}, False),
+            (str_ops.trim_end, {}, False),
+            (str_ops.trim, {}, False),
+            (str_ops.regex_replace, {"pattern": "a", "replacement": "b"}, False),
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
@@ -491,7 +501,7 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             if creates_bin is False:
-                assert NON_EXISTENT_BIN_NAME not in bins
+                assert bins[NON_EXISTENT_BIN_NAME] is None
                 return
 
             assert NON_EXISTENT_BIN_NAME in bins
