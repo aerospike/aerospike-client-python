@@ -276,10 +276,16 @@ expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
-def clean_test_background(as_connection):
+# TODO: improve fixture naming
+def clean_test_background(request, as_connection):
+    if hasattr(request, "param") and isinstance(request.param, int):
+        num_keys = request.param
+    else:
+        num_keys = len(KEYS)
+
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
-    for i, key in enumerate(KEYS):
+    for i, key in enumerate(KEYS[:num_keys]):
         ops = [
             operations.write(BIN_NAME, i),
             operations.write(MAP_BIN_NAME, {"a": i})
@@ -290,6 +296,15 @@ def clean_test_background(as_connection):
     as_connection.batch_write(brs)
     yield
     as_connection.batch_remove(KEYS)
+
+def expect_records_to_have_user_key_stored(client: aerospike.Client, key: int | str | bytearray):
+    query = client.query("test", "demo")
+    recs = query.results()
+
+    # Check that record key tuple has the primary key
+    for record in recs:
+        first_record_pk = record[0]
+        assert first_record_pk[2] == key
 
 BASIC_READ_BIN_OPS = [
     operations.read(BIN_NAME)

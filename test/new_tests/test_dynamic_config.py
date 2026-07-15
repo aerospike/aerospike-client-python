@@ -1,5 +1,6 @@
 import aerospike
 from aerospike import exception as e
+from .conftest import expect_records_to_have_user_key_stored
 from .test_base_class import TestBaseClass
 import pytest
 import os
@@ -93,13 +94,7 @@ class TestDynamicConfig:
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
-        query = self.client.query("test", "demo")
-        recs = query.results()
-        assert len(recs) == 1
-        # Check that record key tuple has the primary key
-        first_record = recs[0]
-        first_record_key = first_record[0]
-        assert first_record_key[2] is self.key[2]
+        expect_records_to_have_user_key_stored(self.client, self.key[2])
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
