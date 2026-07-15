@@ -40,15 +40,17 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
-    # def test_client_config_overrides_command_level_apply_policy(self):
-    #     config["policies"]["apply"]["key"] = True
-    #     client = connection_with_udf
+    def test_client_config_overrides_command_level_apply_policy(self):
+        config["policies"]["apply"]["key"] = True
+        client = aerospike.client(config)
+        # TODO: this needs to be set in a fixture...
+        client.udf_put("query_apply.lua")
 
-    #     KEY = KEYS[0]
+        KEY = KEYS[0]
 
-    #     client.apply(KEY, "example.lua")
+        client.apply(KEY, "query_apply", "mark_as_applied_one_arg", ["a"])
 
-    #     expect_records_to_have_user_key_stored(client, KEY[2])
+        expect_records_to_have_user_key_stored(client, KEY[2])
 
     def test_client_config_overrides_command_level_batch_write_policy(self):
         config["policies"]["batch_write"] = {
@@ -64,4 +66,15 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
-    # TODO: batch apply
+    def test_client_config_overrides_command_level_batch_apply_policy(self):
+        config["policies"]["batch_apply"] = {
+            "key": True
+        }
+        client = aerospike.client(config)
+        client.udf_put("query_apply.lua")
+
+        KEY = KEYS[0]
+
+        client.batch_apply([KEY], "query_apply", "mark_as_applied_one_arg", ["a"])
+
+        expect_records_to_have_user_key_stored(client, KEY[2])
