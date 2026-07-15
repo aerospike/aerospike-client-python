@@ -217,7 +217,9 @@ class MetricsPolicy:
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
-            Example::
+            Example:
+
+            .. testcode::
 
                 # latencyColumns=7 latencyShift=1
                 # <=1ms >1ms >2ms >4ms >8ms >16ms >32ms

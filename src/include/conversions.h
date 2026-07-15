@@ -62,10 +62,6 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files,
                                    PyObject **py_files);
 
-as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
-                                        char str_array_ptr[][AS_ROLE_SIZE],
-                                        PyObject *py_list);
-
 as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
                                      int element_size, char **str_array_ptr,
                                      PyObject *py_list);
@@ -131,7 +127,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
                            const as_record *rec, PyObject **obj);
 
-void error_to_pyobject(const as_error *err, PyObject **obj);
+void create_py_tuple_from_as_error(const as_error *err, PyObject **obj);
 
 as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
                                    PyObject *py_as_privilege,
@@ -240,3 +236,7 @@ const char *convert_pyobject_to_str(PyObject *py_obj);
 PyObject *
 create_py_cluster_stats_from_as_cluster_stats(as_error *err,
                                               as_cluster_stats *stats);
+
+as_status as_string_policy_init_from_pyobject(as_error *err,
+                                              as_string_policy *policy,
+                                              PyObject *py_string_policy);
