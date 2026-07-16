@@ -409,6 +409,7 @@ class ToString(_BaseExpr):
         Args:
 
             bin: A bin expression to apply this function to.
+                If this argument is a string, the bin must contain a string.
 
         Returns:
 
