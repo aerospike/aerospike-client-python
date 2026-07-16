@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 ##########################################################################
 # Copyright 2018 Aerospike, Inc.
 #
@@ -15,10 +15,12 @@
 # limitations under the License.
 ##########################################################################
 
+from __future__ import print_function
 import argparse
 
 import aerospike
 from aerospike import exception as as_exceptions
+from aerospike_helpers.operations import list_operations, operations
 '''
 This provides a rough implementation of an expandable list for Aerospike
 It utilizes a metadata record to provide information about associated subrecords.
@@ -171,7 +173,7 @@ class ClientSideBigList(object):
                 )
                 keys.append(key)
 
-            subrecords = self.client.get_many(keys)
+            subrecords = self.client.batch_read(keys)
             entries = self._get_items_from_subrecords(subrecords)
 
             # Try to get subrecords beyond the listed amount.
@@ -242,8 +244,11 @@ class ClientSideBigList(object):
         subrecord_userkey = self._make_user_key(subrecord_number)
         subrecord_record_key = (self.ns, self.set, subrecord_userkey)
         try:
-            self.client.list_append(
-                subrecord_record_key, self.subrecord_list_bin, item)
+            ops = [
+                list_operations.list_append(self.subrecord_list_bin, item)
+            ]
+            self.client.operate(
+                subrecord_record_key, ops)
         except as_exceptions.RecordTooBig as e:
             if retries_remaining == 0:
                 raise e
@@ -259,11 +264,15 @@ class ClientSideBigList(object):
         update_policy = {'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': generation}
         try:
-            self.client.increment(self.metadata_key, self.subrecourd_count_name, 1, meta=meta, policy=update_policy)
+            ops = [
+                operations.increment(self.subrecourd_count_name, 1)
+            ]
+            self.client.operate(self.metadata_key, ops, meta=meta, policy=update_policy)
         except as_exceptions.RecordTooBig:
             raise ASMetadataRecordTooLarge
         except as_exceptions.RecordGenerationError:
             # This means that somebody else has updated the record count already. Don't risk updating again.
+            # TODO: if this happens then there's no way to further update the list from this client?
             pass
 
     def _get_items_from_subrecords(self, subrecords):
@@ -285,7 +294,8 @@ class ClientSideBigList(object):
         entries = []
         # If a subrecord was included in the header of the top level record, but the matching subrecord
         # was not found, ignore it.
-        for _, _, sr_bins in subrecords:
+        for br in subrecords.batch_records:
+            sr_bins = br.record[2]
             if sr_bins:
                 entries.extend(sr_bins[self.subrecord_list_bin])
         return entries
@@ -320,6 +330,24 @@ def main():
     If the database is set up with a small enough write block-size, several subrecords
     will be created.
     '''
+
+    optparser = argparse.ArgumentParser()
+
+    optparser.add_argument(
+        "--host", type=str, default="127.0.0.1", metavar="<ADDRESS>",
+        help="Address of Aerospike server.")
+
+    optparser.add_argument(
+        "--port", type=int, default=3000, metavar="<PORT>",
+        help="Port of the Aerospike server.")
+
+    optparser.add_argument(
+        "--namespace", type=str, default="test", metavar="<NS>",
+        help="Namespace to use for this example")
+
+    optparser.add_argument(
+        "-s", "--set", type=str, default="demo", metavar="<SET>",
+        help="Set to use for this example")
 
     optparser.add_argument(
         "-i", "--items", type=int, default=1000, metavar="<ITEMS>",
