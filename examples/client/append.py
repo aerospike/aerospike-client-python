@@ -27,15 +27,13 @@ class Append(Example):
         }
 
         # TODO meta gen/ttl should be options?
-        # TODO: this is the deprecated way of setting ttl and maybe gen
         meta = {
-            'ttl': 1000,
             'gen': 10
         }
-        policy = None
+        policy = {
+            'ttl': 1000
+        }
         self.client.put(self.key, record, meta, policy)
-
-        # TODO: print statements should mark when command successfully finishes?
 
         self.client.append(
             self.key, "example_name", " Smith", meta, policy)

@@ -16,108 +16,14 @@
 ##########################################################################
 
 
-import aerospike
-import json
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Option Parsing
-##########################################################################
-
-usage = "usage: %prog [options] key module function [args...]"
-
-optparser.add_option(
-    "--gen", dest="gen", type="int", default=None, metavar="<GEN>",
-    help="Generation of the record being written.")
-
-optparser.add_option(
-    "--ttl", dest="ttl", type="int", default=None, metavar="<TTL>",
-    help="TTL of the record being written.")
+from .. import ExampleWithRecord
 
 
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) < 3:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-
-def parse_arg(s):
-    try:
-        return json.loads(s)
-    except ValueError:
-        return s
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-
-        args.reverse()
-        key = args.pop()
-        module = args.pop()
-        function = args.pop()
-
-        # invoke operation
-        args.reverse()
-        argl = list(map(parse_arg, args))
-        res = client.apply((namespace, set, key), module, function, argl)
+class Apply(ExampleWithRecord):
+    def run(self):
+        module = "module"
+        function = "a"
+        args = []
+        res = self.client.apply(self.key, module, function, args)
 
         print(res)
-        print("---")
-        print("OK, 1 UDF applied.")
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
