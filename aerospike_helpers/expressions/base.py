@@ -33,7 +33,6 @@ from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
 from aerospike_helpers.cdt_ctx import _cdt_ctx
-import warnings
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -837,11 +836,18 @@ class LE(_BaseExpr):
 
 
 class CmpRegex(_BaseExpr):
-    """Create an expression that performs a regex match on a string bin or value expression."""
+    """
+    .. deprecated:: 19.3.0 :py:class:`~aerospike_helpers.expressions.string.RegexCompare` should be used instead.
+        This legacy expression uses POSIX regex and is not Unicode/DBCS-aware; the string-package equivalent
+        uses ICU regex.
+
+    Create an expression that performs a regex match on a string bin or value expression.
+    """
 
     _op = _ExprOp.CMP_REGEX
 
     def __init__(self, options: int, regex_str: str, cmp_str: Union[_BaseExpr, str]):
+
         """Args:
             options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
             regex_str (str): POSIX regex string.
@@ -1217,20 +1223,15 @@ class LoopVarHLL(LoopVar):
     _op = aerospike._AS_EXP_LOOPVAR_HLL
 
 
-class ResultRemove(_BaseExpr):
+class RemoveResult(_BaseExpr):
     """
     Indicates entry deletion for :py:class:`ModifyByPath`.
     """
     _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
     def __init__(self):
-        warnings.warn(
-            "This expression will be renamed to RemoveResult in the next major client release",
-            DeprecationWarning
-        )
-
         """
-        :return: (result_remove)
+        :return: (remove_result)
         """
         pass
 
