@@ -220,7 +220,7 @@ enum {
     _AS_EXP_LOOPVAR_GEOJSON,
     _AS_EXP_LOOPVAR_HLL,
     _AS_EXP_CODE_CALL_SELECT,
-    _AS_EXP_CODE_CALL_APPLY
+    _AS_EXP_CODE_CALL_APPLY,
 };
 
 // Can be either for select or apply
