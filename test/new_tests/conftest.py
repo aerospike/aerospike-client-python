@@ -300,7 +300,7 @@ def expect_records_to_have_user_key_stored(client: aerospike.Client, key: int | 
     query = client.query("test", "demo")
     recs = query.results()
 
-    # Check that record key tuple has the primary key
+    # Check that record key tuple has the user key
     for record in recs:
         first_record_pk = record[0]
         assert first_record_pk[2] == key
