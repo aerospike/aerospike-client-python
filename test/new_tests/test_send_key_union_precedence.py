@@ -1,7 +1,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 import aerospike
-from .conftest import KEYS, BIN_NAME, expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH
+from .conftest import KEYS, BIN_NAME, expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH, WRITE_OPS
 from aerospike_helpers.operations import operations
 import os
 
@@ -44,14 +44,12 @@ class TestSendKeyUnionPrecedence:
     def test_client_config_overrides_command_level_operate_policy(self):
         client = aerospike.client(self.config)
 
-        ops = [
-            operations.write(BIN_NAME, "a")
-        ]
+        ops = WRITE_OPS
         client.operate(KEY, ops)
 
         expect_records_to_have_user_key_stored(client, KEY[2])
 
-    udf_to_load = "example.lua"
+    udf_to_load = "query_apply.lua"
 
     @pytest.mark.parametrize("set_key_option", ["apply"], indirect=True)
     def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
