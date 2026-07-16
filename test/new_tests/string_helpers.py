@@ -6,7 +6,7 @@ from aerospike_helpers.string_helpers import StringPolicy
 
 KEY = KEYS[0]
 
-INT_BIN_NAME = "nonstr"
+NON_STR_BIN_NAME = INT_BIN_NAME = "nonstr"
 STR_BIN_NAME = "str"
 DOUBLE_BIN_NAME = "double"
 BLOB_BIN_NAME = "blob"
