@@ -471,6 +471,7 @@ class TestStringOperations:
 
             assert bins[bin_name] == expected_results
 
+    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
