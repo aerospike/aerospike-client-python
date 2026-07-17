@@ -968,7 +968,8 @@ def map_remove_by_value_rank_range_relative(
     Note:
         This operation requires server version 4.3.0 or greater.
 
-    Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}`` and return type of ``aerospike.MAP_RETURN_KEY``:
+    Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}`` and return type of
+        :py:data:`aerospike.MAP_RETURN_KEY`:
 
     ::
 
@@ -1041,7 +1042,7 @@ def map_get_by_value_rank_range_relative(
     Note:
         This operation requires server version 4.3.0 or greater.
 
-    Examples for map ``{0: 6, 10: 18, 6: 12, 15: 24}`` and return type of ``aerospike.MAP_RETURN_KEY``.
+    Examples for map ``{0: 6, 10: 18, 6: 12, 15: 24}`` and return type of :py:data:`aerospike.MAP_RETURN_KEY`.
     See :meth:`map_remove_by_value_rank_range_relative` for in-depth explanation.
 
     ::
@@ -1101,7 +1102,7 @@ def map_remove_by_key_index_range_relative(
         should be considered an internal detail, and subject to change.
 
     Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}``
-    and return type of ``aerospike.MAP_RETURN_KEY``
+    and return type of :py:data:`aerospike.MAP_RETURN_KEY`
 
     ::
 
@@ -1175,7 +1176,7 @@ def map_get_by_key_index_range_relative(
         This operation requires server version 4.3.0 or greater.
 
     Examples for a key ordered map ``{0: 6, 6: 12, 10: 18, 15: 24}``
-    and return type of ``aerospike.MAP_RETURN_KEY``.
+    and return type of :py:data:`aerospike.MAP_RETURN_KEY`.
     See :meth:`map_remove_by_key_index_range_relative` for in-depth explanation.
 
     ::

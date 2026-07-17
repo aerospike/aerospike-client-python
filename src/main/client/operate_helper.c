@@ -771,7 +771,9 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
-
+    case OP_STRING_TO_STRING:
+        success = as_operations_to_string(ops, bin);
+        break;
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
             success = as_operations_map_remove_by_value_rel_rank_range(

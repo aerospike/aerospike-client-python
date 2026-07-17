@@ -473,6 +473,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
         [OP_STRING_REGEX_COMPARE] =
             EXP_SZ(as_exp_string_regex_compare_flags("", 0, NIL)),
+        [OP_STRING_TO_STRING] = EXP_SZ(as_exp_to_string(NIL)),
         [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
@@ -1914,6 +1915,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         }
         case OP_STRING_B64_DECODE:
             APPEND_ARRAY(1, as_exp_string_b64_decode(NIL));
+            break;
+        case OP_STRING_TO_STRING:
+            APPEND_ARRAY(1, as_exp_to_string(NIL));
             break;
         case OP_STRING_REGEX_REPLACE:
         case OP_STRING_REGEX_COMPARE: {
