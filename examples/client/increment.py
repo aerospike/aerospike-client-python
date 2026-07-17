@@ -16,112 +16,33 @@
 ##########################################################################
 
 
-
-import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Option Parsing
-##########################################################################
-
-usage = "usage: %prog [options] key"
-
-optparser.add_option(
-    "--gen", dest="gen", type="int", default=10, metavar="<GEN>",
-    help="Generation of the record being written.")
-
-optparser.add_option(
-    "--ttl", dest="ttl", type="int", default=1000, metavar="<TTL>",
-    help="TTL of the record being written.")
+from .. import ExampleWithRecord
 
 
-if len(args) != 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-        key = args.pop()
-
+class Increment(ExampleWithRecord):
+    def run(self):
         record = {
             'example_name': 'John',
             'example_age': 1
         }
 
-        meta = {'ttl': options.ttl, 'gen': options.gen}
+        # TODO: configurable
+        # TODO: deprecated
+        meta = {'ttl': 1000, 'gen': 10}
         policy = None
 
         # invoke operation
 
-        client.put((namespace, set, key), record, meta, policy)
+        self.client.put(self.key, record, meta, policy)
 
-        print("---")
-        print("OK, 1 record written.")
+        (returnedkey, meta, bins) = self.client.get(self.key)
 
-        (returnedkey, meta, bins) = client.get((namespace, set, key))
-
-        print("---")
         print("Before increment operation")
         print(bins)
 
-        client.increment((namespace, set, key), "example_age", 5, meta, policy)
-        print("---")
-        print("OK, 1 record touched.")
+        self.client.increment(self.key, "example_age", 5, meta, policy)
 
-        (returnedkey, meta, bins) = client.get((namespace, set, key))
+        (returnedkey, meta, bins) = self.client.get(self.key)
 
-        print("---")
         print("After increment operation")
         print(bins)
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

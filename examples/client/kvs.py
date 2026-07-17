@@ -17,39 +17,10 @@
 
 
 
-import aerospike
-import sys
+from .. import Example
 
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    config = {'hosts': [(options.host, options.port)]}
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
+class KVS(Example):
+    def run(self):
         print(
             '########################################################################')
         print('PUT')
@@ -66,7 +37,8 @@ try:
                 'm': {'a': 2, 'b': 4, 'c': 8, 'd': 16}
             }
             print(rec)
-            client.put(('test', 'demo', str(i)), rec)
+            KEY = ('test', 'demo', str(i))
+            self.client.put(KEY, rec)
 
         print(
             '########################################################################')
@@ -75,7 +47,8 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            (key, metadata) = client.exists(('test', 'demo', str(i)))
+            KEY = ('test', 'demo', str(i))
+            (key, metadata) = self.client.exists(KEY)
             print(key, metadata)
 
         print(
@@ -85,7 +58,8 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            (key, metadata, record) = client.get(('test', 'demo', str(i)))
+            KEY = ('test', 'demo', str(i))
+            (key, metadata, record) = self.client.get(KEY)
             print(key, metadata, record)
 
         print(
@@ -94,11 +68,11 @@ try:
         print(
             '########################################################################')
 
-        client.udf_put('simple.lua')
+        self.client.udf_put('simple.lua')
 
         for i in range(1, 1000):
             key = ('test', 'demo', 'key{0}'.format(i))
-            val1 = client.apply(key, 'simple', 'concat', ['a', 30000])
+            val1 = self.client.apply(key, 'simple', 'concat', ['a', 30000])
             print(val1)
 
         print(
@@ -108,24 +82,5 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            client.remove(('test', 'demo', str(i)))
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+            KEY = ('test', 'demo', str(i))
+            self.client.remove(KEY)

@@ -20,10 +20,22 @@ from .. import ExampleWithRecord
 
 
 # TODO: should use fixture with multiple records
-class ExistsMany(ExampleWithRecord):
+class BatchRead(ExampleWithRecord):
     def run(self):
         keys = [f"key{i}" for i in range(5)]
-        records = self.client.exists_many(keys)
+
+        # Get records
+        records = self.client.batch_read(keys)
+
+        if records != None:
+            print(f"{len(records)} records were found")
+            print(records)
+        else:
+            print('error: Not Found.')
+
+        # TODO: verify syntax
+        # Verify existence of records
+        records = self.client.batch_read(keys, bins=[])
 
         if records != None:
             print(f"{len(records)} records were found")

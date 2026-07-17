@@ -16,12 +16,7 @@
 ##########################################################################
 
 
-
-import aerospike
-import sys
-
-from optparse import OptionParser
-
+from .. import Example
 
 ##########################################################################
 # Options Parsing
@@ -29,59 +24,8 @@ from optparse import OptionParser
 
 usage = "usage: %prog"
 
-##########################################################################
-# Client Configuration
-##########################################################################
 
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-        response = client.get_nodes()
-
-        if response is not None:
-            print(response)
-            print("---")
-        else:
-            print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+class GetNodes(Example):
+    def run(self):
+        # TODO: Demonstrate different outcomes (i.e response is None or not)
+        response = self.client.get_nodes()

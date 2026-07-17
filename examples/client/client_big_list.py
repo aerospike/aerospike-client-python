@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 import argparse
+from .. import Example
 
 import aerospike
 from aerospike import exception as as_exceptions
@@ -66,7 +67,7 @@ class ASMetadataRecordTooLarge(Exception):
     pass
 
 
-class ClientSideBigList(object):
+class ClientSideBigList:
     '''
     Abstraction around an unbounded size list for Aerospike. Relies on a top level record
     containing metadata about subrecords. When a subrecord fills up, a new subrecord is created
@@ -323,61 +324,33 @@ class ClientSideBigList(object):
         # Instantiate the generator and return it.
         return sr_iter()
 
+class ClientSideBigListExample(Example):
+    def run(self):
+        '''
+        Simple tests demonstrating the functionality.
+        If the database is set up with a small enough write block-size, several subrecords
+        will be created.
+        '''
+        item_count = 1000
 
-def main():
-    '''
-    Simple tests demonstrating the functionality.
-    If the database is set up with a small enough write block-size, several subrecords
-    will be created.
-    '''
+        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        ldt = ClientSideBigList(client, 'person1_friends')
 
-    optparser = argparse.ArgumentParser()
+        for i in range(item_count):
+            # Store a reasonably large item
+            ldt.add_item('friend{}'.format(i) * 100)
 
-    optparser.add_argument(
-        "--host", type=str, default="127.0.0.1", metavar="<ADDRESS>",
-        help="Address of Aerospike server.")
+        print("Stored {} items".format(item_count))
 
-    optparser.add_argument(
-        "--port", type=int, default=3000, metavar="<PORT>",
-        help="Port of the Aerospike server.")
+        items = ldt.get_all_entries()
+        _, _, bins = ldt.get_metadata_record()
+        print(bins)
+        print("Known subrecord count is: {}".format(bins['sr_count']))
+        print("Fetched {} items:".format(len(items)))
 
-    optparser.add_argument(
-        "--namespace", type=str, default="test", metavar="<NS>",
-        help="Namespace to use for this example")
+        count = 0
+        for sr in ldt.subrecord_iterator():
+            if sr:
+                count = count + 1
 
-    optparser.add_argument(
-        "-s", "--set", type=str, default="demo", metavar="<SET>",
-        help="Set to use for this example")
-
-    optparser.add_argument(
-        "-i", "--items", type=int, default=1000, metavar="<ITEMS>",
-        help="Number of items to store into the big list")
-
-    options = optparser.parse_args()
-    print(options)
-
-    client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
-    ldt = ClientSideBigList(client, 'person1_friends')
-
-    for i in range(options.items):
-        # Store a reasonably large item
-        ldt.add_item('friend{}'.format(i) * 100)
-
-    print("Stored {} items".format(options.items))
-
-    items = ldt.get_all_entries()
-    _, _, bins = ldt.get_metadata_record()
-    print(bins)
-    print("Known subrecord count is: {}".format(bins['sr_count']))
-    print("Fetched {} items:".format(len(items)))
-
-    count = 0
-    for sr in ldt.subrecord_iterator():
-        if sr:
-            count = count + 1
-
-    print("Records yielded: {}".format(count))
-
-
-if __name__ == '__main__':
-    main()
+        print("Records yielded: {}".format(count))

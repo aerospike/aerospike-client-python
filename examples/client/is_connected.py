@@ -14,84 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+from .. import Example
 
 
-
-import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-
-if len(args) != 0:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-        if client.is_connected() == True:
+class IsConnected(Example):
+    def run(self):
+        # TODO: negative path where not connected, or exception raised was removed
+        if self.client.is_connected() is True:
             print("Connected to Aerospike DB.")
-
-    except Exception as xxx_todo_changeme:
-        (code, msg, file, line) = xxx_todo_changeme.args
-        if code == 1:
-            print("error: Connect failed")
-        else:
-            print(
-                "error: {0}".format((code, msg, file, line)), file=sys.stderr)
-            rc = 1
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

@@ -15,90 +15,15 @@
 # limitations under the License.
 ##########################################################################
 
-
-
+from .. import Example
 import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] bin index_name"
 
 
-optparser.add_option(
-    "-t", "--type", dest="type", type="string", default="string", metavar="<INDEX_TYPE>",
-    help="The type of index to create")
-
-
-if len(args) != 2:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-        args.reverse()
+class IndexCreate(Example):
+    def run(self):
         policy = {}
-        namespace = options.namespace
-        set = options.set
-        type = options.type
-        bin = args.pop()
-        index_name = args.pop()
+        # TODO: these are configurable
+        BIN_NAME = "a"
+        INDEX_DATATYPE = aerospike.INDEX_INTEGER
 
-        if type == 'string':
-            client.index_string_create(namespace, set, bin, index_name, policy)
-            print("OK, 1 Secondary Index Created ")
-        elif type == 'integer':
-            client.index_integer_create(
-                namespace, set, bin, index_name, policy)
-            print("OK, 1 Secondary Index Created ")
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+        self.client.index_single_value_create(self.namespace, self.set_name, BIN_NAME, INDEX_DATATYPE, "index_name", policy)

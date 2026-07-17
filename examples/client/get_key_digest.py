@@ -16,86 +16,11 @@
 ##########################################################################
 
 
-
+from .. import ExampleWithRecord
 import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] key"
 
 
-optparser.add_option(
-    "--timeout", dest="timeout", type="int", default=1000, metavar="<MS>",
-    help="Client timeout")
-
-(options, args) = optparser.parse_args()
-
-
-if len(args) != 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)],
-    'policies': {
-        'read': {'total_timeout': options.timeout}
-    }
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-        key = args.pop(0)
-
-        digest = aerospike.calc_digest(namespace, set, key)
-        print("---")
-        print("Digest is: ", digest)
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+class CalcDigest(ExampleWithRecord):
+    def run(self):
+        digest = aerospike.calc_digest(self.namespace, self.set_name, self.key)
+        print(digest)

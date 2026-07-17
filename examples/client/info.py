@@ -17,58 +17,17 @@
 
 
 
-import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] [REQUEST]"
+from .. import Example
 
 
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
+class Info(Example):
+    def run(self):
+        # Default info request
+        # TODO: configurable
         request = "statistics"
-        if len(args) > 0:
-            request = ' '.join(args)
 
-        for node, (err, res) in list(client.info_all(request).items()):
+        # TODO: needs review
+        for node, (err, res) in list(self.client.info_all(request).items()):
             if res is not None:
                 res = res.strip()
                 if len(res) > 0:
@@ -90,23 +49,3 @@ try:
                                     count += 1
                     else:
                         print("{0}: {1}".format(node, res))
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
