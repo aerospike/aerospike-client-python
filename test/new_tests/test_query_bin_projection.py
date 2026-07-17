@@ -17,6 +17,12 @@ class TestQueryBinProjection:
                 aerospike.Client.query
             ],
             indirect=True
+        ),
+        pytest.mark.parametrize(
+            "insert_records",
+            [
+                [500, False]
+            ]
         )
     ]
 
