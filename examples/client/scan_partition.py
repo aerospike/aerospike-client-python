@@ -15,69 +15,20 @@
 # limitations under the License.
 ##########################################################################
 
+from .. import Example
 
-import aerospike
-import sys
 
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser.add_option(
-    "-i", "--partition_id", dest="partition", type="int", default=0,
-    help="Partition id from where to scan.")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-
-        s = client.scan(namespace, set)
+class ScanPartition(Example):
+    def run(self):
+        s = self.client.scan(self.namespace, self.set_name)
 
         partition_policy = None
 
-        if options.partition > 0:
+        # TODO: configurable
+        STARTING_PARTITION = 1
+        if STARTING_PARTITION > 0:
             # project specified bins
-            partition_policy = {'partition_filter': {'begin': options.partition, 'count': 1}}
-            print(f'partition_id: {options.partition}')
+            partition_policy = {'partition_filter': {'begin': STARTING_PARTITION, 'count': 1}}
 
         records = []
 
@@ -87,19 +38,19 @@ try:
             records.append(record)
             print(record)
 
-        client.truncate('test', "demo", 0)
+        self.client.truncate(self.namespace, self.set_name, 0)
 
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback, partition_policy)
         existing_count = len(records)
         if existing_count > 0:
-            print(f"{existing_count} records are exist already in partition:{options.partition}.")
+            print(f"{existing_count} records already exist in partition: {STARTING_PARTITION}.")
 
         count = 0
         for i in range(1, 80000):
-            rec_partition = client.get_key_partition_id('test', 'demo', str(i))
+            rec_partition = self.client.get_key_partition_id(self.namespace, self.set_name, str(i))
 
-            if rec_partition == options.partition: # and not client.exists(('test', 'demo', str(i))):
+            if rec_partition == STARTING_PARTITION: # and not client.exists(('test', 'demo', str(i))):
 
                 count = count + 1
                 rec = {
@@ -108,32 +59,12 @@ try:
                     'l': [2, 4, 8, 16, 32, None, 128, 256],
                     'm': {'partition': rec_partition, 'b': 4, 'c': 8, 'd': 16}
                 }
-                client.put(('test', 'demo', str(i)), rec)
+                self.client.put((self.namespace, self.set_name, str(i)), rec)
 
         records.clear()
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback, partition_policy)
 
         print("---")
-        print(f"{count} records are put into partition:{options.partition}.")
-        print(f"{len(records)} records are found in partition:{options.partition}.")
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        rc = 1
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+        print(f"{count} records are put into partition: {STARTING_PARTITION}.")
+        print(f"{len(records)} records are found in partition: {STARTING_PARTITION}.")

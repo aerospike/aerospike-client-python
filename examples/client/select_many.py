@@ -20,91 +20,31 @@
 import aerospike
 import sys
 
-from optparse import OptionParser
 
 
-##########################################################################
-# Options Parsing
-##########################################################################
+# optparser.add_option(
+#     "-k", "--keys", dest="keys", type="string", default="", metavar="<KEYS>",
+#     help="Keys to be accessed in the database server. Should be specified as 'name','name1','name2' etc")
 
-usage = "usage: %prog [options]"
+from .. import Example
 
-optparser.add_option(
-    "-k", "--keys", dest="keys", type="string", default="", metavar="<KEYS>",
-    help="Keys to be accessed in the database server. Should be specified as 'name','name1','name2' etc")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
+class SelectMany(Example):
+    def run(self):
         # args.pop()
+        # TODO: configurable
+        keys = []
+        # keys = options.keys.split(',')
+        # keylist = []
+        # for key in keys:
+        #     individualkey = (namespace, set, key)
+        #     keylist.append(individualkey)
 
-        keys = options.keys.split(',')
-        keylist = []
-        for key in keys:
-            individualkey = (namespace, set, key)
-            keylist.append(individualkey)
-
-        records = client.select_many(keylist, ['i', 'd'])
+        records = self.client.select_many(keys, ['i', 'd'])
 
         if records is not None:
             print(records)
             print("---")
             print("OK, %d records found." % len(records))
         else:
+            # TODO: not sure if this is right
             print('error: Not Found.', file=sys.stderr)
-            exitCode = 1
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

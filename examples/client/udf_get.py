@@ -27,43 +27,6 @@ from optparse import OptionParser
 
 usage = "usage: %prog [options] module"
 
-(options, args) = optparser.parse_args()
-
-if len(args) != 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
         module = args.pop()
         language = aerospike.UDF_TYPE_LUA
         policy = {}

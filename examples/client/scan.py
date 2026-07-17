@@ -15,66 +15,17 @@
 # limitations under the License.
 ##########################################################################
 
+from .. import Example
 
-import aerospike
-import sys
 
-from optparse import OptionParser
+class Scan(Example):
+    def run(self):
+        s = self.client.scan(self.namespace, self.set_name)
 
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append",
-    help="Bins to select from each record.")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-
-        s = client.scan(namespace, set)
-
-        if options.bins and len(options.bins) > 0:
-            # project specified bins
-            s.select(*options.bins)
+        # TODO: configurable
+        bins = []
+        # project specified bins
+        s.select(*bins)
 
         records = []
 
@@ -87,28 +38,4 @@ try:
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback)
 
-        print("---")
-        if len(records) == 1:
-            print("OK, 1 record found.")
-        else:
-            print("OK, %d records found." % len(records))
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        rc = 1
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+        print("OK, %d records found." % len(records))

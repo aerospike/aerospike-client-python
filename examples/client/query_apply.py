@@ -22,7 +22,6 @@ import re
 import sys
 import os.path
 
-from optparse import OptionParser
 from aerospike import predicates as p
 
 ##########################################################################
@@ -60,48 +59,21 @@ optparser.add_option(
     help="If set, displays the metadata.")
 
 
-(options, args) = optparser.parse_args()
+from .. import Example
 
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-if len(args) > 1:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
 
 config = {
-    'hosts': [(options.host, options.port)],
     'lua': {
         'user_path': os.path.dirname(__file__)
     }
 }
 
-##########################################################################
-# Application
-##########################################################################
 
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect()
-
+class QueryApply(Example):
+    def run(self):
     # ----------------------------------------------------------------------------
     # Perform Operation
     # ----------------------------------------------------------------------------
-
-    try:
 
         query_id = 0
         re_bin = "(.{1,14})"
@@ -109,10 +81,7 @@ try:
         re_int_eq = "\s+=\s*(\d+)"
         re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
         re_w = re.compile("%s(?:%s|%s|%s)" %
-                          (re_bin, re_str_eq, re_int_eq, re_int_rg))
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
+                            (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
         q = None
 
@@ -130,31 +99,31 @@ try:
                     b = w.group(1)
                     v = w.group(2)
                     query_id = client.query_apply(options.namespace,
-                                                  options.set, p.equals(
-                                                      b, v), options.module,
-                                                  options.function, options.arguments)
+                                                    options.set, p.equals(
+                                                        b, v), options.module,
+                                                    options.function, options.arguments)
                 elif w.group(3):
                     b = w.group(1)
                     v = w.group(3)
                     query_id = client.query_apply(options.namespace,
-                                                  options.set, p.equals(
-                                                      b, v), options.module,
-                                                  options.function, options.arguments)
+                                                    options.set, p.equals(
+                                                        b, v), options.module,
+                                                    options.function, options.arguments)
                 elif w.group(4):
                     b = w.group(1)
                     v = int(w.group(4))
                     query_id = client.query_apply(options.namespace,
-                                                  options.set, p.equals(
-                                                      b, v), options.module,
-                                                  options.function, options.arguments)
+                                                    options.set, p.equals(
+                                                        b, v), options.module,
+                                                    options.function, options.arguments)
                 elif w.group(5) and w.group(6):
                     b = w.group(1)
                     l = int(w.group(5))
                     u = int(w.group(6))
                     query_id = client.query_apply(options.namespace,
-                                                  options.set, p.between(
-                                                      b, l, u), options.module,
-                                                  options.function, options.arguments)
+                                                    options.set, p.between(
+                                                        b, l, u), options.module,
+                                                    options.function, options.arguments)
 
         while True:
             response = client.job_info(query_id, aerospike.JOB_QUERY)
@@ -165,24 +134,3 @@ try:
             print("Background query is successful")
         else:
             print("Query_apply failed")
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

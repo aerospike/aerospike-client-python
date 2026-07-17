@@ -49,43 +49,21 @@ if len(args) < 1:
     print()
     sys.exit(1)
 
-##########################################################################
-# Client Configuration
-##########################################################################
+from .. import ExampleWithRecord
 
-config = {
-    'hosts': [(options.host, options.port)]
-}
 
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
+class SelectRecord(ExampleWithRecord):
+    def run(self):
+        # TODO: both configurable
         key = args.pop(0)
+        bins = []
+
         policy = None
 
         print(args)
 
-        (key, metadata, record) = client.select(
-            (namespace, set, key), args, policy)
+        (key, metadata, record) = self.client.select(
+            (self.namespace, self.set_name, key), bins, policy)
 
         if metadata is not None:
             if options.nometadata and options.nokey:
@@ -99,25 +77,6 @@ try:
             print("---")
             print("OK, 1 record found.")
         else:
+            # TODO: not sure if this is right.
             print('error: Not Found.', file=sys.stderr)
             exitCode = 1
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

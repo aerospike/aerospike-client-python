@@ -35,25 +35,6 @@ import time
 from optparse import OptionParser
 from aerospike import exception as e
 
-##########################################################################
-# Option Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# CONSTANTS
-##########################################################################
-
 TTL_DEFAULT = 10
 TTL_MAX = 20
 TTL_NO_EXPIRE = -1
