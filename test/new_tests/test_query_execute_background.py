@@ -41,6 +41,11 @@ def validate_records(client, keys, validator):
 
 
 
+@pytest.mark.parametrize(
+    "insert_records",
+    [[500, False]],
+    indirect=True
+)
 class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the

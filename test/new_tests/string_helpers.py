@@ -1,10 +1,7 @@
-from .conftest import KEYS
 import unicodedata
 import pytest
 from aerospike_helpers.string_helpers import StringPolicy
 
-
-KEY = KEYS[0]
 
 NON_STR_BIN_NAME = INT_BIN_NAME = "nonstr"
 STR_BIN_NAME = "str"

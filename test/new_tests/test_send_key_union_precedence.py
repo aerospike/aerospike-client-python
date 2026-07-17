@@ -1,17 +1,14 @@
 import pytest
 from .test_base_class import TestBaseClass
 import aerospike
-from .conftest import KEYS, BIN_NAME, expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH, WRITE_OPS
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH, WRITE_OPS
 from aerospike_helpers.operations import operations
 import os
 
 
-KEY = KEYS[0]
-
-
 @pytest.mark.parametrize(
     "insert_records",
-    [1],
+    [[1, True]],
     indirect=True
 )
 @pytest.mark.usefixtures("insert_records")
@@ -36,7 +33,7 @@ class TestSendKeyUnionPrecedence:
     def test_client_config_overrides_command_level_write_policy(self):
         client = aerospike.client(self.config)
 
-        client.put(KEY, bins={BIN_NAME: "a"}, policy={"key": aerospike.POLICY_KEY_DIGEST})
+        client.put(self.keys[0], bins={BIN_NAME: "a"}, policy={"key": aerospike.POLICY_KEY_DIGEST})
 
         expect_records_to_have_user_key_stored(client)
 
@@ -45,7 +42,7 @@ class TestSendKeyUnionPrecedence:
         client = aerospike.client(self.config)
 
         ops = WRITE_OPS
-        client.operate(KEY, ops, policy={"key": aerospike.POLICY_KEY_DIGEST})
+        client.operate(self.keys[0], ops, policy={"key": aerospike.POLICY_KEY_DIGEST})
 
         expect_records_to_have_user_key_stored(client)
 
@@ -55,7 +52,7 @@ class TestSendKeyUnionPrecedence:
     def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 
-        client.apply(KEY, "query_apply", "mark_as_applied_one_arg", ["a"], policy={"key": aerospike.POLICY_KEY_DIGEST})
+        client.apply(self.keys[0], "query_apply", "mark_as_applied_one_arg", ["a"], policy={"key": aerospike.POLICY_KEY_DIGEST})
 
         expect_records_to_have_user_key_stored(client)
 
@@ -66,7 +63,7 @@ class TestSendKeyUnionPrecedence:
         ops = [
             operations.write(BIN_NAME, "a")
         ]
-        client.batch_operate([KEY], ops, policy_batch_write={"key": aerospike.POLICY_KEY_DIGEST})
+        client.batch_operate([self.keys[0]], ops, policy_batch_write={"key": aerospike.POLICY_KEY_DIGEST})
 
         expect_records_to_have_user_key_stored(client)
 
@@ -74,6 +71,6 @@ class TestSendKeyUnionPrecedence:
     def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 
-        client.batch_apply([KEY], "query_apply", "mark_as_applied_one_arg", ["a"], policy_batch_apply={"key": aerospike.POLICY_KEY_DIGEST})
+        client.batch_apply([self.keys[0]], "query_apply", "mark_as_applied_one_arg", ["a"], policy_batch_apply={"key": aerospike.POLICY_KEY_DIGEST})
 
         expect_records_to_have_user_key_stored(client)

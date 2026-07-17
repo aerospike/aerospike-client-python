@@ -270,23 +270,27 @@ TEST_SET = "demo"
 BIN_NAME = "number"
 MAP_BIN_NAME = "map"
 
-# TODO: scale down tests maybe
-KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
 expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
 def insert_records(request, as_connection):
-    if hasattr(request, "param") and isinstance(request.param, int):
-        num_keys = request.param
+
+    num_keys, make_set_unique = request.param
+
+    if make_set_unique:
+        unique_set = f"{TEST_SET}-{time.time()}"
+        request.cls.unique_set = unique_set
     else:
-        num_keys = len(KEYS)
+        unique_set = TEST_SET
+
+    keys = [(TEST_NS, unique_set, i) for i in range(num_keys)]
+    request.cls.keys = keys
 
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
-    KEYS_TO_INSERT = KEYS[:num_keys]
 
-    for i, key in enumerate(KEYS_TO_INSERT):
+    for i, key in enumerate(keys):
         ops = [
             operations.write(BIN_NAME, i),
             operations.write(MAP_BIN_NAME, {"a": i})
@@ -294,11 +298,12 @@ def insert_records(request, as_connection):
         br = Write(key, ops=ops)
         batch_records.append(br)
         expected_number_bin_values.add(i)
+
     as_connection.batch_write(brs)
 
     yield
 
-    as_connection.batch_remove(KEYS_TO_INSERT)
+    as_connection.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client):
     query = client.query("test", "demo")
