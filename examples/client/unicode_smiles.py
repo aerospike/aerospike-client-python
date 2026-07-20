@@ -17,68 +17,33 @@
 
 
 
+from .. import Example
 import aerospike
-import sys
 
-from optparse import OptionParser
-from aerospike import exception as e
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-
-optparser.add_option(
-    "--timeout", dest="timeout", type="int", default=1000, metavar="<MS>",
-    help="Client timeout")
-
-optparser.add_option(
-    "--read-timeout", dest="read_timeout", type="int", default=1000, metavar="<MS>",
-    help="Client read timeout")
-
-
-##########################################################################
-# Application
-##########################################################################
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    config = {
-        'hosts': [(options.host, options.port)],
-        'policies': {
-            'total_timeout': options.timeout
-        }
+config = {
+    'policies': {
+        # TODO: configurable
+        'total_timeout': 1000
     }
-    client = aerospike.client(config).connect(
-        options.username, options.password)
+}
 
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
 
-    try:
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
+class UnicodeSmiles(Example):
+    def run(self):
         smile = u"smilé"
+        # TODO: configurable
+        read_timeout = 1000
 
-        key = (namespace, set, smile)
+        key = (self.namespace, self.set_name, smile)
         bins = {'smiley': smile, 'smile_count': 1, 'mood': 'happy'}
         print("Storing ", bins, "at a record identified by the tuple", key)
         # overwrite the record if it exists, otherwise create it
-        client.put(key, bins,
+        self.client.put(key, bins,
                    policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
                            'key': aerospike.POLICY_KEY_SEND})
         print("Retrieving the record from the server for comparison")
-        (key, meta, record) = client.get(
-            key, policy={'total_timeout': options.read_timeout})
+        (key, meta, record) = self.client.get(
+            key, policy={'total_timeout': read_timeout})
         print("The value of the 'smiley' bin is", record['smiley'], "\n")
         print("By the way, this record has been written", meta['gen'], "times")
         future_gen = str(int(meta['gen']) + 2)
@@ -88,8 +53,8 @@ try:
         # add a dictionary under a bin named 'data'
         bins = {'data': {'smiley_key': smile, smile: 'this is a smiley '}}
         print("Storing ", bins, "at the record", key)
-        client.put(key,  bins)
-        (key, metadata, bins) = client.get(key)
+        self.client.put(key,  bins)
+        (key, metadata, bins) = self.client.get(key)
         print("The value of the 'smiley_key' of the 'data' bin is",
               bins['data']['smiley_key'], "\n")
         # print("The value of the", smile, " key is:",
@@ -98,16 +63,16 @@ try:
         # append to the value of the smile key
         print("Before appending, the value of the 'mood' key is:",
               bins['mood'])
-        client.append(key, 'mood', smile)
-        (key, metadata, bins) = client.get(key)
+        self.client.append(key, 'mood', smile)
+        (key, metadata, bins) = self.client.get(key)
         print("After appending, the value of the 'mood' key is:",
               bins['mood'], "\n")
 
         # prepend to the value of the smile key
         print("Before prepending, the value of the 'mood' key is:",
               bins['mood'])
-        client.prepend(key, 'mood', smile)
-        (key, metadata, bins) = client.get(key)
+        self.client.prepend(key, 'mood', smile)
+        (key, metadata, bins) = self.client.get(key)
         print("After prepending, the value of the 'mood' key is:",
               bins['mood'], "\n")
 
@@ -116,45 +81,23 @@ try:
                {'bin': 'smile_count', 'op': aerospike.OPERATOR_INCR, 'val': 5},
                {'bin': 'smiley', 'op': aerospike.OPERATOR_READ}]
         print("Setting the following multiops on the same record\n", ops)
-        (key, meta, bins) = client.operate(key, ops)
+        (key, meta, bins) = self.client.operate(key, ops)
         print("The value of the 'smiley' bin is", bins['smiley'], "\n")
 
         print("Displaying the key, metadata, and bins of the record")
-        (key, meta, bins) = client.get(key)
+        (key, meta, bins) = self.client.get(key)
         print(key)
         print(meta)
         print(bins, "\n")
-        client.remove(key)
+        self.client.remove(key)
 
         # example of a bytearray primary key
         print("Save a new record with a bytearray primary key")
         smiley_pk = smile.encode("utf-8")
-        client.put((namespace, set, smiley_pk), {'smiley': smile, 'smiley_pk':
+        self.client.put((self.namespace, self.set_name, smiley_pk), {'smiley': smile, 'smiley_pk':
                                                  smiley_pk})
         print("Display the bins of a record with a bytearray key")
-        (key, meta, bins) = client.get((namespace, set, smiley_pk))
+        (key, meta, bins) = self.client.get((self.namespace, self.set_name, smiley_pk))
         print(bins)
         print("The value of the 'smiley_pk' bin is", bins['smiley_pk'], "\n")
-        client.remove(key)
-        exitCode = 0
-    except Exception as exception:
-        print("error: {0}".format(exception), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except e.ClientError as exception:
-    print("Error: {0} [{1}]".format(exception.msg, exception.code))
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
-
-#
+        self.client.remove(key)

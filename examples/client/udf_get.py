@@ -15,43 +15,18 @@
 # limitations under the License.
 ##########################################################################
 
-
+from .. import Example
 import aerospike
-import sys
 
-from optparse import OptionParser
 
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] module"
-
-        module = args.pop()
+class UDFGet(Example):
+    def run(self):
+        # TODO: configurable
+        module = "a"
         language = aerospike.UDF_TYPE_LUA
         policy = {}
 
-        client.udf_put(module, language, policy)
-        udf_contents = client.udf_get(module, language, policy)
+        self.client.udf_put(module, language, policy)
+        udf_contents = self.client.udf_get(module, language, policy)
         print("Module contents : ")
         print(udf_contents)
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
