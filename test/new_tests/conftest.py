@@ -284,12 +284,12 @@ def insert_records(request, as_connection):
     num_keys, make_set_unique = request.param
 
     if make_set_unique:
-        unique_set = f"{TEST_SET}-{time.time()}"
-        request.cls.unique_set = unique_set
+        set_name = f"{TEST_SET}-{time.time()}"
+        request.cls.unique_set = set_name
     else:
-        unique_set = TEST_SET
+        set_name = TEST_SET
 
-    keys = [(TEST_NS, unique_set, i) for i in range(num_keys)]
+    keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
 
     batch_records = []
