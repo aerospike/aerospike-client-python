@@ -22,7 +22,8 @@ class TestQueryBinProjection:
             "insert_records",
             [
                 [500, False]
-            ]
+            ],
+            indirect=True
         )
     ]
 

@@ -276,6 +276,8 @@ expected_number_bin_values = set()
 @pytest.fixture(scope="function")
 def insert_records(request, as_connection):
 
+    # Some tests don't make use of unique sets,
+    # so we leave this alone for backwards compatibility
     num_keys, make_set_unique = request.param
 
     if make_set_unique:
