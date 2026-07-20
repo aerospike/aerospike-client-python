@@ -12,24 +12,24 @@ import os
     indirect=True
 )
 @pytest.mark.usefixtures("insert_records")
-@pytest.mark.parametrize("override_dynamic_config", [False, True])
 class TestSendKeyUnionPrecedence:
     @pytest.fixture(autouse=True)
-    def set_key_option(self, request, override_dynamic_config: bool):
+    def set_key_option(self, request):
         self.config = TestBaseClass.get_connection_config()
+        policy_name, override_dynamic_config = request.param
         if override_dynamic_config:
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
-            if request.param not in self.config["policies"]:
-                self.config["policies"][request.param] = {}
-            self.config["policies"][request.param]["key"] = True
+            if policy_name not in self.config["policies"]:
+                self.config["policies"][policy_name] = {}
+            self.config["policies"][policy_name]["key"] = True
 
         yield
 
         if override_dynamic_config:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
-    @pytest.mark.parametrize("set_key_option", ["write"], indirect=True)
+    @pytest.mark.parametrize("set_key_option", [("write", False), ("write", True)], indirect=True)
     def test_client_config_overrides_command_level_write_policy(self):
         client = aerospike.client(self.config)
 
@@ -37,7 +37,7 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, self.set_name)
 
-    @pytest.mark.parametrize("set_key_option", ["operate"], indirect=True)
+    @pytest.mark.parametrize("set_key_option", [("operate", False)], indirect=True)
     def test_client_config_overrides_command_level_operate_policy(self):
         client = aerospike.client(self.config)
 
@@ -48,7 +48,7 @@ class TestSendKeyUnionPrecedence:
 
     udf_to_load = "query_apply.lua"
 
-    @pytest.mark.parametrize("set_key_option", ["apply"], indirect=True)
+    @pytest.mark.parametrize("set_key_option", [("apply", False)], indirect=True)
     def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 
@@ -56,7 +56,7 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, self.set_name)
 
-    @pytest.mark.parametrize("set_key_option", ["batch_write"], indirect=True)
+    @pytest.mark.parametrize("set_key_option", [("batch_write", False), ("batch_write", True)], indirect=True)
     def test_client_config_overrides_command_level_batch_write_policy(self):
         client = aerospike.client(self.config)
 
@@ -67,7 +67,7 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, self.set_name)
 
-    @pytest.mark.parametrize("set_key_option", ["batch_apply"], indirect=True)
+    @pytest.mark.parametrize("set_key_option", [("batch_apply", False)], indirect=True)
     def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 
