@@ -9,8 +9,8 @@ from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
-KEY = ("test", "demo", 1)
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET
+KEY = (TEST_NS, TEST_SET, 1)
 
 
 class TestExpressions:
