@@ -35,7 +35,7 @@ class TestSendKeyUnionPrecedence:
 
         client.put(self.keys[0], bins={BIN_NAME: "a"}, policy={"key": aerospike.POLICY_KEY_DIGEST})
 
-        expect_records_to_have_user_key_stored(client)
+        expect_records_to_have_user_key_stored(client, self.set_name)
 
     @pytest.mark.parametrize("set_key_option", ["operate"], indirect=True)
     def test_client_config_overrides_command_level_operate_policy(self):
@@ -44,7 +44,7 @@ class TestSendKeyUnionPrecedence:
         ops = WRITE_OPS
         client.operate(self.keys[0], ops, policy={"key": aerospike.POLICY_KEY_DIGEST})
 
-        expect_records_to_have_user_key_stored(client)
+        expect_records_to_have_user_key_stored(client, self.set_name)
 
     udf_to_load = "query_apply.lua"
 
@@ -54,7 +54,7 @@ class TestSendKeyUnionPrecedence:
 
         client.apply(self.keys[0], "query_apply", "mark_as_applied_one_arg", ["a"], policy={"key": aerospike.POLICY_KEY_DIGEST})
 
-        expect_records_to_have_user_key_stored(client)
+        expect_records_to_have_user_key_stored(client, self.set_name)
 
     @pytest.mark.parametrize("set_key_option", ["batch_write"], indirect=True)
     def test_client_config_overrides_command_level_batch_write_policy(self):
@@ -65,7 +65,7 @@ class TestSendKeyUnionPrecedence:
         ]
         client.batch_operate([self.keys[0]], ops, policy_batch_write={"key": aerospike.POLICY_KEY_DIGEST})
 
-        expect_records_to_have_user_key_stored(client)
+        expect_records_to_have_user_key_stored(client, self.set_name)
 
     @pytest.mark.parametrize("set_key_option", ["batch_apply"], indirect=True)
     def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
@@ -73,4 +73,4 @@ class TestSendKeyUnionPrecedence:
 
         client.batch_apply([self.keys[0]], "query_apply", "mark_as_applied_one_arg", ["a"], policy_batch_apply={"key": aerospike.POLICY_KEY_DIGEST})
 
-        expect_records_to_have_user_key_stored(client)
+        expect_records_to_have_user_key_stored(client, self.set_name)

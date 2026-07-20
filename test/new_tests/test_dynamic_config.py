@@ -91,7 +91,7 @@ class TestDynamicConfig:
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
-        expect_records_to_have_user_key_stored(self.client)
+        expect_records_to_have_user_key_stored(self.client, set_name="demo")
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()

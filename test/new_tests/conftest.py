@@ -285,10 +285,10 @@ def insert_records(request, as_connection):
 
     if make_set_unique:
         set_name = f"{TEST_SET}-{time.time()}"
-        request.cls.unique_set = set_name
     else:
         set_name = TEST_SET
 
+    request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
 
@@ -310,8 +310,8 @@ def insert_records(request, as_connection):
 
     as_connection.batch_remove(keys)
 
-def expect_records_to_have_user_key_stored(client: aerospike.Client):
-    query = client.query("test", "demo")
+def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
+    query = client.query(TEST_NS, set_name)
     recs = query.results()
 
     # Check that record key tuple has the user key
