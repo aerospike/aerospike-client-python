@@ -308,7 +308,8 @@ def insert_records(request, as_connection):
 
     yield
 
-    as_connection.batch_remove(keys)
+    if make_set_unique is False:
+        as_connection.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
     query = client.query(TEST_NS, set_name)
