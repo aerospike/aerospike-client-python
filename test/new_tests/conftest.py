@@ -284,7 +284,7 @@ def insert_records(request, as_connection):
     num_keys, make_set_unique = request.param
 
     if make_set_unique:
-        set_name = f"{TEST_SET}-{time.time()}"
+        set_name = f"{TEST_SET}-{time.time_ns()}"
     else:
         set_name = TEST_SET
 
