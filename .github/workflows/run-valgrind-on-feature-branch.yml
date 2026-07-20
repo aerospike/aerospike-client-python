@@ -24,9 +24,6 @@ on:
         required: false
         default: false
 
-env:
-  PYTHON_VERSION: '3.10'
-
 jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
@@ -48,13 +45,3 @@ jobs:
       run-with-valgrind: true
       run-valgrind-with-massif: ${{ inputs.massif }}
     secrets: inherit
-
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: [
-      # These jobs must have downloaded the artifact from Github before we can delete it
-      valgrind
-    ]
-    # Workflow run must clean up after itself even if cancelled
-    if: ${{ always() }}
-    uses: ./.github/workflows/delete-artifacts.yml
