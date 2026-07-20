@@ -276,8 +276,11 @@ expected_number_bin_values = set()
 @pytest.fixture(scope="function")
 def insert_records(request, as_connection):
 
-    # Some tests don't make use of unique sets,
+    # - Some tests don't make use of unique sets,
     # so we leave this alone for backwards compatibility
+    # - make_set_unique ensures that if a test case's cleanup stage fails to run
+    # e.g when the test case's setup fixture fails out,
+    # that test case's records does not interfere with future test cases that need to perform a query
     num_keys, make_set_unique = request.param
 
     if make_set_unique:
