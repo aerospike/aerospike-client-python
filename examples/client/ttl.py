@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ from aerospike import exception as e
 
 TTL_DEFAULT = 10
 TTL_MAX = 20
+# TODO: is there an aerospike constant for this?
 TTL_NO_EXPIRE = -1
 
 
@@ -53,46 +54,33 @@ PARAMS_SERVICE = [[('nsup-period', 1)]]
 # and does not trigger the "greater than max ttl" warning.
 # Also, we'll check that one of our records DOES trigger the Max TTL warning
 # with a TTL of greater than 20.
+# TODO: max-ttl removed in aerospike 5.0
 PARAMS_NAMESPACE = [[('default-ttl', TTL_DEFAULT), ('max-ttl', TTL_MAX)]]
 
+AS_POLICY_W_RETRY = "retry"
+
+# TODO: needs to be updated
 # Write Policy names and related values
 AS_POLICY_W_TIMEOUT = "timeout"
 
-AS_POLICY_W_RETRY = "retry"
-AS_POLICY_RETRY_UNDEF = 0  # Use Default value
-AS_POLICY_RETRY_NONE = 1  # No retry
-AS_POLICY_RETRY_ONCE = 2  # Retry Once
-
 AS_POLICY_W_KEY = "key"
-AS_POLICY_KEY_UNDEF = 0  # If set, then the value will default to either
-# as_config.policies.key or `AS_POLICY_KEY_DEFAULT`.
-AS_POLICY_KEY_DIGEST = 1  # Send the digest value of the key.
-AS_POLICY_KEY_SEND = 2  # Send the key, but do not store it.
+# TODO: don't know what this is for...
 AS_POLICY_KEY_STORE = 3  # Store the key (NOT YET IMPLEMENTED)
 
 AS_POLICY_W_GEN = "generation"
-AS_POLICY_GEN_UNDEF = 0  # Use default value
-AS_POLICY_GEN_IGNORE = 1  # Write a record, regardless of generation.
-AS_POLICY_GEN_EQ = 2  # Write a record, ONLY if generations are equal
-AS_POLICY_GEN_GT = 3  # Write a record, ONLY if local generation is
-# greater-than remote generation.
+# TODO: verify this works?
 AS_POLICY_GEN_DUP = 4  # Write a record creating a duplicate, ONLY if
 # the generation collides (?)
 
 AS_POLICY_W_EXISTS = "exists"
-AS_POLICY_EXISTS_UNDEF = 0  # Use default value
-AS_POLICY_EXISTS_IGNORE = 1  # Write the record, regardless of existence.
-AS_POLICY_EXISTS_CREATE = 2  # Create a record, ONLY if it doesn't exist.
-# Update a record, ONLY if it exist (NOT YET IMPL).
-AS_POLICY_EXISTS_UPDATE = 3
 
 # Setup write policy
 wr_policy = {
     AS_POLICY_W_TIMEOUT: 5000,
-    AS_POLICY_W_RETRY:   AS_POLICY_RETRY_NONE,
-    AS_POLICY_W_KEY:     AS_POLICY_KEY_DIGEST,
-    AS_POLICY_W_GEN:     AS_POLICY_GEN_IGNORE,
-    AS_POLICY_W_EXISTS:  AS_POLICY_EXISTS_IGNORE
+    AS_POLICY_W_RETRY:   aerospike.POLICY_RETRY_NONE,
+    AS_POLICY_W_KEY:     aerospike.POLICY_KEY_DIGEST,
+    AS_POLICY_W_GEN:     aerospike.POLICY_GEN_IGNORE,
+    AS_POLICY_W_EXISTS:  aerospike.POLICY_EXISTS_IGNORE
 }
 
 BASE_KEY_RANGE = list(range(1, 11))
@@ -102,29 +90,13 @@ SPECIAL_KEYS = {
          'desc': '5 sec TTL'},
     40: {'ttl': 15,
          'desc': '15 sec TTL'},
-    60: {'ttl': TTL_NO_EXPIRE,
+    60: {'ttl': aerospike.TTL_NEVER_EXPIRE,
          'desc': 'NO_EXPIRE TTL'},
     80: {'ttl': TTL_MAX + 1,
          'desc': 'Larger than MAX TTL'}
 }
 
 KEYS = BASE_KEY_RANGE + list(SPECIAL_KEYS.keys())
-
-##########################################################################
-# Connect to Cluster
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-print('Connect to Server: ', config)
-client = aerospike.client(config).connect(options.username, options.password)
-
-##########################################################################
-# Perform Operation
-##########################################################################
-
 
 def test_params_for_stanza(p, contx, is_namespace):
     for t in p:

@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,17 +25,8 @@ class Append(Example):
             'example_name': 'John',
             'example_age': 1
         }
+        self.client.put(self.key, record)
 
-        # TODO meta gen/ttl should be options?
-        meta = {
-            'gen': 10
-        }
-        policy = {
-            'ttl': 1000
-        }
-        self.client.put(self.key, record, meta, policy)
-
-        self.client.append(
-            self.key, "example_name", " Smith", meta, policy)
-        (key, meta, bins) = self.client.get(self.key)
+        self.client.append(self.key, "example_name", " Smith")
+        _, _, bins = self.client.get(self.key)
         print(bins)

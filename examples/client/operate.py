@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ class Operate(Example):
             'example_age': 1
         }
 
-        meta = {'ttl': 1000, 'gen': 10}
-        policy = None
-        self.client.put(self.key, record, meta, policy)
+        self.client.put(self.key, record)
 
         _, _, bins = self.client.get(self.key)
         print("Before operation:", bins)
@@ -39,7 +37,7 @@ class Operate(Example):
             op_helpers.increment("example_age", 3),
             op_helpers.read("example_name")
         ]
-        _, _, bins = self.client.operate(self.key, ops, meta, policy)
+        _, _, bins = self.client.operate(self.key, ops)
         print("Record returned by operate():", bins)
 
         _, _, bins = self.client.get(self.key)

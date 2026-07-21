@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,40 +16,21 @@
 ##########################################################################
 
 
-import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Option Parsing
-##########################################################################
-
-# TODO: ttl/gen configurable
-
 from .. import ExampleWithRecord
 
 
 class Touch(ExampleWithRecord):
     def run(self):
-        # TODO configurable
-        key = args.pop()
-
-        meta = {'ttl': options.ttl, 'gen': options.gen}
-        policy = None
-
-        (returnedkey, meta) = self.client.exists(self.key)
+        _, meta = self.client.exists(self.key)
 
         print("---")
-        print("Ttl before touch operation")
+        print("TTL before touch operation")
         print(meta)
 
-        self.client.touch(self.key, options.ttl + 1000, meta, policy)
-        print("---")
-        print("OK, 1 record touched.")
+        self.client.touch(self.key, meta["ttl"] + 1000)
 
-        (returnedkey, meta) = self.client.exists(self.key)
+        _, meta = self.client.exists(self.key)
 
         print("---")
-        print("Ttl after touch operation")
+        print("TTL after touch operation")
         print(meta)

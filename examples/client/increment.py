@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,23 +26,18 @@ class Increment(ExampleWithRecord):
             'example_age': 1
         }
 
-        # TODO: configurable
-        # TODO: deprecated
-        meta = {'ttl': 1000, 'gen': 10}
-        policy = None
-
         # invoke operation
 
-        self.client.put(self.key, record, meta, policy)
+        self.client.put(self.key, record)
 
-        (returnedkey, meta, bins) = self.client.get(self.key)
+        _, _, bins = self.client.get(self.key)
 
         print("Before increment operation")
         print(bins)
 
-        self.client.increment(self.key, "example_age", 5, meta, policy)
+        self.client.increment(self.key, "example_age", 5)
 
-        (returnedkey, meta, bins) = self.client.get(self.key)
+        _, _, bins = self.client.get(self.key)
 
         print("After increment operation")
         print(bins)

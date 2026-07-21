@@ -2,7 +2,7 @@ from .. import Example
 
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,4 @@ class Put(Example):
             'l': [123, 'abc', '안녕하세요', ['x', 'y', 'z'], {'x': 1, 'y': 2, 'z': 3}],
             'm': {'i': 123, 's': 'abc', 'u': '안녕하세요', 'l': ['x', 'y', 'z'], 'd': {'x': 1, 'y': 2, 'z': 3}}
         }
-        # TODO: should TTL and gen be configurable?
-        meta = {'ttl': 1000, 'gen': 5}
-        policy = None
-        self.client.put(self.key, record, meta, policy)
+        self.client.put(self.key, record)

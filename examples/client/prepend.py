@@ -1,6 +1,6 @@
 
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,12 +26,8 @@ class Prepend(Example):
             'example_age': 1
         }
 
-        # TODO: should this be configurable?
-        meta = {'ttl': 1000, 'gen': 10}
-        policy = None
+        self.client.put(self.key, record)
 
-        self.client.put(self.key, record, meta, policy)
-
-        self.client.prepend(self.key, "example_name", "Mr ", meta, policy)
-        (key, meta, bins) = self.client.get(self.key)
+        self.client.prepend(self.key, "example_name", "Mr ")
+        _, _, bins = self.client.get(self.key)
         print(bins)
