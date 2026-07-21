@@ -59,31 +59,30 @@ def parse_arg(s):
     except ValueError:
         return s
 
-try:
+from .. import Example
 
-    args.reverse()
 
-    module = options.module
-    function = options.function
+class ScanApply(Example):
+    def run(self):
+        # args.reverse()
 
-    for i, param in enumerate(options.arguments):
-        if param.isdigit():
-            options.arguments[i] = int(param)
+        module = options.module
+        function = options.function
 
-    policy = {}
-    scan_id = client.scan_apply(
-        namespace, set, module, function, options.arguments, policy)
+        for i, param in enumerate(options.arguments):
+            if param.isdigit():
+                options.arguments[i] = int(param)
 
-    while True:
-        response = client.job_info(scan_id, aerospike.JOB_SCAN)
+        policy = {}
+        scan_id = client.scan_apply(
+            namespace, set, module, function, options.arguments, policy)
+
+        while True:
+            response = client.job_info(scan_id, aerospike.JOB_SCAN)
+            if response['status'] == aerospike.JOB_STATUS_COMPLETED:
+                break
+
         if response['status'] == aerospike.JOB_STATUS_COMPLETED:
-            break
-
-    if response['status'] == aerospike.JOB_STATUS_COMPLETED:
-        print("Background scan is successful")
-    else:
-        print("Scan_apply failed")
-
-except Exception as e:
-    print("error: {0}".format(e), file=sys.stderr)
-    rc = 1
+            print("Background scan is successful")
+        else:
+            print("Scan_apply failed")

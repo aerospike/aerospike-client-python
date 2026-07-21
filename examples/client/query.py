@@ -16,58 +16,52 @@
 ##########################################################################
 
 
-import aerospike
 import re
 import sys
 import os.path
 
 from optparse import OptionParser
 from aerospike import predicates as p
+from .. import Example
 
-##########################################################################
-# Option Parsing
-##########################################################################
+# optparser.add_option(
+#     "-m", "--module", dest="module", type="string",
+#     help="UDF Module.")
 
-optparser.add_option(
-    "-m", "--module", dest="module", type="string",
-    help="UDF Module.")
+# optparser.add_option(
+#     "-f", "--function", dest="function", type="string",
+#     help="UDF Function.")
 
-optparser.add_option(
-    "-f", "--function", dest="function", type="string",
-    help="UDF Function.")
+# optparser.add_option(
+#     "-a", "--arg", dest="arguments", action="append", type="string",
+#     help="UDF Arguments.")
 
-optparser.add_option(
-    "-a", "--arg", dest="arguments", action="append", type="string",
-    help="UDF Arguments.")
+# optparser.add_option(
+#     "-b", "--bins", dest="bins", type="string", action="append",
+#     help="Bins to select from each record.")
 
-optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append",
-    help="Bins to select from each record.")
+# optparser.add_option(
+#     "--show-key", dest="show_key", action="store_true",
+#     help="If set, displays the key/digest.")
 
-optparser.add_option(
-    "--show-key", dest="show_key", action="store_true",
-    help="If set, displays the key/digest.")
-
-optparser.add_option(
-    "--show-meta", dest="show_meta", action="store_true",
-    help="If set, displays the metadata.")
+# optparser.add_option(
+#     "--show-meta", dest="show_meta", action="store_true",
+#     help="If set, displays the metadata.")
 
 config = {
     'lua': {
         'user_path': os.path.dirname(__file__)
     }
 }
-    try:
 
+class Query(Example):
+    def run(self):
         re_bin = "(.{1,14})"
         re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
         re_int_eq = "\s+=\s*(\d+)"
         re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
         re_w = re.compile("%s(?:%s|%s|%s)" %
                           (re_bin, re_str_eq, re_int_eq, re_int_rg))
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
 
         q = None
 
@@ -134,24 +128,3 @@ config = {
             print("OK, 1 result found.")
         else:
             print("OK, %d results found." % len(results))
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)

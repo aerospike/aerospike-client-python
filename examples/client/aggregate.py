@@ -16,14 +16,13 @@
 ##########################################################################
 
 
-import aerospike
 import json
 import re
-import sys
 import os.path
 
 from optparse import OptionParser
 from aerospike import predicates as p
+from .. import Example
 
 ##########################################################################
 # Option Parsing
@@ -63,54 +62,57 @@ re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
 re_w = re.compile("%s(?:%s|%s|%s)" %
                     (re_bin, re_str_eq, re_int_eq, re_int_rg))
 
-args.reverse()
-where = args.pop()
-module = args.pop()
-function = args.pop()
+# args.reverse()
+# where = args.pop()
+# module = args.pop()
+# function = args.pop()
 
-# If predicate is provided, then perform a query
-q = client.query(namespace, set)
-w = re_w.match(where)
-if w is not None:
-    if w.group(2):
-        b = w.group(1)
-        v = w.group(2)
-        q.where(p.equals(b, v))
-    elif w.group(3):
-        b = w.group(1)
-        v = w.group(3)
-        q.where(p.equals(b, v))
-    elif w.group(4):
-        b = w.group(1)
-        v = int(w.group(4))
-        q.where(p.equals(b, v))
-    elif w.group(5) and w.group(6):
-        b = w.group(1)
-        l = int(w.group(5))
-        u = int(w.group(6))
-        q.where(p.between(b, l, u))
+class Aggregate(Example):
+    def run(self):
+        # If predicate is provided, then perform a query
+        q = self.client.query(self.namespace, self.set_name)
 
-if options.bins and len(options.bins) > 0:
-    # project specified bins
-    q.select(*options.bins)
+        w = re_w.match(where)
+        if w is not None:
+            if w.group(2):
+                b = w.group(1)
+                v = w.group(2)
+                q.where(p.equals(b, v))
+            elif w.group(3):
+                b = w.group(1)
+                v = w.group(3)
+                q.where(p.equals(b, v))
+            elif w.group(4):
+                b = w.group(1)
+                v = int(w.group(4))
+                q.where(p.equals(b, v))
+            elif w.group(5) and w.group(6):
+                b = w.group(1)
+                l = int(w.group(5))
+                u = int(w.group(6))
+                q.where(p.between(b, l, u))
 
-args.reverse()
-argl = list(map(parse_arg, args))
-print("argl == ", argl)
-q.apply(module, function, *argl)
+        if options.bins and len(options.bins) > 0:
+            # project specified bins
+            q.select(*options.bins)
 
-results = []
+        args.reverse()
+        argl = list(map(parse_arg, args))
+        print("argl == ", argl)
+        q.apply(module, function, *argl)
 
-# callback to be called for each record read
-def callback(result):
-    results.append(result)
-    print(result)
+        results = []
 
-# invoke the operations, and for each record invoke the callback
-q.foreach(callback)
+        # callback to be called for each record read
+        def callback(result):
+            results.append(result)
+            print(result)
 
-print("---")
-if len(results) == 1:
-    print("OK, 1 result found.")
-else:
-    print("OK, %d results found." % len(results))
+        # invoke the operations, and for each record invoke the callback
+        q.foreach(callback)
+
+        print("---")
+        if len(results) == 1:
+            print("OK, 1 result found.")
+        else:
+            print("OK, %d results found." % len(results))

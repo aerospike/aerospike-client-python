@@ -34,29 +34,29 @@ usage = "usage: %prog [options] [where]"
 def query_callback(option, opt, value, parser):
     setattr(parser.values, option.dest, value.split(','))
 
-optparser.add_option(
-    "-m", "--module", dest="module", type="string",
-    help="UDF Module.")
+# optparser.add_option(
+#     "-m", "--module", dest="module", type="string",
+#     help="UDF Module.")
 
-optparser.add_option(
-    "-f", "--function", dest="function", type="string",
-    help="UDF Function.")
+# optparser.add_option(
+#     "-f", "--function", dest="function", type="string",
+#     help="UDF Function.")
 
-optparser.add_option(
-    "-a", "--arg", dest="arguments", type="string", action="callback",
-    callback=query_callback,  help="UDF Arguments.")
+# optparser.add_option(
+#     "-a", "--arg", dest="arguments", type="string", action="callback",
+#     callback=query_callback,  help="UDF Arguments.")
 
-optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append",
-    help="Bins to select from each record.")
+# optparser.add_option(
+#     "-b", "--bins", dest="bins", type="string", action="append",
+#     help="Bins to select from each record.")
 
-optparser.add_option(
-    "--show-key", dest="show_key", action="store_true",
-    help="If set, displays the key/digest.")
+# optparser.add_option(
+#     "--show-key", dest="show_key", action="store_true",
+#     help="If set, displays the key/digest.")
 
-optparser.add_option(
-    "--show-meta", dest="show_meta", action="store_true",
-    help="If set, displays the metadata.")
+# optparser.add_option(
+#     "--show-meta", dest="show_meta", action="store_true",
+#     help="If set, displays the metadata.")
 
 
 from .. import Example
