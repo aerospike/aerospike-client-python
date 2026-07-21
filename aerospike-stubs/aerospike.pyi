@@ -63,6 +63,7 @@ INDEX_BLOB: Literal[3]
 INDEX_GEO2DSPHERE: Literal[2]
 INDEX_NUMERIC: Literal[1]
 INDEX_STRING: Literal[0]
+INDEX_INTEGER: Literal[4]
 INDEX_TYPE_DEFAULT: Literal[0]
 INDEX_TYPE_LIST: Literal[1]
 INDEX_TYPE_MAPKEYS: Literal[2]
@@ -303,32 +304,87 @@ ABORT_OK: Literal[0]
 ABORT_ALREADY_ABORTED: Literal[1]
 ABORT_ROLL_BACK_ABANDONED: Literal[3]
 ABORT_CLOSE_ABANDONED: Literal[4]
+ABORT_COMMIT_FAILED: Literal[5]
 
 TXN_STATE_OPEN: Literal[0]
 TXN_STATE_VERIFIED: Literal[1]
 TXN_STATE_COMMITTED: Literal[2]
 TXN_STATE_ABORTED: Literal[3]
+TXN_STATE_COMMIT_FAILED: Literal[4]
 
-CDT_SELECT_MATCHING_TREE: Literal[0]
-CDT_SELECT_VALUES: Literal[1]
-CDT_SELECT_MAP_KEY_VALUES: Literal[1]
-CDT_SELECT_MAP_KEYS: Literal[2]
-CDT_SELECT_NO_FAIL: Literal[0x10]
+EXP_PATH_SELECT_MATCHING_TREE: Literal[0]
+EXP_PATH_SELECT_VALUE: Literal[1]
+EXP_PATH_SELECT_MAP_VALUE: Literal[1]
+EXP_PATH_SELECT_LIST_VALUE: Literal[1]
+EXP_PATH_SELECT_MAP_KEY: Literal[2]
+EXP_PATH_SELECT_MAP_KEY_VALUE: Literal[3]
+EXP_PATH_SELECT_NO_FAIL: Literal[0x10]
 
-CDT_MODIFY_DEFAULT: Literal[0]
-CDT_MODIFY_NO_FAIL: Literal[0x10]
+EXP_PATH_MODIFY_DEFAULT: Literal[0]
+EXP_PATH_MODIFY_NO_FAIL: Literal[0x10]
 
 EXP_LOOPVAR_KEY: Literal[0]
 EXP_LOOPVAR_VALUE: Literal[1]
 EXP_LOOPVAR_INDEX: Literal[2]
 
+ERROR_DETAIL_NONE: Literal[0]
+ERROR_DETAIL_SUBCODE: Literal[1]
+ERROR_DETAIL_MESSAGE: Literal[2]
+
+SUB_NONE: Literal[0]
+
+SUB_PARAM_TTL_INVALID: Literal[1]
+SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE: Literal[2]
+SUB_PARAM_BITS_SIZE_OUT_OF_RANGE: Literal[3]
+SUB_PARAM_BITS_RESIZE_EXCEEDED: Literal[4]
+SUB_PARAM_BIN_COUNT_TOO_LARGE: Literal[5]
+
+SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED: Literal[1]
+SUB_UNAVAIL_REPLICA_UNAVAILABLE: Literal[2]
+
+SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: Literal[1]
+SUB_UNSUPP_FEAT_GENERIC: Literal[2]
+
+SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: Literal[1]
+
+SUB_BIN_NAME_COUNT_TOO_LARGE: Literal[1]
+
+SUB_FORBID_XDR_FILTER_BLOCKED: Literal[1]
+SUB_FORBID_SET_COUNT_STOP_WRITES: Literal[2]
+SUB_FORBID_SET_SIZE_STOP_WRITES: Literal[3]
+SUB_FORBID_CLOCK_SKEW_STOP_WRITES: Literal[4]
+SUB_FORBID_REPLACE_CONFLICT_RESOLVING: Literal[5]
+SUB_FORBID_TRUNCATED: Literal[6]
+SUB_FORBID_MASKING_POLICY_BLOCKED: Literal[7]
+SUB_FORBID_DURABILITY_VIOLATION: Literal[8]
+SUB_FORBID_MASKING_ROLE_VIOLATION: Literal[9]
+
+SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS: Literal[1]
+SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS: Literal[2]
+SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW: Literal[3]
+SUB_OPNOT_HLL_INDEX_BITS_UNSET: Literal[4]
+SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: Literal[5]
+SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: Literal[6]
+SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH: Literal[7]
+SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: Literal[8]
+SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: Literal[9]
+
+SUB_FILTERED_META: Literal[1]
+SUB_FILTERED_BINS: Literal[2]
+SUB_FILTERED_META_EVAL_FAILED: Literal[3]
+SUB_FILTERED_BINS_EVAL_FAILED: Literal[4]
+
+SUB_MRT_BLOCKED_RECORD_LOCKED: Literal[1]
+SUB_MRT_BLOCKED_ID_MISMATCH: Literal[2]
+
+
 @final
 class CDTInfinite:
-    def __init__(self, *args, **kwargs) -> None: ...
+    def __init__(self) -> None: ...
 
 @final
 class CDTWildcard:
-    def __init__(self, *args, **kwargs) -> None: ...
+    def __init__(self) -> None: ...
 
 @final
 class Transaction:
@@ -384,17 +440,25 @@ class Client:
     def get_node_names(self) -> list: ...
     def get_nodes(self) -> list: ...
     def increment(self, key: tuple, bin: str, offset: int, meta: dict = ..., policy: dict = ...) -> None: ...
-    def index_cdt_create(self, *args, **kwargs) -> Any: ...
+
+    # Index creation for root-level bin values
     def index_geo2dsphere_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
     def index_integer_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
-    # We cannot use aerospike_helpers's TypeExpression type because mypy's stubtest will complain
-    def index_expr_create(self, ns: str, set: str, index_type: int, index_datatype: int, expressions: list, name: str, policy: dict = ...) -> None: ...
-    def index_list_create(self, ns: str, set: str, bin: str, index_datatype, name: str, policy: dict = ...) -> None: ...
-    def index_map_keys_create(self, ns: str, set: str, bin: str, index_datatype, name: str, policy: dict = ...) -> None: ...
-    def index_map_values_create(self, ns: str, set: str, bin: str, index_datatype, name: str, policy: dict = ...) -> None: ...
-    def index_remove(self, ns, name: str, policy: dict = ...) -> None: ...
     def index_string_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
     def index_blob_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
+
+    # We cannot use aerospike_helpers's TypeExpression type because mypy's stubtest will complain
+    def index_single_value_create(self, ns: str, set: str, bin: str, index_datatype: int, name: str, policy: dict = ..., ctx: Optional[list] = ...) -> None: ...
+    def index_list_create(self, ns: str, set: str, bin: str, index_datatype: int, name: str, policy: dict = ..., ctx: Optional[list] = ...) -> None: ...
+    def index_map_keys_create(self, ns: str, set: str, bin: str, index_datatype: int, name: str, policy: dict = ..., ctx: Optional[list] = ...) -> None: ...
+    def index_map_values_create(self, ns: str, set: str, bin: str, index_datatype: int, name: str, policy: dict = ..., ctx: Optional[list] = ...) -> None: ...
+    def index_set_create(self, ns: str, set: str, name: str, policy: dict = ...) -> None: ...
+
+    def index_cdt_create(self, ns: str, set: str, bin: str, index_type: int, index_datatype: int, name: str, ctx: list, policy: dict = ...) -> int: ...
+    def index_expr_create(self, ns: str, set: str, index_type: int, index_datatype: int, expressions: list, name: str, policy: dict = ...) -> None: ...
+
+    def index_remove(self, ns, name: str, policy: dict = ...) -> None: ...
+
     def info_all(self, command: str, policy: dict = ...) -> dict: ...
     def info_random_node(self, command: str, policy: dict = ...) -> str: ...
     def info_single_node(self, command: str, host: str, policy: dict = ...) -> str: ...
@@ -472,7 +536,7 @@ class Scan:
 
 @final
 class null:
-    def __init__(self, *args, **kwargs) -> None: ...
+    def __init__(self) -> None: ...
 
 def calc_digest(ns: str, set: str, key: Union[str, int, bytearray]) -> bytearray: ...
 def client(config: dict) -> Client: ...

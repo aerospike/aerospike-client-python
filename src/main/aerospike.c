@@ -104,28 +104,19 @@ struct module_constant_name_to_value {
 
 #define EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(                     \
     macro_name_without_prefix)                                                 \
-    {                                                                          \
-        #macro_name_without_prefix,                                            \
-            .value.integer = AS_##macro_name_without_prefix                    \
-    }
+    {#macro_name_without_prefix,                                               \
+     .value.integer = AS_##macro_name_without_prefix}
 
 #define STRINGIFY(X) #X
 
-#define EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)            \
-    {                                                                          \
-        STRINGIFY(_##macro_name_without_prefix),                               \
-            .value.integer = macro_name_without_prefix                         \
-    }
+#define EXPOSE_MACRO_AS_PRIVATE_FIELD(macro_name_without_prefix)               \
+    {STRINGIFY(_##macro_name_without_prefix),                                  \
+     .value.integer = macro_name_without_prefix}
 
-#define EXPOSE_MACRO(macro_name)                                               \
-    {                                                                          \
-        #macro_name, .value.integer = macro_name                               \
-    }
+#define EXPOSE_MACRO(macro_name) {#macro_name, .value.integer = macro_name}
 
 #define EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(macro_name)                  \
-    {                                                                          \
-        #macro_name, .is_str_value = true, .value.string = macro_name          \
-    }
+    {#macro_name, .is_str_value = true, .value.string = macro_name}
 
 // TODO: many of these names are the same as the enum name
 // Is there a way to generate this code?
@@ -138,8 +129,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
-    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_READ),
-    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_MODIFY),
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_READ),
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(AS_OPERATOR_CDT_MODIFY),
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
@@ -190,6 +181,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"INDEX_NUMERIC", .value.integer = AS_INDEX_NUMERIC},
     {"INDEX_GEO2DSPHERE", .value.integer = AS_INDEX_GEO2DSPHERE},
     {"INDEX_BLOB", .value.integer = AS_INDEX_BLOB},
+    {"INDEX_INTEGER", .value.integer = AS_INDEX_INTEGER},
+
     {"INDEX_TYPE_DEFAULT", .value.integer = AS_INDEX_TYPE_DEFAULT},
     {"INDEX_TYPE_LIST", .value.integer = AS_INDEX_TYPE_LIST},
     {"INDEX_TYPE_MAPKEYS", .value.integer = AS_INDEX_TYPE_MAPKEYS},
@@ -456,9 +449,11 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_INDEX", .value.integer = AS_CDT_CTX_MAP_INDEX},
     {"CDT_CTX_MAP_RANK", .value.integer = AS_CDT_CTX_MAP_RANK},
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_MAP_KEYS_IN),
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
-    EXPOSE_AS_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_EXP),
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(AS_CDT_CTX_AND),
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
@@ -525,7 +520,7 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_QUERY_DURATION_LONG_RELAX_AP},
     {"QUERY_DURATION_SHORT", .value.integer = AS_QUERY_DURATION_SHORT},
 
-    {"LOG_LEVEL_OFF", .value.integer = -1},
+    {"LOG_LEVEL_OFF", .value.integer = LOG_LEVEL_OFF},
     {"LOG_LEVEL_ERROR", .value.integer = AS_LOG_LEVEL_ERROR},
     {"LOG_LEVEL_WARN", .value.integer = AS_LOG_LEVEL_WARN},
     {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
@@ -544,16 +539,20 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
     {"ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
 
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ABORT_COMMIT_FAILED),
+
     {"TXN_STATE_OPEN", .value.integer = AS_TXN_STATE_OPEN},
     {"TXN_STATE_VERIFIED", .value.integer = AS_TXN_STATE_VERIFIED},
     {"TXN_STATE_COMMITTED", .value.integer = AS_TXN_STATE_COMMITTED},
     {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
 
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(TXN_STATE_COMMIT_FAILED),
+
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
 
     /*
-        When doing a cdt select/apply operation, and applying an expression on each
+        When doing a path expression select/apply operation, and applying an expression on each
         iterated object, this lets us choose a specific value over each iterated
         object.
     */
@@ -561,15 +560,20 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_VALUE),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_LOOPVAR_INDEX),
 
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MATCHING_TREE),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_VALUES),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
-        CDT_SELECT_MAP_KEY_VALUES),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_MAP_KEYS),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_SELECT_NO_FAIL),
+        EXP_PATH_SELECT_MATCHING_TREE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_LIST_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_MAP_KEY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        EXP_PATH_SELECT_MAP_KEY_VALUE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_SELECT_NO_FAIL),
 
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_NO_FAIL),
-    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(CDT_MODIFY_DEFAULT),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_NO_FAIL),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(EXP_PATH_MODIFY_DEFAULT),
 
     // For aerospike_helpers to use. Not to be exposed in public API
     // TODO: move all internal constants used by aerospike_helpers to this loc
@@ -579,16 +583,168 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_LIST),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_MAP),
     EXPOSE_MACRO(_AS_EXP_LOOPVAR_STR),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BLOB),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_BOOL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_NIL),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_GEOJSON),
+    EXPOSE_MACRO(_AS_EXP_LOOPVAR_HLL),
 
     // C client uses the same expression code for these two expressions
     // so we define unique ones in the Python client code
+    EXPOSE_MACRO(_AS_EXP_CODE_CALL),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_SELECT),
     EXPOSE_MACRO(_AS_EXP_CODE_CALL_APPLY),
+
+    EXPOSE_MACRO(_AS_EXP_CODE_REMOVE_RESULT),
+    EXPOSE_MACRO(_AS_EXP_CODE_IN_LIST),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_KEYS_IN),
+    EXPOSE_MACRO(_AS_EXP_CODE_MAP_VALUES_IN),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_FLAGS_KEY),
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_APPLY_MOD_EXP_KEY),
 
     EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_CDT_CTX_FILTER_EXPR_KEY),
+
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_START_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_END_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_TARGET_LENGTH_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_COUNT_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_INDEX_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_NEEDLE_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_REPLACEMENT_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_OCCURRENCE_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_PREFIX_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_SUFFIX_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_SEPARATOR_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_PATTERN_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_PAD_STRING_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_REGEX_FLAGS_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_POLICY_KEY),
+    EXPOSE_STRING_MACRO_FOR_AEROSPIKE_HELPERS(_STR_EXP_NUMERIC_TYPE_KEY),
+
+#define X(op_name) EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_##op_name)
+    STRING_OP_NAMES
+#undef X
+
+        EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_SUBCODE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_MESSAGE),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_SUBCODE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_MESSAGE),
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_NONE),
+
+    //------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_PARAM (ERR_PARAMETER)
+    //------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_PARAM_TTL_INVALID),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_SIZE_OUT_OF_RANGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BITS_RESIZE_EXCEEDED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_BIN_COUNT_TOO_LARGE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_CLUSTER (ERR_UNAVAILABLE)
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNAVAIL_REPLICA_UNAVAILABLE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_UNSUPPORTED_FEATURE
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_UNSUPP_FEAT_GENERIC),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_BIN_NOT_FOUND
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_BIN_NAME
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_BIN_NAME_COUNT_TOO_LARGE),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_FAIL_FORBIDDEN
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_XDR_FILTER_BLOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_SET_COUNT_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_SET_SIZE_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_CLOCK_SKEW_STOP_WRITES),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_REPLACE_CONFLICT_RESOLVING),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FORBID_TRUNCATED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_MASKING_POLICY_BLOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_DURABILITY_VIOLATION),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FORBID_MASKING_ROLE_VIOLATION),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_OP_NOT_APPLICABLE
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_INDEX_BITS_UNSET),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_FILTERED_OUT
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FILTERED_META),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(SUB_FILTERED_BINS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FILTERED_META_EVAL_FAILED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_FILTERED_BINS_EVAL_FAILED),
+
+    //----------------------------------------------------------------
+    // Subcodes paired with AEROSPIKE_ERR_MRT_BLOCKED
+    //----------------------------------------------------------------
+
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_MRT_BLOCKED_RECORD_LOCKED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_MRT_BLOCKED_ID_MISMATCH),
 };
 
 struct submodule_name_to_creation_method {
@@ -659,7 +815,9 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "batch_parent_write", "info", "admin", "txn_verify",
                          "txn_roll", "total_timeout", "auth_mode",
                          "login_timeout_ms", "key", "exists", "max_retries",
-                         "replica", "commit_level", "metrics", NULL)
+                         "replica", "commit_level", "metrics", "read_mode_ap",
+                         "max_threads", "thread_pool_size", "socket_timeout",
+                         NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",
@@ -671,7 +829,8 @@ DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
 
 #define BASE_POLICY_KEYS                                                       \
     "total_timeout", "socket_timeout", "max_retries", "sleep_between_retries", \
-        "compress", "txn", "expressions", "connect_timeout", "timeout_delay"
+        "compress", "txn", "expressions", "connect_timeout", "timeout_delay",  \
+        "error_detail_verbosity"
 
 DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
                          "commit_level", "durable_delete", "ttl",
@@ -789,10 +948,7 @@ struct py_set_name_to_str_list {
     const char **valid_keys;
 };
 
-#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
-    {                                                                          \
-        &py_##array_name, array_name                                           \
-    }
+#define PY_SET_NAME_TO_STR_LIST(array_name) {&py_##array_name, array_name}
 
 static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),

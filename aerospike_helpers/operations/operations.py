@@ -78,6 +78,10 @@ def append(bin_name, append_item):
 
     The append operation appends `append_item` to the value in bin_name.
 
+    .. deprecated:: 19.3.0 Passing a string argument to ``append_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
+
     Args:
         bin_name (str): The name of the bin to be used.
         append_item: The value which will be appended to the item contained in the specified bin.
@@ -91,6 +95,10 @@ def prepend(bin_name, prepend_item):
     """Create a prepend operation dictionary.
 
     The prepend operation prepends `prepend_item` to the value in bin_name.
+
+    .. deprecated:: 19.3.0 Passing a string argument to ``prepend_item`` is deprecated.
+        This legacy operation performs raw byte concatenation, is not Unicode/DBCS-aware, and does not
+        support string policy or ctx.
 
     Args:
         bin_name (str): The name of the bin to be used.
@@ -119,30 +127,31 @@ def increment(bin_name, amount):
 def touch(ttl: Optional[int] = None):
     """Create a touch operation dictionary.
 
-    Using ttl here is deprecated. It should be set in the record metadata for the operate method.
+    Using ttl here is deprecated. It should be set in the policy parameter for the operate method.
 
     Args:
         ttl (int): Deprecated. The ttl that should be set for the record.
-            This should be set in the metadata passed to the operate or
+            This should be set in the policy parameter passed to the operate or
             operate_ordered methods.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
     op_dict = {"op": aerospike.OPERATOR_TOUCH}
     if ttl:
-        warnings.warn("TTL should be specified in the meta dictionary for operate", DeprecationWarning)
+        warnings.warn("TTL should be specified in the policy parameter for operate", DeprecationWarning)
         op_dict["val"] = ttl
     return op_dict
 
 
 def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
     """
-    Create CDT select operation.
+    Create path expression select operation.
 
     Args:
-        bin_name: Bin name
+        bin_name: Name of bin where this select operation is performed against.
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
-        flags: See :ref:`cdt_select_flags` for the set of valid flags for this function.
+            See :ref:`path_expressions_contexts` for possible contexts.
+        flags: See :ref:`exp_path_select_flags` for the set of valid flags for this function.
 
     Returns:
         A dictionary to be passed to operate or operate_ordered.
@@ -153,16 +162,17 @@ def select_by_path(bin_name: str, ctx: list[_cdt_ctx], flags: int):
 
 def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     """
-    Create CDT modification operation.
+    Create path expression modification operation.
 
     The results of the evaluation of the modifying expression will replace the
-    selected map, and the changes are written back to storage.
+    selected element, and the changes are written back to storage.
 
     Args:
-        bin_name: Bin name
+        bin_name: Name of bin that this modify operation is performed against
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
+            See :ref:`path_expressions_contexts` for possible contexts.
         expr: compiled modifying expression.
-        flags: See :ref:`cdt_modify_flags` for the set of valid flags for this function.
+        flags: See :ref:`exp_path_modify_flags` for the set of valid flags for this function.
 
     Returns:
         A dictionary to be passed to operate or operate_ordered.

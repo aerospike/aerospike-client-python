@@ -129,15 +129,13 @@ enum utiity_constants {
 #define EXP_SZ(_expr) sizeof((as_exp_entry[]){_expr})
 
 #define APPEND_ARRAY(_sub_values, ...)                                         \
-    {                                                                          \
-        {                                                                      \
-            as_exp_entry tmp_expr_array[] = {__VA_ARGS__};                     \
-            int expr_array_size =                                              \
-                sizeof(tmp_expr_array) / sizeof(as_exp_entry) - _sub_values;   \
-            memcpy(&((*expressions)[(*bottom)]), &tmp_expr_array,              \
-                   (expr_array_size * sizeof(as_exp_entry)));                  \
-            (*bottom) += expr_array_size;                                      \
-        }                                                                      \
+    {{as_exp_entry tmp_expr_array[] = {__VA_ARGS__};                           \
+    int expr_array_size =                                                      \
+        sizeof(tmp_expr_array) / sizeof(as_exp_entry) - _sub_values;           \
+    memcpy(&((*expressions)[(*bottom)]), &tmp_expr_array,                      \
+           (expr_array_size * sizeof(as_exp_entry)));                          \
+    (*bottom) += expr_array_size;                                              \
+    }                                                                          \
     }
 
 #define BIN_EXPR()                                                             \
@@ -148,9 +146,7 @@ enum utiity_constants {
     {.op = _AS_EXP_CODE_KEY, .count = 2}, as_exp_int(temp_expr->result_type)
 
 #define LIST_MOD_EXP()                                                         \
-    {                                                                          \
-        .op = temp_expr->op, .v.list_pol = temp_expr->list_policy              \
-    }
+    {.op = temp_expr->op, .v.list_pol = temp_expr->list_policy}
 
 // STRUCT DEFINITIONS
 typedef struct {
@@ -195,7 +191,7 @@ static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
 #define NIL as_exp_nil()
 
 /*
-* get_expr_size 
+* get_expr_size
 * Sets `size_to_alloc` to the byte count required to fit the array of as_exp_entry that will be allocated
 * when `intermediate_exprs` is converted.
 * Note that intermediate_exprs has an entry for every child of every expression but the child values' sizes do not need to be counted
@@ -210,6 +206,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_select_by_path(NULL, 0, 0, NIL)),
         [_AS_EXP_CODE_CALL_APPLY] =
             EXP_SZ(as_exp_modify_by_path(NULL, 0, NULL, 0, NIL)),
+        [_AS_EXP_CODE_REMOVE_RESULT] = EXP_SZ(as_exp_remove_result()),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_LOOPVAR_FLOAT] = EXP_SZ(as_exp_loopvar_float(0)),
@@ -217,6 +214,11 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [_AS_EXP_LOOPVAR_LIST] = EXP_SZ(as_exp_loopvar_list(0)),
         [_AS_EXP_LOOPVAR_MAP] = EXP_SZ(as_exp_loopvar_map(0)),
         [_AS_EXP_LOOPVAR_STR] = EXP_SZ(as_exp_loopvar_str(0)),
+        [_AS_EXP_LOOPVAR_BOOL] = EXP_SZ(as_exp_loopvar_bool(0)),
+        [_AS_EXP_LOOPVAR_BLOB] = EXP_SZ(as_exp_loopvar_blob(0)),
+        [_AS_EXP_LOOPVAR_GEOJSON] = EXP_SZ(as_exp_loopvar_geojson(0)),
+        [_AS_EXP_LOOPVAR_NIL] = EXP_SZ(as_exp_loopvar_nil(0)),
+        [_AS_EXP_LOOPVAR_HLL] = EXP_SZ(as_exp_loopvar_hll(0)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(
@@ -249,6 +251,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_GET_BY_INDEX] =
             EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, NIL, NIL)),
         [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, NIL)),
+        [_AS_EXP_CODE_IN_LIST] = EXP_SZ(as_exp_in_list(NIL, NIL)),
         [OP_LIST_GET_BY_VALUE] =
             EXP_SZ(as_exp_list_get_by_value(NULL, 0, NIL, NIL)),
         [OP_LIST_GET_BY_VALUE_RANGE] =
@@ -348,6 +351,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, NIL)),
         [OP_MAP_GET_BY_KEY] =
             EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, NIL, NIL)),
+        [_AS_EXP_CODE_MAP_KEYS_IN] = EXP_SZ(as_exp_map_keys_in(NIL)),
+        [_AS_EXP_CODE_MAP_VALUES_IN] = EXP_SZ(as_exp_map_values_in(NIL)),
         [OP_MAP_GET_BY_KEY_RANGE] =
             EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_GET_BY_KEY_LIST] =
@@ -445,7 +450,54 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [LET] = EXP_SZ(as_exp_let(NIL)),
         [DEF] = EXP_SZ(as_exp_def("", NIL)),
         [VAR] = EXP_SZ(as_exp_var("")),
-        [UNKNOWN] = EXP_SZ(as_exp_unknown())};
+        [UNKNOWN] = EXP_SZ(as_exp_unknown()),
+        [OP_STRING_STRLEN] = EXP_SZ(as_exp_string_strlen(NIL)),
+        [OP_STRING_SUBSTR] = EXP_SZ(as_exp_string_substr(0, NIL)),
+        [OP_STRING_SUBSTR_RANGE] =
+            EXP_SZ(as_exp_string_substr_range(0, 0, NIL)),
+        [OP_STRING_CHAR_AT] = EXP_SZ(as_exp_string_char_at(0, NIL)),
+        [OP_STRING_FIND] = EXP_SZ(as_exp_string_find_occurrence("", 0, NIL)),
+        [OP_STRING_CONTAINS] = EXP_SZ(as_exp_string_contains("", NIL)),
+        [OP_STRING_STARTS_WITH] = EXP_SZ(as_exp_string_starts_with("", NIL)),
+        [OP_STRING_ENDS_WITH] = EXP_SZ(as_exp_string_ends_with("", NIL)),
+        [OP_STRING_TO_INTEGER] = EXP_SZ(as_exp_string_to_integer(NIL)),
+        [OP_STRING_TO_DOUBLE] = EXP_SZ(as_exp_string_to_double(NIL)),
+        [OP_STRING_BYTE_LENGTH] = EXP_SZ(as_exp_string_byte_length(NIL)),
+        [OP_STRING_IS_NUMERIC] = EXP_SZ(as_exp_string_is_numeric_type(0, NIL)),
+        [OP_STRING_IS_UPPER] = EXP_SZ(as_exp_string_is_upper(NIL)),
+        [OP_STRING_IS_LOWER] = EXP_SZ(as_exp_string_is_lower(NIL)),
+        [OP_STRING_TO_BLOB] = EXP_SZ(as_exp_string_to_blob(NIL)),
+        [OP_STRING_SPLIT] = EXP_SZ(as_exp_string_split(NIL)),
+        [OP_STRING_SPLIT_SEPARATOR] =
+            EXP_SZ(as_exp_string_split_separator("", NIL)),
+        [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
+        [OP_STRING_REGEX_COMPARE] =
+            EXP_SZ(as_exp_string_regex_compare_flags("", 0, NIL)),
+        [OP_STRING_TO_STRING] = EXP_SZ(as_exp_to_string(NIL)),
+        [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
+        [OP_STRING_OVERWRITE] =
+            EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
+        [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
+        [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, 0, NIL)),
+        [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
+        [OP_STRING_REPLACE_ALL] =
+            EXP_SZ(as_exp_string_replace_all(NULL, "", "", NIL)),
+        [OP_STRING_UPPER] = EXP_SZ(as_exp_string_upper(NULL, NIL)),
+        [OP_STRING_LOWER] = EXP_SZ(as_exp_string_lower(NULL, NIL)),
+        [OP_STRING_CASE_FOLD] = EXP_SZ(as_exp_string_case_fold(NULL, NIL)),
+        [OP_STRING_NORMALIZE_NFC] =
+            EXP_SZ(as_exp_string_normalize_nfc(NULL, NIL)),
+        [OP_STRING_TRIM_START] = EXP_SZ(as_exp_string_trim_start(NULL, NIL)),
+        [OP_STRING_TRIM_END] = EXP_SZ(as_exp_string_trim_end(NULL, NIL)),
+        [OP_STRING_TRIM] = EXP_SZ(as_exp_string_trim(NULL, NIL)),
+        [OP_STRING_PAD_START] =
+            EXP_SZ(as_exp_string_pad_start(NULL, 1, "", NIL)),
+        [OP_STRING_PAD_END] = EXP_SZ(as_exp_string_pad_end(NULL, 1, "", NIL)),
+        [OP_STRING_REPEAT] = EXP_SZ(as_exp_string_repeat(NULL, 1, NIL)),
+        [OP_STRING_REGEX_REPLACE] =
+            EXP_SZ(as_exp_string_regex_replace(NULL, "", "", 0, NIL)),
+        [OP_STRING_APPEND] = EXP_SZ(as_exp_string_append(NULL, "", NIL)),
+        [OP_STRING_PREPEND] = EXP_SZ(as_exp_string_prepend(NULL, "", NIL))};
 
     for (int i = 0; i < *intermediate_exprs_size; ++i) {
         intermediate_expr *tmp_expr =
@@ -603,11 +655,15 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     return err->code;
 }
 
+#define CMP_REGEX_DEPRECATION                                                  \
+    "CmpRegex expression is deprecated. Please use string expression "         \
+    "RegexCompare instead."
+
 /*
 * add_expr_macros
 * Converts each intermediate_expr struct in intermediate_expr_vector to as_exp_entries and copies them to expressions.
 * Note that a count of as_exp_entries to leave out of the copy is passed to the `APPEND_ARRAY` macro.
-* Since this function uses the C expressions macros directly, we don't want to copy the useless junk generated by the 
+* Since this function uses the C expressions macros directly, we don't want to copy the useless junk generated by the
 * empty arguments used. Each expression child/value has a intermediate_expr struct in intermediate_expr_vector so the missing values will be copied later.
 * These counts need to be updated if the C client macro changes.
 */
@@ -657,6 +713,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case _AS_EXP_LOOPVAR_LIST:
         case _AS_EXP_LOOPVAR_MAP:
         case _AS_EXP_LOOPVAR_STR:
+        case _AS_EXP_LOOPVAR_BOOL:
+        case _AS_EXP_LOOPVAR_BLOB:
+        case _AS_EXP_LOOPVAR_NIL:
+        case _AS_EXP_LOOPVAR_HLL:
+        case _AS_EXP_LOOPVAR_GEOJSON:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -677,6 +738,21 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 break;
             case _AS_EXP_LOOPVAR_FLOAT:
                 APPEND_ARRAY(0, as_exp_loopvar_float(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_BLOB:
+                APPEND_ARRAY(0, as_exp_loopvar_blob(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_BOOL:
+                APPEND_ARRAY(0, as_exp_loopvar_bool(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_NIL:
+                APPEND_ARRAY(0, as_exp_loopvar_nil(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_GEOJSON:
+                APPEND_ARRAY(0, as_exp_loopvar_geojson(lval1));
+                break;
+            case _AS_EXP_LOOPVAR_HLL:
+                APPEND_ARRAY(0, as_exp_loopvar_hll(lval1));
                 break;
             }
 
@@ -711,7 +787,14 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case LE:
             APPEND_ARRAY(2, as_exp_cmp_le(NIL, NIL));
             break;
-        case CMP_REGEX:
+        case CMP_REGEX: {
+            int retval = PyErr_WarnEx(PyExc_DeprecationWarning,
+                                      CMP_REGEX_DEPRECATION, STACK_LEVEL);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                       CMP_REGEX_DEPRECATION);
+            }
+
             if (get_int64_t(err, REGEX_OPTIONS_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
@@ -733,6 +816,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(1, as_exp_cmp_regex(lval1, regex_str, NIL));
             break;
+        }
         case CMP_GEO:
             APPEND_ARRAY(2, as_exp_cmp_geo(NIL, NIL));
             break;
@@ -825,6 +909,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case OP_LIST_SIZE:
             APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, NIL));
+            break;
+        case _AS_EXP_CODE_IN_LIST:
+            APPEND_ARRAY(2, as_exp_in_list(
+                                NIL, NIL)); // - 2 for left value and list value
             break;
         case OP_LIST_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -1219,6 +1307,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_MAP_SIZE:
             APPEND_ARRAY(1, as_exp_map_size(temp_expr->ctx,
                                             NIL)); // - 1 for bin
+            break;
+        case _AS_EXP_CODE_MAP_KEYS_IN:
+            APPEND_ARRAY(1, as_exp_map_keys_in(NIL)); // - 1 for bin
+            break;
+        case _AS_EXP_CODE_MAP_VALUES_IN:
+            APPEND_ARRAY(1, as_exp_map_values_in(NIL)); // - 1 for bin
             break;
         case OP_MAP_GET_BY_KEY:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1655,8 +1749,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case _AS_EXP_CODE_CALL_SELECT:
         case _AS_EXP_CODE_CALL_APPLY:
-            if (get_int64_t(err, "return_type", temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+            if (get_int64_t(err, AS_PY_VALUE_TYPE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
 
@@ -1688,6 +1782,356 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                                       lval2, NIL));
             }
             break;
+        case _AS_EXP_CODE_REMOVE_RESULT:
+            APPEND_ARRAY(0, as_exp_remove_result());
+            break;
+
+            // String ops
+
+        case OP_STRING_STRLEN:
+            APPEND_ARRAY(1, as_exp_string_strlen(NIL));
+            break;
+        case OP_STRING_SUBSTR:
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_substr(lval1, NIL));
+            break;
+        case OP_STRING_SUBSTR_RANGE:
+            if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_substr_range(lval1, lval2, NIL));
+            break;
+        case OP_STRING_CHAR_AT: {
+            if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_char_at(lval1, NIL));
+            break;
+        }
+        case OP_STRING_FIND: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            if (get_int64_t(err, _STR_EXP_OCCURRENCE_KEY, temp_expr->pydict,
+                            &lval1) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_find_occurrence(needle, lval1, NIL));
+            break;
+        }
+        case OP_STRING_CONTAINS: {
+            char *needle = NULL;
+            if (get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                        &needle, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_contains(needle, NIL));
+            break;
+        }
+        case OP_STRING_STARTS_WITH: {
+            char *prefix = NULL;
+            if (get_str(err, _STR_EXP_PREFIX_KEY, temp_expr->pydict, NULL,
+                        &prefix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_starts_with(prefix, NIL));
+            break;
+        }
+        case OP_STRING_ENDS_WITH: {
+            char *suffix = NULL;
+            if (get_str(err, _STR_EXP_SUFFIX_KEY, temp_expr->pydict, NULL,
+                        &suffix, false) != AEROSPIKE_OK) {
+                return err->code;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_ends_with(suffix, NIL));
+            break;
+        }
+        case OP_STRING_TO_INTEGER:
+            APPEND_ARRAY(1, as_exp_string_to_integer(NIL));
+            break;
+        case OP_STRING_TO_DOUBLE:
+            APPEND_ARRAY(1, as_exp_string_to_double(NIL));
+            break;
+        case OP_STRING_BYTE_LENGTH:
+            APPEND_ARRAY(1, as_exp_string_byte_length(NIL));
+            break;
+        case OP_STRING_IS_NUMERIC: {
+            as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
+            int64_t tmp_value;
+            if (get_int64_t(err, _STR_EXP_NUMERIC_TYPE_KEY, temp_expr->pydict,
+                            &tmp_value) != AEROSPIKE_OK) {
+                return err->code;
+            }
+            numeric_type = (as_string_numeric_type)tmp_value;
+
+            APPEND_ARRAY(1, as_exp_string_is_numeric_type(numeric_type, NIL));
+            break;
+        }
+        case OP_STRING_IS_UPPER:
+            APPEND_ARRAY(1, as_exp_string_is_upper(NIL));
+            break;
+        case OP_STRING_IS_LOWER:
+            APPEND_ARRAY(1, as_exp_string_is_lower(NIL));
+            break;
+        case OP_STRING_TO_BLOB:
+            APPEND_ARRAY(1, as_exp_string_to_blob(NIL));
+            break;
+        case OP_STRING_SPLIT:
+            APPEND_ARRAY(1, as_exp_string_split(NIL));
+            break;
+        case OP_STRING_SPLIT_SEPARATOR: {
+            char *separator = NULL;
+            as_status status =
+                get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
+                        &separator, false);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            break;
+        }
+        case OP_STRING_B64_DECODE:
+            APPEND_ARRAY(1, as_exp_string_b64_decode(NIL));
+            break;
+        case OP_STRING_TO_STRING:
+            APPEND_ARRAY(1, as_exp_to_string(NIL));
+            break;
+        case OP_STRING_REGEX_REPLACE:
+        case OP_STRING_REGEX_COMPARE: {
+            char *pattern = NULL;
+            as_status status =
+                get_str(err, _STR_EXP_PATTERN_KEY, temp_expr->pydict, NULL,
+                        &pattern, false);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            int64_t tmp_regex_flags;
+            status = get_int64_t(err, _STR_EXP_REGEX_FLAGS_KEY,
+                                 temp_expr->pydict, &tmp_regex_flags);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
+
+            if (temp_expr->op == OP_STRING_REGEX_COMPARE) {
+                APPEND_ARRAY(1, as_exp_string_regex_compare_flags(
+                                    pattern, tmp_regex_flags, NIL));
+            }
+            else {
+                char *replacement = NULL;
+                status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
+                                 temp_expr->pydict, NULL, &replacement, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                APPEND_ARRAY(
+                    1, as_exp_string_regex_replace(NULL, pattern, replacement,
+                                                   tmp_regex_flags, NIL));
+            }
+            break;
+        }
+
+        case OP_STRING_INSERT:
+        case OP_STRING_OVERWRITE:
+        case OP_STRING_CONCAT:
+        case OP_STRING_SNIP:
+        case OP_STRING_REPLACE:
+        case OP_STRING_REPLACE_ALL:
+        case OP_STRING_UPPER:
+        case OP_STRING_LOWER:
+        case OP_STRING_CASE_FOLD:
+        case OP_STRING_NORMALIZE_NFC:
+        case OP_STRING_TRIM_START:
+        case OP_STRING_TRIM_END:
+        case OP_STRING_TRIM:
+        case OP_STRING_PAD_START:
+        case OP_STRING_PAD_END:
+        case OP_STRING_REPEAT:
+        case OP_STRING_APPEND:
+        case OP_STRING_PREPEND: {
+            PyObject *py_str_policy =
+                PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
+            as_string_policy policy;
+            as_string_policy_init_from_pyobject(err, &policy, py_str_policy);
+
+            char *value = NULL;
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+            case OP_STRING_OVERWRITE:
+            case OP_STRING_APPEND:
+            case OP_STRING_PREPEND: {
+                as_status status = get_str(
+                    err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+                break;
+            }
+            }
+
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+            case OP_STRING_OVERWRITE: {
+                if (get_int64_t(err, _STR_EXP_INDEX_KEY, temp_expr->pydict,
+                                &lval1) != AEROSPIKE_OK) {
+                    return err->code;
+                }
+            }
+            }
+
+            switch (temp_expr->op) {
+            case OP_STRING_INSERT:
+                APPEND_ARRAY(1,
+                             as_exp_string_insert(&policy, lval1, value, NIL));
+                break;
+            case OP_STRING_OVERWRITE:
+                APPEND_ARRAY(
+                    1, as_exp_string_overwrite(&policy, lval1, value, NIL));
+                break;
+            case OP_STRING_CONCAT: {
+                // For this op, we don't pass the values list as a child expression
+                // because the values parameter in the C client expression
+                // is not placed second last before bin.
+                as_list *values = NULL;
+                as_status status =
+                    get_val_list(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
+                                 &values, static_pool, serializer_type);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                as_exp_entry list_entry = as_exp_val(values);
+                temp_expr->val.val_list_p = values;
+                temp_expr->val_flag = VAL_LIST_P_ACTIVE;
+
+                APPEND_ARRAY(
+                    1, as_exp_string_concat_list(&policy, list_entry, NIL));
+                break;
+            }
+            case OP_STRING_APPEND:
+                APPEND_ARRAY(1, as_exp_string_append(&policy, value, NIL));
+                break;
+            case OP_STRING_PREPEND:
+                APPEND_ARRAY(1, as_exp_string_prepend(&policy, value, NIL));
+                break;
+            case OP_STRING_SNIP:
+                if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
+                                &lval1)) {
+                    return err->code;
+                }
+                if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
+                                &lval2)) {
+                    return err->code;
+                }
+                APPEND_ARRAY(1, as_exp_string_snip(&policy, lval1, lval2, NIL));
+                break;
+            case OP_STRING_REPLACE:
+            case OP_STRING_REPLACE_ALL: {
+                char *needle = NULL;
+                as_status status =
+                    get_str(err, _STR_EXP_NEEDLE_KEY, temp_expr->pydict, NULL,
+                            &needle, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                char *replacement = NULL;
+                status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
+                                 temp_expr->pydict, NULL, &replacement, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                if (temp_expr->op == OP_STRING_REPLACE) {
+                    APPEND_ARRAY(1, as_exp_string_replace(&policy, needle,
+                                                          replacement, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1, as_exp_string_replace_all(
+                                        &policy, needle, replacement, NIL));
+                }
+            } break;
+            case OP_STRING_UPPER:
+                APPEND_ARRAY(1, as_exp_string_upper(&policy, NIL));
+                break;
+            case OP_STRING_LOWER:
+                APPEND_ARRAY(1, as_exp_string_lower(&policy, NIL));
+                break;
+            case OP_STRING_CASE_FOLD:
+                APPEND_ARRAY(1, as_exp_string_case_fold(&policy, NIL));
+                break;
+            case OP_STRING_NORMALIZE_NFC:
+                APPEND_ARRAY(1, as_exp_string_normalize_nfc(&policy, NIL));
+                break;
+            case OP_STRING_TRIM_START:
+                APPEND_ARRAY(1, as_exp_string_trim_start(&policy, NIL));
+                break;
+            case OP_STRING_TRIM_END:
+                APPEND_ARRAY(1, as_exp_string_trim_end(&policy, NIL));
+                break;
+            case OP_STRING_TRIM:
+                APPEND_ARRAY(1, as_exp_string_trim(&policy, NIL));
+                break;
+            case OP_STRING_PAD_START:
+            case OP_STRING_PAD_END: {
+                as_status status = get_int64_t(err, _STR_EXP_TARGET_LENGTH_KEY,
+                                               temp_expr->pydict, &lval1);
+                if (status != AEROSPIKE_OK) {
+                    return err->code;
+                }
+
+                char *pad_string = NULL;
+                status = get_str(err, _STR_EXP_PAD_STRING_KEY,
+                                 temp_expr->pydict, NULL, &pad_string, false);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
+                if (temp_expr->op == OP_STRING_PAD_START) {
+                    APPEND_ARRAY(1, as_exp_string_pad_start(&policy, lval1,
+                                                            pad_string, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1, as_exp_string_pad_end(&policy, lval1,
+                                                          pad_string, NIL));
+                }
+                break;
+            }
+            case OP_STRING_REPEAT: {
+                as_status status = get_int64_t(err, _STR_EXP_COUNT_KEY,
+                                               temp_expr->pydict, &lval1);
+                if (status != AEROSPIKE_OK) {
+                    return err->code;
+                }
+
+                APPEND_ARRAY(1, as_exp_string_repeat(&policy, lval1, NIL));
+                break;
+            }
+            }
+            break;
+        }
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Unrecognised expression op type.");
@@ -1907,6 +2351,10 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     }
 
     *exp_list = as_exp_compile(c_expr_entries, bottom);
+    if (*exp_list == NULL) {
+        as_error_update(err, AEROSPIKE_ERR, "as_exp_compile failed.");
+        goto CLEANUP;
+    }
 
 CLEANUP:
     if (is_building_temp_expr) {

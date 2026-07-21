@@ -46,8 +46,6 @@
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
-static inline bool isListOp(int op);
-static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
 static inline bool isHllOp(int op);
 static inline bool isExprOp(int op);
@@ -201,7 +199,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     return 0;
 }
 
-static inline bool isListOp(int op)
+static inline bool use_operate_conversion_helper(int op)
 {
     return (
         op == OP_LIST_APPEND || op == OP_LIST_APPEND_ITEMS ||
@@ -219,15 +217,12 @@ static inline bool isListOp(int op)
         op == OP_LIST_REMOVE_BY_VALUE_LIST ||
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE);
-}
-
-static inline bool isNewMapOp(int op)
-{
-    return (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
-            op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL);
+        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
+        (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
+         op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL));
 }
 
 static inline bool isBitOp(int op)
@@ -309,6 +304,13 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
+#define DEPRECATED_PREPEND_NAME                                                \
+    "aerospike_helpers.operations.operations.prepend"
+#define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
+
+#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+    "%s is deprecated for strings in server 8.1.3 or higher."
+
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
                  as_static_pool *static_pool, as_operations *ops, long *op,
@@ -353,18 +355,11 @@ as_status add_op(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    /* Handle the list operations with a helper in the cdt_list_operate.c file */
-    if (isListOp(operation)) {
-        return add_new_list_op(
+    if (use_operate_conversion_helper(operation)) {
+        return as_operations_add_from_pyobject(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
-    }
-
-    if (isNewMapOp(operation)) {
-        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector,
-                              static_pool, ops, operation, ret_type,
-                              SERIALIZER_PYTHON);
     }
 
     if (isBitOp(operation)) {
@@ -558,8 +553,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
         goto CLEANUP;
     }
 
-    // For backwards compatibility, we set this to true
-    bool operation_succeeded = true;
     switch (operation) {
     case AS_OPERATOR_CDT_READ:
     case AS_OPERATOR_CDT_MODIFY: {
@@ -585,8 +578,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
 
         if (operation == AS_OPERATOR_CDT_READ) {
-            operation_succeeded =
-                as_operations_select_by_path(ops, bin, ctx_ref, flags);
+            as_operations_select_by_path(err, ops, bin, ctx_ref, flags);
         }
         else if (operation == AS_OPERATOR_CDT_MODIFY) {
             PyObject *py_expr = NULL;
@@ -609,14 +601,23 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 goto CLEANUP;
             }
 
-            operation_succeeded =
-                as_operations_modify_by_path(ops, bin, ctx_ref, mod_exp, flags);
+            as_operations_modify_by_path(err, ops, bin, ctx_ref, mod_exp,
+                                         flags);
         }
 
         break;
     }
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
+            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                          DEPRECATION_MESSAGE_TEMPLATE,
+                                          DEPRECATED_APPEND_NAME);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       DEPRECATION_MESSAGE_TEMPLATE,
+                                       DEPRECATED_APPEND_NAME);
+            }
+
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_append_str(ops, bin, val);
@@ -650,6 +651,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_PREPEND:
         if (PyUnicode_Check(py_value)) {
+            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                          DEPRECATION_MESSAGE_TEMPLATE,
+                                          DEPRECATED_PREPEND_NAME);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       DEPRECATION_MESSAGE_TEMPLATE,
+                                       DEPRECATED_PREPEND_NAME);
+            }
+
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_prepend_str(ops, bin, val);
@@ -878,11 +888,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
     }
 
-    if (operation_succeeded == false) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to add an operation");
-    }
-
 CLEANUP:
     if (mod_exp) {
         as_exp_destroy(mod_exp);
@@ -923,7 +928,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate *operate_policy_p = NULL;
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -933,10 +937,10 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, size);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1098,7 +1102,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_operations_inita(&ops, ops_list_size);
 
     // For expressions conversion.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     /* These are the values which will be returned in a 3 element list */
@@ -1109,10 +1112,10 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     CHECK_CONNECTED(err);
 
     if (py_policy) {
-        if (pyobject_to_policy_operate(
-                self, err, py_policy, &operate_policy, &operate_policy_p,
-                &self->as->config.policies.operate, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
+                                       &operate_policy_p,
+                                       &self->as->config.policies.operate,
+                                       &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

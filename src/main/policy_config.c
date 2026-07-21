@@ -18,6 +18,7 @@
 #include "policy_config.h"
 #include "types.h"
 #include "policy.h"
+#include "conversions.h"
 
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
                            const char *name);
@@ -900,6 +901,27 @@ as_status set_batch_remove_policy(as_error *err,
     return AEROSPIKE_OK;
 }
 
+as_status set_optional_uint8_property(uint8_t *target_ptr, PyObject *py_policy,
+                                      const char *name)
+{
+    // Assume py_policy is a Python dictionary
+    PyObject *py_policy_val = PyDict_GetItemString(py_policy, name);
+    if (!py_policy_val) {
+        // Key doesn't exist in policy
+        return AEROSPIKE_OK;
+    }
+
+    uint8_t int_value = convert_pyobject_to_uint8_t(py_policy_val);
+
+    if (PyErr_Occurred()) {
+        PyErr_Clear();
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    *target_ptr = int_value;
+    return AEROSPIKE_OK;
+}
+
 as_status set_base_policy(as_policy_base *base_policy, PyObject *py_policy)
 {
 
@@ -950,6 +972,17 @@ as_status set_base_policy(as_policy_base *base_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_bool_property((bool *)&base_policy->compress,
+                                        py_policy, "compress");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint8_property(&base_policy->error_detail_verbosity,
+                                         py_policy, "error_detail_verbosity");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
     return AEROSPIKE_OK;
 }
 

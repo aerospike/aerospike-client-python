@@ -8,6 +8,9 @@
 
 .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
+.. warning:: :meth:`aerospike.Scan` should not be called directly to create a :class:`~aerospike.Scan` object.
+    Please use :meth:`aerospike.Client.scan` instead.
+
 Overview
 ========
 
@@ -15,8 +18,8 @@ The Scan object is used to return all the records in a specified set (which \
 can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
 
-The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
-bins returned can be filtered using :meth:`select`.
+The scan is invoked using :meth:`~aerospike.Scan.foreach`, :meth:`~aerospike.Scan.results`, or
+:meth:`~aerospike.Scan.execute_background`. The bins returned can be filtered using :meth:`~aerospike.Scan.select`.
 
 .. seealso::
     `Manage queries <https://aerospike.com/docs/database/manage/cluster/queries/>`_.
@@ -26,7 +29,9 @@ Fields
 
 .. class:: Scan
 
-    ttl (:class:`int`)
+    .. py:attribute:: ttl
+        :type: int
+
         The time-to-live (expiration) of the record in seconds. Note that ttl
         is only used on background scan writes.
 
@@ -179,7 +184,7 @@ Methods
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :param str nodename: optional Node ID of node used to limit the scan to a single node.
@@ -293,16 +298,64 @@ Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the :py:data:`aerospike.JOB_SCAN`, as it runs in the background.
 
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
 
-            .. include:: examples/scan/top.py
-                :code: python
+        .. testcode::
 
-            .. include:: examples/scan/my_udf.lua
-                :code: lua
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+            import time
+
+            config = {"hosts": [("127.0.0.1", 3000)]}
+            client = aerospike.client(config)
+
+            # register udf
+            try:
+                client.udf_put("./my_udf.lua")
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # put records and apply udf
+            try:
+                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                records = [{"number": 1}, {"number": 2}, {"number": 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                scan = client.scan("test", "demo")
+                scan.apply("my_udf", "my_udf", ["number", 10])
+                job_id = scan.execute_background()
+
+                # wait for job to finish
+                while True:
+                    response = client.job_info(job_id, aerospike.JOB_SCAN)
+                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.25)
+
+                brs = client.batch_read(keys)
+                for br in brs.batch_records:
+                    print(br.record[2])
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. testoutput::
+
+            {'number': 11}
+            {'number': 12}
+            {'number': 13}
+
+        .. include:: examples/scan/my_udf.lua
+            :code: lua
 
     .. method:: paginate()
 
@@ -476,7 +529,7 @@ Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
         * **ttl** (:class:`int`)
             The default time-to-live (expiration) of the record in seconds. This field will only be used on
             background scan writes if :py:attr:`aerospike.Scan.ttl` is set to

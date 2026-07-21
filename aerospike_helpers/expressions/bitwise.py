@@ -19,7 +19,9 @@ Most of these operations are equivalent to the
 :mod:`Bitwise Operations API <aerospike_helpers.operations.bitwise_operations>`
 for binary data.
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike_helpers.expressions as exp
     # Let blob bin "c" == bytearray([3] * 5).
@@ -60,7 +62,9 @@ class BitResize(_BaseExpr):
 
         :return: Blob value expression of resized blob bin.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Blob bin "c" == bytearray([1] * 5).
             # Resize blob bin "c" from the front so that the returned value is bytearray([0] * 5 + [1] * 5).
@@ -96,7 +100,9 @@ class BitInsert(_BaseExpr):
 
         :return: Resulting blob containing the inserted bytes.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # Insert 3 so that returned value is bytearray([1, 3, 1, 1, 1, 1]).
@@ -130,7 +136,9 @@ class BitRemove(_BaseExpr):
 
         :return: Resulting blob containing the remaining bytes.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # b = bytearray([1, 2, 3, 4, 5])
             expr = exp.BitRemove(None, 1, 1, exp.BlobBin("b")).compile()
@@ -169,7 +177,9 @@ class BitSet(_BaseExpr):
 
         :return: Resulting blob expression with the bits overwritten.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([0] * 5).
             # Set bit at offset 7 with size 1 bits to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
@@ -205,7 +215,9 @@ class BitOr(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9, 1, 1, 1, 1]).
@@ -248,7 +260,9 @@ class BitXor(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # bitwise Xor `1` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1])
@@ -284,7 +298,9 @@ class BitAnd(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1])
@@ -327,7 +343,9 @@ class BitNot(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([255] * 5).
             # bitwise, not, all of "c" to get bytearray([254] * 5).
@@ -362,7 +380,9 @@ class BitLeftShift(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # Bit left shift the first byte of bin "c" to get bytearray([8, 1, 1, 1, 1]).
@@ -398,7 +418,9 @@ class BitRightShift(_BaseExpr):
 
         :return: Resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([8] * 5).
             # Bit left shift the first byte of bin "c" to get bytearray([4, 8, 8, 8, 8]).
@@ -446,7 +468,9 @@ class BitAdd(_BaseExpr):
 
         :return: resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Assume we have a blob bin of five bytes: bytearray([1, 1, 1, 1, 1])
             expr = exp.BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, exp.BlobBin("b")).compile()
@@ -498,11 +522,13 @@ class BitSubtract(_BaseExpr):
 
         :return: resulting blob with the bits operated on.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1] * 5).
             # Bit subtract the second byte of bin "c" to get bytearray([1, 0, 1, 1, 1])
-            expr = exp.BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
+            expr = exp.BitSubtract(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, "c").compile()
         """
         self._children = (
             bit_offset,
@@ -539,7 +565,9 @@ class BitSetInt(_BaseExpr):
 
         :return: Resulting blob expression with the bits overwritten.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([0] * 5).
             # Set bit at offset 7 with size 1 bytes to 1 to make the returned value bytearray([1, 0, 0, 0, 0]).
@@ -578,7 +606,9 @@ class BitGet(_BaseExpr):
 
         :return: Blob, bit_size bits rounded up to the nearest byte size.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
             # Get 2 from bin "c".
@@ -600,7 +630,9 @@ class BitCount(_BaseExpr):
 
         :return: Blob, bit_size bits rounded up to the nearest byte size.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([3] * 5).
             # Count set bits starting at 3rd byte in bin "c" to get count of 6.
@@ -622,12 +654,14 @@ class BitLeftScan(_BaseExpr):
         """Args:
             bit_offset (int): Bit index of where to start reading.
             bit_size (int): Number of bits to read.
-            value bool: Bit value to check for.
+            value (bool): Bit value to check for.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Index of the left most bit starting from bit_offset set to value. Returns -1 if not found.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([3] * 5).
             # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
@@ -650,7 +684,9 @@ class BitRightScan(_BaseExpr):
 
         :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # b = bytearray([1, 0, 0, 0, 128])
             expr = exp.BitRightScan(32, 8, True, exp.BlobBin("b")).compile()
@@ -672,12 +708,14 @@ class BitGetInt(_BaseExpr):
         """Args:
             bit_offset (int): Bit index of where to start reading.
             bit_size (int): Number of bits to get.
-            sign bool: True for signed, False for unsigned.
+            sign (bool): True for signed, False for unsigned.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Integer expression.
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # Let blob bin "c" == bytearray([1, 2, 3, 4, 5).
             # Get 2 as an integer from bin "c".

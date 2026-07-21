@@ -255,6 +255,18 @@ class TestNewListOperationsHelpers(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[:2] + self.test_list[4:]
 
+    def test_remove_by_index_range_with_none_count(self):
+        """
+        Remove all elements starting from index 2
+        """
+        operation = list_operations.list_remove_by_index_range(self.test_bin, 2, aerospike.LIST_RETURN_VALUE, count=None)
+
+        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+
+        assert result == self.test_list[2:]
+        _, _, bins = self.as_connection.get(self.test_key)
+        assert bins[self.test_bin] == self.test_list[:2]
+
     def test_remove_by_index_range_inverted(self):
         """
         Remove the 3rd item, a 5
@@ -293,6 +305,18 @@ class TestNewListOperationsHelpers(object):
         assert result == [7, 6, 5]
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[3:]
+
+    def test_remove_by_rank_range_with_none_count(self):
+        """
+        Remove the largest 2 items
+        """
+        operation = list_operations.list_remove_by_rank_range(self.test_bin, 4, aerospike.LIST_RETURN_VALUE, count=None)
+
+        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+
+        assert result == [9, 10]
+        _, _, bins = self.as_connection.get(self.test_key)
+        assert bins[self.test_bin] == self.test_list[:-2]
 
     def test_remove_by_rank_range_inverted(self):
         """
