@@ -333,8 +333,7 @@ class ClientSideBigListExample(Example):
         '''
         item_count = 1000
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
-        ldt = ClientSideBigList(client, 'person1_friends')
+        ldt = ClientSideBigList(self.client, 'person1_friends')
 
         for i in range(item_count):
             # Store a reasonably large item

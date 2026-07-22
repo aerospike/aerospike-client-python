@@ -16,25 +16,11 @@
 ##########################################################################
 
 
-import json
-import re
 import os.path
 
-from optparse import OptionParser
 from aerospike import predicates as p
 from .. import Example
 
-##########################################################################
-# Option Parsing
-##########################################################################
-
-usage = "usage: %prog [options] where module function [args...]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append",
-    help="Bins to select from each record.")
 
 config = {
     'lua': {
@@ -42,64 +28,25 @@ config = {
     }
 }
 
-
-def parse_arg(s):
-    try:
-        return json.loads(s)
-    except ValueError:
-        return s
-
-
-
-# ----------------------------------------------------------------------------
-# Perform Operation
-# ----------------------------------------------------------------------------
-
-re_bin = "(.{1,14})"
-re_str_eq = "\s+=\s*(?:(?:\"(.*)\")|(?:\'(.*)\'))"
-re_int_eq = "\s+=\s*(\d+)"
-re_int_rg = "\s+between\s+\(\s*(\d+)\s*,\s*(\d+)\s*\)"
-re_w = re.compile("%s(?:%s|%s|%s)" %
-                    (re_bin, re_str_eq, re_int_eq, re_int_rg))
-
-# args.reverse()
-# where = args.pop()
-# module = args.pop()
-# function = args.pop()
-
 class Aggregate(Example):
     def run(self):
         # If predicate is provided, then perform a query
-        q = self.client.query(self.namespace, self.set_name)
+        query = self.client.query(self.namespace, self.set_name)
 
-        w = re_w.match(where)
-        if w is not None:
-            if w.group(2):
-                b = w.group(1)
-                v = w.group(2)
-                q.where(p.equals(b, v))
-            elif w.group(3):
-                b = w.group(1)
-                v = w.group(3)
-                q.where(p.equals(b, v))
-            elif w.group(4):
-                b = w.group(1)
-                v = int(w.group(4))
-                q.where(p.equals(b, v))
-            elif w.group(5) and w.group(6):
-                b = w.group(1)
-                l = int(w.group(5))
-                u = int(w.group(6))
-                q.where(p.between(b, l, u))
+        BIN = "bin"
+        query.where(p.equals(BIN, 1))
 
-        if options.bins and len(options.bins) > 0:
-            # project specified bins
-            q.select(*options.bins)
+        query.where(p.equals(BIN, "a"))
 
-        args.reverse()
-        argl = list(map(parse_arg, args))
-        print("argl == ", argl)
-        q.apply(module, function, *argl)
+        query.where(p.between(BIN, 1, 3))
+
+        BINS = [BIN]
+        query.select(BINS)
+
+        MODULE = "a"
+        FUNCTION = "b"
+        ARGS = []
+        query.apply(MODULE, FUNCTION, ARGS)
 
         results = []
 
@@ -109,10 +56,6 @@ class Aggregate(Example):
             print(result)
 
         # invoke the operations, and for each record invoke the callback
-        q.foreach(callback)
+        query.foreach(callback)
 
-        print("---")
-        if len(results) == 1:
-            print("OK, 1 result found.")
-        else:
-            print("OK, %d results found." % len(results))
+        print(len(results))
