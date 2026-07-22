@@ -23,7 +23,6 @@ jobs:
     needs: build-wheel-for-feature-branch
     uses: ./.github/workflows/run-qe-test.yml
     with:
-      get-wheel-from-jfrog: false
       test-definition: ${{ inputs.test-definition }}
       # CLIENT-4733-migrate-from-internal-ansible-api-to-ansible-runner-to-clean-up-technical-debt
       test-code-revision: af16b3a63c8852760ad78c64301135adb55dfdeb

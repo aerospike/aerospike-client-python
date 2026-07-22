@@ -1,4 +1,4 @@
-run-name: "Run QE test (python-client-version=${{ inputs.python-client-version-in-jfrog-to-test }}, feature=${{ inputs.feature }}, num_records=${{ inputs.num_records }}, insert_mode=${{ inputs.insert_mode }})"
+run-name: "Run QE test (feature=${{ inputs.feature }}, num_records=${{ inputs.num_records }}, insert_mode=${{ inputs.insert_mode }})"
 
 permissions:
   contents: read
@@ -7,10 +7,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      python-client-version-in-jfrog-to-test:
-        type: string
-        required: true
-        description: Python client version
       test-definition:
         type: string
         required: true
@@ -44,15 +40,6 @@ on:
         type: boolean
         default: true
         required: false
-      get-wheel-from-jfrog:
-        type: boolean
-        default: true
-        required: false
-      # Optional since calling workflow can also pass in their own wheel built from a feature branch
-      python-client-version-in-jfrog-to-test:
-        type: string
-        required: false
-        description: Python client version
       test-code-revision:
         type: string
         required: true
@@ -97,21 +84,13 @@ jobs:
         ref: ${{ inputs.qe-docker-revision }}
         token: ${{ secrets.CLIENT_BOT_PAT }}
 
-    - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        # Calling workflow only builds wheel from source
-        get_from_jfrog: ${{ inputs.is-workflow-call == false && true || inputs.get-wheel-from-jfrog }}
-        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
-        dist_type_to_get: 'wheel'
-        wheel_python_version: '3.10'
-        wheel_os: manylinux
-        wheel_cpu_arch: ${{ env.WHEEL_ARCH }}
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
+        # TODO: shouldn't hardcode
+        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-3.10-manylinux_x86_64
 
     - name: Add wheel to staging folder for building Docker image
-      run: mv *linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
+      run: mv ./*linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
 
     - name: Log in to QE's Docker registry to download base image and publish new image
       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
@@ -160,7 +139,7 @@ jobs:
         sparse-checkout-cone-mode: false
 
     - name: Add test-register to PATH
-      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+      run: realpath qe-tools/bin >> "$GITHUB_PATH"
 
     - uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
@@ -176,7 +155,7 @@ jobs:
         mkdir -p ~/.aws
         cd ~/.aws
         sections=("default" "qe")
-        for section in ${sections[@]};
+        for section in "${sections[@]}";
         do
           cat <<-EOF >> credentials
           [$section]
@@ -256,7 +235,7 @@ jobs:
         sparse-checkout-cone-mode: false
 
     - name: Add test-enqueue to PATH
-      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+      run: realpath qe-tools/bin >> "$GITHUB_PATH"
 
     - uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
@@ -279,7 +258,7 @@ jobs:
         mkdir -p ~/.aws
         cd ~/.aws
         sections=("default" "qe")
-        for section in ${sections[@]};
+        for section in "${sections[@]}";
         do
           cat <<-EOF >> credentials
           [$section]
@@ -297,7 +276,7 @@ jobs:
       working-directory: aerospike-client-python/test/
 
     - name: Allows us to get the exact test run id that was created by test-enqueue.
-      run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
+      run: echo "TESTCTL_USER=$(uuidgen)" >> "$GITHUB_ENV"
 
     - name: Set the test code revision to run.
       run: yq -i '.definitions.std.[0] = "${{ inputs.test-code-revision }}@${{ inputs.test-definition }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
@@ -356,8 +335,8 @@ jobs:
 
     - name: Set Github job status
       run: |
-        run_status=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
-        echo $run_status
+        run_status="$("$TESTCTL_BINARY_NAME" --config staging ps --no-color --user "$TESTCTL_USER" -n 1 -status completed --columns STATUS | sed '1d' | xargs)"
+        echo "$run_status"
         if [[ "$run_status" == "Failure" ]]; then
           exit 1
         else
