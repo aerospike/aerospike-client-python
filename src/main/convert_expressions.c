@@ -2378,7 +2378,7 @@ CLEANUP:
 
     if (c_expr_entries != NULL) {
         for (int i = 0; i < bottom; i++) {
-            if (c_expr_entries[i].v.val->free) {
+            if (c_expr_entries[i].op == _AS_EXP_CODE_VAL_GEO) {
                 as_val_destroy(c_expr_entries[i].v.val);
             }
             if (c_expr_entries[i].op == _AS_EXP_CODE_MERGE) {
