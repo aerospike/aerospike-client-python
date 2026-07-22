@@ -1,5 +1,5 @@
 import pytest
-from .conftest import KEYS, BIN_NAME
+from .conftest import TEST_NS, TEST_SET, BIN_NAME
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops
@@ -7,7 +7,7 @@ from .test_base_class import TestBaseClass
 from . import as_errors
 
 
-KEY = KEYS[0]
+KEY = (TEST_NS, TEST_SET, 1)
 OPS = [
     list_ops.list_get_by_index(BIN_NAME, index=99, return_type=aerospike.LIST_RETURN_VALUE)
 ]
@@ -49,7 +49,7 @@ class TestExceptionSubcode:
             if not set_in_client_config:
                 cmd_policy |= policy_w_verbosity_setting
 
-            self.as_connection.operate(KEYS[0], OPS, policy=cmd_policy)
+            self.as_connection.operate(KEY, OPS, policy=cmd_policy)
 
         # Make sure there's no regression with the parent error code
         assert excinfo.value.code == as_errors.AEROSPIKE_ERR_OP_NOT_APPLICABLE
@@ -83,4 +83,4 @@ class TestExceptionSubcode:
             ERROR_DETAIL_VERBOSITY_SETTING: 3
         }
         with pytest.raises(e.ServerError):
-            self.as_connection.operate(KEYS[0], OPS, policy=policy)
+            self.as_connection.operate(KEY, OPS, policy=policy)

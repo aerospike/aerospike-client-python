@@ -1,11 +1,11 @@
 import aerospike
 from aerospike import exception as e
+from .conftest import expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH
 from .test_base_class import TestBaseClass
 import pytest
 import os
 import glob
 
-DYN_CONFIG_PATH = "./dyn_config.yml"
 METRICS_LOG_FILES = "./metrics-*.log"
 
 
@@ -52,8 +52,6 @@ class TestDynamicConfig:
         for item in metrics_log_filenames:
             os.remove(item)
 
-    AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
-
     @pytest.fixture
     def functional_test_setup(self, request, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
@@ -73,7 +71,7 @@ class TestDynamicConfig:
         setup_client.close()
 
         if request.param is True:
-            del os.environ[self.AEROSPIKE_CLIENT_CONFIG_URL]
+            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
     # Decide whether env var should be used or not to read dynamic config file.
     # If not using env var, use the config provider instead
@@ -82,7 +80,7 @@ class TestDynamicConfig:
     def test_dyn_config_file_works(self, functional_test_setup):
         config = TestBaseClass.get_connection_config()
         if functional_test_setup is True:
-            os.environ[self.AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
+            os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
             config["config_provider"] = provider
@@ -93,13 +91,7 @@ class TestDynamicConfig:
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
-        query = self.client.query("test", "demo")
-        recs = query.results()
-        assert len(recs) == 1
-        # Check that record key tuple has the primary key
-        first_record = recs[0]
-        first_record_key = first_record[0]
-        assert first_record_key[2] is self.key[2]
+        expect_records_to_have_user_key_stored(self.client, set_name="demo")
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
