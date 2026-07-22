@@ -50,7 +50,7 @@ class WriteFlags(IntEnum):
 
     DEFAULT = 0
     """
-    Default. Create or replace.
+    Default. Does not suppress an in-operation execution failure.
     """
 
     NO_FAIL = 4
