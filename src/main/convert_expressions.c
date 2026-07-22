@@ -574,7 +574,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         Py_DECREF(py_geo_value);
 
         as_exp_entry tmp_entry = as_exp_geo(geo_value);
-        tmp_entry.v.val->free = true;
+        as_geojson *geojson = as_geojson_fromval(tmp_entry.v.val);
+        geojson->free = true;
         *new_entry = tmp_entry;
     }
     else if (PyByteArray_Check(py_obj)) {
