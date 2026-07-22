@@ -475,7 +475,7 @@ class TestStringOperations:
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.insert(bin_name=INT_BIN_NAME, index=0, value="a", policy=policy)
+            str_ops.repeat(bin_name=STR_BIN_NAME, count=-1, policy=policy)
         ]
         self.add_read_op(ops, INT_BIN_NAME)
 
