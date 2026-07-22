@@ -401,6 +401,24 @@ class RegexCompare(_BaseExpr):
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
+class ToString(_BaseExpr):
+    _op = aerospike._OP_STRING_TO_STRING
+
+    def __init__(self, bin: "TypeBinName"):
+        """
+        Args:
+
+            bin: A bin expression to apply this function to.
+                If this argument is a string, the bin must contain a string.
+
+        Returns:
+
+            The string in the bin with the value converted to a string.
+
+        """
+        self._children = (_convert_bin_name_to_expr(bin),)
+
+
 class _WriteOp(_BaseExpr):
     def __init__(self, policy: StringPolicy):
         self._fixed = {
@@ -820,23 +838,6 @@ class RegexReplace(_WriteOp):
             aerospike._STR_EXP_REPLACEMENT_KEY: replacement,
             aerospike._STR_EXP_REGEX_FLAGS_KEY: regex_flags
         }
-        self._children = (_convert_bin_name_to_expr(bin),)
-
-
-class ToString(_WriteOp):
-    _op = aerospike._AS_EXP_CODE_CALL
-
-    def __init__(self, bin: "TypeBinName"):
-        """
-        Args:
-
-            bin: A bin expression to apply this function to.
-
-        Returns:
-
-            The string in the bin with the value converted to a string.
-
-        """
         self._children = (_convert_bin_name_to_expr(bin),)
 
 
