@@ -7,9 +7,9 @@ from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFla
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
-from .test_base_class import TestBaseClass
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET
 from .string_helpers import *
+KEY = (TEST_NS, TEST_SET, 1)
 
 
 class TestStringOperations:
