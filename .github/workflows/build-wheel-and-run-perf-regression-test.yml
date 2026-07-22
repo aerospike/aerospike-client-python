@@ -1,7 +1,7 @@
 permissions:
   statuses: write
   contents: read
-  packages: read
+  id-token: write
 
 on:
   workflow_dispatch:
