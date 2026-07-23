@@ -20,10 +20,6 @@
 # We will write records that expire BEFORE the default namespace TTL,
 # we will write records that expire with the default TTL, and we'll
 # write records that NEVER expire.
-#
-# NOTE:
-# This test is meant to run on an Aerospike 2.x or 3.x server, so the
-# records that it writes have only primitive types for bin values.
 
 
 import aerospike
@@ -32,19 +28,16 @@ import textwrap
 import re
 import time
 
-from optparse import OptionParser
 from aerospike import exception as e
 
 TTL_DEFAULT = 10
 TTL_MAX = 20
-# TODO: is there an aerospike constant for this?
-TTL_NO_EXPIRE = -1
 
-
+# TODO: include instructions to have docker commands to set up server instead of through python
 # Define the Namespace Supervisor parms -- setting the period very short
 # so that we know it will have visited all of our records before we look
 # at them at each TTL interval.
-PARAMS_SERVICE = [[('nsup-period', 1)]]
+# PARAMS_SERVICE = [[('nsup-period', 1)]]
 
 # Define the default Namespace Time To Live at 10 seconds. We will write
 # some records that expire EARLY (5 seconds), some records that expire at
@@ -54,38 +47,32 @@ PARAMS_SERVICE = [[('nsup-period', 1)]]
 # and does not trigger the "greater than max ttl" warning.
 # Also, we'll check that one of our records DOES trigger the Max TTL warning
 # with a TTL of greater than 20.
-# TODO: max-ttl removed in aerospike 5.0
-PARAMS_NAMESPACE = [[('default-ttl', TTL_DEFAULT), ('max-ttl', TTL_MAX)]]
-
-AS_POLICY_W_RETRY = "retry"
+# PARAMS_NAMESPACE = [[('default-ttl', TTL_DEFAULT)]]
 
 # TODO: needs to be updated
 # Write Policy names and related values
 AS_POLICY_W_TIMEOUT = "timeout"
 
-AS_POLICY_W_KEY = "key"
 # TODO: don't know what this is for...
 AS_POLICY_KEY_STORE = 3  # Store the key (NOT YET IMPLEMENTED)
 
-AS_POLICY_W_GEN = "generation"
 # TODO: verify this works?
 AS_POLICY_GEN_DUP = 4  # Write a record creating a duplicate, ONLY if
 # the generation collides (?)
 
-AS_POLICY_W_EXISTS = "exists"
 
 # Setup write policy
 wr_policy = {
-    AS_POLICY_W_TIMEOUT: 5000,
-    AS_POLICY_W_RETRY:   aerospike.POLICY_RETRY_NONE,
-    AS_POLICY_W_KEY:     aerospike.POLICY_KEY_DIGEST,
-    AS_POLICY_W_GEN:     aerospike.POLICY_GEN_IGNORE,
-    AS_POLICY_W_EXISTS:  aerospike.POLICY_EXISTS_IGNORE
+    "total_timeout": 5000,
+    "max_retries":   0,
+    "key":     aerospike.POLICY_KEY_DIGEST,
+    "gen":     aerospike.POLICY_GEN_IGNORE,
+    "exists":  aerospike.POLICY_EXISTS_IGNORE
 }
 
-BASE_KEY_RANGE = list(range(1, 11))
+PRIMARY_KEYS_WITHOUT_TTL = list(range(1, 11))
 
-SPECIAL_KEYS = {
+KEYS_WITH_TTL = {
     20: {'ttl': 5,
          'desc': '5 sec TTL'},
     40: {'ttl': 15,
@@ -96,45 +83,16 @@ SPECIAL_KEYS = {
          'desc': 'Larger than MAX TTL'}
 }
 
-KEYS = BASE_KEY_RANGE + list(SPECIAL_KEYS.keys())
+ALL_KEYS = PRIMARY_KEYS_WITHOUT_TTL + list(KEYS_WITH_TTL.keys())
 
-def test_params_for_stanza(p, contx, is_namespace):
-    for t in p:
-        if is_namespace:
-            info_code = "set-config:context=namespace;id=" + \
-                contx + ";" + t[0] + "=" + str(t[1])
-        else:
-            info_code = "set-config:context=" + \
-                contx + ";" + t[0] + "=" + str(t[1])
-        try:
-            v = list(client.info_all(info_code).items())
-            res = v[0][1][1]
-            if res != "ok\n":
-                print(
-                    "setting {0} to {1} failed. Got result({2})".format(t[0], t[1], res))
-                sys.exit(1)
-            else:
-                print("setting {0} to {1} succeeded".format(t[0], t[1]))
-        except:
-            print("error: info_code({0}) result({1})".format(info_code, v))
-
-
-def print_header(header, message=None):
-    print()
-    print(''.ljust(80, '='))
-    print(header)
-    print(message) if message else None
-    print(''.ljust(80, '-'))
-
-
-def print_record(xxx_todo_changeme, prefix=''):
-    (key, meta, record) = xxx_todo_changeme
+def print_record(record_tuple, prefix=''):
+    (key, meta, bins) = record_tuple
     print("%s%-4d %-4s %-8s %s" % (
         prefix,
         int(key[2] or 0),
         meta.get('gen') if meta and 'gen' in meta else '-',
         meta.get('ttl') if meta and 'ttl' in meta else '-',
-        record if record else '-'
+        bins if bins else '-'
     ))
 
 
@@ -147,8 +105,15 @@ def print_records(records, prefix=''):
     [print_record(r, prefix) for r in records]
 
 
+def print_header(header, message=None):
+    print()
+    print(''.ljust(80, '='))
+    print(header)
+    print(message) if message else None
+    print(''.ljust(80, '-'))
+
 def print_histogram(prefix=''):
-    request = ''.join(["hist-dump:ns=", options.namespace, ";hist=ttl"])
+    request = ''.join(["histogram:ns=", options.namespace, ";hist=ttl"])
 
     header = "%sHISTOGRAM (%s)" % (prefix, request)
     border = prefix.ljust(80, '-')
@@ -176,38 +141,24 @@ def check_records(start, wait=0, message=None):
 
     try:
         print_records(
-            [client.get((options.namespace, options.set, k)) for k in KEYS], '  ')
+            [client.get((options.namespace, options.set, k)) for k in ALL_KEYS], '  ')
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
 
     print_histogram('  ')
 
 
-def delete_records():
-    try:
-        for key in KEYS:
-            # first remove the existing record
-            client.remove((options.namespace, options.set, key))
-    except e.RecordNotFound:
-        print("Record not found")
-    except Exception as err:
-        if err[0] != 2:
-            print("delete_records() error: {0}".format(
-                err[0]), file=sys.stderr)
-            sys.exit(1)
-
-
 def write_records():
 
     try:
-        for key in KEYS:
-            ttl = SPECIAL_KEYS[key]['ttl'] if key in SPECIAL_KEYS else None
+        for key in ALL_KEYS:
+            ttl = KEYS_WITH_TTL[key]['ttl'] if key in KEYS_WITH_TTL else None
 
             rec = {}
             rec['key'] = key
             rec['ttl'] = ttl if ttl else TTL_DEFAULT
-            rec['desc'] = SPECIAL_KEYS[key][
-                'desc'] if key in SPECIAL_KEYS else 'default TTL'
+            rec['desc'] = KEYS_WITH_TTL[key][
+                'desc'] if key in KEYS_WITH_TTL else 'default TTL'
 
             try:
                 # write a new record
@@ -233,55 +184,20 @@ def write_records():
 # CONFIGURE SERVER
 ##########################################################################
 
-print_header("CONFIGURE THE SERVER")
+# TODO: use docker container
 
-# Now go off and set the params
-print('Set Parameters for Service')
-for p in PARAMS_SERVICE:
-    test_params_for_stanza(p, "service", False)
-    time.sleep(1)
-print("service parameters passed")
+from .. import Example
 
-print("getting initial ttl values")
-info = client.info_all("namespace/" + options.namespace)
-default_ttl = 0
-max_ttl = 0
-for key, value in list(info.items()):
-    array_of_items = re.split(';|=', value[1])
-    i = 0
-    for item in array_of_items:
-        i = i + 1
-        if item == "default-ttl":
-            default_ttl = array_of_items[i]
-        if item == "max-ttl":
-            max_ttl = array_of_items[i]
+class TTL(Example):
+    def run(self):
+        start = time.time()
 
-print('Set Parameters for Namespace')
-for p in PARAMS_NAMESPACE:
-    test_params_for_stanza(p, options.namespace, True)
-    time.sleep(1)
-print("namespace parameters passed")
+        check_records(start, 0, 'Clean state')
 
-##########################################################################
-# CHECK RECORDS ON INTERVALS
-##########################################################################
+        write_records()
 
-start = time.time()
-
-delete_records()
-check_records(start, 0, 'Clean state')
-
-write_records()
-
-check_records(start, 0, 'Initial state')
-check_records(start, 2, 'Expect all records with TTL-2')
-check_records(start, 6, 'Expect all records with TTL<=5 to be gone')
-check_records(start, 3, 'Expect all records with TTL<=10 to be gone')
-check_records(start, 6, 'Expect all records to be gone, except NO_EXPIRE')
-client.remove((options.namespace, options.set, 60))
-
-PARAMS_NAMESPACE = [[('default-ttl', default_ttl), ('max-ttl', max_ttl)]]
-print('Reset Parameters for Namespace')
-for p in PARAMS_NAMESPACE:
-    test_params_for_stanza(p, options.namespace, True)
-    time.sleep(1)
+        check_records(start, 0, 'Initial state')
+        check_records(start, 2, 'Expect all records with TTL-2')
+        check_records(start, 6, 'Expect all records with TTL<=5 to be gone')
+        check_records(start, 3, 'Expect all records with TTL<=10 to be gone')
+        check_records(start, 6, 'Expect all records to be gone, except NO_EXPIRE')
