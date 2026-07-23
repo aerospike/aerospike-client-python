@@ -67,6 +67,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      actions: read
 
   promote-release-bundle-to-dev:
     needs: [
