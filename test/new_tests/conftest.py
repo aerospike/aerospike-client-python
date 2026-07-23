@@ -270,16 +270,32 @@ TEST_SET = "demo"
 BIN_NAME = "number"
 MAP_BIN_NAME = "map"
 
-# TODO: scale down tests maybe
-KEYS = [(TEST_NS, TEST_SET, i) for i in range(500)]
 expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
-def clean_test_background(as_connection):
+def insert_records(request, as_connection):
+
+    # - Some tests don't make use of unique sets,
+    # so we leave them alone for backwards compatibility
+    # - make_set_unique ensures that if a test case's cleanup stage fails to run
+    # e.g when the test case's setup fixture fails out,
+    # that test case's records does not interfere with future test cases that need to perform a query
+    num_keys, make_set_unique = request.param
+
+    if make_set_unique:
+        set_name = f"{TEST_SET}-{time.time_ns()}"
+    else:
+        set_name = TEST_SET
+
+    request.cls.set_name = set_name
+    keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
+    request.cls.keys = keys
+
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
-    for i, key in enumerate(KEYS):
+
+    for i, key in enumerate(keys):
         ops = [
             operations.write(BIN_NAME, i),
             operations.write(MAP_BIN_NAME, {"a": i})
@@ -287,9 +303,22 @@ def clean_test_background(as_connection):
         br = Write(key, ops=ops)
         batch_records.append(br)
         expected_number_bin_values.add(i)
+
     as_connection.batch_write(brs)
+
     yield
-    as_connection.batch_remove(KEYS)
+
+    if make_set_unique is False:
+        as_connection.batch_remove(keys)
+
+def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
+    query = client.query(TEST_NS, set_name)
+    recs = query.results()
+
+    # Check that record key tuple has the user key
+    for record in recs:
+        pk = record[0]
+        assert pk[2] is not None
 
 BASIC_READ_BIN_OPS = [
     operations.read(BIN_NAME)
@@ -307,7 +336,7 @@ WRITE_OPS = [
 NON_EXISTENT_BIN_NAME = "asdf"
 
 @pytest.fixture()
-def query(request, clean_test_background, as_connection):
+def query(request, insert_records, as_connection):
     if not hasattr(request, "param"):
         query = as_connection.query(TEST_NS, TEST_SET)
     else:
@@ -413,3 +442,6 @@ def hydrate_partitions_1000_to_1003(request, as_connection):
     yield
 
     as_connection.batch_remove(keys)
+
+AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+DYN_CONFIG_PATH = "./dyn_config.yml"
