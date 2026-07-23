@@ -528,8 +528,6 @@ class TestStringOperations:
                 assert bins[NON_EXISTENT_BIN_NAME] is None
                 return
 
-            assert NON_EXISTENT_BIN_NAME in bins
-
             if op == str_ops.repeat:
                 assert bins[NON_EXISTENT_BIN_NAME] == ""
             else:
