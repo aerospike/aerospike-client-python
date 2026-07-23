@@ -48,7 +48,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      actions: read
+      actions: write
 
   create-release-bundle:
     if: ${{ inputs.dry-run == false }}
