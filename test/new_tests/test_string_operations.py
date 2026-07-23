@@ -472,7 +472,7 @@ class TestStringOperations:
             assert bins[bin_name] == expected_results
 
     @expect_server_version_earlier_than_8_1_3_to_fail
-    @pytest.mark.xfail(reason="Currently server the latest server 8.1.3 dev build does not respect NO_FAIL when no" \
+    @pytest.mark.xfail(reason="Currently the latest server 8.1.3 dev build does not respect NO_FAIL when no" \
     " ctx argument is provided")
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
