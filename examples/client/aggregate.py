@@ -30,32 +30,33 @@ config = {
 
 class Aggregate(Example):
     def run(self):
-        # If predicate is provided, then perform a query
-        query = self.client.query(self.namespace, self.set_name)
-
         BIN = "bin"
-        query.where(p.equals(BIN, 1))
+        predicates = [
+            p.equals(BIN, 1),
+            p.equals(BIN, "a"),
+            p.between(BIN, 1, 3)
+        ]
 
-        query.where(p.equals(BIN, "a"))
+        for predicate in predicates:
+            # If predicate is provided, then perform a query
+            query = self.client.query(self.namespace, self.set_name)
+            query.where(predicate)
+            BINS = [BIN]
+            query.select(*BINS)
 
-        query.where(p.between(BIN, 1, 3))
+            MODULE = "a"
+            FUNCTION = "b"
+            ARGS = []
+            query.apply(MODULE, FUNCTION, ARGS)
 
-        BINS = [BIN]
-        query.select(BINS)
+            results = []
 
-        MODULE = "a"
-        FUNCTION = "b"
-        ARGS = []
-        query.apply(MODULE, FUNCTION, ARGS)
+            # callback to be called for each record read
+            def callback(result):
+                results.append(result)
+                print(result)
 
-        results = []
+            # invoke the operations, and for each record invoke the callback
+            query.foreach(callback)
 
-        # callback to be called for each record read
-        def callback(result):
-            results.append(result)
-            print(result)
-
-        # invoke the operations, and for each record invoke the callback
-        query.foreach(callback)
-
-        print(len(results))
+            print(len(results))
