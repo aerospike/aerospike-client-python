@@ -471,14 +471,64 @@ class TestStringOperations:
 
             assert bins[bin_name] == expected_results
 
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.xfail(reason="Currently the latest server 8.1.3 dev build does not respect NO_FAIL when no" \
+    " ctx argument is provided")
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.insert(bin_name=NON_STR_BIN_NAME, index=0, value="a", policy=policy)
+            str_ops.repeat(bin_name=STR_BIN_NAME, count=-1, policy=policy)
         ]
-        self.add_read_op(ops, NON_STR_BIN_NAME)
+        self.add_read_op(ops, INT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]
+            assert bins[INT_BIN_NAME] == BINS[INT_BIN_NAME]
+
+    @pytest.mark.parametrize(
+        "op, kwargs, creates_bin",
+        [
+            # Positive
+            (str_ops.append, {"value": NEEDLE}, True),
+            (str_ops.prepend, {"value": NEEDLE}, True),
+            (str_ops.concat, {"value_list": [NEEDLE]}, True),
+            (str_ops.overwrite, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.insert, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.pad_start, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            # Negative
+            (str_ops.snip, {"start": 0, "end": 1}, False),
+            (str_ops.replace, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.replace_all, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.upper, {}, False),
+            (str_ops.lower, {}, False),
+            (str_ops.casefold, {}, False),
+            (str_ops.normalize_nfc, {}, False),
+            (str_ops.trim_start, {}, False),
+            (str_ops.trim_end, {}, False),
+            (str_ops.trim, {}, False),
+            (str_ops.regex_replace, {"pattern": "a", "replacement": "b"}, False),
+            (str_ops.to_string, {}, False),
+        ]
+    )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    def test_string_ops_on_nonexistent_bin(self, op, kwargs: dict, creates_bin: bool):
+        ops = [
+            op(bin_name=NON_EXISTENT_BIN_NAME, **kwargs),
+            operations.read(NON_EXISTENT_BIN_NAME)
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            if creates_bin is False:
+                assert bins[NON_EXISTENT_BIN_NAME] is None
+                return
+
+            if op == str_ops.repeat:
+                assert bins[NON_EXISTENT_BIN_NAME] == ""
+            else:
+                assert bins[NON_EXISTENT_BIN_NAME] == NEEDLE
