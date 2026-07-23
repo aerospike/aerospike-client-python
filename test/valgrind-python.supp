@@ -87,7 +87,7 @@
    Memcheck:Leak
    fun:realloc
    fun:_PyObject_GC_Resize
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+#    fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 {
@@ -95,7 +95,7 @@
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_New
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+#   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 {
@@ -103,7 +103,7 @@
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_NewVar
-   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
+#   fun:COMMENT_THIS_LINE_TO_DISABLE_LEAK_WARNING
 }
 
 #
