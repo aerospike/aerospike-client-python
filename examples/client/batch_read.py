@@ -33,6 +33,15 @@ class BatchRead(ExampleWithRecord):
         else:
             print('error: Not Found.')
 
+        # Select bins
+        records = self.client.batch_read(keys, bins=["a"])
+
+        if records != None:
+            print(f"{len(records)} records were found")
+            print(records)
+        else:
+            print('error: Not Found.')
+
         # TODO: verify syntax
         # Verify existence of records
         records = self.client.batch_read(keys, bins=[])
