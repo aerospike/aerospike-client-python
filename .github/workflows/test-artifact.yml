@@ -246,7 +246,7 @@ jobs:
           else
             export PYTHONMALLOC=malloc
             VALGRIND_SUPP_FILE=valgrind-python.supp
-            exec {fd}>/dev/null
+            exec {fd}<>/dev/null
             VALGRIND_ARGS+=(
               "--suppressions=./$VALGRIND_SUPP_FILE"
               "--fullpath-after=."
