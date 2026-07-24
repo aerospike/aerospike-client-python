@@ -246,7 +246,6 @@ jobs:
           else
             export PYTHONMALLOC=malloc
             VALGRIND_SUPP_FILE=valgrind-python.supp
-            VALGRIND_LOG_FILE=valgrind.log
             VALGRIND_ARGS+=(
               "--suppressions=./$VALGRIND_SUPP_FILE"
               "--fullpath-after=."
@@ -255,8 +254,10 @@ jobs:
               "--show-leak-kinds=definite"
               "--leak-check=full"
               "--errors-for-leak-kinds=none"
-              "--log-file=$VALGRIND_LOG_FILE"
+              "--log-fd=3"
             )
+
+            VALGRIND_LOG_FILE=valgrind.log
           fi
         fi
 
@@ -265,8 +266,12 @@ jobs:
 
         # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
         # There's no way to tell unless we see the logs
-        "${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" \
-          -W error::pytest.PytestUnraisableExceptionWarning
+        test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
+        if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
+          "${test_command[@]}"
+        else
+          "${test_command[@]}" | tee "$VALGRIND_LOG_FILE" <&3
+        fi
 
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
           if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
