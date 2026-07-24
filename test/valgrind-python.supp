@@ -499,3 +499,24 @@
    Memcheck:Addr4
    fun:PyUnicode_FSConverter
 }
+
+# Custom suppressions
+
+{
+   Known memory leak that intermittently shows up but is hard to reproduce with a subset of the test suite
+   Memcheck:Leak
+   fun:malloc
+   fun:CRYPTO_zalloc
+   fun:SSL_new
+   fun:as_tls_wrap
+   fun:as_socket_wrap
+   fun:as_socket_create
+   fun:as_node_try_family_connections
+   fun:as_node_create_socket
+   fun:as_node_create_connection
+   fun:as_node_get_connection
+   fun:as_info_command_node
+   fun:aerospike_info_foreach
+   fun:AerospikeClient_InfoAll_Invoke
+   fun:AerospikeClient_InfoAll
+}
