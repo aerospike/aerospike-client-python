@@ -186,19 +186,6 @@ jobs:
           echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> "$GITHUB_ENV"
           echo "LD_PRELOAD=$(gcc --print-file-name=libasan.so)" >> "$GITHUB_ENV"
         fi
-
-        if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
-          sudo apt-get update
-          sudo apt-get install -y valgrind
-          VALGRIND_ARGS="valgrind --error-exitcode=1"
-
-          if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --tool=massif --massif-out-file=./${MASSIF_REPORT_FILE_NAME}" >> "$GITHUB_ENV"
-          else
-            VALGRIND_SUPP_FILE=valgrind-python.supp
-            echo VALGRIND_ARGS="$VALGRIND_ARGS --suppressions=./$VALGRIND_SUPP_FILE --gen-suppressions=all --num-callers=500 --show-leak-kinds=definite --leak-check=full --errors-for-leak-kinds=definite" >> "$GITHUB_ENV"
-          fi
-        fi
       env:
         MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
         SERVER_TAG: ${{ inputs.server-tag }}
@@ -241,16 +228,66 @@ jobs:
         fi
         pip install -r requirements.txt
 
+        VALGRIND_ARGS=()
+        if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
+          sudo apt-get update
+          sudo apt-get install -y valgrind
+
+          VALGRIND_ARGS+=(
+            "valgrind"
+            "--error-exitcode=1"
+          )
+
+          if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
+            VALGRIND_ARGS+=(
+              "--tool=massif"
+              "--massif-out-file=./${MASSIF_REPORT_FILE_NAME}"
+            )
+          else
+            export PYTHONMALLOC=malloc
+            VALGRIND_SUPP_FILE=valgrind-python.supp
+            VALGRIND_ARGS+=(
+              "--suppressions=./$VALGRIND_SUPP_FILE"
+              "--fullpath-after=."
+              "--gen-suppressions=all"
+              "--num-callers=500"
+              "--show-leak-kinds=definite"
+              "--leak-check=full"
+              "--errors-for-leak-kinds=none"
+              "--log-fd=55"
+            )
+
+            VALGRIND_LOG_FILE=valgrind.log
+          fi
+        fi
+
+        # eval: perform variable expansion before brace expansion
+        read -ra test_files < <(eval echo "new_tests/$TEST_FILE")
+
         # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
         # There's no way to tell unless we see the logs
-        # eval needed to perform variable expansion before brace expansion inside $TEST_FILE
+        test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
+        if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
+          "${test_command[@]}" 55> >(tee "$VALGRIND_LOG_FILE")
+        else
+          "${test_command[@]}"
+        fi
 
-        # shellcheck disable=SC2086
-        eval PYTHONMALLOC=malloc $VALGRIND_ARGS python3 -m pytest -vvs --full-trace new_tests/$TEST_FILE \
-          -W error::pytest.PytestUnraisableExceptionWarning
-
-        if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == true ]]; then
-          ms_print "./$MASSIF_REPORT_FILE_NAME"
+        if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
+          if [[ ${{ inputs.run-valgrind-with-massif }} == true ]]; then
+            ms_print "./$MASSIF_REPORT_FILE_NAME"
+          else
+            # Since valgrind suppressions don't support filtering out stack traces that *don't* contain specific lines
+            # i.e our smart client source code,
+            # we have to filter it outside of valgrind.
+            # This fails if client code is found by valgrind
+            # /repo/ is the root directory where the manylinux wheels are built
+            cat "$VALGRIND_LOG_FILE"
+            if grep '/repo/' "$VALGRIND_LOG_FILE"; then
+              echo "Found client code in valgrind logs. Failing out"
+              exit 1
+            fi
+          fi
         fi
       working-directory: test
       shell: bash -ex {0}
