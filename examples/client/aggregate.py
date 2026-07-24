@@ -19,22 +19,16 @@
 import os.path
 
 from aerospike import predicates as p
-from .. import Example
+from .. import ExampleWithIndex
 
 
-config = {
-    'lua': {
-        'user_path': os.path.dirname(__file__)
-    }
-}
-
-class Aggregate(Example):
+class Aggregate(ExampleWithIndex):
     def run(self):
         BIN = "bin"
         predicates = [
             p.equals(BIN, 1),
-            p.equals(BIN, "a"),
-            p.between(BIN, 1, 3)
+            # p.equals(BIN, "a"),
+            # p.between(BIN, 1, 3)
         ]
 
         for predicate in predicates:
@@ -44,8 +38,8 @@ class Aggregate(Example):
             BINS = [BIN]
             query.select(*BINS)
 
-            MODULE = "a"
-            FUNCTION = "b"
+            MODULE = "stream_example"
+            FUNCTION = "count"
             ARGS = []
             query.apply(MODULE, FUNCTION, ARGS)
 

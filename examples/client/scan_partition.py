@@ -33,7 +33,8 @@ class ScanPartition(Example):
         records = []
 
         # callback to be called for each record read
-        def callback(input_tuple):
+        def callback(part_id, input_tuple):
+            print(part_id)
             (_, _, record) = input_tuple
             records.append(record)
             print(record)

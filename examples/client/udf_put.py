@@ -24,7 +24,7 @@ class UDFPut(Example):
         policy = {}
         # TODO
         # filename = args.pop()
-        filename = "z"
+        filename = "./examples/client/example.lua"
         udf_type = 0  # 0 for LUA
 
         self.client.udf_put(filename, udf_type, policy)

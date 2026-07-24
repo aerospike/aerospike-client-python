@@ -43,7 +43,7 @@ def query_callback(option, opt, value, parser):
 #     help="If set, displays the metadata.")
 
 
-from .. import Example
+from .. import ExampleWithIndex
 
 
 config = {
@@ -53,17 +53,24 @@ config = {
 }
 
 
-class QueryApply(Example):
+class QueryApply(ExampleWithIndex):
     def run(self):
+        BIN = "bin"
         predicates = [
-            p.equals(b, v),
-            p.equals(b, v),
-            p.between(b, l, u)
+            p.equals(BIN, 1),
+            # p.equals(BIN, "a"),
+            # p.between(BIN, 1, 3)
         ]
+
         for predicate in predicates:
-            query_id = self.client.query_apply(self.namespace,
-                                            self.set_name, predicate, MODULE,
-                                            FUNCTION, ARGS)
+            # If predicate is provided, then perform a query
+            BINS = [BIN]
+
+            MODULE = "stream_example"
+            FUNCTION = "count"
+            ARGS = []
+            query_id = self.client.query_apply(self.namespace, self.set_name, predicate, MODULE, FUNCTION, ARGS)
+
             while True:
                 response = self.client.job_info(query_id, aerospike.JOB_QUERY)
                 if response['status'] == aerospike.JOB_STATUS_COMPLETED:

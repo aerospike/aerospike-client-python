@@ -22,7 +22,7 @@ import aerospike
 class UDFGet(Example):
     def run(self):
         # TODO: configurable
-        module = "a"
+        module = "./examples/client/example.lua"
         language = aerospike.UDF_TYPE_LUA
         policy = {}
 

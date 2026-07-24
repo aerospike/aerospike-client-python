@@ -52,7 +52,7 @@ class BinOps(Example):
         # kitty loses another life, gains a color, all as part of a record
         # multi-op
         ops = [
-            operations.write(bin="color", write_item="smoke"),
+            operations.write(bin_name="color", write_item="smoke"),
             operations.increment(bin_name="lives", amount=-1),
             operations.read("ailments"),
             operations.read("lives")

@@ -68,7 +68,7 @@ class KVS(Example):
         print(
             '########################################################################')
 
-        self.client.udf_put('simple.lua')
+        self.client.udf_put('./examples/client/simple.lua')
 
         for i in range(1, 1000):
             key = ('test', 'demo', 'key{0}'.format(i))

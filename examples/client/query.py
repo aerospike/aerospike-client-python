@@ -21,11 +21,6 @@ import os.path
 from aerospike import predicates as p
 from .. import Example
 
-config = {
-    'lua': {
-        'user_path': os.path.dirname(__file__)
-    }
-}
 
 class Query(Example):
     def run(self):
@@ -35,9 +30,12 @@ class Query(Example):
         query = self.client.scan(self.namespace, self.set_name)
 
         # TODO
-        BINS = []
-        query.select(BINS)
-        query.apply(MODULE, FUNCTION, *ARGS)
+        BINS = ["a"]
+        query.select(*BINS)
+        MODULE = "stream_example"
+        FUNCTION = "count"
+        ARGS = []
+        query.apply(MODULE, FUNCTION, ARGS)
 
         results = []
 

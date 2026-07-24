@@ -66,19 +66,15 @@ class ScanApply(Example):
     def run(self):
         # args.reverse()
 
-        module = options.module
-        function = options.function
-
-        for i, param in enumerate(options.arguments):
-            if param.isdigit():
-                options.arguments[i] = int(param)
+        MODULE = "stream_example"
+        FUNCTION = "count"
 
         policy = {}
-        scan_id = client.scan_apply(
-            namespace, set, module, function, options.arguments, policy)
+        scan_id = self.client.scan_apply(
+            self.namespace, self.set_name, MODULE, FUNCTION, [], policy)
 
         while True:
-            response = client.job_info(scan_id, aerospike.JOB_SCAN)
+            response = self.client.job_info(scan_id, aerospike.JOB_SCAN)
             if response['status'] == aerospike.JOB_STATUS_COMPLETED:
                 break
 

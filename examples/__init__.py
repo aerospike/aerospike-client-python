@@ -1,4 +1,5 @@
 import aerospike
+import os
 
 
 class Example:
@@ -11,12 +12,16 @@ class Example:
         namespace: str = "test",
         set_name: str = "demo"
     ):
-        config = {
+        self.config = {
             "hosts": [(host, port)],
             "user": user,
-            "password": password
+            "password": password,
+            # TODO: should belong in a different fixture to make less complex
+            'lua': {
+                'user_path': os.path.dirname(__file__) + "/client/"
+            }
         }
-        client = aerospike.client(config)
+        client = aerospike.client(self.config)
 
         self.client = client
         self.namespace = namespace
@@ -25,6 +30,15 @@ class Example:
 
     def __del__(self):
         self.client.close()
+
+
+class ExampleWithIndex(Example):
+    INDEX_NAME = "index_name"
+    def __init__(self):
+        self.client.index_single_value_create(self.namespace, self.set_name, aerospike.INDEX_INTEGER, self.INDEX_NAME)
+
+    def __del__(self):
+        self.client.index_remove(self.namespace, self.INDEX_NAME)
 
 # TODO: I'm wondering if pytest can be used since
 # it has fixtures as a built-in feature

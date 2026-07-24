@@ -29,7 +29,7 @@ from aerospike import exception as e
 class Multithread(Example):
 
     numKeys = 10000
-    numReads = 1000000
+    numReads = 100000
     fNames = ('Jimmy', 'Johnny', 'Sammy', 'Sally', 'Sandy', 'Mandy', 'Billy')
     lNames = ('Bama', 'Mama', 'Sama', 'Lama', 'Cama', 'Rama', 'Tama')
     numThreads = 5
