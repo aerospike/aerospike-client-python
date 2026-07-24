@@ -1,10 +1,7 @@
-from .conftest import KEYS
 import unicodedata
 import pytest
 from aerospike_helpers.string_helpers import StringPolicy
 
-
-KEY = KEYS[0]
 
 NON_STR_BIN_NAME = INT_BIN_NAME = "nonstr"
 STR_BIN_NAME = "str"
@@ -19,6 +16,7 @@ BASE64_ENCODED_BIN_NAME = "base64_enc"
 SURROUNDING_WHITESPACE_BIN_NAME = "whitespace"
 MULTILINE_STR_BIN_NAME = "multiline"
 MULTILINE_STR_WITH_CR_BIN_NAME = "multiline_cr"
+NON_EXISTENT_BIN_NAME = "nonexistent"
 
 PAD_STRING = " "
 SINGLE_CHAR = "z"

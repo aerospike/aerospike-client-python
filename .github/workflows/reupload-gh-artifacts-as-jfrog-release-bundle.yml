@@ -24,7 +24,7 @@ jobs:
     outputs:
       artifact-name: ${{ env.ARTIFACT_NAME }}
     steps:
-    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@df68d17cd7b577287b56cbbca5621a5cea0bf803
       with:
         # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
         # to change unexpectedly.
@@ -34,7 +34,7 @@ jobs:
     needs: [
       reupload-artifacts-as-one-artifact-in-github
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@df68d17cd7b577287b56cbbca5621a5cea0bf803
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
@@ -48,14 +48,14 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      actions: read
+      actions: write
 
   create-release-bundle:
     if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@df68d17cd7b577287b56cbbca5621a5cea0bf803
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-names: |
@@ -67,6 +67,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      actions: read
 
   promote-release-bundle-to-dev:
     needs: [
