@@ -268,9 +268,9 @@ jobs:
         # There's no way to tell unless we see the logs
         test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
-          "${test_command[@]}"
-        else
           "${test_command[@]}" | tee "$VALGRIND_LOG_FILE" <&3
+        else
+          "${test_command[@]}"
         fi
 
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
