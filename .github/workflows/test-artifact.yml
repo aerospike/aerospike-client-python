@@ -277,6 +277,7 @@ jobs:
             # we have to filter it outside of valgrind.
             # This fails if client code is found by valgrind
             # /repo/ is the root directory where the manylinux wheels are built
+            cat "$VALGRIND_LOG_FILE"
             if ! grep '/repo/' "$VALGRIND_LOG_FILE"; then
               echo "Found client code in valgrind logs. Failing out"
               exit 1
