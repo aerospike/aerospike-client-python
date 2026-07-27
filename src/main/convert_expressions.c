@@ -1486,18 +1486,14 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 temp_expr->ctx, lval1, NIL, NIL,
                                 NIL)); // - 3 for rank, count, bin
             break;
-        case _AS_EXP_BIT_FLAGS: {
-            int tmp_value;
-            if (get_enum_from_py_dict(err, AS_PY_VAL_KEY, temp_expr->pydict,
-                                      &tmp_value, AS_BIT_RESIZE_DEFAULT,
-                                      AS_BIT_RESIZE_SHRINK_ONLY * 2 - 1,
-                                      false) != AEROSPIKE_OK) {
+        case _AS_EXP_BIT_FLAGS:
+            if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
+                AEROSPIKE_OK) {
                 return err->code;
             }
 
-            APPEND_ARRAY(0, as_exp_uint(tmp_value));
+            APPEND_ARRAY(0, as_exp_uint((uint64_t)lval1));
             break;
-        }
         case OP_BIT_RESIZE:
             APPEND_ARRAY(4, as_exp_bit_resize(
                                 NULL, NIL, NO_BIT_FLAGS,
