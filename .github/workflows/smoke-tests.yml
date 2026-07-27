@@ -275,7 +275,10 @@ jobs:
       # We cannot run this module with the cwd being string_ops
       # Otherwise we will get relative import errors
       # https://stackoverflow.com/a/47030746
-      run: python3 -m examples.run_all_examples
+      run: |
+        docker run --rm --network host aerospike/aerospike-tools asinfo -v "set-config:context=namespace;id=test;nsup-period=1"
+        docker run --rm --network host aerospike/aerospike-tools asinfo -v "set-config:context=namespace;namespace=test;default-ttl=10S"
+        python3 -m examples.run_all_examples
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}

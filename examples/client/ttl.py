@@ -31,7 +31,6 @@ import time
 from aerospike import exception as e
 
 TTL_DEFAULT = 10
-TTL_MAX = 20
 
 # TODO: include instructions to have docker commands to set up server instead of through python
 # Define the Namespace Supervisor parms -- setting the period very short
@@ -43,161 +42,54 @@ TTL_MAX = 20
 # some records that expire EARLY (5 seconds), some records that expire at
 # the default (10 seconds), some that expire LATE (15 seconds) and some
 # that NEVER expire.
-# We set MAX ttl to 20 to check that our flag (0xFFFFFFFF) is allowed in
-# and does not trigger the "greater than max ttl" warning.
-# Also, we'll check that one of our records DOES trigger the Max TTL warning
-# with a TTL of greater than 20.
 # PARAMS_NAMESPACE = [[('default-ttl', TTL_DEFAULT)]]
 
-# TODO: needs to be updated
-# Write Policy names and related values
-AS_POLICY_W_TIMEOUT = "timeout"
 
-# TODO: don't know what this is for...
-AS_POLICY_KEY_STORE = 3  # Store the key (NOT YET IMPLEMENTED)
-
-# TODO: verify this works?
-AS_POLICY_GEN_DUP = 4  # Write a record creating a duplicate, ONLY if
-# the generation collides (?)
-
-
-# Setup write policy
-wr_policy = {
-    "total_timeout": 5000,
-    "max_retries":   0,
-    "key":     aerospike.POLICY_KEY_DIGEST,
-    "gen":     aerospike.POLICY_GEN_IGNORE,
-    "exists":  aerospike.POLICY_EXISTS_IGNORE
+USER_KEYS = {
+    5: 5,
+    15: 15,
+    "ns_default": aerospike.TTL_NAMESPACE_DEFAULT,
+    "dont_expire": aerospike.TTL_NEVER_EXPIRE,
 }
-
-PRIMARY_KEYS_WITHOUT_TTL = list(range(1, 11))
-
-KEYS_WITH_TTL = {
-    20: {'ttl': 5,
-         'desc': '5 sec TTL'},
-    40: {'ttl': 15,
-         'desc': '15 sec TTL'},
-    60: {'ttl': aerospike.TTL_NEVER_EXPIRE,
-         'desc': 'NO_EXPIRE TTL'},
-    80: {'ttl': TTL_MAX + 1,
-         'desc': 'Larger than MAX TTL'}
-}
-
-ALL_KEYS = PRIMARY_KEYS_WITHOUT_TTL + list(KEYS_WITH_TTL.keys())
-
-##########################################################################
-# CONFIGURE SERVER
-##########################################################################
-
-# TODO: use docker container
 
 from .. import Example
 
 class TTL(Example):
     def run(self):
-        start = time.time()
-
-        self.check_records(start, 0, 'Clean state')
-
+        self.time_elapsed = 0
         self.write_records()
+        self.check_records(0, 'Initial state')
+        self.check_records(2, 'Expect all records with TTL<=2 to be gone.')
+        self.check_records(6, 'Expect all records with TTL<=5 to be gone')
+        self.check_records(3, 'Expect all records with TTL<=10 to be gone')
+        self.check_records(6, 'Expect all records to be gone, except NO_EXPIRE')
 
-        self.check_records(start, 0, 'Initial state')
-        self.check_records(start, 2, 'Expect all records with TTL-2')
-        self.check_records(start, 6, 'Expect all records with TTL<=5 to be gone')
-        self.check_records(start, 3, 'Expect all records with TTL<=10 to be gone')
-        self.check_records(start, 6, 'Expect all records to be gone, except NO_EXPIRE')
+    def __del__(self):
+        self.client.batch_remove([(self.namespace, self.set_name, key) for key in USER_KEYS])
+        super().__del__()
 
-    def print_record(self, record_tuple, prefix=''):
-        (key, meta, bins) = record_tuple
-        print("%s%-4d %-4s %-8s %s" % (
-            prefix,
-            int(key[2] or 0),
-            meta.get('gen') if meta and 'gen' in meta else '-',
-            meta.get('ttl') if meta and 'ttl' in meta else '-',
-            bins if bins else '-'
-        ))
+    def print_histogram(self):
+        request = f"histogram:namespace={self.namespace};type=ttl"
+        response = self.client.info_random_node(request)
+        print("Server TTL histogram:", response)
 
-
-    def print_records(self, records, prefix=''):
-        header = "%s---- ---- -------- " % prefix
-        header = header.ljust(80, '-')
-        print()
-        print("%s%-4s %-4s %-8s %s" % (prefix, "key", "gen", "ttl", "record"))
-        print(header)
-        [self.print_record(r, prefix) for r in records]
-
-
-    def print_header(self, header, message=None):
-        print()
-        print(''.ljust(80, '='))
-        print(header)
-        print(message) if message else None
-        print(''.ljust(80, '-'))
-
-    def print_histogram(self, prefix=''):
-        request = ''.join(["histogram:namespace=", self.namespace, ";type=ttl"])
-
-        header = "%sHISTOGRAM (%s)" % (prefix, request)
-        border = prefix.ljust(80, '-')
-
-        print()
-        print(header)
-        print(border)
-        for _, (error, response) in list(self.client.info_all(request).items()):
-            if error:
-                print('%serror: %s' % (prefix, error))
-            else:
-                for line in textwrap.wrap(response, 80 - len(prefix)):
-                    print("%s%s" % (prefix, line))
-
-
-    def check_records(self, start, wait=0, message=None):
-
+    def check_records(self, wait=0, message=None):
         if wait:
             time.sleep(wait)
+            print(f"Waited {wait} seconds")
+            self.time_elapsed += wait
 
-        stop = time.time()
-        duration = int(stop - start)
+        print(f"Total elapsed time is {self.time_elapsed}. {message}")
+        pks = [(self.namespace, self.set_name, user_key) for user_key in USER_KEYS]
+        brs = self.client.batch_read(pks)
+        for br in brs.batch_records:
+            print(f"Server returned error code {br.result} for record with ttl of {br.key[2]}")
 
-        self.print_header('CHECK :: wait=%s duration=%s' % (wait, duration), message)
-
-        try:
-            self.print_records(
-                [self.client.get((self.namespace, self.set_name, k)) for k in ALL_KEYS], '  ')
-        except Exception as e:
-            print("error: {0}".format(e), file=sys.stderr)
-
-        self.print_histogram('  ')
+        self.print_histogram()
 
 
     def write_records(self):
-
-        try:
-            for key in ALL_KEYS:
-                ttl = KEYS_WITH_TTL[key]['ttl'] if key in KEYS_WITH_TTL else None
-
-                rec = {}
-                rec['key'] = key
-                rec['ttl'] = ttl if ttl else TTL_DEFAULT
-                rec['desc'] = KEYS_WITH_TTL[key][
-                    'desc'] if key in KEYS_WITH_TTL else 'default TTL'
-
-                try:
-                    # write a new record
-                    # ttl=None is equivalent to not setting a ttl
-                    print("writing key :=", key)
-                    self.client.put(
-                        (self.namespace, self.set_name, key), rec, {'ttl': ttl})
-
-                except Exception as e:
-                    ttlVal = int(ttl or 0)
-                    if ttlVal > TTL_MAX:
-                        print('error: (correct) failed to write record with TTL(%d) > TTL_MAX(%d)' % (
-                            ttlVal, TTL_MAX))
-                    else:
-                        print('error: failed to write record with TTL = %d ' %
-                            ttlVal)
-
-        except Exception as e:
-            print("error: {0}".format(e), file=sys.stderr)
-            sys.exit(1)
+        for key, ttl in USER_KEYS.items():
+            pk = (self.namespace, self.set_name, key)
+            print("writing key :=", key)
+            self.client.put(pk, {"a": 1}, policy={"ttl": ttl})

@@ -2,10 +2,11 @@ import pkgutil
 import importlib
 import inspect
 import os
+import sys
 # from . import Example
 
 
-example_classes = []
+example_classes: list[type] = []
 
 dir_containing_this_module = os.path.dirname(os.path.abspath(__file__))
 all_packages = pkgutil.walk_packages([dir_containing_this_module + "/client"])
@@ -22,6 +23,9 @@ for package in all_packages:
         if obj.__bases__[0].__name__ != "Example":
             continue
         example_classes.append(obj)
+
+if len(sys.argv) == 2:
+    example_classes = [cls for cls in example_classes if cls.__name__ == sys.argv[1]]
 
 print("Running examples...")
 for cls in example_classes:
