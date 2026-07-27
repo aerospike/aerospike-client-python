@@ -15,11 +15,11 @@
 # limitations under the License.
 ##########################################################################
 
-from .. import Example
+from .. import UDFExample
 import aerospike
 
 
-class UDFGet(Example):
+class UDFGet(UDFExample):
     def run(self):
         # TODO: configurable
         module = "./examples/client/example.lua"

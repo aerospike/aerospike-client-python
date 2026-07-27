@@ -17,9 +17,9 @@
 
 
 
-from .. import Example
+from .. import UDFExample
 
-class KVS(Example):
+class KVS(UDFExample):
     def run(self):
         print(
             '########################################################################')

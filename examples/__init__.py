@@ -10,17 +10,15 @@ class Example:
         user: str = None,
         password: str = None,
         namespace: str = "test",
-        set_name: str = "demo"
+        set_name: str = "demo",
+        extra_config: dict = {}
     ):
         self.config = {
             "hosts": [(host, port)],
             "user": user,
-            "password": password,
-            # TODO: should belong in a different fixture to make less complex
-            'lua': {
-                'user_path': os.path.dirname(__file__) + "/client/"
-            }
+            "password": password
         }
+        self.config |= extra_config
         client = aerospike.client(self.config)
 
         self.client = client
@@ -31,6 +29,18 @@ class Example:
     def __del__(self):
         self.client.close()
 
+
+class UDFExample(Example):
+    def __init__(self):
+        extra_config = {
+            'lua': {
+                'user_path': os.path.dirname(__file__) + "/client/"
+            }
+        }
+        super().__init__(extra_config)
+
+    def __del__(self):
+        pass
 
 class ExampleWithIndex(Example):
     INDEX_NAME = "index_name"

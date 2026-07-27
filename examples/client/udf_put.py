@@ -16,10 +16,10 @@
 ##########################################################################
 
 
-from .. import Example
+from .. import UDFExample
 
 
-class UDFPut(Example):
+class UDFPut(UDFExample):
     def run(self):
         policy = {}
         # TODO
