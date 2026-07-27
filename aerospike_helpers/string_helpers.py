@@ -48,13 +48,16 @@ class WriteFlags(IntEnum):
     String operation policy write bit flags. Use bitwise OR to combine flags.
     """
 
-    #: Default. Allow create or update.
     DEFAULT = 0
+    """
+    Default. Does not suppress an in-operation execution failure.
+    """
 
     NO_FAIL = 4
     """
-    Do not raise an error if a modify operation cannot be applied because
-            the target bin does not exist. The record is left unchanged.
+    Suppress an operation failure with the bin unchanged.
+
+    Does not suppress wrong-type errors.
     """
 
 
