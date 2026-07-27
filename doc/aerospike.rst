@@ -1247,9 +1247,7 @@ Specifies how the Python client will write Python booleans.
 
 .. data:: AS_BOOL
 
-    Write Python Booleans as ``as_bools``.
-
-    This is the Aerospike server's boolean type.
+    Write Python Booleans as `server booleans <https://aerospike.com/docs/develop/data-types/scalar/#boolean>`_.
 
 List
 ----
