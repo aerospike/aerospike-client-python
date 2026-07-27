@@ -1,9 +1,13 @@
-from .conftest import KEYS
+from .conftest import TEST_NS, TEST_SET
 import pytest
 
 from aerospike_helpers.operations import bitwise_operations, map_operations, list_operations, hll_operations
 import aerospike
 from aerospike import exception as e
+
+
+KEY = (TEST_NS, TEST_SET, 1)
+
 
 @pytest.mark.usefixtures("as_connection")
 class TestInvalidOptions:
@@ -24,7 +28,7 @@ class TestInvalidOptions:
         ]
         try:
             with pytest.warns(DeprecationWarning):
-                self.as_connection.operate(KEYS[0], ops)
+                self.as_connection.operate(KEY, ops)
         # We only care about the client printing the DeprecationWarning; this is not an end to end test
         except e.ServerError:
             pass
