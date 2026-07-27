@@ -45,7 +45,7 @@ TTL_DEFAULT = 10
 # PARAMS_NAMESPACE = [[('default-ttl', TTL_DEFAULT)]]
 
 
-USER_KEYS = {
+USER_KEYS_TO_TTL = {
     5: 5,
     15: 15,
     "ns_default": aerospike.TTL_NAMESPACE_DEFAULT,
@@ -56,6 +56,7 @@ from .. import Example
 
 class TTL(Example):
     def run(self):
+        self.KEYS = [(self.namespace, self.set_name, key) for key in USER_KEYS_TO_TTL]
         self.time_elapsed = 0
         self.write_records()
         self.check_records(0, 'Initial state')
@@ -65,7 +66,7 @@ class TTL(Example):
         self.check_records(6, 'Expect all records to be gone, except NO_EXPIRE')
 
     def __del__(self):
-        self.client.batch_remove([(self.namespace, self.set_name, key) for key in USER_KEYS])
+        self.client.batch_remove(self.KEYS)
         super().__del__()
 
     def print_histogram(self):
@@ -80,8 +81,7 @@ class TTL(Example):
             self.time_elapsed += wait
 
         print(f"Total elapsed time is {self.time_elapsed}. {message}")
-        pks = [(self.namespace, self.set_name, user_key) for user_key in USER_KEYS]
-        brs = self.client.batch_read(pks)
+        brs = self.client.batch_read(self.KEYS)
         for br in brs.batch_records:
             print(f"Server returned error code {br.result} for record with ttl of {br.key[2]}")
 
@@ -89,7 +89,7 @@ class TTL(Example):
 
 
     def write_records(self):
-        for key, ttl in USER_KEYS.items():
-            pk = (self.namespace, self.set_name, key)
+        for key in self.KEYS:
             print("writing key :=", key)
-            self.client.put(pk, {"a": 1}, policy={"ttl": ttl})
+            user_key = key[2]
+            self.client.put(key, {"a": 1}, policy={"ttl": USER_KEYS_TO_TTL[user_key]})
