@@ -214,19 +214,16 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
 
     if (!found) {
         if (!is_optional) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation missing required entry %s", key);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Operation missing required entry %s", key);
         }
-        else {
-            goto exit_without_returning_int;
-        }
+        goto exit_without_returning_int;
     }
 
     if (int64 >= min_bound && int64 <= max_bound) {
         goto return_int;
     }
-
-    if (warn_if_out_of_bounds) {
+    else if (warn_if_out_of_bounds) {
         int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                                       OUT_OF_BOUNDS_MESSAGE, key, min_bound,
                                       max_bound, int64);
