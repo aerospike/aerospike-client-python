@@ -178,8 +178,8 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
         byte_size (int): The new size of the bytes.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
         resize_flags (int): :ref:`aerospike_bitwise_resize_flag` modifying the resize behavior
-            (default ``aerospike.BIT_RESIZE_DEFAULT``), such as ``aerospike.BIT_RESIZE_GROW_ONLY |
-            aerospike.BIT_RESIZE_FROM_FRONT``.
+            (default :py:data:`aerospike.BIT_RESIZE_DEFAULT`), such as :py:data:`aerospike.BIT_RESIZE_GROW_ONLY` |
+            :py:data:`aerospike.BIT_RESIZE_FROM_FRONT`.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary

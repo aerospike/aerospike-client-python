@@ -6,10 +6,10 @@ import time
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
 from aerospike_helpers.operations import operations
-from .conftest import verify_record_ttl
+from .conftest import verify_record_ttl, TEST_NS, TEST_SET
 
 SKIP_MSG = "read_touch_ttl_percent only supported on server 7.1 or higher"
-KEY = ("test", "demo", 1)
+KEY = (TEST_NS, TEST_SET, 1)
 
 
 @pytest.mark.usefixtures("as_connection")

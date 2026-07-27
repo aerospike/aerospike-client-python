@@ -11,7 +11,7 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters.
+:py:mod:`aerospike` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
@@ -255,35 +255,74 @@ The following example shows the three modes of serialization:
 2. Class-level user functions
 3. Instance-level user functions
 
-.. include:: examples/serializer.py
-    :code: python
+.. testcode::
 
-Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
-(record ``foo3`` uses the same encoding as ``foo2``)
-If we read the data for each record using ``aql``, it outputs the following data:
+    import aerospike
+    import json
 
-.. code-block:: sql
+    # Serializers and deserializers
+    # Both local and global serializers use json library
+    # Functions print which one is being used
 
-    aql> select bin from test.demo where PK='foo1'
-    +-------------------------------------------------------------+--------+
-    | bin                                                         | PK     |
-    +-------------------------------------------------------------+--------+
-    | 80 04 95 09 00 00 00 00 00 00 00 4B 01 4B 02 4B 03 87 94 2E | "foo1" |
-    +-------------------------------------------------------------+--------+
-    1 row in set (0.000 secs)
+    def classSerializer(obj):
+        print("Using class serializer")
+        return json.dumps(obj)
 
-    OK
+    def classDeserializer(bytes):
+        print("Using class deserializer")
+        return json.loads(bytes)
 
-    aql> select bin from test.demo where PK='foo2'
-    +----------------------------+--------+
-    | bin                        | PK     |
-    +----------------------------+--------+
-    | 5B 31 2C 20 32 2C 20 33 5D | "foo2" |
-    +----------------------------+--------+
-    1 row in set (0.001 secs)
+    def localSerializer(obj):
+        print("Using local serializer")
+        return json.dumps(obj)
 
-    OK
+    def localDeserializer(bytes):
+        print("Using local deserializer")
+        return json.loads(bytes)
 
+    # First client has class-level serializer set in aerospike module
+    aerospike.set_serializer(classSerializer)
+    aerospike.set_deserializer(classDeserializer)
+    config = {
+        'hosts': [('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    # Second client has instance-level serializer set in client config
+    config['serialization'] = (localSerializer, localDeserializer)
+    client2 = aerospike.client(config)
+
+    # Keys: foo1, foo2, foo3
+    keys = [('test', 'demo', f'foo{i}') for i in range(1, 4)]
+    # Tuple is an unsupported type
+    tupleBin = {'bin': (1, 2, 3)}
+
+    # Use the aerospike module-level serializer
+    client.put(keys[0], tupleBin, serializer=aerospike.SERIALIZER_USER)
+
+    (_, _, bins) = client.get(keys[0])
+    print(bins)
+
+    # Second client uses instance-level, user-defined serialization
+    # Instance-level serializer overrides class-level serializer
+    client2.put(keys[2], tupleBin, serializer=aerospike.SERIALIZER_USER)
+    (_, _, bins) = client2.get(keys[2])
+    print(bins)
+
+    # Cleanup
+    client.batch_remove(keys)
+    client.close()
+    client2.close()
+    aerospike.unset_serializers()
+
+.. testoutput::
+
+    Using class serializer
+    Using class deserializer
+    {'bin': [1, 2, 3]}
+    Using local serializer
+    Using local deserializer
+    {'bin': [1, 2, 3]}
 
 Logging
 -------
@@ -301,8 +340,54 @@ By default:
 
 The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-.. include:: examples/log.py
-    :code: python
+.. testcode::
+
+    # Enable the logging at application start, before connecting to the server.
+    import aerospike
+
+    ## SETTING THE LOG HANDLER ##
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
+    # Set default log handler to print to the console
+    aerospike.set_log_handler()
+
+    def log_callback(level, func, path, line, msg):
+        print("[{}] {}".format(func, msg))
+
+    # Set log handler to custom callback function (defined above)
+    aerospike.set_log_handler(log_callback)
+
+
+    ## SETTING THE LOG LEVEL ##
+
+    # disables log handling
+    aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+
+    # Enables log handling and sets level to LOG_LEVEL_TRACE
+    aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+    # Create a client and connect it to the cluster
+    # This line will print use log_callback to print logs with a log level of TRACE
+    config = {
+        "hosts": [
+            ("127.0.0.1", 3000)
+        ]
+    }
+    client = aerospike.client(config)
+
+.. testoutput::
+
+    [AerospikeClient_Type_Init] Starting to create a new client...
+    [as_node_refresh_peers] Update peers for node 127.0.0.1:3000
+    [as_cluster_add_nodes_copy] Add node ... 127.0.0.1:3000
+    [as_node_refresh_partitions] Update partition map for node 127.0.0.1:3000
+
+.. testcleanup::
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
 
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
@@ -1264,11 +1349,11 @@ List Sort Flags
 
 Flags used by list sort.
 
-.. data:: aerospike.LIST_SORT_DEFAULT
+.. data:: LIST_SORT_DEFAULT
 
     Default. Preserve duplicates when sorting the list.
 
-.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+.. data:: LIST_SORT_DROP_DUPLICATES
 
     Drop duplicate values when sorting the list.
 
@@ -1841,6 +1926,11 @@ Transaction Abort Status
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
 
+.. data:: ABORT_COMMIT_FAILED
+
+    Abort was refused because a commit failed in-doubt and may still advance.
+    Retry the commit to resolve the transaction safely.
+
 .. _mrt_state:
 
 Transaction State
@@ -1853,6 +1943,11 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. data:: TXN_STATE_COMMIT_FAILED
+
+    A commit failed in-doubt and may still advance, so abort is not allowed
+    in this state. Retry the commit to resolve the transaction safely.
 
 .. _exp_path_select_flags:
 

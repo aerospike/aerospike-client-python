@@ -218,7 +218,7 @@ static inline bool use_operate_conversion_helper(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
-        (op >= OP_STRING_STRLEN && op <= OP_STRING_PREPEND) ||
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
         (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
          op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
          op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
@@ -359,7 +359,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
 
     if (use_operate_conversion_helper(operation)) {
-        return as_operations_add_from_pyobject_helper(
+        return as_operations_add_from_pyobject(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior

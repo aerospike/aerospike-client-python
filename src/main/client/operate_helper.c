@@ -53,11 +53,13 @@ const char *op_code_to_names[] = {
 #define STRING_OP_START_KEY "start"
 #define NEEDLE_OP_START_KEY "needle"
 
-as_status as_operations_add_from_pyobject_helper(
-    AerospikeClient *self, as_error *err, PyObject *op_dict,
-    as_vector *unicodeStrVector, as_static_pool *static_pool,
-    as_operations *ops, long operation_code, long *ret_type,
-    int serializer_type)
+as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
+                                          PyObject *op_dict,
+                                          as_vector *unicodeStrVector,
+                                          as_static_pool *static_pool,
+                                          as_operations *ops,
+                                          long operation_code, long *ret_type,
+                                          int serializer_type)
 
 {
     // as_operations_add_* API methods can take ownership of heap allocated as_val
@@ -764,7 +766,9 @@ as_status as_operations_add_from_pyobject_helper(
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
-
+    case OP_STRING_TO_STRING:
+        success = as_operations_to_string(ops, bin);
+        break;
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
             success = as_operations_map_remove_by_value_rel_rank_range(

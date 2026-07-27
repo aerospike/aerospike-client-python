@@ -26,7 +26,7 @@ a cluster-tending thread.
 Boilerplate Code For Examples
 -----------------------------
 
-Assume every in-line example runs this code beforehand:
+Assume this code runs before the code examples:
 
 .. Would prefer to have an external Python script to reduce code duplication here.
 .. But there's no way to call a Python script for testsetup
@@ -46,13 +46,9 @@ Assume every in-line example runs this code beforehand:
     # Create a client and connect it to the cluster
     try:
         client = aerospike.client(config)
-        client.truncate('test', "demo", 0)
     except ex.ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
-
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
 
 .. code-block:: python
 
@@ -69,20 +65,30 @@ Assume every in-line example runs this code beforehand:
     # Create a client and connect it to the cluster
     try:
         client = aerospike.client(config)
-        client.truncate('test', "demo", 0)
     except ex.ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
 
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
-
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
+Code example cleanup:
+
+.. testcleanup::
+
+    client.truncate('test', "demo", 0)
+    client.close()
+
+.. code-block:: python
+
+    client.truncate('test', "demo", 0)
+    client.close()
+
 Basic example:
 
-::
+.. testcode::
+
+    keyTuple = ('test', 'demo', 1)
 
     # Write a record
     client.put(keyTuple, {'name': 'John Doe', 'age': 32})
@@ -162,8 +168,21 @@ Record Commands
 
         Example:
 
-        .. include:: examples/put.py
-            :code: python
+        .. testcode::
+
+            keyTuple = ('test', 'demo', 2)
+
+            # Insert a record with bin1
+            client.put(keyTuple, {'bin1': 4})
+
+            # Insert another bin named bin2
+            client.put(keyTuple, {'bin2': "value"})
+
+            # Remove bin1 from this record
+            client.put(keyTuple, {'bin2': aerospike.null()})
+
+            # Removing the last bin should delete this record
+            client.put(keyTuple, {'bin1': aerospike.null()})
 
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
@@ -180,8 +199,29 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/exists.py
-            :code: python
+        .. testcode::
+
+            keyTuple = ('test', 'demo', 3)
+
+            # Check non-existent record
+            (key, meta) = client.exists(keyTuple)
+
+            print(key)
+            print(meta)
+
+            # Check existing record
+            client.put(keyTuple, {'bin1': 4})
+            (key, meta) = client.exists(keyTuple)
+
+            print(key)
+            print(meta)
+
+        .. testoutput::
+
+            ('test', 'demo', 3, bytearray(b'...'))
+            None
+            ('test', 'demo', 3, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
 
         .. versionchanged:: 2.0.3
 
@@ -196,8 +236,29 @@ Record Commands
 
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. include:: examples/get.py
-            :code: python
+        .. testcode::
+
+            # Get nonexistent record
+            keyTuple = ('test', 'demo', 4)
+            try:
+                client.get(keyTuple)
+            except ex.RecordNotFound as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            # Get existing record
+            client.put(keyTuple, {'bin1': 4})
+            (key, meta, bins) = client.get(keyTuple)
+
+            print(key)
+            print(meta)
+            print(bins)
+
+        .. testoutput::
+
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
+            ('test', 'demo', None, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
 
         .. versionchanged:: 2.0.0
 
@@ -215,8 +276,35 @@ Record Commands
 
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. include:: examples/select.py
-            :code: python
+        .. testcode::
+
+            # Record to select from
+            keyTuple = ('test', 'demo', 5)
+            client.put(keyTuple, {'bin1': 4, 'bin2': 3})
+
+            # Only get bin1
+            (key, meta, bins) = client.select(keyTuple, ['bin1'])
+
+            # Similar output to get()
+            print(key)
+            print(meta)
+            print(bins)
+
+            # Get all bins
+            (key, meta, bins) = client.select(keyTuple, ['bin1', 'bin2'])
+            print(bins)
+
+            # Get nonexistent bin
+            (key, meta, bins) = client.select(keyTuple, ['bin3'])
+            print(bins)
+
+        .. testoutput::
+
+            ('test', 'demo', 5, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
+            {'bin1': 4, 'bin2': 3}
+            {}
 
         .. versionchanged:: 2.0.0
 
@@ -238,8 +326,35 @@ Record Commands
         :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/operate.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.operations import operations
+
+            # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 6)
+            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
+            ops = [
+                operations.increment("age", 1000),
+                operations.write("name", "J."),
+                operations.prepend("name", "Phillip "),
+                operations.append("name", " Fry"),
+                operations.read("name"),
+                operations.read("career"),
+                operations.read("age")
+            ]
+            (key, meta, bins) = client.operate(keyTuple, ops)
+
+            print(key)
+            # The generation should only increment once
+            # A transaction is *atomic*
+            print(meta)
+            print(bins) # Will display all bins selected by read operations
+
+        .. testoutput::
+
+            ('test', 'demo', 6, bytearray(b"..."))
+            {'ttl': 2592000, 'gen': 2}
+            {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
         .. note::
 
@@ -267,8 +382,31 @@ Record Commands
         :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/operate_ordered.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.operations import operations
+
+            # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 7)
+            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
+            ops = [
+                operations.increment("age", 1000),
+                operations.write("name", "J."),
+                operations.prepend("name", "Phillip "),
+                operations.append("name", " Fry"),
+                operations.read("name"),
+                operations.read("career"),
+                operations.read("age")
+            ]
+            (key, meta, bins) = client.operate_ordered(keyTuple, ops)
+
+            # Same output for key and meta as operate()
+            # But read operations are outputted as bin-value pairs
+            print(bins)
+
+        .. testoutput::
+
+            [('name', 'Phillip J. Fry'), ('career', 'delivery boy'), ('age', 1025)]
 
         .. versionchanged:: 2.1.3
 
@@ -287,8 +425,26 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/touch.py
-            :code: python
+        .. testcode::
+
+            # Insert record and get its metadata
+            keyTuple = ('test', 'demo', 8)
+            client.put(keyTuple, bins = {"bin1": 4})
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
+
+            # Explicitly set TTL to 120
+            # and increment generation
+            client.touch(keyTuple, 120)
+
+            # Record metadata should be updated
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
+
+        .. testoutput::
+
+            {'ttl': 2592000, 'gen': 1}
+            {'ttl': 120, 'gen': 2}
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
@@ -304,8 +460,24 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/remove.py
-            :code: python
+        .. testcode::
+
+            # Insert a record
+            keyTuple = ('test', 'demo', 9)
+            client.put(keyTuple, {"bin1": 4})
+
+            # Try to remove it with the wrong generation
+            try:
+                client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            # Remove it ignoring generation
+            client.remove(keyTuple)
+
+        .. testoutput::
+
+            Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
@@ -321,8 +493,23 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/remove_bin.py
-            :code: python
+        .. testcode::
+
+            # Insert record
+            bins = {"bin1": 0, "bin2": 1}
+            keyTuple = ('test', 'demo', 10)
+            client.put(keyTuple, bins)
+
+            # Remove bin1
+            client.remove_bin(keyTuple, ['bin1'])
+
+            # Only bin2 shold remain
+            (keyTuple, meta, bins) = client.get(keyTuple)
+            print(bins)
+
+        .. testoutput::
+
+            {'bin2': 1}
 
     .. index::
         single: Batched Commands
@@ -366,8 +553,67 @@ Batched Commands
 
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_write.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.batch import records as br
+            from aerospike_helpers.operations import operations as op
+
+            # Keys
+            # Only insert two records with the first and second key
+            keyTuples = [
+                ('test', 'demo', 'Robert'),
+                ('test', 'demo', 'Daniel'),
+                ('test', 'demo', 'Patrick'),
+            ]
+            client.put(keyTuples[0], {'id': 100, 'balance': 400})
+            client.put(keyTuples[1], {'id': 101, 'balance': 200})
+            client.put(keyTuples[2], {'id': 102, 'balance': 300})
+
+            # Apply different operations to different keys
+            batchRecords = br.BatchRecords(
+                [
+                    # Remove Robert from system
+                    br.Remove(
+                        key = keyTuples[0],
+                    ),
+                    # Modify Daniel's ID and balance
+                    br.Write(
+                        key = keyTuples[1],
+                        ops = [
+                            op.write("id", 200),
+                            op.write("balance", 100),
+                            op.read("id"),
+                        ],
+                    ),
+                    # Read Patrick's ID
+                    br.Read(
+                        key = keyTuples[2],
+                        ops=[
+                            op.read("id")
+                        ],
+                        policy=None
+                    ),
+                ]
+            )
+
+            client.batch_write(batchRecords)
+
+            # batch_write modifies its BatchRecords argument.
+            # Results for each BatchRecord will be set in the result, record, and in_doubt fields.
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+            # Note how written bins return None if their values aren't read
+            # And removed records have an empty bins dictionary
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
+            0
+            (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -413,8 +659,41 @@ Batched Commands
 
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_operate.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.operations import operations as op
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Increment ID by 100 and balance by 500 for all employees
+            ops = [
+                op.increment("id", 100),
+                op.increment("balance", 500),
+                op.read("balance")
+            ]
+
+            batchRecords = client.batch_operate(keys, ops)
+            print(batchRecords.result)
+
+            # Print each individual transaction's results
+            # and record if it was read from
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 700})
+            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 900})
+            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 800})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -432,8 +711,39 @@ Batched Commands
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_apply.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(4, 7)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Apply a user defined function (UDF) to a batch
+            # of records using batch_apply.
+            client.udf_put("./examples/batch_apply.lua")
+
+            args = ["balance", 0.5, 100]
+            batchRecords = client.batch_apply(keys, "batch_apply", "tax", args)
+
+            print(batchRecords.result)
+
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+
+            # Cleanup
+            client.udf_remove('batch_apply.lua')
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee4', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0.0})
+            0: (('test', 'demo', 'employee5', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100.0})
+            0: (('test', 'demo', 'employee6', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50.0})
 
         .. include:: examples/batch_apply.lua
             :code: lua
@@ -452,8 +762,35 @@ Batched Commands
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_remove.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(7, 10)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            batchRecords = client.batch_remove(keys)
+
+            # A result of 0 means success
+            print(batchRecords.result)
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+
+        .. testoutput::
+
+            0
+            0
+            (('test', 'demo', 'employee7', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee8', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee9', bytearray(b"...")), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
@@ -483,6 +820,7 @@ String Operations
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 11)
             client.put(keyTuple, {'bin1': 'Martin Luther King'})
             client.append(keyTuple, 'bin1', ' jr.')
             (_, _, bins) = client.get(keyTuple)
@@ -508,6 +846,7 @@ String Operations
 
         .. testcode::
 
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'bin1': 'Freeman'})
             client.prepend(keyTuple, 'bin1', 'Gordon ')
             (_, _, bins) = client.get(keyTuple)
@@ -538,12 +877,13 @@ Numeric Operations
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. testcode::
 
             # Start with 100 lives
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'lives': 100})
 
             # Gain health
@@ -625,16 +965,16 @@ User Defined Functions
         'hosts': [ ('127.0.0.1', 3000)],
         'lua': { 'user_path': '~/lua-scripts/'}
     }
-    client = aerospike.client(config)
+    client2 = aerospike.client(config)
     # Register the UDF module and copy it to the Lua 'user_path'
-    client.udf_put('./examples/scan/my_udf.lua')
+    client2.udf_put('./examples/scan/my_udf.lua')
 
-    print("Before remove:", client.udf_list())
+    print("Before remove:", client2.udf_list())
 
-    client.udf_remove('my_udf.lua')
-    print("After remove:", client.udf_list())
+    client2.udf_remove('my_udf.lua')
+    print("After remove:", client2.udf_list())
 
-    client.close()
+    client2.close()
 
 .. testoutput:: udf
 
@@ -654,9 +994,6 @@ User Defined Functions
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. note::
-        To run this example, do not run the boilerplate code.
 
     .. method:: udf_remove(module[, policy: dict])
 
@@ -718,7 +1055,7 @@ User Defined Functions
         :param dict policy: optional dictionary that takes in both :ref:`aerospike_scan_policies` and :ref:`aerospike_info_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_SCAN`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
@@ -735,7 +1072,7 @@ User Defined Functions
         :param list args: the arguments to the UDF.
         :param dict policy: optional dictionary that takes in both :ref:`aerospike_write_policies` and :ref:`aerospike_info_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_QUERY`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: job_info(job_id, module[, policy: dict]) -> dict
@@ -875,8 +1212,19 @@ Info Operations
         :param TypeExpression expression: the compiled expression. See expressions at :py:mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_expression_base64.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers import expressions as exp
+
+            # Compile expression
+            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
+
+            base64 = client.get_expression_base64(expr)
+            print(base64)
+
+        .. testoutput::
+
+            kwGTUQKkYmluMQY=
 
         .. versionchanged:: 7.0.0
 
@@ -910,8 +1258,26 @@ Info Operations
 
         .. note:: Requires Aerospike server version >= 3.12
 
-        .. include:: examples/truncate.py
-            :code: python
+        .. testcode::
+
+            import time
+
+            client.put(("test", "demo", "key1"), {"bin": 4})
+
+            time.sleep(1)
+            # Take threshold time
+            current_time = time.time()
+            time.sleep(1)
+
+            client.put(("test", "demo", "key2"), {"bin": 5})
+
+            threshold_ns = int(current_time * 10**9)
+            # Remove all items in set `demo` created before threshold time
+            # Record using key1 should be removed
+            client.truncate('test', 'demo', threshold_ns)
+
+            # Remove all items in namespace
+            # client.truncate('test', None, 0)
 
     .. index::
         single: Index Operations
@@ -982,15 +1348,12 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
-
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
             # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
 
     .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
 
@@ -1034,8 +1397,18 @@ Index Operations
         :param list ctx: Aerospike CDT context: generated by aerospike CDT ctx helper :mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_cdtctx_base64.py
-            :code: python
+        .. testcode::
+
+            import aerospike
+            from aerospike_helpers import cdt_ctx
+
+            ctxs = [cdt_ctx.cdt_ctx_list_index(0)]
+            ctxs_base64 = client.get_cdtctx_base64(ctxs)
+            print("Base64 encoding of ctxs:", ctxs_base64)
+
+        .. testoutput::
+
+            Base64 encoding of ctxs: khAA
 
         .. versionchanged:: 7.1.1
 
@@ -1101,9 +1474,7 @@ Index Operations
 
         .. testcode::
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
 
     .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
 
@@ -1537,7 +1908,6 @@ Key Tuple
 
         # Cleanup
         client.remove(keyTuple)
-        client.close()
 
     .. testoutput::
 
@@ -1603,7 +1973,6 @@ Record Tuple
             print("Bins:", bins)
 
             client.remove(keyTuple)
-            client.close()
 
         .. testoutput::
 
@@ -1772,10 +2141,7 @@ Write Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **exists**
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
@@ -1871,7 +2237,7 @@ Read Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_operate_policies:
 
@@ -1887,10 +2253,7 @@ Operate Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1974,10 +2337,7 @@ Apply Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2035,7 +2395,7 @@ Remove Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_batch_policies:
 
@@ -2140,10 +2500,7 @@ Batch Write Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2195,10 +2552,7 @@ Batch Apply Policies
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2354,12 +2708,12 @@ List Policies
 
         * **write_flags**
             | Write flags for the operation.
-            | One of the :ref:`aerospike_list_write_flag` values such as :data:`aerospike.LIST_WRITE_DEFAULT`
+            | One of the :ref:`aerospike_list_write_flag` values.
             |
             | Default: :data:`aerospike.LIST_WRITE_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
         * **list_order**
             | Ordering to maintain for the list.
@@ -2395,7 +2749,7 @@ Map Policies
             | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0.
 
