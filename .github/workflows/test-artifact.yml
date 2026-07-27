@@ -269,6 +269,8 @@ jobs:
         test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
           "${test_command[@]}" 55> >(tee "$VALGRIND_LOG_FILE")
+          # Makes sure that tee finishes
+          wait $!
         else
           "${test_command[@]}"
         fi
