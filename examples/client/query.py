@@ -24,14 +24,9 @@ from .. import Example
 
 class Query(Example):
     def run(self):
-        #. TODO: check if predicate to decide if using scan/query.
         query = self.client.query(self.namespace, self.set_name)
 
-        query = self.client.scan(self.namespace, self.set_name)
-
-        # TODO
-        BINS = ["a"]
-        query.select(*BINS)
+        query.select(self.BIN_NAME)
         MODULE = "stream_example"
         FUNCTION = "count"
         ARGS = []

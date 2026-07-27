@@ -20,10 +20,8 @@ from .. import Example
 
 class Prepend(Example):
     def run(self):
-        # TODO: can share this in a fixture class?
         record = {
             'example_name': 'John',
-            'example_age': 1
         }
 
         self.client.put(self.key, record)

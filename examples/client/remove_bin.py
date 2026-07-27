@@ -16,29 +16,14 @@
 ##########################################################################
 
 
-import aerospike
-import sys
-
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] key bin_names"
 
 from .. import ExampleWithRecord
 
 
-exitCode = 0
-
 class RemoveBin(ExampleWithRecord):
     def run(self):
-        # TODO: both configurable
-        # pk
-        bin_names = []
+        bin_names = [self.BIN_NAME]
 
         retval = self.client.remove_bin(self.key, bin_names)
         print("Status of bin removal is: %d" % (retval))
         print("OK, bins removed from the record at", self.key)
-        # TODO: why RecordNotFound used to map to 602?

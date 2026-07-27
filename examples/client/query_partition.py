@@ -18,17 +18,14 @@
 from .. import Example
 
 
-class ScanPartition(Example):
+class QueryPartition(Example):
     def run(self):
-        s = self.client.scan(self.namespace, self.set_name)
+        query = self.client.query(self.namespace, self.set_name)
 
-        partition_policy = None
+        query_policy = None
 
-        # TODO: configurable
-        STARTING_PARTITION = 1
-        if STARTING_PARTITION > 0:
-            # project specified bins
-            partition_policy = {'partition_filter': {'begin': STARTING_PARTITION, 'count': 1}}
+        STARTING_PARTITION = 1000
+        query_policy = {'partition_filter': {'begin': STARTING_PARTITION, 'count': 1}}
 
         records = []
 
@@ -42,7 +39,7 @@ class ScanPartition(Example):
         self.client.truncate(self.namespace, self.set_name, 0)
 
         # invoke the operations, and for each record invoke the callback
-        s.foreach(callback, partition_policy)
+        query.foreach(callback, query_policy)
         existing_count = len(records)
         if existing_count > 0:
             print(f"{existing_count} records already exist in partition: {STARTING_PARTITION}.")
@@ -64,7 +61,7 @@ class ScanPartition(Example):
 
         records.clear()
         # invoke the operations, and for each record invoke the callback
-        s.foreach(callback, partition_policy)
+        query.foreach(callback, query_policy)
 
         print("---")
         print(f"{count} records are put into partition: {STARTING_PARTITION}.")

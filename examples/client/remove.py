@@ -16,10 +16,14 @@
 ##########################################################################
 
 from .. import ExampleWithRecord
+from aerospike import exception as e
 
 
 class Remove(ExampleWithRecord):
     def run(self):
-        # TODO: should demonstrate the negative path
-        # since key is an input for the old example.
         self.client.remove(self.key)
+
+        try:
+            self.client.remove(self.key)
+        except e.RecordNotFound:
+            print("Record already removed")

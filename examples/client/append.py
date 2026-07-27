@@ -23,7 +23,6 @@ class Append(Example):
     def run(self):
         record = {
             'example_name': 'John',
-            'example_age': 1
         }
         self.client.put(self.key, record)
 

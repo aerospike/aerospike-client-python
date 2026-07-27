@@ -24,18 +24,16 @@ from .. import ExampleWithIndex
 
 class Aggregate(ExampleWithIndex):
     def run(self):
-        BIN = "bin"
         predicates = [
-            p.equals(BIN, 1),
-            # p.equals(BIN, "a"),
-            # p.between(BIN, 1, 3)
+            p.equals(self.BIN, 1),
+            p.between(self.BIN, 1, 3)
         ]
 
         for predicate in predicates:
             # If predicate is provided, then perform a query
             query = self.client.query(self.namespace, self.set_name)
             query.where(predicate)
-            BINS = [BIN]
+            BINS = [self.BIN]
             query.select(*BINS)
 
             MODULE = "stream_example"

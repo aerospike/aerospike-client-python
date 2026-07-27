@@ -92,4 +92,4 @@ class TTL(Example):
         for key in self.KEYS:
             print("writing key :=", key)
             user_key = key[2]
-            self.client.put(key, {"a": 1}, policy={"ttl": USER_KEYS_TO_TTL[user_key]})
+            self.client.put(key, {self.BIN_NAME: 1}, policy={"ttl": USER_KEYS_TO_TTL[user_key]})

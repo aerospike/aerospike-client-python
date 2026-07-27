@@ -17,55 +17,13 @@
 
 
 import aerospike
-import json
-import sys
 
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] module function [args...]"
-
-
-def scan_callback(option, opt, value, parser):
-    setattr(parser.values, option.dest, value.split(','))
-
-
-# optparser.add_option(
-#     "-m", "--module", dest="module", type="string",
-#     help="UDF Module.")
-
-# optparser.add_option(
-#     "-f", "--function", dest="function", type="string",
-#     help="UDF Function.")
-
-# optparser.add_option(
-#     "-a", "--arg", dest="arguments", type="string", action="callback",
-#     callback=scan_callback,  help="UDF Arguments.")
-
-# optparser.add_option(
-#     "-b", "--bins", dest="bins", type="string", action="append",
-#     help="Bins to select from each record.")
-
-
-exitCode = 0
-
-
-def parse_arg(s):
-    try:
-        return json.loads(s)
-    except ValueError:
-        return s
 
 from .. import Example
 
 
 class ScanApply(Example):
     def run(self):
-        # args.reverse()
-
         MODULE = "stream_example"
         FUNCTION = "count"
 

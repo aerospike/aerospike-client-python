@@ -17,33 +17,12 @@
 
 
 import aerospike
-import json
-import re
-import sys
 import os.path
 
 from aerospike import predicates as p
 
-##########################################################################
-# Option Parsing
-##########################################################################
 
-usage = "usage: %prog [options] [where]"
-
-
-def query_callback(option, opt, value, parser):
-    setattr(parser.values, option.dest, value.split(','))
-
-# optparser.add_option(
-#     "--show-key", dest="show_key", action="store_true",
-#     help="If set, displays the key/digest.")
-
-# optparser.add_option(
-#     "--show-meta", dest="show_meta", action="store_true",
-#     help="If set, displays the metadata.")
-
-
-from .. import ExampleWithIndex
+from .. import ExampleWithIndex, UDFExample
 
 
 config = {
@@ -53,7 +32,7 @@ config = {
 }
 
 
-class QueryApply(ExampleWithIndex):
+class QueryApply(ExampleWithIndex, UDFExample):
     def run(self):
         BIN = "bin"
         predicates = [

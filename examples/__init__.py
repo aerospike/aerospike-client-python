@@ -26,6 +26,7 @@ class Example:
         self.set_name = set_name
         self.key = (self.namespace, self.set_name, "docreadkey")
         self.non_existent_key = (self.namespace, self.set_name, "nonexistent")
+        self.BIN_NAME = "a"
 
     def __del__(self):
         self.client.close()
@@ -46,7 +47,7 @@ class UDFExample(Example):
 class ExampleWithIndex(Example):
     INDEX_NAME = "index_name"
     def __init__(self):
-        self.client.index_single_value_create(self.namespace, self.set_name, aerospike.INDEX_INTEGER, self.INDEX_NAME)
+        self.client.index_single_value_create(self.namespace, self.set_name, self.BIN_NAME, aerospike.INDEX_INTEGER, self.INDEX_NAME)
 
     def __del__(self):
         self.client.index_remove(self.namespace, self.INDEX_NAME)
@@ -55,7 +56,7 @@ class ExampleWithRecord(Example):
     def __init__(self):
         super().__init__()
 
-        self.client.put(self.key, bins={"a": 1})
+        self.client.put(self.key, bins={self.BIN_NAME: 1})
 
     def __del__(self):
         self.client.remove(self.key)

@@ -22,7 +22,6 @@ from .. import ExampleWithRecord
 class Increment(ExampleWithRecord):
     def run(self):
         record = {
-            'example_name': 'John',
             'example_age': 1
         }
 

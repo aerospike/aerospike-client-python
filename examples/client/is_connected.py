@@ -19,6 +19,7 @@ from .. import Example
 
 class IsConnected(Example):
     def run(self):
-        # TODO: negative path where not connected, or exception raised was removed
-        if self.client.is_connected() is True:
-            print("Connected to Aerospike DB.")
+        print(self.client.is_connected())
+
+        self.client.close()
+        print(self.client.is_connected())
