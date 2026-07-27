@@ -25,6 +25,7 @@ class Example:
         self.namespace = namespace
         self.set_name = set_name
         self.key = (self.namespace, self.set_name, "docreadkey")
+        self.non_existent_key = (self.namespace, self.set_name, "nonexistent")
 
     def __del__(self):
         self.client.close()
@@ -50,8 +51,6 @@ class ExampleWithIndex(Example):
     def __del__(self):
         self.client.index_remove(self.namespace, self.INDEX_NAME)
 
-# TODO: I'm wondering if pytest can be used since
-# it has fixtures as a built-in feature
 class ExampleWithRecord(Example):
     def __init__(self):
         super().__init__()

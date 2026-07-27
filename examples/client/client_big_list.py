@@ -273,7 +273,6 @@ class ClientSideBigList:
             raise ASMetadataRecordTooLarge
         except as_exceptions.RecordGenerationError:
             # This means that somebody else has updated the record count already. Don't risk updating again.
-            # TODO: if this happens then there's no way to further update the list from this client?
             pass
 
     def _get_items_from_subrecords(self, subrecords):

@@ -19,12 +19,13 @@
 from .. import ExampleWithRecord
 
 
-# TODO: should use fixture with multiple records
 class BatchRead(ExampleWithRecord):
-    def run(self):
-        keys = [f"key{i}" for i in range(5)]
+    def __init__(self):
+        pass
 
+    def run(self):
         # Get records
+        keys = [self.key, self.non_existent_key]
         records = self.client.batch_read(keys)
 
         if records != None:
@@ -42,7 +43,6 @@ class BatchRead(ExampleWithRecord):
         else:
             print('error: Not Found.')
 
-        # TODO: verify syntax
         # Verify existence of records
         records = self.client.batch_read(keys, bins=[])
 

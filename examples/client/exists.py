@@ -20,7 +20,8 @@ from .. import ExampleWithRecord
 
 class Exists(ExampleWithRecord):
     def run(self):
-        (key, metadata) = self.client.exists(self.key)
+        key, metadata = self.client.exists(self.key)
         print(key, metadata)
 
-        # TODO: missing negative path example (e.g where metadata is None)
+        key, metadata = self.client.exists(self.non_existent_key)
+        print(key, metadata)

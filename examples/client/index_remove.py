@@ -16,13 +16,10 @@
 ##########################################################################
 
 
-from .. import Example
+from .. import ExampleWithIndex
 
 
-class IndexRemove(Example):
+class IndexRemove(ExampleWithIndex):
     def run(self):
         policy = {}
-        # TODO: should be configurable...
-        INDEX_NAME = "index_name"
-
-        self.client.index_remove(self.namespace, INDEX_NAME, policy)
+        self.client.index_remove(self.namespace, self.INDEX_NAME, policy)

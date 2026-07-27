@@ -23,7 +23,6 @@ from .. import Example
 class Info(Example):
     def run(self):
         # Default info request
-        # TODO: configurable
         request = "statistics"
 
         # TODO: needs review

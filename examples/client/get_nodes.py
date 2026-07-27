@@ -27,5 +27,5 @@ usage = "usage: %prog"
 
 class GetNodes(Example):
     def run(self):
-        # TODO: Demonstrate different outcomes (i.e response is None or not)
         response = self.client.get_nodes()
+        print(response)
