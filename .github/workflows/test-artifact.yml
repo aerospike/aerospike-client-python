@@ -269,6 +269,8 @@ jobs:
         test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
           "${test_command[@]}" 55> >(tee "$VALGRIND_LOG_FILE")
+          # Makes sure that tee finishes
+          wait $!
         else
           "${test_command[@]}"
         fi
@@ -282,7 +284,6 @@ jobs:
             # we have to filter it outside of valgrind.
             # This fails if client code is found by valgrind
             # /repo/ is the root directory where the manylinux wheels are built
-            cat "$VALGRIND_LOG_FILE"
             if grep '/repo/' "$VALGRIND_LOG_FILE"; then
               echo "Found client code in valgrind logs. Failing out"
               exit 1
