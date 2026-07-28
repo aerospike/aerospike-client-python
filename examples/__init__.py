@@ -41,9 +41,6 @@ class UDFExample(Example):
         }
         super().__init__(extra_config)
 
-    def __del__(self):
-        pass
-
 class ExampleWithIndex(Example):
     INDEX_NAME = "index_name"
     def __init__(self):
