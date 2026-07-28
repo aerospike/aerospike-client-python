@@ -19,10 +19,10 @@
 import aerospike
 
 
-from .. import Example
+from .. import UDFExample
 
 
-class ScanApply(Example):
+class ScanApply(UDFExample):
     def run(self):
         MODULE = "stream_example"
         FUNCTION = "count"

@@ -19,10 +19,10 @@
 import os.path
 
 from aerospike import predicates as p
-from .. import Example
+from .. import UDFExample
 
 
-class Query(Example):
+class Query(UDFExample):
     def run(self):
         query = self.client.query(self.namespace, self.set_name)
 

@@ -19,10 +19,10 @@
 import os.path
 
 from aerospike import predicates as p
-from .. import ExampleWithIndex
+from .. import ExampleWithIndex, UDFExample
 
 
-class Aggregate(ExampleWithIndex):
+class Aggregate(ExampleWithIndex, UDFExample):
     def run(self):
         predicates = [
             p.equals(self.BIN, 1),
