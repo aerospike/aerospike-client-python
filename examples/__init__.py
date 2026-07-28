@@ -44,10 +44,14 @@ class UDFExample(Example):
 class ExampleWithIndex(Example):
     INDEX_NAME = "index_name"
     def __init__(self):
+        super().__init__()
+
         self.client.index_single_value_create(self.namespace, self.set_name, self.BIN_NAME, aerospike.INDEX_INTEGER, self.INDEX_NAME)
 
     def __del__(self):
         self.client.index_remove(self.namespace, self.INDEX_NAME)
+
+        super().__del__()
 
 class ExampleWithRecord(Example):
     def __init__(self):
