@@ -25,15 +25,15 @@ jobs:
     permissions:
       contents: write
 
-  promote-release-bundle-to-test:
+  promote-release-bundle:
     needs: [
       ff-stage-to-dev-tag,
     ]
-    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
+    uses: aerospike/shared-workflows/.github/workflows/reusable_promote-release-bundle.yaml@jnguyen/CLIENT-5161-add-promote-release-bundle-workflow-for-qe
     with:
-      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ inputs.jf-bundle-version }}
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      version: ${{ inputs.jf-bundle-version }}
       new-environment: TEST
     permissions:
       id-token: write

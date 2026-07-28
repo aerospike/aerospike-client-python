@@ -63,22 +63,22 @@ jobs:
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
       version: ${{ inputs.next_release_version }}
+      jf-bundle-tag: ${{ inputs.latest_tag }}
       gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
     permissions:
       contents: read
       id-token: write
       actions: read
 
-  promote-release-bundle-to-dev:
+  promote-release-bundle:
     needs: [
       create-release-bundle
     ]
-    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
+    uses: aerospike/shared-workflows/.github/workflows/reusable_promote-release-bundle.yaml@jnguyen/CLIENT-5161-add-promote-release-bundle-workflow-for-qe
     with:
-      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
-      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ inputs.next_release_version }}
-      release-bundle-tag: ${{ inputs.latest_tag }}
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      version: ${{ inputs.next_release_version }}
       new-environment: DEV
     permissions:
       id-token: write
