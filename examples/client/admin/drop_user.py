@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 
-from .create_user import CreateUser
+from .create_user import CreateUser, AdminExample
 
 class DropUser(CreateUser):
     def run(self):
@@ -27,3 +27,6 @@ class DropUser(CreateUser):
         self.client.admin_drop_user(self.user, policy)
 
         print("OK, 1 user dropped")
+
+    def cleanup(self):
+        AdminExample.cleanup(self)

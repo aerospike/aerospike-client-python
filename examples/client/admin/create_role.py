@@ -30,3 +30,6 @@ class CreateRole(AdminExample):
         self.client.admin_create_role(self.role, privileges, policy)
 
         print("OK, 1 new role created")
+
+    def cleanup(self):
+        self.client.admin_drop_role(self.role)

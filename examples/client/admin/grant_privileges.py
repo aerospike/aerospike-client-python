@@ -21,6 +21,7 @@ import aerospike
 
 class GrantPrivileges(CreateRole):
     def run(self):
+        super().run()
         privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
 
         self.client.admin_grant_privileges(self.role, privileges)

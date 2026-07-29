@@ -29,3 +29,7 @@ class CreateUser(AdminExample):
         self.client.admin_create_user(self.user, password, roles, policy)
 
         print("OK, 1 new user created")
+
+    def cleanup(self):
+        self.client.admin_drop_user(self.user)
+        super().cleanup()

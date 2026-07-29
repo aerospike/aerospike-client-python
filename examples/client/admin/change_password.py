@@ -17,14 +17,19 @@
 
 from __future__ import print_function
 
-from ... import ExampleWithUser
+
+from .create_user import CreateUser
 import aerospike
-import sys
-from aerospike.exception import *
 
 
-class ChangePassword(ExampleWithUser):
+class ChangePassword(CreateUser):
     def run(self):
-        status = self.client.admin_change_password(self.user, self.password)
+        super().run()
+
+        config2 = self.config.copy()
+        config2["user"] = self.user
+        config2["password"] = self.password
+        client2 = aerospike.client(config2)
+
+        status = client2.admin_change_password(self.user, self.password)
         print("Status of changing password is: %d" % status)
-        print("OK, password changed for 1 user")
