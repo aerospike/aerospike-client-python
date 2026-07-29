@@ -17,9 +17,14 @@
 
 
 from .. import Example
+from aerospike import exception as e
 
 class UDFRemove(Example):
     def run(self):
-        # TODO: need negative path
         module = "example.lua"
         self.client.udf_remove(module)
+
+        try:
+            self.client.udf_remove(module)
+        except e.UDFNotFound:
+            print("Already removed UDF.")

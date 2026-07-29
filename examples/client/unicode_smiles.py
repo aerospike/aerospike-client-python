@@ -19,6 +19,7 @@
 
 from .. import Example
 import aerospike
+from aerospike_helpers.operations import operations
 
 config = {
     'policies': {
@@ -30,7 +31,7 @@ config = {
 
 class UnicodeSmiles(Example):
     def run(self):
-        smile = u"smilé"
+        smile = "smilé"
         # TODO: configurable
         read_timeout = 1000
 
@@ -77,9 +78,11 @@ class UnicodeSmiles(Example):
               bins['mood'], "\n")
 
         # multiple operations on the record using the operate() method
-        ops = [{'bin': 'smiley', 'op': aerospike.OPERATOR_APPEND, 'val': smile},
-               {'bin': 'smile_count', 'op': aerospike.OPERATOR_INCR, 'val': 5},
-               {'bin': 'smiley', 'op': aerospike.OPERATOR_READ}]
+        ops = [
+            operations.append(bin_name="smiley", append_item=smile),
+            operations.increment(bin_name="smile_count", amount=5),
+            operations.read(bin_name="smiley"),
+        ]
         print("Setting the following multiops on the same record\n", ops)
         (key, meta, bins) = self.client.operate(key, ops)
         print("The value of the 'smiley' bin is", bins['smiley'], "\n")

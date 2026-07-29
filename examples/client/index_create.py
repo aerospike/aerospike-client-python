@@ -22,10 +22,7 @@ import aerospike
 class IndexCreate(Example):
     def run(self):
         policy = {}
-        BIN_NAME = "a"
-        INDEX_DATATYPE = aerospike.INDEX_INTEGER
-
-        self.client.index_single_value_create(self.namespace, self.set_name, BIN_NAME, INDEX_DATATYPE, "index_name", policy)
+        self.client.index_single_value_create(self.namespace, self.set_name, self.BIN_NAME, aerospike.INDEX_INTEGER, "index_name", policy)
 
     def __del__(self):
         self.client.index_remove(self.namespace, "index_name")

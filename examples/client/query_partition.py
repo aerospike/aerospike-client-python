@@ -50,7 +50,7 @@ class QueryPartition(Example):
 
             if rec_partition == STARTING_PARTITION: # and not client.exists(('test', 'demo', str(i))):
 
-                count = count + 1
+                count += 1
                 rec = {
                     'i': i,
                     's': 'xyz',

@@ -69,11 +69,6 @@ class TTL(Example):
         self.client.batch_remove(self.KEYS)
         super().__del__()
 
-    def print_histogram(self):
-        request = f"histogram:namespace={self.namespace};type=ttl"
-        response = self.client.info_random_node(request)
-        print("Server TTL histogram:", response)
-
     def check_records(self, wait=0, message=None):
         if wait:
             time.sleep(wait)
@@ -84,8 +79,6 @@ class TTL(Example):
         brs = self.client.batch_read(self.KEYS)
         for br in brs.batch_records:
             print(f"Server returned error code {br.result} for record with ttl of {br.key[2]}")
-
-        self.print_histogram()
 
 
     def write_records(self):

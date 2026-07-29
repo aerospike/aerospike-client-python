@@ -22,8 +22,7 @@ class Scan(Example):
     def run(self):
         s = self.client.scan(self.namespace, self.set_name)
 
-        # TODO: configurable
-        bins = []
+        bins = [self.BIN_NAME]
         # project specified bins
         s.select(*bins)
 

@@ -23,3 +23,6 @@ class IndexRemove(ExampleWithIndex):
     def run(self):
         policy = {}
         self.client.index_remove(self.namespace, self.INDEX_NAME, policy)
+
+    def __del__(self):
+        super().__del__()

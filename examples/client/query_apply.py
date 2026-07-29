@@ -25,13 +25,6 @@ from aerospike import predicates as p
 from .. import ExampleWithIndex, UDFExample
 
 
-config = {
-    'lua': {
-        'user_path': os.path.dirname(__file__)
-    }
-}
-
-
 class QueryApply(ExampleWithIndex, UDFExample):
     def run(self):
         predicates = [
@@ -41,9 +34,6 @@ class QueryApply(ExampleWithIndex, UDFExample):
         ]
 
         for predicate in predicates:
-            # If predicate is provided, then perform a query
-            # BINS = [BIN]
-
             MODULE = "stream_example"
             FUNCTION = "count"
             ARGS = []
