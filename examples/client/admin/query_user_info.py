@@ -22,5 +22,5 @@ class QueryUserInfo(CreateUser):
         super().run()
         policy = {}
 
-        roles = self.client.admin_query_user_info(self.user, policy)
-        print(roles)
+        user = self.client.admin_query_user_info(self.user, policy)
+        print(user)
