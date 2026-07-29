@@ -32,6 +32,21 @@ class Example:
     def cleanup(self):
         self.client.close()
 
+class AdminExample(Example):
+    def __init__(self):
+        # TODO: admin user doesn't have enough permissions
+        super().__init__(user="admin", password="admin")
+
+class ExampleWithUser(AdminExample):
+    def __init__(self):
+        super().__init__()
+        self.user = "foo-example"
+        self.password = "foobar"
+        self.client.admin_create_user(self.user, self.password, roles=[])
+
+    def cleanup(self):
+        self.client.admin_drop_user(self.user)
+        super().cleanup()
 
 class UDFExample(Example):
     def __init__(self):

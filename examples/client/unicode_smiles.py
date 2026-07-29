@@ -21,13 +21,6 @@ from .. import Example
 import aerospike
 from aerospike_helpers.operations import operations
 
-config = {
-    'policies': {
-        # TODO: configurable
-        'total_timeout': 1000
-    }
-}
-
 
 class UnicodeSmiles(Example):
     def run(self):
