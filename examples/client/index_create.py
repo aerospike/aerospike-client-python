@@ -24,5 +24,5 @@ class IndexCreate(Example):
         policy = {}
         self.client.index_single_value_create(self.namespace, self.set_name, self.BIN_NAME, aerospike.INDEX_INTEGER, "index_name", policy)
 
-    def __del__(self):
+    def cleanup(self):
         self.client.index_remove(self.namespace, "index_name")

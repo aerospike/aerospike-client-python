@@ -65,9 +65,9 @@ class TTL(Example):
         self.check_records(3, 'Expect all records with TTL<=10 to be gone')
         self.check_records(6, 'Expect all records to be gone, except NO_EXPIRE')
 
-    def __del__(self):
+    def cleanup(self):
         self.client.batch_remove(self.KEYS)
-        super().__del__()
+        super().cleanup()
 
     def check_records(self, wait=0, message=None):
         if wait:

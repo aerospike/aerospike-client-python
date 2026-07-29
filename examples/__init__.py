@@ -29,7 +29,7 @@ class Example:
         self.non_existent_key = (self.namespace, self.set_name, "nonexistent")
         self.BIN_NAME = "a"
 
-    def __del__(self):
+    def cleanup(self):
         self.client.close()
 
 
@@ -49,10 +49,10 @@ class ExampleWithIndex(Example):
 
         self.client.index_single_value_create(self.namespace, self.set_name, self.BIN_NAME, aerospike.INDEX_INTEGER, self.INDEX_NAME)
 
-    def __del__(self):
+    def cleanup(self):
         self.client.index_remove(self.namespace, self.INDEX_NAME)
 
-        super().__del__()
+        super().cleanup()
 
 class ExampleWithRecord(Example):
     def __init__(self):
@@ -60,7 +60,7 @@ class ExampleWithRecord(Example):
 
         self.client.put(self.key, bins={self.BIN_NAME: 1})
 
-    def __del__(self):
+    def cleanup(self):
         self.client.remove(self.key)
 
-        super().__del__()
+        super().cleanup()

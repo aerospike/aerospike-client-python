@@ -37,4 +37,6 @@ if len(sys.argv) == 2:
 print("Running examples...")
 for cls in example_classes:
     print(cls)
-    example = cls().run()
+    example = cls()
+    example.run()
+    example.cleanup()

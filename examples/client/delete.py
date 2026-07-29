@@ -29,5 +29,5 @@ class Delete(ExampleWithRecord):
             print(f"Could not find {self.key}")
 
     # Override default destructor
-    def __del__(self):
+    def cleanup(self):
         pass

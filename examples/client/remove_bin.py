@@ -28,5 +28,5 @@ class RemoveBin(ExampleWithRecord):
         print("Status of bin removal is: %d" % (retval))
         print("OK, bins removed from the record at", self.key)
 
-    def __del__(self):
+    def cleanup(self):
         pass

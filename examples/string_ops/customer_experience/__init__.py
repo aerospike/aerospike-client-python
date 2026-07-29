@@ -10,6 +10,6 @@ class CustomerExperienceExample(Example):
 
         self.client.put(self.key, bins={"email": ORIG_EMAIL})
 
-    def __del__(self):
+    def cleanup(self):
         self.client.remove(self.key)
-        super().__del__()
+        super().cleanup()
