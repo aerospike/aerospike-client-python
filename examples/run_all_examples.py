@@ -19,13 +19,13 @@ for folder in ["client", "string_ops"]:
         for name, obj in inspect.getmembers(module, inspect.isclass):
             if obj.__module__ != module.__name__:
                 continue
-            # print(Example is obj.__bases__[0])
             # TODO - comparing the same class imported two different ways fails
             # There might a better way to do this
             print("Found class has these base classes:", obj.__mro__)
             if "Example" not in [obj.__name__ for obj in obj.__mro__]:
                 continue
             if not hasattr(obj, "run") or not callable(getattr(obj, "run")):
+                # Some classes that inherit from Example base class are "abstract" classes
                 continue
 
             print("Class found:", obj)
