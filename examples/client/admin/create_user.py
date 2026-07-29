@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 
-from ... import AdminExample
+from . import AdminExample
 
 class CreateUser(AdminExample):
     def run(self):

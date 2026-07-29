@@ -15,7 +15,7 @@
 # limitations under the License.
 ################################################################################
 
-from ... import AdminExample
+from . import AdminExample
 
 
 class QueryRoles(AdminExample):

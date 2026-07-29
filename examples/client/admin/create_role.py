@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import aerospike
-from ... import AdminExample
+from . import AdminExample
 
 
 class CreateRole(AdminExample):
