@@ -34,16 +34,15 @@ config = {
 
 class QueryApply(ExampleWithIndex, UDFExample):
     def run(self):
-        BIN = "bin"
         predicates = [
-            p.equals(BIN, 1),
+            p.equals(self.BIN_NAME, 1),
             # p.equals(BIN, "a"),
             # p.between(BIN, 1, 3)
         ]
 
         for predicate in predicates:
             # If predicate is provided, then perform a query
-            BINS = [BIN]
+            # BINS = [BIN]
 
             MODULE = "stream_example"
             FUNCTION = "count"

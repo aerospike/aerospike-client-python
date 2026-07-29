@@ -37,12 +37,8 @@ class Query(UDFExample):
         results = []
 
         # callback to be called for each record read
-        def callback(input_tuple):
-            print(input_tuple)
-            # (key, meta, rec) = input_tuple
-            # nonlocal results
-            # results.append((key, meta, rec))
-            # print(key, meta, rec)
+        def callback(result):
+            results.append(result)
 
         # invoke the operations, and for each record invoke the callback
         query.foreach(callback)
