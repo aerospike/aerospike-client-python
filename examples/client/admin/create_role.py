@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import aerospike
 from . import AdminExample
+import time
 
 
 class CreateRole(AdminExample):
@@ -33,3 +34,4 @@ class CreateRole(AdminExample):
 
     def cleanup(self):
         self.client.admin_drop_role(self.role)
+        time.sleep(3)

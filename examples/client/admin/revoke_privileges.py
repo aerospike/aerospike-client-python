@@ -20,6 +20,7 @@ import aerospike
 
 class RevokePrivileges(CreateRole):
     def run(self):
+        super().run()
         policy = {}
         privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
 

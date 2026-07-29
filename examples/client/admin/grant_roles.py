@@ -22,4 +22,4 @@ class GrantRoles(CreateUser):
     def run(self):
         super().run()
         self.roles = ["read-write", "user-admin"]
-        self.client.admin_grant_roles(self.user, roles)
+        self.client.admin_grant_roles(self.user, self.roles)

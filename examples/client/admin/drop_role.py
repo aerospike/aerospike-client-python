@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from .create_role import CreateRole
+from . import AdminExample
 
 class DropRole(CreateRole):
     def run(self):
@@ -26,3 +27,6 @@ class DropRole(CreateRole):
 
         self.client.admin_drop_role(self.role, policy)
         print("OK, 1 role dropped")
+
+    def cleanup(self):
+        AdminExample.cleanup(self)

@@ -9,9 +9,13 @@ example_classes: list[type] = []
 
 dir_containing_this_module = os.path.dirname(os.path.abspath(__file__))
 
-for folder in ["client", "string_ops"]:
+for folder in [
+    "client",
+    "string_ops",
+    "client.admin"
+]:
     all_packages = pkgutil.walk_packages([
-        dir_containing_this_module + "/" + folder,
+        dir_containing_this_module + "/" + folder.replace(".", "/"),
     ])
     for package in all_packages:
         print(package)
@@ -38,5 +42,7 @@ print("Running examples...")
 for cls in example_classes:
     print(cls)
     example = cls()
-    example.run()
-    example.cleanup()
+    try:
+        example.run()
+    finally:
+        example.cleanup()

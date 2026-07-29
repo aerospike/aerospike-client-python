@@ -23,10 +23,10 @@ class CreateUser(AdminExample):
     def run(self):
         policy = {}
         self.user = "foo-example"
-        password = "foobar"
+        self.password = "foobar"
         roles = ["read-write", "read"]
 
-        self.client.admin_create_user(self.user, password, roles, policy)
+        self.client.admin_create_user(self.user, self.password, roles, policy)
 
         print("OK, 1 new user created")
 

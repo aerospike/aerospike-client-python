@@ -21,6 +21,7 @@ from .create_user import CreateUser
 
 class SetPassword(CreateUser):
     def run(self):
+        super().run()
         policy = {}
         password = "bar"
 

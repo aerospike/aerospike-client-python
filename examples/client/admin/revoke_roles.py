@@ -20,5 +20,6 @@ from .grant_roles import GrantRoles
 
 class RevokeRoles(GrantRoles):
     def run(self):
+        super().run()
         policy = {}
         self.client.admin_revoke_roles(self.user, self.roles, policy)

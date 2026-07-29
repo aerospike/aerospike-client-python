@@ -26,7 +26,6 @@ class RemoveBin(ExampleWithRecord):
 
         retval = self.client.remove_bin(self.key, bin_names)
         print("Status of bin removal is: %d" % (retval))
-        print("OK, bins removed from the record at", self.key)
 
     def cleanup(self):
         pass
