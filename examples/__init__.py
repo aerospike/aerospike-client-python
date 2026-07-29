@@ -24,7 +24,8 @@ class Example:
         self.client = client
         self.namespace = namespace
         self.set_name = set_name
-        self.key = (self.namespace, self.set_name, "docreadkey")
+        self.user_key = "docreadkey"
+        self.key = (self.namespace, self.set_name, self.user_key)
         self.non_existent_key = (self.namespace, self.set_name, "nonexistent")
         self.BIN_NAME = "a"
 
@@ -39,7 +40,7 @@ class UDFExample(Example):
                 'user_path': os.path.dirname(__file__) + "/client/"
             }
         }
-        super().__init__(extra_config)
+        super().__init__(extra_config=extra_config)
 
 class ExampleWithIndex(Example):
     INDEX_NAME = "index_name"

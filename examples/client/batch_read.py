@@ -20,16 +20,13 @@ from .. import ExampleWithRecord
 
 
 class BatchRead(ExampleWithRecord):
-    def __init__(self):
-        pass
-
     def run(self):
         # Get records
         keys = [self.key, self.non_existent_key]
         records = self.client.batch_read(keys)
 
         if records != None:
-            print(f"{len(records)} records were found")
+            print(f"{len(records.batch_records)} records were found")
             print(records)
         else:
             print('error: Not Found.')
@@ -38,7 +35,7 @@ class BatchRead(ExampleWithRecord):
         records = self.client.batch_read(keys, bins=["a"])
 
         if records != None:
-            print(f"{len(records)} records were found")
+            print(f"{len(records.batch_records)} records were found")
             print(records)
         else:
             print('error: Not Found.')
@@ -47,7 +44,7 @@ class BatchRead(ExampleWithRecord):
         records = self.client.batch_read(keys, bins=[])
 
         if records != None:
-            print(f"{len(records)} records were found")
+            print(f"{len(records.batch_records)} records were found")
             print(records)
         else:
             print('error: Not Found.')

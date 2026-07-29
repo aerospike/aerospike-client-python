@@ -24,6 +24,8 @@ from .. import UDFExample
 
 class Query(UDFExample):
     def run(self):
+        self.client.udf_put("./examples/client/stream_example.lua")
+
         query = self.client.query(self.namespace, self.set_name)
 
         query.select(self.BIN_NAME)
@@ -36,9 +38,11 @@ class Query(UDFExample):
 
         # callback to be called for each record read
         def callback(input_tuple):
-            (key, meta, rec) = input_tuple
-            results.append((key, meta, rec))
-            print(key, meta, rec)
+            print(input_tuple)
+            # (key, meta, rec) = input_tuple
+            # nonlocal results
+            # results.append((key, meta, rec))
+            # print(key, meta, rec)
 
         # invoke the operations, and for each record invoke the callback
         query.foreach(callback)

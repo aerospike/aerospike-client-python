@@ -25,15 +25,15 @@ from .. import ExampleWithIndex, UDFExample
 class Aggregate(ExampleWithIndex, UDFExample):
     def run(self):
         predicates = [
-            p.equals(self.BIN, 1),
-            p.between(self.BIN, 1, 3)
+            p.equals(self.BIN_NAME, 1),
+            p.between(self.BIN_NAME, 1, 3)
         ]
 
         for predicate in predicates:
             # If predicate is provided, then perform a query
             query = self.client.query(self.namespace, self.set_name)
             query.where(predicate)
-            BINS = [self.BIN]
+            BINS = [self.BIN_NAME]
             query.select(*BINS)
 
             MODULE = "stream_example"

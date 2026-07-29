@@ -16,14 +16,16 @@
 ##########################################################################
 
 
-from .. import ExampleWithRecord
+from .. import ExampleWithRecord, UDFExample
 
 
-class Apply(ExampleWithRecord):
+class Apply(ExampleWithRecord, UDFExample):
     def run(self):
-        module = "module"
-        function = "a"
-        args = []
+        self.client.udf_put("./examples/client/simple.lua")
+
+        module = "simple"
+        function = "add"
+        args = [1, 2]
         res = self.client.apply(self.key, module, function, args)
 
         print(res)

@@ -22,5 +22,5 @@ import aerospike
 
 class CalcDigest(ExampleWithRecord):
     def run(self):
-        digest = aerospike.calc_digest(self.namespace, self.set_name, self.key)
+        digest = aerospike.calc_digest(self.namespace, self.set_name, self.user_key)
         print(digest)
