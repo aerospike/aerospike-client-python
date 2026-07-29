@@ -16,35 +16,30 @@
 ##########################################################################
 
 
+from aerospike_helpers.batch.records import BatchRecords
 from .. import ExampleWithRecord
 
 
 class BatchRead(ExampleWithRecord):
+    def show_records(self, records: BatchRecords):
+        print(f"{len(records.batch_records)} records were found")
+        for br in records.batch_records:
+            pk = br.key
+            print("Record with digest", pk[3], "has result code", br.result, "with record", br.record)
+
     def run(self):
         # Get records
         keys = [self.key, self.non_existent_key]
+        print("All bins should be returned")
         records = self.client.batch_read(keys)
-
-        if records != None:
-            print(f"{len(records.batch_records)} records were found")
-            print(records)
-        else:
-            print('error: Not Found.')
+        self.show_records(records)
 
         # Select bins
-        records = self.client.batch_read(keys, bins=["a"])
-
-        if records != None:
-            print(f"{len(records.batch_records)} records were found")
-            print(records)
-        else:
-            print('error: Not Found.')
+        print("\"a\" should be filtered out")
+        records = self.client.batch_read(keys, bins=["b"])
+        self.show_records(records)
 
         # Verify existence of records
+        print("Bins should not be returned")
         records = self.client.batch_read(keys, bins=[])
-
-        if records != None:
-            print(f"{len(records.batch_records)} records were found")
-            print(records)
-        else:
-            print('error: Not Found.')
+        self.show_records(records)
