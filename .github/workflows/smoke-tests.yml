@@ -270,7 +270,8 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ matrix.test == 'code-examples' && '8.1.3.0-35-20260629033923' || needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server${{ matrix.test == 'ee-code-examples' && '-enterprise' || '' }}
-        config-file: ./.github/workflows/aerospike${{ (matrix.test == 'doctest' || matrix.test == 'ce-code-examples') && '-ce' || '' }}.conf
+        config-file: ${{ (matrix.test == 'doctest' || matrix.test == 'ce-code-examples') && './.github/workflows/aerospike-ce.conf' || '' }}
+        enable-security: ${{ matrix.test == 'ee-code-examples' }}
 
     - name: Run canonical code examples
       if: ${{ endsWith(matrix.test, 'code-examples') }}
