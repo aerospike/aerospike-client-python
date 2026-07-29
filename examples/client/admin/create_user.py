@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from . import AdminExample
+import time
 
 class CreateUser(AdminExample):
     def run(self):
@@ -31,5 +32,6 @@ class CreateUser(AdminExample):
         print("OK, 1 new user created")
 
     def cleanup(self):
+        time.sleep(2)
         self.client.admin_drop_user(self.user)
         super().cleanup()
