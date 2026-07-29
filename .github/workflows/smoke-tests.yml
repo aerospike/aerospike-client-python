@@ -271,7 +271,8 @@ jobs:
         server-container-repo: database-docker-virtual/aerospike-server
         config-file: ./.github/workflows/aerospike-ce.conf
 
-    - if: ${{ matrix.test == 'code-examples' }}
+    - name: Run canonical code examples
+      if: ${{ matrix.test == 'code-examples' }}
       # We cannot run this module with the cwd being string_ops
       # Otherwise we will get relative import errors
       # https://stackoverflow.com/a/47030746
