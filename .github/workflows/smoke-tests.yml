@@ -278,17 +278,13 @@ jobs:
       run: |
         # This is required for the TTL code example
         run_tools=(
-          docker run --rm --network host aerospike/aerospike-tools
+          docker run --rm --network host aerospike/aerospike-tools asinfo -v
         )
 
-        admin_args=()
-        if [[ ${{ matrix.test == 'ee-code-examples' }} == true ]]; then
-          admin_args+=(-U admin -P admin)
-
-          "${run_tools[@]}" asadm "${admin_args[@]}" --enable -e "manage acl grant user admin roles sys-admin"
+        if [[ ${{ matrix.test == 'ce-code-examples' }} == true ]]; then
+          "${run_tools[@]}" "set-config:context=namespace;id=test;nsup-period=1"
+          "${run_tools[@]}" "set-config:context=namespace;namespace=test;default-ttl=10S"
         fi
-        "${run_tools[@]}" asinfo "${admin_args[@]}" -v "set-config:context=namespace;id=test;nsup-period=1"
-        "${run_tools[@]}" asinfo "${admin_args[@]}" -v "set-config:context=namespace;namespace=test;default-ttl=10S"
 
         python3 -m examples.run_all_examples "$SERVER_EDITION"
       env:
