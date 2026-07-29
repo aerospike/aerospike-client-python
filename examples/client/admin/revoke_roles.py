@@ -16,6 +16,7 @@
 ################################################################################
 
 from .grant_roles import GrantRoles
+import time
 
 
 class RevokeRoles(GrantRoles):
@@ -23,3 +24,4 @@ class RevokeRoles(GrantRoles):
         super().run()
         policy = {}
         self.client.admin_revoke_roles(self.user, self.roles, policy)
+        time.sleep(3)

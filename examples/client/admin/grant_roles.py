@@ -16,6 +16,7 @@
 ################################################################################
 
 from .create_user import CreateUser
+import time
 
 
 class GrantRoles(CreateUser):
@@ -23,3 +24,4 @@ class GrantRoles(CreateUser):
         super().run()
         self.roles = ["read-write", "user-admin"]
         self.client.admin_grant_roles(self.user, self.roles)
+        time.sleep(3)

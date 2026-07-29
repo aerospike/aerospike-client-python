@@ -29,10 +29,10 @@ class CreateRole(AdminExample):
         privileges = [{"code": aerospike.PRIV_READ}, {"code": aerospike.PRIV_USER_ADMIN}]
 
         self.client.admin_create_role(self.role, privileges, policy)
+        time.sleep(3)
 
         print("OK, 1 new role created")
 
     def cleanup(self):
-        time.sleep(2)
         self.client.admin_drop_role(self.role)
         time.sleep(3)

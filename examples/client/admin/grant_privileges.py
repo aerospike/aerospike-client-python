@@ -17,6 +17,7 @@
 
 from .create_role import CreateRole
 import aerospike
+import time
 
 
 class GrantPrivileges(CreateRole):
@@ -25,5 +26,6 @@ class GrantPrivileges(CreateRole):
         privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
 
         self.client.admin_grant_privileges(self.role, privileges)
+        time.sleep(3)
 
         print("OK, new privileges granted to 1 role")

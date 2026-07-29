@@ -28,10 +28,11 @@ class CreateUser(AdminExample):
         roles = ["read-write", "read"]
 
         self.client.admin_create_user(self.user, self.password, roles, policy)
+        time.sleep(3)
 
         print("OK, 1 new user created")
 
     def cleanup(self):
-        time.sleep(2)
         self.client.admin_drop_user(self.user)
+        time.sleep(3)
         super().cleanup()

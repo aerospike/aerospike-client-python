@@ -16,6 +16,7 @@
 ################################################################################
 from .create_role import CreateRole
 import aerospike
+import time
 
 
 class RevokePrivileges(CreateRole):
@@ -25,3 +26,4 @@ class RevokePrivileges(CreateRole):
         privileges = [{"code": aerospike.PRIV_SYS_ADMIN}]
 
         self.client.admin_revoke_privileges(self.role, privileges, policy)
+        time.sleep(3)

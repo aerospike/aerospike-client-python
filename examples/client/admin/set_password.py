@@ -18,6 +18,8 @@
 from __future__ import print_function
 
 from .create_user import CreateUser
+import time
+
 
 class SetPassword(CreateUser):
     def run(self):
@@ -26,3 +28,4 @@ class SetPassword(CreateUser):
         password = "bar"
 
         self.client.admin_set_password(self.user, password, policy)
+        time.sleep(3)

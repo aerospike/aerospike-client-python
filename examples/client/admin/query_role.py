@@ -15,6 +15,7 @@
 # limitations under the License.
 ################################################################################
 from .create_role import CreateRole
+import time
 
 
 class QueryRole(CreateRole):

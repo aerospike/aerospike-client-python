@@ -18,6 +18,8 @@
 from __future__ import print_function
 
 from .create_user import CreateUser, AdminExample
+import time
+
 
 class DropUser(CreateUser):
     def run(self):
@@ -25,6 +27,7 @@ class DropUser(CreateUser):
         policy = {}
 
         self.client.admin_drop_user(self.user, policy)
+        time.sleep(3)
 
         print("OK, 1 user dropped")
 
