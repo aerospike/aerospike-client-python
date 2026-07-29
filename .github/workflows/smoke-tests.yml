@@ -273,12 +273,11 @@ jobs:
 
     - name: Run canonical code examples
       if: ${{ matrix.test == 'code-examples' }}
-      # We cannot run this module with the cwd being string_ops
-      # Otherwise we will get relative import errors
-      # https://stackoverflow.com/a/47030746
       run: |
+        # This is required for the TTL code example
         docker run --rm --network host aerospike/aerospike-tools asinfo -v "set-config:context=namespace;id=test;nsup-period=1"
         docker run --rm --network host aerospike/aerospike-tools asinfo -v "set-config:context=namespace;namespace=test;default-ttl=10S"
+
         python3 -m examples.run_all_examples
 
     - name: Install test dependencies
