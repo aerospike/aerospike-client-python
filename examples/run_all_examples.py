@@ -28,6 +28,7 @@ def run_examples_in(modules: list[str], class_name: str | None = None):
                     continue
 
                 # Now we know this class is a valid example
+                # TODO: there's probably a way to get a specific class example in O(1) instead of O(n)
                 if class_name and name != class_name:
                     continue
 
