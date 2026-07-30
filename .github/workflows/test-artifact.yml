@@ -310,7 +310,7 @@ jobs:
 
     - if: ${{ inputs.run-tests-in-container && contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
       name: Log into internal JFrog Docker registry
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+      uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4
       with:
         registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
         username: ${{ steps.setup-jf.outputs.oidc-user }}
