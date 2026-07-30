@@ -1243,7 +1243,7 @@ Specifies how the Python client will write Python booleans.
 
 .. data:: INTEGER
 
-    Write Python Booleans as integers.
+    Write Python Booleans as `server integers <https://aerospike.com/docs/develop/data-types/scalar/#integer>`_.
 
 .. data:: AS_BOOL
 
