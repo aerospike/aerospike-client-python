@@ -2642,7 +2642,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         int map_order = 0;
         status = get_enum_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
                                        &map_order, AS_MAP_UNORDERED,
-                                       AS_MAP_KEY_VALUE_ORDERED, false);
+                                       AS_MAP_KEY_VALUE_ORDERED, false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
@@ -2667,7 +2667,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         int pad = 0;
         status = get_enum_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
                                        &list_order, AS_LIST_UNORDERED,
-                                       AS_LIST_ORDERED, false);
+                                       AS_LIST_ORDERED, false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }

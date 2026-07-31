@@ -83,7 +83,8 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
 // min_bound and max_bound are inclusive.
 as_status get_enum_from_py_dict(as_error *err, const char *key,
                                 PyObject *py_dict, int *int_pointer,
-                                int min_bound, int max_bound, bool is_optional);
+                                int min_bound, int max_bound, bool is_optional,
+                                bool *found);
 
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *py_dict, int *int_pointer);

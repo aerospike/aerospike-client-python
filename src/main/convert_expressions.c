@@ -1060,7 +1060,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             int tmp_value;
             if (get_enum_from_py_dict(err, LIST_ORDER_KEY, temp_expr->pydict,
                                       &tmp_value, AS_LIST_UNORDERED,
-                                      AS_LIST_ORDERED, false) != AEROSPIKE_OK) {
+                                      AS_LIST_ORDERED, false,
+                                      NULL) != AEROSPIKE_OK) {
                 return err->code;
             }
 
