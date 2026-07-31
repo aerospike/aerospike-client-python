@@ -237,7 +237,9 @@ get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
                            min_bound, max_bound, int64);
 
 return_int:
-    *found_ref = true;
+    if (found_ref) {
+        *found_ref = true;
+    }
     *int_pointer = int64;
 exit_without_returning_int:
     return err->code;
