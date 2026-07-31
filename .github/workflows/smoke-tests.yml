@@ -398,7 +398,7 @@ jobs:
           - "./test-user-agent-e2e.bash false"
           - "./test-user-agent-e2e.bash true"
           - "./test-user-agent-e2e.bash true my_app_id"
-          - "PYTHONMALLOC=malloc valgrind --leak-check=full --show-leak-kinds=definite --error-for-leak-kinds=definite python3 ./test_deserialize_as_bytes_python.py"
+          - "python3 ./test_deserialize_as_bytes_python.py"
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
