@@ -418,13 +418,13 @@ jobs:
     - id: setup-aerospike-server
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
-        enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
+        enable-security: ${{ startsWith(matrix.test-script-args, './test-user-agent-e2e.bash true') }}
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, 'true') && '-enterprise' || '' }}
+        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, './test-user-agent-e2e.bash true') && '-enterprise' || '' }}
 
     - if: ${{ contains(matrix.test-script-args, 'deserialize_as_bytes_python') }}
       name: Install Python client that supports inserting AS_BYTES_PYTHON
