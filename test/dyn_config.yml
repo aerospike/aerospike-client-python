@@ -4,6 +4,10 @@ dynamic:
     enable: true
   write:
     send_key: true
+  batch_write:
+    send_key: true
+  batch_udf:
+    send_key: true
 static:
   client:
     config_interval: 1000
