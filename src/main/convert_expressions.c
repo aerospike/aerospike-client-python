@@ -1058,7 +1058,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case OP_LIST_SORT: {
             int tmp_value;
-            if (get_enum_from_py_dict(err, LIST_ORDER_KEY, temp_expr->pydict,
+            if (get_enum_from_py_dict(err, temp_expr->pydict, LIST_ORDER_KEY,
                                       &tmp_value, AS_LIST_UNORDERED,
                                       AS_LIST_ORDERED, false,
                                       NULL) != AEROSPIKE_OK) {

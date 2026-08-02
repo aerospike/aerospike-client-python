@@ -1046,7 +1046,7 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
 
     int tmp_value;
     bool found = false;
-    if (get_enum_from_py_dict(err, BIT_WRITE_FLAGS_KEY, py_policy, &tmp_value,
+    if (get_enum_from_py_dict(err, py_policy, BIT_WRITE_FLAGS_KEY, &tmp_value,
                               AS_BIT_WRITE_DEFAULT,
                               AS_BIT_WRITE_PARTIAL * 2 - 1, true,
                               &found) != AEROSPIKE_OK) {
@@ -1086,7 +1086,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     as_map_order map_order = AS_MAP_UNORDERED;
     int tmp_value;
     bool found = false;
-    if (get_enum_from_py_dict(err, "map_order", py_policy, &tmp_value,
+    if (get_enum_from_py_dict(err, py_policy, "map_order", &tmp_value,
                               AS_MAP_UNORDERED, AS_MAP_KEY_VALUE_ORDERED, true,
                               &found) != AEROSPIKE_OK) {
         return err->code;
@@ -1146,7 +1146,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     int tmp_value;
     as_list_order list_order = AS_LIST_UNORDERED;
     bool found = false;
-    if (get_enum_from_py_dict(err, "list_order", py_policy, &tmp_value,
+    if (get_enum_from_py_dict(err, py_policy, "list_order", &tmp_value,
                               AS_LIST_UNORDERED, AS_LIST_ORDERED, true,
                               &found) != AEROSPIKE_OK) {
         return err->code;
@@ -1157,7 +1157,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 
     as_list_write_flags flags = AS_LIST_WRITE_DEFAULT;
     if (get_enum_from_py_dict(
-            err, "write_flags", py_policy, &tmp_value, AS_LIST_WRITE_DEFAULT,
+            err, py_policy, "write_flags", &tmp_value, AS_LIST_WRITE_DEFAULT,
             AS_LIST_WRITE_PARTIAL * 2 - 1, true, &found) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -1201,7 +1201,7 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     as_hll_write_flags flags;
     bool found = false;
     if (get_enum_from_py_dict(
-            err, "flags", py_policy, &tmp_value, AS_HLL_WRITE_DEFAULT,
+            err, py_policy, "flags", &tmp_value, AS_HLL_WRITE_DEFAULT,
             AS_HLL_WRITE_ALLOW_FOLD * 2 - 1, true, &found) != AEROSPIKE_OK) {
         return err->code;
     }

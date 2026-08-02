@@ -201,7 +201,7 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
     " instead."
 
 static inline as_status
-get_bound_int_from_py_dict(as_error *err, const char *key, PyObject *py_dict,
+get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
                            int *int_pointer, int min_bound, int max_bound,
                            bool is_optional, bool warn_if_out_of_bounds,
                            bool *found_ref)
@@ -245,21 +245,28 @@ exit_without_returning_int:
     return err->code;
 }
 
-as_status get_enum_from_py_dict(as_error *err, const char *key,
-                                PyObject *py_dict, int *int_pointer,
-                                int min_bound, int max_bound, bool is_optional,
-                                bool *found)
+// clang-format off
+as_status get_enum_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    int *int_pointer,
+    int min_bound,
+    int max_bound,
+    bool is_optional,
+    bool *int_was_found)
 {
-    return get_bound_int_from_py_dict(err, key, py_dict, int_pointer, min_bound,
-                                      max_bound, is_optional, true, found);
+    return get_bound_int_from_py_dict(err, py_dict, key, int_pointer, min_bound,
+                                      max_bound, is_optional, true, int_was_found);
 }
 
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *py_dict, int *int_pointer)
 {
-    return get_bound_int_from_py_dict(err, key, py_dict, int_pointer, INT_MIN,
+    return get_bound_int_from_py_dict(err, py_dict, key, int_pointer, INT_MIN,
                                       INT_MAX, false, false, NULL);
 }
+// clang-format on
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type)

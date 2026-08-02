@@ -346,7 +346,7 @@ static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
     int tmp_value;
     bool found = false;
     if (get_enum_from_py_dict(
-            err, RESIZE_FLAGS_KEY, op_dict, &tmp_value, AS_BIT_RESIZE_DEFAULT,
+            err, op_dict, RESIZE_FLAGS_KEY, &tmp_value, AS_BIT_RESIZE_DEFAULT,
             AS_BIT_RESIZE_SHRINK_ONLY * 2 - 1, true, &found) != AEROSPIKE_OK) {
         return err->code;
     }
