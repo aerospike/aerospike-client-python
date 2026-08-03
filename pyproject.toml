@@ -3,7 +3,7 @@ requires = [
     "setuptools",
     "versioningit==3.3.0",
     # Used by our versioningit script that modifies the version
-    "parver==0.5"
+    "parver==1.0.1.post0"
 ]
 build-backend = "setuptools.build_meta"
 
