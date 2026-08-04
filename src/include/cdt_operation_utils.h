@@ -81,6 +81,7 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
 // If is_optional is true and py_dict does not have a key that maps to an int value, int_pointer does not get
 // dereferenced and assigned.
 // min_bound and max_bound are inclusive.
+// int_was_found can be NULL.
 as_status get_enum_from_py_dict(as_error *err, PyObject *py_dict,
                                 const char *key, int *int_pointer,
                                 int min_bound, int max_bound, bool is_optional,
