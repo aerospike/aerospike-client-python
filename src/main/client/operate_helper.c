@@ -196,9 +196,9 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_LIST_SET_ORDER:
     case OP_LIST_CREATE:
-        if (get_enum_from_py_dict(err, AS_PY_LIST_ORDER, op_dict, &tmp_value,
-                                  AS_LIST_UNORDERED, AS_LIST_ORDERED,
-                                  false) != AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(err, op_dict, AS_PY_LIST_ORDER, &tmp_value,
+                                  AS_LIST_UNORDERED, AS_LIST_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto exit;
         }
         list_order = (as_list_order)tmp_value;
@@ -336,8 +336,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_STRING_IS_NUMERIC: {
         if (get_enum_from_py_dict(
-                err, "numeric_type", op_dict, &tmp_value, AS_STRING_NUMERIC_ANY,
-                AS_STRING_NUMERIC_FLOAT, false) != AEROSPIKE_OK) {
+                err, op_dict, "numeric_type", &tmp_value, AS_STRING_NUMERIC_ANY,
+                AS_STRING_NUMERIC_FLOAT, false, NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         numeric_type = (as_string_numeric_type)tmp_value;
@@ -345,10 +345,10 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_REGEX_REPLACE: {
-        if (get_enum_from_py_dict(err, "regex_flags", op_dict, &tmp_value,
+        if (get_enum_from_py_dict(err, op_dict, "regex_flags", &tmp_value,
                                   AS_STRING_REGEX_FLAGS_NONE,
-                                  AS_STRING_REGEX_FLAGS_GLOBAL * 2 - 1,
-                                  false) != AEROSPIKE_OK) {
+                                  AS_STRING_REGEX_FLAGS_GLOBAL * 2 - 1, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         regex_flags = (as_string_regex_flags)tmp_value;
@@ -567,10 +567,10 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_LIST_SORT: {
         as_list_sort_flags sort_flags;
 
-        if (get_enum_from_py_dict(err, AS_PY_LIST_SORT_FLAGS, op_dict,
+        if (get_enum_from_py_dict(err, op_dict, AS_PY_LIST_SORT_FLAGS,
                                   &tmp_value, AS_LIST_SORT_DEFAULT,
-                                  AS_LIST_SORT_DROP_DUPLICATES,
-                                  false) != AEROSPIKE_OK) {
+                                  AS_LIST_SORT_DROP_DUPLICATES, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         sort_flags = (as_list_sort_flags)tmp_value;
@@ -771,7 +771,9 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
-
+    case OP_STRING_TO_STRING:
+        success = as_operations_to_string(ops, bin);
+        break;
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
             success = as_operations_map_remove_by_value_rel_rank_range(

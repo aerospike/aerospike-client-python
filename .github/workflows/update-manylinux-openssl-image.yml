@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.arch-and-runner-os[1] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -50,7 +50,7 @@ jobs:
         oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+    - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
       id: meta
       with:
         images: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
@@ -72,7 +72,7 @@ jobs:
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - name: Build and push
-      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: ${{ github.workspace }}/aerospike-client-python/.github/workflows

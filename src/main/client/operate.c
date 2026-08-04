@@ -219,7 +219,7 @@ static inline bool use_operate_conversion_helper(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
-        (op >= OP_STRING_STRLEN && op <= OP_STRING_PREPEND) ||
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
         (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
          op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
          op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
@@ -745,10 +745,10 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case OP_MAP_CREATE:;
         int tmp_value;
-        if (get_enum_from_py_dict(err, "map_order", py_operation_dict,
+        if (get_enum_from_py_dict(err, py_operation_dict, "map_order",
                                   &tmp_value, AS_MAP_UNORDERED,
-                                  AS_MAP_KEY_VALUE_ORDERED,
-                                  false) != AEROSPIKE_OK) {
+                                  AS_MAP_KEY_VALUE_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
             return err->code;
         }
         as_map_order order = (as_map_order)tmp_value;

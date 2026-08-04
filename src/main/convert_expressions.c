@@ -473,6 +473,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_B64_DECODE] = EXP_SZ(as_exp_string_b64_decode(NIL)),
         [OP_STRING_REGEX_COMPARE] =
             EXP_SZ(as_exp_string_regex_compare_flags("", 0, NIL)),
+        [OP_STRING_TO_STRING] = EXP_SZ(as_exp_to_string(NIL)),
         [OP_STRING_INSERT] = EXP_SZ(as_exp_string_insert(NULL, 0, "", NIL)),
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
@@ -564,10 +565,17 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        char *geo_value =
-            (char *)PyUnicode_AsUTF8(AerospikeGeospatial_DoDumps(py_data, err));
+
+        PyObject *py_geo_str = AerospikeGeospatial_DoDumps(py_data, err);
         Py_DECREF(py_data);
-        as_exp_entry tmp_entry = as_exp_geo(geo_value);
+
+        char *geo_str = (char *)PyUnicode_AsUTF8(py_geo_str);
+        geo_str = strdup(geo_str);
+        Py_DECREF(py_geo_str);
+
+        as_exp_entry tmp_entry = as_exp_geo(geo_str);
+        as_geojson *geojson = as_geojson_fromval(tmp_entry.v.val);
+        geojson->free = true;
         *new_entry = tmp_entry;
     }
     else if (PyByteArray_Check(py_obj)) {
@@ -1048,15 +1056,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_list_clear(temp_expr->ctx,
                                               NIL)); // -1 for bin
             break;
-        case OP_LIST_SORT:
-            if (get_int64_t(err, LIST_ORDER_KEY, temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+        case OP_LIST_SORT: {
+            int tmp_value;
+            if (get_enum_from_py_dict(err, temp_expr->pydict, LIST_ORDER_KEY,
+                                      &tmp_value, AS_LIST_UNORDERED,
+                                      AS_LIST_ORDERED, false,
+                                      NULL) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, lval1,
+            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, tmp_value,
                                              NIL)); // -1 for bin
             break;
+        }
         case OP_LIST_REMOVE_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
@@ -1907,6 +1919,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         }
         case OP_STRING_B64_DECODE:
             APPEND_ARRAY(1, as_exp_string_b64_decode(NIL));
+            break;
+        case OP_STRING_TO_STRING:
+            APPEND_ARRAY(1, as_exp_to_string(NIL));
             break;
         case OP_STRING_REGEX_REPLACE:
         case OP_STRING_REGEX_COMPARE: {
