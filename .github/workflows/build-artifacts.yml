@@ -25,7 +25,7 @@ on:
       server-tag:
         type: string
         # latest tag is not supported in JFrog
-        required: true
+        required: false
         description: 'Server docker image tag'
       test-file:
         required: false

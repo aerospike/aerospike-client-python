@@ -84,11 +84,15 @@ jobs:
     strategy:
       matrix:
         runner-os: [
+          # macOS 14
+          ["self-hosted", "macOS", "ARM64"],
           macos-15-intel,
           macos-26-intel,
           # These are arm64 runners
           macos-15,
           macos-26,
+          # Windows 2022
+          ["self-hosted", "Windows", "X64"],
           windows-2025
         ]
         python-version: ${{ fromJson(inputs.python-versions-to-test) }}
@@ -102,3 +106,19 @@ jobs:
       rev-of-integration-tests: ${{ inputs.rev-of-integration-tests }}
       test-file: ${{ inputs.test-file }}
     secrets: inherit
+
+  valgrind:
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"ubuntu-22.04"'
+      # Get lowest supported python version
+      python-version: ${{ fromJson(inputs.python-versions-to-test)[0] }}
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      run-with-valgrind: true
+      run-valgrind-with-massif: false
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+      statuses: write

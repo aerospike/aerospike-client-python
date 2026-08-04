@@ -5,7 +5,7 @@ name: Update version in repo
 on:
   push:
     branches:
-    - 'dev*'
+    - 'stage*'
     - 'master*'
     # Only trigger on commits and not tags to avoid the workflow triggering itself
     tags-ignore:
@@ -43,7 +43,7 @@ jobs:
         if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
           change_type="manual-override"
           version_to_override="$NEW_VERSION"
-        elif [[ $GH_REF_NAME =~ dev* ]]; then
+        elif [[ $GH_REF_NAME =~ stage* ]]; then
           change_type="bump-dev-num"
         else
           change_type="strip_prerelease_part"

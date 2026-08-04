@@ -79,6 +79,6 @@ jobs:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ inputs.next_release_version }}
       release-bundle-tag: ${{ inputs.latest_tag }}
-      new-environment: DEV
+      new-environment: TEST
     permissions:
       id-token: write
