@@ -1156,6 +1156,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     }
 
     as_list_write_flags flags = AS_LIST_WRITE_DEFAULT;
+    found = false;
     if (get_enum_from_py_dict(
             err, py_policy, "write_flags", &tmp_value, AS_LIST_WRITE_DEFAULT,
             AS_LIST_WRITE_PARTIAL * 2 - 1, true, &found) != AEROSPIKE_OK) {
