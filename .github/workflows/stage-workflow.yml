@@ -130,19 +130,21 @@ jobs:
   # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
   reupload-gh-artifacts-as-jfrog-release-bundle-and-promote-to-dev:
     needs: [
+      compare-last-release-bundle-rev-with-latest-dev-tag,
       get-this-jfrog-build-info,
       run-stage-tests
     ]
-    # See stage-workflow.yml for why we encapsulate all the following jobs into one reusable workflow
     if: |
       !cancelled()
-      ||
-      needs.get-this-jfrog-build-info.result == 'success'
       &&
       (
       needs.run-stage-tests.result == 'success'
       ||
-      needs.run-stage-tests.result == 'skipped'
+        (
+        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
+        &&
+        needs.run-stage-tests.result == 'skipped'
+        )
       )
     uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
     with:
