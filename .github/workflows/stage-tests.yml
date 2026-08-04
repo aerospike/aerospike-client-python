@@ -102,7 +102,7 @@ jobs:
       runner-os-json-string: ${{ format('"{0}"', matrix.runner-os) }}
       python-version: ${{ matrix.python-version }}
       server-tag: ${{ inputs.server-tag }}
-      run-integration-tests: ${{ endsWith(matrix.runner-os, '-intel') && inputs.run-integration-tests-on-macos-x86 }}
+      run-integration-tests: ${{ contains(matrix.runner-os, 'self-hosted') }}
       rev-of-integration-tests: ${{ inputs.rev-of-integration-tests }}
       test-file: ${{ inputs.test-file }}
     secrets: inherit
