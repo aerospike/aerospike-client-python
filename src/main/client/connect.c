@@ -15,8 +15,10 @@
  ******************************************************************************/
 
 #include <Python.h>
+#include <string.h>
 
 #include <aerospike/aerospike.h>
+#include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 
 #include "client.h"
@@ -180,6 +182,22 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         PyUnicode_Check(py_password)) {
         char *username = (char *)PyUnicode_AsUTF8(py_username);
         char *password = (char *)PyUnicode_AsUTF8(py_password);
+        if (strlen(username) >= AS_USER_SIZE) {
+            as_error_update(
+                &err, AEROSPIKE_ERR_PARAM,
+                "Username length exceeds the maximum of %d characters",
+                AS_USER_SIZE - 1);
+            raise_exception(&err);
+            return NULL;
+        }
+        if (strlen(password) >= AS_PASSWORD_SIZE) {
+            as_error_update(
+                &err, AEROSPIKE_ERR_PARAM,
+                "Password length exceeds the maximum of %d characters",
+                AS_PASSWORD_SIZE - 1);
+            raise_exception(&err);
+            return NULL;
+        }
         as_config_set_user(&self->as->config, username, password);
     }
 

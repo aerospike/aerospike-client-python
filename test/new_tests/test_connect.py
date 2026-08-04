@@ -216,6 +216,18 @@ class TestConnect(object):
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
             ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "a" * 64, "password": "password"},
+                e.ParamError,
+                -2,
+                "Username length exceeds the maximum of 63 characters",
+            ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "username", "password": "a" * 64},
+                e.ParamError,
+                -2,
+                "Password length exceeds the maximum of 63 characters",
+            ),
         ],
         ids=[
             "config not dict",
@@ -224,6 +236,8 @@ class TestConnect(object):
             "hosts missing address",
             "hosts port is incorrect",
             "hosts port is string",
+            "username too long",
+            "password too long",
         ],
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
@@ -235,3 +249,35 @@ class TestConnect(object):
         else:
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+    def test_user_and_password_size_constants(self):
+        """
+        aerospike.USER_SIZE / aerospike.PASSWORD_SIZE expose the C client's
+        max buffer size (including the null terminator) for config["user"]/config["password"].
+        """
+        assert aerospike.USER_SIZE == 64
+        assert aerospike.PASSWORD_SIZE == 64
+
+    @pytest.mark.parametrize(
+        "username, password, err_msg",
+        [
+            ("a" * 64, "password", "Username length exceeds the maximum of 63 characters"),
+            ("username", "a" * 64, "Password length exceeds the maximum of 63 characters"),
+        ],
+        ids=[
+            "username too long",
+            "password too long",
+        ],
+    )
+    def test_connect_call_with_too_long_credentials(self, username, password, err_msg):
+        """
+        Invoke connect(username, password) directly with a too-long username/password.
+        """
+        config = self.connection_config.copy()
+
+        with open_as_connection(config) as client:
+            client.close()
+            with pytest.raises(e.ParamError) as err_info:
+                client.connect(username, password)
+            assert err_info.value.code == -2
+            assert err_info.value.msg == err_msg

@@ -35,6 +35,7 @@
 #include "transaction.h"
 #include "config_provider.h"
 
+#include <aerospike/as_config.h>
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
 #include <aerospike/as_job.h>
@@ -136,6 +137,10 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},
     {"AUTH_EXTERNAL_INSECURE", .value.integer = AS_AUTH_EXTERNAL_INSECURE},
     {"AUTH_PKI", .value.integer = AS_AUTH_PKI},
+
+    // Max size (including null terminator) of config["user"]/config["password"]
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(USER_SIZE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(PASSWORD_SIZE),
 
     {"POLICY_RETRY_NONE", .value.integer = AS_POLICY_RETRY_NONE},
     {"POLICY_RETRY_ONCE", .value.integer = AS_POLICY_RETRY_ONCE},
