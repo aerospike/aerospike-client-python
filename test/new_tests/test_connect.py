@@ -228,6 +228,18 @@ class TestConnect(object):
                 -2,
                 "Password length exceeds the maximum of 63 characters",
             ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "", "password": "password"},
+                e.ParamError,
+                -2,
+                "Username must not be empty",
+            ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "username", "password": ""},
+                e.ParamError,
+                -2,
+                "Password must not be empty",
+            ),
         ],
         ids=[
             "config not dict",
@@ -238,6 +250,8 @@ class TestConnect(object):
             "hosts port is string",
             "username too long",
             "password too long",
+            "username empty",
+            "password empty",
         ],
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
@@ -255,15 +269,19 @@ class TestConnect(object):
         [
             ("a" * 64, "password", "Username length exceeds the maximum of 63 characters"),
             ("username", "a" * 64, "Password length exceeds the maximum of 63 characters"),
+            ("", "password", "Username must not be empty"),
+            ("username", "", "Password must not be empty"),
         ],
         ids=[
             "username too long",
             "password too long",
+            "username empty",
+            "password empty",
         ],
     )
     def test_connect_call_with_too_long_credentials(self, username, password, err_msg):
         """
-        Invoke connect(username, password) directly with a too-long username/password.
+        Invoke connect(username, password) directly with an invalid username/password.
         """
         config = self.connection_config.copy()
 

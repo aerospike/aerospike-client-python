@@ -182,6 +182,18 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         PyUnicode_Check(py_password)) {
         char *username = (char *)PyUnicode_AsUTF8(py_username);
         char *password = (char *)PyUnicode_AsUTF8(py_password);
+        if (strlen(username) == 0) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Username must not be empty");
+            raise_exception(&err);
+            return NULL;
+        }
+        if (strlen(password) == 0) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Password must not be empty");
+            raise_exception(&err);
+            return NULL;
+        }
         if (strlen(username) >= AS_USER_SIZE) {
             as_error_update(
                 &err, AEROSPIKE_ERR_PARAM,
