@@ -78,7 +78,7 @@ new_tag_for_push_event="$(python3 .github/workflows/"${CHANGE_TYPE}.py" "$latest
 
 ref_name=$(git branch --show-current)
 
-if [[ "$ref_name" =~ *-test ]]; then
+if [[ "$ref_name" =~ -test$ ]]; then
     new_tag_for_push_event="${new_tag_for_push_event}-test"
 fi
 
