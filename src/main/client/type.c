@@ -17,6 +17,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
@@ -52,6 +53,10 @@ enum {
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
+    INIT_USER_TOO_LONG_ERR,
+    INIT_PASSWORD_TOO_LONG_ERR,
+    INIT_USER_EMPTY_ERR,
+    INIT_PASSWORD_EMPTY_ERR,
 };
 
 /*******************************************************************************
@@ -1296,6 +1301,22 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyUnicode_Check(py_user_pwd)) {
         char *username = (char *)PyUnicode_AsUTF8(py_user_name);
         char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
+        if (strlen(username) == 0) {
+            error_code = INIT_USER_EMPTY_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(password) == 0) {
+            error_code = INIT_PASSWORD_EMPTY_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(username) >= AS_USER_SIZE) {
+            error_code = INIT_USER_TOO_LONG_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(password) >= AS_PASSWORD_SIZE) {
+            error_code = INIT_PASSWORD_TOO_LONG_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
         as_config_set_user(&config, username, password);
     }
 
@@ -1372,6 +1393,28 @@ CONSTRUCTOR_ERROR:
     case INIT_INVALID_AUTHMODE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Specify valid auth_mode");
+        break;
+    }
+    case INIT_USER_TOO_LONG_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Username length exceeds the maximum of %d characters",
+                        AS_USER_SIZE - 1);
+        break;
+    }
+    case INIT_PASSWORD_TOO_LONG_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Password length exceeds the maximum of %d characters",
+                        AS_PASSWORD_SIZE - 1);
+        break;
+    }
+    case INIT_USER_EMPTY_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Username must not be empty");
+        break;
+    }
+    case INIT_PASSWORD_EMPTY_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Password must not be empty");
         break;
     }
     default:
