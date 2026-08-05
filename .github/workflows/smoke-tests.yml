@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -202,7 +202,7 @@ jobs:
       COVERAGE_REPORT_DIR: coverage-report
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -241,7 +241,7 @@ jobs:
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -373,7 +373,7 @@ jobs:
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -392,7 +392,7 @@ jobs:
       working-directory: test/standalone
 
   # This is an e2e test to check that the user agent was sent correctly to the server
-  test-user-agent:
+  test-standalone:
     needs: [
       build,
       get-env-vars
@@ -401,13 +401,14 @@ jobs:
       fail-fast: false
       matrix:
         test-script-args:
-          - "false"
-          - "true"
-          - "true my_app_id"
+          - "./test-user-agent-e2e.bash false"
+          - "./test-user-agent-e2e.bash true"
+          - "./test-user-agent-e2e.bash true my_app_id"
+          - "python3 ./test_deserialize_as_bytes_python.py"
     runs-on: ${{ needs.build.outputs.runner-os-used-for-build }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -419,22 +420,30 @@ jobs:
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-${{ env.PLATFORM_TAG }}
-    - run: python3 -m pip install ./*.whl
 
     - id: setup-aerospike-server
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
-        enable-security: ${{ startsWith(matrix.test-script-args, 'true') }}
+        enable-security: ${{ startsWith(matrix.test-script-args, './test-user-agent-e2e.bash true') }}
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
-        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, 'true') && '-enterprise' || '' }}
+        server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, './test-user-agent-e2e.bash true') && '-enterprise' || '' }}
+
+    - if: ${{ contains(matrix.test-script-args, 'deserialize_as_bytes_python') }}
+      name: Install Python client that supports inserting AS_BYTES_PYTHON
+      run: |
+        python3 -m pip install aerospike==12.*
+        python3 ./insert_as_bytes_python.py
+      working-directory: test/standalone
+
+    - run: python3 -m pip install ./*.whl
 
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
-      run: ./test-user-agent-e2e.bash ${{ matrix.test-script-args }}
+      run: ${{ matrix.test-script-args }}
       working-directory: test/standalone
 
     - if: ${{ !cancelled() }}
