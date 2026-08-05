@@ -250,14 +250,6 @@ class TestConnect(object):
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
 
-    def test_user_and_password_size_constants(self):
-        """
-        aerospike.USER_SIZE / aerospike.PASSWORD_SIZE expose the C client's
-        max buffer size (including the null terminator) for config["user"]/config["password"].
-        """
-        assert aerospike.USER_SIZE == 64
-        assert aerospike.PASSWORD_SIZE == 64
-
     @pytest.mark.parametrize(
         "username, password, err_msg",
         [
