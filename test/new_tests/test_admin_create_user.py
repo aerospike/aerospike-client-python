@@ -4,12 +4,13 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
+from contextlib import nullcontext
 import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")
 class TestCreateUser(object):
+    user = "user7"
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -107,12 +108,10 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+            assert excinfo.value.code == -2
+            assert excinfo.value.msg == "timeout is invalid"
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
@@ -145,12 +144,10 @@ class TestCreateUser(object):
         password = "user3-test"
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_create_user_with_empty_username(self):
 
@@ -158,12 +155,10 @@ class TestCreateUser(object):
         password = "user3-test"
         roles = ["read-write"]
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_create_user(user, password, roles)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_create_user_with_special_characters_in_username(self):
 
@@ -189,12 +184,10 @@ class TestCreateUser(object):
         password = None
         roles = ["sys-admin"]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_create_user(user, password, roles)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Password should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Password should be a string"
 
     def test_create_user_with_empty_string_as_password(self):
 
@@ -244,15 +237,12 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        try:
+        with pytest.raises((e.InvalidUser, e.ClientError)) as excinfo:
             self.client.admin_create_user(user, password, roles)
 
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
-
-        except e.ClientError:
-            pass
+        if excinfo.type == e.InvalidUser:
+            assert excinfo.value.code == 60
+            assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_create_user_with_too_long_password(self):
 
@@ -309,7 +299,7 @@ class TestCreateUser(object):
 
         non_admin_client = None
 
-        try:
+        with pytest.raises(e.RoleViolation) as excinfo:
             # Close and reconnect with non_admin_test user
             non_admin_client = aerospike.client(config)
             non_admin_client.close()
@@ -318,9 +308,7 @@ class TestCreateUser(object):
 
             if non_admin_client:
                 non_admin_client.close()
-
-        except e.RoleViolation as exception:
-            assert exception.code == 81
+        assert excinfo.value.code == 81
 
         self.delete_users.append("non_admin_test")
 
@@ -353,14 +341,47 @@ class TestCreateUser(object):
 
     def test_create_user_with_very_long_role_name(self):
 
-        user = "user7"
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
-            self.client.admin_drop_user(user)
+            self.client.admin_drop_user(self.user)
             time.sleep(2)
         except Exception:
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            self.client.admin_create_user(self.user, password, roles)
+
+    # Need as_connection to get server version
+    def test_create_pki_user(self, as_connection):
+        try:
+            self.client.admin_drop_user(self.user)
+            time.sleep(2)
+        except Exception:
+            pass
+
+        self.delete_users.append(self.user)
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            context = pytest.raises(e.AerospikeError)
+        else:
+            context = nullcontext()
+
+        # Make sure mutual TLS is enabled.
+        if not (
+            TestBaseClass.tls_in_use()
+            and "tls" in self.connection_config
+            and "certfile" in self.connection_config["tls"]
+        ):
+            pytest.skip("Mutual TLS is not enabled")
+
+        roles = ["read-write"]
+        admin_policy = {}
+        with context:
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+
+        if type(context) == nullcontext:
+            print("Check that the PKI user was created.")
+            time.sleep(2)
+            userDict = self.client.admin_query_user_info(self.user)
+            assert userDict["roles"] == ["read-write"]

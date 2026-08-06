@@ -23,7 +23,7 @@ List operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
 
 For list operations that take in an index parameter, you can use negative values for indexes.
-See this `page <https://aerospike.com/docs/server/guide/data-types/cdt-list#list-terminology>`_.
+See this `page <https://aerospike.com/docs/develop/data-types/collections/list#list-terminology>`_.
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
@@ -1013,7 +1013,7 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: Optional[list] = None):
     Args:
         bin_name (str): The name of the bin to sort.
         sort_flags (int): :ref:`aerospike_list_sort_flag` modifying the sorting behavior
-            (default ``aerospike.DEFAULT_LIST_SORT``).
+            (default :py:data:`aerospike.LIST_SORT_DEFAULT`).
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:

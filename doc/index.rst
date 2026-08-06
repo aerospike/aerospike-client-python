@@ -23,9 +23,9 @@ Records are uniquely identified by their key, and record metadata is contained
 in an in-memory primary index.
 
 .. seealso::
-    `Architecture Overview <https://aerospike.com/docs/server/architecture/overview>`_
+    `Architecture Overview <https://aerospike.com/docs/database/learn/architecture/>`_
     and `Aerospike Data Model
-    <https://aerospike.com/docs/server/architecture/data-model.html>`_ for more
+    <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/>`_ for more
     information about Aerospike.
 
 Layout
@@ -60,12 +60,13 @@ Class                                Description
 :ref:`aerospike.geojson`             Handles GeoJSON type data.
 :ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
 :ref:`aerospike.Transaction`         Transaction
+:ref:`aerospike.ConfigProvider`      Dynamic config provider
 =================================    ===========
 
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
 .. seealso::
-    The `Python Client Manual <https://aerospike.com/developer/client/install?client=python>`_
+    The `Python Client Manual <https://aerospike.com/docs/develop/client/python/install/>`_
     for a quick guide.
 
 Content
@@ -81,6 +82,7 @@ Content
     geojson
     key_ordered_dict
     transaction
+    config_provider
     predicates
     exception
     aerospike_helpers

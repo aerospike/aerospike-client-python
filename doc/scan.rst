@@ -8,6 +8,9 @@
 
 .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
+.. warning:: :meth:`aerospike.Scan` should not be called directly to create a :class:`~aerospike.Scan` object.
+    Please use :meth:`aerospike.Client.scan` instead.
+
 Overview
 ========
 
@@ -15,19 +18,20 @@ The Scan object is used to return all the records in a specified set (which \
 can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
 
-The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
-bins returned can be filtered using :meth:`select`.
+The scan is invoked using :meth:`~aerospike.Scan.foreach`, :meth:`~aerospike.Scan.results`, or
+:meth:`~aerospike.Scan.execute_background`. The bins returned can be filtered using :meth:`~aerospike.Scan.select`.
 
 .. seealso::
-    `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
-    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
+    `Manage queries <https://aerospike.com/docs/database/manage/cluster/queries/>`_.
 
 Fields
 ======
 
 .. class:: Scan
 
-    ttl (:class:`int`)
+    .. py:attribute:: ttl
+        :type: int
+
         The time-to-live (expiration) of the record in seconds. Note that ttl
         is only used on background scan writes.
 
@@ -59,15 +63,15 @@ Methods
     .. method:: apply(module, function[, arguments])
 
         Apply a record UDF to each record found by the scan \
-        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_.
+        `User-defined functions (UDFs) <https://aerospike.com/docs/database/learn/architecture/udf/>`_.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview/>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/data-types/scalar>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
-        .. seealso:: `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_
+        .. seealso:: `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_
 
 
     .. method:: add_ops(ops)
@@ -180,7 +184,7 @@ Methods
         Invoke the *callback* function for each of the records streaming back \
         from the scan.
 
-        :param callable callback: the function to invoke for each record.
+        :param typing.Callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_scan_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :param str nodename: optional Node ID of node used to limit the scan to a single node.
@@ -294,16 +298,64 @@ Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the :py:data:`aerospike.JOB_SCAN`, as it runs in the background.
 
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
 
-            .. include:: examples/scan/top.py
-                :code: python
+        .. testcode::
 
-            .. include:: examples/scan/my_udf.lua
-                :code: lua
+            import aerospike
+            from aerospike import exception as ex
+            import sys
+            import time
+
+            config = {"hosts": [("127.0.0.1", 3000)]}
+            client = aerospike.client(config)
+
+            # register udf
+            try:
+                client.udf_put("./my_udf.lua")
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                client.close()
+                sys.exit(1)
+
+            # put records and apply udf
+            try:
+                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
+                records = [{"number": 1}, {"number": 2}, {"number": 3}]
+                for i in range(3):
+                    client.put(keys[i], records[i])
+
+                scan = client.scan("test", "demo")
+                scan.apply("my_udf", "my_udf", ["number", 10])
+                job_id = scan.execute_background()
+
+                # wait for job to finish
+                while True:
+                    response = client.job_info(job_id, aerospike.JOB_SCAN)
+                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.25)
+
+                brs = client.batch_read(keys)
+                for br in brs.batch_records:
+                    print(br.record[2])
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. testoutput::
+
+            {'number': 11}
+            {'number': 12}
+            {'number': 13}
+
+        .. include:: examples/scan/my_udf.lua
+            :code: lua
 
     .. method:: paginate()
 
@@ -442,53 +494,11 @@ Policies
 
     A :class:`dict` of optional scan policies which are applicable to :meth:`Scan.results` and :meth:`Scan.foreach`. See :ref:`aerospike_policies`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** :class:`int`
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
-
-        * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** :class:`int`
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. \
-              If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to \
-             ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``.
-        * **total_timeout** :class:`int`
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely \
-              timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error \
-             ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``0``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **durable_delete** :class:`bool`
             | Perform durable delete (requires Enterprise server version >= 3.10)
             | If the transaction results in a record deletion, leave a tombstone for the record.
@@ -499,12 +509,6 @@ Policies
             | Requires server version >= 4.7.0.
             |
             | Default: ``0`` (no limit).
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: ``None``
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **max_records** :class:`int`
             | Approximate number of records to return to client.
             | This number is divided by the number of nodes involved in the scan.
@@ -525,7 +529,7 @@ Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
         * **ttl** (:class:`int`)
             The default time-to-live (expiration) of the record in seconds. This field will only be used on
             background scan writes if :py:attr:`aerospike.Scan.ttl` is set to

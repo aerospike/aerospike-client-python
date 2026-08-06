@@ -27,7 +27,7 @@
 #include "scan.h"
 #include "policy.h"
 
-bool Scan_Illegal_UDF_Args_Check(PyObject *py_args);
+bool Illegal_UDF_Args_Check(PyObject *py_args);
 
 AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
@@ -99,7 +99,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     if (py_args && PyList_Check(py_args)) {
         Py_ssize_t size = PyList_Size(py_args);
 
-        if (Scan_Illegal_UDF_Args_Check(py_args)) {
+        if (Illegal_UDF_Args_Check(py_args)) {
             as_error_update(
                 &err, AEROSPIKE_ERR_CLIENT,
                 "udf function argument type must be supported by Aerospike");
@@ -154,7 +154,7 @@ CLEANUP:
     return self;
 }
 
-bool Scan_Illegal_UDF_Args_Check(PyObject *py_args)
+bool Illegal_UDF_Args_Check(PyObject *py_args)
 {
     Py_ssize_t size = PyList_Size(py_args);
     PyObject *py_args_copy =
@@ -185,6 +185,7 @@ bool Scan_Illegal_UDF_Args_Check(PyObject *py_args)
                    AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME) ||
                    AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME) ||
                    PyBytes_Check(py_val))) {
+            Py_DECREF(py_args_copy);
             return true;
         }
     }

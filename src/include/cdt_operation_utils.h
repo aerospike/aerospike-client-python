@@ -24,7 +24,9 @@
 #include "types.h"
 
 #define AS_PY_BIN_KEY "bin"
+#define AS_PY_RETURN_INVERTED_KEY "inverted"
 #define AS_PY_VAL_KEY "val"
+#define AS_PY_MAP_KEY_KEY "key"
 #define AS_PY_VALUES_KEY "value_list"
 #define AS_PY_VAL_BEGIN_KEY "value_begin"
 #define AS_PY_VAL_END_KEY "value_end"
@@ -49,6 +51,10 @@ as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
 as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
                   char **binName);
 
+as_status get_str(as_error *err, const char *key, PyObject *op_dict,
+                  as_vector *unicodeStrVector, char **str_ref,
+                  bool is_optional);
+
 as_status get_asval(AerospikeClient *self, as_error *err, char *key,
                     PyObject *op_dict, as_val **val,
                     as_static_pool *static_pool, int serializer_type,
@@ -65,6 +71,9 @@ as_status get_optional_int64_t(as_error *err, const char *key,
                                PyObject *op_dict, int64_t *i64_valptr,
                                bool *found);
 
+as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
+                       uint64_t *ui64_valptr);
+
 as_status get_int_from_py_dict(as_error *err, const char *key,
                                PyObject *op_dict, int *int_pointer);
 
@@ -72,4 +81,8 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type);
 
 as_status get_list_policy(as_error *err, PyObject *op_dict,
-                          as_list_policy *policy, bool *found);
+                          as_list_policy *policy, bool *found,
+                          bool validate_keys);
+
+as_status get_map_return_type(as_error *err, PyObject *op_dict,
+                              int *return_type);

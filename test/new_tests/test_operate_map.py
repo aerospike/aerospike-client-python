@@ -197,7 +197,7 @@ class TestOperate(object):
     def test_pos_operate_set_map_policy(self):
         key = ("test", "map_test", 1)
         llist = [
-            {"op": aerospike.OP_MAP_SET_POLICY, "bin": "my_map", "map_policy": {"map_sort": aerospike.MAP_KEY_ORDERED}}
+            {"op": aerospike.OP_MAP_SET_POLICY, "bin": "my_map", "map_policy": {"map_order": aerospike.MAP_KEY_ORDERED}}
         ]
         key, _, _ = self.as_connection.operate(key, llist)
         self.as_connection.remove(key)

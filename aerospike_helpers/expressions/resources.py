@@ -2,7 +2,7 @@
 Resources used by all expressions.
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 
@@ -87,6 +87,7 @@ class _ExprOp:  # TODO replace this with an enum
     DEF = 126
 
     _AS_EXP_CODE_AS_VAL = 128
+
     # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
@@ -112,6 +113,8 @@ class ReturnType:
     MAP_RETURN_INVERTED = 0x10000
 
 
+# These enum constants must match the values for C client's as_exp_type.
+# These are passed as arguments to ModifyByPath and SelectByPath expressions
 class ResultType:
     """
     Flags used to indicate expression value_type.
@@ -140,6 +143,8 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+
+#: Compiled expression that can be passed to the Python client API.
 TypeExpression = List[TypeCompiledOp]
 
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
@@ -149,6 +154,9 @@ TypeAny = Union[_AtomExpr, Any]
 
 
 class _BaseExpr(_AtomExpr):
+    """
+    Base class for all expressions.
+    """
     _op: int = 0
     _rt: TypeResultType = None
     _fixed: TypeFixed = None
@@ -166,8 +174,10 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
+        """
+        Returns an expression object that can be passed to the Python client API.
+        """
         expression = [self._get_op()]
-        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

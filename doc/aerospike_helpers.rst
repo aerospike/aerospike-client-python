@@ -5,6 +5,7 @@
 *************************************************************************************************************
 
 This package contains:
+
 * Helpers to be used by the operate and operate_ordered methods for bin operations. (list, map, bitwise, etc.)
 * Classes for metrics callbacks.
 * The HyperLogLog data type
@@ -14,8 +15,16 @@ This package contains:
     :undoc-members:
     :show-inheritance:
 
+String Helpers
+==============
+
+.. automodule:: aerospike_helpers.string_helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
-------------
+===========
 
 .. toctree::
 

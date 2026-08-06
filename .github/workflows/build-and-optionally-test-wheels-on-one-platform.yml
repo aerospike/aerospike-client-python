@@ -1,0 +1,185 @@
+name: 'Build and optionally test wheels for one platform'
+run-name: >
+  Build wheels
+  (python-versions=${{ inputs.python-versions }},
+  platform-tag=${{ inputs.platform-tag }},
+  env-vars-for-building=${{ inputs.env-vars-for-building }},
+  run_tests=${{ inputs.run_tests }},
+  server-tag=${{ inputs.server-tag }},
+  test-file=${{ inputs.test-file }})
+
+# Build wheels on all (or select) Python versions supported by the Python client for a specific platform
+
+permissions:
+  id-token: write
+  contents: read
+  statuses: write
+
+on:
+  workflow_dispatch:
+    inputs: &inputs
+      # These are the usual cases for building wheels:
+      #
+      # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
+      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
+      # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
+      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
+      # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
+      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
+      #
+      # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
+      # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
+      #
+      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
+      # in Github Actions. So all jobs in the build-wheel job would have to pass for a self hosted job to run.
+      # We want each platform to be tested independently of each other,
+      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
+      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
+      python-versions:
+        type: string
+        description: Valid JSON list of Python tags to build the client for.
+        required: false
+        default: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
+      platform-tag:
+        # One of these values:
+        # - manylinux_x86_64
+        # - manylinux_aarch64
+        # - linux_x86_64
+        # - macosx_x86_64
+        # - macosx_arm64
+        # - win_amd64
+        description: Platform to build the client for.
+        type: string
+        required: true
+      env-vars-for-building:
+        description: ''
+        type: string
+        default: ''
+      run_tests:
+        description: 'Run Aerospike server and run tests using built wheels?'
+        type: boolean
+        required: false
+        default: false
+      server-tag:
+        type: string
+        required: false
+        description: 'Only required if run_tests is true. Server docker image tag'
+      test-file:
+        type: string
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
+      # Used upstream by the dev workflow to disable integration testing for macos x86
+      run-integration-tests-on-macos-x86:
+        type: boolean
+        required: false
+        default: true
+      publish-build-info:
+        required: false
+        description: Only used upstream by dev workflow
+        default: false
+        type: boolean
+      # NOT used by workflow dispatch
+      jf-build-id:
+        required: false
+        default: ''
+        description: If publishing build info is true
+        type: string
+
+  workflow_call:
+    outputs:
+      # Both outputs are used by downstream jobs that need to test the wheel
+      runner-os-used-for-build:
+        value: ${{ jobs.get-build-runner-os.outputs.runner-os }}
+      python-versions:
+        value: ${{ inputs.python-versions }}
+    inputs: *inputs
+
+jobs:
+  # Maps don't exist in Github Actions and we cannot pass env vars as inputs to reusable workflows,
+  # so we have to store the map using a script and fetch it in a job
+  # This uses up more billing minutes (rounded up to 1 minute for each job run),
+  # but this should be ok based on the minutes usage data for the aerospike organization
+  get-build-runner-os:
+    outputs:
+      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+      manylinux-image-digest: ${{ steps.get-runner-os.outputs.manylinux_image_digest }}
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - id: get-runner-os
+      # Single source of truth for which runner OS to use for each platform tag
+      run: |
+        declare -A hashmap
+        hashmap[linux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
+        hashmap[macosx_x86_64]="macos-14-large"
+        hashmap[macosx_arm64]="macos-14"
+        hashmap[win_amd64]="windows-2022"
+        echo "runner_os=${hashmap[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
+
+        declare -A manylinux_digest
+        manylinux_digest[manylinux_x86_64]="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
+        manylinux_digest[manylinux_aarch64]="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
+        # This will not fail if map key is not found. Assuming only a blank string will be returned
+        echo "manylinux_image_digest=${manylinux_digest[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
+      # Bash >= 4 supports hashmaps
+      shell: bash
+      env:
+        PLATFORM_TAG: ${{ inputs.platform-tag }}
+
+  build-wheel:
+    needs: get-build-runner-os
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(inputs.python-versions) }}
+      fail-fast: false
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      runs-on: ${{ needs.get-build-runner-os.outputs.runner-os }}
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      jf-build-id: ${{ inputs.jf-build-id }}-buildinfo-${{ matrix.python-version }}-${{ inputs.platform-tag }}
+      gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}${{ contains(inputs.env-vars-for-building, 'SANITIZER') && '-sanitizer' || '' }}
+      gh-artifact-directory: wheelhouse
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+      oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+      build-script-path: ./build-wheel.bash
+      # Same as default folder where source repo is cloned
+      working-directory: local
+      setup-python: true
+      python-version: ${{ matrix.python-version }}
+      publish-build-info: ${{ inputs.publish-build-info }}
+      # TODO: I have already raised an issue with dev infra team re: the action not ignoring newlines/spaces for env var
+      # names. For now, just put all the env vars in one line.
+      build-env: BUILD_MANYLINUX_WHEEL=${{ contains(inputs.platform-tag, 'manylinux') }};MANYLINUX_REGISTRY_NAME=${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }};MANYLINUX_IMAGE_DIGEST=${{ needs.get-build-runner-os.outputs.manylinux-image-digest }};VERIFY_REPAIR=1;KEEP_CONTAINER=1;${{ inputs.env-vars-for-building }}
+
+  test-wheel:
+    needs: [
+      get-build-runner-os,
+      build-wheel
+    ]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJSON(inputs.python-versions) }}
+    uses: ./.github/workflows/test-artifact.yml
+    if: ${{ inputs.run_tests }}
+    with:
+      # Not the prettiest solution...
+      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
+      python-version: ${{ matrix.python-version }}
+      use-sanitizer-wheel: ${{ contains(inputs.env-vars-for-building, 'SANITIZER') }}
+      run-tests-in-container: ${{ contains(inputs.platform-tag, 'manylinux') }}
+      # Only used if running tests in container
+      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
+      server-tag: ${{ inputs.server-tag }}
+      run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
+      test-file: ${{ inputs.test-file }}
+    secrets: inherit

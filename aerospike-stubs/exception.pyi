@@ -3,10 +3,14 @@ from typing import Union
 class AerospikeError(Exception):
     # When attributes are first assigned to exception class, they have an initial value of None
     code: Union[int, None]
+    subcode: Union[int, None]
     msg: Union[str, None]
     file: Union[str, None]
     line: Union[int, None]
     in_doubt: Union[bool, None]
+
+class TimeoutError(AerospikeError):
+     pass
 
 class ClientError(AerospikeError):
     pass
