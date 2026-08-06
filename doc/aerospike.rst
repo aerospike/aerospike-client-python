@@ -2041,6 +2041,11 @@ Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
 
     Request subcode and human-readable message from the server on error responses.
 
+.. data:: ERROR_DETAIL_EXP_TRACE
+
+    Request subcode and human-readable message from the server on error responses,
+    as well as expression build trace if an expression fails to build.
+
 .. _subcodes:
 
 Subcodes
