@@ -86,11 +86,19 @@ class TestConnect(object):
 
     def test_connect_positive_string_host_and_port(self):
         """
-        Invoke connect() with a single "hostname:port" string entry
-        (CLIENT-4841).
+        Invoke connect() with a single "hostname[:tlsname]:port" string
+        entry (CLIENT-4841). connection_config's host entry has a tls-name
+        as a third tuple element when TLS is enabled, so build the
+        equivalent string for both the 2- and 3-element tuple cases.
         """
-        addr, port = self.connection_config["hosts"][0]
-        config = {"hosts": [f"{addr}:{port}"]}
+        config = self.connection_config.copy()
+        host_entry = config["hosts"][0]
+        if len(host_entry) == 3:
+            addr, port, tls_name = host_entry
+            config["hosts"] = [f"{addr}:{tls_name}:{port}"]
+        else:
+            addr, port = host_entry
+            config["hosts"] = [f"{addr}:{port}"]
 
         with open_as_connection(config) as client:
             assert client.is_connected()
