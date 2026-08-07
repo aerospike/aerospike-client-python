@@ -2045,7 +2045,7 @@ static as_status add_expr_macros(AerospikeClient *self,
                 as_list *values = NULL;
                 as_status status =
                     get_val_list(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
-                                 &values, static_pool, serializer_type);
+                                 &values, dynamic_pool);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
