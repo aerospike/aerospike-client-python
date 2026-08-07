@@ -56,12 +56,12 @@ jobs:
     - id: get-next-release-version
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
-    - name: Safeguard to make sure there's changes in stage to be promoted
+    - name: Safeguard to make sure there's changes in dev to be promoted
       id: get-latest-tag
       run: |
         latest_tag=$(git describe --tags --exact-match HEAD)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
-          echo "We have not merged any changes to stage since the last release yet." >&2
+          echo "We have not merged any changes to dev since the last release yet." >&2
           exit 1
         fi
         echo latest_tag="$latest_tag" >> "$GITHUB_OUTPUT"

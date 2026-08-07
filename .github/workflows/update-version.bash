@@ -76,12 +76,6 @@ latest_tag=$(git describe --tags --abbrev=0 HEAD)
 pip install parver -c .github/workflows/requirements.txt
 new_tag_for_push_event="$(python3 .github/workflows/"${CHANGE_TYPE}.py" "$latest_tag")"
 
-ref_name=$(git branch --show-current)
-
-if [[ "$ref_name" =~ *-test ]]; then
-    new_tag_for_push_event="${new_tag_for_push_event}-test"
-fi
-
 if [[ "$CHANGE_TYPE" == "bump-dev-num" ]]; then
     new_release_version_for_push_event=$(python3 .github/workflows/strip_prerelease_part.py "$new_tag_for_push_event")
 
