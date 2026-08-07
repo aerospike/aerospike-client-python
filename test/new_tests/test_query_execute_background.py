@@ -67,7 +67,6 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
-    @pytest.mark.xfail(reason="This started failing when adding support for bin projection due to query.ttl not being applied")
     def test_background_with_ttl(self, insert_records):
         """
         Ensure that ttl is set for the record found with background query
