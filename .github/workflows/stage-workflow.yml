@@ -116,7 +116,7 @@ jobs:
     # Need to pass in JFrog secrets
     secrets: inherit
     with:
-      python-versions-to-test: ${{ fromJson(needs.build-artifacts.outputs.python-versions) }}
+      python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
       # Need to use the same version of tests designed for the client version we're promoting
       rev-of-integration-tests: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.later_rev_tag }}
       server-tag: ${{ inputs.server-tag }}
