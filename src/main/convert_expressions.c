@@ -565,10 +565,17 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        char *geo_value =
-            (char *)PyUnicode_AsUTF8(AerospikeGeospatial_DoDumps(py_data, err));
+
+        PyObject *py_geo_str = AerospikeGeospatial_DoDumps(py_data, err);
         Py_DECREF(py_data);
-        as_exp_entry tmp_entry = as_exp_geo(geo_value);
+
+        char *geo_str = (char *)PyUnicode_AsUTF8(py_geo_str);
+        geo_str = strdup(geo_str);
+        Py_DECREF(py_geo_str);
+
+        as_exp_entry tmp_entry = as_exp_geo(geo_str);
+        as_geojson *geojson = as_geojson_fromval(tmp_entry.v.val);
+        geojson->free = true;
         *new_entry = tmp_entry;
     }
     else if (PyByteArray_Check(py_obj)) {
