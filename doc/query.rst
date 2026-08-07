@@ -111,8 +111,87 @@ Methods
 
 Assume this boilerplate code is run before all examples below:
 
-.. include:: examples/query/boilerplate.py
-    :code: python
+.. testsetup:: default,paginate,get_partitions_status
+
+    import aerospike
+    import sys
+    from aerospike import exception as ex
+
+    config = {'hosts': [('127.0.0.1', 3000)]}
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Remove old indices
+    try:
+        client.index_remove("test", "scoreIndex")
+        client.index_remove("test", "eloIndex")
+    except ex.AerospikeError as e:
+        # Ignore if no indices found
+        pass
+
+    # Insert 4 records
+    keyTuples = [("test", "demo", f"player{i}") for i in range(4)]
+    bins = [
+        {"score": 100, "elo": 1400},
+        {"score": 20, "elo": 1500},
+        {"score": 10, "elo": 1100},
+        {"score": 200, "elo": 900}
+    ]
+    for keyTuple, bin in zip(keyTuples, bins):
+        client.put(keyTuple, bin)
+
+    query = client.query('test', 'demo')
+
+    # Queries require a secondary index for each bin name
+    client.index_integer_create("test", "demo", "score", "scoreIndex")
+    client.index_integer_create("test", "demo", "elo", "eloIndex")
+
+.. code-block:: Python
+
+    import aerospike
+    import sys
+    from aerospike import exception as ex
+
+    config = {'hosts': [('127.0.0.1', 3000)]}
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+        client.truncate('test', "demo", 0)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+    # Remove old indices
+    try:
+        client.index_remove("test", "scoreIndex")
+        client.index_remove("test", "eloIndex")
+    except ex.AerospikeError as e:
+        # Ignore if no indices found
+        pass
+
+    # Insert 4 records
+    keyTuples = [("test", "demo", f"player{i}") for i in range(4)]
+    bins = [
+        {"score": 100, "elo": 1400},
+        {"score": 20, "elo": 1500},
+        {"score": 10, "elo": 1100},
+        {"score": 200, "elo": 900}
+    ]
+    for keyTuple, bin in zip(keyTuples, bins):
+        client.put(keyTuple, bin)
+
+    query = client.query('test', 'demo')
+
+    # Queries require a secondary index for each bin name
+    client.index_integer_create("test", "demo", "score", "scoreIndex")
+    client.index_integer_create("test", "demo", "elo", "eloIndex")
 
 .. class:: Query
     :noindex:
@@ -177,14 +256,26 @@ Assume this boilerplate code is run before all examples below:
         :param dict options: optional :ref:`aerospike_query_options`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. include:: examples/query/results.py
-            :code: python
+        .. testcode::
+
+            from aerospike import predicates
+
+            query.select('score')
+            query.where(predicates.equals('score', 100))
+
+            records = query.results()
+            # Matches one record
+            print(records)
+
+        .. testoutput::
+
+            [(('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': 100})]
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
             results will query. See the example below.
 
-            .. code-block:: python
+            .. testcode::
 
                 # This is an example of querying partitions 1000 - 1003.
                 import aerospike
@@ -217,19 +308,65 @@ Assume this boilerplate code is run before all examples below:
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. include:: examples/query/foreach.py
-            :code: python
+        .. testcode::
+
+            # Callback function
+            # Calculates new elo for a player
+            def updateElo(record):
+                keyTuple, _, bins = record
+                # Add score to elo
+                bins["elo"] = bins["elo"] + bins["score"]
+                client.put(keyTuple, bins)
+
+            query.foreach(updateElo)
+
+            # Player elos should be updated
+            brs = client.batch_read(keyTuples)
+            for br in brs.batch_records:
+                # Print record bin
+                print(br.record[2])
+
+        .. testoutput::
+
+            {'score': 100, 'elo': 1500}
+            {'score': 20, 'elo': 1520}
+            {'score': 10, 'elo': 1110}
+            {'score': 200, 'elo': 1100}
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
-            .. include:: examples/query/foreachfalse.py
-                :code: python
+        .. testcode::
+
+            # Adds record keys from a stream to a list
+            # But limits the number of keys to "lim"
+            def limit(lim: int, result: list):
+                # Integers are immutable
+                # so a list (mutable) is used for the counter
+                c = [0]
+                def key_add(record):
+                    key, metadata, bins = record
+                    if c[0] < lim:
+                        result.append(key)
+                        c[0] = c[0] + 1
+                    else:
+                        return False
+                return key_add
+
+            from aerospike import predicates as p
+
+            keys = []
+            query.foreach(limit(2, keys))
+            print(len(keys))
+
+        .. testoutput::
+
+            2
 
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
          foreach will query. See the example below.
 
-         .. code-block:: python
+         .. testcode::
 
             # This is an example of querying partitions 1000 - 1003.
             import aerospike
@@ -254,11 +391,13 @@ Assume this boilerplate code is run before all examples below:
 
 
             # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
-            # should be 4
             print(len(partitions))
-
-            # should be [1000, 1001, 1002, 1003]
             print(partitions)
+
+        .. testoutput::
+
+            0
+            []
 
     .. method:: apply(module, function[, arguments])
 
@@ -284,8 +423,51 @@ Assume this boilerplate code is run before all examples below:
 
         Assume the example code above is in a file called "example.lua", and is the same folder as the following script.
 
-        .. include:: examples/lua/lua.py
-            :code: python
+        .. testcode::
+
+            import aerospike
+
+            config = {'hosts': [('127.0.0.1', 3000)],
+                        'lua': {'system_path':'/usr/local/aerospike/lua/',
+                                'user_path':'./'}}
+            client = aerospike.client(config)
+            client.udf_put("./examples/lua/example.lua")
+
+            # Remove index if it already exists
+            from aerospike import exception as ex
+            try:
+                client.index_remove("test", "ageIndex")
+            except ex.IndexNotFound:
+                pass
+
+            bins = [
+                {"name": "Jeff", "age": 20},
+                {"name": "Derek", "age": 24},
+                {"name": "Derek", "age": 21},
+                {"name": "Derek", "age": 29},
+                {"name": "Jeff", "age": 29},
+            ]
+            keys = [("test", "users", f"user{i}") for i in range(len(bins))]
+            for key, recordBins in zip(keys, bins):
+                client.put(key, recordBins)
+
+            client.index_integer_create("test", "users", "age", "ageIndex")
+
+            query = client.query('test', 'users')
+            query.apply('example', 'group_count', ['name', 'age', 21])
+            names = query.results()
+
+            # we expect a dict (map) whose keys are names, each with a count value
+            print(names)
+            # One of the Jeffs is excluded because he is under 21
+
+            # Cleanup
+            client.index_remove("test", "ageIndex")
+            client.batch_remove(keys)
+
+        .. testoutput::
+
+            [{'Derek': 3, 'Jeff': 1}]
 
         With stream UDFs, the final reduce steps (which ties
         the results from the reducers of the cluster nodes) executes on the
@@ -326,9 +508,19 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the :py:data:`aerospike.JOB_QUERY` , as it runs in the background.
 
-        .. code-block:: python
+        Continuing from the results of the :meth:`~aerospike.Query.foreach` code example:
+
+        .. testcode::
+
+            import time
+            def wait_for_job_completion(job_id):
+                while True:
+                    response = client.job_info(job_id, aerospike.JOB_QUERY)
+                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+                        break
+                    time.sleep(0.1)
 
             # EXAMPLE 1: Increase everyone's score by 100
 
@@ -336,20 +528,16 @@ Assume this boilerplate code is run before all examples below:
             ops = [
                 operations.increment("score", 100)
             ]
+            query = client.query("test", "demo")
             query.add_ops(ops)
             id = query.execute_background()
 
-            # Allow time for query to complete
-            import time
-            time.sleep(3)
+            wait_for_job_completion(id)
 
             for key in keyTuples:
                 _, _, bins = client.get(key)
                 print(bins)
-            # {"score": 200, "elo": 1400}
-            # {"score": 120, "elo": 1500}
-            # {"score": 110, "elo": 1100}
-            # {"score": 300, "elo": 900}
+            print()
 
             # EXAMPLE 2: Increase score by 100 again for those with elos > 1000
             # Use write policy to select players by elo
@@ -360,20 +548,23 @@ Assume this boilerplate code is run before all examples below:
             }
             id = query.execute_background(policy=writePolicy)
 
-            time.sleep(3)
+            wait_for_job_completion(id)
 
             for i, key in enumerate(keyTuples):
                 _, _, bins = client.get(key)
                 print(bins)
-            # {"score": 300, "elo": 1400} <--
-            # {"score": 220, "elo": 1500} <--
-            # {"score": 210, "elo": 1100} <--
-            # {"score": 300, "elo": 900}
 
-            # Cleanup and close the connection to the Aerospike cluster.
-            for key in keyTuples:
-                client.remove(key)
-            client.close()
+        .. testoutput::
+
+            {'score': 200, 'elo': 1500}
+            {'score': 120, 'elo': 1520}
+            {'score': 110, 'elo': 1110}
+            {'score': 300, 'elo': 1100}
+
+            {'score': 300, 'elo': 1500}
+            {'score': 220, 'elo': 1520}
+            {'score': 210, 'elo': 1110}
+            {'score': 400, 'elo': 1100}
 
     .. method:: paginate()
 
@@ -385,7 +576,7 @@ Assume this boilerplate code is run before all examples below:
             This can be retrieved later using .get_partitions_status(). This can also been done by
             using the partition_filter policy.
 
-        .. code-block:: python
+        .. testcode:: paginate
 
             # After inserting 4 records...
             # Query 3 pages of 2 records each.
@@ -393,30 +584,41 @@ Assume this boilerplate code is run before all examples below:
             pages = 3
             page_size = 2
 
+            query = client.query("test", "demo")
             query.max_records = 2
             query.paginate()
+
+            all_records = []
 
             # NOTE: The number of pages queried and records returned per page can differ
             # if record counts are small or unbalanced across nodes.
             for page in range(pages):
                 records = query.results()
                 print("got page: " + str(page))
-
-                # Print records in each page
-                for record in records:
-                    print(record)
+                print("Page size:", len(records))
+                all_records.extend(records)
 
                 if query.is_done():
                     print("all done")
                     break
-            # got page: 0
-            # (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
-            # (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
-            # got page: 1
-            # (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
-            # (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
-            # got page: 2
-            # all done
+
+            all_records = sorted(all_records)
+            for record in all_records:
+                print(record)
+
+        .. testoutput:: paginate
+
+            got page: 0
+            Page size: 2
+            got page: 1
+            Page size: 2
+            got page: 2
+            Page size: 0
+            all done
+            (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': ..., 'gen': 1}, {'score': 20, 'elo': 1500})
+            (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': ..., 'gen': 1}, {'score': 10, 'elo': 1100})
+            (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': ..., 'gen': 1}, {'score': 100, 'elo': 1400})
+            (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': ..., 'gen': 1}, {'score': 200, 'elo': 900})
 
     .. method:: is_done()
 
@@ -435,7 +637,17 @@ Assume this boilerplate code is run before all examples below:
 
         :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
-        .. code-block:: python
+        .. testcode:: get_partitions_status
+
+            import aerospike
+            # Configure the client
+            config = {
+                'hosts': [('127.0.0.1', 3000)]
+            }
+
+            # Create a client and connect it to the cluster
+            client = aerospike.client(config)
+
 
             # Only read 2 records
 
@@ -452,8 +664,6 @@ Assume this boilerplate code is run before all examples below:
             query = client.query("test", "demo")
             query.paginate()
             query.foreach(callback)
-            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
-            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
 
 
             # Use this to resume query where we left off
@@ -471,8 +681,13 @@ Assume this boilerplate code is run before all examples below:
             }
 
             query.foreach(resume_callback, policy)
-            # 1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
-            # 3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+
+        .. testoutput:: get_partitions_status
+
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            ... -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
+            ... -> (('test', 'demo', None, bytearray(b'...')), {'ttl': ..., 'gen': 1}, {'score': ..., 'elo': ...})
 
 .. _aerospike_query_policies:
 
@@ -531,7 +746,7 @@ Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_query_options:
 

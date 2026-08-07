@@ -54,11 +54,14 @@
 #define PY_KEYT_KEY 2
 #define PY_KEYT_DIGEST 3
 
-#define PY_EXCEPTION_CODE 0
-#define PY_EXCEPTION_MSG 1
-#define PY_EXCEPTION_FILE 2
-#define PY_EXCEPTION_LINE 3
-#define AS_PY_EXCEPTION_IN_DOUBT 4
+enum {
+    PY_EXCEPTION_CODE = 0,
+    PY_EXCEPTION_MSG,
+    PY_EXCEPTION_FILE,
+    PY_EXCEPTION_LINE,
+    AS_PY_EXCEPTION_IN_DOUBT,
+    EXCEPTION_TUPLE_MEMBER_COUNT
+};
 
 #define CTX_KEY "ctx"
 #define CDT_CTX_ORDER_KEY "order_key"
@@ -176,6 +179,43 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
     *py_as_users = py_users;
 
     return err->code;
+}
+
+as_status as_string_policy_init_from_pyobject(as_error *err,
+                                              as_string_policy *policy,
+                                              PyObject *py_string_policy)
+{
+    as_string_policy_init(policy);
+    if (!py_string_policy || Py_IsNone(py_string_policy)) {
+        return AEROSPIKE_OK;
+    }
+
+    PyObject *py_write_flags =
+        PyObject_GetAttrString(py_string_policy, "write_flags");
+    if (!py_write_flags) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unable to get write flags from string policy");
+    }
+
+    if (!PyLong_Check(py_write_flags)) {
+        Py_DECREF(py_write_flags);
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "Write flags in string policy must be an integer value");
+    }
+
+    long long tmp_value = PyLong_AsLongLong(py_write_flags);
+    Py_DECREF(py_write_flags);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Unable to convert write flags in string policy "
+                               "to as_string_write_flags");
+    }
+    as_string_write_flags write_flags = (as_string_write_flags)tmp_value;
+
+    policy->flags = write_flags;
+
+    return AEROSPIKE_OK;
 }
 
 /**
@@ -2236,7 +2276,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
     return err->code;
 }
 
-void error_to_pyobject(const as_error *err, PyObject **obj)
+void create_py_tuple_from_as_error(const as_error *err, PyObject **obj)
 {
     PyObject *py_file = NULL;
     if (err->file) {
@@ -2261,7 +2301,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
     Py_INCREF(py_in_doubt);
 
-    PyObject *py_err = PyTuple_New(5);
+    PyObject *py_err = PyTuple_New(EXCEPTION_TUPLE_MEMBER_COUNT);
     PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
     PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
     PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
@@ -2765,7 +2805,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     as_status status = AEROSPIKE_OK;
     PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
 
-    if (!py_ctx_list) {
+    if (!py_ctx_list || Py_IsNone(py_ctx_list)) {
         goto RETURN;
     }
 
