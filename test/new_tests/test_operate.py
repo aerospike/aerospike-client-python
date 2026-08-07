@@ -4,6 +4,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE
@@ -119,10 +120,10 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 [
-                    {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+                    operations.prepend("name", "ram"),
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
@@ -232,7 +233,7 @@ class TestOperate(object):
         }
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -262,7 +263,7 @@ class TestOperate(object):
         self.as_connection.put(key, rec)
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -276,7 +277,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, policy, meta, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 {
                     "key": aerospike.POLICY_KEY_SEND,
@@ -286,7 +287,7 @@ class TestOperate(object):
                 },
                 {"gen": 10},
                 [
-                    {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+                    operations.append("name", "aa"),
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
@@ -319,7 +320,7 @@ class TestOperate(object):
         meta = {"gen": gen}
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -365,15 +366,13 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             key, meta, _ = self.as_connection.operate(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -395,16 +394,14 @@ class TestOperate(object):
         meta = {"gen": gen}
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             (key, meta, _) = self.as_connection.operate(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -447,7 +444,7 @@ class TestOperate(object):
         meta = {"gen": gen + 5}
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -468,7 +465,7 @@ class TestOperate(object):
         """
         key1 = ("test", "demo", "key11")
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "loc", "val": "mumbai"},
+            operations.prepend("loc", "mumbai"),
             {"op": aerospike.OPERATOR_READ, "bin": "loc"},
         ]
         _, _, bins = self.as_connection.operate(key1, llist)
@@ -482,7 +479,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "addr", "val": "pune"},
+            operations.append("addr", "pune"),
             {"op": aerospike.OPERATOR_READ, "bin": "addr"},
         ]
         key, _, bins = self.as_connection.operate(key, llist)
@@ -526,16 +523,14 @@ class TestOperate(object):
         client1 = aerospike.client(config)
         client1.close()
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             key, _, _ = client1.operate(key, llist)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_pos_operate_write_set_to_aerospike_null(self):
         """
@@ -688,7 +683,7 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
         ]
 
@@ -705,7 +700,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
@@ -733,11 +728,10 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "no"},
         ]
 
-        try:
+        with pytest.raises(e.InvalidRequest) as excinfo:
             (key, _, bins) = self.as_connection.operate(key, llist)
+        assert excinfo.value.code == 4
 
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
@@ -1041,11 +1035,9 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         list = [{"op": aerospike.OP_LIST_INSERT, "bin": "age", "index": 2, "val": 9}]
 
-        try:
+        with pytest.raises(e.BinIncompatibleType) as excinfo:
             (key, _, _) = self.as_connection.operate(key, list)
-
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        assert excinfo.value.code == 12
 
     def test_neg_operate_append_items_not_a_list(self):
         """
@@ -1057,10 +1049,9 @@ class TestOperate(object):
             {"op": aerospike.OP_LIST_APPEND_ITEMS, "bin": "int_bin", "val": 7},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             key, _, bins = self.as_connection.operate(key, list)
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     @pytest.mark.parametrize(
         "list",
@@ -1085,10 +1076,9 @@ class TestOperate(object):
         Invoke operate() with list addition operations negative
         """
         key = ("test", "demo", "list_key")
-        try:
+        with pytest.raises(e.OpNotApplicable) as excinfo:
             key, _, _ = self.as_connection.operate(key, list)
-        except e.OpNotApplicable as exception:
-            assert exception.code == 26
+        assert excinfo.value.code == 26
 
     def test_neg_operate_with_command_invalid(self):
         """
@@ -1097,16 +1087,14 @@ class TestOperate(object):
         key = ("test", "demo", 1)
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": 999, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             key, _, _ = self.as_connection.operate(key, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_with_bin_length_extra(self):
         """
@@ -1119,28 +1107,26 @@ class TestOperate(object):
             max_length = max_length + "a"
 
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": max_length, "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.BinNameError) as excinfo:
             key, _, _ = self.as_connection.operate(key, llist)
-
-        except e.BinNameError as exception:
-            assert exception.code == 21
-            assert exception.msg == "A bin name should not exceed 15 characters limit"
+        assert excinfo.value.code == 21
+        assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_empty_string_key(self):
         """
         Invoke operate() with empty string key
         """
-        llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        llist = [
+            operations.prepend("name", "ram"),
+        ]
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate("", llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_with_extra_parameter(self):
         """
@@ -1148,7 +1134,9 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {}
-        llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
+        llist = [
+            operations.prepend("name", "ram")
+        ]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate(key, llist, {}, policy, "")
 
@@ -1159,23 +1147,23 @@ class TestOperate(object):
         Invoke operate() with policy is string
         """
         key = ("test", "demo", 1)
-        llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        llist = [
+            operations.prepend("name", "ram")
+        ]
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, "")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_operate_key_is_none(self):
         """
         Invoke operate() with key is none
         """
-        llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
-        try:
+        llist = [
+            operations.prepend("name", "ram")
+        ]
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(None, llist)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     @pytest.mark.parametrize(
         "key, policy, llist, ex_code",
@@ -1233,10 +1221,9 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist)
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_opearte_with_incorrect_polic(self):
         """
@@ -1245,16 +1232,14 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            operations.prepend("name", "ram"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(key, llist, {}, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
+        assert excinfo.value.code == -2
 
     def test_neg_opearte_on_same_bin(self):
         """
@@ -1263,14 +1248,28 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {}
         llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
+            operations.prepend("name", "ram"),
+            operations.append("name", "aa"),
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
         try:
             self.as_connection.operate(key, llist, {}, policy)
-
         except e.InvalidRequest as exception:
             assert exception.code == 4
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            operations.prepend("name", "ram"),
+            operations.append("name", "ram")
+        ]
+    )
+    def test_deprecated_ops_raise_warning(self, op):
+        key = ("test", "demo", 1)
+        ops = [
+            op
+        ]
+        with pytest.warns(DeprecationWarning):
+            self.as_connection.operate(key, ops)

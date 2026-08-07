@@ -1,3 +1,7 @@
+permissions:
+  contents: read
+  id-token: write
+
 name: Build manylinux openssl image
 run-name: 'Build manylinux openssl image (openssl-version=${{ inputs.openssl-version }})'
 
@@ -26,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.arch-and-runner-os[1] }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -36,58 +40,39 @@ jobs:
           .github/workflows
         path: aerospike-client-python
 
-    - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+    - name: Setup JFrog CLI
+      id: setup-jf
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        version: '2.92.0'
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
 
-    - uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+    - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
       id: meta
       with:
-        images: ${{ env.REGISTRY }}/aerospike/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
+        images: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
         # These images aren't used by customers, anyway.
         flavor: latest=false
 
     - name: Set up Docker Buildx so we can cache our Docker image layers
-      uses: step-security/setup-buildx-action@c60a792b446ef83310733d5cd9d0c8d6870d043f # v3.12.0
-
-    - name: Get cibuildwheel version used to build wheels
-      run: echo CIBW_VERSION=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_ENV
-      working-directory: aerospike-client-python/.github/workflows
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        repository: pypa/cibuildwheel
-        ref: ${{ env.CIBW_VERSION }}
-        sparse-checkout: |
-          ${{ env.CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH }}
-        sparse-checkout-cone-mode: false
-        path: cibuildwheel
+      uses: step-security/setup-buildx-action@a4709e2865773e1792246433e8eb922f9743a875 # v4.2.0
 
     - name: Get manylinux base image to use
       id: get-manylinux-base-image
-      run: |
-        import os
-        import configparser
+      run: echo manylinux_base_image=quay.io/pypa/manylinux_2_28_${{ matrix.arch-and-runner-os[0] }}:2026.04.25-0 >> "$GITHUB_OUTPUT"
 
-        config = configparser.ConfigParser()
-        config.read('${{ env.CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH }}')
-        BASE_IMAGE = config['${{ matrix.arch-and-runner-os[0] }}']['${{ env.MANYLINUX_TAG }}']
-
-        output_file = os.getenv('GITHUB_OUTPUT')
-        if not output_file:
-          print(f"Error: GITHUB_OUTPUT environment variable not found.")
-          exit(1)
-
-        with open(output_file, 'a') as f:
-          print("base image:", BASE_IMAGE)
-          f.write(f"manylinux_base_image={BASE_IMAGE}\n")
-      shell: python
-      working-directory: cibuildwheel
+    - name: Log into internal JFrog registry
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+      with:
+        registry: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}
+        username: ${{ steps.setup-jf.outputs.oidc-user }}
+        password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - name: Build and push
-      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: ${{ github.workspace }}/aerospike-client-python/.github/workflows

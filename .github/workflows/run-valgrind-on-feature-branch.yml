@@ -1,0 +1,47 @@
+name: Valgrind
+run-name: Valgrind (server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
+
+permissions:
+  id-token: write
+  contents: read
+  statuses: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      test-file:
+        description: 'new_test/<test-file>'
+        required: false
+        default: ""
+        type: string
+      server-tag:
+        required: true
+        description: Server tag
+        type: string
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
+        default: false
+
+jobs:
+  build-manylinux-wheel:
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
+    with:
+      python-versions: "[\"3.10\"]"
+      platform-tag: manylinux_x86_64
+    secrets: inherit
+
+  valgrind:
+    needs: [
+      build-manylinux-wheel
+    ]
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"ubuntu-22.04"'
+      python-version: '3.10'
+      server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
+      run-with-valgrind: true
+      run-valgrind-with-massif: ${{ inputs.massif }}
+    secrets: inherit

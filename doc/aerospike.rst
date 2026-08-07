@@ -11,7 +11,7 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters.
+:py:mod:`aerospike` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
@@ -45,16 +45,15 @@ Client
 
     Simple example:
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
-
         # Configure the client to first connect to a cluster node at 127.0.0.1
         # The client will learn about the other nodes in the cluster from the seed node.
         # Also sets a top level policy for read commands
         config = {
-            'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'read': {'total_timeout': 1000}},
+           'hosts':    [ ('127.0.0.1', 3000) ],
+           'policies': {'read': {'total_timeout': 1000}}
         }
         client = aerospike.client(config)
 
@@ -65,8 +64,6 @@ Client
         import aerospike
         import sys
 
-        # NOTE: Use of TLS requires Aerospike Enterprise version >= 3.11
-        # and client version 2.1.0 or greater
         tls_name = "some-server-tls-name"
         tls_ip = "127.0.0.1"
         tls_port = 4333
@@ -103,15 +100,14 @@ Geospatial
     :param dict geo_data: a :class:`dict` representing the geospatial data.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 45.920278
         longitude = 63.342222
-        loc = aerospike.geodata({'type': 'Point',
-                                 'coordinates': [longitude, latitude]})
+        loc = aerospike.geodata({'type': 'Point', 'coordinates': [longitude, latitude]})
 
     .. versionadded:: 1.0.54
 
@@ -123,7 +119,7 @@ Geospatial
     :param dict geojson_str: a :class:`str` of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
@@ -152,7 +148,7 @@ Types
 
     :return: a type representing a wildcard value.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
@@ -160,11 +156,16 @@ Types
         client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
         #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
         operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -176,7 +177,7 @@ Types
 
     :return: a type representing an infinite value.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
@@ -184,11 +185,16 @@ Types
         client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
         #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
         operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -214,10 +220,10 @@ Serialization
     .. seealso:: To use this function with :meth:`Client.put`, \
         the argument to the serializer parameter should be :const:`aerospike.SERIALIZER_USER`.
 
-    .. code-block:: python
+    .. testcode::
 
         def my_serializer(val):
-            return json.dumps(val)
+           return json.dumps(val)
 
         aerospike.set_serializer(my_serializer)
 
@@ -249,35 +255,74 @@ The following example shows the three modes of serialization:
 2. Class-level user functions
 3. Instance-level user functions
 
-.. include:: examples/serializer.py
-    :code: python
+.. testcode::
 
-Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
-(record ``foo3`` uses the same encoding as ``foo2``)
-If we read the data for each record using ``aql``, it outputs the following data:
+    import aerospike
+    import json
 
-.. code-block:: sql
+    # Serializers and deserializers
+    # Both local and global serializers use json library
+    # Functions print which one is being used
 
-    aql> select bin from test.demo where PK='foo1'
-    +-------------------------------------------------------------+--------+
-    | bin                                                         | PK     |
-    +-------------------------------------------------------------+--------+
-    | 80 04 95 09 00 00 00 00 00 00 00 4B 01 4B 02 4B 03 87 94 2E | "foo1" |
-    +-------------------------------------------------------------+--------+
-    1 row in set (0.000 secs)
+    def classSerializer(obj):
+        print("Using class serializer")
+        return json.dumps(obj)
 
-    OK
+    def classDeserializer(bytes):
+        print("Using class deserializer")
+        return json.loads(bytes)
 
-    aql> select bin from test.demo where PK='foo2'
-    +----------------------------+--------+
-    | bin                        | PK     |
-    +----------------------------+--------+
-    | 5B 31 2C 20 32 2C 20 33 5D | "foo2" |
-    +----------------------------+--------+
-    1 row in set (0.001 secs)
+    def localSerializer(obj):
+        print("Using local serializer")
+        return json.dumps(obj)
 
-    OK
+    def localDeserializer(bytes):
+        print("Using local deserializer")
+        return json.loads(bytes)
 
+    # First client has class-level serializer set in aerospike module
+    aerospike.set_serializer(classSerializer)
+    aerospike.set_deserializer(classDeserializer)
+    config = {
+        'hosts': [('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    # Second client has instance-level serializer set in client config
+    config['serialization'] = (localSerializer, localDeserializer)
+    client2 = aerospike.client(config)
+
+    # Keys: foo1, foo2, foo3
+    keys = [('test', 'demo', f'foo{i}') for i in range(1, 4)]
+    # Tuple is an unsupported type
+    tupleBin = {'bin': (1, 2, 3)}
+
+    # Use the aerospike module-level serializer
+    client.put(keys[0], tupleBin, serializer=aerospike.SERIALIZER_USER)
+
+    (_, _, bins) = client.get(keys[0])
+    print(bins)
+
+    # Second client uses instance-level, user-defined serialization
+    # Instance-level serializer overrides class-level serializer
+    client2.put(keys[2], tupleBin, serializer=aerospike.SERIALIZER_USER)
+    (_, _, bins) = client2.get(keys[2])
+    print(bins)
+
+    # Cleanup
+    client.batch_remove(keys)
+    client.close()
+    client2.close()
+    aerospike.unset_serializers()
+
+.. testoutput::
+
+    Using class serializer
+    Using class deserializer
+    {'bin': [1, 2, 3]}
+    Using local serializer
+    Using local deserializer
+    {'bin': [1, 2, 3]}
 
 Logging
 -------
@@ -295,8 +340,54 @@ By default:
 
 The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-.. include:: examples/log.py
-    :code: python
+.. testcode::
+
+    # Enable the logging at application start, before connecting to the server.
+    import aerospike
+
+    ## SETTING THE LOG HANDLER ##
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
+    # Set default log handler to print to the console
+    aerospike.set_log_handler()
+
+    def log_callback(level, func, path, line, msg):
+        print("[{}] {}".format(func, msg))
+
+    # Set log handler to custom callback function (defined above)
+    aerospike.set_log_handler(log_callback)
+
+
+    ## SETTING THE LOG LEVEL ##
+
+    # disables log handling
+    aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+
+    # Enables log handling and sets level to LOG_LEVEL_TRACE
+    aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+    # Create a client and connect it to the cluster
+    # This line will print use log_callback to print logs with a log level of TRACE
+    config = {
+        "hosts": [
+            ("127.0.0.1", 3000)
+        ]
+    }
+    client = aerospike.client(config)
+
+.. testoutput::
+
+    [AerospikeClient_Type_Init] Starting to create a new client...
+    [as_node_refresh_peers] Update peers for node 127.0.0.1:3000
+    [as_cluster_add_nodes_copy] Add node ... 127.0.0.1:3000
+    [as_node_refresh_partitions] Update partition map for node 127.0.0.1:3000
+
+.. testcleanup::
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
 
 .. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
 
@@ -336,13 +427,17 @@ Other
     :return: a RIPEMD-160 digest of the input tuple.
     :rtype: :class:`bytearray`
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         import pprint
 
-        digest = aerospike.calc_digest("test", "demo", 1 )
-        pp.pprint(digest)
+        digest = aerospike.calc_digest("test", "demo", 1)
+        pprint.pprint(digest)
+
+    .. testoutput::
+
+        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
 
 .. _client_config:
 
@@ -374,56 +469,71 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Invalid client config example:
 
-            .. code-block:: python
+            .. testcode::
 
                 import aerospike
 
                 config = {
-                    "validate_keys": True,
-                    "hosts": [
-                        ("127.0.0.1", 3000)
-                    ],
-                    # The correct key is "user", but "username" may be used by accident
-                    "username": "user",
-                    "password": "password"
+                   "validate_keys": True,
+                   "hosts": [
+                      ("127.0.0.1", 3000)
+                   ],
+                   # The correct key is "user", but "username" may be used by accident
+                   "username": "user",
+                   "password": "password"
                 }
-                # This call will raise a ParamError from aerospike.exception
-                # Exception message should be:
-                # "username" is an invalid client config dictionary key
                 client = aerospike.client(config)
+
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "username" is an invalid client config dictionary key
 
             Invalid policy example:
 
-            .. code-block:: python
+            .. testcode::
 
                 import aerospike
 
                 config = {
-                    "validate_keys": True,
-                    "hosts": [
-                        ("127.0.0.1", 3000)
-                    ],
+                   "validate_keys": True,
+                   "hosts": [
+                       ("127.0.0.1", 3000)
+                   ],
                 }
                 client = aerospike.client(config)
 
                 key = ("test", "demo", 1)
                 # "key_policy" is used instead of the correct key named "key"
                 policy = {
-                    "key_policy": aerospike.POLICY_KEY_SEND
+                   "key_policy": aerospike.POLICY_KEY_SEND
                 }
-                # This call will raise a ParamError from aerospike.exception
-                # Exception message should be:
-                # "key_policy" is an invalid policy dictionary key
                 client.get(key, policy=policy)
 
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
+
         * **hosts** (:class:`list`)
-            A list of tuples identifying a node (or multiple nodes) in the cluster.
+            A list identifying a node (or multiple nodes) in the cluster. Each entry may be
+            either a tuple or a string.
 
             The tuple is in this format: ``(address, port, [tls-name])``
 
             * address: :class:`str`
             * port: :class:`int`
             * tls-name: :class:`str`
+
+            The string form is ``"address[:tls-name]:[port]"``, e.g.:
+
+            * ``"address:port"``
+            * ``"address:tls-name:port"``
+            * ``"[ipv6-address]:port"``
+            * ``"[ipv6-address]:tls-name:port"``
+
+            IPv6 addresses must be enclosed in square brackets to distinguish the address's
+            own colons from the ``:tls-name`` and ``:port`` separators.
 
             The client will connect to the first available node in the list called the *seed node*.
             From there, it will learn about the cluster and its partition map.
@@ -606,7 +716,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Take over tending if the cluster hasn't been checked for this many seconds
 
                 Default: ``30``
-            * **shm_key**
+            * **shm_key** (:class:`int`)
                 Explicitly set the shm key for this client.
 
                 If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
@@ -1144,13 +1254,11 @@ Specifies how the Python client will write Python booleans.
 
 .. data:: INTEGER
 
-    Write Python Booleans as integers.
+    Write Python Booleans as `server integers <https://aerospike.com/docs/develop/data-types/scalar/#integer>`_.
 
 .. data:: AS_BOOL
 
-    Write Python Booleans as ``as_bools``.
-
-    This is the Aerospike server's boolean type.
+    Write Python Booleans as `server booleans <https://aerospike.com/docs/develop/data-types/scalar/#boolean>`_.
 
 List
 ----
@@ -1250,11 +1358,11 @@ List Sort Flags
 
 Flags used by list sort.
 
-.. data:: aerospike.LIST_SORT_DEFAULT
+.. data:: LIST_SORT_DEFAULT
 
     Default. Preserve duplicates when sorting the list.
 
-.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+.. data:: LIST_SORT_DROP_DUPLICATES
 
     Drop duplicate values when sorting the list.
 
@@ -1609,6 +1717,8 @@ Index data types
 
 .. data:: INDEX_NUMERIC
 
+    .. deprecated:: 19.3.0 Use :py:data:`~aerospike.INDEX_INTEGER` instead.
+
     An index whose values are of the aerospike integer data type.
 
 .. data:: INDEX_BLOB
@@ -1618,6 +1728,10 @@ Index data types
 .. data:: INDEX_GEO2DSPHERE
 
     An index whose values are of the aerospike GeoJSON data type.
+
+.. data:: INDEX_INTEGER
+
+    An index whose values are of the aerospike integer data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
@@ -1821,6 +1935,11 @@ Transaction Abort Status
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
 
+.. data:: ABORT_COMMIT_FAILED
+
+    Abort was refused because a commit failed in-doubt and may still advance.
+    Retry the commit to resolve the transaction safely.
+
 .. _mrt_state:
 
 Transaction State
@@ -1833,6 +1952,11 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. data:: TXN_STATE_COMMIT_FAILED
+
+    A commit failed in-doubt and may still advance, so abort is not allowed
+    in this state. Retry the commit to resolve the transaction safely.
 
 .. _exp_path_select_flags:
 
@@ -1908,3 +2032,277 @@ Path Expression Loop Variable Metadata
 .. data:: EXP_LOOPVAR_INDEX
 
     The index if this element was part of a list.
+
+.. _error_detail_verbosity_levels:
+
+Error Detail Verbosity Levels
+-----------------------------
+
+Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
+
+.. data:: ERROR_DETAIL_NONE
+
+    No error details requested (default).
+
+.. data:: ERROR_DETAIL_SUBCODE
+
+    Request subcode only from the server on error responses.
+
+.. data:: ERROR_DETAIL_MESSAGE
+
+    Request subcode and human-readable message from the server on error responses.
+
+.. _subcodes:
+
+Subcodes
+--------
+
+.. data:: SUB_NONE
+
+    No dispatchable subcode. Used when the parent status alone fully identifies
+    the condition. Reserved as 0 across all status families.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_PARAM_TTL_INVALID
+
+    Per-record TTL exceeds the namespace's max-ttl.
+
+    App use: clamp the TTL to the namespace max and retry.
+
+.. data:: SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE
+
+    Bit op offset lands past the blob (or above the proto cap).
+
+    App use: refresh the bin size, recompute the offset, retry.
+
+.. data:: SUB_PARAM_BITS_SIZE_OUT_OF_RANGE
+
+    Bit op size is out of range (e.g. zero, or too large).
+
+    App use: clamp the size dimension (vs. offset) and retry.
+
+.. data:: SUB_PARAM_BITS_RESIZE_EXCEEDED
+
+    Blob resize would exceed the max blob size allowed for a record.
+
+    App use: backpressure or partition the dynamically-sized blob.
+
+.. data:: SUB_PARAM_BIN_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit.
+
+    App use: prune least-valuable bins and retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED
+
+    Cluster is still resolving initial partition balance at startup.
+
+    App use: wait a fixed backoff (~1s) and retry; failing over is
+    pointless since every node is unresolved at once.
+
+.. data:: SUB_UNAVAIL_REPLICA_UNAVAILABLE
+
+    A needed replica is unavailable (likely a partition split).
+
+    App use: an SC reader may downgrade to read-mode=any if safe, or
+    back off longer than for transient unavailability.
+
+Subcodes paired with :py:exc:`~aerospike.exception.UnsupportedFeature`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY
+
+    MRT attempted against a non-SC (AP) namespace.
+
+    App use: route the MRT to an SC namespace, or use a non-MRT path.
+
+.. data:: SUB_UNSUPP_FEAT_GENERIC
+
+    Requested feature is unsupported in this context (generic).
+
+    App use: same dispatch as :py:data:`~aerospike.SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY`; kept
+    distinct to preserve the sole live emit (MRT-monitor AP check).
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNotFound`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP
+
+    HLL op needs an existing bin and can't auto-create one.
+
+    App use: dispatch a one-time init op with default index_bits,
+    then retry the count/fold.
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNameError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NAME_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit (UDF path).
+
+    App use: prune least-valuable bins and retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ForbiddenError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FORBID_XDR_FILTER_BLOCKED
+
+    Write bounced by an XDR ship filter at the destination.
+
+    App use: suppress retry; optionally record the digest for audit.
+
+.. data:: SUB_FORBID_SET_COUNT_STOP_WRITES
+
+    Set-level record-count stop-writes limit reached.
+
+    App use: route new records to another set, or archive old ones.
+
+.. data:: SUB_FORBID_SET_SIZE_STOP_WRITES
+
+    Set-level size stop-writes limit reached.
+
+    App use: backpressure or route to a different set (not ns-wide).
+
+.. data:: SUB_FORBID_CLOCK_SKEW_STOP_WRITES
+
+    Writes stopped due to cluster clock skew.
+
+    App use: page on-call to investigate NTP / time-source drift.
+
+.. data:: SUB_FORBID_REPLACE_CONFLICT_RESOLVING
+
+    REPLACE / CREATE_OR_REPLACE forbidden while resolving conflicts.
+
+    App use: back off and retry once the cluster stabilizes.
+
+.. data:: SUB_FORBID_TRUNCATED
+
+    Write forbidden because the set/namespace is mid-truncate.
+
+    App use: retry shortly after the truncate completes (transient).
+
+.. data:: SUB_FORBID_MASKING_POLICY_BLOCKED
+
+    Access blocked by a data-masking policy.
+
+    App use: elevate role / impersonate, or route to an admin queue.
+
+.. data:: SUB_FORBID_DURABILITY_VIOLATION
+
+    Non-durable delete forbidden (would violate durability).
+
+    App use: upgrade the delete to durable, or skip the shortcut.
+
+.. data:: SUB_FORBID_MASKING_ROLE_VIOLATION
+
+    Caller's role lacks unmasked access.
+
+    App use: prompt the user to escalate / switch role (distinct
+    from auth not configured).
+
+Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS
+
+    List index is outside the current element range.
+
+    App use: refresh the cached list size, clamp the index, retry.
+
+.. data:: SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS
+
+    Requested rank is past the current population.
+
+    App use: clamp top-N rank to the element count and retry.
+
+.. data:: SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW
+
+    Insert would exceed an ordered+bounded list's cap.
+
+    App use: roll to a fresh bin/key partition, or apply backpressure.
+
+.. data:: SUB_OPNOT_HLL_INDEX_BITS_UNSET
+
+    HLL op needs index_bits but the sketch has none set.
+
+    App use: dispatch a one-time init with default index_bits, retry.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS
+
+    Union needs to reduce index_bits but folding isn't allowed.
+
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or fold sources to the smaller
+    precision first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS
+
+    As above, for the minhash dimension.
+
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or align sources first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH
+
+    Fold blocked because the sketch carries minhash bits.
+
+    App use: switch to a strip-minhash-then-fold path.
+
+.. data:: SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE
+
+    Fold target index_bits >= current (fold can only reduce).
+
+    App use: clamp target to current-1 and retry, or skip the fold.
+
+.. data:: SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH
+
+    Intersect inputs have mismatched minhash parameters.
+
+    App use: harmonize sketches (fold/strip minhash) before retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FILTERED_META
+
+    Record filtered out by a metadata-only filter expression.
+
+    App use: treat as a normal expected miss (no-op).
+
+.. data:: SUB_FILTERED_BINS
+
+    Record filtered out by a bin-reading filter expression.
+
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META`; split out to meter metadata-vs-bin misses.
+
+.. data:: SUB_FILTERED_META_EVAL_FAILED
+
+    A metadata filter expression failed to evaluate.
+
+    App use: treat as an expression bug - log digest, alert, no retry.
+
+.. data:: SUB_FILTERED_BINS_EVAL_FAILED
+
+    A bin filter expression failed to evaluate.
+
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META_EVAL_FAILED`.
+
+Subcodes paired with server error code ``AEROSPIKE_MRT_BLOCKED``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_MRT_BLOCKED_RECORD_LOCKED
+
+    Record is provisionally locked by another MRT.
+
+    App use: a non-MRT writer backs off with jittered retry until the
+    MRT commits or expires.
+
+.. data:: SUB_MRT_BLOCKED_ID_MISMATCH
+
+    Op belongs to a different MRT than the one holding the lock.
+
+    App use: abort the whole MRT - retrying this op alone can never
+    succeed within the current MRT.

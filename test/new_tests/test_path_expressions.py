@@ -4,7 +4,7 @@ import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And, Val
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, RemoveResult, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And, Val
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -612,19 +612,18 @@ class TestPathExprOperations:
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
     @expect_server_version_earlier_than_8_1_1_to_fail
-    def test_expr_result_remove(self):
-        with pytest.warns(DeprecationWarning):
-            ops = [
-                operations.modify_by_path(
-                    bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
-                    ctx=[
-                        cdt_ctx.cdt_ctx_all_children(),
-                        cdt_ctx.cdt_ctx_all_children()
-                    ],
-                    expr=ResultRemove().compile(),
-                    flags=aerospike.EXP_PATH_MODIFY_DEFAULT
-                )
-            ]
+    def test_expr_remove_result(self):
+        ops = [
+            operations.modify_by_path(
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
+                ],
+                expr=RemoveResult().compile(),
+                flags=aerospike.EXP_PATH_MODIFY_DEFAULT
+            )
+        ]
 
         with self.expected_context_for_pos_tests:
             self.as_connection.operate(self.key, ops)

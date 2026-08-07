@@ -3,67 +3,53 @@
 
 name: Update version in repo
 on:
+  push:
+    branches:
+    - 'dev*'
+    - 'master*'
+    # Only trigger on commits and not tags to avoid the workflow triggering itself
+    tags-ignore:
+    - '*'
   workflow_dispatch:
     inputs:
       new_version:
         type: string
         description: Version string to set in the repo
         required: true
-  workflow_call:
-    inputs:
-      new_version:
-        type: string
-        description: Version string to set in the repo
-        required: true
-      ref:
-        type: string
-        description: commit/branch to change version
+      dry-run:
         required: false
-      # A hack to tell if workflow is triggered by workflow_call or not
-      # Calling workflows should not set this input
-      # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
-      # https://github.com/actions/runner/discussions/1884#discussioncomment-6377587
-      is_workflow_call:
+        default: false
         type: boolean
-        default: true
-        required: false
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
-    outputs:
-      bump_sha:
-        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
+        description: No committing or tagging in repo
 
 jobs:
   update-version-in-repo:
+    permissions:
+      contents: write
     name: Update version in repo
     runs-on: ubuntu-22.04
-    outputs:
-      bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
-        ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
-    - name: Update version in repo
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ inputs.new_version }}
-
-    - name: Commit new version
-      uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
-      with:
-        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
-        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        tagging_message: ${{ inputs.new_version }}
-        branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
-
-    - name: Output bump commit hash for next jobs to use
-      id: get-bump-commit-sha
-      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+    - run: |
+        if [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]; then
+          change_type="manual-override"
+          version_to_override="$NEW_VERSION"
+        elif [[ $GH_REF_NAME =~ dev* ]]; then
+          change_type="bump-dev-num"
+        else
+          change_type="strip_prerelease_part"
+        fi
+        ./.github/workflows/update-version.bash "$change_type" "$version_to_override"
+      env:
+        DRY_RUN: ${{ inputs.dry-run && '1' || '' }}
+        NEW_VERSION: ${{ inputs.new_version }}
+        GH_REF_NAME: ${{ github.ref_name }}

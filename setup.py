@@ -77,6 +77,7 @@ extra_compile_args = [
 if not WINDOWS:
     # Windows does not have this flag
     extra_compile_args.append("-Wno-strict-prototypes")
+    extra_compile_args.append("-Werror")
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
@@ -161,7 +162,7 @@ elif LINUX:
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
     extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions'
+        '-rdynamic', '-finline-functions',
     ]
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine

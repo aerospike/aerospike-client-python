@@ -30,7 +30,9 @@ Offset examples:
     * -1: rightmost bit in the map
     * -4: 3 bits from rightmost
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import bitwise_operations
@@ -52,13 +54,11 @@ Example::
 
     _, _, bins = client.get(key)
     print("5 bytes: ", bins)
-    # 5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     _, _, _ = client.operate(key, ops)
 
     _, _, newbins = client.get(key)
     print("After resize to 10 bytes: ", newbins)
-    # After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
 
     # EXAMPLE 2: shrink the five_ones bin to a bytesize of 5 from the front.
 
@@ -71,13 +71,20 @@ Example::
     _, _, _ = client.operate(key, ops)
     _, _, newbins = client.get(key)
     print("After resize to 5 bytes again: ", newbins)
-    # After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
     # Cleanup and close the connection to the Aerospike cluster.
     client.remove(key)
     client.close()
 
-Example::
+.. testoutput::
+
+    5 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    After resize to 10 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00'}
+    After resize to 5 bytes again:  {'bitwise1': b'\\x00\\x00\\x00\\x00\\x00'}
+
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as e
@@ -106,7 +113,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     # Example 2: modify bits using the 'or' op, then read bits
     # 0 = offset
@@ -119,7 +125,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\xff\x01\x01\x01\x01'}
 
     # Example 3: modify bits using the 'remove' op, then read bits'
     # offset = 0
@@ -131,9 +136,14 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01'}
 
     client.close()
+
+.. testoutput::
+
+    {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\xff\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\x01\\x01\\x01'}
 
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
@@ -168,8 +178,8 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
         byte_size (int): The new size of the bytes.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
         resize_flags (int): :ref:`aerospike_bitwise_resize_flag` modifying the resize behavior
-            (default ``aerospike.BIT_RESIZE_DEFAULT``), such as ``aerospike.BIT_RESIZE_GROW_ONLY |
-            aerospike.BIT_RESIZE_FROM_FRONT``.
+            (default :py:data:`aerospike.BIT_RESIZE_DEFAULT`), such as :py:data:`aerospike.BIT_RESIZE_GROW_ONLY` |
+            :py:data:`aerospike.BIT_RESIZE_FROM_FRONT`.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
