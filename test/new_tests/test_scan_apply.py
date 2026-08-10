@@ -400,7 +400,7 @@ class TestScanApply(object):
 
     def test_fail_if_operations_exist_before_apply(self):
         """
-        Invoke query.apply() with a stream udf.
+        Invoke scan.apply() with a stream udf.
         arguments contain a serialized set.
         """
         ops = [
@@ -420,7 +420,7 @@ class TestScanApply(object):
 
     def test_fail_if_UDF_exists_before_add_ops(self):
         """
-        Invoke query.apply() with a stream udf.
+        Invoke scan.apply() with a stream udf.
         arguments contain a serialized set.
         """
         ops = [
