@@ -128,7 +128,6 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
                            const as_record *rec, PyObject **obj);
 
 void create_py_tuple_from_as_error(const as_error *err, PyObject **obj);
-
 as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
                                    PyObject *py_as_privilege,
                                    int privilege_size);
