@@ -1,12 +1,12 @@
 import pytest
-from .conftest import KEYS
+from .conftest import TEST_NS, TEST_SET
 from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestInvalidMapKeys:
     def test_passing_invalid_map_keys_raises_exc(self):
-        KEY = KEYS[0]
+        KEY = (TEST_NS, TEST_SET, 1)
         invalid_map_in_server = {
             4.0: 1
         }
