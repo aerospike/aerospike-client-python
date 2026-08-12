@@ -15,7 +15,7 @@ class TestInvalidMapKeys:
         4.0,
         aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
     )
-    def test_passing_invalid_map_keys_raises_exc(self):
+    def test_passing_invalid_map_keys_raises_exc(self, invalid_map_key):
         KEY = (TEST_NS, TEST_SET, 1)
         invalid_map_in_server = {
             4.0: 1
