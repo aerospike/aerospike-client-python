@@ -1,5 +1,4 @@
-
-##########################################################################
+################################################################################
 # Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+################################################################################
+
+from .create_user import CreateUser
 
 
-from .. import Example
-from aerospike import exception as e
-
-class UDFRemove(Example):
+class QueryUserInfo(CreateUser):
     def run(self):
-        module = "example.lua"
-        self.client.udf_remove(module)
+        super().run()
+        policy = {}
 
-        try:
-            self.client.udf_remove(module)
-        except e.UDFNotFound:
-            print("Already removed UDF.")
+        user = self.client.admin_query_user_info(self.user, policy)
+        print(user)
