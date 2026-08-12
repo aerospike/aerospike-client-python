@@ -7,7 +7,7 @@ from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from .test_base_class import TestBaseClass
-
+from aerospike_helpers.operations import operations
 import aerospike
 
 
@@ -510,3 +510,43 @@ class TestQueryApply(object):
             assert bins["name"] != "aerospike"
         else:
             assert bins["name"] == "no_set_name"
+
+    def test_fail_if_operations_exist_before_apply(self):
+        """
+        Invoke query.apply() with a stream udf.
+        arguments contain a serialized set.
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+
+        query = self.as_connection.query("test", "demo")
+        query.add_ops(ops)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            query.apply(
+                "query_apply_parameters",
+                "query_params",
+                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+            )
+        assert excinfo.value.msg == "Query can have either a UDF or operations, not both"
+
+    def test_fail_if_UDF_exists_before_add_ops(self):
+        """
+        Invoke query.apply() with a stream udf.
+        arguments contain a serialized set.
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+
+        query = self.as_connection.query("test", "demo")
+        query.apply(
+            "query_apply_parameters",
+            "query_params",
+            [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+        )
+
+        with pytest.raises(e.ParamError) as excinfo:
+            query.add_ops(ops)
+        assert excinfo.value.msg == "Query can have either a UDF or operations, not both"

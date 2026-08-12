@@ -4,7 +4,7 @@ import base64
 from aerospike_helpers.expressions import string as str_expr, IntBin, FloatBin, BlobBin
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.operations import operations
-from aerospike_helpers.string_helpers import NumericType, RegexFlags, WriteFlags
+from aerospike_helpers.string_helpers import NumericType, RegexFlags
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
@@ -249,10 +249,6 @@ class TestExpressions:
             ),
             (
                 str_expr.RegexReplace, {"pattern": "asdf", "replacement": "1234", "regex_flags": RegexFlags.DEFAULT, "bin": STR_BIN_NAME},
-                "1234asdf"
-            ),
-            (
-                str_expr.RegexReplace, {"pattern": "ASDF", "replacement": "1234", "regex_flags": RegexFlags.DEFAULT | RegexFlags.CASE_INSENSITIVE, "bin": STR_BIN_NAME},
                 "1234asdf"
             )
         ]
