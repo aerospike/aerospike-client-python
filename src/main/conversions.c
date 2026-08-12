@@ -804,15 +804,15 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
             break;
         }
 
-        bool is_map_key_valid_type = val->type == AS_STRING ||
-                                     val->type == AS_INTEGER ||
-                                     val->type == AS_BYTES;
+        bool is_map_key_valid_type = key->type == AS_STRING ||
+                                     key->type == AS_INTEGER ||
+                                     key->type == AS_BYTES;
         if (!is_map_key_valid_type) {
-            char *as_val_repr = as_val_tostring(val);
+            char *key_repr = as_val_tostring(key);
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Map contains invalid map key %s.", as_val_repr);
+                            "Map contains invalid map key %s.", key_repr);
 
-            free(as_val_repr);
+            free(key_repr);
             as_val_destroy(key);
             break;
         }
