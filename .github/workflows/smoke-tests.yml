@@ -229,7 +229,8 @@ jobs:
         test: [
           stubtest,
           doctest,
-          code-examples
+          ce-code-examples,
+          ee-code-examples
         ]
       fail-fast: false
     needs: [
@@ -261,22 +262,33 @@ jobs:
     - name: Install client
       run: pip install ./*.whl
 
-    - if: ${{ matrix.test == 'doctest' || matrix.test == 'code-examples' }}
+    - if: ${{ matrix.test == 'doctest' || endsWith(matrix.test, 'code-examples') }}
       uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
       with:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ matrix.test == 'code-examples' && '8.1.3.0-35-20260629033923' || needs.get-env-vars.outputs.server-tag }}
-        server-container-repo: database-docker-virtual/aerospike-server
-        config-file: ./.github/workflows/aerospike-ce.conf
+        server-container-repo: database-docker-virtual/aerospike-server${{ matrix.test == 'ee-code-examples' && '-enterprise' || '' }}
+        config-file: ${{ (matrix.test == 'doctest' || matrix.test == 'ce-code-examples') && './.github/workflows/aerospike-ce.conf' || '' }}
+        enable-security: ${{ matrix.test == 'ee-code-examples' }}
 
-    - if: ${{ matrix.test == 'code-examples' }}
-      # We cannot run this module with the cwd being string_ops
-      # Otherwise we will get relative import errors
-      # https://stackoverflow.com/a/47030746
-      run: python3 -m string_ops.run_all_examples
-      working-directory: examples
+    - name: Run canonical code examples
+      if: ${{ endsWith(matrix.test, 'code-examples') }}
+      run: |
+        # This is required for the TTL code example
+        run_tools=(
+          docker run --rm --network host aerospike/aerospike-tools asinfo -v
+        )
+
+        if [[ ${{ matrix.test == 'ce-code-examples' }} == true ]]; then
+          "${run_tools[@]}" "set-config:context=namespace;id=test;nsup-period=1"
+          "${run_tools[@]}" "set-config:context=namespace;namespace=test;default-ttl=10S"
+        fi
+
+        python3 -m examples.run_all_examples "$SERVER_EDITION"
+      env:
+        SERVER_EDITION: ${{ matrix.test == 'ce-code-examples' && 'CE' || 'EE' }}
 
     - name: Install test dependencies
       if: ${{ matrix.test == 'doctest' }}

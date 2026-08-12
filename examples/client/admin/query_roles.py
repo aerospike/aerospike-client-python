@@ -1,5 +1,4 @@
-
-##########################################################################
+################################################################################
 # Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+################################################################################
+
+from . import AdminExample
 
 
-from .. import Example
-from aerospike import exception as e
-
-class UDFRemove(Example):
+class QueryRoles(AdminExample):
     def run(self):
-        module = "example.lua"
-        self.client.udf_remove(module)
+        policy = {}
 
-        try:
-            self.client.udf_remove(module)
-        except e.UDFNotFound:
-            print("Already removed UDF.")
+        roles = self.client.admin_query_roles(policy)
+        print(roles)

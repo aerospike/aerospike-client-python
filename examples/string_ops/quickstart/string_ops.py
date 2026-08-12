@@ -1,4 +1,4 @@
-from .. import Example
+from ... import Example
 from aerospike_helpers.operations import string_operations as so
 
 class StringOps(Example):
