@@ -1269,32 +1269,32 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 // On failure, decrefs py_dict and returns AEROSPIKE_ERR_CLIENT from the
 // enclosing function, so every function using these macros must return
 // as_status and must not have any other cleanup to do besides py_dict itself.
-#define POLICY_GET_INT_FIELD(__err, __py_dict, __c_val, __key)               \
-    do {                                                                     \
-        PyObject *py_field_val = PyLong_FromLong((long)(__c_val));           \
-        if (!py_field_val ||                                                \
-            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {   \
-            Py_XDECREF(py_field_val);                                       \
-            Py_DECREF(__py_dict);                                           \
-            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                    \
-                            "Failed to set policy field: %s", __key);       \
-            return AEROSPIKE_ERR_CLIENT;                                    \
-        }                                                                   \
-        Py_DECREF(py_field_val);                                            \
+#define POLICY_GET_INT_FIELD(__err, __py_dict, __c_val, __key)                 \
+    do {                                                                       \
+        PyObject *py_field_val = PyLong_FromLong((long)(__c_val));             \
+        if (!py_field_val ||                                                   \
+            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {      \
+            Py_XDECREF(py_field_val);                                          \
+            Py_DECREF(__py_dict);                                              \
+            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                       \
+                            "Failed to set policy field: %s", __key);          \
+            return AEROSPIKE_ERR_CLIENT;                                       \
+        }                                                                      \
+        Py_DECREF(py_field_val);                                               \
     } while (0)
 
-#define POLICY_GET_BOOL_FIELD(__err, __py_dict, __c_val, __key)              \
-    do {                                                                     \
-        PyObject *py_field_val = PyBool_FromLong((long)(__c_val));           \
-        if (!py_field_val ||                                                \
-            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {   \
-            Py_XDECREF(py_field_val);                                       \
-            Py_DECREF(__py_dict);                                           \
-            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                    \
-                            "Failed to set policy field: %s", __key);       \
-            return AEROSPIKE_ERR_CLIENT;                                    \
-        }                                                                   \
-        Py_DECREF(py_field_val);                                            \
+#define POLICY_GET_BOOL_FIELD(__err, __py_dict, __c_val, __key)                \
+    do {                                                                       \
+        PyObject *py_field_val = PyBool_FromLong((long)(__c_val));             \
+        if (!py_field_val ||                                                   \
+            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {      \
+            Py_XDECREF(py_field_val);                                          \
+            Py_DECREF(__py_dict);                                              \
+            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                       \
+                            "Failed to set policy field: %s", __key);          \
+            return AEROSPIKE_ERR_CLIENT;                                       \
+        }                                                                      \
+        Py_DECREF(py_field_val);                                               \
     } while (0)
 
 // Adds the base policy fields directly into py_dict (flattened, not nested).
@@ -1539,8 +1539,7 @@ as_status get_batch_policy(as_error *err, const as_policy_batch *batch_policy,
         return status;
     }
 
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->concurrent,
-                          "concurrent");
+    POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->concurrent, "concurrent");
     POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->allow_inline,
                           "allow_inline");
     POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->deserialize,
@@ -1589,9 +1588,10 @@ as_status get_admin_policy(as_error *err, const as_policy_admin *admin_policy,
     return AEROSPIKE_OK;
 }
 
-as_status get_batch_apply_policy(as_error *err,
-                                 const as_policy_batch_apply *batch_apply_policy,
-                                 PyObject **py_policy)
+as_status
+get_batch_apply_policy(as_error *err,
+                       const as_policy_batch_apply *batch_apply_policy,
+                       PyObject **py_policy)
 {
     PyObject *py_dict = PyDict_New();
     if (!py_dict) {
@@ -1611,9 +1611,10 @@ as_status get_batch_apply_policy(as_error *err,
     return AEROSPIKE_OK;
 }
 
-as_status get_batch_write_policy(as_error *err,
-                                 const as_policy_batch_write *batch_write_policy,
-                                 PyObject **py_policy)
+as_status
+get_batch_write_policy(as_error *err,
+                       const as_policy_batch_write *batch_write_policy,
+                       PyObject **py_policy)
 {
     PyObject *py_dict = PyDict_New();
     if (!py_dict) {
@@ -1635,9 +1636,10 @@ as_status get_batch_write_policy(as_error *err,
     return AEROSPIKE_OK;
 }
 
-as_status get_batch_remove_policy(
-    as_error *err, const as_policy_batch_remove *batch_remove_policy,
-    PyObject **py_policy)
+as_status
+get_batch_remove_policy(as_error *err,
+                        const as_policy_batch_remove *batch_remove_policy,
+                        PyObject **py_policy)
 {
     PyObject *py_dict = PyDict_New();
     if (!py_dict) {
@@ -1663,8 +1665,7 @@ as_status get_batch_remove_policy(
 // py_sub_policy either way. On failure, decrefs py_dict and returns
 // AEROSPIKE_ERR_CLIENT, so callers should return whatever this returns.
 static as_status add_policy_dict_entry(as_error *err, PyObject *py_dict,
-                                       const char *key,
-                                       PyObject *py_sub_policy)
+                                       const char *key, PyObject *py_sub_policy)
 {
     if (PyDict_SetItemString(py_dict, key, py_sub_policy) == -1) {
         Py_DECREF(py_sub_policy);
@@ -1787,8 +1788,7 @@ as_status get_policies(as_error *err, const as_policies *policies,
     if (status != AEROSPIKE_OK) {
         return status;
     }
-    status =
-        add_policy_dict_entry(err, py_dict, "batch_remove", py_sub_policy);
+    status = add_policy_dict_entry(err, py_dict, "batch_remove", py_sub_policy);
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -1806,11 +1806,10 @@ as_status get_policies(as_error *err, const as_policies *policies,
     const char *batch_policy_names[] = {"batch", "batch_parent_write",
                                         "txn_verify", "txn_roll"};
     const as_policy_batch *batch_policies[] = {
-        &policies->batch, &policies->batch_parent_write,
-        &policies->txn_verify, &policies->txn_roll};
+        &policies->batch, &policies->batch_parent_write, &policies->txn_verify,
+        &policies->txn_roll};
     for (unsigned long i = 0;
-         i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]);
-         i++) {
+         i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
         status = get_batch_policy(err, batch_policies[i], &py_sub_policy);
         if (status != AEROSPIKE_OK) {
             return status;

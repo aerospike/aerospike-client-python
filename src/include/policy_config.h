@@ -98,12 +98,15 @@ as_status get_info_policy(as_error *err, const as_policy_info *info_policy,
                           PyObject **py_policy);
 as_status get_admin_policy(as_error *err, const as_policy_admin *admin_policy,
                            PyObject **py_policy);
-as_status get_batch_apply_policy(as_error *err,
-                                 const as_policy_batch_apply *batch_apply_policy,
-                                 PyObject **py_policy);
-as_status get_batch_write_policy(as_error *err,
-                                 const as_policy_batch_write *batch_write_policy,
-                                 PyObject **py_policy);
-as_status get_batch_remove_policy(
-    as_error *err, const as_policy_batch_remove *batch_remove_policy,
-    PyObject **py_policy);
+as_status
+get_batch_apply_policy(as_error *err,
+                       const as_policy_batch_apply *batch_apply_policy,
+                       PyObject **py_policy);
+as_status
+get_batch_write_policy(as_error *err,
+                       const as_policy_batch_write *batch_write_policy,
+                       PyObject **py_policy);
+as_status
+get_batch_remove_policy(as_error *err,
+                        const as_policy_batch_remove *batch_remove_policy,
+                        PyObject **py_policy);
