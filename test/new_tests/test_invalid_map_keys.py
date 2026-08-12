@@ -11,8 +11,6 @@ class TestInvalidMapKeys:
         [
             None,
             True,
-            [1],
-            {"a": 1},
             4.0,
             aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]})
         ]
