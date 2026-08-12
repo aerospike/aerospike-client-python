@@ -8,12 +8,14 @@ import aerospike
 class TestInvalidMapKeys:
     @pytest.mark.parametrize(
         "invalid_map_key",
-        None,
-        True,
-        [1],
-        {"a": 1},
-        4.0,
-        aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
+        [
+            None,
+            True,
+            [1],
+            {"a": 1},
+            4.0,
+            aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]})
+        ]
     )
     def test_passing_invalid_map_keys_raises_exc(self, invalid_map_key):
         KEY = (TEST_NS, TEST_SET, 1)
