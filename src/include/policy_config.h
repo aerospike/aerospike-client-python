@@ -73,40 +73,23 @@ as_status set_batch_remove_policy(as_error *err,
                                   as_policy_batch_remove *batch_remove_policy,
                                   PyObject *py_policy, int validate_keys);
 
-// Builds a dict with one key per policy type, mirroring set_subpolicies
-as_status get_policies(as_error *err, const as_policies *policies,
-                       PyObject **py_policies);
-as_status get_read_policy(as_error *err, const as_policy_read *read_policy,
-                          PyObject **py_policy);
-as_status get_write_policy(as_error *err, const as_policy_write *write_policy,
-                           PyObject **py_policy);
-as_status get_apply_policy(as_error *err, const as_policy_apply *apply_policy,
-                           PyObject **py_policy);
-as_status get_remove_policy(as_error *err,
-                            const as_policy_remove *remove_policy,
-                            PyObject **py_policy);
-as_status get_query_policy(as_error *err, const as_policy_query *query_policy,
-                           PyObject **py_policy);
-as_status get_scan_policy(as_error *err, const as_policy_scan *scan_policy,
-                          PyObject **py_policy);
-as_status get_operate_policy(as_error *err,
-                             const as_policy_operate *operate_policy,
-                             PyObject **py_policy);
-as_status get_batch_policy(as_error *err, const as_policy_batch *batch_policy,
-                           PyObject **py_policy);
-as_status get_info_policy(as_error *err, const as_policy_info *info_policy,
-                          PyObject **py_policy);
-as_status get_admin_policy(as_error *err, const as_policy_admin *admin_policy,
-                           PyObject **py_policy);
-as_status
-get_batch_apply_policy(as_error *err,
-                       const as_policy_batch_apply *batch_apply_policy,
-                       PyObject **py_policy);
-as_status
-get_batch_write_policy(as_error *err,
-                       const as_policy_batch_write *batch_write_policy,
-                       PyObject **py_policy);
-as_status
-get_batch_remove_policy(as_error *err,
-                        const as_policy_batch_remove *batch_remove_policy,
-                        PyObject **py_policy);
+// Builds a dict with one key per policy type, mirroring set_subpolicies.
+// These convert trusted internal C policy structs (not user input), so
+// unlike the set_*_policy functions above they return the dict directly.
+PyObject *get_policies(const as_policies *policies);
+PyObject *get_read_policy(const as_policy_read *read_policy);
+PyObject *get_write_policy(const as_policy_write *write_policy);
+PyObject *get_apply_policy(const as_policy_apply *apply_policy);
+PyObject *get_remove_policy(const as_policy_remove *remove_policy);
+PyObject *get_query_policy(const as_policy_query *query_policy);
+PyObject *get_scan_policy(const as_policy_scan *scan_policy);
+PyObject *get_operate_policy(const as_policy_operate *operate_policy);
+PyObject *get_batch_policy(const as_policy_batch *batch_policy);
+PyObject *get_info_policy(const as_policy_info *info_policy);
+PyObject *get_admin_policy(const as_policy_admin *admin_policy);
+PyObject *
+get_batch_apply_policy(const as_policy_batch_apply *batch_apply_policy);
+PyObject *
+get_batch_write_policy(const as_policy_batch_write *batch_write_policy);
+PyObject *
+get_batch_remove_policy(const as_policy_batch_remove *batch_remove_policy);

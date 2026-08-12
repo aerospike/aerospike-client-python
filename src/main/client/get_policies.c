@@ -19,33 +19,13 @@
 #include <aerospike/aerospike.h>
 
 #include "client.h"
-#include "exceptions.h"
 #include "policy_config.h"
 
 PyObject *AerospikeClient_Get_Policies(AerospikeClient *self, PyObject *args,
                                        PyObject *kwds)
 {
-    as_error err;
-    as_error_init(&err);
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
     // Read from the live config, not a cached copy, so this reflects any
     // dynamic config updates applied after client construction.
     as_config *config = aerospike_load_config(self->as);
-
-    PyObject *py_policies = NULL;
-    as_status status = get_policies(&err, &config->policies, &py_policies);
-    if (status != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    return py_policies;
-
-CLEANUP:
-    raise_exception(&err);
-    return NULL;
+    return get_policies(&config->policies);
 }

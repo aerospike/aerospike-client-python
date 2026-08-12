@@ -1266,561 +1266,234 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
     return AEROSPIKE_OK;
 }
 
-// On failure, decrefs py_dict and returns AEROSPIKE_ERR_CLIENT from the
-// enclosing function, so every function using these macros must return
-// as_status and must not have any other cleanup to do besides py_dict itself.
-#define POLICY_GET_INT_FIELD(__err, __py_dict, __c_val, __key)                 \
-    do {                                                                       \
-        PyObject *py_field_val = PyLong_FromLong((long)(__c_val));             \
-        if (!py_field_val ||                                                   \
-            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {      \
-            Py_XDECREF(py_field_val);                                          \
-            Py_DECREF(__py_dict);                                              \
-            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                       \
-                            "Failed to set policy field: %s", __key);          \
-            return AEROSPIKE_ERR_CLIENT;                                       \
-        }                                                                      \
-        Py_DECREF(py_field_val);                                               \
-    } while (0)
+// This file only converts trusted internal C policy structs into Python
+// dicts (the reverse of set_*_policy above) -- there's no untrusted input to
+// validate here, so unlike the set_*_policy functions, these don't check
+// individual Python/C-API call results (matching e.g. AerospikeClient_shm_key
+// and get_key_partition_id.c's PyDict_New() usage elsewhere in this codebase).
+static void set_int_field(PyObject *py_dict, const char *key, long value)
+{
+    PyObject *py_val = PyLong_FromLong(value);
+    PyDict_SetItemString(py_dict, key, py_val);
+    Py_DECREF(py_val);
+}
 
-#define POLICY_GET_BOOL_FIELD(__err, __py_dict, __c_val, __key)                \
-    do {                                                                       \
-        PyObject *py_field_val = PyBool_FromLong((long)(__c_val));             \
-        if (!py_field_val ||                                                   \
-            PyDict_SetItemString(__py_dict, __key, py_field_val) == -1) {      \
-            Py_XDECREF(py_field_val);                                          \
-            Py_DECREF(__py_dict);                                              \
-            as_error_update(__err, AEROSPIKE_ERR_CLIENT,                       \
-                            "Failed to set policy field: %s", __key);          \
-            return AEROSPIKE_ERR_CLIENT;                                       \
-        }                                                                      \
-        Py_DECREF(py_field_val);                                               \
-    } while (0)
+static void set_bool_field(PyObject *py_dict, const char *key, bool value)
+{
+    PyObject *py_val = PyBool_FromLong((long)value);
+    PyDict_SetItemString(py_dict, key, py_val);
+    Py_DECREF(py_val);
+}
+
+// Takes ownership of py_sub_dict.
+static void set_dict_field(PyObject *py_dict, const char *key,
+                           PyObject *py_sub_dict)
+{
+    PyDict_SetItemString(py_dict, key, py_sub_dict);
+    Py_DECREF(py_sub_dict);
+}
 
 // Adds the base policy fields directly into py_dict (flattened, not nested).
-// On failure, py_dict has already been decreffed via the macros above.
-static as_status get_base_policy_fields(as_error *err, PyObject *py_dict,
-                                        const as_policy_base *base)
+static void add_base_policy_fields(PyObject *py_dict,
+                                   const as_policy_base *base)
 {
-    POLICY_GET_INT_FIELD(err, py_dict, base->total_timeout, "total_timeout");
-    POLICY_GET_INT_FIELD(err, py_dict, base->connect_timeout,
-                         "connect_timeout");
-    POLICY_GET_INT_FIELD(err, py_dict, base->socket_timeout, "socket_timeout");
-    POLICY_GET_INT_FIELD(err, py_dict, base->timeout_delay, "timeout_delay");
-    POLICY_GET_INT_FIELD(err, py_dict, base->max_retries, "max_retries");
-    POLICY_GET_INT_FIELD(err, py_dict, base->sleep_between_retries,
-                         "sleep_between_retries");
-    POLICY_GET_BOOL_FIELD(err, py_dict, base->compress, "compress");
-    POLICY_GET_INT_FIELD(err, py_dict, base->error_detail_verbosity,
-                         "error_detail_verbosity");
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "total_timeout", base->total_timeout);
+    set_int_field(py_dict, "connect_timeout", base->connect_timeout);
+    set_int_field(py_dict, "socket_timeout", base->socket_timeout);
+    set_int_field(py_dict, "timeout_delay", base->timeout_delay);
+    set_int_field(py_dict, "max_retries", base->max_retries);
+    set_int_field(py_dict, "sleep_between_retries",
+                  base->sleep_between_retries);
+    set_bool_field(py_dict, "compress", base->compress);
+    set_int_field(py_dict, "error_detail_verbosity",
+                  base->error_detail_verbosity);
 }
 
-as_status get_read_policy(as_error *err, const as_policy_read *read_policy,
-                          PyObject **py_policy)
+PyObject *get_read_policy(const as_policy_read *read_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create read policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status = get_base_policy_fields(err, py_dict, &read_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, read_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, read_policy->replica, "replica");
-    POLICY_GET_BOOL_FIELD(err, py_dict, read_policy->deserialize,
-                          "deserialize");
-    POLICY_GET_INT_FIELD(err, py_dict, read_policy->read_mode_ap,
-                         "read_mode_ap");
-    POLICY_GET_INT_FIELD(err, py_dict, read_policy->read_mode_sc,
-                         "read_mode_sc");
-    POLICY_GET_INT_FIELD(err, py_dict, read_policy->read_touch_ttl_percent,
-                         "read_touch_ttl_percent");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &read_policy->base);
+    set_int_field(py_dict, "key", read_policy->key);
+    set_int_field(py_dict, "replica", read_policy->replica);
+    set_bool_field(py_dict, "deserialize", read_policy->deserialize);
+    set_int_field(py_dict, "read_mode_ap", read_policy->read_mode_ap);
+    set_int_field(py_dict, "read_mode_sc", read_policy->read_mode_sc);
+    set_int_field(py_dict, "read_touch_ttl_percent",
+                  read_policy->read_touch_ttl_percent);
+    return py_dict;
 }
 
-as_status get_write_policy(as_error *err, const as_policy_write *write_policy,
-                           PyObject **py_policy)
+PyObject *get_write_policy(const as_policy_write *write_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create write policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &write_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->gen, "gen");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->exists, "exists");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->ttl, "ttl");
-    POLICY_GET_INT_FIELD(err, py_dict, write_policy->compression_threshold,
-                         "compression_threshold");
-    POLICY_GET_BOOL_FIELD(err, py_dict, write_policy->durable_delete,
-                          "durable_delete");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &write_policy->base);
+    set_int_field(py_dict, "key", write_policy->key);
+    set_int_field(py_dict, "replica", write_policy->replica);
+    set_int_field(py_dict, "commit_level", write_policy->commit_level);
+    set_int_field(py_dict, "gen", write_policy->gen);
+    set_int_field(py_dict, "exists", write_policy->exists);
+    set_int_field(py_dict, "ttl", write_policy->ttl);
+    set_int_field(py_dict, "compression_threshold",
+                  write_policy->compression_threshold);
+    set_bool_field(py_dict, "durable_delete", write_policy->durable_delete);
+    return py_dict;
 }
 
-as_status get_apply_policy(as_error *err, const as_policy_apply *apply_policy,
-                           PyObject **py_policy)
+PyObject *get_apply_policy(const as_policy_apply *apply_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create apply policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &apply_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, apply_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, apply_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, apply_policy->ttl, "ttl");
-    POLICY_GET_INT_FIELD(err, py_dict, apply_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_BOOL_FIELD(err, py_dict, apply_policy->durable_delete,
-                          "durable_delete");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &apply_policy->base);
+    set_int_field(py_dict, "key", apply_policy->key);
+    set_int_field(py_dict, "replica", apply_policy->replica);
+    set_int_field(py_dict, "ttl", apply_policy->ttl);
+    set_int_field(py_dict, "commit_level", apply_policy->commit_level);
+    set_bool_field(py_dict, "durable_delete", apply_policy->durable_delete);
+    return py_dict;
 }
 
-as_status get_remove_policy(as_error *err,
-                            const as_policy_remove *remove_policy,
-                            PyObject **py_policy)
+PyObject *get_remove_policy(const as_policy_remove *remove_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create remove policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &remove_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, remove_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, remove_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, remove_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_INT_FIELD(err, py_dict, remove_policy->gen, "gen");
-    POLICY_GET_BOOL_FIELD(err, py_dict, remove_policy->durable_delete,
-                          "durable_delete");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &remove_policy->base);
+    set_int_field(py_dict, "key", remove_policy->key);
+    set_int_field(py_dict, "replica", remove_policy->replica);
+    set_int_field(py_dict, "commit_level", remove_policy->commit_level);
+    set_int_field(py_dict, "gen", remove_policy->gen);
+    set_bool_field(py_dict, "durable_delete", remove_policy->durable_delete);
+    return py_dict;
 }
 
-as_status get_query_policy(as_error *err, const as_policy_query *query_policy,
-                           PyObject **py_policy)
+PyObject *get_query_policy(const as_policy_query *query_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create query policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &query_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_BOOL_FIELD(err, py_dict, query_policy->deserialize,
-                          "deserialize");
-    POLICY_GET_INT_FIELD(err, py_dict, query_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, query_policy->expected_duration,
-                         "expected_duration");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &query_policy->base);
+    set_bool_field(py_dict, "deserialize", query_policy->deserialize);
+    set_int_field(py_dict, "replica", query_policy->replica);
+    set_int_field(py_dict, "expected_duration",
+                  query_policy->expected_duration);
+    return py_dict;
 }
 
-as_status get_scan_policy(as_error *err, const as_policy_scan *scan_policy,
-                          PyObject **py_policy)
+PyObject *get_scan_policy(const as_policy_scan *scan_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create scan policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status = get_base_policy_fields(err, py_dict, &scan_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_BOOL_FIELD(err, py_dict, scan_policy->durable_delete,
-                          "durable_delete");
-    POLICY_GET_INT_FIELD(err, py_dict, scan_policy->ttl, "ttl");
-    POLICY_GET_INT_FIELD(err, py_dict, scan_policy->replica, "replica");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &scan_policy->base);
+    set_bool_field(py_dict, "durable_delete", scan_policy->durable_delete);
+    set_int_field(py_dict, "ttl", scan_policy->ttl);
+    set_int_field(py_dict, "replica", scan_policy->replica);
+    return py_dict;
 }
 
-as_status get_operate_policy(as_error *err,
-                             const as_policy_operate *operate_policy,
-                             PyObject **py_policy)
+PyObject *get_operate_policy(const as_policy_operate *operate_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create operate policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &operate_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->ttl, "ttl");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->gen, "gen");
-    POLICY_GET_BOOL_FIELD(err, py_dict, operate_policy->durable_delete,
-                          "durable_delete");
-    POLICY_GET_BOOL_FIELD(err, py_dict, operate_policy->deserialize,
-                          "deserialize");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->read_mode_ap,
-                         "read_mode_ap");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->read_mode_sc,
-                         "read_mode_sc");
-    POLICY_GET_INT_FIELD(err, py_dict, operate_policy->read_touch_ttl_percent,
-                         "read_touch_ttl_percent");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &operate_policy->base);
+    set_int_field(py_dict, "key", operate_policy->key);
+    set_int_field(py_dict, "replica", operate_policy->replica);
+    set_int_field(py_dict, "commit_level", operate_policy->commit_level);
+    set_int_field(py_dict, "ttl", operate_policy->ttl);
+    set_int_field(py_dict, "gen", operate_policy->gen);
+    set_bool_field(py_dict, "durable_delete", operate_policy->durable_delete);
+    set_bool_field(py_dict, "deserialize", operate_policy->deserialize);
+    set_int_field(py_dict, "read_mode_ap", operate_policy->read_mode_ap);
+    set_int_field(py_dict, "read_mode_sc", operate_policy->read_mode_sc);
+    set_int_field(py_dict, "read_touch_ttl_percent",
+                  operate_policy->read_touch_ttl_percent);
+    return py_dict;
 }
 
-as_status get_batch_policy(as_error *err, const as_policy_batch *batch_policy,
-                           PyObject **py_policy)
+PyObject *get_batch_policy(const as_policy_batch *batch_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create batch policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status =
-        get_base_policy_fields(err, py_dict, &batch_policy->base);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->concurrent, "concurrent");
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->allow_inline,
-                          "allow_inline");
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_policy->deserialize,
-                          "deserialize");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_policy->read_mode_ap,
-                         "read_mode_ap");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_policy->read_mode_sc,
-                         "read_mode_sc");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_policy->replica, "replica");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_policy->read_touch_ttl_percent,
-                         "read_touch_ttl_percent");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    add_base_policy_fields(py_dict, &batch_policy->base);
+    set_bool_field(py_dict, "concurrent", batch_policy->concurrent);
+    set_bool_field(py_dict, "allow_inline", batch_policy->allow_inline);
+    set_bool_field(py_dict, "deserialize", batch_policy->deserialize);
+    set_int_field(py_dict, "read_mode_ap", batch_policy->read_mode_ap);
+    set_int_field(py_dict, "read_mode_sc", batch_policy->read_mode_sc);
+    set_int_field(py_dict, "replica", batch_policy->replica);
+    set_int_field(py_dict, "read_touch_ttl_percent",
+                  batch_policy->read_touch_ttl_percent);
+    return py_dict;
 }
 
-as_status get_info_policy(as_error *err, const as_policy_info *info_policy,
-                          PyObject **py_policy)
+PyObject *get_info_policy(const as_policy_info *info_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create info policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, info_policy->timeout, "timeout");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "timeout", info_policy->timeout);
+    return py_dict;
 }
 
-as_status get_admin_policy(as_error *err, const as_policy_admin *admin_policy,
-                           PyObject **py_policy)
+PyObject *get_admin_policy(const as_policy_admin *admin_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create admin policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, admin_policy->timeout, "timeout");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "timeout", admin_policy->timeout);
+    return py_dict;
 }
 
-as_status
-get_batch_apply_policy(as_error *err,
-                       const as_policy_batch_apply *batch_apply_policy,
-                       PyObject **py_policy)
+PyObject *
+get_batch_apply_policy(const as_policy_batch_apply *batch_apply_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create batch apply policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, batch_apply_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_apply_policy->durable_delete,
-                          "durable_delete");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_apply_policy->key, "key");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_apply_policy->ttl, "ttl");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "commit_level", batch_apply_policy->commit_level);
+    set_bool_field(py_dict, "durable_delete",
+                   batch_apply_policy->durable_delete);
+    set_int_field(py_dict, "key", batch_apply_policy->key);
+    set_int_field(py_dict, "ttl", batch_apply_policy->ttl);
+    return py_dict;
 }
 
-as_status
-get_batch_write_policy(as_error *err,
-                       const as_policy_batch_write *batch_write_policy,
-                       PyObject **py_policy)
+PyObject *
+get_batch_write_policy(const as_policy_batch_write *batch_write_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create batch write policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, batch_write_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_write_policy->durable_delete,
-                          "durable_delete");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_write_policy->exists, "exists");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_write_policy->ttl, "ttl");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_write_policy->gen, "gen");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_write_policy->key, "key");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "commit_level", batch_write_policy->commit_level);
+    set_bool_field(py_dict, "durable_delete",
+                   batch_write_policy->durable_delete);
+    set_int_field(py_dict, "exists", batch_write_policy->exists);
+    set_int_field(py_dict, "ttl", batch_write_policy->ttl);
+    set_int_field(py_dict, "gen", batch_write_policy->gen);
+    set_int_field(py_dict, "key", batch_write_policy->key);
+    return py_dict;
 }
 
-as_status
-get_batch_remove_policy(as_error *err,
-                        const as_policy_batch_remove *batch_remove_policy,
-                        PyObject **py_policy)
+PyObject *
+get_batch_remove_policy(const as_policy_batch_remove *batch_remove_policy)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create batch remove policy dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    POLICY_GET_INT_FIELD(err, py_dict, batch_remove_policy->commit_level,
-                         "commit_level");
-    POLICY_GET_BOOL_FIELD(err, py_dict, batch_remove_policy->durable_delete,
-                          "durable_delete");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_remove_policy->gen, "gen");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_remove_policy->generation,
-                         "generation");
-    POLICY_GET_INT_FIELD(err, py_dict, batch_remove_policy->key, "key");
-
-    *py_policy = py_dict;
-    return AEROSPIKE_OK;
-}
-
-// Adds py_sub_policy to py_dict under key, consuming the reference to
-// py_sub_policy either way. On failure, decrefs py_dict and returns
-// AEROSPIKE_ERR_CLIENT, so callers should return whatever this returns.
-static as_status add_policy_dict_entry(as_error *err, PyObject *py_dict,
-                                       const char *key, PyObject *py_sub_policy)
-{
-    if (PyDict_SetItemString(py_dict, key, py_sub_policy) == -1) {
-        Py_DECREF(py_sub_policy);
-        Py_DECREF(py_dict);
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to set policies dict entry: %s", key);
-        return AEROSPIKE_ERR_CLIENT;
-    }
-    Py_DECREF(py_sub_policy);
-    return AEROSPIKE_OK;
+    set_int_field(py_dict, "commit_level", batch_remove_policy->commit_level);
+    set_bool_field(py_dict, "durable_delete",
+                   batch_remove_policy->durable_delete);
+    set_int_field(py_dict, "gen", batch_remove_policy->gen);
+    set_int_field(py_dict, "generation", batch_remove_policy->generation);
+    set_int_field(py_dict, "key", batch_remove_policy->key);
+    return py_dict;
 }
 
 // Builds the top-level policies dict, mirroring set_subpolicies's key set.
-as_status get_policies(as_error *err, const as_policies *policies,
-                       PyObject **py_policies)
+PyObject *get_policies(const as_policies *policies)
 {
     PyObject *py_dict = PyDict_New();
-    if (!py_dict) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to create policies dict");
-        return AEROSPIKE_ERR_CLIENT;
-    }
-
-    as_status status = AEROSPIKE_OK;
-    PyObject *py_sub_policy = NULL;
-
-    status = get_read_policy(err, &policies->read, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "read", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_write_policy(err, &policies->write, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "write", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_apply_policy(err, &policies->apply, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "apply", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_remove_policy(err, &policies->remove, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "remove", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_query_policy(err, &policies->query, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "query", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_scan_policy(err, &policies->scan, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "scan", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_operate_policy(err, &policies->operate, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "operate", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_info_policy(err, &policies->info, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "info", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = get_admin_policy(err, &policies->admin, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "admin", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status =
-        get_batch_apply_policy(err, &policies->batch_apply, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "batch_apply", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status =
-        get_batch_remove_policy(err, &policies->batch_remove, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "batch_remove", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status =
-        get_batch_write_policy(err, &policies->batch_write, &py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-    status = add_policy_dict_entry(err, py_dict, "batch_write", py_sub_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    const char *batch_policy_names[] = {"batch", "batch_parent_write",
-                                        "txn_verify", "txn_roll"};
-    const as_policy_batch *batch_policies[] = {
-        &policies->batch, &policies->batch_parent_write, &policies->txn_verify,
-        &policies->txn_roll};
-    for (unsigned long i = 0;
-         i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
-        status = get_batch_policy(err, batch_policies[i], &py_sub_policy);
-        if (status != AEROSPIKE_OK) {
-            return status;
-        }
-        status = add_policy_dict_entry(err, py_dict, batch_policy_names[i],
-                                       py_sub_policy);
-        if (status != AEROSPIKE_OK) {
-            return status;
-        }
-    }
-
-    *py_policies = py_dict;
-    return AEROSPIKE_OK;
+    set_dict_field(py_dict, "read", get_read_policy(&policies->read));
+    set_dict_field(py_dict, "write", get_write_policy(&policies->write));
+    set_dict_field(py_dict, "apply", get_apply_policy(&policies->apply));
+    set_dict_field(py_dict, "remove", get_remove_policy(&policies->remove));
+    set_dict_field(py_dict, "query", get_query_policy(&policies->query));
+    set_dict_field(py_dict, "scan", get_scan_policy(&policies->scan));
+    set_dict_field(py_dict, "operate", get_operate_policy(&policies->operate));
+    set_dict_field(py_dict, "info", get_info_policy(&policies->info));
+    set_dict_field(py_dict, "admin", get_admin_policy(&policies->admin));
+    set_dict_field(py_dict, "batch_apply",
+                   get_batch_apply_policy(&policies->batch_apply));
+    set_dict_field(py_dict, "batch_remove",
+                   get_batch_remove_policy(&policies->batch_remove));
+    set_dict_field(py_dict, "batch_write",
+                   get_batch_write_policy(&policies->batch_write));
+    set_dict_field(py_dict, "batch", get_batch_policy(&policies->batch));
+    set_dict_field(py_dict, "batch_parent_write",
+                   get_batch_policy(&policies->batch_parent_write));
+    set_dict_field(py_dict, "txn_verify",
+                   get_batch_policy(&policies->txn_verify));
+    set_dict_field(py_dict, "txn_roll", get_batch_policy(&policies->txn_roll));
+    return py_dict;
 }
