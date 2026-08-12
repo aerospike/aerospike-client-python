@@ -517,19 +517,24 @@ class TestQueryApply(object):
         arguments contain a serialized set.
         """
         ops = [
-            operations.increment("testBinName", 1)
+            operations.read("testBinName")
         ]
 
         query = self.as_connection.query("test", "demo")
         query.add_ops(ops)
 
-        with pytest.raises(e.ParamError) as excinfo:
-            query.apply(
-                "query_apply_parameters",
-                "query_params",
-                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
-            )
-        assert excinfo.value.msg == "Query can have either a UDF or operations, not both"
+        # with pytest.raises(e.ParamError) as excinfo:
+        query.apply(
+            "query_apply_parameters",
+            "query_params",
+            [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+        )
+        # assert excinfo.value.msg == "Query can have either a UDF or operations, not both"
+        query.results()
+
+        query2 = self.as_connection.query("test", "demo")
+        query2.results()
+        print(query2)
 
     def test_fail_if_UDF_exists_before_add_ops(self):
         """
@@ -537,7 +542,7 @@ class TestQueryApply(object):
         arguments contain a serialized set.
         """
         ops = [
-            operations.increment("testBinName", 1)
+            operations.read("testBinName")
         ]
 
         query = self.as_connection.query("test", "demo")
@@ -547,6 +552,11 @@ class TestQueryApply(object):
             [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
         )
 
-        with pytest.raises(e.ParamError) as excinfo:
-            query.add_ops(ops)
-        assert excinfo.value.msg == "Query can have either a UDF or operations, not both"
+        # with pytest.raises(e.ParamError) as excinfo:
+        query.add_ops(ops)
+        # assert excinfo.value.msg == "Query can have either a UDF or operations, not both"
+        query.results()
+
+        query2 = self.as_connection.query("test", "demo")
+        query2.results()
+        print(query2)

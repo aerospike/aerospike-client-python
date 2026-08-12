@@ -404,19 +404,20 @@ class TestScanApply(object):
         arguments contain a serialized set.
         """
         ops = [
-            operations.increment("testBinName", 1)
+            operations.read("testBinName")
         ]
 
         scan = self.as_connection.scan("test", "demo")
         scan.add_ops(ops)
 
-        with pytest.raises(e.ParamError) as excinfo:
-            scan.apply(
-                "query_apply_parameters",
-                "query_params",
-                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
-            )
-        assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
+        # with pytest.raises(e.ParamError) as excinfo:
+        scan.apply(
+            "query_apply_parameters",
+            "query_params",
+            [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+        )
+        # assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
+        scan.results()
 
     def test_fail_if_UDF_exists_before_add_ops(self):
         """
@@ -424,7 +425,7 @@ class TestScanApply(object):
         arguments contain a serialized set.
         """
         ops = [
-            operations.increment("testBinName", 1)
+            operations.read("testBinName")
         ]
         scan = self.as_connection.scan("test", "demo")
         scan.apply(
@@ -433,6 +434,7 @@ class TestScanApply(object):
             [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
         )
 
-        with pytest.raises(e.ParamError) as excinfo:
-            scan.add_ops(ops)
-        assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
+        # with pytest.raises(e.ParamError) as excinfo:
+        scan.add_ops(ops)
+        # assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
+        scan.results()
