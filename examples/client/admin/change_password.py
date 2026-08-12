@@ -1,5 +1,4 @@
-
-##########################################################################
+################################################################################
 # Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+################################################################################
 
 
-from .. import Example
-from aerospike import exception as e
 
-class UDFRemove(Example):
+from .create_user import CreateUser
+import aerospike
+
+
+class ChangePassword(CreateUser):
     def run(self):
-        module = "example.lua"
-        self.client.udf_remove(module)
+        super().run()
 
-        try:
-            self.client.udf_remove(module)
-        except e.UDFNotFound:
-            print("Already removed UDF.")
+        config2 = self.config.copy()
+        config2["user"] = self.user
+        config2["password"] = self.password
+        client2 = aerospike.client(config2)
+
+        status = client2.admin_change_password(self.user, self.password)
+        print("Status of changing password is: %d" % status)

@@ -1,5 +1,4 @@
-
-##########################################################################
+################################################################################
 # Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+################################################################################
 
 
-from .. import Example
-from aerospike import exception as e
+from .create_role import CreateRole
+from . import AdminExample
+import time
 
-class UDFRemove(Example):
+
+class DropRole(CreateRole):
     def run(self):
-        module = "example.lua"
-        self.client.udf_remove(module)
+        super().run()
+        policy = {}
 
-        try:
-            self.client.udf_remove(module)
-        except e.UDFNotFound:
-            print("Already removed UDF.")
+        self.client.admin_drop_role(self.role, policy)
+        time.sleep(3)
+        print("OK, 1 role dropped")
+
+    def cleanup(self):
+        AdminExample.cleanup(self)
