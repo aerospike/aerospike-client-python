@@ -1941,6 +1941,15 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                     pattern, tmp_regex_flags, NIL));
             }
             else {
+                PyObject *py_str_policy = PyDict_GetItemString(
+                    temp_expr->pydict, _STR_EXP_POLICY_KEY);
+                as_string_policy policy;
+                status = as_string_policy_init_from_pyobject(err, &policy,
+                                                             py_str_policy);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
                 char *replacement = NULL;
                 status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
                                  temp_expr->pydict, NULL, &replacement, false);
@@ -1948,9 +1957,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     return status;
                 }
 
-                APPEND_ARRAY(
-                    1, as_exp_string_regex_replace(NULL, pattern, replacement,
-                                                   tmp_regex_flags, NIL));
+                APPEND_ARRAY(1, as_exp_string_regex_replace(
+                                    &policy, pattern, replacement,
+                                    tmp_regex_flags, NIL));
             }
             break;
         }
