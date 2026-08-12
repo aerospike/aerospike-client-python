@@ -516,13 +516,24 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
         * **hosts** (:class:`list`)
-            A list of tuples identifying a node (or multiple nodes) in the cluster.
+            A list identifying a node (or multiple nodes) in the cluster. Each entry may be
+            either a tuple or a string.
 
             The tuple is in this format: ``(address, port, [tls-name])``
 
             * address: :class:`str`
             * port: :class:`int`
             * tls-name: :class:`str`
+
+            The string form is ``"address[:tls-name]:[port]"``, e.g.:
+
+            * ``"address:port"``
+            * ``"address:tls-name:port"``
+            * ``"[ipv6-address]:port"``
+            * ``"[ipv6-address]:tls-name:port"``
+
+            IPv6 addresses must be enclosed in square brackets to distinguish the address's
+            own colons from the ``:tls-name`` and ``:port`` separators.
 
             The client will connect to the first available node in the list called the *seed node*.
             From there, it will learn about the cluster and its partition map.

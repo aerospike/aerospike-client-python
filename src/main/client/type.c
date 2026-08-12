@@ -788,24 +788,34 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                             strdup((char *)PyUnicode_AsUTF8(py_tls_name));
                     }
                 }
-            }
-            else if (PyUnicode_Check(py_host)) {
-                addr = strdup(strtok((char *)PyUnicode_AsUTF8(py_host), ":"));
-                addr = strtok(addr, ":");
-                char *temp = strtok(NULL, ":");
-                if (NULL != temp) {
-                    port = (uint16_t)atoi(temp);
-                }
-            }
-            if (addr) {
-                if (tls_name) {
-                    as_config_tls_add_host(&config, addr, tls_name, port);
-                    free(tls_name);
+
+                if (addr) {
+                    if (tls_name) {
+                        as_config_tls_add_host(&config, addr, tls_name, port);
+                        free(tls_name);
+                    }
+                    else {
+                        as_config_add_host(&config, addr, port);
+                    }
+                    free(addr);
                 }
                 else {
-                    as_config_add_host(&config, addr, port);
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
-                free(addr);
+            }
+            else if (PyUnicode_Check(py_host)) {
+                // Accepts "hostname[:tlsname][:port]", including bracketed
+                // IPv6 addresses, e.g. "host:3000", "host:tlsname:3000",
+                // "[::1]:3000", "[::1]:tlsname:3000" (CLIENT-4841). Parsing
+                // is delegated to the C client, which copies the string
+                // instead of mutating the Python-owned buffer.
+                const char *host_str = PyUnicode_AsUTF8(py_host);
+                if (!host_str ||
+                    !as_config_add_hosts(&config, host_str, port)) {
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
+                }
             }
             else {
                 error_code = INIT_INVALID_ADRR_ERR;
