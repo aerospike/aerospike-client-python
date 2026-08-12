@@ -20,7 +20,7 @@ class TestInvalidMapKeys:
     def test_passing_invalid_map_keys_raises_exc(self, invalid_map_key):
         KEY = (TEST_NS, TEST_SET, 1)
         invalid_map_in_server = {
-            4.0: 1
+            invalid_map_key: 1
         }
         # Python client checks for valid key types,
         # since C client doesn't raise a specific enough error in as_map_set
