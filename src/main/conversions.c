@@ -803,6 +803,20 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         if (err->code != AEROSPIKE_OK) {
             break;
         }
+
+        bool is_map_key_valid_type = val->type == AS_STRING ||
+                                     val->type == AS_INTEGER ||
+                                     val->type == AS_BYTES;
+        if (!is_map_key_valid_type) {
+            char *as_val_repr = as_val_tostring(val);
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Map contains invalid map key %s.", as_val_repr);
+
+            free(as_val_repr);
+            as_val_destroy(key);
+            break;
+        }
+
         as_val_new_from_pyobject(self, err, py_val, &val, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
@@ -813,7 +827,6 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         }
         int retval = as_map_set(*map, key, val);
         if (retval != 0) {
-            // TODO: message not specific enough
             as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Failed to convert Python dictionary to a C client as_map.");
