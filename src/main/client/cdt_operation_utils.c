@@ -221,9 +221,18 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
         goto exit_without_returning_int;
     }
 
+    // Integer was found
+    if (int64 < INT_MIN || int64 > INT_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.",
+                        key);
+        goto exit_without_returning_int;
+    }
+
+    // Integer is within "int" bounds
     if (int64 >= min_bound && int64 <= max_bound) {
         goto return_int;
     }
+    // Integer is out of bounds
     else if (warn_if_out_of_bounds) {
         int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
                                       OUT_OF_BOUNDS_MESSAGE, key, min_bound,
@@ -233,8 +242,9 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
         }
     }
 
-    return as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
-                           min_bound, max_bound, int64);
+    as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
+                    min_bound, max_bound, int64);
+    goto exit_without_returning_int;
 
 return_int:
     if (found_ref) {
