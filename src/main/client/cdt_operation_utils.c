@@ -210,7 +210,7 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
     bool found = false;
     if (get_optional_int64_t(err, key, py_dict, &int64, &found) !=
         AEROSPIKE_OK) {
-        goto exit_without_returning_int;
+        return err->code;
     }
 
     if (!found) {
@@ -218,40 +218,40 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "Operation missing required entry %s", key);
         }
-        goto exit_without_returning_int;
+        return err->code;
     }
 
     // Integer was found
     if (int64 < INT_MIN || int64 > INT_MAX) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.",
                         key);
-        goto exit_without_returning_int;
+        return err->code;
     }
 
-    // Integer is within "int" bounds
-    if (int64 >= min_bound && int64 <= max_bound) {
-        goto return_int;
-    }
-    // Integer is out of bounds
-    else if (warn_if_out_of_bounds) {
-        int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                      OUT_OF_BOUNDS_MESSAGE, key, min_bound,
-                                      max_bound, int64);
-        if (retval == 0) {
-            goto return_int;
+    if (int64 < min_bound && int64 > max_bound) {
+        if (warn_if_out_of_bounds) {
+            int warning_failed = PyErr_WarnFormat(
+                PyExc_DeprecationWarning, STACK_LEVEL, OUT_OF_BOUNDS_MESSAGE,
+                key, min_bound, max_bound, int64);
+            if (!warning_failed) {
+                // Return integer value as-is
+                goto return_int;
+            }
         }
-    }
 
-    as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
-                    min_bound, max_bound, int64);
-    goto exit_without_returning_int;
+        // warn_if_out_of_bounds is false, or warning failed to be raised.
+        // Fallback to raising exception
+        as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
+                        min_bound, max_bound, int64);
+        return err->code;
+    }
 
 return_int:
     if (found_ref) {
         *found_ref = true;
     }
     *int_pointer = int64;
-exit_without_returning_int:
+
     return err->code;
 }
 
