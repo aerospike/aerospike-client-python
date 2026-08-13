@@ -228,7 +228,7 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
         return err->code;
     }
 
-    if (int64 < min_bound && int64 > max_bound) {
+    if (int64 < min_bound || int64 > max_bound) {
         if (warn_if_out_of_bounds) {
             int warning_failed = PyErr_WarnFormat(
                 PyExc_DeprecationWarning, STACK_LEVEL, OUT_OF_BOUNDS_MESSAGE,
