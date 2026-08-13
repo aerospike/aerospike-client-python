@@ -72,25 +72,3 @@ as_status set_batch_write_policy(as_error *err,
 as_status set_batch_remove_policy(as_error *err,
                                   as_policy_batch_remove *batch_remove_policy,
                                   PyObject *py_policy, int validate_keys);
-
-// Builds a dict with one key per policy type, mirroring set_subpolicies.
-// These convert trusted internal C policy structs (not user input), so
-// unlike the set_*_policy functions above they return the dict directly.
-PyObject *as_policies_to_pyobject(const as_policies *policies);
-PyObject *as_policy_read_to_pyobject(const as_policy_read *read_policy);
-PyObject *as_policy_write_to_pyobject(const as_policy_write *write_policy);
-PyObject *as_policy_apply_to_pyobject(const as_policy_apply *apply_policy);
-PyObject *as_policy_remove_to_pyobject(const as_policy_remove *remove_policy);
-PyObject *as_policy_query_to_pyobject(const as_policy_query *query_policy);
-PyObject *as_policy_scan_to_pyobject(const as_policy_scan *scan_policy);
-PyObject *
-as_policy_operate_to_pyobject(const as_policy_operate *operate_policy);
-PyObject *as_policy_batch_to_pyobject(const as_policy_batch *batch_policy);
-PyObject *as_policy_info_to_pyobject(const as_policy_info *info_policy);
-PyObject *as_policy_admin_to_pyobject(const as_policy_admin *admin_policy);
-PyObject *as_policy_batch_apply_to_pyobject(
-    const as_policy_batch_apply *batch_apply_policy);
-PyObject *as_policy_batch_write_to_pyobject(
-    const as_policy_batch_write *batch_write_policy);
-PyObject *as_policy_batch_remove_to_pyobject(
-    const as_policy_batch_remove *batch_remove_policy);
