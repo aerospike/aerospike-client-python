@@ -817,9 +817,9 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
             int warning_success = 0;
 
             if (!key_repr) {
-                warning_success =
-                    PyErr_WarnEx(PyExc_DeprecationWarning, STACK_LEVEL,
-                                 DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
+                warning_success = PyErr_WarnEx(
+                    PyExc_DeprecationWarning,
+                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR, STACK_LEVEL);
             }
             else {
                 warning_success =
