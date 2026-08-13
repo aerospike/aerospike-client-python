@@ -749,7 +749,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                                   &tmp_value, AS_MAP_UNORDERED,
                                   AS_MAP_KEY_VALUE_ORDERED, false,
                                   NULL) != AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP;
         }
         as_map_order order = (as_map_order)tmp_value;
 
