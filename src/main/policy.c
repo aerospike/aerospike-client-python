@@ -121,6 +121,7 @@
                 if (as_exp_new_from_pyobject(                                  \
                         self, py_exp_list, exp_list_p, err, false,             \
                         &stack_dynamic_pool) == AEROSPIKE_OK) {                \
+                    policy->filter_exp = *exp_list_p;                          \
                     as_dynamic_pool_destroy(&stack_dynamic_pool);              \
                 }                                                              \
                 else {                                                         \
@@ -133,6 +134,7 @@
                                               dynamic_pool) == AEROSPIKE_OK) { \
                     return err->code;                                          \
                 }                                                              \
+                policy->filter_exp = *exp_list_p;                              \
             }                                                                  \
         }                                                                      \
     }
