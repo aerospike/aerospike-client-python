@@ -35,6 +35,7 @@
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
+#include "cdt_operation_utils.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
@@ -1046,20 +1047,18 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
         }
     }
 
-    PyObject *py_bit_flags =
-        PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
-    if (py_bit_flags) {
-        if (PyLong_Check(py_bit_flags)) {
-            as_bit_write_flags bit_write_flags =
-                (as_bit_write_flags)PyLong_AsLong(py_bit_flags);
-            as_bit_policy_set_write_flags(policy, bit_write_flags);
-        }
+    int tmp_value;
+    bool found = false;
+    if (get_enum_from_py_dict(err, py_policy, BIT_WRITE_FLAGS_KEY, &tmp_value,
+                              AS_BIT_WRITE_DEFAULT,
+                              AS_BIT_WRITE_PARTIAL * 2 - 1, true,
+                              &found) != AEROSPIKE_OK) {
+        return err->code;
     }
-    else if (PyErr_Occurred()) {
-        /* Fetching a map key failed internally for some reason, raise an error and exit.*/
-        PyErr_Clear();
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Unable to get bit_write_flags");
+
+    if (found) {
+        as_bit_write_flags bit_write_flags = (as_bit_write_flags)tmp_value;
+        as_bit_policy_set_write_flags(policy, bit_write_flags);
     }
 
     return err->code;
@@ -1084,11 +1083,21 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     }
 
     // Defaults
-    long map_order = AS_MAP_UNORDERED;
     uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
     bool persist_index = false;
 
-    MAP_POLICY_SET_FIELD(map_order, PyLong_AsLong);
+    as_map_order map_order = AS_MAP_UNORDERED;
+    int tmp_value;
+    bool found = false;
+    if (get_enum_from_py_dict(err, py_policy, "map_order", &tmp_value,
+                              AS_MAP_UNORDERED, AS_MAP_KEY_VALUE_ORDERED, true,
+                              &found) != AEROSPIKE_OK) {
+        return err->code;
+    }
+    if (found) {
+        map_order = (as_map_order)tmp_value;
+    }
+
     MAP_POLICY_SET_FIELD(map_write_flags, PyLong_AsUnsignedLong);
 
     PyObject *py_persist_index =
@@ -1114,9 +1123,6 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
                                   bool validate_keys)
 {
     as_list_policy_init(list_policy);
-    PyObject *py_val = NULL;
-    long list_order = AS_LIST_UNORDERED;
-    long flags = AS_LIST_WRITE_DEFAULT;
 
     if (!py_policy || py_policy == Py_None) {
         return AEROSPIKE_OK;
@@ -1140,38 +1146,30 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
         }
     }
 
-    py_val = PyDict_GetItemString(py_policy, "list_order");
-    if (py_val && py_val != Py_None) {
-        if (PyLong_Check(py_val)) {
-            list_order = PyLong_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert list_order");
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid List order");
-        }
+    int tmp_value;
+    as_list_order list_order = AS_LIST_UNORDERED;
+    bool found = false;
+    if (get_enum_from_py_dict(err, py_policy, "list_order", &tmp_value,
+                              AS_LIST_UNORDERED, AS_LIST_ORDERED, true,
+                              &found) != AEROSPIKE_OK) {
+        return err->code;
+    }
+    if (found) {
+        list_order = (as_list_order)tmp_value;
     }
 
-    py_val = PyDict_GetItemString(py_policy, "write_flags");
-    if (py_val && py_val != Py_None) {
-        if (PyLong_Check(py_val)) {
-            flags = PyLong_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert write_flags");
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid write_flags");
-        }
+    as_list_write_flags flags = AS_LIST_WRITE_DEFAULT;
+    found = false;
+    if (get_enum_from_py_dict(
+            err, py_policy, "write_flags", &tmp_value, AS_LIST_WRITE_DEFAULT,
+            AS_LIST_WRITE_PARTIAL * 2 - 1, true, &found) != AEROSPIKE_OK) {
+        return err->code;
+    }
+    if (found) {
+        flags = (as_list_write_flags)tmp_value;
     }
 
-    as_list_policy_set(list_policy, (as_list_order)list_order,
-                       (as_list_write_flags)flags);
+    as_list_policy_set(list_policy, list_order, flags);
 
     return AEROSPIKE_OK;
 }
@@ -1179,9 +1177,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
                                  as_hll_policy *hll_policy, bool validate_keys)
 {
-    int64_t flags = 0;
     as_hll_policy_init(hll_policy);
-    PyObject *py_val = NULL;
 
     if (!py_policy || py_policy == Py_None) {
         return AEROSPIKE_OK;
@@ -1205,22 +1201,19 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
         }
     }
 
-    py_val = PyDict_GetItemString(py_policy, "flags");
-    if (py_val && py_val != Py_None) {
-        if (PyLong_Check(py_val)) {
-            flags = (int64_t)PyLong_AsLongLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert flags.");
-            }
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid hll policy flags.");
-        }
+    int tmp_value;
+    as_hll_write_flags flags;
+    bool found = false;
+    if (get_enum_from_py_dict(
+            err, py_policy, "flags", &tmp_value, AS_HLL_WRITE_DEFAULT,
+            AS_HLL_WRITE_ALLOW_FOLD * 2 - 1, true, &found) != AEROSPIKE_OK) {
+        return err->code;
     }
 
-    as_hll_policy_set_write_flags(hll_policy, flags);
+    if (found) {
+        flags = (as_hll_write_flags)tmp_value;
+        as_hll_policy_set_write_flags(hll_policy, flags);
+    }
 
     return AEROSPIKE_OK;
 }

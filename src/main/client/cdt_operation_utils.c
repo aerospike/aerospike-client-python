@@ -196,23 +196,82 @@ as_status get_uint64_t(as_error *err, const char *key, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-as_status get_int_from_py_dict(as_error *err, const char *key,
-                               PyObject *op_dict, int *int_pointer)
-{
-    int64_t int64_to_return = -1;
+#define OUT_OF_BOUNDS_MESSAGE                                                  \
+    "%s must be inclusively between %d and %d, but received %" PRId64          \
+    " instead."
 
-    if (get_int64_t(err, key, op_dict, &int64_to_return) != AEROSPIKE_OK) {
+static inline as_status
+get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
+                           int *int_pointer, int min_bound, int max_bound,
+                           bool is_optional, bool warn_if_out_of_bounds,
+                           bool *found_ref)
+{
+    int64_t int64 = -1;
+    bool found = false;
+    if (get_optional_int64_t(err, key, py_dict, &int64, &found) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s too large for C int.", key);
+    if (!found) {
+        if (!is_optional) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Operation missing required entry %s", key);
+        }
+        return err->code;
     }
-    *int_pointer = int64_to_return;
 
-    return AEROSPIKE_OK;
+    // Integer was found
+    if (int64 < INT_MIN || int64 > INT_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large for C int.",
+                        key);
+        return err->code;
+    }
+
+    if (int64 < min_bound || int64 > max_bound) {
+        int warning_failed = 0;
+        if (warn_if_out_of_bounds) {
+            warning_failed = PyErr_WarnFormat(
+                PyExc_DeprecationWarning, STACK_LEVEL, OUT_OF_BOUNDS_MESSAGE,
+                key, min_bound, max_bound, int64);
+        }
+
+        if (warn_if_out_of_bounds == false || warning_failed) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE,
+                            key, min_bound, max_bound, int64);
+            return err->code;
+        }
+    }
+
+    if (found_ref) {
+        *found_ref = true;
+    }
+    *int_pointer = int64;
+
+    return err->code;
 }
+
+// clang-format off
+as_status get_enum_from_py_dict(
+    as_error *err,
+    PyObject *py_dict,
+    const char *key,
+    int *int_pointer,
+    int min_bound,
+    int max_bound,
+    bool is_optional,
+    bool *int_was_found)
+{
+    return get_bound_int_from_py_dict(err, py_dict, key, int_pointer, min_bound,
+                                      max_bound, is_optional, true, int_was_found);
+}
+
+as_status get_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key, int *int_pointer)
+{
+    return get_bound_int_from_py_dict(err, py_dict, key, int_pointer, INT_MIN,
+                                      INT_MAX, false, false, NULL);
+}
+// clang-format on
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type)
