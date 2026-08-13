@@ -1,6 +1,5 @@
 import pytest
 from .conftest import TEST_NS, TEST_SET
-from aerospike import exception as e
 import aerospike
 
 
@@ -21,6 +20,6 @@ class TestInvalidMapKeys:
             invalid_map_key: 1
         }
         # Python client checks for valid key types,
-        # since C client doesn't raise a specific enough error in as_map_set
-        with pytest.raises(e.ParamError):
+        # since C client doesn't return a specific enough error message in as_map_set
+        with pytest.warns(DeprecationWarning):
             self.as_connection.put(KEY, bins={"map": invalid_map_in_server})
