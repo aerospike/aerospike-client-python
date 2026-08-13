@@ -94,12 +94,15 @@ Examples
 
 Example applications are provided in the `examples directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/examples/client>`__
 
-For examples, to run the ``kvs.py``:
+For examples, to run all code examples:
 
 ::
 
-    python examples/client/kvs.py
+    python3 -m examples.run_all_examples
 
+To run a specific code example from ``examples/client/kvs.py``:
+
+    python3 -m examples.run_all_examples KVS
 
 Benchmarks
 ----------

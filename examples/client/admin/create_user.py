@@ -1,5 +1,4 @@
-
-##########################################################################
+################################################################################
 # Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +12,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-##########################################################################
+################################################################################
 
 
-from .. import ExampleWithIndex
+from . import AdminExample
+import time
 
-
-class IndexRemove(ExampleWithIndex):
+class CreateUser(AdminExample):
     def run(self):
         policy = {}
-        self.client.index_remove(self.namespace, self.INDEX_NAME, policy)
+        self.user = "foo-example"
+        self.password = "foobar"
+        roles = ["read-write", "read"]
+
+        self.client.admin_create_user(self.user, self.password, roles, policy)
+        time.sleep(3)
+
+        print("OK, 1 new user created")
 
     def cleanup(self):
+        self.client.admin_drop_user(self.user)
+        time.sleep(3)
         super().cleanup()
