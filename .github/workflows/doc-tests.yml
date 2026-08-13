@@ -34,7 +34,7 @@ jobs:
         builder-command:
         - 'spelling . spelling -W --keep-going'
         # -vv is too verbose and makes it hard to read logs
-        - 'linkcheck -v . links'
+        - 'linkcheck -vv . links'
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -52,5 +52,9 @@ jobs:
       # TODO: find way to split up dependencies
       run: python -m pip install -r doc/requirements.txt
     - name: Run builder
+      id: builder
       run: sphinx-build -b ${{ matrix.builder-command }}
+      working-directory: doc
+    - if: ${{ !cancelled() && steps.builder.outcome == 'failure' }}
+      run: sphinx-build --bug-report
       working-directory: doc
