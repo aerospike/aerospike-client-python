@@ -1247,6 +1247,10 @@ Info Operations
         ``"txn_verify"``, ``"txn_roll"``), each mapping to a flat :class:`dict` of that policy's
         fields, using the same keys and constant values documented under :ref:`aerospike_policies`.
 
+        The config-level ``"metrics"`` policy (set via the ``policies`` config dict's ``metrics``
+        key) is not included, since it is a :class:`~aerospike_helpers.metrics.MetricsPolicy`
+        object rather than a policy dict.
+
         :return: a :class:`dict` of policy dictionaries.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
