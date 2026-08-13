@@ -229,24 +229,20 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
     }
 
     if (int64 < min_bound || int64 > max_bound) {
+        int warning_failed = 0;
         if (warn_if_out_of_bounds) {
-            int warning_failed = PyErr_WarnFormat(
+            warning_failed = PyErr_WarnFormat(
                 PyExc_DeprecationWarning, STACK_LEVEL, OUT_OF_BOUNDS_MESSAGE,
                 key, min_bound, max_bound, int64);
-            if (!warning_failed) {
-                // Return integer value as-is
-                goto return_int;
-            }
         }
 
-        // warn_if_out_of_bounds is false, or warning failed to be raised.
-        // Fallback to raising exception
-        as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE, key,
-                        min_bound, max_bound, int64);
-        return err->code;
+        if (warn_if_out_of_bounds == false || warning_failed) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM, OUT_OF_BOUNDS_MESSAGE,
+                            key, min_bound, max_bound, int64);
+            return err->code;
+        }
     }
 
-return_int:
     if (found_ref) {
         *found_ref = true;
     }
