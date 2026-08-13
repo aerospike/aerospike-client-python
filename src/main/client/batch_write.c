@@ -38,6 +38,8 @@
 #define FAILED_TO_CONVERT_POLICY_ERROR                                         \
     "batch_type: %s, failed to convert policy"
 
+#define AS_POLICY_TYPE_NAME(suffix) as_policy_##suffix
+
 #define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                              \
                                        __conversion_func, __batch_type)                      \
     {                                                                                        \
@@ -46,10 +48,13 @@
         if (py___policy != Py_None) {                                                        \
             as_exp *expr_p = NULL;                                                           \
             if (py___policy != NULL) {                                                       \
-                __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
+                __policy = (AS_POLICY_TYPE_NAME(__policy_type) *)malloc(                     \
+                    sizeof(AS_POLICY_TYPE_NAME(__policy_type)));                             \
                 garb->policy_to_free = __policy;                                             \
-                if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, &expr_p) != AEROSPIKE_OK) {                 \
+                if (__conversion_func(                                                       \
+                        self, err, py___policy, __policy, &__policy,                         \
+                        &self->as->config.policies.__policy_type,                            \
+                        &expr_p) != AEROSPIKE_OK) {                                          \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
@@ -324,9 +329,44 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         case AS_BATCH_READ:;
 
             as_policy_batch_read *r_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read,
-                                           pyobject_to_batch_read_policy,
-                                           "Read")
+            // This is a separate codepath from GET_BATCH_POLICY_FROM_PYOBJECT
+            // since pyobject_to_batch_read_policy doesn't take in a config level policy
+            // The C and Python client doesn't have one for as_policy_batch_read
+            PyObject *py_policy_batch_read = PyObject_GetAttrString(
+                py_batch_record, FIELD_NAME_BATCH_POLICY);
+            if (py_policy_batch_read != Py_None) {
+                if (py_policy_batch_read == NULL) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "batch_type: %s, policy must be a dict",
+                                    // TODO: double check
+                                    "as_policy_batch_read");
+                    goto CLEANUP_ON_ERROR;
+                }
+
+                r_policy = (as_policy_batch_read *)malloc(
+                    sizeof(as_policy_batch_read));
+                garb->policy_to_free = r_policy;
+                as_exp *expr_p = NULL;
+                if (pyobject_to_batch_read_policy(
+                        self, err, py_policy_batch_read, r_policy, &r_policy,
+                        &expr_p) != AEROSPIKE_OK) {
+                    /* Don't call strstr unless we have to. It is a linear time operation */
+                    /* Also, not bothering to use POSIX regex library in this case  */
+                    if (!(self->validate_keys &&
+                          strstr(err->message,
+                                 INVALID_DICTIONARY_KEY_ERROR_PART1) &&
+                          strstr(err->message,
+                                 INVALID_DICTIONARY_KEY_ERROR_PART2))) {
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                        FAILED_TO_CONVERT_POLICY_ERROR,
+                                        "as_policy_batch_read");
+                    }
+                    Py_DECREF(py_policy_batch_read);
+                    goto CLEANUP_ON_ERROR;
+                }
+                garb->expressions_to_free = expr_p;
+            }
+            Py_XDECREF(py_policy_batch_read);
 
             PyObject *py_read_all_bins =
                 PyObject_GetAttrString(py_batch_record, "read_all_bins");
@@ -350,9 +390,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         case AS_BATCH_WRITE:;
 
             as_policy_batch_write *w_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write,
-                                           pyobject_to_batch_write_policy,
-                                           "Write")
+            GET_BATCH_POLICY_FROM_PYOBJECT(
+                w_policy, batch_write, pyobject_to_batch_write_policy, "Write")
 
             as_batch_write_record *wr;
             wr = as_batch_write_reserve(&batch_records);
@@ -369,9 +408,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         case AS_BATCH_APPLY:;
 
             as_policy_batch_apply *a_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply,
-                                           pyobject_to_batch_apply_policy,
-                                           "Apply")
+            GET_BATCH_POLICY_FROM_PYOBJECT(
+                a_policy, batch_apply, pyobject_to_batch_apply_policy, "Apply")
 
             PyObject *py_mod = PyObject_GetAttrString(py_batch_record,
                                                       FIELD_NAME_BATCH_MODULE);
@@ -431,7 +469,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         case AS_BATCH_REMOVE:;
 
             as_policy_batch_remove *re_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove,
+            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, batch_remove,
                                            pyobject_to_batch_remove_policy,
                                            "Remove")
 
