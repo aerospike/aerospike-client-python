@@ -766,6 +766,11 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+#define DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR                                 \
+    "Attempted to store a map with an invalid map key type"
+#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+    "Attempted to store a map with key %s, which is an invalid type"
+
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
                           as_static_pool *static_pool, int serializer_type)
@@ -801,17 +806,73 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         as_val_new_from_pyobject(self, err, py_key, &key, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            break;
+            goto EXIT_LOOP;
         }
+
+        bool is_map_key_valid_type = key->type == AS_STRING ||
+                                     key->type == AS_INTEGER ||
+                                     key->type == AS_BYTES;
+        if (!is_map_key_valid_type) {
+            char *key_repr = as_val_tostring(key);
+            int warning_failed = 0;
+
+            if (!key_repr) {
+                warning_failed = PyErr_WarnEx(
+                    PyExc_DeprecationWarning,
+                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR, STACK_LEVEL);
+            }
+            else {
+                warning_failed =
+                    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                     DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+            }
+
+            if (warning_failed) {
+                // Warning could not be raised or was converted to an error.
+                if (!key_repr) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
+                }
+                else {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+                }
+            }
+
+            free(key_repr);
+
+            if (warning_failed) {
+                // Fail out
+                goto CLEANUP_KEY_AND_EXIT_LOOP;
+            }
+
+            // Warning raised. Skip this key
+            as_val_destroy(key);
+            continue;
+        }
+
         as_val_new_from_pyobject(self, err, py_val, &val, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            if (key) {
-                as_val_destroy(key);
-            }
-            break;
+            goto CLEANUP_KEY_AND_EXIT_LOOP;
         }
-        as_map_set(*map, key, val);
+
+        int retval = as_map_set(*map, key, val);
+        if (retval != 0) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to convert Python dictionary to a C client as_map.");
+            goto CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP;
+        }
+
+        continue;
+
+    CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP:
+        as_val_destroy(val);
+    CLEANUP_KEY_AND_EXIT_LOOP:
+        as_val_destroy(key);
+    EXIT_LOOP:
+        break;
     }
 
     if (err->code != AEROSPIKE_OK) {
