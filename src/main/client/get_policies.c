@@ -27,5 +27,5 @@ PyObject *AerospikeClient_Get_Policies(AerospikeClient *self, PyObject *args,
     // Read from the live config, not a cached copy, so this reflects any
     // dynamic config updates applied after client construction.
     as_config *config = aerospike_load_config(self->as);
-    return get_policies(&config->policies);
+    return as_policies_to_pyobject(&config->policies);
 }

@@ -1309,7 +1309,7 @@ static void add_base_policy_fields(PyObject *py_dict,
                   base->error_detail_verbosity);
 }
 
-PyObject *get_read_policy(const as_policy_read *read_policy)
+PyObject *as_policy_read_to_pyobject(const as_policy_read *read_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &read_policy->base);
@@ -1323,7 +1323,7 @@ PyObject *get_read_policy(const as_policy_read *read_policy)
     return py_dict;
 }
 
-PyObject *get_write_policy(const as_policy_write *write_policy)
+PyObject *as_policy_write_to_pyobject(const as_policy_write *write_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &write_policy->base);
@@ -1339,7 +1339,7 @@ PyObject *get_write_policy(const as_policy_write *write_policy)
     return py_dict;
 }
 
-PyObject *get_apply_policy(const as_policy_apply *apply_policy)
+PyObject *as_policy_apply_to_pyobject(const as_policy_apply *apply_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &apply_policy->base);
@@ -1351,7 +1351,7 @@ PyObject *get_apply_policy(const as_policy_apply *apply_policy)
     return py_dict;
 }
 
-PyObject *get_remove_policy(const as_policy_remove *remove_policy)
+PyObject *as_policy_remove_to_pyobject(const as_policy_remove *remove_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &remove_policy->base);
@@ -1363,7 +1363,7 @@ PyObject *get_remove_policy(const as_policy_remove *remove_policy)
     return py_dict;
 }
 
-PyObject *get_query_policy(const as_policy_query *query_policy)
+PyObject *as_policy_query_to_pyobject(const as_policy_query *query_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &query_policy->base);
@@ -1374,7 +1374,7 @@ PyObject *get_query_policy(const as_policy_query *query_policy)
     return py_dict;
 }
 
-PyObject *get_scan_policy(const as_policy_scan *scan_policy)
+PyObject *as_policy_scan_to_pyobject(const as_policy_scan *scan_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &scan_policy->base);
@@ -1384,7 +1384,7 @@ PyObject *get_scan_policy(const as_policy_scan *scan_policy)
     return py_dict;
 }
 
-PyObject *get_operate_policy(const as_policy_operate *operate_policy)
+PyObject *as_policy_operate_to_pyobject(const as_policy_operate *operate_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &operate_policy->base);
@@ -1402,7 +1402,7 @@ PyObject *get_operate_policy(const as_policy_operate *operate_policy)
     return py_dict;
 }
 
-PyObject *get_batch_policy(const as_policy_batch *batch_policy)
+PyObject *as_policy_batch_to_pyobject(const as_policy_batch *batch_policy)
 {
     PyObject *py_dict = PyDict_New();
     add_base_policy_fields(py_dict, &batch_policy->base);
@@ -1417,22 +1417,22 @@ PyObject *get_batch_policy(const as_policy_batch *batch_policy)
     return py_dict;
 }
 
-PyObject *get_info_policy(const as_policy_info *info_policy)
+PyObject *as_policy_info_to_pyobject(const as_policy_info *info_policy)
 {
     PyObject *py_dict = PyDict_New();
     set_int_field(py_dict, "timeout", info_policy->timeout);
     return py_dict;
 }
 
-PyObject *get_admin_policy(const as_policy_admin *admin_policy)
+PyObject *as_policy_admin_to_pyobject(const as_policy_admin *admin_policy)
 {
     PyObject *py_dict = PyDict_New();
     set_int_field(py_dict, "timeout", admin_policy->timeout);
     return py_dict;
 }
 
-PyObject *
-get_batch_apply_policy(const as_policy_batch_apply *batch_apply_policy)
+PyObject *as_policy_batch_apply_to_pyobject(
+    const as_policy_batch_apply *batch_apply_policy)
 {
     PyObject *py_dict = PyDict_New();
     set_int_field(py_dict, "commit_level", batch_apply_policy->commit_level);
@@ -1443,8 +1443,8 @@ get_batch_apply_policy(const as_policy_batch_apply *batch_apply_policy)
     return py_dict;
 }
 
-PyObject *
-get_batch_write_policy(const as_policy_batch_write *batch_write_policy)
+PyObject *as_policy_batch_write_to_pyobject(
+    const as_policy_batch_write *batch_write_policy)
 {
     PyObject *py_dict = PyDict_New();
     set_int_field(py_dict, "commit_level", batch_write_policy->commit_level);
@@ -1457,8 +1457,8 @@ get_batch_write_policy(const as_policy_batch_write *batch_write_policy)
     return py_dict;
 }
 
-PyObject *
-get_batch_remove_policy(const as_policy_batch_remove *batch_remove_policy)
+PyObject *as_policy_batch_remove_to_pyobject(
+    const as_policy_batch_remove *batch_remove_policy)
 {
     PyObject *py_dict = PyDict_New();
     set_int_field(py_dict, "commit_level", batch_remove_policy->commit_level);
@@ -1471,29 +1471,40 @@ get_batch_remove_policy(const as_policy_batch_remove *batch_remove_policy)
 }
 
 // Builds the top-level policies dict, mirroring set_subpolicies's key set.
-PyObject *get_policies(const as_policies *policies)
+PyObject *as_policies_to_pyobject(const as_policies *policies)
 {
     PyObject *py_dict = PyDict_New();
-    set_dict_field(py_dict, "read", get_read_policy(&policies->read));
-    set_dict_field(py_dict, "write", get_write_policy(&policies->write));
-    set_dict_field(py_dict, "apply", get_apply_policy(&policies->apply));
-    set_dict_field(py_dict, "remove", get_remove_policy(&policies->remove));
-    set_dict_field(py_dict, "query", get_query_policy(&policies->query));
-    set_dict_field(py_dict, "scan", get_scan_policy(&policies->scan));
-    set_dict_field(py_dict, "operate", get_operate_policy(&policies->operate));
-    set_dict_field(py_dict, "info", get_info_policy(&policies->info));
-    set_dict_field(py_dict, "admin", get_admin_policy(&policies->admin));
+    set_dict_field(py_dict, "read",
+                   as_policy_read_to_pyobject(&policies->read));
+    set_dict_field(py_dict, "write",
+                   as_policy_write_to_pyobject(&policies->write));
+    set_dict_field(py_dict, "apply",
+                   as_policy_apply_to_pyobject(&policies->apply));
+    set_dict_field(py_dict, "remove",
+                   as_policy_remove_to_pyobject(&policies->remove));
+    set_dict_field(py_dict, "query",
+                   as_policy_query_to_pyobject(&policies->query));
+    set_dict_field(py_dict, "scan",
+                   as_policy_scan_to_pyobject(&policies->scan));
+    set_dict_field(py_dict, "operate",
+                   as_policy_operate_to_pyobject(&policies->operate));
+    set_dict_field(py_dict, "info",
+                   as_policy_info_to_pyobject(&policies->info));
+    set_dict_field(py_dict, "admin",
+                   as_policy_admin_to_pyobject(&policies->admin));
     set_dict_field(py_dict, "batch_apply",
-                   get_batch_apply_policy(&policies->batch_apply));
+                   as_policy_batch_apply_to_pyobject(&policies->batch_apply));
     set_dict_field(py_dict, "batch_remove",
-                   get_batch_remove_policy(&policies->batch_remove));
+                   as_policy_batch_remove_to_pyobject(&policies->batch_remove));
     set_dict_field(py_dict, "batch_write",
-                   get_batch_write_policy(&policies->batch_write));
-    set_dict_field(py_dict, "batch", get_batch_policy(&policies->batch));
+                   as_policy_batch_write_to_pyobject(&policies->batch_write));
+    set_dict_field(py_dict, "batch",
+                   as_policy_batch_to_pyobject(&policies->batch));
     set_dict_field(py_dict, "batch_parent_write",
-                   get_batch_policy(&policies->batch_parent_write));
+                   as_policy_batch_to_pyobject(&policies->batch_parent_write));
     set_dict_field(py_dict, "txn_verify",
-                   get_batch_policy(&policies->txn_verify));
-    set_dict_field(py_dict, "txn_roll", get_batch_policy(&policies->txn_roll));
+                   as_policy_batch_to_pyobject(&policies->txn_verify));
+    set_dict_field(py_dict, "txn_roll",
+                   as_policy_batch_to_pyobject(&policies->txn_roll));
     return py_dict;
 }
