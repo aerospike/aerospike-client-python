@@ -31,6 +31,11 @@ class TestInvalidOptions:
                 byte_size=1,
                 resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY * 2,
             ),
+            map_operations.map_create(
+                bin_name="map",
+                map_order=aerospike.MAP_KEY_VALUE_ORDERED + 1,
+                persist_index=False
+            ),
             map_operations.map_put(
                 bin_name="map",
                 key=1,
