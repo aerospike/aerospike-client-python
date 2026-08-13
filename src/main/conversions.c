@@ -766,6 +766,11 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+#define DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR                                 \
+    "Attempted to store a map with an invalid map key type"
+#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+    "Attempted to store a map with key %s, which is an invalid type"
+
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
                           as_dynamic_pool *dynamic_pool, int serializer_type)
@@ -801,17 +806,73 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         as_val_new_from_pyobject(self, err, py_key, &key, dynamic_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            break;
+            goto EXIT_LOOP;
         }
+
+        bool is_map_key_valid_type = key->type == AS_STRING ||
+                                     key->type == AS_INTEGER ||
+                                     key->type == AS_BYTES;
+        if (!is_map_key_valid_type) {
+            char *key_repr = as_val_tostring(key);
+            int warning_failed = 0;
+
+            if (!key_repr) {
+                warning_failed = PyErr_WarnEx(
+                    PyExc_DeprecationWarning,
+                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR, STACK_LEVEL);
+            }
+            else {
+                warning_failed =
+                    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                     DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+            }
+
+            if (warning_failed) {
+                // Warning could not be raised or was converted to an error.
+                if (!key_repr) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
+                }
+                else {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+                }
+            }
+
+            free(key_repr);
+
+            if (warning_failed) {
+                // Fail out
+                goto CLEANUP_KEY_AND_EXIT_LOOP;
+            }
+
+            // Warning raised. Skip this key
+            as_val_destroy(key);
+            continue;
+        }
+
         as_val_new_from_pyobject(self, err, py_val, &val, dynamic_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            if (key) {
-                as_val_destroy(key);
-            }
-            break;
+            goto CLEANUP_KEY_AND_EXIT_LOOP;
         }
-        as_map_set(*map, key, val);
+
+        int retval = as_map_set(*map, key, val);
+        if (retval != 0) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to convert Python dictionary to a C client as_map.");
+            goto CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP;
+        }
+
+        continue;
+
+    CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP:
+        as_val_destroy(val);
+    CLEANUP_KEY_AND_EXIT_LOOP:
+        as_val_destroy(key);
+    EXIT_LOOP:
+        break;
     }
 
     if (err->code != AEROSPIKE_OK) {
@@ -2718,8 +2779,9 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     case CDT_CTX_MAP_KEY_CREATE:;
         int map_order = 0;
-        status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                                      &map_order);
+        status = get_enum_from_py_dict(err, py_extra_args, CDT_CTX_ORDER_KEY,
+                                       &map_order, AS_MAP_UNORDERED,
+                                       AS_MAP_KEY_VALUE_ORDERED, false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
@@ -2741,17 +2803,20 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     case CDT_CTX_LIST_INDEX_CREATE:;
         int list_order = 0;
+        status = get_enum_from_py_dict(err, py_extra_args, CDT_CTX_ORDER_KEY,
+                                       &list_order, AS_LIST_UNORDERED,
+                                       AS_LIST_ORDERED, false, NULL);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_PY_EXTRA_ARGS;
+        }
+
         int pad = 0;
-        status = get_int_from_py_dict(err, CDT_CTX_ORDER_KEY, py_extra_args,
-                                      &list_order);
-        if (status != AEROSPIKE_OK) {
-            goto CLEANUP_PY_EXTRA_ARGS;
-        }
         status =
-            get_int_from_py_dict(err, CDT_CTX_PAD_KEY, py_extra_args, &pad);
+            get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
+
         as_cdt_ctx_add_list_index_create(cdt_ctx, int_val, list_order, pad);
         break;
 
