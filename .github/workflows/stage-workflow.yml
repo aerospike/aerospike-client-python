@@ -110,6 +110,8 @@ jobs:
     if: |
       !cancelled() &&
       (
+        needs.build-artifacts.result == 'success'
+        &&
         needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true'
       )
     uses: ./.github/workflows/stage-tests.yml
@@ -133,6 +135,7 @@ jobs:
     needs: [
       compare-last-release-bundle-rev-with-latest-dev-tag,
       get-this-jfrog-build-info,
+      build-artifacts,
       run-stage-tests
     ]
     if: |
@@ -143,6 +146,8 @@ jobs:
       ||
         (
         needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
+        &&
+        needs.build-artifacts.result == 'success'
         &&
         needs.run-stage-tests.result == 'skipped'
         )
