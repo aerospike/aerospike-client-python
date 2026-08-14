@@ -57,9 +57,11 @@ jobs:
 
     - id: get-next-release-version
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      shell: bash -ex {0}
 
     - name: Safeguard to make sure there's changes in stage to be promoted
       id: get-latest-tag
+      shell: bash -ex {0}
       run: |
         latest_tag=$(git describe --tags --exact-match HEAD)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
