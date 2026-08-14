@@ -378,3 +378,17 @@ class TestQueryApply(object):
         records = query.results()
         for _, _, bins in records:
             assert bins[BIN_NAME] == 3
+
+    def test_add_ops_then_apply(self, query):
+        query.add_ops(WRITE_OPS)
+        test_bin = "tz"
+        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+
+        query.execute_background()
+
+    def test_apply_then_add_ops(self, query):
+        test_bin = "tz"
+        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+        query.add_ops(WRITE_OPS)
+
+        query.execute_background()
