@@ -217,7 +217,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             }
 
             as_bytes_init(*bytes, len);
-            as_bytes_set(*bytes, 0, buffer, len);
+            as_bytes_set(*bytes, 0, (const uint8_t *)buffer, len);
             Py_DECREF(py_return);
         }
         else {
