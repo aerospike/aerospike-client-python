@@ -328,6 +328,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Checks current connection state."},
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
+    {"get_policies", (PyCFunction)AerospikeClient_Get_Policies,
+     METH_VARARGS | METH_KEYWORDS,
+     "Get the client's currently effective policies."},
 
     {"get_stats", (PyCFunction)AerospikeClient_GetStats, METH_NOARGS, NULL},
 
