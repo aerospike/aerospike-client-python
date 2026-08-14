@@ -270,6 +270,7 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         server-tag: ${{ matrix.test == 'code-examples' && '8.1.3.0-35-20260629033923' || needs.get-env-vars.outputs.server-tag }}
         server-container-repo: database-docker-virtual/aerospike-server${{ matrix.test == 'ee-code-examples' && '-enterprise' || '' }}
+        tools-tag: 13.0.2_1
         config-file: ${{ (matrix.test == 'doctest' || matrix.test == 'ce-code-examples') && './.github/workflows/aerospike-ce.conf' || '' }}
         enable-security: ${{ matrix.test == 'ee-code-examples' }}
 
@@ -436,6 +437,7 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+        tools-tag: 13.0.2_1
         server-container-repo: database-docker-virtual/aerospike-server${{ startsWith(matrix.test-script-args, './test-user-agent-e2e.bash true') && '-enterprise' || '' }}
 
     - if: ${{ contains(matrix.test-script-args, 'deserialize_as_bytes_python') }}
