@@ -30,7 +30,6 @@ on:
 
 jobs:
   get-last-release-bundle-info:
-    if: ${{ startsWith(github.ref_name, 'stage') }}
     uses: ./.github/workflows/get-latest-release-bundle.yml
     permissions:
       id-token: write
@@ -58,6 +57,12 @@ jobs:
     - id: get-next-release-version
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
       shell: bash -ex {0}
+
+    - name: Fail out if not running on stage* branch
+      run: |
+        if [[ "${{ startsWith(github.ref_name, 'stage') }}" != "true" ]]; then
+          exit 1
+        fi
 
     - name: Safeguard to make sure there's changes in stage to be promoted
       id: get-latest-tag
