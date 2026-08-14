@@ -62,9 +62,11 @@ jobs:
     - name: Safeguard to make sure there's changes in stage to be promoted
       id: get-latest-tag
       shell: bash -ex {0}
+      env:
+        NEXT_RELEASE_VERSION: ${{ steps.get-next-release-version.outputs.next_release_version }}
       run: |
         latest_tag=$(git describe --tags --exact-match HEAD)
-        if [[ "$latest_tag" == "$next_release_version" ]]; then
+        if [[ "$latest_tag" == "$NEXT_RELEASE_VERSION" ]]; then
           echo "We have not merged any changes to stage since the last release yet." >&2
           exit 1
         fi
