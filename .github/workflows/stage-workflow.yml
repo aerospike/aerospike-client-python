@@ -30,6 +30,7 @@ on:
 
 jobs:
   get-last-release-bundle-info:
+    if: ${{ startsWith(github.ref_name, 'stage') }}
     uses: ./.github/workflows/get-latest-release-bundle.yml
     permissions:
       id-token: write
