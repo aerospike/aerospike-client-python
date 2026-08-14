@@ -18,7 +18,6 @@ on:
   push:
     # To any central branch
     branches:
-      - "dev*"
       - "stage*"
       - "master*"
       - "v*-backport*"

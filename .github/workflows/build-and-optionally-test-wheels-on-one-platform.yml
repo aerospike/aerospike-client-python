@@ -25,7 +25,7 @@ on:
       # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
       # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
       # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
+      # CI/CD stages (e.g stage, or master). We can also test debugging modes for all platforms that support them
       #
       # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
@@ -69,14 +69,14 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
-      # Used upstream by the dev workflow to disable integration testing for macos x86
+      # Used upstream by the stage workflow to disable integration testing for macos x86
       run-integration-tests-on-macos-x86:
         type: boolean
         required: false
         default: true
       publish-build-info:
         required: false
-        description: Only used upstream by dev workflow
+        description: Only used upstream by stage workflow
         default: false
         type: boolean
       # NOT used by workflow dispatch

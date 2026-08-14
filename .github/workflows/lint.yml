@@ -7,7 +7,6 @@ env:
 on:
   push:
     branches:
-    - "dev*"
     - "stage*"
     - "master*"
     - "v*-backport*"

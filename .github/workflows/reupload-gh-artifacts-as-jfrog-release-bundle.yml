@@ -69,7 +69,7 @@ jobs:
       id-token: write
       actions: read
 
-  promote-release-bundle-to-dev:
+  promote-release-bundle-to-test:
     needs: [
       create-release-bundle
     ]

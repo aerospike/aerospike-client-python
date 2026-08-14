@@ -1,5 +1,5 @@
 name: 'Run server and configure tests'
-description: 'Run server in a Docker container. Also configure python client dev tests'
+description: 'Run server in a Docker container. Also configure python client integration tests'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
 outputs:

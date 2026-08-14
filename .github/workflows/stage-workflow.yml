@@ -13,7 +13,7 @@ on:
         required: false
         default: true
         type: boolean
-        description: Run dev tests. For speeding up debugging
+        description: Run stage tests. For speeding up debugging
       # For testing purposes
       dry-run:
         required: false
@@ -58,12 +58,12 @@ jobs:
     - id: get-next-release-version
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
-    - name: Safeguard to make sure there's changes in dev to be promoted
+    - name: Safeguard to make sure there's changes in stage to be promoted
       id: get-latest-tag
       run: |
         latest_tag=$(git describe --tags --exact-match HEAD)
         if [[ "$latest_tag" == "$next_release_version" ]]; then
-          echo "We have not merged any changes to dev since the last release yet." >&2
+          echo "We have not merged any changes to stage since the last release yet." >&2
           exit 1
         fi
         echo latest_tag="$latest_tag" >> "$GITHUB_OUTPUT"
@@ -72,14 +72,14 @@ jobs:
       # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
       run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
 
-  compare-last-release-bundle-rev-with-latest-dev-tag:
+  compare-last-release-bundle-rev-with-latest-stage-tag:
     needs: [
       get-last-release-bundle-info,
       get-this-jfrog-build-info
     ]
     uses: ./.github/workflows/decide-to-run-integration-tests.yml
     with:
-      # If no release bundle was found, default to comparing dev with the latest release
+      # If no release bundle was found, default to comparing stage with the latest release
       earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'origin/master' }}
       later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
     permissions:
@@ -88,7 +88,7 @@ jobs:
   build-artifacts:
     needs: [
       get-this-jfrog-build-info,
-      compare-last-release-bundle-rev-with-latest-dev-tag
+      compare-last-release-bundle-rev-with-latest-stage-tag
     ]
     uses: ./.github/workflows/build-artifacts.yml
     with:
@@ -105,7 +105,7 @@ jobs:
 
   run-stage-tests:
     needs: [
-      compare-last-release-bundle-rev-with-latest-dev-tag,
+      compare-last-release-bundle-rev-with-latest-stage-tag,
       build-artifacts
     ]
     if: |
@@ -113,7 +113,7 @@ jobs:
       (
         needs.build-artifacts.result == 'success'
         &&
-        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'true'
+        needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.run_integration_tests == 'true'
       )
     uses: ./.github/workflows/stage-tests.yml
     # Need to pass in JFrog secrets
@@ -121,20 +121,20 @@ jobs:
     with:
       python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
       # Need to use the same version of tests designed for the client version we're promoting
-      rev-of-integration-tests: ${{ needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.later_rev_tag }}
+      rev-of-integration-tests: ${{ needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.later_rev_tag }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       run-integration-tests-on-macos-x86: false
 
   # Stage tests have passed or skipped
-  # so it is safe to update the stage branch with the changes in dev and promote the release bundle to TEST
+  # so it is safe to promote the release bundle to TEST
   # We store the subsequent jobs after the stage tests in a separate reusable workflow...
   # because if stage tests were skipped, all subsequent jobs will be skipped by default too (both direct and indirect descendents)
   # This means we have to add a manual check for each subsequent job that checks if the stage tests were skipped in order to run them
   # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
   reupload-gh-artifacts-as-jfrog-release-bundle-and-promote-to-test:
     needs: [
-      compare-last-release-bundle-rev-with-latest-dev-tag,
+      compare-last-release-bundle-rev-with-latest-stage-tag,
       get-this-jfrog-build-info,
       build-artifacts,
       run-stage-tests
@@ -146,7 +146,7 @@ jobs:
       needs.run-stage-tests.result == 'success'
       ||
         (
-        needs.compare-last-release-bundle-rev-with-latest-dev-tag.outputs.run_integration_tests == 'false'
+        needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.run_integration_tests == 'false'
         &&
         needs.build-artifacts.result == 'success'
         &&

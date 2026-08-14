@@ -40,7 +40,7 @@ on:
       publish-build-info:
         required: false
         default: false
-        description: Only used upstream by dev workflow
+        description: Only used upstream by stage workflow
         type: boolean
       # NOT used by workflow dispatch
       jf-build-id:
