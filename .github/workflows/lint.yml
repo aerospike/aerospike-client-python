@@ -7,8 +7,10 @@ env:
 on:
   push:
     branches:
-    - "stage*"
-    - "master*"
+    - "stage"
+    - "stage-test"
+    - "master"
+    - "master-test"
     - "v*-backport*"
   pull_request:
 

@@ -18,8 +18,10 @@ on:
   push:
     # To any central branch
     branches:
-      - "stage*"
-      - "master*"
+      - "stage"
+      - "stage-test"
+      - "master"
+      - "master-test"
       - "v*-backport*"
   # For debugging this workflow
   workflow_dispatch:
