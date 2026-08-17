@@ -262,6 +262,7 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
             break
         time.sleep(0.1)
+    print("time_limit_secs was hit.")
 
 # Shared between bin projection and execute background tests
 
