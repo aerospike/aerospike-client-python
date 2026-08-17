@@ -45,9 +45,9 @@ jobs:
 
         files = os.listdir('.')
         for file in files:
-          if file.endsWith('.whl'):
+          if file.endswith('.whl'):
             name, version, build, tags = parse_wheel_filename(file)
-          elif file.endsWith('.tar.gz'):
+          elif file.endswith('.tar.gz'):
             name, version = parse_sdist_filename(file)
           else:
             print(f"Found invalid package file {file}")
