@@ -260,7 +260,7 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
     while time.time() - start < time_limit_secs:
         response = as_connection.job_info(job_id, job_module)
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
+            return
         time.sleep(0.1)
     print("time_limit_secs was hit.")
 
