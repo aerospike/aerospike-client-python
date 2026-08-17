@@ -1,3 +1,4 @@
+run-name: Stage workflow (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
 name: Stage workflow
 
 permissions:
@@ -9,24 +10,19 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      run_tests:
-        required: false
-        default: true
-        type: boolean
-        description: Run stage tests. For speeding up debugging
+      server-tag:
+        required: true
+        description: 'Server docker image tag'
       # For testing purposes
       dry-run:
         required: false
         default: false
         type: boolean
         description: Don't publish JFrog build info or create a JFrog build + release bundle
-      server-tag:
-        required: true
-        description: 'Server docker image tag'
       test-file:
         required: false
         default: ''
-        description: 'new_tests/<value>'
+        description: 'new_tests/<value>. For speeding up debugging only.'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
