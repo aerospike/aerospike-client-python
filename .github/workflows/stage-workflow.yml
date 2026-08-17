@@ -28,6 +28,10 @@ on:
         default: ''
         description: 'new_tests/<value>'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   get-last-release-bundle-info:
     uses: ./.github/workflows/get-latest-release-bundle.yml
