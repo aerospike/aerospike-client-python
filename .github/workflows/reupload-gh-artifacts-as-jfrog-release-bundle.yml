@@ -30,6 +30,37 @@ jobs:
         # to change unexpectedly.
         output-name: ${{ env.ARTIFACT_NAME }}
 
+    - name: Ensure each package has the correct version matching the source code
+      id: get_expected_version
+      run: echo "expected_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+    - name: Verify package version
+      shell: python
+      working-directory: ${{ env.ARTIFACT_NAME }}
+      env:
+        EXPECTED_PACKAGE_VERSION: ${{ steps.get_expected_version.outputs.expected_version }}
+      run: |
+        from packaging.utils import parse_wheel_filename
+        import os
+
+        files = os.listdir('.')
+        for file in files:
+          if file.endsWith('.whl'):
+            name, version, build, tags = parse_wheel_filename(file)
+          elif file.endsWith('.tar.gz'):
+            name, version = parse_sdist_filename(file)
+          else:
+            print(f"Found invalid package file {file}")
+            exit(1)
+          assert name == "aerospike"
+
+          expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
+          assert version.__str__() == expected_version
+
+    # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
+    - name: Make sure package README is renderable in PyPI
+      run: twine check "$ARTIFACT_NAME"/*
+
   upload-artifacts-to-jfrog:
     needs: [
       reupload-artifacts-as-one-artifact-in-github
