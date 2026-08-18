@@ -52,8 +52,11 @@ jobs:
             exit(1)
           assert name == "aerospike"
 
+          expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
+
           print("Expected version:", expected_version)
           print("Actual version:", version.__str__())
+
           assert version.__str__() == expected_version
 
     # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
