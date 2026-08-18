@@ -36,7 +36,7 @@ jobs:
       env:
         EXPECTED_PACKAGE_VERSION: ${{ inputs.next_release_version }}
       run: |
-        from packaging.utils import parse_wheel_filename
+        from packaging.utils import parse_wheel_filename, parse_sdist_filename
         import os
 
         files = os.listdir('.')
