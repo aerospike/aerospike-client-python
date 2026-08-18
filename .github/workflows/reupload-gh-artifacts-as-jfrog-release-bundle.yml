@@ -61,7 +61,10 @@ jobs:
 
     # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
     - name: Make sure package README is renderable in PyPI
-      run: twine check "$ARTIFACT_NAME"/*
+      run: |
+        # TODO: eventually should add this to requirements.txt for CI/CD pipeline
+        python3 -m pip install twine==7.0.0
+        twine check "$ARTIFACT_NAME"/*
 
   upload-artifacts-to-jfrog:
     needs: [
