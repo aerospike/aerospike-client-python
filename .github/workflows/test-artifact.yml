@@ -66,9 +66,7 @@ on:
 
 jobs:
   test-artifact:
-    runs-on:
-      group: client_team_runners
-      labels: ${{ fromJson(inputs.runner-os-json-string) }}
+    runs-on: ${{ fromJson(inputs.runner-os-json-string) }}
     env:
       PYTHON_VERSION: ${{ inputs.python-version }}
       MASSIF_REPORT_FILE_NAME: massif.out
