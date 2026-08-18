@@ -385,11 +385,15 @@ class TestScanApply(object):
         test_bin = "tz"
         scan_obj.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
 
-        scan_obj.execute_background()
+        with pytest.raises(exception.ParamError) as excinfo:
+            scan_obj.execute_background()
+        assert excinfo.value.msg == "Cannot combine scan operations with a UDF"
 
     def test_apply_then_add_ops(self, scan_obj):
         test_bin = "tz"
         scan_obj.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         scan_obj.add_ops(WRITE_OPS)
 
-        scan_obj.execute_background()
+        with pytest.raises(exception.ParamError) as excinfo:
+            scan_obj.execute_background()
+        assert excinfo.value.msg == "Cannot combine scan operations with a UDF"

@@ -384,11 +384,15 @@ class TestQueryApply(object):
         test_bin = "tz"
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
 
-        query.execute_background()
+        with pytest.raises(exception.ParamError) as excinfo:
+            query.execute_background()
+        assert excinfo.value.msg == "Cannot combine query operations with aggregation"
 
     def test_apply_then_add_ops(self, query):
         test_bin = "tz"
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         query.add_ops(WRITE_OPS)
 
-        query.execute_background()
+        with pytest.raises(exception.ParamError) as excinfo:
+            query.execute_background()
+        assert excinfo.value.msg == "Cannot combine query operations with aggregation"
