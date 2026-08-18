@@ -58,9 +58,13 @@ jobs:
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
       shell: bash -ex {0}
 
-    - name: Fail out if not running on stage* branch
+    - name: Fail out if the whole test suite is not targeted when running on "stage"
+      env:
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+        TEST_FILE: ${{ inputs.test-file }}
       run: |
-        if [[ "${{ github.ref_name == 'stage' }}" != "true" ]]; then
+        if [[ "$GITHUB_REF_NAME" == "stage" && -n "$TEST_FILE" ]]; then
+          echo "This workflow must not select specific test files in the stage branch."
           exit 1
         fi
 
