@@ -57,6 +57,10 @@ A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/d
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
+.. note::
+    :meth:`~aerospike.Query.add_ops` and :meth:`~aerospike.Query.apply` cannot both be used on the same
+    :class:`~aerospike.Query` object. See :meth:`~aerospike.Query.execute_background`.
+
 Getting Results From Query
 --------------------------
 
@@ -408,6 +412,9 @@ Assume this boilerplate code is run before all examples below:
 
         This function can also be used to apply a record UDF.
 
+        This method cannot be used together with :meth:`~aerospike.Query.add_ops` on the same :class:`~aerospike.Query`
+        object — see :meth:`~aerospike.Query.execute_background`.
+
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/client/python/data-types/>`_.
@@ -496,6 +503,9 @@ Assume this boilerplate code is run before all examples below:
         If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
         during the query.
 
+        This method cannot be used together with :meth:`~aerospike.Query.apply` on the same :class:`~aerospike.Query`
+        object — see :meth:`~aerospike.Query.execute_background`.
+
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
         .. note::
@@ -505,6 +515,9 @@ Assume this boilerplate code is run before all examples below:
 
         Execute a record UDF or write operations on records found by the query in the background. This method returns before the query has completed.
         A UDF or a list of write operations must have been added to the query with :meth:`Query.apply` or :meth:`Query.add_ops` respectively.
+
+        :meth:`Query.apply` and :meth:`Query.add_ops` cannot both be used on the same :class:`~aerospike.Query` object.
+        Calling this method after both have been set will raise a :exc:`~aerospike.exception.ParamError`.
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
