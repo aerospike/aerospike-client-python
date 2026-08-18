@@ -84,6 +84,25 @@ class TestConnect(object):
         with open_as_connection(config) as client:
             assert client.is_connected()
 
+    def test_connect_positive_string_host_and_port(self):
+        """
+        Invoke connect() with a single "hostname[:tlsname]:port" string
+        entry (CLIENT-4841). connection_config's host entry has a tls-name
+        as a third tuple element when TLS is enabled, so build the
+        equivalent string for both the 2- and 3-element tuple cases.
+        """
+        config = self.connection_config.copy()
+        host_entry = config["hosts"][0]
+        if len(host_entry) == 3:
+            addr, port, tls_name = host_entry
+            config["hosts"] = [f"{addr}:{tls_name}:{port}"]
+        else:
+            addr, port = host_entry
+            config["hosts"] = [f"{addr}:{port}"]
+
+        with open_as_connection(config) as client:
+            assert client.is_connected()
+
     def test_connect_positive_shm_key(self):
         """
         Invoke connect() with shm_key specified
@@ -216,6 +235,14 @@ class TestConnect(object):
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
             ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
+            # String host formats (CLIENT-4841). These target an unused
+            # address/port so parsing succeeds but the connection attempt
+            # itself fails, proving the string was accepted rather than
+            # rejected as invalid.
+            ({"hosts": ["[::1]:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["127.0.0.1:tls1:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["[::1]:tls1:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["127.0.0.1:1:2:3"]}, e.ParamError, -2, "Invalid host"),
             (
                 {"hosts": [("127.0.0.1", 3000)], "user": "a" * 64, "password": "password"},
                 e.ParamError,
@@ -248,6 +275,10 @@ class TestConnect(object):
             "hosts missing address",
             "hosts port is incorrect",
             "hosts port is string",
+            "string host ipv6 and port",
+            "string host, tls name, and port",
+            "string host ipv6, tls name, and port",
+            "string host with too many colons",
             "username too long",
             "password too long",
             "username empty",

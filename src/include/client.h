@@ -76,6 +76,12 @@ PyObject *AerospikeClient_is_connected(AerospikeClient *self, PyObject *args,
 PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
                                   PyObject *kwds);
 
+/**
+ * Get the client's currently effective policies.
+ */
+PyObject *AerospikeClient_Get_Policies(AerospikeClient *self, PyObject *args,
+                                       PyObject *kwds);
+
 /*******************************************************************************
  * KVS OPERATIONS
  ******************************************************************************/
