@@ -8,9 +8,7 @@ on:
   push:
     branches:
     - "stage"
-    - "stage-test"
     - "master"
-    - "master-test"
     - "v*-backport*"
   pull_request:
 

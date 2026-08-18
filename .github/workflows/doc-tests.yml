@@ -19,9 +19,7 @@ on:
     # To any central branch
     branches:
       - "stage"
-      - "stage-test"
       - "master"
-      - "master-test"
       - "v*-backport*"
   # For debugging this workflow
   workflow_dispatch:

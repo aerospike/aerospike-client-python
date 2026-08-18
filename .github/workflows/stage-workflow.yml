@@ -60,7 +60,7 @@ jobs:
 
     - name: Fail out if not running on stage* branch
       run: |
-        if [[ "${{ startsWith(github.ref_name, 'stage') }}" != "true" ]]; then
+        if [[ "${{ github.ref_name == 'stage' }}" != "true" ]]; then
           exit 1
         fi
 
