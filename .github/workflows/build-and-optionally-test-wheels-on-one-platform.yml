@@ -178,7 +178,7 @@ jobs:
       use-sanitizer-wheel: ${{ contains(inputs.env-vars-for-building, 'SANITIZER') }}
       run-tests-in-container: ${{ contains(inputs.platform-tag, 'manylinux') }}
       # Only used if running tests in container
-      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
+      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
       test-file: ${{ inputs.test-file }}
