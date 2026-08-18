@@ -161,7 +161,7 @@ jobs:
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install "./$ARTIFACT_FILE_NAME"
+        python3 -m pip install "./$ARTIFACT_FILE_NAME"
 
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           exit 0
@@ -227,7 +227,7 @@ jobs:
         if [[ ${{ inputs.validate-keys }} == false ]]; then
           crudini --existing=param --set config.conf input-validation validate_keys false
         fi
-        pip install -r requirements.txt
+        python3 -m pip install -r requirements.txt
 
         VALGRIND_ARGS=()
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
