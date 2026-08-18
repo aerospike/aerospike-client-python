@@ -45,6 +45,8 @@ jobs:
 
         files = os.listdir('.')
         for file in files:
+          print("Parsing", file)
+
           if file.endswith('.whl'):
             name, version, build, tags = parse_wheel_filename(file)
           elif file.endswith('.tar.gz'):
@@ -55,6 +57,9 @@ jobs:
           assert name == "aerospike"
 
           expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
+
+          print("Expected version:", expected_version)
+          print("Actual version": version.__str__())
           assert version.__str__() == expected_version
 
     # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
