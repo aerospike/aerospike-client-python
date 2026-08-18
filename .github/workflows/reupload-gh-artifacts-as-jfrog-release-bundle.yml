@@ -30,6 +30,8 @@ jobs:
         # to change unexpectedly.
         output-name: ${{ env.ARTIFACT_NAME }}
 
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
     - name: Ensure each package has the correct version matching the source code
       id: get_expected_version
       run: echo "expected_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
