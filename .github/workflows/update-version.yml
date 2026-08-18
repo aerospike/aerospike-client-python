@@ -46,12 +46,15 @@ jobs:
           change_type="manual-override"
           version_to_override="$NEW_VERSION"
         elif [[ $GH_REF_NAME =~ stage* ]]; then
-          MASTER_HEAD_SHA=$(git rev-parse origin/master)
-          if [[ "$MASTER_HEAD_SHA" == "${{ github.sha }}" ]]; then
-            echo "We pushed stage, but it has no new changes compared to master. Don't bump or tag the latest commit in stage."
-            exit 0
-          fi
           change_type="bump-dev-num"
+
+          if [[ "$GH_REF_NAME" == "stage-test" ]]; then
+            MASTER_TEST_HEAD_SHA=$(git rev-parse origin/master-test)
+            if [[ "${{ github.sha }}" == "$MASTER_TEST_HEAD_SHA" ]]; then
+              echo "We pushed stage, but it has no new changes compared to master. Don't bump or tag the latest commit in stage."
+              exit 0
+            fi
+          fi
         else
           change_type="strip_prerelease_part"
         fi
