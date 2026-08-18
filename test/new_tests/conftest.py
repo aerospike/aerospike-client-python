@@ -293,6 +293,9 @@ def insert_records(request, as_connection):
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
 
+    if make_set_unique is False:
+        as_connection.batch_remove(keys)
+
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
 
@@ -308,9 +311,6 @@ def insert_records(request, as_connection):
     as_connection.batch_write(brs)
 
     yield
-
-    if make_set_unique is False:
-        as_connection.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
     query = client.query(TEST_NS, set_name)
