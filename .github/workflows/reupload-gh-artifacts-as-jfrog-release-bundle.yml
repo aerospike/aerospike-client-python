@@ -30,17 +30,11 @@ jobs:
         # to change unexpectedly.
         output-name: ${{ env.ARTIFACT_NAME }}
 
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-    - name: Ensure each package has the correct version matching the source code
-      id: get_expected_version
-      run: echo "expected_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
-
     - name: Verify package version
       shell: python
       working-directory: ${{ env.ARTIFACT_NAME }}
       env:
-        EXPECTED_PACKAGE_VERSION: ${{ steps.get_expected_version.outputs.expected_version }}
+        EXPECTED_PACKAGE_VERSION: ${{ inputs.next_release_version }}
       run: |
         from packaging.utils import parse_wheel_filename
         import os
@@ -57,8 +51,6 @@ jobs:
             print(f"Found invalid package file {file}")
             exit(1)
           assert name == "aerospike"
-
-          expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
 
           print("Expected version:", expected_version)
           print("Actual version:", version.__str__())
