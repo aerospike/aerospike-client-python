@@ -880,7 +880,8 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_write *config_policy,
                                          as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_write);
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
@@ -958,7 +959,8 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_apply *config_policy,
                                          as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_apply);
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
@@ -997,7 +999,8 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_policy_batch_remove *config_policy,
                                           as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_remove);
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
