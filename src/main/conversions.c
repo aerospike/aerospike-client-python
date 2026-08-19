@@ -2950,7 +2950,7 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (bres->message) {
+    if (strlen(bres->message)) {
         PyObject *py_message = PyUnicode_FromString(bres->message);
         if (!py_message) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
