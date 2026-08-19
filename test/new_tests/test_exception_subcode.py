@@ -120,6 +120,9 @@ class TestExceptionSubcode:
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
 
     def test_error_detail_exp_trace(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+
         policy = {
             ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_EXP_TRACE,
             "expressions": expr.GE(expr.Abs(expr.Val("a")), 1).compile()
