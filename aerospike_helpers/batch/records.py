@@ -51,7 +51,7 @@ class BatchRecord:
                 :ref:`aerospike_base_policies` ``error_detail_verbosity`` option.
             error_message (str): Server error detail message for this record, or :py:obj:`None` when absent. Set only
                 when result is not ``AEROSPIKE_OK`` and :ref:`aerospike_base_policies` ``error_detail_verbosity`` option
-                 is >= 2.
+                is >= 2.
             in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
