@@ -2268,6 +2268,24 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
 
     App use: harmonize sketches (fold/strip minhash) before retry.
 
+.. data:: SUB_OPNOT_STRING_CONVERSION_FAILED
+
+    String conversion failed for an :py:exc:`~aerospike.exception.OpNotApplicable` operation path.
+
+    App use: inspect source and requested destination encoding/type.
+
+.. data:: SUB_OPNOT_STRING_UTF8_INVALID
+
+    Source blob/string is not valid UTF-8 for an :py:exc:`~aerospike.exception.OpNotApplicable` operation path.
+
+    App use: validate or transcode input before retry.
+
+.. data:: SUB_OPNOT_STRING_B64_INVALID
+
+    Base64 input is malformed for an :py:exc:`~aerospike.exception.OpNotApplicable` string operation.
+
+    App use: validate or sanitize base64 input before retry.
+
 Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -23,6 +23,46 @@ class TestExceptionSubcode:
         yield
         self.as_connection.remove(KEY)
 
+    def test_subcode_constants(self):
+        # TODO: can't use pytest.mark.parametrize or else setup fixture will run for each
+        # constant
+        CONSTANTS = [
+            aerospike.SUB_PARAM_TTL_INVALID,
+            aerospike.SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE,
+            aerospike.SUB_PARAM_BITS_SIZE_OUT_OF_RANGE,
+            aerospike.SUB_PARAM_BITS_RESIZE_EXCEEDED,
+            aerospike.SUB_PARAM_BIN_COUNT_TOO_LARGE,
+            aerospike.SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED,
+            aerospike.SUB_UNAVAIL_REPLICA_UNAVAILABLE,
+            aerospike.SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY,
+            aerospike.SUB_UNSUPP_FEAT_GENERIC,
+            aerospike.SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP,
+            aerospike.SUB_BIN_NAME_COUNT_TOO_LARGE,
+            aerospike.SUB_FORBID_XDR_FILTER_BLOCKED,
+            aerospike.SUB_FORBID_SET_COUNT_STOP_WRITES,
+            aerospike.SUB_FORBID_SET_SIZE_STOP_WRITES,
+            aerospike.SUB_FORBID_CLOCK_SKEW_STOP_WRITES,
+            aerospike.SUB_FORBID_REPLACE_CONFLICT_RESOLVING,
+            aerospike.SUB_FORBID_TRUNCATED,
+            aerospike.SUB_FORBID_MASKING_POLICY_BLOCKED,
+            aerospike.SUB_FORBID_DURABILITY_VIOLATION,
+            aerospike.SUB_FORBID_MASKING_ROLE_VIOLATION,
+            aerospike.SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS,
+            aerospike.SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS,
+            aerospike.SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW,
+            aerospike.SUB_OPNOT_HLL_INDEX_BITS_UNSET,
+            aerospike.SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS,
+            aerospike.SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS,
+            aerospike.SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH,
+            aerospike.SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE,
+            aerospike.SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH,
+            aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED,
+            aerospike.SUB_OPNOT_STRING_UTF8_INVALID,
+            aerospike.SUB_OPNOT_STRING_B64_INVALID
+        ]
+        for constant in CONSTANTS:
+            assert type(constant) == int
+
     @pytest.mark.parametrize(
         "policy_w_verbosity_setting",
         [
