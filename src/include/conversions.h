@@ -47,6 +47,8 @@
 #define FIELD_NAME_BATCH_FUNCTION "function"
 #define FIELD_NAME_BATCH_ARGS "args"
 #define FIELD_NAME_BATCH_INDOUBT "in_doubt"
+#define FIELD_NAME_BATCH_SUBCODE "subcode"
+#define FIELD_NAME_BATCH_MESSAGE "message"
 
 #define BATCH_TYPE_READ 0
 #define BATCH_TYPE_WRITE 1
