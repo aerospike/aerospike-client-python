@@ -1,4 +1,4 @@
-run-name: Stage workflow (test-file=${{ inputs.test-file }})
+run-name: Stage workflow
 name: Stage workflow
 
 permissions:
@@ -13,10 +13,6 @@ on:
       server-tag:
         required: true
         description: 'Server docker image tag'
-      test-file:
-        required: false
-        default: ''
-        description: 'new_tests/<value>. For speeding up debugging only.'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,13 +48,12 @@ jobs:
       run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
       shell: bash -ex {0}
 
-    - name: Fail out if the whole test suite is not targeted when running on "stage"
+    - name: Fail out if not running on stage
       env:
         GITHUB_REF_NAME: ${{ github.ref_name }}
-        TEST_FILE: ${{ inputs.test-file }}
       run: |
-        if [[ "$GITHUB_REF_NAME" == "stage" && -n "$TEST_FILE" ]]; then
-          echo "This workflow must not select specific test files in the stage branch."
+        if [[ "$GITHUB_REF_NAME" != "stage" ]]; then
+          echo "This workflow must run in the stage branch."
           exit 1
         fi
 
@@ -130,7 +125,6 @@ jobs:
       # Need to use the same version of tests designed for the client version we're promoting
       rev-of-integration-tests: ${{ needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.later_rev_tag }}
       server-tag: ${{ inputs.server-tag }}
-      test-file: ${{ inputs.test-file }}
       run-integration-tests-on-macos-x86: false
 
   # Stage tests have passed or skipped
