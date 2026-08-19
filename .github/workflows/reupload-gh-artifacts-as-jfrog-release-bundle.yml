@@ -10,9 +10,6 @@ on:
       latest_tag:
         required: true
         type: string
-      dry-run:
-        required: true
-        type: boolean
 
 jobs:
   reupload-artifacts-as-one-artifact-in-github:
@@ -80,14 +77,13 @@ jobs:
       jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
       version: ${{ inputs.next_release_version }}
       gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803
-      dry-run: ${{ inputs.dry-run }}
+      dry-run: false
     permissions:
       contents: read
       id-token: write
       actions: write
 
   create-release-bundle:
-    if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog
     ]

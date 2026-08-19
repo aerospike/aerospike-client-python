@@ -1,4 +1,4 @@
-run-name: Stage workflow (dry-run=${{ inputs.dry-run }}, test-file=${{ inputs.test-file }})
+run-name: Stage workflow (test-file=${{ inputs.test-file }})
 name: Stage workflow
 
 permissions:
@@ -13,12 +13,6 @@ on:
       server-tag:
         required: true
         description: 'Server docker image tag'
-      # For testing purposes
-      dry-run:
-        required: false
-        default: false
-        type: boolean
-        description: Don't publish JFrog build info or create a JFrog build + release bundle
       test-file:
         required: false
         default: ''
@@ -106,7 +100,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: false
-      publish-build-info: ${{ inputs.dry-run == false }}
+      publish-build-info: true
       # Needed for collecting build info
       jf-build-id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
     permissions:
@@ -171,4 +165,3 @@ jobs:
       jfrog_build_id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
       next_release_version: ${{ needs.get-this-jfrog-build-info.outputs.next-release-version }}
       latest_tag: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
-      dry-run: ${{ inputs.dry-run }}
