@@ -124,8 +124,11 @@ class TestExceptionSubcode:
             ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_EXP_TRACE,
             "expressions": expr.GE(expr.Abs(expr.Val("a")), 1).compile()
         }
-        with pytest.raises(e.InvalidRequest):
+        with pytest.raises(e.InvalidRequest) as excinfo:
             self.as_connection.get(KEY, policy=policy)
+
+        assert "; exp_trace={" in excinfo.value.msg
+        print(excinfo.value.msg)
 
     def test_invalid_verbosity(self):
         policy = {
