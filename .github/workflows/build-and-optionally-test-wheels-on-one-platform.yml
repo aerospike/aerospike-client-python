@@ -139,7 +139,7 @@ jobs:
       matrix:
         python-version: ${{ fromJson(inputs.python-versions) }}
       fail-fast: false
-    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@523949cc2fdae9dd0792f9af9b4a94fe5abf492a
     with:
       runs-on: ${{ needs.get-build-runner-os.outputs.runner-os }}
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
@@ -147,7 +147,7 @@ jobs:
       jf-build-id: ${{ inputs.jf-build-id }}-buildinfo-${{ matrix.python-version }}-${{ inputs.platform-tag }}
       gh-artifact-name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ matrix.python-version }}-${{ inputs.platform-tag }}${{ contains(inputs.env-vars-for-building, 'SANITIZER') && '-sanitizer' || '' }}
       gh-artifact-directory: wheelhouse
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      gh-workflows-ref: 523949cc2fdae9dd0792f9af9b4a94fe5abf492a
       oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
       oidc-audience: ${{ vars.OIDC_AUDIENCE }}
       build-script-path: ./build-wheel.bash
