@@ -2270,19 +2270,19 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
 
 .. data:: SUB_OPNOT_STRING_CONVERSION_FAILED
 
-    String conversion failed for an :py:exc:`~aerospike.exception.OpNotApplicable` operation path.
+    String conversion failed.
 
     App use: inspect source and requested destination encoding/type.
 
 .. data:: SUB_OPNOT_STRING_UTF8_INVALID
 
-    Source blob/string is not valid UTF-8 for an :py:exc:`~aerospike.exception.OpNotApplicable` operation path.
+    Source blob/string is not valid UTF-8.
 
     App use: validate or transcode input before retry.
 
 .. data:: SUB_OPNOT_STRING_B64_INVALID
 
-    Base64 input is malformed for an :py:exc:`~aerospike.exception.OpNotApplicable` string operation.
+    Base64 input is malformed.
 
     App use: validate or sanitize base64 input before retry.
 
