@@ -1254,6 +1254,39 @@ Info Operations
 
         :rtype: :class:`int` or :py:obj:`None`
 
+    .. method:: get_policies() -> dict
+
+        Return the client's currently effective policies, i.e. the config-level default policies
+        set via the ``policies`` key of the config dictionary passed to :func:`aerospike.client`,
+        merged with the library's own defaults for any values that weren't set. This reads live
+        config, so it also reflects any changes applied via :class:`aerospike.ConfigProvider`.
+
+        The returned :class:`dict` has one key per policy type (``"read"``, ``"write"``, ``"apply"``,
+        ``"remove"``, ``"query"``, ``"scan"``, ``"operate"``, ``"info"``, ``"admin"``, ``"batch"``,
+        ``"batch_parent_write"``, ``"batch_apply"``, ``"batch_write"``, ``"batch_remove"``,
+        ``"txn_verify"``, ``"txn_roll"``), each mapping to a flat :class:`dict` of that policy's
+        fields, using the same keys and constant values documented under :ref:`aerospike_policies`.
+
+        The config-level ``"metrics"`` policy (set via the ``policies`` config dict's ``metrics``
+        key) is not included, since it is a :class:`~aerospike_helpers.metrics.MetricsPolicy`
+        object rather than a policy dict.
+
+        :return: a :class:`dict` of policy dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. testcode::
+
+            policies = client.get_policies()
+            print(sorted(policies.keys()))
+            print(policies["read"]["total_timeout"])
+
+        .. testoutput::
+
+            ['admin', 'apply', 'batch', 'batch_apply', 'batch_parent_write', 'batch_remove', 'batch_write', 'info', 'operate', 'query', 'read', 'remove', 'scan', 'txn_roll', 'txn_verify', 'write']
+            1000
+
+        .. versionadded:: 19.3.0
+
     .. method:: truncate(namespace, set, nanos[, policy: dict])
 
         Remove all records in the namespace / set whose last updated time is older than the given time.
