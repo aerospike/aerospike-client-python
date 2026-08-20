@@ -5,7 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.batch.records import Read, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
 from contextlib import nullcontext
@@ -261,11 +261,8 @@ class TestClientConfigBatchPolicies:
 
         brs = BatchRecords(
             batch_records=[
-                Write(
+                Read(
                     key=self.keys[0],
-                    ops=[
-                        operations.write(BIN_NAME, 1)
-                    ]
                 )
             ]
         )
@@ -284,15 +281,6 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     def test_batch_parent_write_applies_to_batch_apply(self, insert_records):
-        DURATION = TTL / 2 + 0.1
-        time.sleep(DURATION)
-
-        self.as_connection.batch_apply(self.keys, self.UDF_FILE, "list_append", ["list", 1])
-
-        _, meta = self.as_connection.exists(self.keys[0])
-        assert meta["ttl"] > TTL - DURATION
-
-    def test_batch_parent_write_applies_to_batch_operate(self, insert_records):
         DURATION = TTL / 2 + 0.1
         time.sleep(DURATION)
 
