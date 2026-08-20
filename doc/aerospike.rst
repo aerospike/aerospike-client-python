@@ -583,7 +583,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch** (:class:`dict`)
                 Default parent batch policy used in batch read commands.
 
-                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+                This applies to these methods when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_read`
                     * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
@@ -592,7 +592,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_remove** (:class:`dict`)
                 Default delete policy used in batch remove commands.
 
-                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_remove`
                     * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
@@ -601,14 +601,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_apply** (:class:`dict`)
                 Default user defined function policy used in batch UDF apply commands.
 
-                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_apply`
                     * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
 
                 Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+                Default batch write policy when a command-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
 
                     * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
@@ -617,7 +617,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_parent_write** (:class:`dict`)
                 Default parent batch policy used in batch write commands.
 
-                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
@@ -635,7 +635,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
-                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
