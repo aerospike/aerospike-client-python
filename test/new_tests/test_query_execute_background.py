@@ -67,7 +67,9 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
-    @pytest.mark.xfail(reason="This started failing when adding support for bin projection due to query.ttl not being applied")
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
     def test_background_with_ttl(self, insert_records):
         """
         Ensure that ttl is set for the record found with background query
@@ -252,8 +254,10 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.add_ops(ops)
-        query.execute_background()
-        time.sleep(3)
+        job_id = query.execute_background()
+
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
@@ -316,6 +320,8 @@ class TestQueryApply(object):
         res = query.execute_background({"socket_timeout": 180000})
         assert isinstance(res, (int, long))
 
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
     def test_background_execute_with_policy_kwarg(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
@@ -325,6 +331,8 @@ class TestQueryApply(object):
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         res = query.execute_background(policy={})
         assert isinstance(res, (int, long))
+
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
 
     def test_background_execute_with_invalid_policy_type(self, insert_records):
         """
