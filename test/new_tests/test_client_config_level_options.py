@@ -5,7 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Read, BatchRecords
+from aerospike_helpers.batch.records import Read, Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
 from contextlib import nullcontext
@@ -263,6 +263,9 @@ class TestClientConfigBatchPolicies:
             batch_records=[
                 Read(
                     key=self.keys[0],
+                    ops=[
+                        operations.read(BIN_NAME)
+                    ]
                 )
             ]
         )
