@@ -17,17 +17,9 @@ ERROR_DETAIL_VERBOSITY_SETTING = "error_detail_verbosity"
 
 
 class TestExceptionSubcode:
-    # TODO: need to reuse fixture in conftest.py using indirect params to set num of records
-    @pytest.fixture(autouse=True)
-    def setup(self, as_connection):
-        self.as_connection.put(KEY, bins={BIN_NAME: []})
-        yield
-        self.as_connection.remove(KEY)
-
-    def test_subcode_constants(self):
-        # TODO: can't use pytest.mark.parametrize or else setup fixture will run for each
-        # constant
-        CONSTANTS = [
+    @pytest.mark.parametrize(
+        "constant",
+        [
             aerospike.SUB_PARAM_TTL_INVALID,
             aerospike.SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE,
             aerospike.SUB_PARAM_BITS_SIZE_OUT_OF_RANGE,
@@ -61,8 +53,16 @@ class TestExceptionSubcode:
             aerospike.SUB_OPNOT_STRING_UTF8_INVALID,
             aerospike.SUB_OPNOT_STRING_B64_INVALID
         ]
-        for constant in CONSTANTS:
-            assert type(constant) == int
+    )
+    def test_subcode_constants(self, constant):
+        assert type(constant) == int
+
+    # TODO: need to reuse fixture in conftest.py using indirect params to set num of records
+    @pytest.fixture()
+    def setup(self, as_connection):
+        self.as_connection.put(KEY, bins={BIN_NAME: []})
+        yield
+        self.as_connection.remove(KEY)
 
     @pytest.mark.parametrize(
         "policy_w_verbosity_setting",
@@ -77,6 +77,7 @@ class TestExceptionSubcode:
         "set_in_client_config",
         [False, True]
     )
+    @pytest.mark.usefixtures("setup")
     def test_error_verbosity_levels(self, policy_w_verbosity_setting: dict, set_in_client_config: bool):
         if set_in_client_config:
             config = {
@@ -120,6 +121,7 @@ class TestExceptionSubcode:
             SUBCODE_IN_QUOTES = "({}".format(EXPECTED_SUBCODE_IN_MESSAGE)
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
 
+    @pytest.mark.usefixtures("setup")
     def test_batch_records_return_error_details(self):
         brs = BatchRecords(
             [
@@ -128,9 +130,14 @@ class TestExceptionSubcode:
         )
         self.as_connection.batch_write(brs)
         for br in brs.batch_records:
-            assert isinstance(br.error_message, str)
-            assert br.error_subcode > 0
+            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+                assert br.error_message is None
+                assert br.error_subcode == 0
+            else:
+                assert isinstance(br.error_message, str)
+                assert br.error_subcode > 0
 
+    @pytest.mark.usefixtures("setup")
     def test_error_detail_exp_trace(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
             pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
