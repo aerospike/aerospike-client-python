@@ -46,9 +46,16 @@ class TestSendKeyUnionPrecedence:
 
         expect_records_to_have_user_key_stored(client, self.set_name)
 
-    udf_to_load = "query_apply.lua"
+    udf_to_load = pytest.mark.parametrize(
+        "connection_with_udf",
+        [
+            "query_apply.lua"
+        ],
+        indirect=True
+    )
 
     @pytest.mark.parametrize("set_key_option", [("apply", False)], indirect=True)
+    @udf_to_load
     def test_client_config_overrides_command_level_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 
@@ -68,6 +75,7 @@ class TestSendKeyUnionPrecedence:
         expect_records_to_have_user_key_stored(client, self.set_name)
 
     @pytest.mark.parametrize("set_key_option", [("batch_apply", False)], indirect=True)
+    @udf_to_load
     def test_client_config_overrides_command_level_batch_apply_policy(self, connection_with_udf):
         client = aerospike.client(self.config)
 

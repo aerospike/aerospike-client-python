@@ -23,7 +23,7 @@ class TestGetRegistered(object):
         """
         cls.loaded_udf_name = "bin_lua.lua"
         cls.udf_language = aerospike.UDF_TYPE_LUA
-        with open(cls.udf_to_load, "r", newline='') as udf_file:
+        with open(cls.loaded_udf_name, "r", newline='') as udf_file:
             cls.loaded_udf_content = udf_file.read()
 
     def test_udf_get_with_correct_paramters_no_policy(self):
