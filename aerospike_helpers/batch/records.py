@@ -61,6 +61,8 @@ class BatchRecord:
         self.key = key
         self.record = None
         self.result = 0
+        self.error_message = None
+        self.error_subcode = 0
         self.in_doubt = False
 
 

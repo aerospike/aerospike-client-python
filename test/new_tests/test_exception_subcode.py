@@ -4,6 +4,7 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops
 from aerospike_helpers import expressions as expr
+from aerospike_helpers.batch.records import BatchRecords, Write
 from .test_base_class import TestBaseClass
 from . import as_errors
 
@@ -118,6 +119,17 @@ class TestExceptionSubcode:
             # There should be a message before the subcode
             SUBCODE_IN_QUOTES = "({}".format(EXPECTED_SUBCODE_IN_MESSAGE)
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
+
+    def test_batch_records_return_error_details(self):
+        brs = BatchRecords(
+            [
+                Write(KEY, ops=OPS)
+            ]
+        )
+        self.as_connection.batch_write(brs)
+        for br in brs.batch_records:
+            assert isinstance(br.error_message, str)
+            assert br.error_subcode > 0
 
     def test_error_detail_exp_trace(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
