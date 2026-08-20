@@ -291,7 +291,7 @@ def insert_records(request, connection_with_udf):
         set_name = TEST_SET
 
     if make_set_unique is False:
-        as_connection.truncate(TEST_NS, set_name, 0)
+        connection_with_udf.truncate(TEST_NS, set_name, 0)
 
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
