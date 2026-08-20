@@ -38,8 +38,6 @@
 #define FAILED_TO_CONVERT_POLICY_ERROR                                         \
     "batch_type: %s, failed to convert policy"
 
-#define AS_POLICY_TYPE_NAME(suffix) as_policy_##suffix
-
 #define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                              \
                                        __conversion_func, __batch_type)                      \
     {                                                                                        \
@@ -48,8 +46,7 @@
         if (py___policy != Py_None) {                                                        \
             as_exp *expr_p = NULL;                                                           \
             if (py___policy != NULL) {                                                       \
-                __policy = (AS_POLICY_TYPE_NAME(__policy_type) *)malloc(                     \
-                    sizeof(AS_POLICY_TYPE_NAME(__policy_type)));                             \
+                __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
                                       &__policy, config_policy,                              \
@@ -329,8 +326,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
             as_policy_batch_read *r_policy = NULL;
             as_policy_batch_read *config_policy = NULL;
-            GET_BATCH_POLICY_FROM_PYOBJECT(
-                r_policy, batch_read, pyobject_to_batch_read_policy, "Read")
+            GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read,
+                                           pyobject_to_batch_read_policy,
+                                           "Read")
 
             PyObject *py_read_all_bins =
                 PyObject_GetAttrString(py_batch_record, "read_all_bins");
@@ -357,8 +355,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             as_policy_batch_write *config_policy =
                 &self->as->config.policies.batch_write;
 
-            GET_BATCH_POLICY_FROM_PYOBJECT(
-                w_policy, batch_write, pyobject_to_batch_write_policy, "Write")
+            GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write,
+                                           pyobject_to_batch_write_policy,
+                                           "Write")
 
             as_batch_write_record *wr;
             wr = as_batch_write_reserve(&batch_records);
@@ -378,8 +377,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             as_policy_batch_apply *config_policy =
                 &self->as->config.policies.batch_apply;
 
-            GET_BATCH_POLICY_FROM_PYOBJECT(
-                a_policy, batch_apply, pyobject_to_batch_apply_policy, "Apply")
+            GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply,
+                                           pyobject_to_batch_apply_policy,
+                                           "Apply")
 
             PyObject *py_mod = PyObject_GetAttrString(py_batch_record,
                                                       FIELD_NAME_BATCH_MODULE);
@@ -441,7 +441,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             as_policy_batch_remove *re_policy = NULL;
             as_policy_batch_remove *config_policy =
                 &self->as->config.policies.batch_remove;
-            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, batch_remove,
+            GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove,
                                            pyobject_to_batch_remove_policy,
                                            "Remove")
 
