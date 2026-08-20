@@ -78,8 +78,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 @pytest.fixture(scope="class")
 def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
-    # TODO: remove. this is a duplicate.
-    request.cls.config = config
+
+    if hasattr(request, "param"):
+        config |= request.param
+
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
@@ -155,14 +157,13 @@ def connection_with_udf(request, as_connection):
     """
     Injects an as_client() as a dependency, loads a udf to it,
     and at the end of the test class removes it.
-    Note: if the requesting class does not have a class attr:
-    `udf_to_load`, this is essentially a noop
+    Note: if the requesting class does not pass in a param, this is a no-op.
     """
     udf_status = {"loaded": False, "name": None}
     # if the class doesn't have the correct information,
     # don't bother loading a UDF
-    if hasattr(request.cls, "udf_to_load"):
-        udf_status["name"] = request.cls.udf_to_load
+    if hasattr(request, "param"):
+        udf_status["name"] = request.param
         as_connection.udf_put(udf_status["name"], 0, {})
         udf_status["loaded"] = True
 
@@ -274,14 +275,14 @@ expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
-def insert_records(request, as_connection):
+def insert_records(request, connection_with_udf):
 
     # - Some tests don't make use of unique sets,
     # so we leave them alone for backwards compatibility
     # - make_set_unique ensures that if a test case's cleanup stage fails to run
     # e.g when the test case's setup fixture fails out,
     # that test case's records does not interfere with future test cases that need to perform a query
-    num_keys, make_set_unique = request.param
+    num_keys, make_set_unique, *_ = request.param
 
     if make_set_unique:
         set_name = f"{TEST_SET}-{time.time_ns()}"
@@ -292,6 +293,11 @@ def insert_records(request, as_connection):
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
 
+    if len(request.param) > 2:
+        batch_write_policy = request.param[2]
+    else:
+        batch_write_policy = None
+
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
 
@@ -300,16 +306,16 @@ def insert_records(request, as_connection):
             operations.write(BIN_NAME, i),
             operations.write(MAP_BIN_NAME, {"a": i})
         ]
-        br = Write(key, ops=ops)
+        br = Write(key, ops=ops, policy=batch_write_policy)
         batch_records.append(br)
         expected_number_bin_values.add(i)
 
-    as_connection.batch_write(brs)
+    connection_with_udf.batch_write(brs)
 
     yield
 
     if make_set_unique is False:
-        as_connection.batch_remove(keys)
+        connection_with_udf.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
     query = client.query(TEST_NS, set_name)
@@ -445,3 +451,23 @@ def hydrate_partitions_1000_to_1003(request, as_connection):
 
 AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
 DYN_CONFIG_PATH = "./dyn_config.yml"
+
+
+def setup_record_with_ttl_for_read_touch_ttl_percent(self, as_connection):
+    ttl = 2
+    self.as_connection.put(KEYS[0], bins={"a": 1}, policy={"ttl": ttl})
+    self.policy = {
+        "read_touch_ttl_percent": 50
+    }
+    self.invalid_policy = {
+        "read_touch_ttl_percent": "1"
+    }
+    self.delay = ttl / 2 + 0.1
+
+    yield
+
+    # Some tests call the client remove API
+    try:
+        self.as_connection.remove(KEY)
+    except e.RecordNotFound:
+        pass

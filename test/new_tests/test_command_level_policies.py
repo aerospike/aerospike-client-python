@@ -88,26 +88,30 @@ class CommandLevelTTL:
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
 
+TTL = 2
+
+@pytest.mark.parametrize(
+    "insert_records",
+    [[
+        1,
+        True,
+        {"ttl": TTL}
+    ]],
+    indirect=True
+)
+@pytest.mark.usefixtures("insert_records")
 class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
-        ttl = 2
-        self.as_connection.put(KEY, bins={"a": 1}, policy={"ttl": ttl})
         self.policy = {
             "read_touch_ttl_percent": 50
         }
         self.invalid_policy = {
             "read_touch_ttl_percent": "1"
         }
-        self.delay = ttl / 2 + 0.1
+        self.delay = TTL / 2 + 0.1
 
         yield
-
-        # Some tests call the client remove API
-        try:
-            self.as_connection.remove(KEY)
-        except e.RecordNotFound:
-            pass
 
     def test_read_invalid(self):
         with pytest.raises(e.ParamError) as excinfo:
@@ -136,10 +140,10 @@ class TestReadTouchTTLPercent:
         time.sleep(self.delay)
         # By this time, the record's ttl should be less than 1 second left
         # Reset record TTL
-        self.as_connection.get(KEY, policy=self.policy)
+        self.as_connection.get(self.keys[0], policy=self.policy)
         time.sleep(self.delay)
         # Record should not have expired
-        self.as_connection.get(KEY)
+        self.as_connection.get(self.keys[0])
 
     def test_operate(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
@@ -148,20 +152,17 @@ class TestReadTouchTTLPercent:
         ops = [
             operations.read("a")
         ]
-        self.as_connection.operate(KEY, ops, policy=self.policy)
+        self.as_connection.operate(self.keys[0], ops, policy=self.policy)
         time.sleep(self.delay)
-        self.as_connection.get(KEY)
+        self.as_connection.get(self.keys[0])
 
     def test_batch(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
             pytest.skip(SKIP_MSG)
         time.sleep(self.delay)
-        keys = [
-            KEY
-        ]
-        self.as_connection.batch_read(keys, policy=self.policy)
+        self.as_connection.batch_read(self.keys, policy=self.policy)
         time.sleep(self.delay)
-        self.as_connection.get(KEY)
+        self.as_connection.get(self.keys[0])
 
     def test_batch_write(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
@@ -169,7 +170,7 @@ class TestReadTouchTTLPercent:
         batch_records = br.BatchRecords(
             [
                 br.Read(
-                    key=KEY,
+                    key=self.keys[0],
                     ops=[
                         operations.read("a"),
                     ],
@@ -180,4 +181,4 @@ class TestReadTouchTTLPercent:
         time.sleep(self.delay)
         self.as_connection.batch_write(batch_records)
         time.sleep(self.delay)
-        self.as_connection.get(KEY)
+        self.as_connection.get(self.keys[0])
