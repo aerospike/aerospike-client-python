@@ -289,12 +289,12 @@ def insert_records(request, as_connection):
     else:
         set_name = TEST_SET
 
+    if make_set_unique is False:
+        as_connection.truncate(TEST_NS, set_name, 0)
+
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
-
-    if make_set_unique is False:
-        as_connection.batch_remove(keys)
 
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)
