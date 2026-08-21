@@ -2919,6 +2919,48 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
     return AEROSPIKE_OK;
 }
 
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message)
+{
+    PyObject *py_subcode = PyLong_FromUnsignedLong(subcode);
+    if (!py_subcode) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to convert BatchRecord.subcode");
+    }
+    int retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_SUBCODE, py_subcode);
+    Py_DECREF(py_subcode);
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.subcode");
+    }
+
+    if (strlen(message)) {
+        PyObject *py_message = PyUnicode_FromString(message);
+        if (!py_message) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Failed to convert BatchRecord.message");
+        }
+
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, py_message);
+        Py_DECREF(py_message);
+    }
+    else {
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, Py_None);
+    }
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.message");
+    }
+    return err->code;
+}
+
 // checking_if_records_exist:
 // false if we want to get the record metadata and bins
 // true if we only care about the record's metadata
@@ -2935,47 +2977,16 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
     Py_DECREF(py_res);
 
-    PyObject *py_subcode = PyLong_FromUnsignedLong(bres->subcode);
-    if (!py_subcode) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to convert BatchRecord.subcode");
-        return err->code;
-    }
-    int retval = PyObject_SetAttrString(py_batch_record,
-                                        FIELD_NAME_BATCH_SUBCODE, py_subcode);
-    Py_DECREF(py_subcode);
-    if (retval == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to get BatchRecord.subcode");
-        return err->code;
-    }
-
-    if (strlen(bres->message)) {
-        PyObject *py_message = PyUnicode_FromString(bres->message);
-        if (!py_message) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to convert BatchRecord.message");
-        }
-
-        retval = PyObject_SetAttrString(py_batch_record,
-                                        FIELD_NAME_BATCH_MESSAGE, py_message);
-        Py_DECREF(py_message);
-    }
-    else {
-        retval = PyObject_SetAttrString(py_batch_record,
-                                        FIELD_NAME_BATCH_MESSAGE, Py_None);
-    }
-
-    if (retval == -1) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Failed to get BatchRecord.message");
-        return err->code;
-    }
-
     PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
                            py_in_doubt);
     Py_DECREF(py_in_doubt);
+
+    set_error_details_in_py_batch_record(err, py_batch_record, bres->subcode,
+                                         bres->message);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
 
     if (*result_code != AEROSPIKE_OK) {
         // Don't insert record tuple or 2-tuple containing key and meta

@@ -196,6 +196,11 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
 
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message);
+
 PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                                             struct as_cluster_s *cluster);
 PyObject *create_py_node_from_as_node(as_error *error_p,

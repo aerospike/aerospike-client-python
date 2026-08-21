@@ -128,13 +128,13 @@ class TestExceptionSubcode:
                 Write(KEY, ops=OPS)
             ]
         )
-        self.as_connection.batch_write(brs)
+        self.as_connection.batch_write(brs, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
         for br in brs.batch_records:
             if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-                assert br.error_message is None
+                assert br.message is None
                 assert br.error_subcode == 0
             else:
-                assert isinstance(br.error_message, str)
+                assert isinstance(br.message, str)
                 assert br.error_subcode > 0
 
     @pytest.mark.usefixtures("setup")
