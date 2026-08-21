@@ -9,6 +9,11 @@ from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.batch.records import BatchRecords, Write
+from contextlib import nullcontext
+from aerospike_helpers.batch import records as br
 
 # Comment this out because nowhere in the repository is using it
 '''
@@ -246,3 +251,198 @@ def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
     _, meta = client.exists(key)
     clock_skew_tolerance_secs = 50
     assert meta["ttl"] in range(expected_ttl - clock_skew_tolerance_secs, expected_ttl + clock_skew_tolerance_secs)
+
+def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < time_limit_secs:
+        response = as_connection.job_info(job_id, job_module)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            return
+        time.sleep(0.1)
+    print("time_limit_secs was hit.")
+
+# Shared between bin projection and execute background tests
+
+TEST_NS = "test"
+TEST_SET = "demo"
+BIN_NAME = "number"
+MAP_BIN_NAME = "map"
+
+expected_number_bin_values = set()
+
+# Add records around the test
+@pytest.fixture(scope="function")
+def insert_records(request, as_connection):
+
+    # - Some tests don't make use of unique sets,
+    # so we leave them alone for backwards compatibility
+    # - make_set_unique ensures that if a test case's cleanup stage fails to run
+    # e.g when the test case's setup fixture fails out,
+    # that test case's records does not interfere with future test cases that need to perform a query
+    num_keys, make_set_unique = request.param
+
+    if make_set_unique:
+        set_name = f"{TEST_SET}-{time.time_ns()}"
+    else:
+        set_name = TEST_SET
+
+    if make_set_unique is False:
+        as_connection.truncate(TEST_NS, set_name, 0)
+
+    request.cls.set_name = set_name
+    keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
+    request.cls.keys = keys
+
+    batch_records = []
+    brs = BatchRecords(batch_records=batch_records)
+
+    for i, key in enumerate(keys):
+        ops = [
+            operations.write(BIN_NAME, i),
+            operations.write(MAP_BIN_NAME, {"a": i})
+        ]
+        br = Write(key, ops=ops)
+        batch_records.append(br)
+        expected_number_bin_values.add(i)
+
+    as_connection.batch_write(brs)
+
+    yield
+
+def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
+    query = client.query(TEST_NS, set_name)
+    recs = query.results()
+
+    # Check that record key tuple has the user key
+    for record in recs:
+        pk = record[0]
+        assert pk[2] is not None
+
+BASIC_READ_BIN_OPS = [
+    operations.read(BIN_NAME)
+]
+
+READ_AND_WRITE_OPS = [
+    operations.read(BIN_NAME),
+    operations.write(BIN_NAME, 1)
+]
+
+WRITE_OPS = [
+    operations.write(BIN_NAME, 3)
+]
+
+NON_EXISTENT_BIN_NAME = "asdf"
+
+@pytest.fixture()
+def query(request, insert_records, as_connection):
+    if not hasattr(request, "param"):
+        query = as_connection.query(TEST_NS, TEST_SET)
+    else:
+        query = request.param(as_connection, TEST_NS, TEST_SET)
+    yield query
+
+@pytest.fixture(scope="function")
+def expect_earlier_than_server_version_to_fail(as_connection, request):
+    # Some requesting test cases may not set the param. Like if it is a negative client-side test case and there is no
+    # required server version, but every test case in that module depends on this fixture
+    if hasattr(request, "param") and (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= request.param:
+        request.cls.expected_context_for_pos_tests = nullcontext()
+    else:
+        # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+        request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+
+expect_server_version_earlier_than_8_1_3_to_fail = pytest.mark.parametrize(
+    "expect_earlier_than_server_version_to_fail",
+    [
+        (8, 1, 3)
+    ],
+    indirect=True
+)
+
+def check_user_dictionary(user: dict):
+    assert set(user["roles"]) == set([
+        "read",
+        "read-write",
+        "sys-admin"
+    ])
+
+
+    # The user has not read or written anything, so all r/w stats should be 0
+    # NOTE: we don't test the scenario where read_info / write_info is not 0
+    # because it takes time and a lot of transactions for the server to actually record non-zero values
+    dict_keys = [
+        "read_info",
+        "write_info"
+    ]
+    for key in dict_keys:
+        assert type(user[key]) == list
+        assert len(user[key]) == 4
+        for element in user[key]:
+            assert element == 0
+
+    # We assume no clients were logged in as this user
+    assert user.get("conns_in_use") == 0
+
+@pytest.fixture(scope="class")
+def hydrate_partitions_1000_to_1003(request, as_connection):
+    if request.cls.server_version < [6, 0]:
+        pytest.mark.xfail(reason="Servers older than 6.0 do not support partition/paginated queries.")
+        pytest.xfail()
+
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
+
+    request.cls.partition_1000_count = 0
+    request.cls.partition_1001_count = 0
+    request.cls.partition_1002_count = 0
+    request.cls.partition_1003_count = 0
+
+    as_connection.truncate(request.cls.test_ns, None, 0)
+
+    brs = br.BatchRecords(batch_records=[])
+    keys = []
+
+    for i in range(1, 100000):
+        put = 0
+        rec_partition = as_connection.get_key_partition_id(request.cls.test_ns, request.cls.test_set, str(i))
+
+        if rec_partition == 1000:
+            request.cls.partition_1000_count += 1
+            put = 1
+        if rec_partition == 1001:
+            request.cls.partition_1001_count += 1
+            put = 1
+        if rec_partition == 1002:
+            request.cls.partition_1002_count += 1
+            put = 1
+        if rec_partition == 1003:
+            request.cls.partition_1003_count += 1
+            put = 1
+        if put:
+            key = (request.cls.test_ns, request.cls.test_set, str(i))
+            keys.append(key)
+
+            br_write = br.Write(key, ops=[
+                operations.write("i", i),
+                operations.write("s", "xyz"),
+                operations.write("l", [2, 4, 8, 16, 32, None, 128, 256]),
+                operations.write("m", {"partition": rec_partition, "b": 4, "c": 8, "d": 16})
+            ])
+            brs.batch_records.append(br_write)
+
+    as_connection.batch_write(brs)
+
+    # print(f"{request.cls.partition_1000_count} records are put in partition 1000, \
+    #         {request.cls.partition_1001_count} records are put in partition 1001, \
+    #         {request.cls.partition_1002_count} records are put in partition 1002, \
+    #         {request.cls.partition_1003_count} records are put in partition 1003")
+
+    yield
+
+    as_connection.batch_remove(keys)
+
+AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+DYN_CONFIG_PATH = "./dyn_config.yml"

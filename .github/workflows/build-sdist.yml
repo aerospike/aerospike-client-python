@@ -6,13 +6,9 @@ on:
         type: boolean
         default: true
         required: false
-      sha_to_build:
-        type: string
-        required: true
 
 env:
   STATUS_CHECK_MESSAGE: "Build source distribution"
-  COMMIT_SHA_TO_BUILD: ${{ inputs.is_workflow_call == true && inputs.sha_to_build || github.sha }}
 
 jobs:
   build-sdist:
@@ -20,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
       with:
         egress-policy: audit
 
@@ -31,15 +27,14 @@ jobs:
       # The calling workflow can be triggered by push or pull request events, so there's that
       # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        sha: ${{ github.sha }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD }}
         fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
@@ -49,17 +44,17 @@ jobs:
       run: python3 -m build --sdist
 
     - name: Upload source distribution to GitHub
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         path: ./dist/*.tar.gz
-        name: sdist.build
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-sdist
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@38f3f27c7d52fb381273e95542f07f0fba301307 # v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # v2.0.1
       # Always run even if job failed or is cancelled
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD }}
+        sha: ${{ github.sha }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}

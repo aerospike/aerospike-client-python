@@ -1,18 +1,18 @@
 import aerospike
 from aerospike import exception as e
+from .conftest import expect_records_to_have_user_key_stored, AEROSPIKE_CLIENT_CONFIG_URL, DYN_CONFIG_PATH
 from .test_base_class import TestBaseClass
 import pytest
 import os
 import glob
 
-DYN_CONFIG_PATH = "./dyn_config.yml"
 METRICS_LOG_FILES = "./metrics-*.log"
 
 
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
-        assert provider.interval == 60000
+        assert provider.interval == 5000
 
     def test_config_provider_class(self):
         provider = aerospike.ConfigProvider(path="path", interval=30000)
@@ -53,7 +53,7 @@ class TestDynamicConfig:
             os.remove(item)
 
     @pytest.fixture
-    def functional_test_setup(self, show_more_logs, cleanup_metrics_logs):
+    def functional_test_setup(self, request, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
         setup_client = aerospike.client(config)
         self.key = ("test", "demo", 1)
@@ -62,7 +62,7 @@ class TestDynamicConfig:
         except e.RecordNotFound:
             pass
 
-        yield
+        yield request.param
 
         # Close file descriptors for metrics log files before removing the files
         self.client.close()
@@ -70,37 +70,28 @@ class TestDynamicConfig:
         setup_client.remove(self.key)
         setup_client.close()
 
+        if request.param is True:
+            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
+
+    # Decide whether env var should be used or not to read dynamic config file.
     # If not using env var, use the config provider instead
-    @pytest.mark.parametrize("use_env_var", [False, True])
-    # Dynamic config file should take precedence over both client config defaults and programmatically set values
-    def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
+    # Manually tested that setting send_key to false in the dynamic config yaml causes this test to fail.
+    @pytest.mark.parametrize("functional_test_setup", [False, True], indirect=True)
+    def test_dyn_config_file_works(self, functional_test_setup):
         config = TestBaseClass.get_connection_config()
-        if use_env_var:
-            AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+        if functional_test_setup is True:
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
             config["config_provider"] = provider
 
-        write_policy = {"key": aerospike.POLICY_KEY_SEND}
-        config["policies"]["write"] = write_policy
         self.client = aerospike.client(config)
 
-        self.client.put(self.key, bins={"a": 1}, policy=write_policy)
+        self.client.put(self.key, bins={"a": 1})
 
-        # "Send key" is disabled in dynamic config
-        # The key should not be returned here
-        query = self.client.query("test", "demo")
-        recs = query.results()
-        assert len(recs) == 1
-        # Check that record key tuple does not have a primary key
-        first_record = recs[0]
-        first_record_key = first_record[0]
-        assert first_record_key[2] is None
-
-        # Cleanup
-        if use_env_var:
-            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
+        # "Send key" is enabled in dynamic config
+        # The key should be returned here
+        expect_records_to_have_user_key_stored(self.client, set_name="demo")
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()

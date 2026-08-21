@@ -6,9 +6,8 @@ import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations
 from aerospike import exception, predicates
+from .conftest import wait_for_job_completion, TEST_NS, TEST_SET, BASIC_READ_BIN_OPS, READ_AND_WRITE_OPS, WRITE_OPS, NON_EXISTENT_BIN_NAME, BIN_NAME
 
-TEST_NS = "test"
-TEST_SET = "background_q_e"
 TEST_UDF_MODULE = "query_apply"
 TEST_UDF_FUNCTION = "mark_as_applied"
 # Hack to get long to exist in Python 3
@@ -16,25 +15,6 @@ try:
     long
 except NameError:
     long = int
-
-
-def wait_for_job_completion(as_connection, job_id):
-    """
-    Blocks until the job has completed
-    """
-    while True:
-        response = as_connection.job_info(job_id, aerospike.JOB_QUERY)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
-
-
-def add_indexes_to_client(client):
-    try:
-        client.index_integer_create(TEST_NS, TEST_SET, "number", "test_background_number_idx")
-    except exception.IndexFoundError:
-        pass
-
 
 def add_test_udf(client):
     policy = {}
@@ -44,6 +24,11 @@ def add_test_udf(client):
 def drop_test_udf(client):
     client.udf_remove("query_apply.lua")
 
+def add_indexes_to_client(client):
+    try:
+        client.index_single_value_create(TEST_NS, TEST_SET, BIN_NAME, aerospike.INDEX_INTEGER, "test_background_number_idx")
+    except exception.IndexFoundError:
+        pass
 
 def remove_indexes_from_client(client):
     client.index_remove(TEST_NS, "test_background_number_idx")
@@ -55,17 +40,12 @@ def validate_records(client, keys, validator):
         assert validator(rec)
 
 
-# Add records around the test
-@pytest.fixture(scope="function")
-def clean_test_background(as_connection):
-    keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
-    for i, key in enumerate(keys):
-        as_connection.put(key, {"number": i})
-    yield
-    for i, key in enumerate(keys):
-        as_connection.remove(key)
 
-
+@pytest.mark.parametrize(
+    "insert_records",
+    [[500, False]],
+    indirect=True
+)
 class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
@@ -77,7 +57,7 @@ class TestQueryApply(object):
     def setup(self, connection_with_config_funcs):
         pass
 
-    def test_background_execute_return_val(self, clean_test_background):
+    def test_background_execute_return_val(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -87,7 +67,10 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
-    def test_background_with_ttl(self, clean_test_background):
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_with_ttl(self, insert_records):
         """
         Ensure that ttl is set for the record found with background query
         """
@@ -100,9 +83,10 @@ class TestQueryApply(object):
             operations.increment(bin_name, 1)
         ]
         query.add_ops(ops)
-        status = query.execute_background()
+        job_id = query.execute_background()
+        print(job_id)
 
-        wait_for_job_completion(self.as_connection, status)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         key = (TEST_NS, TEST_SET, 4)
         _, meta = self.as_connection.exists(key)
@@ -110,7 +94,7 @@ class TestQueryApply(object):
         skew_tolerance_secs = 50
         assert meta["ttl"] in range(query.ttl - skew_tolerance_secs, query.ttl + skew_tolerance_secs)
 
-    def test_background_execute_no_predicate(self, clean_test_background):
+    def test_background_execute_no_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to all records
         """
@@ -119,15 +103,14 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
 
-        time.sleep(5)
-        # wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_exp_everywhere(self, clean_test_background):
+    def test_background_execute_exp_everywhere(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to records that match the exp
         """
@@ -149,10 +132,9 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         # query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy)
+        job_id = query.execute_background(policy)
         # Give time for the query to finish
-        time.sleep(5)
-        # wait_for_job_completion(self.as_connection, job_id)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -162,7 +144,7 @@ class TestQueryApply(object):
                 assert bins.get(test_bin) is None
 
     @pytest.mark.xfail(reason="predicate and exp used at same time")
-    def test_background_execute_exp_and_predicate(self, clean_test_background):
+    def test_background_execute_exp_and_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to records that match the predicate
         NOTE: the predicate overrides the exp
@@ -179,9 +161,9 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy)
+        job_id = query.execute_background(policy)
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -190,7 +172,7 @@ class TestQueryApply(object):
             else:
                 assert bins.get(test_bin) is None
 
-    def test_background_execute_with_ops_and_exp(self, clean_test_background):
+    def test_background_execute_with_ops_and_exp(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to records that match the expressions.
         """
@@ -212,9 +194,9 @@ class TestQueryApply(object):
         policy = {"expressions": expr.compile()}
 
         query.add_ops(ops)
-        query.execute_background(policy=policy)
+        job_id = query.execute_background(policy=policy)
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         for key in keys:
             _, _, bins = self.as_connection.get(key)
@@ -223,7 +205,7 @@ class TestQueryApply(object):
             else:
                 assert bins.get(test_bin) is None
 
-    def test_background_execute_with_ops(self, clean_test_background):
+    def test_background_execute_with_ops(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to all records
         """
@@ -236,13 +218,13 @@ class TestQueryApply(object):
         ops = [operations.write(test_bin, "new_val")]
 
         query.add_ops(ops)
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
-    def test_background_execute_with_ops_and_preds(self, clean_test_background):
+    def test_background_execute_with_ops_and_preds(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to records that match the predicate
         """
@@ -257,9 +239,9 @@ class TestQueryApply(object):
 
         query.add_ops(ops)
         query.where(number_predicate)
-        query.execute_background()
+        job_id = query.execute_background()
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record.get(test_bin) is None
@@ -272,12 +254,14 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.add_ops(ops)
-        query.execute_background()
-        time.sleep(3)
+        job_id = query.execute_background()
+
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_sindex_predicate(self, clean_test_background):
+    def test_background_execute_sindex_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -289,15 +273,15 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background()
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
         # Give time for the query to finish
-        time.sleep(5)
         keys = [(TEST_NS, TEST_SET, i) for i in range(500) if i != 5]
         validate_records(self.as_connection, keys, lambda rec: test_bin not in rec)
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record[test_bin] == "aerospike"
 
-    def test_background_execute_sindex_exp(self, clean_test_background):
+    def test_background_execute_sindex_exp(self, insert_records):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -317,16 +301,16 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        query.execute_background(policy=policy)
+        job_id = query.execute_background(policy=policy)
         # Give time for the query to finish
-        time.sleep(5)
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         # Records with number > 10 should not have had the UDF applied
         validate_records(self.as_connection, keys[10:], lambda rec: test_bin not in rec)
         #  Records with number < 10 should have had the udf applied
         validate_records(self.as_connection, keys[:10], lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_with_policy(self, clean_test_background):
+    def test_background_execute_with_policy(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -336,7 +320,9 @@ class TestQueryApply(object):
         res = query.execute_background({"socket_timeout": 180000})
         assert isinstance(res, (int, long))
 
-    def test_background_execute_with_policy_kwarg(self, clean_test_background):
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_execute_with_policy_kwarg(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -346,7 +332,9 @@ class TestQueryApply(object):
         res = query.execute_background(policy={})
         assert isinstance(res, (int, long))
 
-    def test_background_execute_with_invalid_policy_type(self, clean_test_background):
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_execute_with_invalid_policy_type(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -356,3 +344,45 @@ class TestQueryApply(object):
         # Policy needs to be a dict. Not a string
         with pytest.raises(exception.ParamError):
             query.execute_background("Honesty is the best Policy")
+
+    @pytest.mark.parametrize(
+        "ops",
+        [
+            BASIC_READ_BIN_OPS,
+            READ_AND_WRITE_OPS
+        ]
+    )
+    def test_add_read_ops(self, ops, query):
+        query.add_ops(ops)
+
+        with pytest.raises(exception.ParamError) as excinfo:
+            query.execute_background()
+        assert excinfo.value.msg == "Background query operations must be write-only. Use query for read-only operations."
+
+    def test_select_bins_then_add_ops_then_bg_query(self, query):
+        query.select(NON_EXISTENT_BIN_NAME)
+        with pytest.warns(DeprecationWarning) as record:
+            query.add_ops(WRITE_OPS)
+        assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
+
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
+
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        records = query.results()
+        for _, _, bins in records:
+            assert bins[BIN_NAME] == 3
+
+    def test_add_ops_then_select_bins_then_bg_query(self, query):
+        query.add_ops(WRITE_OPS)
+        with pytest.warns(DeprecationWarning) as record:
+            query.select(NON_EXISTENT_BIN_NAME)
+        assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
+
+        job_id = query.execute_background()
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
+
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        records = query.results()
+        for _, _, bins in records:
+            assert bins[BIN_NAME] == 3

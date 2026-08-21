@@ -35,8 +35,8 @@ sudo yum install python-setuptools
 
 The following are dependencies for:
 
-- Debian 11 or newer
-- Ubuntu 20.04 or newer
+- Debian 12 or newer
+- Ubuntu 22.04 or newer
 - Related distributions which use the `apt` package manager
 
 ```sh
@@ -124,7 +124,7 @@ python3 -m build
 
 If you are building on a non-tagged commit, or there are uncommitted changes to the repository, a local version
 identifier will be added to the version. The formatting of the local version identifier can be found [here](https://github.com/jwodder/versioningit/tree/v3.1.0?tab=readme-ov-file#example-configurations) under the versioneer
-section. 
+section.
 
 The local version identifier will appear in:
 - The package version in the wheel name
