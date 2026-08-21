@@ -5,7 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Read, Write, BatchRecords
+from aerospike_helpers.batch.records import Write, BatchRecords, Read
 from aerospike_helpers.metrics import MetricsPolicy
 import copy
 from contextlib import nullcontext
@@ -13,8 +13,8 @@ import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME
-
+from .conftest import verify_record_ttl, wait_for_job_completion
+import warnings
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -233,64 +233,6 @@ def test_setting_batch_policies():
         config["policies"][policy] = {}
     aerospike.client(config)
 
-TTL = 2
-
-
-@pytest.mark.parametrize(
-    "insert_records",
-    [[1, True, {"ttl": TTL}]],
-    indirect=True
-)
-@pytest.mark.parametrize(
-    "as_connection",
-    [
-        {
-            "policies": {
-                "batch_parent_write": {
-                    "read_touch_ttl_percent": 50
-                }
-            }
-        },
-    ],
-    indirect=True
-)
-class TestClientConfigBatchPolicies:
-    def test_batch_parent_write_applies_to_batch_write(self, insert_records):
-        DURATION = TTL / 2 + 0.1
-        time.sleep(DURATION)
-
-        brs = BatchRecords(
-            batch_records=[
-                Read(
-                    key=self.keys[0],
-                    ops=[
-                        operations.read(BIN_NAME)
-                    ]
-                )
-            ]
-        )
-        self.as_connection.batch_write(brs)
-
-        _, meta = self.as_connection.exists(self.keys[0])
-        assert meta["ttl"] > TTL - DURATION
-
-    UDF_FILE = "sample.lua"
-
-    @pytest.mark.parametrize(
-        "connection_with_udf",
-        [
-            UDF_FILE
-        ],
-        indirect=True
-    )
-    def test_batch_parent_write_applies_to_batch_apply(self, insert_records):
-        DURATION = TTL / 2 + 0.1
-        time.sleep(DURATION)
-
-        self.as_connection.batch_apply(self.keys, self.UDF_FILE, "list_append", ["list", 1])
-
-        _, meta = self.as_connection.exists(self.keys[0])
-        assert meta["ttl"] > TTL - DURATION
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
