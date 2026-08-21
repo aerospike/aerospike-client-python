@@ -1448,28 +1448,29 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
+        // TODO: this may not be atomic when failing out
         as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
-
-        if (err->code == AEROSPIKE_OK) {
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-            if (dynamic_pool->allocate_buffers) {
-                uint8_t *heap_b = (uint8_t *)malloc(b_len);
-                memcpy(heap_b, b, b_len);
-                as_bytes_init_wrap(bytes, heap_b, b_len,
-                                   dynamic_pool->allocate_buffers);
-            }
-            else {
-                as_bytes_init_wrap(bytes, b, b_len,
-                                   dynamic_pool->allocate_buffers);
-            }
-
-            if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
-                                                 false)) {
-                bytes->type = AS_BYTES_HLL;
-            }
-            *val = (as_val *)bytes;
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
         }
+
+        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
+        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
+        if (dynamic_pool->allocate_buffers) {
+            uint8_t *heap_b = (uint8_t *)malloc(b_len);
+            memcpy(heap_b, b, b_len);
+            as_bytes_init_wrap(bytes, heap_b, b_len,
+                               dynamic_pool->allocate_buffers);
+        }
+        else {
+            as_bytes_init_wrap(bytes, b, b_len, dynamic_pool->allocate_buffers);
+        }
+
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
+                                             false)) {
+            bytes->type = AS_BYTES_HLL;
+        }
+        *val = (as_val *)bytes;
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
