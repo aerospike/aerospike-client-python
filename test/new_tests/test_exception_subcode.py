@@ -122,7 +122,7 @@ class TestExceptionSubcode:
             assert SUBCODE_IN_QUOTES in excinfo.value.msg
 
     @pytest.mark.usefixtures("setup")
-    def test_batch_records_return_error_details(self):
+    def test_batch_write_return_error_details(self):
         brs = BatchRecords(
             [
                 Write(KEY, ops=OPS)
@@ -136,6 +136,17 @@ class TestExceptionSubcode:
             else:
                 assert isinstance(br.message, str)
                 assert br.subcode > 0
+
+    @pytest.mark.usefixtures("setup")
+    def test_batch_operate_return_error_details(self):
+        brs = self.as_connection.batch_operate([KEY], OPS, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
+        br = brs.batch_records[0]
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            assert br.message is None
+            assert br.subcode == 0
+        else:
+            assert isinstance(br.message, str)
+            assert br.subcode > 0
 
     @pytest.mark.usefixtures("setup")
     def test_error_detail_exp_trace(self):
