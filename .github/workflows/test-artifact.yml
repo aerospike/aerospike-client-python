@@ -160,7 +160,7 @@ jobs:
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install "./$ARTIFACT_FILE_NAME"
+        python3 -m pip install "./$ARTIFACT_FILE_NAME"
 
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           exit 0
@@ -226,7 +226,7 @@ jobs:
         if [[ ${{ inputs.validate-keys }} == false ]]; then
           crudini --existing=param --set config.conf input-validation validate_keys false
         fi
-        pip install -r requirements.txt
+        python3 -m pip install -r requirements.txt
 
         VALGRIND_ARGS=()
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
@@ -356,7 +356,11 @@ jobs:
         docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "./$ARTIFACT_FILE_NAME"
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
-        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
+
+        # eval: perform variable expansion before brace expansion
+        read -ra test_files < <(eval echo "new_tests/$TEST_FILE")
+
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "${test_files[@]}"
       shell: bash -ex {0}
       env:
         IS_DISTRO_CONTAINER_DNF_BASED: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}
