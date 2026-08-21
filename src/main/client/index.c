@@ -252,9 +252,6 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
-
     // Python Function Arguments
     PyObject *py_policy = NULL;
     PyObject *py_ns = NULL;
