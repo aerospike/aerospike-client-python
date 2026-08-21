@@ -357,9 +357,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
 
     if (use_operate_conversion_helper(operation)) {
-        return as_operations_add_from_pyobject(
-            self, err, py_operation_dict, unicodeStrVector, dynamic_pool, ops,
-            operation, ret_type); //This hardcoding matches current behavior
+        return as_operations_add_from_pyobject(self, err, py_operation_dict,
+                                               unicodeStrVector, dynamic_pool,
+                                               ops, operation, ret_type);
     }
 
     if (isBitOp(operation)) {
