@@ -132,10 +132,10 @@ class TestExceptionSubcode:
         for br in brs.batch_records:
             if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
                 assert br.message is None
-                assert br.error_subcode == 0
+                assert br.subcode == 0
             else:
                 assert isinstance(br.message, str)
-                assert br.error_subcode > 0
+                assert br.subcode > 0
 
     @pytest.mark.usefixtures("setup")
     def test_error_detail_exp_trace(self):

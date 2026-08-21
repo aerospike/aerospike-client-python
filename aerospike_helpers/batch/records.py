@@ -46,7 +46,7 @@ class BatchRecord:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
-            error_subcode (int): Server error subcode for this record, or zero when absent. Set only when
+            subcode (int): Server error subcode for this record, or zero when absent. Set only when
                 result is not ``AEROSPIKE_OK`` and the client requested error details via
                 :ref:`aerospike_base_policies` ``error_detail_verbosity`` option.
             message (str | None): Server error detail message for this record, or :py:obj:`None` when absent. Set
@@ -62,7 +62,7 @@ class BatchRecord:
         self.record = None
         self.result = 0
         self.message = None
-        self.error_subcode = 0
+        self.subcode = 0
         self.in_doubt = False
 
 
