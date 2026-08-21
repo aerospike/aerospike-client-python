@@ -2978,6 +2978,7 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     Py_DECREF(py_in_doubt);
 
     if (*result_code != AEROSPIKE_OK) {
+        // Don't insert record tuple or 2-tuple containing key and meta
         return err->code;
     }
 
