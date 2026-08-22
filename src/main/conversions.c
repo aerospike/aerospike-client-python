@@ -1488,22 +1488,23 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
     }
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
-
         if (err->code == AEROSPIKE_OK) {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_obj);
-            if (dynamic_pool->allocate_buffers) {
-                uint8_t *heap_b = (uint8_t *)malloc(str_len);
-                memcpy(heap_b, str, str_len);
-                as_bytes_init_wrap(bytes, heap_b, str_len,
-                                   dynamic_pool->allocate_buffers);
-            }
-            else {
-                as_bytes_init_wrap(bytes, str, str_len,
-                                   dynamic_pool->allocate_buffers);
-            }
-            *val = (as_val *)bytes;
+            return err->code;
         }
+
+        uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
+        uint32_t str_len = (uint32_t)PyByteArray_Size(py_obj);
+        if (dynamic_pool->allocate_buffers) {
+            uint8_t *heap_b = (uint8_t *)malloc(str_len);
+            memcpy(heap_b, str, str_len);
+            as_bytes_init_wrap(bytes, heap_b, str_len,
+                               dynamic_pool->allocate_buffers);
+        }
+        else {
+            as_bytes_init_wrap(bytes, str, str_len,
+                               dynamic_pool->allocate_buffers);
+        }
+        *val = (as_val *)bytes;
     }
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
