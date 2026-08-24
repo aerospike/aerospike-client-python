@@ -25,6 +25,9 @@ static inline void as_dynamic_pool_init(as_dynamic_pool *dynamic_pool,
     dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
 
     as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+    if (err->code != AEROSPIKE_OK) {
+        return;
+    }
 
     as_dynamic_pool_malloc_group(dynamic_pool, err);
 }
