@@ -58,7 +58,6 @@ if __doc__:
 
 
 # from __future__ import annotations
-from typing import List, Union, Dict, Any
 import aerospike
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.base import HLLBin
@@ -67,10 +66,9 @@ from aerospike_helpers.expressions.base import HLLBin
 # HLL Modify Expressions
 ########################
 
-TypeBinName = Union[_BaseExpr, str]
-TypeListValue = Union[_BaseExpr, List[Any]]
-TypeValue = Union[_BaseExpr, Any]
-TypePolicy = Union[Dict[str, Any], None]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .resources import TypePolicy, TypeBinName, TypeListValue, TypeValue
 
 
 class HLLInit(_BaseExpr):
@@ -87,15 +85,15 @@ class HLLInit(_BaseExpr):
     def __init__(
         self,
         policy: "TypePolicy",
-        index_bit_count: Union[int, None],
-        mh_bit_count: Union[int, None],
+        index_bit_count: int | None,
+        mh_bit_count: int | None,
         bin: "TypeBinName",
     ):
         """Args:
-            policy (TypePolicy): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
-            index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
-            mh_bit_count (int): Number of min hash bits. Must be between 4 and 51 inclusive.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            policy: An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
+            index_bit_count: Number of index bits. Must be between 4 and 16 inclusive.
+            mh_bit_count: Number of min hash bits. Must be between 4 and 51 inclusive.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Returns the resulting hll.
 
@@ -123,16 +121,16 @@ class HLLAdd(_BaseExpr):
         self,
         policy: "TypePolicy",
         list: "TypeListValue",
-        index_bit_count: Union[int, None],
-        mh_bit_count: Union[int, None],
+        index_bit_count: int | None,
+        mh_bit_count: int | None,
         bin: "TypeBinName",
     ):
         """Args:
-            policy (TypePolicy): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
-            list (TypeListValue): A list or list expression of elements to add to the HLL.
-            index_bit_count (int): Number of index bits. Must be between 4 and 16 inclusive.
-            mh_bit_count (int): Number of min hash bits. Must be between 4 and 51 inclusive.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            policy: An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
+            list: A list or list expression of elements to add to the HLL.
+            index_bit_count: Number of index bits. Must be between 4 and 16 inclusive.
+            mh_bit_count: Number of min hash bits. Must be between 4 and 51 inclusive.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Returns the resulting hll bin after adding elements from list.
 
@@ -185,7 +183,7 @@ class HLLGetCount(_BaseExpr):
 
     def __init__(self, bin: "TypeBinName"):
         """Args:
-           bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+           bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Integer bin, the estimated number of unique elements in an HLL.
 
@@ -206,8 +204,8 @@ class HLLGetUnion(_BaseExpr):
 
     def __init__(self, values: "TypeValue", bin: "TypeBinName"):
         """Args:
-            values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            values: A single HLL or list of HLLs, values or expressions, to union with bin.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: HLL bin representing the set union.
 
@@ -244,8 +242,8 @@ class HLLGetUnionCount(_BaseExpr):
 
     def __init__(self, values: "TypeValue", bin: "TypeBinName"):
         """Args:
-            values (TypeValue): A single HLL or list of HLLs, values or expressions, to union with bin.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            values: A single HLL or list of HLLs, values or expressions, to union with bin.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Integer bin, estimated number of elements in the set union.
 
@@ -282,8 +280,8 @@ class HLLGetIntersectCount(_BaseExpr):
 
     def __init__(self, values: "TypeValue", bin: "TypeBinName"):
         """Args:
-            values (TypeValue): A single HLL or list of HLLs, values or expressions, to intersect with bin.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            values: A single HLL or list of HLLs, values or expressions, to intersect with bin.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Integer bin, estimated number of elements in the set intersection.
 
@@ -320,8 +318,8 @@ class HLLGetSimilarity(_BaseExpr):
 
     def __init__(self, values: "TypeValue", bin: "TypeBinName"):
         """Args:
-            values (TypeValue): A single HLL or list of HLLs, values or expressions, to calculate similarity with.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            values: A single HLL or list of HLLs, values or expressions, to calculate similarity with.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: Float bin, estimated similarity between 0.0 and 1.0.
 
@@ -359,7 +357,7 @@ class HLLDescribe(_BaseExpr):
 
     def __init__(self, bin: "TypeBinName"):
         """Args:
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: List bin, a list containing the index_bit_count and minhash_bit_count.
 
@@ -402,8 +400,8 @@ class HLLMayContain(_BaseExpr):
         bin: "TypeBinName",
     ):
         """Args:
-            list (TypeListValue): A list expression of keys to check if the HLL may contain any of them.
-            bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
+            list: A list expression of keys to check if the HLL may contain any of them.
+            bin: An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
         :return: 1 if bin may contain any key in list, 0 otherwise.
 

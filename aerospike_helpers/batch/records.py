@@ -14,16 +14,20 @@
 # limitations under the License.
 ##########################################################################
 
-import typing as ty
-from typing import Optional
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-TypeOps = ty.List[ty.Dict]
-TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
-TypeBatchPolicyRemove = ty.Union[ty.Dict, None]
-TypeBatchPolicyApply = ty.Union[ty.Dict, None]
-TypeBatchPolicyRead = ty.Union[ty.Dict, None]
-TypeRecord = ty.Union[ty.Tuple, None]
-TypeUDFArgs = ty.List[ty.Any]
+
+if TYPE_CHECKING:
+    from typing import Optional, Any
+
+    TypeOps = list[dict]
+    TypeBatchPolicyWrite = dict | None
+    TypeBatchPolicyRemove = dict | None
+    TypeBatchPolicyApply = dict | None
+    TypeBatchPolicyRead = dict | None
+    TypeRecord = tuple | None
+    TypeUDFArgs = list[Any]
 
 
 class _Types:
@@ -43,13 +47,17 @@ class BatchRecord:
         containing the batch request results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
-            record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
+            key: The aerospike key to operate on.
+            record: The record corresponding to the requested key.
+            result: The status code of the command.
+            in_doubt: Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
+    key: tuple
+    record: tuple | None
+    result: int
+    in_doubt: bool
 
     def __init__(self, key: tuple) -> None:
         self.key = key
@@ -64,18 +72,15 @@ class Write(BatchRecord):
         .. include:: ./deprecate_meta_ttl.rst
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to send the command to.
-            record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
-            This may be the case when a client error occurs (like timeout) after the command was sent \
-            to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
+            ops: A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for this command
-            policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
+            meta: the metadata to set for this command
+            policy: An optional dictionary of batch write policy
                 flags.
     """
+    ops: TypeOps
+    meta: Optional[dict]
+    policy: TypeBatchPolicyWrite
 
     def __init__(
         self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
@@ -120,23 +125,21 @@ class Read(BatchRecord):
             :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to send the command to.
-            record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
-            This may be the case when a client error occurs (like timeout) after the command was sent \
-            to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
+            ops: list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for this command
-            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
-            policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
+            meta: the metadata to set for this command
+            read_all_bins: An optional bool, if True, read all bins in the record.
+            policy: An optional dictionary of :ref:`aerospike_batch_read_policies`.
     """
+    ops: Optional[TypeOps]
+    meta: Optional[dict]
+    read_all_bins: bool
+    policy: TypeBatchPolicyRead
 
     def __init__(
         self,
         key: tuple,
-        ops: ty.Union[TypeOps, None],
+        ops: TypeOps | None,
         read_all_bins: bool = False,
         meta: Optional[dict] = None,
         policy: "TypeBatchPolicyRead" = None,
@@ -179,18 +182,16 @@ class Apply(BatchRecord):
         retrieving results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
-            module (str): Name of the lua module previously registered with the server.
-            function (str): Name of the UDF to invoke.
-            args (:obj:`list`): List of arguments to pass to the UDF.
-            record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
-            This may be the case when a client error occurs (like timeout) after the command was sent \
-            to the server.
-            policy (:ref:`aerospike_batch_apply_policies`, optional): An optional dictionary of batch apply policy
+            module: Name of the lua module previously registered with the server.
+            function: Name of the UDF to invoke.
+            args: List of arguments to pass to the UDF.
+            policy: An optional dictionary of batch apply policy
                 flags.
     """
+    module: str
+    function: str
+    args: TypeUDFArgs
+    policy: TypeBatchPolicyApply
 
     def __init__(
         self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
@@ -235,15 +236,10 @@ class Remove(BatchRecord):
     """ Remove is used for executing Batch remove commands with batch_write and retrieving results.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
-            record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
-            This may be the case when a client error occurs (like timeout) after the command was sent \
-            to the server.
-            policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
+            policy: An optional dictionary of batch remove policy
                 flags.
     """
+    policy: TypeBatchPolicyRemove
 
     def __init__(self, key: tuple, policy: "TypeBatchPolicyRemove" = None) -> None:
         """
@@ -268,22 +264,24 @@ class Remove(BatchRecord):
         self.policy = policy
 
 
-TypeBatchRecordList = ty.List[BatchRecord]
+TypeBatchRecordList = list[BatchRecord]
 
 
 class BatchRecords:
     """ BatchRecords is used as input and output for multiple batch APIs.
 
         Attributes:
-            batch_records (list): A list of BatchRecord subtype objects used to \
+            batch_records: A list of BatchRecord subtype objects used to \
             define batched commands and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
-            result (int): The status code of the last batch call that used this BatchRecords.
+            result: The status code of the last batch call that used this BatchRecords.
                 ``0`` if all batched commands succeeded (or if the only failures were \
                     ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
                 Not ``0`` if an error occurred. The most common error is ``-16`` \
                     (One or more batched commands failed).
     """
+    batch_records: TypeBatchRecordList
+    result: int
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """

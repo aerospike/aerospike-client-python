@@ -4,7 +4,8 @@ Resources used by all expressions.
 
 from __future__ import annotations
 from itertools import chain
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
+import aerospike
 
 
 class _Keys:
@@ -139,20 +140,6 @@ class _AtomExpr:
         raise NotImplementedError
 
 
-TypeResultType = Optional[int]
-TypeFixedEle = Union[int, float, str, bytes, dict]
-TypeFixed = Optional[Dict[str, TypeFixedEle]]
-TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
-
-#: Compiled expression that can be passed to the Python client API.
-TypeExpression = List[TypeCompiledOp]
-
-TypeChild = Union[int, float, str, bytes, _AtomExpr]
-TypeChildren = Tuple[TypeChild, ...]
-
-TypeAny = Union[_AtomExpr, Any]
-
-
 class _BaseExpr(_AtomExpr):
     """
     Base class for all expressions.
@@ -269,6 +256,48 @@ class _BaseExpr(_AtomExpr):
 
     def __mod__(self, right: "TypeAny"):
         return self._overload_op(right, _ExprOp.MOD)
+
+
+if TYPE_CHECKING:
+    TypeResultType = Optional[int]
+    TypeFixedEle = int | float | str | bytes | dict
+    TypeFixed = Optional[Dict[str, TypeFixedEle]]
+    TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+
+    #: Compiled expression that can be passed to the Python client API.
+    TypeExpression = List[TypeCompiledOp]
+
+    TypeChild = int | float | str | bytes | _AtomExpr
+    TypeChildren = Tuple[TypeChild, ...]
+
+    TypeAny = _AtomExpr | Any
+    from aerospike_helpers import cdt_ctx
+    TypeCTX = None | List[cdt_ctx._cdt_ctx]
+    from typing import Any
+    TypePolicy = dict[str, Any], None
+    TypeBinName = _BaseExpr | str
+
+    # Type aliases shared across expression modules
+    TypeValue = _BaseExpr | Any
+    TypeKey = _BaseExpr | Any
+    TypeListValue = _BaseExpr | List[Any]
+    TypeKeyList = _BaseExpr | List[Any]
+    TypeIndex = _BaseExpr | int | aerospike.CDTInfinite
+    TypeRank = _BaseExpr | int | aerospike.CDTInfinite
+    TypeCount = _BaseExpr | int | aerospike.CDTInfinite
+
+    # Arithmetic/bitwise type aliases
+    TypeNumber = _BaseExpr | int | float
+    TypeFloat = _BaseExpr | float
+    TypeInteger = _BaseExpr | int
+    TypeBool = _BaseExpr | bool
+
+    # Bitwise-specific type aliases
+    TypeBitValue = bytes | bytearray
+
+    # Comparison/geo type aliases
+    TypeComparisonArg = _BaseExpr | Any
+    TypeGeo = _BaseExpr | aerospike.GeoJSON
 
 
 def _create_operator_expression(left_children: "TypeChildren", right_children: "TypeChildren", op_type: int):

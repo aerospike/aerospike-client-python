@@ -18,16 +18,16 @@ Arithmetic expressions provide arithmetic operator support for Aerospike express
 
 """
 
-# from __future__ import annotations
-from typing import Union
+from __future__ import annotations
 
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 
-TypeNumber = Union[_BaseExpr, int, float]
-TypeFloat = Union[_BaseExpr, float]
-TypeInteger = Union[_BaseExpr, int]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .resources import TypeNumber, TypeFloat, TypeInteger
 
 
 ########################
@@ -47,9 +47,9 @@ class Add(_BaseExpr):
 
     _op = _ExprOp.ADD
 
-    def __init__(self, *args: "TypeNumber"):
+    def __init__(self, *args: TypeNumber):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
+            `*args`: Variable amount of float or integer expressions or values to be added together.
 
         :return: (integer or float value).
 
@@ -85,7 +85,7 @@ class Sub(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be subtracted.
+            `*args`: Variable amount of float or integer expressions or values to be subtracted.
 
         :return: (integer or float value)
 
@@ -118,7 +118,7 @@ class Mul(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be multiplied.
+            `*args`: Variable amount of float or integer expressions or values to be multiplied.
 
         :return: (integer or float value)
 
@@ -153,7 +153,7 @@ class Div(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values to be divided.
+            `*args`: Variable amount of float or integer expressions or values to be divided.
 
         :return: (integer or float value)
 
@@ -188,8 +188,8 @@ class Pow(_BaseExpr):
 
     def __init__(self, base: "TypeFloat", exponent: "TypeFloat"):
         """Args:
-            base (TypeFloat): Float expression or value base.
-            exponent (TypeFloat): Float expression or value exponent.
+            base: Float expression or value base.
+            exponent: Float expression or value exponent.
 
         :return: (float value)
 
@@ -218,8 +218,8 @@ class Log(_BaseExpr):
 
     def __init__(self, num: "TypeFloat", base: "TypeFloat"):
         """Args:
-            num (TypeFloat): Float expression or value number.
-            base (TypeFloat): Float expression or value base.
+            num: Float expression or value number.
+            base: Float expression or value base.
 
         :return: (float value)
 
@@ -248,8 +248,8 @@ class Mod(_BaseExpr):
 
     def __init__(self, numerator: "TypeInteger", denominator: "TypeInteger"):
         """Args:
-            numerator (TypeInteger): Integer expression or value numerator.
-            denominator (TypeInteger): Integer expression or value denominator.
+            numerator: Integer expression or value numerator.
+            denominator: Integer expression or value denominator.
 
         :return: (integer value)
 
@@ -281,7 +281,7 @@ class Abs(_BaseExpr):
 
     def __init__(self, value: "TypeNumber"):
         """Args:
-            value (TypeNumber): Float or integer expression or value to take absolute value of.
+            value: Float or integer expression or value to take absolute value of.
 
         :return: (number value)
 
@@ -313,7 +313,7 @@ class Floor(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to take floor of.
+            value: Float expression or value to take floor of.
 
         :return: (float value)
 
@@ -346,7 +346,7 @@ class Ceil(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to take ceiling of.
+            value: Float expression or value to take ceiling of.
 
         :return: (float value)
 
@@ -374,7 +374,7 @@ class ToInt(_BaseExpr):
 
     def __init__(self, value: "TypeFloat"):
         """Args:
-            value (TypeFloat): Float expression or value to convert to int.
+            value: Float expression or value to convert to int.
 
         :return: (integer value)
 
@@ -398,7 +398,7 @@ class ToFloat(_BaseExpr):
 
     def __init__(self, value: "TypeInteger"):
         """Args:
-            value (TypeInteger): Integer expression or value to convert to float.
+            value: Integer expression or value to convert to float.
 
         :return: (float value)
 
@@ -424,7 +424,7 @@ class Min(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
+            `*args`: Variable amount of float or integer expressions or values from which to find the
                 minimum value.
 
         :return: (integer or float value).
@@ -450,7 +450,7 @@ class Max(_BaseExpr):
 
     def __init__(self, *args: "TypeNumber"):
         """Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
+            `*args`: Variable amount of float or integer expressions or values from which to find the
                 maximum value.
 
         :return: (integer or float value).

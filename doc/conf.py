@@ -27,10 +27,17 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+    "sphinxcontrib.spelling",
     "sphinxcontrib.spelling",
     "sphinx_copybutton"
 ]
+
 napoleon_google_docstring = True
+napoleon_use_rtype = False
+typehints_use_rtype = False
+always_use_bars_union = True
+
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 copybutton_exclude = '.linenos, .gp'
@@ -98,37 +105,8 @@ pygments_style = "sphinx"
 # modindex_common_prefix = []
 
 # Alias/type hint configuration.
-autodoc_typehints = "signature"
-autodoc_type_aliases = {
-    "_BaseExpr": "AerospikeExpression",
-    "TypeCTX": "TypeCTX",
-    "TypeRank": "TypeRank",
-    "TypeCount": "TypeCount",
-    "TypePolicy": "TypePolicy",
-    "TypeValue": "TypeValue",
-    "TypeBinName": "TypeBinName",
-    "TypeListValue": "TypeListValue",
-    "TypeIndex": "TypeIndex",
-    "TypeChild": "TypeChild",
-    "TypeCompiledOp": "TypeCompiledOp",
-    "TypeExpression": "aerospike_helpers.expressions.resources.TypeExpression",
-    "TypeGeo": "TypeGeo",
-    "TypeKey": "TypeKey",
-    "TypeKeyList": "TypeKeyList",
-    "TypeBitValue": "TypeBitValue",
-    "TypeNumber": "TypeNumber",
-    "TypeFloat": "TypeFloat",
-    "TypeInteger": "TypeInteger",
-    "TypeBool": "TypeBool",
-    "TypeComparisonArg": "TypeComparisonArg",
-    "TypeResultType": "TypeResultType",
-    "TypeFixedEle": "TypeFixedEle",
-    "TypeFixed": "TypeFixed",
-}
+autodoc_typehints = "none"
 nitpicky = True
-nitpick_ignore_regex = {
-    ("py:class", "Type.*")
-}
 
 # -- Options for HTML output ---------------------------------------------------
 
