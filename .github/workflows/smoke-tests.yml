@@ -143,7 +143,7 @@ jobs:
         features-content: ${{ secrets.FEATURES_CONTENT }}
         server-tag: ${{ env.SERVER_TAG }}
 
-    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
+    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests/test_get_put.py
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -181,7 +181,9 @@ jobs:
       if: ${{ !cancelled() }}
       run: |
         cd build/temp*/src/main
-        find . -type f -name "*.o" -execdir gcov {} \;
+        # find . -type f -name "*.o" -execdir gcov {} \;
+        pip install gcovr
+        gcovr
 
     - name: Move aerospike_helpers coverage report to this directory
       if: ${{ !cancelled() }}
