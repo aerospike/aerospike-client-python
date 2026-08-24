@@ -154,9 +154,15 @@ as_bytes *as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool,
         }
 
         as_dynamic_pool_malloc_group(dynamic_pool, err);
+        if (err->code != AEROSPIKE_OK) {
+            return NULL;
+        }
     }
     else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
         as_dynamic_pool_add_group(dynamic_pool, err);
+        if (err->code != AEROSPIKE_OK) {
+            return NULL;
+        }
     }
 
     table = dynamic_pool->byte_group_table;
