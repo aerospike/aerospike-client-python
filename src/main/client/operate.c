@@ -32,7 +32,6 @@
 #include "serializer.h"
 #include "geo.h"
 #include "cdt_list_operations.h"
-#include "cdt_map_operations.h"
 #include "bit_operations.h"
 #include "hll_operations.h"
 #include "pythoncapi_compat.h"
