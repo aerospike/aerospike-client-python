@@ -118,7 +118,7 @@
         if (py_exp_list) {                                                     \
             if (!dynamic_pool) {                                               \
                 as_dynamic_pool stack_dynamic_pool;                            \
-                BYTE_POOL_INIT_NULL(&stack_dynamic_pool);                      \
+                as_dynamic_pool_init(&stack_dynamic_pool);                     \
                 if (as_exp_new_from_pyobject(                                  \
                         self, py_exp_list, exp_list_p, err, false,             \
                         &stack_dynamic_pool) == AEROSPIKE_OK) {                \

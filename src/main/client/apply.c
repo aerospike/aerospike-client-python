@@ -73,7 +73,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     if (!PyList_Check(py_arglist)) {
         PyErr_SetString(PyExc_TypeError,

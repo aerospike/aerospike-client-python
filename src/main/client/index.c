@@ -134,7 +134,7 @@ static PyObject *convert_python_args_to_c_and_create_index(
     }
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list

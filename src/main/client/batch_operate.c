@@ -138,7 +138,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     as_vector *tmp_keys_p = NULL;
 

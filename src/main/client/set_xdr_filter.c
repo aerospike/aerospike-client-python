@@ -64,7 +64,7 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
 
     // Initialize the dynamic byte pool
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     static char *kwlist[] = {"data_center", "namespace", "expression_filter",
                              "policy", NULL};

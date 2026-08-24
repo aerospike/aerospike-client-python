@@ -53,7 +53,7 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
 
     // Initialize the dynamic byte pool
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     as_error err;
     as_error_init(&err);

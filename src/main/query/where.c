@@ -88,7 +88,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (self->dynamic_pool == NULL) {
             self->dynamic_pool =
                 (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
-            BYTE_POOL_INIT_NULL(self->dynamic_pool);
+            as_dynamic_pool_init(self->dynamic_pool);
             // Buffers must be heap allocated in order to persist after the current function returns
             self->dynamic_pool->allocate_buffers = true;
         }

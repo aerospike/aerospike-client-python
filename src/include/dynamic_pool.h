@@ -39,9 +39,11 @@ typedef struct as_dynamic_pool {
  *
  * @param dynamic_pool Pointer to a dynamic pool.
  */
-#define BYTE_POOL_INIT_NULL(dynamic_pool)                                      \
-    (dynamic_pool)->byte_group_table = NULL;                                   \
-    (dynamic_pool)->allocate_buffers = false;
+static inline void as_dynamic_pool_init(as_dynamic_pool *dynamic_pool)
+{
+    dynamic_pool->byte_group_table = NULL;
+    dynamic_pool->allocate_buffers = false;
+}
 
 /**
  * Fetches the address of the next as_byte in the pool.

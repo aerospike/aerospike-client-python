@@ -930,7 +930,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, size);
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     CHECK_CONNECTED(err);
 
@@ -1090,7 +1090,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     as_operations ops;
     Py_ssize_t ops_list_size = PyList_Size(py_list);

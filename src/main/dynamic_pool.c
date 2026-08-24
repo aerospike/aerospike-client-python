@@ -7,31 +7,6 @@ static inline void as_dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
                                                 as_error *err);
 
 #define AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP 128
-
-/**
- * Fully initializes a null intialized dynamic pool.
- *
- * If the group table is full, the table is also expanded.
- *
- * @param dynamic_pool Pointer to a dynamic pool.
- * @param err Pointer to an as_error
- *
- */
-static inline void as_dynamic_pool_init(as_dynamic_pool *dynamic_pool,
-                                        as_error *err)
-{
-    dynamic_pool->group_iterator = 0;
-    dynamic_pool->byte_iterator = 0;
-    dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
-
-    as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
-    if (err->code != AEROSPIKE_OK) {
-        return;
-    }
-
-    as_dynamic_pool_malloc_group(dynamic_pool, err);
-}
-
 #define AS_DYNAMIC_POOL_NUM_GROUPS_PER_ALLOCATION 4
 
 /**
@@ -164,7 +139,18 @@ as_bytes *as_dynamic_pool_get_as_bytes(as_dynamic_pool *dynamic_pool,
     as_bytes **table = dynamic_pool->byte_group_table;
 
     if (table == NULL) {
-        as_dynamic_pool_init(dynamic_pool, err);
+        // Fully initializes a null intialized dynamic pool.
+        // If the group table is full, the table is also expanded.
+        dynamic_pool->group_iterator = 0;
+        dynamic_pool->byte_iterator = 0;
+        dynamic_pool->bytes_per_group = AS_DYNAMIC_POOL_MIN_AS_BYTES_PER_GROUP;
+
+        as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+        if (err->code != AEROSPIKE_OK) {
+            return NULL;
+        }
+
+        as_dynamic_pool_malloc_group(dynamic_pool, err);
     }
     else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
         as_dynamic_pool_add_group(dynamic_pool, err);

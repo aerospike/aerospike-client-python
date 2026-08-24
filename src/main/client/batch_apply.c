@@ -130,7 +130,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     PyObject *br_instance = NULL;
 
     as_dynamic_pool dynamic_pool;
-    BYTE_POOL_INIT_NULL(&dynamic_pool);
+    as_dynamic_pool_init(&dynamic_pool);
 
     Py_ssize_t keys_size = PyList_Size(py_keys);
 
