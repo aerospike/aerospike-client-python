@@ -38,9 +38,6 @@ PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
     uint64_t scan_id = 0;
     static char *kwlist[] = {"policy", NULL};
 
-    // For converting expressions.
-    as_exp *exp_list_p = NULL;
-
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
                                     &py_policy) == false) {
         return NULL;
@@ -63,7 +60,7 @@ PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
         if (pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy,
                                     &scan_policy_p,
                                     &self->client->as->config.policies.scan,
-                                    &exp_list_p, false) != AEROSPIKE_OK) {
+                                    false) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -75,9 +72,8 @@ PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
+    if (scan_policy_p) {
+        as_exp_destroy(scan_policy_p->base.filter_exp);
     }
 
     if (err.code != AEROSPIKE_OK) {

@@ -19,6 +19,7 @@
 #include <aerospike/as_config.h>
 
 #include "macros.h"
+#include "types.h"
 
 as_status set_optional_uint32_property(uint32_t *target_ptr,
                                        PyObject *policy_dict, const char *name);
@@ -39,10 +40,15 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
 as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
                               const char *name);
 
+// Although set_subpolicies is called by AerospikeClient's init method, and it takes in AerospikeClient as a param,
+// it should be safe to use because set_subpolicies only reads from self->validate_keys in this case
+// We know that self->validate_keys is initialized by the time we call this.
+// TODO: refactor set_subpolicies to not depend on AerospikeClient
+//
 // This only sets the err object if an invalid dictionary key is passed
 // On error, return an error code
-as_status set_subpolicies(as_error *err, as_config *config,
-                          PyObject *py_policies, int validate_keys);
+as_status set_subpolicies(AerospikeClient *self, as_error *err,
+                          as_config *config, PyObject *py_policies);
 as_status set_read_policy(as_error *err, as_policy_read *read_policy,
                           PyObject *py_policy, int validate_keys);
 as_status set_write_policy(as_error *err, as_policy_write *write_policy,
