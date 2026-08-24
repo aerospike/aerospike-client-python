@@ -1488,7 +1488,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
     }
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
-        if (err->code == AEROSPIKE_OK) {
+        if (err->code != AEROSPIKE_OK) {
             return err->code;
         }
 
