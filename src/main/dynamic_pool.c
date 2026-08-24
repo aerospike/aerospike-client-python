@@ -197,6 +197,11 @@ static inline void as_dynamic_pool_free_group(as_dynamic_pool *dynamic_pool,
                                               uint16_t group_index,
                                               uint16_t num_bytes)
 {
+    if (dynamic_pool->allocate_buffers) {
+        as_dynamic_pool_destroy_bytes_in_group(dynamic_pool, group_index,
+                                               num_bytes);
+    }
+
     as_bytes *group = dynamic_pool->byte_group_table[group_index];
     cf_free(group);
 }
