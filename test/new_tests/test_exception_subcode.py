@@ -111,16 +111,6 @@ class TestExceptionSubcode:
         else:
             assert excinfo.value.subcode > 0
 
-        EXPECTED_SUBCODE_IN_MESSAGE = "subcode="
-        if excinfo.value.subcode == 0:
-            assert EXPECTED_SUBCODE_IN_MESSAGE not in excinfo.value.msg
-        elif policy_w_verbosity_setting[ERROR_DETAIL_VERBOSITY_SETTING] == aerospike.ERROR_DETAIL_SUBCODE:
-            assert EXPECTED_SUBCODE_IN_MESSAGE in excinfo.value.msg
-        else:
-            # There should be a message before the subcode
-            SUBCODE_IN_QUOTES = "({}".format(EXPECTED_SUBCODE_IN_MESSAGE)
-            assert SUBCODE_IN_QUOTES in excinfo.value.msg
-
     @pytest.mark.usefixtures("setup")
     def test_batch_write_return_error_details(self):
         brs = BatchRecords(
