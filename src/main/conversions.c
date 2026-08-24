@@ -2938,7 +2938,7 @@ as_status set_error_details_in_py_batch_record(as_error *err,
                                "Failed to get BatchRecord.subcode");
     }
 
-    if (strlen(message)) {
+    if (message) {
         PyObject *py_message = PyUnicode_FromString(message);
         if (!py_message) {
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
