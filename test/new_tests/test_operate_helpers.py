@@ -541,7 +541,7 @@ class TestOperate(object):
 
         TestOperate.client_no_typechecks.remove(key)
 
-    class Invalid_Type:
+    class InvalidType:
         pass
 
     @pytest.mark.parametrize(
@@ -549,15 +549,15 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", "existing_key"),  # Existing Bytearray
-                [operations.increment("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.increment("invalid_type", InvalidType()), operations.read("invalid_type")],
             ),
             (
                 ("test", "demo", "existing_key"),  # Existing Bytearray
-                [operations.prepend("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.prepend("invalid_type", InvalidType()), operations.read("invalid_type")],
             ),
             (
                 ("test", "demo", "existing_key"),  # Existing Bytearray
-                [operations.append("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.append("invalid_type", InvalidType()), operations.read("invalid_type")],
             ),
         ],
     )
@@ -578,7 +578,7 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", "existing_key"),  # New serialized type
-                [operations.increment("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.increment("invalid_type", InvalidType()), operations.read("invalid_type")],
                 {"invalid_type": ("instance serialized", "instance deserialized")},
             ),
             (
@@ -593,7 +593,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", "existing_key"),  # New serialized type
-                [operations.append("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.append("invalid_type", InvalidType()), operations.read("invalid_type")],
                 {"invalid_type": ("instance serialized", "instance deserialized")},
             ),
             (
@@ -608,7 +608,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", "existing_key"),  # New serialized type
-                [operations.prepend("invalid_type", Invalid_Type()), operations.read("invalid_type")],
+                [operations.prepend("invalid_type", InvalidType()), operations.read("invalid_type")],
                 {"invalid_type": ("instance serialized", "instance deserialized")},
             ),
             (
