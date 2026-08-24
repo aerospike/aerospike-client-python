@@ -34,6 +34,15 @@ typedef struct as_dynamic_pool {
     bool allocate_buffers;
 } as_dynamic_pool;
 
+static inline as_dynamic_pool *as_dynamic_pool_new()
+{
+    as_dynamic_pool *dynamic_pool =
+        (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
+    dynamic_pool->byte_group_table = NULL;
+    dynamic_pool->allocate_buffers = true;
+    return dynamic_pool;
+}
+
 /**
  * Initializes the byte pool. Must be called anytime a dynamic pool is declared.
  *
