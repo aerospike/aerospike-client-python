@@ -255,9 +255,15 @@ jobs:
         python-version: ${{ env.SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION }}
         architecture: 'x64'
 
+    - run: echo "GH_ARTIFACT_PATTERN=$GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS-$GH_ARTIFACT_NAME_SUFFIX_PATTERN" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}
+
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        pattern: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.SPHINX_MINIMUM_SUPPORTED_PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        pattern: ${{ env.GH_ARTIFACT_PATTERN }}
+        path: ./
 
     - name: Install client
       run: pip install ./*.whl
