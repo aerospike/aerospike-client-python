@@ -56,6 +56,9 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     // Initialisation flags
     bool key_initialised = false;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     // Initialize error
     as_error_init(&err);
 
@@ -82,7 +85,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         pyobject_to_policy_remove(
             self, &err, py_policy, &remove_policy, &remove_policy_p,
-            &self->as->config.policies.remove, NULL, &exp_list_p);
+            &self->as->config.policies.remove, &dynamic_pool, &exp_list_p);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -121,6 +124,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

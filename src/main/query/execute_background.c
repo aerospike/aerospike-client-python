@@ -48,6 +48,9 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
         return NULL;
     }
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     as_error err;
     as_error_init(&err);
 
@@ -61,10 +64,10 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (pyobject_to_policy_write(self->client, &err, py_policy, &write_policy,
-                                 &write_policy_p,
-                                 &self->client->as->config.policies.write, NULL,
-                                 &exp_list_p, false) != AEROSPIKE_OK) {
+    if (pyobject_to_policy_write(
+            self->client, &err, py_policy, &write_policy, &write_policy_p,
+            &self->client->as->config.policies.write, &dynamic_pool,
+            &exp_list_p, false) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -74,6 +77,7 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

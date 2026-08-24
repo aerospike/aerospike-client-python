@@ -136,6 +136,9 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     as_vector *tmp_keys_p = &tmp_keys;
     uint64_t processed_key_count = 0;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     if (!self || !self->as) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -172,10 +175,10 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
-                                     &policy_batch_p,
-                                     &self->as->config.policies.batch, NULL,
-                                     &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(
+                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
+                &self->as->config.policies.batch, &dynamic_pool,
+                &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -183,7 +186,7 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     if (py_policy_batch_remove) {
         if (pyobject_to_batch_remove_policy(
                 self, err, py_policy_batch_remove, &policy_batch_remove,
-                &policy_batch_remove_p, NULL,
+                &policy_batch_remove_p, &dynamic_pool,
                 &batch_remove_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -252,6 +255,8 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     as_error_reset(err);
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
+
     if (batch_exp_list_p) {
         as_exp_destroy(batch_exp_list_p);
     }

@@ -62,6 +62,9 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     // Initialisation flags
     bool key_initialised = false;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     // Initialize error
     as_error_init(&err);
 
@@ -144,7 +147,8 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, NULL, &exp_list_p);
+                            &self->as->config.policies.read, &dynamic_pool,
+                            &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -161,6 +165,8 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
+
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
         ;

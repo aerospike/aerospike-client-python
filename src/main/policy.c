@@ -116,27 +116,12 @@
         }                                                                      \
         Py_DECREF(py_field_name);                                              \
         if (py_exp_list) {                                                     \
-            if (!dynamic_pool) {                                               \
-                as_dynamic_pool stack_dynamic_pool;                            \
-                as_dynamic_pool_init(&stack_dynamic_pool);                     \
-                if (as_exp_new_from_pyobject(                                  \
-                        self, py_exp_list, exp_list_p, err, false,             \
-                        &stack_dynamic_pool) == AEROSPIKE_OK) {                \
-                    policy->filter_exp = *exp_list_p;                          \
-                    as_dynamic_pool_destroy(&stack_dynamic_pool);              \
-                }                                                              \
-                else {                                                         \
-                    return err->code;                                          \
-                }                                                              \
+            if (!as_exp_new_from_pyobject(self, py_exp_list, exp_list_p, err,  \
+                                          false,                               \
+                                          dynamic_pool) == AEROSPIKE_OK) {     \
+                return err->code;                                              \
             }                                                                  \
-            else {                                                             \
-                if (!as_exp_new_from_pyobject(self, py_exp_list, exp_list_p,   \
-                                              err, false,                      \
-                                              dynamic_pool) == AEROSPIKE_OK) { \
-                    return err->code;                                          \
-                }                                                              \
-                policy->filter_exp = *exp_list_p;                              \
-            }                                                                  \
+            policy->filter_exp = *exp_list_p;                                  \
         }                                                                      \
     }
 

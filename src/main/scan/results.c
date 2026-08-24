@@ -92,6 +92,9 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
         return NULL;
     }
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     as_error err;
     as_error_init(&err);
 
@@ -106,9 +109,10 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     }
 
     // Convert python policy object to as_policy_scan
-    pyobject_to_policy_scan(
-        self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, NULL, &exp_list_p, false);
+    pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy,
+                            &scan_policy_p,
+                            &self->client->as->config.policies.scan,
+                            &dynamic_pool, &exp_list_p, false);
     if (err.code != AEROSPIKE_OK) {
         as_error_update(&err, err.code, NULL);
         goto CLEANUP;
@@ -169,6 +173,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

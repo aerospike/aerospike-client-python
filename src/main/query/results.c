@@ -94,6 +94,9 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     as_partition_filter *partition_filter_p = NULL;
     as_partitions_status *ps = NULL;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -108,7 +111,7 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     // Convert python policy object to as_policy_query
     pyobject_to_policy_query(
         self->client, &err, py_policy, &query_policy, &query_policy_p,
-        &self->client->as->config.policies.query, NULL, &exp_list_p);
+        &self->client->as->config.policies.query, &dynamic_pool, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -159,6 +162,8 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
 CLEANUP: /*??trace()*/
+    as_dynamic_pool_destroy(&dynamic_pool);
+
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }

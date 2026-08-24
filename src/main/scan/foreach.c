@@ -159,6 +159,9 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 
     as_error_init(&data.error);
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     if (!self || !self->client->as) {
         as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
                         "Invalid aerospike object");
@@ -172,9 +175,10 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     }
 
     // Convert python policy object to as_policy_exists
-    pyobject_to_policy_scan(
-        self->client, &data.error, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, NULL, &exp_list_p, false);
+    pyobject_to_policy_scan(self->client, &data.error, py_policy, &scan_policy,
+                            &scan_policy_p,
+                            &self->client->as->config.policies.scan,
+                            &dynamic_pool, &exp_list_p, false);
 
     if (data.error.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -242,6 +246,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     }
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
