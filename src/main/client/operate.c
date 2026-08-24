@@ -605,14 +605,22 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     }
     case AS_OPERATOR_APPEND:
+    case AS_OPERATOR_PREPEND:
+        const char *op_name = NULL;
+        if (operation == AS_OPERATOR_APPEND) {
+            op_name = DEPRECATED_APPEND_NAME;
+        }
+        else {
+            op_name = DEPRECATED_PREPEND_NAME;
+        }
+
         if (PyUnicode_Check(py_value)) {
-            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                          DEPRECATION_MESSAGE_TEMPLATE,
-                                          DEPRECATED_APPEND_NAME);
+            int retval =
+                PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                 DEPRECATION_MESSAGE_TEMPLATE, op_name);
             if (retval == -1) {
                 return as_error_update(err, AEROSPIKE_ERR,
-                                       DEPRECATION_MESSAGE_TEMPLATE,
-                                       DEPRECATED_APPEND_NAME);
+                                       DEPRECATION_MESSAGE_TEMPLATE, op_name);
             }
 
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
@@ -621,80 +629,36 @@ as_status add_op(AerospikeClient *self, as_error *err,
             as_vector_append(unicodeStrVector, &val);
             Py_DECREF(py_ustr1);
         }
-        else if (PyByteArray_Check(py_value)) {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_value);
-            uint8_t *heap_b = (uint8_t *)malloc(str_len);
-            memcpy(heap_b, str, str_len);
-            as_operations_add_append_rawp(ops, bin, heap_b, str_len, true);
-        }
-        else if (PyBytes_Check(py_value)) {
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_value);
+        else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
+            uint32_t b_len = 0;
+            uint8_t *b = NULL;
+
+            if (PyByteArray_Check(py_value)) {
+                b = (uint8_t *)PyByteArray_AsString(py_value);
+                b_len = (uint32_t)PyByteArray_Size(py_value);
+            }
+            else {
+                b = (uint8_t *)PyBytes_AsString(py_value);
+                b_len = (uint32_t)PyBytes_Size(py_value);
+            }
+
             uint8_t *heap_b = (uint8_t *)malloc(b_len);
             memcpy(heap_b, b, b_len);
             as_operations_add_append_rawp(ops, bin, heap_b, b_len, true);
         }
-        else {
-            if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
-                as_operations *pointer_ops = ops;
-                as_binop *binop =
-                    &pointer_ops->binops.entries[pointer_ops->binops.size++];
-                binop->op = AS_OPERATOR_APPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              dynamic_pool);
-                if (err->code != AEROSPIKE_OK) {
-                    goto CLEANUP;
-                }
+        else if (!self->strict_types ||
+                 !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+            as_operations *pointer_ops = ops;
+            as_binop *binop =
+                &pointer_ops->binops.entries[pointer_ops->binops.size++];
+            binop->op = operation;
+            initialize_bin_for_strictypes(self, err, py_value, binop, bin,
+                                          dynamic_pool);
+            if (err->code != AEROSPIKE_OK) {
+                goto CLEANUP;
             }
         }
-        break;
-    case AS_OPERATOR_PREPEND:
-        if (PyUnicode_Check(py_value)) {
-            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                          DEPRECATION_MESSAGE_TEMPLATE,
-                                          DEPRECATED_PREPEND_NAME);
-            if (retval == -1) {
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       DEPRECATION_MESSAGE_TEMPLATE,
-                                       DEPRECATED_PREPEND_NAME);
-            }
 
-            py_ustr1 = PyUnicode_AsUTF8String(py_value);
-            val = strdup(PyBytes_AsString(py_ustr1));
-            as_operations_add_prepend_str(ops, bin, val);
-            as_vector_append(unicodeStrVector, &val);
-            Py_DECREF(py_ustr1);
-        }
-        else if (PyByteArray_Check(py_value)) {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_value);
-            uint8_t *heap_b = (uint8_t *)malloc(str_len);
-            memcpy(heap_b, str, str_len);
-            as_operations_add_prepend_rawp(ops, bin, heap_b, str_len, true);
-        }
-        else if (PyBytes_Check(py_value)) {
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_value);
-            uint8_t *heap_b = (uint8_t *)malloc(b_len);
-            memcpy(heap_b, b, b_len);
-            as_operations_add_prepend_rawp(ops, bin, heap_b, b_len, true);
-        }
-        else {
-            if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
-                as_operations *pointer_ops = ops;
-                as_binop *binop =
-                    &pointer_ops->binops.entries[pointer_ops->binops.size++];
-                binop->op = AS_OPERATOR_PREPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              dynamic_pool);
-                if (err->code != AEROSPIKE_OK) {
-                    goto CLEANUP;
-                }
-            }
-        }
         break;
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
