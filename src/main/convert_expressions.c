@@ -554,26 +554,6 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         *new_entry = tmp_entry;
         Py_DECREF(py_ustr);
     }
-    else if (PyBytes_Check(py_obj)) {
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj, err) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            as_exp_entry tmp_entry = as_exp_val(
-                (as_val *)
-                    bytes); //TODO can this be simplified to a buffer and as_exp_bytes?
-            *new_entry = tmp_entry;
-        }
-        else {
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-            as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
-            *new_entry = tmp_entry;
-        }
-    }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
@@ -590,26 +570,6 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         as_geojson *geojson = as_geojson_fromval(tmp_entry.v.val);
         geojson->free = true;
         *new_entry = tmp_entry;
-    }
-    else if (PyByteArray_Check(py_obj)) {
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj, err) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            as_exp_entry tmp_entry = as_exp_val(
-                (as_val *)
-                    bytes); //TODO can this be simplified to a buffer and as_exp_bytes?
-            *new_entry = tmp_entry;
-        }
-        else {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_obj);
-            as_exp_entry tmp_entry = as_exp_bytes(str, str_len);
-            *new_entry = tmp_entry;
-        }
     }
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
@@ -650,32 +610,26 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
             as_exp_val((as_val *)as_val_reserve(&as_cmp_inf));
         *new_entry = tmp_entry;
     }
+    else if (PyFloat_Check(py_obj)) {
+        double d = PyFloat_AsDouble(py_obj);
+        as_exp_entry tmp_entry = as_exp_float(d);
+        *new_entry = tmp_entry;
+    }
+    else if (PyBytes_Check(py_obj)) {
+        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
+        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
+        as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
+        *new_entry = tmp_entry;
+    }
+    else if (PyByteArray_Check(py_obj)) {
+        uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
+        uint32_t str_len = (uint32_t)PyByteArray_Size(py_obj);
+        as_exp_entry tmp_entry = as_exp_bytes(str, str_len);
+        *new_entry = tmp_entry;
+    }
     else {
-        if (PyFloat_Check(py_obj)) {
-            double d = PyFloat_AsDouble(py_obj);
-            as_exp_entry tmp_entry = as_exp_float(d);
-            *new_entry = tmp_entry;
-        }
-        else {
-            if (self->user_serializer_call_info.callback) {
-                as_bytes *bytes;
-                if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj,
-                        err) != AEROSPIKE_OK) {
-                    return err->code;
-                }
-
-                as_exp_entry tmp_entry = as_exp_val((as_val *)bytes);
-                *new_entry = tmp_entry;
-            }
-            else {
-                if (err->code == AEROSPIKE_OK) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to create bin for unknown Python native type.");
-                }
-            }
-        }
     }
 
     return err->code;
