@@ -625,7 +625,14 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
-            as_operations_add_append_str(ops, bin, val);
+
+            if (operation == AS_OPERATOR_APPEND) {
+                as_operations_add_append_str(ops, bin, val);
+            }
+            else {
+                as_operations_add_prepend_str(ops, bin, val);
+            }
+
             as_vector_append(unicodeStrVector, &val);
             Py_DECREF(py_ustr1);
         }
@@ -644,7 +651,13 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
             uint8_t *heap_b = (uint8_t *)malloc(b_len);
             memcpy(heap_b, b, b_len);
-            as_operations_add_append_rawp(ops, bin, heap_b, b_len, true);
+
+            if (operation == AS_OPERATOR_APPEND) {
+                as_operations_add_append_rawp(ops, bin, heap_b, b_len, true);
+            }
+            else {
+                as_operations_add_prepend_rawp(ops, bin, heap_b, b_len, true);
+            }
         }
         else if (!self->strict_types ||
                  !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
