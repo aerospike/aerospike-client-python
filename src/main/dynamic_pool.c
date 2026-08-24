@@ -121,6 +121,9 @@ static inline void as_dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
     dynamic_pool->group_iterator++;
 
     as_dynamic_pool_expand_table_if_needed(dynamic_pool, err);
+    if (err->code != AEROSPIKE_OK) {
+        return;
+    }
 
     as_dynamic_pool_shift_bytes_per_group_if_needed(dynamic_pool);
     as_dynamic_pool_malloc_group(dynamic_pool, err);
