@@ -664,9 +664,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert excinfo.value.code == 20
 
     def test_neg_cdtindex_with_incorrect_cdt_ctx(self):
-        """
-        Invoke createindex() with incorrect namespace
-        """
         policy = {}
 
         with pytest.raises(e.ParamError) as err_info:
