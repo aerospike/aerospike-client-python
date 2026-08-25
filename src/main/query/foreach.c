@@ -280,7 +280,7 @@ CLEANUP:
         return NULL;
     }
 
-    if (!py_callback) {
+    if (py_callback) {
         Py_RETURN_NONE;
     }
     else {
