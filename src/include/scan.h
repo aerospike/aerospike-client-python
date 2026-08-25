@@ -132,3 +132,9 @@ PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self);
 
 AerospikeScan *AerospikeScan_Type_New(PyTypeObject *type,
                                       AerospikeClient *client);
+
+PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
+                                       PyObject *py_callback,
+                                       PyObject *py_policy,
+                                       PyObject *py_options,
+                                       PyObject *py_nodename);

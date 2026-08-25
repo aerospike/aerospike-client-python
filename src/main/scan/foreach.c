@@ -34,12 +34,32 @@ extern bool each_result(const as_val *val, void *udata);
 PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
                                 PyObject *kwds)
 {
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"callback", "policy", "options", "nodename", NULL};
+
     // Python Function Arguments
     PyObject *py_callback = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_options = NULL;
     PyObject *py_nodename = NULL;
 
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:foreach", kwlist,
+                                    &py_callback, &py_policy, &py_options,
+                                    &py_nodename) == false) {
+        return NULL;
+    }
+
+    return AerospikeScan_Foreach_Invoke(self, py_callback, py_policy,
+                                        py_options, py_nodename);
+}
+
+PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
+                                       PyObject *py_callback,
+                                       PyObject *py_policy,
+                                       PyObject *py_options,
+                                       PyObject *py_nodename)
+{
     char *nodename = NULL;
 
     as_policy_scan scan_policy;
@@ -52,19 +72,17 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     as_partition_filter *partition_filter_p = NULL;
     as_partitions_status *ps = NULL;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"callback", "policy", "options", "nodename", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:foreach", kwlist,
-                                    &py_callback, &py_policy, &py_options,
-                                    &py_nodename) == false) {
-        return NULL;
-    }
-
     // Create and initialize callback user-data
     LocalData data;
-    data.py_obj = py_callback;
+    if (py_callback) {
+        data.py_obj = py_callback;
+    }
+    else {
+        data.py_obj = PyList_New(0);
+        if (data.py_obj == NULL) {
+            goto CLEANUP;
+        }
+    }
     data.client = self->client;
     data.partition_query = 0;
 
@@ -168,6 +186,10 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
+        if (!py_callback) {
+            // Clear list from results()
+            Py_DECREF(data.py_obj);
+        }
         raise_exception(&err);
         return NULL;
     }
