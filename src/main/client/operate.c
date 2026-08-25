@@ -605,7 +605,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     }
     case AS_OPERATOR_APPEND:
-    case AS_OPERATOR_PREPEND:
+    case AS_OPERATOR_PREPEND: {
         const char *op_name = NULL;
         if (operation == AS_OPERATOR_APPEND) {
             op_name = DEPRECATED_APPEND_NAME;
@@ -673,6 +673,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         }
 
         break;
+    }
     case AS_OPERATOR_INCR:
         if (PyLong_Check(py_value)) {
             offset = PyLong_AsLong(py_value);

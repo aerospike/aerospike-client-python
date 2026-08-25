@@ -116,9 +116,9 @@
         }                                                                      \
         Py_DECREF(py_field_name);                                              \
         if (py_exp_list) {                                                     \
-            if (!as_exp_new_from_pyobject(self, py_exp_list, exp_list_p, err,  \
-                                          false,                               \
-                                          dynamic_pool) == AEROSPIKE_OK) {     \
+            if (as_exp_new_from_pyobject(self, py_exp_list, exp_list_p, err,   \
+                                         false,                                \
+                                         dynamic_pool) != AEROSPIKE_OK) {      \
                 return err->code;                                              \
             }                                                                  \
             policy->filter_exp = *exp_list_p;                                  \
