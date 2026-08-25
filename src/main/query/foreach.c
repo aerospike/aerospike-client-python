@@ -271,8 +271,11 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
+        if (PyList_Check(data.py_obj)) {
+            Py_XDECREF(data.py_obj);
+        }
+
         // TODO: results() used raise_exception();
-        Py_XDECREF(data.py_obj);
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
