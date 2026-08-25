@@ -38,8 +38,6 @@ typedef struct {
     int partition_query;
     as_vector thread_errors;
     pthread_mutex_t thread_errors_mutex;
-    // If false, it is a python list
-    bool is_pyobj_callback;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -74,7 +72,7 @@ static bool each_result(const as_val *val, void *udata)
         goto EXIT_CALLBACK;
     }
 
-    if (data->is_pyobj_callback == false) {
+    if (PyList_Check(py_callback_or_list_of_results)) {
         // query.results()
         if (py_result) {
             int retval =
@@ -196,7 +194,6 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     else {
         data.py_obj = py_callback;
     }
-    data.is_pyobj_callback = py_callback != NULL;
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_query(
@@ -280,7 +277,7 @@ CLEANUP:
         return NULL;
     }
 
-    if (data.is_pyobj_callback) {
+    if (!py_callback) {
         Py_RETURN_NONE;
     }
     else {
