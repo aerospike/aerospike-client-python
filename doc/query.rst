@@ -409,7 +409,8 @@ Assume this boilerplate code is run before all examples below:
         This function can also be used to apply a record UDF.
 
         This method cannot be used together with :meth:`~aerospike.Query.add_ops` on the same :class:`~aerospike.Query`
-        object — see :meth:`~aerospike.Query.execute_background`.
+        object. Executing the query as either a foreground or background query will raise a
+        :exc:`~aerospike.exception.ParamError` if both have been set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
@@ -500,7 +501,8 @@ Assume this boilerplate code is run before all examples below:
         during the query.
 
         This method cannot be used together with :meth:`~aerospike.Query.apply` on the same :class:`~aerospike.Query`
-        object — see :meth:`~aerospike.Query.execute_background`.
+        object. Executing the query as either a foreground or background query will raise a
+        :exc:`~aerospike.exception.ParamError` if both have been set.
 
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 
@@ -511,9 +513,6 @@ Assume this boilerplate code is run before all examples below:
 
         Execute a record UDF or write operations on records found by the query in the background. This method returns before the query has completed.
         A UDF or a list of write operations must have been added to the query with :meth:`Query.apply` or :meth:`Query.add_ops` respectively.
-
-        :meth:`Query.apply` and :meth:`Query.add_ops` cannot both be used on the same :class:`~aerospike.Query` object.
-        Calling this method after both have been set will raise a :exc:`~aerospike.exception.ParamError`.
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
