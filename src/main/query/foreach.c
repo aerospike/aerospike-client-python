@@ -30,17 +30,9 @@
 #include "exceptions.h"
 #include "query.h"
 #include "policy.h"
+#include "foreach.h"
 
-// Struct for Python User-Data for the Callback
-typedef struct {
-    PyObject *py_obj;
-    AerospikeClient *client;
-    int partition_query;
-    as_vector thread_errors;
-    pthread_mutex_t thread_errors_mutex;
-} LocalData;
-
-static bool each_result(const as_val *val, void *udata)
+bool each_result(const as_val *val, void *udata)
 {
     bool retval = true;
 
