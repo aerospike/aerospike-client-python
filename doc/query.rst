@@ -57,10 +57,6 @@ A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/d
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
-.. note::
-    :meth:`~aerospike.Query.add_ops` and :meth:`~aerospike.Query.apply` cannot both be used on the same
-    :class:`~aerospike.Query` object. See :meth:`~aerospike.Query.execute_background`.
-
 Getting Results From Query
 --------------------------
 
