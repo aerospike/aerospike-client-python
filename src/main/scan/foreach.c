@@ -194,6 +194,11 @@ CLEANUP:
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    if (!py_callback) {
+        return data.py_obj;
+    }
+    else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 }
