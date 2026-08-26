@@ -74,14 +74,15 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
 
     // Create and initialize callback user-data
     LocalData data;
-    if (py_callback) {
-        data.py_obj = py_callback;
-    }
-    else {
+    bool is_scan_results = py_callback == NULL;
+    if (is_scan_results) {
         data.py_obj = PyList_New(0);
         if (data.py_obj == NULL) {
             goto CLEANUP;
         }
+    }
+    else {
+        data.py_obj = py_callback;
     }
     data.client = self->client;
     data.partition_query = 0;
@@ -186,7 +187,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        if (!py_callback) {
+        if (is_scan_results) {
             // Clear list from results()
             Py_DECREF(data.py_obj);
         }
@@ -194,7 +195,7 @@ CLEANUP:
         return NULL;
     }
 
-    if (!py_callback) {
+    if (is_scan_results) {
         return data.py_obj;
     }
     else {
