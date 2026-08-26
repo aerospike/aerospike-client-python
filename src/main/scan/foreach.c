@@ -74,16 +74,6 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
 
     // Create and initialize callback user-data
     LocalData data;
-    bool is_scan_results = py_callback == NULL;
-    if (is_scan_results) {
-        data.py_obj = PyList_New(0);
-        if (data.py_obj == NULL) {
-            goto CLEANUP;
-        }
-    }
-    else {
-        data.py_obj = py_callback;
-    }
     data.client = self->client;
     data.partition_query = 0;
 
@@ -103,6 +93,17 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
         as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
                         "No connection to aerospike cluster");
         goto CLEANUP;
+    }
+
+    bool is_scan_results = py_callback == NULL;
+    if (is_scan_results) {
+        data.py_obj = PyList_New(0);
+        if (data.py_obj == NULL) {
+            goto CLEANUP;
+        }
+    }
+    else {
+        data.py_obj = py_callback;
     }
 
     // Convert python policy object to as_policy_exists
@@ -185,6 +186,13 @@ CLEANUP:
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
+
+    for (uint32_t i = 0; i < data.thread_errors.size; ++i) {
+        void *err_ptr = as_vector_get_ptr(&data.thread_errors, i);
+        cf_free(err_ptr);
+    }
+    as_vector_destroy(&data.thread_errors);
+    pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
         if (is_scan_results) {
