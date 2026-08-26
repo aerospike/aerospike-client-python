@@ -71,7 +71,8 @@ bool each_result(const as_val *val, void *udata)
                 PyList_Append(py_callback_or_list_of_results, py_result);
             Py_DECREF(py_result);
             if (retval == -1) {
-                // TODO: should fail, not return true
+                as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
+                                "Failed to append item to results list");
                 goto EXIT_CALLBACK;
             }
         }
