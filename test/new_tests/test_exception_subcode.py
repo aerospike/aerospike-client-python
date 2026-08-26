@@ -113,6 +113,7 @@ class TestExceptionSubcode:
         else:
             assert excinfo.value.subcode > 0
 
+    @pytest.mark.usefixtures("setup")
     def test_batch_record_message_field_is_none_when_batch_succeeds(self):
         brs = BatchRecords(
             [
