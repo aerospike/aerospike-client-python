@@ -209,6 +209,9 @@ class TestExceptionSubcode:
     )
     @pytest.mark.usefixtures("setup")
     def test_dyn_config(self, api_method, kwargs):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
         config["config_provider"] = provider
