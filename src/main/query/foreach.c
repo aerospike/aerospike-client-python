@@ -165,7 +165,7 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     as_partition_filter *partition_filter_p = NULL;
     as_partitions_status *ps = NULL;
 
-    // Initialize error
+    bool is_query_results = py_callback != NULL;
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -178,8 +178,7 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
         goto CLEANUP;
     }
 
-    bool is_this_query_results = py_callback != NULL;
-    if (is_this_query_results) {
+    if (is_query_results) {
         data.py_obj = PyList_New(0);
         if (data.py_obj == NULL) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -267,7 +266,7 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
-        if (is_this_query_results) {
+        if (is_query_results) {
             Py_XDECREF(data.py_obj);
         }
 
@@ -275,7 +274,7 @@ CLEANUP:
         return NULL;
     }
 
-    if (is_this_query_results) {
+    if (is_query_results) {
         return data.py_obj;
     }
     else {

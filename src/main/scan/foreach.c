@@ -84,6 +84,8 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
     as_vector_init(&data.thread_errors, sizeof(as_error *), 16);
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
+    bool is_scan_results = py_callback == NULL;
+
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -95,7 +97,6 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
         goto CLEANUP;
     }
 
-    bool is_scan_results = py_callback == NULL;
     if (is_scan_results) {
         data.py_obj = PyList_New(0);
         if (data.py_obj == NULL) {
