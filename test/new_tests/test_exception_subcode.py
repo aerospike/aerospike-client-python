@@ -113,6 +113,19 @@ class TestExceptionSubcode:
         else:
             assert excinfo.value.subcode > 0
 
+    def test_batch_record_message_field_is_none_when_batch_succeeds(self):
+        brs = BatchRecords(
+            [
+                Read(KEY, ops=[
+                    operations.read(BIN_NAME)
+                ])
+            ]
+        )
+        self.as_connection.batch_write(brs, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
+        for br in brs.batch_records:
+            assert br.message is None
+            assert br.subcode == 0
+
     @pytest.mark.usefixtures("setup")
     @pytest.mark.parametrize(
         "brs",
