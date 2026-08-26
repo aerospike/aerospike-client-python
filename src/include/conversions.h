@@ -196,6 +196,8 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
 
+// This is shared for Python client API calls where the C client API returns as_batch_result or as_batch_base_record
+// Then it extracts the subcode and detailed error message and sets it in a BatchRecord instance.
 as_status set_error_details_in_py_batch_record(as_error *err,
                                                PyObject *py_batch_record,
                                                uint32_t subcode,
