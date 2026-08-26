@@ -16,9 +16,6 @@ env:
   MANYLINUX_TAG: manylinux_2_28
 jobs:
   main:
-    env:
-      REGISTRY: ghcr.io
-      CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH: cibuildwheel/resources/pinned_docker_images.cfg
     strategy:
       matrix:
         arch-and-runner-os: [

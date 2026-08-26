@@ -4,12 +4,13 @@ import os
 import sys
 
 import pytest
-
 from . import invalid_data
 from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+import logging
+
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import BatchRecords, Write
 from contextlib import nullcontext
@@ -247,6 +248,95 @@ def invalid_key(request):
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
 
+HARD_LIMIT_SECS = 3
+# Server team states that this time interval is a safe amount
+POLL_INTERVAL_SECS = 0.1
+
+def poll_until_role_exists(role_name: str, client: aerospike.Client):
+    start = time.time()
+    while time.time() - start < HARD_LIMIT_SECS:
+        try:
+            client.admin_query_role(role=role_name)
+        except e.InvalidRole:
+            time.sleep(POLL_INTERVAL_SECS)
+            continue
+        logging.debug("Role now exists. Return early")
+        return
+    logging.debug("poll_until_role_exists timeout")
+
+def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
+    start = time.time()
+    try:
+        while time.time() - start < HARD_LIMIT_SECS:
+            client.admin_query_role(role=role_name)
+            time.sleep(POLL_INTERVAL_SECS)
+    except e.InvalidRole:
+        logging.debug("Role no longer exists. Return early")
+        return
+    logging.debug("poll_until_role_doesnt_exist timeout")
+
+def poll_until_user_exists(username: str, client: aerospike.Client, roles: list[str]):
+    start = time.time()
+    while time.time() - start < HARD_LIMIT_SECS:
+        try:
+            user_dict = client.admin_query_user_info(user=username)
+            if user_dict["roles"] != roles:
+                continue
+        except e.InvalidUser:
+            time.sleep(POLL_INTERVAL_SECS)
+            continue
+        logging.debug("User now exists with expected roles.")
+        return
+    logging.debug("poll_until_user_exists timeout")
+
+def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
+    start = time.time()
+    try:
+        while time.time() - start < HARD_LIMIT_SECS:
+            client.admin_query_user_info(user=username)
+            time.sleep(POLL_INTERVAL_SECS)
+    except e.InvalidUser:
+        logging.debug("User no longer exists. Return early")
+        return
+    logging.debug("poll_until_user_doesnt_exist timeout")
+
+def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
+    """
+    Blocks until the job has completed
+    """
+    start = time.time()
+    while time.time() - start < time_limit_secs:
+        response = as_connection.job_info(job_id, job_module)
+        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
+            break
+        time.sleep(0.1)
+
+# Monkeypatching the client class or instance isn't possible since it's immutable
+
+def admin_create_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    retval = client.admin_create_role(role, *args, **kwargs)
+    poll_until_role_exists(role, client)
+    return retval
+
+def admin_create_user_and_poll(client: aerospike.Client, username: str, password: str, roles: list, *args, **kwargs):
+    retval = client.admin_create_user(username, password, roles, *args, **kwargs)
+
+    # The server creates a user and adds roles to it asynchronously, since security is a type of smd operation
+    # So client.admin_create_user() can return before all th
+    poll_until_user_exists(username, client, roles)
+
+    return retval
+
+def admin_drop_user_and_poll(client: aerospike.Client, username: str, *args, **kwargs):
+    retval = client.admin_drop_user(username, *args, **kwargs)
+    poll_until_user_doesnt_exist(username, client)
+    return retval
+
+def admin_drop_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    retval = client.admin_drop_role(role, *args, **kwargs)
+    poll_until_role_doesnt_exist(role, client)
+    return retval
+
 def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
     _, meta = client.exists(key)
     clock_skew_tolerance_secs = 50
@@ -260,8 +350,9 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
     while time.time() - start < time_limit_secs:
         response = as_connection.job_info(job_id, job_module)
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
+            return
         time.sleep(0.1)
+    print("time_limit_secs was hit.")
 
 # Shared between bin projection and execute background tests
 
@@ -288,6 +379,9 @@ def insert_records(request, as_connection):
     else:
         set_name = TEST_SET
 
+    if make_set_unique is False:
+        as_connection.truncate(TEST_NS, set_name, 0)
+
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
@@ -307,9 +401,6 @@ def insert_records(request, as_connection):
     as_connection.batch_write(brs)
 
     yield
-
-    if make_set_unique is False:
-        as_connection.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
     query = client.query(TEST_NS, set_name)

@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_role_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
 
 
 class TestRevokePrivilege(TestBaseClass):
@@ -23,14 +24,12 @@ class TestRevokePrivilege(TestBaseClass):
         config = self.config
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
-        self.client.admin_create_role(
+        admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -38,7 +37,7 @@ class TestRevokePrivilege(TestBaseClass):
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except e.InvalidRole:
             pass
         self.client.close()
