@@ -283,7 +283,9 @@ def insert_records(request, connection_with_udf):
     # - make_set_unique ensures that if a test case's cleanup stage fails to run
     # e.g when the test case's setup fixture fails out,
     # that test case's records does not interfere with future test cases that need to perform a query
-    num_keys, make_set_unique, *_ = request.param
+    num_keys = request.param["record_count"]
+    make_set_unique = request.param["make_set_unique"]
+    batch_write_policy = request.param.get("batch_write_command_policy", None)
 
     if make_set_unique:
         set_name = f"{TEST_SET}-{time.time_ns()}"
@@ -296,11 +298,6 @@ def insert_records(request, connection_with_udf):
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
-
-    if len(request.param) > 2:
-        batch_write_policy = request.param[2]
-    else:
-        batch_write_policy = None
 
     batch_records = []
     brs = BatchRecords(batch_records=batch_records)

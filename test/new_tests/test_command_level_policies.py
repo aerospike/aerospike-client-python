@@ -92,6 +92,7 @@ TTL = 2
 
 @pytest.mark.parametrize(
     "insert_records",
+    [{"record_count": 500, "make_set_unique": False, "batch_write_command_policy": {"ttl": TTL}}],
     [[
         1,
         True,

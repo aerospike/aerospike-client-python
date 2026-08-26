@@ -8,7 +8,7 @@ import os
 
 @pytest.mark.parametrize(
     "insert_records",
-    [[1, True]],
+    [{"record_count": 1, "make_set_unique": True}],
     indirect=True
 )
 @pytest.mark.usefixtures("insert_records")
