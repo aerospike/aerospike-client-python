@@ -2,9 +2,9 @@ import pytest
 from .conftest import TEST_NS, TEST_SET, BIN_NAME
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import list_operations as list_ops
+from aerospike_helpers.operations import list_operations as list_ops, operations
 from aerospike_helpers import expressions as expr
-from aerospike_helpers.batch.records import BatchRecords, Write
+from aerospike_helpers.batch.records import BatchRecords, Read
 from .test_base_class import TestBaseClass
 from . import as_errors
 
@@ -118,11 +118,11 @@ class TestExceptionSubcode:
         "brs",
         [
             [
-                Write(KEY, ops=OPS),
+                Read(KEY, ops=OPS),
             ],
             [
-                Write(KEY, ops=OPS),
-                Write(KEY2, ops=OPS),
+                Read(KEY, ops=OPS),
+                Read(KEY2, ops=OPS),
             ]
         ]
     )
@@ -158,12 +158,20 @@ class TestExceptionSubcode:
                 assert br.subcode > 0
 
     @pytest.mark.usefixtures("setup")
-    def test_error_detail_exp_trace(self):
+    @pytest.mark.parametrize(
+        "verbosity_level",
+        [
+            aerospike.ERROR_DETAIL_EXP_TRACE,
+            # Test that an invalid verbosity level gets clamped
+            4
+        ]
+    )
+    def test_error_detail_exp_trace(self, verbosity_level):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
             pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
 
         policy = {
-            ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_EXP_TRACE,
+            ERROR_DETAIL_VERBOSITY_SETTING: verbosity_level,
             "expressions": expr.GE(expr.Abs(expr.Val("a")), 1).compile()
         }
         with pytest.raises(e.InvalidRequest) as excinfo:
@@ -171,10 +179,3 @@ class TestExceptionSubcode:
 
         assert "; exp_trace={" in excinfo.value.msg
         print(excinfo.value.msg)
-
-    def test_invalid_verbosity(self):
-        policy = {
-            ERROR_DETAIL_VERBOSITY_SETTING: 4
-        }
-        with pytest.raises(e.ServerError):
-            self.as_connection.operate(KEY, OPS, policy=policy)
