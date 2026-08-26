@@ -10,6 +10,7 @@ from . import as_errors
 
 
 KEY = (TEST_NS, TEST_SET, 1)
+KEY2 = (TEST_NS, TEST_SET, 2)
 OPS = [
     list_ops.list_get_by_index(BIN_NAME, index=99, return_type=aerospike.LIST_RETURN_VALUE)
 ]
@@ -61,8 +62,9 @@ class TestExceptionSubcode:
     @pytest.fixture()
     def setup(self, as_connection):
         self.as_connection.put(KEY, bins={BIN_NAME: []})
+        self.as_connection.put(KEY2, bins={BIN_NAME: []})
         yield
-        self.as_connection.remove(KEY)
+        self.as_connection.batch_remove(keys=[KEY, KEY2])
 
     @pytest.mark.parametrize(
         "policy_w_verbosity_setting",
@@ -112,31 +114,48 @@ class TestExceptionSubcode:
             assert excinfo.value.subcode > 0
 
     @pytest.mark.usefixtures("setup")
-    def test_batch_write_return_error_details(self):
-        brs = BatchRecords(
+    @pytest.mark.parametrize(
+        "brs",
+        [
             [
-                Write(KEY, ops=OPS)
+                Write(KEY, ops=OPS),
+            ],
+            [
+                Write(KEY, ops=OPS),
+                Write(KEY2, ops=OPS),
             ]
+        ]
+    )
+    def test_batch_write_return_error_details(self, brs):
+        brs = BatchRecords(
+            brs
         )
         self.as_connection.batch_write(brs, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
         for br in brs.batch_records:
+            assert isinstance(br.message, str)
             if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-                assert br.message is None
                 assert br.subcode == 0
             else:
-                assert isinstance(br.message, str)
                 assert br.subcode > 0
 
     @pytest.mark.usefixtures("setup")
-    def test_batch_operate_return_error_details(self):
-        brs = self.as_connection.batch_operate([KEY], OPS, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
-        br = brs.batch_records[0]
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-            assert br.message is None
-            assert br.subcode == 0
-        else:
+    @pytest.mark.parametrize(
+        "keys",
+        [
+            [KEY],
+            [KEY, KEY2]
+        ]
+    )
+    def test_batch_operate_return_error_details(self, keys):
+        brs = self.as_connection.batch_operate(
+            keys, OPS, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
+
+        for br in brs.batch_records:
             assert isinstance(br.message, str)
-            assert br.subcode > 0
+            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+                assert br.subcode == 0
+            else:
+                assert br.subcode > 0
 
     @pytest.mark.usefixtures("setup")
     def test_error_detail_exp_trace(self):
