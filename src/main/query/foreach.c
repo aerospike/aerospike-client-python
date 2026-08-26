@@ -177,7 +177,8 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
         goto CLEANUP;
     }
 
-    if (!py_callback) {
+    bool is_this_query_results = py_callback != NULL;
+    if (is_this_query_results) {
         data.py_obj = PyList_New(0);
         if (data.py_obj == NULL) {
             goto CLEANUP;
@@ -263,20 +264,19 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
-        if (PyList_Check(data.py_obj)) {
+        if (is_this_query_results) {
             Py_XDECREF(data.py_obj);
         }
 
-        // TODO: results() used raise_exception();
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
+        raise_exception(&err);
         return NULL;
     }
 
-    if (py_callback) {
-        Py_RETURN_NONE;
+    if (is_this_query_results) {
+        return data.py_obj;
     }
     else {
-        return data.py_obj;
+        Py_RETURN_NONE;
     }
 }
 
