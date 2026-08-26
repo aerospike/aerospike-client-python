@@ -165,7 +165,7 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     as_partition_filter *partition_filter_p = NULL;
     as_partitions_status *ps = NULL;
 
-    bool is_query_results = py_callback != NULL;
+    bool is_query_results = py_callback == NULL;
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
