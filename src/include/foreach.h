@@ -5,7 +5,7 @@
 typedef struct {
     PyObject *py_obj;
     AerospikeClient *client;
-    int partition_query;
     as_vector thread_errors;
     pthread_mutex_t thread_errors_mutex;
+    bool partition_query;
 } LocalData;
