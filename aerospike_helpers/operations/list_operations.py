@@ -1166,3 +1166,32 @@ def list_remove_by_value_rank_range_relative(
         op_dict[CTX_KEY] = ctx
 
     return op_dict
+
+
+def list_join(
+    bin_name: str, ctx: Optional[list] = None
+):
+    """Create a list_join operation.
+
+    Takes in a list of string values and returns a string with all the values concatenated together.
+
+    Args:
+        bin_name (str): The name of the bin containing the list.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
+
+    Returns:
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The
+        format of the dictionary should be considered an internal detail, and subject to change.
+
+    Note:
+        This operation requires server version 8.1.3.0 or greater.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL,
+        BIN_KEY: bin_name,
+    }
+    if ctx:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict

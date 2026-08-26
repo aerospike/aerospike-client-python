@@ -307,6 +307,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
             EXP_SZ(as_exp_list_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
+        // TODO
+        [OP_LIST_JOIN] = 0,
         [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, NIL, NIL, NIL)),
         [OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, NIL, NIL)),
         [OP_MAP_INCREMENT] =
@@ -1159,6 +1161,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(3, as_exp_list_remove_by_rank_range(
                                 temp_expr->ctx, lval1, NIL, NIL,
                                 NIL)); // - 3 for rank, count, bin
+            break;
+        case OP_LIST_JOIN:
+            // TODO
             break;
         case OP_MAP_PUT:
             APPEND_ARRAY(4,
