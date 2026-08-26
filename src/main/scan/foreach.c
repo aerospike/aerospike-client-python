@@ -122,12 +122,12 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
                                          &partition_filter, &ps,
                                          &err) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
+                data.partition_query = 1;
             }
-            data.partition_query = 1;
+            else {
+                goto CLEANUP;
+            }
         }
-    }
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
     }
 
     if (py_options && PyDict_Check(py_options)) {
