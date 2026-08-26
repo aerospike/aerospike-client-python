@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,70 +16,11 @@
 ##########################################################################
 
 
-from __future__ import print_function
 
-import aerospike
-import sys
+from .. import UDFExample
 
-from optparse import OptionParser
-
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    config = {'hosts': [(options.host, options.port)]}
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
+class KVS(UDFExample):
+    def run(self):
         print(
             '########################################################################')
         print('PUT')
@@ -96,7 +37,8 @@ try:
                 'm': {'a': 2, 'b': 4, 'c': 8, 'd': 16}
             }
             print(rec)
-            client.put(('test', 'demo', str(i)), rec)
+            KEY = ('test', 'demo', str(i))
+            self.client.put(KEY, rec)
 
         print(
             '########################################################################')
@@ -105,7 +47,8 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            (key, metadata) = client.exists(('test', 'demo', str(i)))
+            KEY = ('test', 'demo', str(i))
+            (key, metadata) = self.client.exists(KEY)
             print(key, metadata)
 
         print(
@@ -115,7 +58,8 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            (key, metadata, record) = client.get(('test', 'demo', str(i)))
+            KEY = ('test', 'demo', str(i))
+            (key, metadata, record) = self.client.get(KEY)
             print(key, metadata, record)
 
         print(
@@ -124,11 +68,11 @@ try:
         print(
             '########################################################################')
 
-        client.udf_put('simple.lua')
+        self.client.udf_put('./examples/client/simple.lua')
 
         for i in range(1, 1000):
             key = ('test', 'demo', 'key{0}'.format(i))
-            val1 = client.apply(key, 'simple', 'concat', ['a', 30000])
+            val1 = self.client.apply(key, 'simple', 'concat', ['a', 30000])
             print(val1)
 
         print(
@@ -138,24 +82,5 @@ try:
             '########################################################################')
 
         for i in range(1, 1000):
-            client.remove(('test', 'demo', str(i)))
-
-    except Exception as eargs:
-        print("error: {0}".format(eargs), file=sys.stderr)
-        exitCode = 2
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+            KEY = ('test', 'demo', str(i))
+            self.client.remove(KEY)

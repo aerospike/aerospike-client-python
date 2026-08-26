@@ -37,6 +37,7 @@
 #include "hll_operations.h"
 #include "pythoncapi_compat.h"
 #include "expression_operations.h"
+#include "cdt_operation_utils.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -346,7 +347,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
     PyObject *py_map_policy = NULL;
     PyObject *py_return_type = NULL;
     // For map_create operation
-    PyObject *py_map_order = NULL;
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;
@@ -419,7 +419,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else if (strcmp(name, "map_order") == 0) {
-                py_map_order = value;
+                continue;
             }
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
@@ -744,7 +744,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
         as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
         break;
     case OP_MAP_CREATE:;
-        as_map_order order = (as_map_order)PyLong_AsLong(py_map_order);
+        int tmp_value;
+        if (get_enum_from_py_dict(err, py_operation_dict, "map_order",
+                                  &tmp_value, AS_MAP_UNORDERED,
+                                  AS_MAP_KEY_VALUE_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        as_map_order order = (as_map_order)tmp_value;
+
         bool persist_index = PyObject_IsTrue(py_persist_index);
         as_operations_map_create_all(ops, bin, ctx_ref, order, persist_index);
         break;

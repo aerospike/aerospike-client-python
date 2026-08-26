@@ -10,15 +10,12 @@ on:
       latest_tag:
         required: true
         type: string
-      dry-run:
-        required: true
-        type: boolean
 
 jobs:
   reupload-artifacts-as-one-artifact-in-github:
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
     env:
       ARTIFACT_NAME: build-artifacts
     outputs:
@@ -29,6 +26,42 @@ jobs:
         # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
         # to change unexpectedly.
         output-name: ${{ env.ARTIFACT_NAME }}
+
+    - name: Verify package version
+      shell: python
+      working-directory: ${{ env.ARTIFACT_NAME }}
+      env:
+        EXPECTED_PACKAGE_VERSION: ${{ inputs.next_release_version }}
+      run: |
+        from packaging.utils import parse_wheel_filename, parse_sdist_filename
+        import os
+
+        files = os.listdir('.')
+        for file in files:
+          print("Parsing", file)
+
+          if file.endswith('.whl'):
+            name, version, build, tags = parse_wheel_filename(file)
+          elif file.endswith('.tar.gz'):
+            name, version = parse_sdist_filename(file)
+          else:
+            print(f"Found invalid package file {file}")
+            exit(1)
+          assert name == "aerospike"
+
+          expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
+
+          print("Expected version:", expected_version)
+          print("Actual version:", version.__str__())
+
+          assert version.__str__() == expected_version
+
+    # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
+    - name: Make sure package README is renderable in PyPI
+      run: |
+        # TODO: eventually should add this to requirements.txt for CI/CD pipeline
+        python3 -m pip install twine==7.0.0
+        twine check "$ARTIFACT_NAME"/*
 
   upload-artifacts-to-jfrog:
     needs: [
@@ -43,15 +76,14 @@ jobs:
       jf-build-id: ${{ inputs.jfrog_build_id }}
       jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
       version: ${{ inputs.next_release_version }}
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
-      dry-run: ${{ inputs.dry-run }}
+      gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803
+      dry-run: false
     permissions:
       contents: read
       id-token: write
       actions: write
 
   create-release-bundle:
-    if: ${{ inputs.dry-run == false }}
     needs: [
       upload-artifacts-to-jfrog
     ]
@@ -63,13 +95,13 @@ jobs:
       jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       # JFrog release bundle version
       version: ${{ inputs.next_release_version }}
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16 # Should match the version in your 'uses:' line
+      gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803 # Should match the version in your 'uses:' line
     permissions:
       contents: read
       id-token: write
       actions: read
 
-  promote-release-bundle-to-dev:
+  promote-release-bundle-to-test:
     needs: [
       create-release-bundle
     ]
@@ -79,6 +111,6 @@ jobs:
       release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ inputs.next_release_version }}
       release-bundle-tag: ${{ inputs.latest_tag }}
-      new-environment: DEV
+      new-environment: TEST
     permissions:
       id-token: write

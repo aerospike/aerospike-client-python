@@ -350,8 +350,9 @@ def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.J
     while time.time() - start < time_limit_secs:
         response = as_connection.job_info(job_id, job_module)
         if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
+            return
         time.sleep(0.1)
+    print("time_limit_secs was hit.")
 
 # Shared between bin projection and execute background tests
 
@@ -378,6 +379,9 @@ def insert_records(request, as_connection):
     else:
         set_name = TEST_SET
 
+    if make_set_unique is False:
+        as_connection.truncate(TEST_NS, set_name, 0)
+
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
     request.cls.keys = keys
@@ -397,9 +401,6 @@ def insert_records(request, as_connection):
     as_connection.batch_write(brs)
 
     yield
-
-    if make_set_unique is False:
-        as_connection.batch_remove(keys)
 
 def expect_records_to_have_user_key_stored(client: aerospike.Client, set_name: str):
     query = client.query(TEST_NS, set_name)
