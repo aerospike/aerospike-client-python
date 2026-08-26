@@ -99,6 +99,8 @@ PyObject *AerospikeScan_Foreach_Invoke(AerospikeScan *self,
     if (is_scan_results) {
         data.py_obj = PyList_New(0);
         if (data.py_obj == NULL) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Was unable to construct results list");
             goto CLEANUP;
         }
     }
