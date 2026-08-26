@@ -1,5 +1,5 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, DYN_CONFIG_PATH
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops, operations
@@ -193,3 +193,35 @@ class TestExceptionSubcode:
 
         assert "; exp_trace={" in excinfo.value.msg
         print(excinfo.value.msg)
+
+    @pytest.mark.parametrize(
+        "api_method, kwargs",
+        [
+            (
+                aerospike.Client.get,
+                {"key": KEY}
+            ),
+            (
+                aerospike.Client.put,
+                {"key": KEY, "bins": {"a": 1}}
+            )
+        ]
+    )
+    @pytest.mark.usefixtures("setup")
+    def test_dyn_config(self, api_method, kwargs):
+        config = TestBaseClass.get_connection_config()
+        provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        config["config_provider"] = provider
+
+        client = aerospike.client(config)
+
+        policy = {
+            "expressions": expr.GE(expr.Abs(expr.Val("a")), 1).compile()
+        }
+        with pytest.raises(e.InvalidRequest) as excinfo:
+            api_method(client, **kwargs, policy=policy)
+
+        assert "; exp_trace={" in excinfo.value.msg
+        print(excinfo.value.msg)
+
+        client.close()
