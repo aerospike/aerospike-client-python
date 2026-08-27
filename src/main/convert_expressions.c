@@ -308,6 +308,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
             EXP_SZ(as_exp_list_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
         [OP_LIST_JOIN] = EXP_SZ(as_exp_list_join(NULL, NIL)),
+        [OP_LIST_JOIN_SEPARATOR] =
+            EXP_SZ(as_exp_list_join_separator(NULL, "", NIL)),
         [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, NIL, NIL, NIL)),
         [OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, NIL, NIL)),
         [OP_MAP_INCREMENT] =
@@ -1913,24 +1915,21 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_string_split(NIL));
             break;
         case OP_LIST_JOIN:
+            APPEND_ARRAY(1, as_exp_list_join(temp_expr->ctx, NIL));
+            break;
+        case OP_LIST_JOIN_SEPARATOR:
         case OP_STRING_SPLIT_SEPARATOR: {
             char *separator = NULL;
-            bool is_separator_optional = temp_expr->op == OP_LIST_JOIN;
             as_status status =
                 get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
-                        &separator, is_separator_optional);
+                        &separator, false);
             if (status != AEROSPIKE_OK) {
                 return status;
             }
 
-            if (temp_expr->op == OP_LIST_JOIN) {
-                if (separator) {
-                    APPEND_ARRAY(1, as_exp_list_join_separator(temp_expr->ctx,
-                                                               separator, NIL));
-                }
-                else {
-                    APPEND_ARRAY(1, as_exp_list_join(temp_expr->ctx, NIL));
-                }
+            if (temp_expr->op == OP_LIST_JOIN_SEPARATOR) {
+                APPEND_ARRAY(1, as_exp_list_join_separator(temp_expr->ctx,
+                                                           separator, NIL));
             }
             else {
                 APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));

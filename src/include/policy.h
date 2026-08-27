@@ -61,7 +61,8 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
         X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
-        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN)
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN),     \
+        X(LIST_JOIN_SEPARATOR)
 
 // clang-format off
 #define STRING_OP_NAMES                                                        \

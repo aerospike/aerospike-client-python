@@ -1323,8 +1323,6 @@ class ListJoin(_BaseExpr):
     and a single-item list yields that item with no separator applied.
     """
 
-    _op = aerospike._OP_LIST_JOIN
-
     def __init__(
         self, ctx: "TypeCTX",
         separator: str | None,
@@ -1340,6 +1338,11 @@ class ListJoin(_BaseExpr):
 
         :return: Expression.
         """
+        if separator:
+            self._op = aerospike._OP_LIST_JOIN
+        else:
+            self._op = aerospike._OP_LIST_JOIN_SEPARATOR
+
         self._children = (bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {aerospike._STR_EXP_SEPARATOR_KEY: separator}
         if ctx is not None:
