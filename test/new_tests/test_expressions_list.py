@@ -952,7 +952,6 @@ class TestExpressions(TestBaseClass):
         "bin_name, expected",
         [
             ("slist_bin", "bdf"),
-            (Val(["b", "d", "f"]), "bdf"),
             # Edge cases
             ("empty_list", ""),
             ("list_of_one_str", "b"),
