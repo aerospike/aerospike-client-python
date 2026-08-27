@@ -1335,8 +1335,8 @@ class ListJoin(_BaseExpr):
                 objects.
             separator (str | None): If set to a :class:`str`, this will be inserted between consecutive items.
                 If set to :py:obj:`None`, there will be no separator inserted between items.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                an expression that returns a list value.
 
         :return: Expression.
         """
