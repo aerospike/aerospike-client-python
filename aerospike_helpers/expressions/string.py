@@ -543,7 +543,7 @@ class Concat(_WriteOp):
 class Snip(_WriteOp):
     _op = aerospike._OP_STRING_SNIP
 
-    def __init__(self, policy: StringPolicy, start: int, end: int, bin: "TypeBinName"):
+    def __init__(self, policy: StringPolicy, start: int, end: int | None, bin: "TypeBinName"):
         """
         Args:
 

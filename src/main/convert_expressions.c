@@ -2065,11 +2065,20 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 &lval1)) {
                     return err->code;
                 }
-                if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
-                                &lval2)) {
+                bool end_found = false;
+                if (get_optional_int64_t(err, _STR_EXP_END_KEY,
+                                         temp_expr->pydict, &lval2,
+                                         &end_found)) {
                     return err->code;
                 }
-                APPEND_ARRAY(1, as_exp_string_snip(&policy, lval1, lval2, NIL));
+                if (end_found) {
+                    APPEND_ARRAY(
+                        1, as_exp_string_snip(&policy, lval1, lval2, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1,
+                                 as_exp_string_snip_start(&policy, lval1, NIL));
+                }
                 break;
             case OP_STRING_REPLACE:
             case OP_STRING_REPLACE_ALL: {

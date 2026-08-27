@@ -539,7 +539,7 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
     }
 
 
-def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
+def snip(bin_name: str, start: int, end: int | None = None, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``snip`` operation that removes codepoints from start to end.
 
@@ -549,8 +549,9 @@ def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None
 
         bin_name: name of string bin.
         start: First codepoint to remove, inclusive.
-        end: One past the last codepoint to remove, exclusive.
-        policy: String policy.
+        end: One past the last codepoint to remove, exclusive. If :py:obj:`None`, remove from ``start`` to end of
+            string.
+        policy: String policy. If end is :py:obj:`None`, ``policy`` is not sent. TODO
         ctx: Optional path into a string nested inside a list or map.
     """
     return {
