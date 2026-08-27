@@ -26,7 +26,15 @@ class TestNewListOperationsHelpers(object):
 
         self.test_key = "test", "demo", "new_list_op"
         self.test_bin = "list"
-        self.as_connection.put(self.test_key, {self.test_bin: self.test_list})
+        self.as_connection.put(
+            self.test_key,
+            {
+                self.test_bin: self.test_list,
+                "empty_list": [],
+                "list_of_one_str": ["a"],
+                "list_of_strs": ["a", "b", "c"]
+            }
+        )
         self.keys.append(self.test_key)
 
         yield
@@ -474,3 +482,26 @@ class TestNewListOperationsHelpers(object):
                                                 persist_index=persist_index, ctx=None)
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, [operation])
+
+    @pytest.mark.parametrize(
+        "bin_name, expected",
+        [
+            ("list_of_strs", "abc"),
+            # Edge cases
+            ("empty_list", ""),
+            ("list_of_one_str", "a")
+        ]
+    )
+    def test_list_join(self, bin_name, expected: str):
+        ops = [
+            list_operations.list_join(bin_name=bin_name)
+        ]
+        _, _, bins = self.as_connection.operate(self.test_key, ops)
+        assert bins[bin_name] == expected
+
+    def test_list_join_fail(self):
+        ops = [
+            list_operations.list_join(bin_name="list")
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.test_key, ops)

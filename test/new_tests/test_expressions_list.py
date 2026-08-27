@@ -38,8 +38,10 @@ from aerospike_helpers.expressions import (
     ListSet,
     ListSize,
     ListSort,
+    ListJoin,
     Or,
     ResultType,
+    Val
 )
 
 import aerospike
@@ -137,6 +139,7 @@ class TestExpressions(TestBaseClass):
                 "balance": i * 10,
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
+                "empty_list": [],
                 "list_bin": [
                     None,
                     i,
@@ -155,6 +158,7 @@ class TestExpressions(TestBaseClass):
                     2,
                     6,
                 ],
+                "list_of_one_str": ["b"],
                 "slist_bin": ["b", "d", "f"],
                 "llist_bin": [[1, 2], [1, 3], [1, 4]],
                 "mlist_bin": [
@@ -938,6 +942,26 @@ class TestExpressions(TestBaseClass):
     def test_list_expr_inverted(self, bin_name: str, expr, expected):
         ops = [
             expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected
+
+    @pytest.mark.parametrize(
+        "bin_name, expected",
+        [
+            ("slist_bin", "bdf"),
+            (Val(["b", "d", "f"]), "bdf"),
+            # Edge cases
+            ("empty_list", ""),
+            ("list_of_one_str", "b"),
+        ]
+    )
+    def test_list_join(self, bin_name, expected):
+        expr = ListJoin(None, None, bin_name).compile()
+        ops = [
+            expr_ops.expression_read(bin_name, expr)
         ]
         key = (self.test_ns, self.test_set, 0)
         _, _, bins = self.as_connection.operate(key, ops)

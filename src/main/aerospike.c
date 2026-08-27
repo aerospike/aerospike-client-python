@@ -266,6 +266,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OP_LIST_REMOVE_BY_RANK_RANGE_TO_END",
      .value.integer = OP_LIST_REMOVE_BY_RANK_RANGE_TO_END},
     EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_LIST_JOIN),
+    EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_LIST_JOIN_SEPARATOR),
 
     {"OP_MAP_SET_POLICY", .value.integer = OP_MAP_SET_POLICY},
     {"OP_MAP_CREATE", .value.integer = OP_MAP_CREATE},
