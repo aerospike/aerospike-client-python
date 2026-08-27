@@ -734,12 +734,16 @@ class BitB64Encode(_BaseExpr):
 
     def __init__(
         self,
+        byte_offset: int,
+        byte_size: int | None,
         bin: "TypeBinName",
-        byte_offset: int = 0,
-        byte_size: int | None = None,
         # TODO: missing invert_size param.
     ):
-        """Args:
+        """
+        Args:
+            byte_offset (int): Byte offset into the blob. Negative values count from the end.
+            byte_size (int): Number of bytes to encode.
+            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: String expression.
         """
