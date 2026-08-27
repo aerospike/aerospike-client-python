@@ -20,10 +20,10 @@ These expressions mirror the operations from :mod:`String API <aerospike_helpers
 
 Requires server version 8.1.3 or later.
 
-Unlike operate-level string ops, these macros do not take a `ctx` parameter. To target
+Unlike operate-level string ops, these macros do not take a ``ctx`` parameter. To target
 a string nested inside a list or map, extract the leaf with
-:py:class:`~aerospike_helpers.expressions.list.ListGetByIndex` or `~aerospike_helpers.expressions.map.MapGetByKey` and
-pass the result as the operand expression.
+:py:class:`~aerospike_helpers.expressions.list.ListGetByIndex` or
+:py:class:`~aerospike_helpers.expressions.map.MapGetByKey` and pass the result as the operand expression.
 """
 
 
