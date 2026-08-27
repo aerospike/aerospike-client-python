@@ -1169,14 +1169,21 @@ def list_remove_by_value_rank_range_relative(
 
 
 def list_join(
-    bin_name: str, ctx: Optional[list] = None
+    bin_name: str, separator: str | None = None, ctx: Optional[list] = None
 ):
     """Create a list_join operation.
 
-    Takes in a list of string values and returns a string with all the values concatenated together.
+    Server concatenates the string items of a list and returns the results as a single string.
+    Every item must be a string; a non-string item returns :py:exc:`~aerospike.exception.InvalidRequest`.
+    An empty list yields an empty string, and a single-item list yields that item with no separator applied.
+    This is the inverse of :py:meth:`~aerospike_helpers.operations.string_operations.split_separator`.
+
+    Requires server version 8.1.3 or later.
 
     Args:
         bin_name (str): The name of the bin containing the list.
+        separator (str | None): If set to a :py:class:`str`, the separator is placed between
+            consecutive string items. If :py:obj:`None`, no separator is inserted between items.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
 

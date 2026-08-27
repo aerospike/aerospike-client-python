@@ -202,7 +202,7 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_integer`` operation that parses the string as an unsigned 64-bit integer.
-    Raises :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as an integer.
+    Raises :exc:`~aerospike.exception.OpNotApplicable` if the bin cannot be parsed as an integer.
 
     Args:
 
@@ -219,7 +219,7 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 def to_double(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_double`` operation that parses the string as a 64-bit float.
-    Returns :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as a double.
+    Returns :exc:`~aerospike.exception.OpNotApplicable` if the bin cannot be parsed as a double.
 
     Args:
 
@@ -252,8 +252,13 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
 
 def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: TypeCTX = None):
     """
-    Create string ``is_numeric`` operation that returns true if the bin contains a
-    valid integer or floating-point number.
+    Create string ``is_numeric`` operation that filters by ``numeric_type`` and returns true if a valid type, false
+    otherwise.
+
+    This is a spelling check, not "parses as a number of that type":
+    :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` requires a ``.`` followed by a digit, so
+    `"5"` is false under :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` even though it parses as a
+    double.
 
     Args:
 
@@ -399,7 +404,7 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 
 def to_string(bin_name: str):
     """
-    Create ``to_string`` operation that converts an integer, double, string, or blob
+    Create ``to_string`` operation that converts an integer, double, string, bool, or blob
     bin to its string representation.
 
     Raises :exc:`~aerospike.exception.BinIncompatibleType` for
@@ -551,7 +556,7 @@ def snip(bin_name: str, start: int, end: int | None = None, policy: StringPolicy
         start: First codepoint to remove, inclusive.
         end: One past the last codepoint to remove, exclusive. If :py:obj:`None`, remove from ``start`` to end of
             string.
-        policy: String policy. If end is :py:obj:`None`, ``policy`` is not sent. TODO
+        policy: String policy. If end is :py:obj:`None`, ``policy`` is not sent.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {

@@ -57,14 +57,16 @@ class WriteFlags(IntEnum):
     """
     Create new values only. Valid only on:
 
-    - ``insert``
-    - ``overwrite``
-    - ``concat``
-    - ``append``
-    - ``prepend``
-    - ``pad_start``
-    - ``pad_end``
-    - ``repeat``.
+    - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
+    - `py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.concat`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.append`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.prepend`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.pad_start`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.pad_end`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.repeat`
+
+    and their corresponding expressions.
 
     Raises :py:exc:`~aerospike.exception.BinExistsError` if the bin already exists. Mutually exclusive with
     :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`. Invalid with a CDT context path.
@@ -93,8 +95,13 @@ class NumericType(IntEnum):
     ANY = 0
     #: Match only integers.
     INT = 1
-    #: Match only floating-point numbers. The string must contain a decimal point and at least one digit after it.
+
     FLOAT = 2
+    """
+    Match only floating-point numbers. Stricter than parsing as a double:
+    # the string must contain a ``.`` followed by a digit, so ``"5"`` is false under
+	# this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`
+    """
 
 
 class StringPolicy:

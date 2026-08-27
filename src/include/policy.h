@@ -88,6 +88,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_OVERWRITE), \
     X(STRING_CONCAT), \
     X(STRING_SNIP), \
+    X(STRING_SNIP_START), \
     X(STRING_REPLACE), \
     X(STRING_REPLACE_ALL), \
     X(STRING_UPPER), \

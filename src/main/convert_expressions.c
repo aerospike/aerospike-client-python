@@ -481,6 +481,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
         [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
+        [OP_STRING_SNIP_START] = EXP_SZ(as_exp_string_snip_start(NULL, 0, NIL)),
         [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
@@ -2060,11 +2061,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             case OP_STRING_PREPEND:
                 APPEND_ARRAY(1, as_exp_string_prepend(&policy, value, NIL));
                 break;
+            case OP_STRING_SNIP_START:
             case OP_STRING_SNIP:
                 if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
                                 &lval1)) {
                     return err->code;
                 }
+
                 bool end_found = false;
                 if (get_optional_int64_t(err, _STR_EXP_END_KEY,
                                          temp_expr->pydict, &lval2,
