@@ -2108,7 +2108,7 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
 
     String op ctx envelope is malformed.
 
-    App use: verify the client emits `[0xFF, ctx_list, [sub_op, args...]]`.
+    App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
 
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
