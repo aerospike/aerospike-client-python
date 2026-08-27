@@ -178,12 +178,12 @@ static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
     as_hll_policy *hll_policy_p = &hll_policy;
 
     if (get_int_from_py_dict(err, op_dict, AS_PY_HLL_INDEX_BIT_COUNT,
-                             &index_bit_count, false) != AEROSPIKE_OK) {
+                             &index_bit_count, false, NULL) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
     if (get_int_from_py_dict(err, op_dict, AS_PY_HLL_MH_BIT_COUNT_KEY,
-                             &mh_bit_count, false) != AEROSPIKE_OK) {
+                             &mh_bit_count, false, NULL) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -242,12 +242,12 @@ static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
     as_hll_policy *hll_policy_p = &hll_policy;
 
     if (get_int_from_py_dict(err, op_dict, AS_PY_HLL_INDEX_BIT_COUNT,
-                             &index_bit_count, false) != AEROSPIKE_OK) {
+                             &index_bit_count, false, NULL) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
     if (get_int_from_py_dict(err, op_dict, AS_PY_HLL_MH_BIT_COUNT_KEY,
-                             &mh_bit_count, false) != AEROSPIKE_OK) {
+                             &mh_bit_count, false, NULL) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -318,7 +318,7 @@ static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
     int index_bit_count;
 
     if (get_int_from_py_dict(err, op_dict, AS_PY_HLL_INDEX_BIT_COUNT,
-                             &index_bit_count, false) != AEROSPIKE_OK) {
+                             &index_bit_count, false, NULL) != AEROSPIKE_OK) {
         goto cleanup;
     }
 

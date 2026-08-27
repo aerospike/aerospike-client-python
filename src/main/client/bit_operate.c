@@ -337,13 +337,14 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
 
         int byte_offset = 0;
         if (get_int_from_py_dict(err, op_dict, "byte_offset", &byte_offset,
-                                 false) != AEROSPIKE_OK) {
+                                 false, NULL) != AEROSPIKE_OK) {
             goto exit;
         }
 
         int byte_size = 0;
-        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size,
-                                 true) != AEROSPIKE_OK) {
+        bool was_byte_size_found = false;
+        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size, true,
+                                 &was_byte_size_found) != AEROSPIKE_OK) {
             goto exit;
         }
 
@@ -353,13 +354,13 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             goto exit;
         }
 
-        if (byte_size) {
-            success = as_operations_bit_b64_encode_from(ops, bin, ctx_ref,
-                                                        byte_offset);
-        }
-        else {
+        if (was_byte_size_found) {
             success = as_operations_bit_b64_encode_range_invert(
                 ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
+        }
+        else {
+            success = as_operations_bit_b64_encode_from(ops, bin, ctx_ref,
+                                                        byte_offset);
         }
         break;
     }

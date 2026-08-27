@@ -89,7 +89,7 @@ as_status get_enum_from_py_dict(as_error *err, PyObject *py_dict,
 
 as_status get_int_from_py_dict(as_error *err, PyObject *py_dict,
                                const char *key, int *int_pointer,
-                               bool is_optional);
+                               bool is_optional, bool *int_was_found);
 
 as_status get_list_return_type(as_error *err, PyObject *op_dict,
                                int *return_type);
