@@ -70,7 +70,7 @@ class NumericType(IntEnum):
     ANY = 0
     #: Match only integers.
     INT = 1
-    #: Match only floating-point numbers.
+    #: Match only floating-point numbers. The string must contain a decimal point and at least one digit after it.
     FLOAT = 2
 
 
