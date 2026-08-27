@@ -58,7 +58,7 @@ class WriteFlags(IntEnum):
     Create new values only. Valid only on:
 
     - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
-    - `py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
     - :py:meth:`~aerospike_helpers.operations.string_operations.concat`
     - :py:meth:`~aerospike_helpers.operations.string_operations.append`
     - :py:meth:`~aerospike_helpers.operations.string_operations.prepend`
