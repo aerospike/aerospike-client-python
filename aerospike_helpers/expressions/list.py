@@ -1327,16 +1327,16 @@ class ListJoin(_BaseExpr):
 
     def __init__(
         self, ctx: "TypeCTX",
+        separator: str | None,
         bin: "TypeBinName",
-        separator: str | None = None
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
             separator (str | None): If set to a :class:`str`, this will be inserted between consecutive items.
                 If set to :py:obj:`None`, there will be no separator inserted between items.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
+                :class:`~aerospike_helpers.expressions.base.ListBin`.
 
         :return: Expression.
         """
