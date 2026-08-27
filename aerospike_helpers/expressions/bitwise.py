@@ -730,7 +730,7 @@ class BitB64Encode(_BaseExpr):
     operation.
     """
 
-    _op = aerospike.OP_BIT_B64_ENCODE
+    _op = aerospike._OP_BIT_B64_ENCODE
 
     def __init__(
         self,
