@@ -2969,11 +2969,11 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist)
 {
-    as_status *result_code = &(bres->result);
+    as_status *batch_result_code = &(bres->result);
     as_record *result_rec = &(bres->record);
     bool in_doubt = bres->in_doubt;
 
-    PyObject *py_res = PyLong_FromLong((long)*result_code);
+    PyObject *py_res = PyLong_FromLong((long)*batch_result_code);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
     Py_DECREF(py_res);
 
@@ -2988,7 +2988,7 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (*result_code != AEROSPIKE_OK) {
+    if (*batch_result_code != AEROSPIKE_OK) {
         // Don't insert record tuple or 2-tuple containing key and meta
         return err->code;
     }
