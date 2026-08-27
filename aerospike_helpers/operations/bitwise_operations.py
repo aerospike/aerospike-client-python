@@ -679,7 +679,7 @@ def bit_b64_encode(
     return {
         OP_KEY: aerospike._OP_BIT_B64_ENCODE,
         BIN_KEY: bin_name,
-        "byte_offset": byte_offset,
+        BYTE_OFFSET_KEY: byte_offset,
         BYTE_SIZE_KEY: byte_size,
         "invert_size": invert_size,
         "ctx": ctx
