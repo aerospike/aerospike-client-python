@@ -99,8 +99,8 @@ class NumericType(IntEnum):
     FLOAT = 2
     """
     Match only floating-point numbers. Stricter than parsing as a double:
-    # the string must contain a ``.`` followed by a digit, so ``"5"`` is false under
-	# this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`
+    the string must contain a ``.`` followed by a digit, so ``"5"`` is false under
+    this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`
     """
 
 
