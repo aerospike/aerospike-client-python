@@ -53,6 +53,29 @@ class WriteFlags(IntEnum):
     Default. Does not suppress an in-operation execution failure.
     """
 
+    CREATE_ONLY = 1
+    """
+    Create new values only. Valid only on:
+
+    - ``insert``
+    - ``overwrite``
+    - ``concat``
+    - ``append``
+    - ``prepend``
+    - ``pad_start``
+    - ``pad_end``
+    - ``repeat``.
+
+    Raises :py:exc:`~aerospike.exception.BinExistsError` if the bin already exists. Mutually exclusive with
+    :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`. Invalid with a CDT context path.
+    """
+
+    UPDATE_ONLY = 2
+    """
+	 Update existing values only. Mutually exclusive with
+	 :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
+    """
+
     NO_FAIL = 4
     """
     Suppress an operation failure with the bin unchanged.
