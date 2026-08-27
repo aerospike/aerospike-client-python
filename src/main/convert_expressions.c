@@ -1915,9 +1915,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_LIST_JOIN:
         case OP_STRING_SPLIT_SEPARATOR: {
             char *separator = NULL;
+            bool is_separator_optional = temp_expr->op == OP_LIST_JOIN;
             as_status status =
                 get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
-                        &separator, true);
+                        &separator, is_separator_optional);
             if (status != AEROSPIKE_OK) {
                 return status;
             }
