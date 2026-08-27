@@ -730,8 +730,6 @@ class BitB64Encode(_BaseExpr):
     operation.
     """
 
-    _op = aerospike._OP_BIT_B64_ENCODE
-
     def __init__(
         self,
         byte_offset: int,
@@ -747,8 +745,17 @@ class BitB64Encode(_BaseExpr):
 
         :return: String expression.
         """
-        self._children = (
-            byte_offset,
-            byte_size,
-            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
-        )
+        print("test")
+        bin = bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
+        if byte_size:
+            self._op = aerospike._OP_BIT_B64_ENCODE_RANGE
+            self._children = (
+                byte_offset,
+                byte_size,
+                bin
+            )
+        else:
+            self._op = aerospike._OP_BIT_B64_ENCODE
+            self._children = (
+                bin,
+            )

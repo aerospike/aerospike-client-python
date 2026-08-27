@@ -409,7 +409,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_GET_INT] = EXP_SZ(as_exp_bit_get_int(NIL, NIL, 0, NIL)),
-        [OP_BIT_B64_ENCODE] =
+        [OP_BIT_B64_ENCODE] = EXP_SZ(as_exp_bit_b64_encode(NIL)),
+        [OP_BIT_B64_ENCODE_RANGE] =
             EXP_SZ(as_exp_bit_b64_encode_range(NIL, NIL, NIL)),
         [OP_HLL_INIT] = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, NIL)),
         [OP_HLL_ADD] = EXP_SZ(as_exp_hll_add_mh(NULL, NIL, 0, 0, NIL)),
@@ -1571,6 +1572,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(4, as_exp_bit_get_int(NIL, NIL, 0, NIL));
             break;
         case OP_BIT_B64_ENCODE:
+            APPEND_ARRAY(1, as_exp_bit_b64_encode(NIL));
+            break;
+        case OP_BIT_B64_ENCODE_RANGE:
             APPEND_ARRAY(3, as_exp_bit_b64_encode_range(NIL, NIL, NIL));
             break;
         case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.

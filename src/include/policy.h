@@ -181,8 +181,8 @@ enum Aerospike_map_operations {
     X(BIT_COUNT), \
     X(BIT_LSCAN), \
     X(BIT_RSCAN), \
-    X(BIT_B64_ENCODE)
-// clang-format on
+    X(BIT_B64_ENCODE), \
+    X(BIT_B64_ENCODE_RANGE) // clang-format on
 
 enum aerospike_bitwise_operations {
 #define X(op_name) OP_##op_name

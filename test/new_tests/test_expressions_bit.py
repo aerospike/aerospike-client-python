@@ -21,8 +21,10 @@ from aerospike_helpers.expressions import (
     BitSetInt,
     BitSubtract,
     BitXor,
+    BitB64Encode,
     Eq,
 )
+from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
 from . import as_errors
@@ -64,6 +66,10 @@ class TestUsrDefinedClass:
         self.data = i
 
 
+BASE64_BYTES = b'1234'
+import base64
+
+
 class TestExpressions(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -72,8 +78,11 @@ class TestExpressions(TestBaseClass):
 
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
-            rec = {"1bits_bin": bytearray([1] * 8)}
-            self.as_connection.put(key, rec)
+            self.rec = {
+                "1bits_bin": bytearray([1] * 8),
+                "base64_bytes": BASE64_BYTES
+            }
+            self.as_connection.put(key, self.rec)
 
         def teardown():
             for i in range(_NUM_RECORDS):
@@ -341,3 +350,19 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "byte_offset, byte_size, expected",
+        [
+            (0, None, base64.b64encode(BASE64_BYTES).decode("utf-8"))
+        ]
+    )
+    def test_bit_b64_encode(self, byte_offset, byte_size, expected):
+        bin = "base64_bytes"
+        expr = BitB64Encode(byte_offset, byte_size, bin).compile()
+        ops = [
+            expr_ops.expression_read(bin, expr)
+        ]
+        key = ("test", "demo", 1)
+        _, _, bins = self.as_connection.operate(key, ops)
+        assert bins[bin] == expected
