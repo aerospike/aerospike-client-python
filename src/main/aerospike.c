@@ -651,6 +651,8 @@ static struct module_constant_name_to_value module_constants[] = {
         SUB_PARAM_BITS_RESIZE_EXCEEDED),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
         SUB_PARAM_BIN_COUNT_TOO_LARGE),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_STRING_CTX_MALFORMED),
 
     //----------------------------------------------------------------
     // Subcodes paired with AEROSPIKE_ERR_CLUSTER (ERR_UNAVAILABLE)
@@ -731,6 +733,8 @@ static struct module_constant_name_to_value module_constants[] = {
         SUB_OPNOT_STRING_CONVERSION_FAILED),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
         SUB_OPNOT_STRING_UTF8_INVALID),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
         SUB_OPNOT_STRING_B64_INVALID),
 

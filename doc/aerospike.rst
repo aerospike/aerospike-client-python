@@ -2104,6 +2104,12 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
 
     App use: prune least-valuable bins and retry.
 
+.. data:: SUB_PARAM_STRING_CTX_MALFORMED
+
+    String op ctx envelope is malformed.
+
+    App use: verify the client emits `[0xFF, ctx_list, [sub_op, args...]]`.
+
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2283,6 +2289,12 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
     Source blob/string is not valid UTF-8.
 
     App use: validate or transcode input before retry.
+
+.. data:: SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED
+
+    Regex pattern exceeded a server limit for an ``OP_NOT_APPLICABLE`` string operation.
+
+    App use: simplify the pattern or reduce input size before retry.
 
 .. data:: SUB_OPNOT_STRING_B64_INVALID
 
