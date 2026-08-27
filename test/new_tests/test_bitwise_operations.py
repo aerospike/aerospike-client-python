@@ -6,6 +6,7 @@ from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
 from contextlib import nullcontext
+import base64
 
 random.seed(0)
 
@@ -1647,6 +1648,35 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([0] * 5)
         assert bins[self.test_bin_zeroes] == expected_result
+
+    @pytest.mark.parametrize(
+        "kwargs, expected",
+        [
+            (
+                {"bin_name": "bitwise1"},
+                base64.b64encode(bytearray([1] * 5)).decode('utf-8')
+            ),
+            (
+                {"bin_name": "bitwise1", "byte_offset": 1},
+                base64.b64encode(bytearray([1] * 4)).decode('utf-8')
+            ),
+            (
+                {"bin_name": "bitwise1", "byte_offset": 1, "byte_size": 2},
+                base64.b64encode(bytearray([1] * 2)).decode('utf-8')
+            ),
+            (
+                {"bin_name": "random_blob", "byte_offset": 1, "byte_size": 1, "invert_size": True},
+                base64.b64encode(bytearray([0x42, 0x03, 0x04])).decode('utf-8')
+            ),
+        ]
+    )
+    def test_bit_b64_encode(self, kwargs, expected):
+        ops = [
+            bitwise_operations.bit_b64_encode(**kwargs)
+        ]
+        _, _, bins = self.as_connection.operate(self.test_key, ops)
+        bin_name = kwargs["bin_name"]
+        assert bins[bin_name] == expected
 
     BIN_NAME_FOR_INVALID_PARAMS = "bitwise0"
 

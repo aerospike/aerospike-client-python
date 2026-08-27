@@ -336,14 +336,14 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
 
         int byte_offset = 0;
-        if (get_int_from_py_dict(err, op_dict, "offset", &byte_offset) !=
-            AEROSPIKE_OK) {
+        if (get_int_from_py_dict(err, op_dict, "byte_offset", &byte_offset,
+                                 false) != AEROSPIKE_OK) {
             goto exit;
         }
 
         int byte_size = 0;
-        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size) !=
-            AEROSPIKE_OK) {
+        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size,
+                                 true) != AEROSPIKE_OK) {
             goto exit;
         }
 
@@ -353,8 +353,15 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             goto exit;
         }
 
-        success = as_operations_bit_b64_encode_range_invert(
-            ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
+        if (byte_size) {
+            success = as_operations_bit_b64_encode_from(ops, bin, ctx_ref,
+                                                        byte_offset);
+        }
+        else {
+            success = as_operations_bit_b64_encode_range_invert(
+                ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
+        }
+        break;
     }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.

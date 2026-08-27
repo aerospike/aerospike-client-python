@@ -1999,7 +1999,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_PAD_END:
         case OP_STRING_REPEAT:
         case OP_STRING_APPEND:
-        case OP_STRING_PREPEND: {
+        case OP_STRING_PREPEND:
+        case OP_STRING_SNIP_START: {
             PyObject *py_str_policy =
                 PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
             as_string_policy policy;
