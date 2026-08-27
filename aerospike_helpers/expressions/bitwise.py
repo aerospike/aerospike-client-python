@@ -722,3 +722,29 @@ class BitGetInt(_BaseExpr):
             expr = exp.BitGetInt(8, 8, True, exp.BlobBin("c")).compile()
         """
         self._children = (bit_offset, bit_size, 1 if sign else 0, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+
+
+class BitB64Encode(_BaseExpr):
+    """
+    Create an expression that performs a :py:meth:`~aerospike_helpers.operations.bitwise_operations.bit_b64_encode`
+    operation.
+    """
+
+    _op = aerospike.OP_BIT_B64_ENCODE
+
+    def __init__(
+        self,
+        bin: "TypeBinName",
+        byte_offset: int = 0,
+        byte_size: int | None = None,
+        # TODO: missing invert_size param.
+    ):
+        """Args:
+
+        :return: String expression.
+        """
+        self._children = (
+            byte_offset,
+            byte_size,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
+        )

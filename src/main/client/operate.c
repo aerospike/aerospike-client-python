@@ -230,7 +230,7 @@ static inline bool use_operate_conversion_helper(int op)
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_RSCAN;
+    int bit_end = OP_BIT_B64_ENCODE;
     return (op >= bit_start && op <= bit_end);
 }
 

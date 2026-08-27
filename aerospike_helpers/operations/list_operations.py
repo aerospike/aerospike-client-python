@@ -1188,7 +1188,7 @@ def list_join(
         This operation requires server version 8.1.3.0 or greater.
     """
     op_dict = {
-        OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL,
+        OP_KEY: aerospike._OP_LIST_JOIN,
         BIN_KEY: bin_name,
     }
     if ctx:

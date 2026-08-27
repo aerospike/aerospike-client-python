@@ -634,7 +634,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         }
         break;
     case OP_LIST_JOIN:
-        // TODO
+        success = as_operations_list_join(ops, bin, ctx_ref);
         break;
     case OP_STRING_STRLEN:
         success = as_operations_string_strlen(ops, bin, ctx_ref);

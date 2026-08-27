@@ -61,7 +61,7 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
         X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
-        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN)
 
 // clang-format off
 #define STRING_OP_NAMES                                                        \
@@ -103,8 +103,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_REGEX_REPLACE), \
     X(STRING_APPEND), \
     X(STRING_PREPEND), \
-    X(STRING_TO_STRING),
-// clang-format on
+    X(STRING_TO_STRING), // clang-format on
 
 enum {
 #define X(op_name) OP_##op_name
@@ -179,7 +178,8 @@ enum Aerospike_map_operations {
     X(BIT_GET), \
     X(BIT_COUNT), \
     X(BIT_LSCAN), \
-    X(BIT_RSCAN)
+    X(BIT_RSCAN), \
+    X(BIT_B64_ENCODE)
 // clang-format on
 
 enum aerospike_bitwise_operations {

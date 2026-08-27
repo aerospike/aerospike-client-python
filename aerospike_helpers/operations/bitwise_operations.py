@@ -649,3 +649,38 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
+
+
+def bit_b64_encode(
+        bin_name: str,
+        byte_offset: int = 0,
+        byte_size: int | None = None,
+        invert_size: bool = False,
+        ctx: list | None = None
+):
+    """
+    Create bit "b64 encode" operation that returns the base64 text of ``byte_size`` bytes starting from ``byte_offset``.
+
+    Requires server version 8.1.3 or later.
+
+    Args:
+        bin_name (str): The name of the bin containing the map.
+        byte_offset (int): Which byte index to start from. A negative value counts back from the end of the blob.
+        byte_size (int | None): How many bytes starting from ``byte_offset`` to select. If :py:obj:`None`, selects from
+            ``byte_offset`` through the end of the blob.
+        invert_size (bool): When :py:obj:`True`, ``byte_size`` counts back from the
+            blob end rather than forward from ``byte_offset``, so a ``byte_size`` of 0 means to the
+            end of the blob.
+
+    Returns:
+        A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
+    """
+    return {
+        OP_KEY: aerospike._OP_BIT_B64_ENCODE,
+        BIN_KEY: bin_name,
+        "byte_offset": byte_offset,
+        "byte_size": byte_size,
+        "invert_size": invert_size,
+        "ctx": ctx
+    }

@@ -326,6 +326,36 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
                                   bit_size, value_byte_size, uint8_array_value);
         break;
+    case OP_BIT_B64_ENCODE: {
+        bool ctx_in_use = false;
+        as_cdt_ctx ctx;
+        if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+                        serializer_type) != AEROSPIKE_OK) {
+            goto exit;
+        }
+        as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
+
+        int byte_offset = 0;
+        if (get_int_from_py_dict(err, op_dict, "offset", &byte_offset) !=
+            AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        int byte_size = 0;
+        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size) !=
+            AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        bool invert_size = false;
+        if (get_bool_from_pyargs(err, "invert_size", op_dict, &invert_size) !=
+            AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        success = as_operations_bit_b64_encode_range_invert(
+            ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
+    }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");

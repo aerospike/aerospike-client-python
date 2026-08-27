@@ -307,8 +307,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
             EXP_SZ(as_exp_list_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
-        // TODO
-        [OP_LIST_JOIN] = 0,
+        [OP_LIST_JOIN] = EXP_SZ(as_exp_list_join(NULL, NIL)),
         [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, NIL, NIL, NIL)),
         [OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, NIL, NIL)),
         [OP_MAP_INCREMENT] =
@@ -408,6 +407,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_GET_INT] = EXP_SZ(as_exp_bit_get_int(NIL, NIL, 0, NIL)),
+        [OP_BIT_B64_ENCODE] =
+            EXP_SZ(as_exp_bit_b64_encode_range(NIL, NIL, NIL)),
         [OP_HLL_INIT] = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, NIL)),
         [OP_HLL_ADD] = EXP_SZ(as_exp_hll_add_mh(NULL, NIL, 0, 0, NIL)),
         [OP_HLL_GET_COUNT] = EXP_SZ(as_exp_hll_update(NULL, NIL, NIL)),
@@ -1162,9 +1163,6 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 temp_expr->ctx, lval1, NIL, NIL,
                                 NIL)); // - 3 for rank, count, bin
             break;
-        case OP_LIST_JOIN:
-            // TODO
-            break;
         case OP_MAP_PUT:
             APPEND_ARRAY(4,
                          as_exp_map_put(temp_expr->ctx, temp_expr->map_policy,
@@ -1569,6 +1567,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_BIT_GET_INT:
             APPEND_ARRAY(4, as_exp_bit_get_int(NIL, NIL, 0, NIL));
             break;
+        case OP_BIT_B64_ENCODE:
+            APPEND_ARRAY(3, as_exp_bit_b64_encode_range(NIL, NIL, NIL));
+            break;
         case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
             APPEND_ARRAY(
                 4,
@@ -1910,16 +1911,28 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_SPLIT:
             APPEND_ARRAY(1, as_exp_string_split(NIL));
             break;
+        case OP_LIST_JOIN:
         case OP_STRING_SPLIT_SEPARATOR: {
             char *separator = NULL;
             as_status status =
                 get_str(err, _STR_EXP_SEPARATOR_KEY, temp_expr->pydict, NULL,
-                        &separator, false);
+                        &separator, true);
             if (status != AEROSPIKE_OK) {
                 return status;
             }
 
-            APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            if (temp_expr->op == OP_LIST_JOIN) {
+                if (separator) {
+                    APPEND_ARRAY(1, as_exp_list_join_separator(temp_expr->ctx,
+                                                               separator, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1, as_exp_list_join(temp_expr->ctx, NIL));
+                }
+            }
+            else {
+                APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            }
             break;
         }
         case OP_STRING_B64_DECODE:
