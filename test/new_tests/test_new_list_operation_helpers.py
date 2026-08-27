@@ -484,17 +484,18 @@ class TestNewListOperationsHelpers(object):
             self.as_connection.operate(self.test_key, [operation])
 
     @pytest.mark.parametrize(
-        "bin_name, expected",
+        "bin_name, separator, expected",
         [
-            ("list_of_strs", "abc"),
+            ("list_of_strs", None, "abc"),
+            ("list_of_strs", "#", "a#b#c"),
             # Edge cases
-            ("empty_list", ""),
-            ("list_of_one_str", "a")
+            ("empty_list", None, ""),
+            ("list_of_one_str", None, "a")
         ]
     )
-    def test_list_join(self, bin_name, expected: str):
+    def test_list_join(self, bin_name: str, separator: str | None, expected: str):
         ops = [
-            list_operations.list_join(bin_name=bin_name)
+            list_operations.list_join(bin_name=bin_name, separator=separator)
         ]
         _, _, bins = self.as_connection.operate(self.test_key, ops)
         assert bins[bin_name] == expected

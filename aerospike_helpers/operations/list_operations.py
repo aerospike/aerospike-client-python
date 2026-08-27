@@ -1197,6 +1197,7 @@ def list_join(
     op_dict = {
         OP_KEY: aerospike._OP_LIST_JOIN,
         BIN_KEY: bin_name,
+        "separator": separator
     }
     if ctx:
         op_dict[CTX_KEY] = ctx
