@@ -100,7 +100,7 @@ class NumericType(IntEnum):
     """
     Match only floating-point numbers. Stricter than parsing as a double:
     the string must contain a ``.`` followed by a digit, so ``"5"`` is false under
-    this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`
+    this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`.
     """
 
 
