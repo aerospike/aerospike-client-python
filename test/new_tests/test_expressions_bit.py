@@ -353,16 +353,16 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "byte_offset, byte_size, expected",
+        "byte_offset, byte_size, invert_size, expected",
         [
-            (0, None, base64.b64encode(BASE64_BYTES).decode("utf-8"))
+            (0, None, False, base64.b64encode(BASE64_BYTES).decode("utf-8"))
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
     @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
-    def test_bit_b64_encode(self, byte_offset, byte_size, expected):
+    def test_bit_b64_encode(self, byte_offset, byte_size, invert_size, expected):
         bin = "base64_bytes"
-        expr = BitB64Encode(byte_offset, byte_size, bin).compile()
+        expr = BitB64Encode(byte_offset, byte_size, invert_size, bin).compile()
         ops = [
             expr_ops.expression_read(bin, expr)
         ]

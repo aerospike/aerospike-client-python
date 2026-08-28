@@ -355,7 +355,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
         }
 
         if (was_byte_size_found) {
-            success = as_operations_bit_b64_encode_range_invert(
+            success = as_operations_bit_b64_encode_range(
                 ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
         }
         else {
