@@ -477,7 +477,7 @@ Record Commands
 
         .. testoutput::
 
-            Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 

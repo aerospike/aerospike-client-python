@@ -219,6 +219,7 @@ static inline bool use_operate_conversion_helper(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        op == OP_LIST_JOIN || op == OP_LIST_JOIN_SEPARATOR ||
         (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
         (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
          op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
@@ -229,7 +230,7 @@ static inline bool use_operate_conversion_helper(int op)
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_RSCAN;
+    int bit_end = OP_BIT_B64_ENCODE;
     return (op >= bit_start && op <= bit_end);
 }
 

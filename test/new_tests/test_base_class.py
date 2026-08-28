@@ -240,6 +240,7 @@ class TestBaseClass(object):
             config["policies"][policy_name]["total_timeout"] = 180000
             # Must hear back from server after a certain number of seconds
             config["policies"][policy_name]["socket_timeout"] = 180000
+            config["policies"][policy_name]["error_detail_verbosity"] = aerospike.ERROR_DETAIL_EXP_TRACE
         # config["max_socket_idle"] = 60
 
         config["policies"]["info"] = {}
