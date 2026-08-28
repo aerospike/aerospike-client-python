@@ -364,7 +364,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
 
     if (isBitOp(operation)) {
         return add_new_bit_op(self, err, py_operation_dict, unicodeStrVector,
-                              ops, operation, ret_type);
+                              ops, operation, ret_type, dynamic_pool);
     }
 
     if (isHllOp(operation)) {
