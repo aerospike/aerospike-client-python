@@ -851,8 +851,7 @@ class TestPathExprOperations:
                     SECOND_LIST_OF_INTS_BIN_NAME
                 ),
                 # Only the third list element is in SECOND_LIST_OF_INTS_BIN_NAME
-                [3],
-                marks=pytest.mark.xfail(reason="Known bug where server 8.1.2 raises InvalidRequest")
+                [3]
             ),
         ]
     )
