@@ -7,7 +7,7 @@ from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFla
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET, TestBaseClass
 from .string_helpers import *
 KEY = (TEST_NS, TEST_SET, 1)
 
@@ -446,6 +446,29 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == expected_results
+
+    def test_string_policy_create_only(self):
+        policy = StringPolicy(write_flags=WriteFlags.CREATE_ONLY)
+        ops = [
+            str_ops.insert(bin_name=STR_BIN_NAME, index=0, value="a", policy=policy)
+        ]
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            expected_exc = e.InvalidRequest
+        else:
+            expected_exc = e.BinExistsError
+
+        with pytest.raises(expected_exc):
+            self.as_connection.operate(KEY, ops)
+
+    def test_string_policy_update_only(self):
+        policy = StringPolicy(write_flags=WriteFlags.UPDATE_ONLY)
+        ops = [
+            str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
+        ]
+
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(KEY, ops)
 
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
