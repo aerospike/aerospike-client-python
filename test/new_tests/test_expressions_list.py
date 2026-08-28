@@ -43,6 +43,7 @@ from aerospike_helpers.expressions import (
     ResultType,
     Val
 )
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 import aerospike
 from . import as_errors
