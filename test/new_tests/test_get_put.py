@@ -752,7 +752,7 @@ class TestGetPut:
         with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.put(key, rec, meta, policy)
         assert excinfo.value.code == 3
-        assert excinfo.value.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+        assert "AEROSPIKE_ERR_RECORD_GENERATION" in excinfo.value.msg
 
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins

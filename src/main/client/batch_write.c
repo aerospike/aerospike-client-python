@@ -502,6 +502,12 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                                py_in_doubt);
         Py_DECREF(py_in_doubt);
 
+        set_error_details_in_py_batch_record(
+            err, py_batch_record, batch_record->subcode, batch_record->message);
+        if (err->code != AEROSPIKE_OK) {
+            goto CLEANUP_ON_ERROR;
+        }
+
         if (*result_code == AEROSPIKE_OK) {
             PyObject *rec = NULL;
 
