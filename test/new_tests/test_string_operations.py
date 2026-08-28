@@ -465,11 +465,16 @@ class TestStringOperations:
             self.as_connection.operate(KEY, ops)
 
     def test_string_policy_update_only(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
+            pytest.xfail("Currently 8.1.3 does not raise a ParamError exception." \
+                "This has already been raised to server team")
+
         policy = StringPolicy(write_flags=WriteFlags.UPDATE_ONLY)
         ops = [
             str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
         ]
-        self.as_connection.operate(KEY, ops)
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(KEY, ops)
 
         _, _, bins = self.as_connection.get(KEY)
         assert "aaaa" not in bins
