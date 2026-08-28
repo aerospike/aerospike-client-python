@@ -264,10 +264,10 @@ as_status get_enum_from_py_dict(
                                       max_bound, is_optional, true, int_was_found);
 }
 
-as_status get_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key, int *int_pointer)
+as_status get_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key, int *int_pointer, bool is_optional, bool *int_was_found)
 {
     return get_bound_int_from_py_dict(err, py_dict, key, int_pointer, INT_MIN,
-                                      INT_MAX, false, false, NULL);
+                                      INT_MAX, is_optional, false, int_was_found);
 }
 // clang-format on
 
