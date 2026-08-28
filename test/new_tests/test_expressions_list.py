@@ -966,6 +966,7 @@ class TestExpressions(TestBaseClass):
             expr_ops.expression_read(bin_name, expr)
         ]
         key = (self.test_ns, self.test_set, 0)
-        _, _, bins = self.as_connection.operate(key, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(key, ops)
 
-        assert bins[bin_name] == expected
+            assert bins[bin_name] == expected
