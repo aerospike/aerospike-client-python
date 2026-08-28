@@ -42,6 +42,9 @@ enum Aerospike_send_bool_as_values {
     SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
+// We have a separate op for list join with a non-None separator argument
+// because the expressions for list join with a separator and the one without it
+// take up different amounts of space in memory when allocating the list of as_exp_entry's
 #define LIST_OP_NAMES_EXCEPT_LIST_APPEND                                       \
     X(LIST_APPEND_ITEMS), X(LIST_INSERT), X(LIST_INSERT_ITEMS), X(LIST_POP),   \
         X(LIST_POP_RANGE), X(LIST_REMOVE), X(LIST_REMOVE_RANGE),               \
