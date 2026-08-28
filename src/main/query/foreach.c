@@ -30,17 +30,9 @@
 #include "exceptions.h"
 #include "query.h"
 #include "policy.h"
+#include "foreach.h"
 
-// Struct for Python User-Data for the Callback
-typedef struct {
-    PyObject *callback;
-    AerospikeClient *client;
-    int partition_query;
-    as_vector thread_errors;
-    pthread_mutex_t thread_errors_mutex;
-} LocalData;
-
-static bool each_result(const as_val *val, void *udata)
+bool each_result(const as_val *val, void *udata)
 {
     bool retval = true;
 
@@ -50,7 +42,7 @@ static bool each_result(const as_val *val, void *udata)
 
     // Extract callback user-data
     LocalData *data = (LocalData *)udata;
-    PyObject *py_callback = data->callback;
+    PyObject *py_callback_or_list_of_results = data->py_obj;
 
     // Python Function Arguments and Result Value
     PyObject *py_arglist = NULL;
@@ -72,45 +64,61 @@ static bool each_result(const as_val *val, void *udata)
         goto EXIT_CALLBACK;
     }
 
-    // Build Python Function Arguments
-    if (data->partition_query) {
-
-        uint32_t part_id = 0;
-
-        as_record *rec = as_record_fromval(val);
-
-        if (rec->key.digest.init) {
-            part_id =
-                as_partition_getid(rec->key.digest.value, CLUSTER_NPARTITIONS);
+    if (PyList_Check(py_callback_or_list_of_results)) {
+        // query.results()
+        if (py_result) {
+            int retval =
+                PyList_Append(py_callback_or_list_of_results, py_result);
+            Py_DECREF(py_result);
+            if (retval == -1) {
+                as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
+                                "Failed to append item to results list");
+                goto EXIT_CALLBACK;
+            }
         }
-
-        py_arglist = PyTuple_New(2);
-
-        PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
-        PyTuple_SetItem(py_arglist, 1, py_result);
     }
     else {
-        py_arglist = PyTuple_New(1);
-        PyTuple_SetItem(py_arglist, 0, py_result);
-    }
+        // Build Python Function Arguments
+        if (data->partition_query) {
 
-    // Invoke Python Callback
-    py_return = PyObject_Call(py_callback, py_arglist, NULL);
+            uint32_t part_id = 0;
 
-    // Release Python Function Arguments
-    Py_DECREF(py_arglist);
-    // handle return value
-    if (!py_return) {
-        // an exception was raised, handle it (someday)
-        // for now, we bail from the loop
-        as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
-                        "Callback function contains an error");
-        retval = false;
+            as_record *rec = as_record_fromval(val);
+
+            if (rec->key.digest.init) {
+                part_id = as_partition_getid(rec->key.digest.value,
+                                             CLUSTER_NPARTITIONS);
+            }
+
+            py_arglist = PyTuple_New(2);
+
+            PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
+            PyTuple_SetItem(py_arglist, 1, py_result);
+        }
+        else {
+            py_arglist = PyTuple_New(1);
+            PyTuple_SetItem(py_arglist, 0, py_result);
+        }
+
+        // Invoke Python Callback
+        py_return =
+            PyObject_Call(py_callback_or_list_of_results, py_arglist, NULL);
+
+        // Release Python Function Arguments
+        Py_DECREF(py_arglist);
+        // handle return value
+        if (!py_return) {
+            // an exception was raised, handle it (someday)
+            // for now, we bail from the loop
+            as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
+                            "Callback function contains an error");
+            retval = false;
+        }
+        else if (py_return == Py_False) {
+            retval = false;
+        }
+        Py_XDECREF(py_return);
     }
-    else if (py_return == Py_False) {
-        retval = false;
-    }
-    Py_XDECREF(py_return);
 
 EXIT_CALLBACK:
     if (thread_err_local.code != AEROSPIKE_OK) {
@@ -129,27 +137,13 @@ EXIT_CALLBACK:
     return retval;
 }
 
-PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
-                                 PyObject *kwds)
+PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
+                                        PyObject *py_callback,
+                                        PyObject *py_policy,
+                                        PyObject *py_options)
 {
-    // Python Function Arguments
-    PyObject *py_callback = NULL;
-    PyObject *py_policy = NULL;
-    PyObject *py_options = NULL;
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"callback", "policy", "options", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist,
-                                    &py_callback, &py_policy,
-                                    &py_options) == false) {
-        as_query_destroy(&self->query);
-        return NULL;
-    }
-
     // Initialize callback user data
-    LocalData data;
-    data.callback = py_callback;
+    LocalData data = {0};
     data.client = self->client;
     data.partition_query = 0;
 
@@ -175,6 +169,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     as_dynamic_pool_init(&dynamic_pool);
 
     // Initialize error
+    bool is_query_results = py_callback == NULL;
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -185,6 +180,18 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
         as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
                         "No connection to aerospike cluster");
         goto CLEANUP;
+    }
+
+    if (is_query_results) {
+        data.py_obj = PyList_New(0);
+        if (data.py_obj == NULL) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Was unable to construct results list");
+            goto CLEANUP;
+        }
+    }
+    else {
+        data.py_obj = py_callback;
     }
 
     // Convert python policy object to as_policy_exists
@@ -265,10 +272,40 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
+        if (is_query_results) {
+            Py_XDECREF(data.py_obj);
+        }
+
+        raise_exception(&err);
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    if (is_query_results) {
+        return data.py_obj;
+    }
+    else {
+        Py_RETURN_NONE;
+    }
+}
+
+PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
+                                 PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_callback = NULL;
+    PyObject *py_policy = NULL;
+    PyObject *py_options = NULL;
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"callback", "policy", "options", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:foreach", kwlist,
+                                    &py_callback, &py_policy,
+                                    &py_options) == false) {
+        as_query_destroy(&self->query);
+        return NULL;
+    }
+
+    return AerospikeQuery_Foreach_Invoke(self, py_callback, py_policy,
+                                         py_options);
 }
