@@ -957,6 +957,7 @@ class TestExpressions(TestBaseClass):
             ("list_of_one_str", "b"),
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_list_join(self, bin_name, expected):
         expr = ListJoin(None, None, bin_name).compile()
         ops = [

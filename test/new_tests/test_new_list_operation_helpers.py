@@ -2,6 +2,7 @@
 import pytest
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 import aerospike
 
@@ -493,6 +494,8 @@ class TestNewListOperationsHelpers(object):
             ("list_of_one_str", None, "a")
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_list_join(self, bin_name: str, separator: str | None, expected: str):
         ops = [
             list_operations.list_join(bin_name=bin_name, separator=separator)

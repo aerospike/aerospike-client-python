@@ -25,6 +25,7 @@ from aerospike_helpers.expressions import (
     Eq,
 )
 from aerospike_helpers.operations import expression_operations as expr_ops
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 import aerospike
 from . import as_errors
@@ -357,6 +358,8 @@ class TestExpressions(TestBaseClass):
             (0, None, base64.b64encode(BASE64_BYTES).decode("utf-8"))
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_bit_b64_encode(self, byte_offset, byte_size, expected):
         bin = "base64_bytes"
         expr = BitB64Encode(byte_offset, byte_size, bin).compile()
@@ -364,5 +367,7 @@ class TestExpressions(TestBaseClass):
             expr_ops.expression_read(bin, expr)
         ]
         key = ("test", "demo", 1)
-        _, _, bins = self.as_connection.operate(key, ops)
-        assert bins[bin] == expected
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(key, ops)
+            assert bins[bin] == expected

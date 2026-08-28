@@ -3,6 +3,7 @@ import pytest
 import random
 from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 import aerospike
 from contextlib import nullcontext
@@ -1670,13 +1671,17 @@ class TestBitwiseOperations(object):
             ),
         ]
     )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_bit_b64_encode(self, kwargs, expected):
         ops = [
             bitwise_operations.bit_b64_encode(**kwargs)
         ]
-        _, _, bins = self.as_connection.operate(self.test_key, ops)
-        bin_name = kwargs["bin_name"]
-        assert bins[bin_name] == expected
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.test_key, ops)
+
+            bin_name = kwargs["bin_name"]
+            assert bins[bin_name] == expected
 
     BIN_NAME_FOR_INVALID_PARAMS = "bitwise0"
 
