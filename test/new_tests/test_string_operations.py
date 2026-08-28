@@ -16,14 +16,17 @@ KEY = (TEST_NS, TEST_SET, 1)
 class TestStringOperations:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
+        try:
+            self.as_connection.remove(KEY)
+        except e.RecordNotFound:
+            pass
+
         self.as_connection.put(
             key=KEY,
-            bins=BINS
+            bins=BINS,
         )
 
         yield
-
-        self.as_connection.remove(KEY)
 
     root_level_and_nested_str = pytest.mark.parametrize(
         "bin_name, kwargs_with_ctx",
@@ -466,9 +469,10 @@ class TestStringOperations:
         ops = [
             str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
         ]
+        self.as_connection.operate(KEY, ops)
 
-        with pytest.raises(e.InvalidRequest):
-            self.as_connection.operate(KEY, ops)
+        _, _, bins = self.as_connection.get(KEY)
+        assert "aaaa" not in bins
 
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
