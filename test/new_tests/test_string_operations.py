@@ -12,6 +12,7 @@ from .string_helpers import *
 KEY = (TEST_NS, TEST_SET, 1)
 
 
+@expect_server_version_earlier_than_8_1_3_to_fail
 class TestStringOperations:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
@@ -42,7 +43,6 @@ class TestStringOperations:
     )
 
     @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
     @pytest.mark.parametrize(
         "op_method, kwargs, expected_result",
         [
@@ -75,7 +75,6 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
             assert bins[bin_name] == expected_result
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_find_not_found(self):
         ops = [
             str_ops.find(bin_name=STR_BIN_NAME, needle=NOT_IN_EXAMPLE_STR)
@@ -85,7 +84,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] == -1
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_contains_not_found(self):
         ops = [
             str_ops.contains(bin_name=STR_BIN_NAME, needle=NOT_IN_EXAMPLE_STR)
@@ -95,7 +93,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] is False
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_starts_with_returns_false(self):
         ops = [
             str_ops.starts_with(bin_name=STR_BIN_NAME, prefix=NOT_IN_EXAMPLE_STR)
@@ -105,7 +102,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] is False
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_integer(self):
         ops = [
             str_ops.to_integer(bin_name=STR_WITH_INT_BIN_NAME)
@@ -122,7 +118,6 @@ class TestStringOperations:
             str_ops.to_double
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_numeric_fail(self, op):
         ops = [
             op(bin_name=STR_BIN_NAME)
@@ -131,7 +126,6 @@ class TestStringOperations:
         with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_double(self):
         ops = [
             str_ops.to_double(bin_name=STR_WITH_DOUBLE_BIN_NAME)
@@ -141,7 +135,6 @@ class TestStringOperations:
 
             assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_byte_length_for_multibyte_codepoint(self):
         ops = [
             str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
@@ -158,7 +151,6 @@ class TestStringOperations:
             (STR_WITH_DOUBLE_BIN_NAME, True),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_numeric(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_numeric(bin_name=bin_name)
@@ -179,7 +171,6 @@ class TestStringOperations:
             (NumericType.FLOAT, STR_WITH_INT_BIN_NAME, False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_numeric_type(self, numeric_type: NumericType, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_numeric(bin_name=bin_name, numeric_type=numeric_type)
@@ -195,7 +186,6 @@ class TestStringOperations:
             (UPPERCASE_STR_BIN_NAME, True)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_upper(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_upper(bin_name=bin_name)
@@ -211,7 +201,6 @@ class TestStringOperations:
             (UPPERCASE_STR_BIN_NAME, False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_lower(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_lower(bin_name=bin_name)
@@ -228,7 +217,6 @@ class TestStringOperations:
             ","
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_split_with_separator(self, separator: str):
         ops = [
             str_ops.split_separator(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
@@ -242,7 +230,6 @@ class TestStringOperations:
             else:
                 assert bins[STR_WITH_DOUBLE_BIN_NAME] == [STRING_WITH_DOUBLE]
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_base64_decode(self):
         ops = [
             str_ops.base64_decode(bin_name=BASE64_ENCODED_BIN_NAME)
@@ -260,7 +247,6 @@ class TestStringOperations:
             ("π", False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_compare(self, pattern: str, expected_result: bool):
         ops = [
             str_ops.regex_compare(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, pattern=pattern)
@@ -271,7 +257,6 @@ class TestStringOperations:
 
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
@@ -327,7 +312,6 @@ class TestStringOperations:
     )
     @root_level_and_nested_str
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_string_write_op_on_str_value(self, op, expected_value: str, kwargs: dict, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
             op(bin_name=bin_name, **kwargs, **kwargs_policy, **kwargs_with_ctx)
@@ -355,7 +339,6 @@ class TestStringOperations:
         ]
     )
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_lower(self, kwargs_policy: dict, bin_name: str, expected_result: str):
         ops = [
             str_ops.lower(bin_name=bin_name, **kwargs_policy)
@@ -368,7 +351,6 @@ class TestStringOperations:
             assert bins[bin_name] == expected_result
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_casefold(self, kwargs_policy: dict):
         ops = [
             str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
@@ -381,7 +363,6 @@ class TestStringOperations:
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
             str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
@@ -394,7 +375,6 @@ class TestStringOperations:
             assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim_start(self, kwargs_policy):
         ops = [
             str_ops.trim_start(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -407,7 +387,6 @@ class TestStringOperations:
             assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim_end(self, kwargs_policy):
         ops = [
             str_ops.trim_end(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -421,7 +400,6 @@ class TestStringOperations:
 
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim(self, kwargs_policy):
         ops = [
             str_ops.trim(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -435,7 +413,6 @@ class TestStringOperations:
 
     @kwargs_policy
     @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         PATTERN = "asdf"
         ops = [
@@ -459,7 +436,6 @@ class TestStringOperations:
             (STR_BIN_NAME, RegexFlags.GLOBAL, "asdf", NEW_STR * 2)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_flags(self, bin_name: str, regex_flags: RegexFlags, pattern: str, expected_results: str):
         ops = [
             str_ops.regex_replace(bin_name=bin_name, pattern=pattern, replacement=NEW_STR, regex_flags=regex_flags)
@@ -471,7 +447,6 @@ class TestStringOperations:
 
             assert bins[bin_name] == expected_results
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_string_policy_no_fail(self):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
@@ -512,7 +487,6 @@ class TestStringOperations:
             (str_ops.to_string, {}, False),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_string_ops_on_nonexistent_bin(self, op, kwargs: dict, creates_bin: bool):
         ops = [
             op(bin_name=NON_EXISTENT_BIN_NAME, **kwargs),
