@@ -959,6 +959,7 @@ class TestExpressions(TestBaseClass):
         ]
     )
     @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_list_join(self, bin_name, expected):
         expr = ListJoin(None, None, bin_name).compile()
         ops = [
