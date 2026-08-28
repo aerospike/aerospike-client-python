@@ -47,6 +47,8 @@
 #define FIELD_NAME_BATCH_FUNCTION "function"
 #define FIELD_NAME_BATCH_ARGS "args"
 #define FIELD_NAME_BATCH_INDOUBT "in_doubt"
+#define FIELD_NAME_BATCH_SUBCODE "subcode"
+#define FIELD_NAME_BATCH_MESSAGE "message"
 
 #define BATCH_TYPE_READ 0
 #define BATCH_TYPE_WRITE 1
@@ -193,6 +195,13 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          as_batch_result *bres,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
+
+// This is shared for Python client API calls where the C client API returns as_batch_result or as_batch_base_record
+// Then it extracts the subcode and detailed error message and sets it in a BatchRecord instance.
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message);
 
 PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                                             struct as_cluster_s *cluster);

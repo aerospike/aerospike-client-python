@@ -2052,6 +2052,15 @@ Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
 
     Request subcode and human-readable message from the server on error responses.
 
+.. data:: ERROR_DETAIL_EXP_TRACE
+
+    Request subcode and human-readable message from the server on error responses,
+    as well as expression trace diagnostics appended to :py:attr:`aerospike.exception.AerospikeError.msg` when present.
+
+    Expression trace text is best-effort diagnostic output. It may be truncated
+    to fit the maximum number of characters for :py:attr:`aerospike.exception.AerospikeError.msg`, may include operand
+    values, and is not a machine-readable API.
+
 .. _subcodes:
 
 Subcodes
@@ -2094,6 +2103,12 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
     Write would exceed the per-record bin-count limit.
 
     App use: prune least-valuable bins and retry.
+
+.. data:: SUB_PARAM_STRING_CTX_MALFORMED
+
+    String op ctx envelope is malformed.
+
+    App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
 
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2262,6 +2277,30 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
     Intersect inputs have mismatched minhash parameters.
 
     App use: harmonize sketches (fold/strip minhash) before retry.
+
+.. data:: SUB_OPNOT_STRING_CONVERSION_FAILED
+
+    String conversion failed.
+
+    App use: inspect source and requested destination encoding/type.
+
+.. data:: SUB_OPNOT_STRING_UTF8_INVALID
+
+    Source blob/string is not valid UTF-8.
+
+    App use: validate or transcode input before retry.
+
+.. data:: SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED
+
+    Regex pattern exceeded a server limit for an ``OP_NOT_APPLICABLE`` string operation.
+
+    App use: simplify the pattern or reduce input size before retry.
+
+.. data:: SUB_OPNOT_STRING_B64_INVALID
+
+    Base64 input is malformed for a string operation.
+
+    App use: validate or sanitize base64 input before retry.
 
 Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
