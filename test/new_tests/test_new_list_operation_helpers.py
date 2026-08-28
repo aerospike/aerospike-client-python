@@ -500,7 +500,7 @@ class TestNewListOperationsHelpers(object):
         ops = [
             list_operations.list_join(bin_name=bin_name, separator=separator)
         ]
-        with pytest.raises(self.expected_context_for_pos_tests):
+        with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.test_key, ops)
             assert bins[bin_name] == expected
 
