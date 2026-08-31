@@ -126,6 +126,8 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     Create string ``find`` operation that returns the codepoint index of the first
     occurrence of needle, or ``-1`` if not found.
 
+    Matching is Unicode canonical, not byte-exact.
+
     Args:
 
         bin_name: name of string bin.
@@ -146,6 +148,8 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
 def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
     """
     Create string ``contains`` operation that returns true if the bin contains needle.
+
+    Matching is Unicode canonical, not byte-exact.
 
     Args:
 
@@ -580,6 +584,7 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
     Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
+    Matching is Unicode canonical, not byte-exact.
     If the bin doesn't exist, this operation will be a no-op.
 
     Args:
