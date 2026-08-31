@@ -568,8 +568,9 @@ class TestStringOperations:
             str_ops.replace(bin_name=BIN_NAME, needle=str_param, replacement="tea"),
             operations.read(BIN_NAME)
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
-        assert bins[BIN_NAME] == "tea au lait"
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == "tea au lait"
 
     @nfc_param
     def test_starts_with_across_normalization_forms(self, bin_substr, str_param):
@@ -580,8 +581,9 @@ class TestStringOperations:
         ops = [
             str_ops.starts_with(bin_name=BIN_NAME, prefix=str_param),
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
-        assert bins[BIN_NAME] is True
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
 
     @nfc_param
     def test_ends_with_across_normalization_forms(self, bin_substr, str_param):
@@ -592,8 +594,9 @@ class TestStringOperations:
         ops = [
             str_ops.ends_with(bin_name=BIN_NAME, suffix=str_param),
         ]
-        _, _, bins = self.as_connection.operate(KEY, ops)
-        assert bins[BIN_NAME] is True
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
 
     RESULT_SIZE_CAP = 8 * 1024 * 1024
 
