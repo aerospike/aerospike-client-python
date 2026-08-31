@@ -141,12 +141,12 @@ class TestStringOperations:
 
     def test_byte_length_for_multibyte_codepoint(self):
         ops = [
-            str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
+            str_ops.byte_length(bin_name=NFD_CODEPOINT_BIN_NAME)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == len(BINS[MULTIBYTE_CODEPOINT_BIN_NAME].encode('utf-8'))
+            assert bins[NFD_CODEPOINT_BIN_NAME] == len(BINS[NFD_CODEPOINT_BIN_NAME].encode('utf-8'))
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
@@ -247,19 +247,19 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "pattern, expected_result",
         [
-            (MULTIBYTE_CODEPOINT, True),
+            (NFD_CODEPOINT, True),
             ("π", False)
         ]
     )
     def test_regex_compare(self, pattern: str, expected_result: bool):
         ops = [
-            str_ops.regex_compare(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, pattern=pattern)
+            str_ops.regex_compare(bin_name=NFD_CODEPOINT_BIN_NAME, pattern=pattern)
         ]
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
+            assert bins[NFD_CODEPOINT_BIN_NAME] is expected_result
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
@@ -339,7 +339,7 @@ class TestStringOperations:
         "bin_name, expected_result",
         [
             (UPPERCASE_STR_BIN_NAME, UPPERCASE_STR.lower()),
-            (MULTIBYTE_CODEPOINT_BIN_NAME, MULTIBYTE_CODEPOINT)
+            (NFD_CODEPOINT_BIN_NAME, NFD_CODEPOINT)
         ]
     )
     @kwargs_policy
@@ -357,26 +357,26 @@ class TestStringOperations:
     @kwargs_policy
     def test_casefold(self, kwargs_policy: dict):
         ops = [
-            str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.casefold(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFD_CODEPOINT.casefold()
 
     @kwargs_policy
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
-            str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.normalize_nfc(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFC_CODEPOINT
 
     @kwargs_policy
     def test_trim_start(self, kwargs_policy):
