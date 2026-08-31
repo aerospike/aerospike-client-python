@@ -474,7 +474,7 @@ class TestStringOperations:
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
             expected_context = pytest.raises(e.InvalidRequest)
         else:
-            expected_context = nullcontext
+            expected_context = nullcontext()
 
         with expected_context:
             self.as_connection.operate(KEY, ops)
