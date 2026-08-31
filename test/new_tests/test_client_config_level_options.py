@@ -13,7 +13,8 @@ import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME
+from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME, WRITE_OPS
+from .as_status_codes import AerospikeStatus
 
 
 gconfig = {}
@@ -238,7 +239,7 @@ TTL = 2
 
 @pytest.mark.parametrize(
     "insert_records",
-    [{"record_count": 1, "make_set_unique": True, "batch_write_command_policy": {"ttl": TTL}}],
+    [{"record_count": 1, "make_set_unique": False, "batch_write_command_policy": {"ttl": TTL}}],
     indirect=True
 )
 class TestClientConfigBatchPolicies:
@@ -270,6 +271,48 @@ class TestClientConfigBatchPolicies:
         _, meta = self.as_connection.exists(self.keys[0])
         assert meta is not None
 
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            [["policies", "batch_apply", "ttl"], 5000]
+        ],
+        indirect=True
+    )
+    @pytest.mark.parametrize(
+        "connection_with_udf",
+        [
+            "sample.lua"
+        ],
+        indirect=True
+    )
+    def test_batch_apply(self, insert_records):
+        self.as_connection.batch_apply(self.keys, "sample", "noop", [], policy_batch_apply={})
+
+        verify_record_ttl(self.as_connection, self.keys[0], 5000)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            [["policies", "batch_write", "ttl"], 5000]
+        ],
+        indirect=True
+    )
+    def test_batch_write(self, insert_records):
+        self.as_connection.batch_operate(self.keys, WRITE_OPS, policy_batch_write={})
+
+        verify_record_ttl(self.as_connection, self.keys[0], 5000)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            [["policies", "batch_remove", "gen"], aerospike.POLICY_GEN_EQ]
+        ],
+        indirect=True
+    )
+    def test_batch_remove(self, insert_records):
+        brs = self.as_connection.batch_remove(self.keys, policy_batch_remove={"generation": 1000})
+        assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
