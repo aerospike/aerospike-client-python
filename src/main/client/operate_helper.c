@@ -425,7 +425,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_STRING_REPLACE_ALL:
     case OP_STRING_REGEX_REPLACE:
         if (get_str(err, "replacement", op_dict, unicodeStrVector,
-                    &str_attr_value2, true) != AEROSPIKE_OK) {
+                    &str_attr_value2, false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
