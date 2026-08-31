@@ -482,7 +482,6 @@ class TestStringOperations:
             _, _, bins = self.as_connection.get(KEY)
             assert "aaaa" not in bins
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     @pytest.mark.parametrize(
         "op, kwargs",
         [
