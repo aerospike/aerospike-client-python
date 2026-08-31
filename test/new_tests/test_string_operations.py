@@ -546,3 +546,69 @@ class TestStringOperations:
                 assert bins[NON_EXISTENT_BIN_NAME] == ""
             else:
                 assert bins[NON_EXISTENT_BIN_NAME] == NEEDLE
+
+    NFC_CODEPOINT2 = "caf\u00E9"
+    NFD_CODEPOINT2 = "cafe\u0301"
+
+    nfc_param = pytest.mark.parametrize(
+        "bin_substr, str_param",
+        [
+            (NFC_CODEPOINT2, NFD_CODEPOINT2),
+            (NFD_CODEPOINT2, NFC_CODEPOINT2)
+        ]
+    )
+
+    @nfc_param
+    def test_replace_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.replace(bin_name=BIN_NAME, needle=str_param, replacement="tea"),
+            operations.read(BIN_NAME)
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+        assert bins[BIN_NAME] == "tea au lait"
+
+    @nfc_param
+    def test_starts_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.starts_with(bin_name=BIN_NAME, prefix=str_param),
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+        assert bins[BIN_NAME] is True
+
+    @nfc_param
+    def test_ends_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = "au lait " + bin_substr
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.ends_with(bin_name=BIN_NAME, suffix=str_param),
+        ]
+        _, _, bins = self.as_connection.operate(KEY, ops)
+        assert bins[BIN_NAME] is True
+
+    RESULT_SIZE_CAP = 8 * 1024 * 1024
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            str_ops.repeat(STR_BIN_NAME, count=RESULT_SIZE_CAP),
+            str_ops.pad_start(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
+            str_ops.pad_end(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
+            str_ops.concat(STR_BIN_NAME, value_list=["*" * RESULT_SIZE_CAP]),
+        ]
+    )
+    def test_result_size_cap(self, op):
+        ops = [
+            op
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(KEY, ops)
