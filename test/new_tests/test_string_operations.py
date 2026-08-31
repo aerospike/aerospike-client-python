@@ -6,6 +6,7 @@ from aerospike_helpers.operations import string_operations as str_ops, operation
 from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags, WriteFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from contextlib import nullcontext
 
 from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET, TestBaseClass
 from .string_helpers import *
@@ -465,19 +466,21 @@ class TestStringOperations:
             self.as_connection.operate(KEY, ops)
 
     def test_string_policy_update_only(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            pytest.xfail("Currently 8.1.3 does not raise a ParamError exception." \
-                "This has already been raised to server team")
-
         policy = StringPolicy(write_flags=WriteFlags.UPDATE_ONLY)
         ops = [
             str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
         ]
-        with pytest.raises(e.InvalidRequest):
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            expected_context = pytest.raises(e.InvalidRequest)
+        else:
+            expected_context = nullcontext
+
+        with expected_context:
             self.as_connection.operate(KEY, ops)
 
-        _, _, bins = self.as_connection.get(KEY)
-        assert "aaaa" not in bins
+            _, _, bins = self.as_connection.get(KEY)
+            assert "aaaa" not in bins
 
     @expect_server_version_earlier_than_8_1_3_to_fail
     @pytest.mark.parametrize(
