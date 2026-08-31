@@ -126,6 +126,8 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     Create string ``find`` operation that returns the codepoint index of the first
     occurrence of needle, or ``-1`` if not found.
 
+    Matching is Unicode canonical, not byte-exact.
+
     Args:
 
         bin_name: name of string bin.
@@ -147,6 +149,8 @@ def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
     """
     Create string ``contains`` operation that returns true if the bin contains needle.
 
+    Matching is Unicode canonical, not byte-exact.
+
     Args:
 
         bin_name: name of string bin.
@@ -166,6 +170,9 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
     Create string ``starts_with`` operation that returns true if the bin begins with
     prefix.
 
+    Matching is Unicode canonical, not byte-exact: a prefix in a different
+    normalization form than the source still matches.
+
     Args:
 
         bin_name: name of string bin.
@@ -184,6 +191,9 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
     """
     Create string ``ends_with`` operation that returns true if the bin ends with
     suffix.
+
+    Matching is Unicode canonical, not byte-exact: a suffix in a different
+    normalization form than the source still matches.
 
     Args:
 
@@ -574,6 +584,7 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
     Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
+    Matching is Unicode canonical, not byte-exact.
     If the bin doesn't exist, this operation will be a no-op.
 
     Args:
@@ -871,7 +882,7 @@ def regex_replace(
         pattern: the regex pattern to match against.
         replacement: the string to replace with.
         regex_flags: The regex flags to use.
-        policy: No-op.
+        policy: String policy.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {
