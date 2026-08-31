@@ -291,6 +291,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_STRING_SUBSTR:
     case OP_STRING_SUBSTR_RANGE:
+    // OP_STRING_SNIP_START isn't used here because we don't need to worry about heap allocating
+    // memory for operations, unlike with expressions
     case OP_STRING_SNIP:
         if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &start) !=
             AEROSPIKE_OK) {
@@ -388,6 +390,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             str_attr_key = "suffix";
             break;
         case OP_STRING_SPLIT_SEPARATOR:
+        // OP_LIST_JOIN_SEPARATOR isn't used here because we don't need to worry about heap allocating
+        // memory for operations, unlike with expressions
         case OP_LIST_JOIN:
             str_attr_key = "separator";
             break;
