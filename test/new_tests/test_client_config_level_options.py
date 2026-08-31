@@ -236,6 +236,15 @@ def test_setting_batch_policies():
 
 TTL = 2
 
+def generate_policy_kwargs(policy_param_name: str):
+    return pytest.mark.parametrize(
+        "command_policy_kwargs",
+        [
+            {},
+            {policy_param_name: None},
+            {policy_param_name: {}}
+        ]
+    )
 
 @pytest.mark.parametrize(
     "insert_records",
@@ -251,7 +260,8 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
-    def test_batch_parent_write_applies_to_batch_write(self, insert_records):
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_write(self, insert_records, command_policy_kwargs):
         time.sleep(self.DURATION)
 
         brs = BatchRecords(
@@ -264,7 +274,7 @@ class TestClientConfigBatchPolicies:
                 )
             ]
         )
-        self.as_connection.batch_write(brs, policy_batch={})
+        self.as_connection.batch_write(brs, **command_policy_kwargs)
 
         time.sleep(self.DURATION)
 
@@ -285,8 +295,9 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
-    def test_batch_apply(self, insert_records):
-        self.as_connection.batch_apply(self.keys, "sample", "noop", [], policy_batch_apply={})
+    @generate_policy_kwargs("policy_batch_apply")
+    def test_batch_apply(self, insert_records, command_policy_kwargs):
+        self.as_connection.batch_apply(self.keys, "sample", "noop", [], **command_policy_kwargs)
 
         verify_record_ttl(self.as_connection, self.keys[0], 5000)
 
@@ -297,8 +308,9 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
-    def test_batch_write(self, insert_records):
-        self.as_connection.batch_operate(self.keys, WRITE_OPS, policy_batch_write={})
+    @generate_policy_kwargs("policy_batch_write")
+    def test_batch_write(self, insert_records, command_policy_kwargs):
+        self.as_connection.batch_operate(self.keys, WRITE_OPS, **command_policy_kwargs)
 
         verify_record_ttl(self.as_connection, self.keys[0], 5000)
 
@@ -309,8 +321,9 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
-    def test_batch_remove(self, insert_records):
-        brs = self.as_connection.batch_remove(self.keys, policy_batch_remove={"generation": 1000})
+    @generate_policy_kwargs("policy_batch_remove")
+    def test_batch_remove(self, insert_records, command_policy_kwargs):
+        brs = self.as_connection.batch_remove(self.keys, **command_policy_kwargs)
         assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
         assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION
 
