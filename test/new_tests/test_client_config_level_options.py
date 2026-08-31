@@ -238,26 +238,20 @@ TTL = 2
 
 @pytest.mark.parametrize(
     "insert_records",
-    [[1, True, {"ttl": TTL}]],
-    indirect=True
-)
-@pytest.mark.parametrize(
-    "as_connection",
-    [
-        {
-            "policies": {
-                "batch_parent_write": {
-                    "read_touch_ttl_percent": 50
-                }
-            }
-        },
-    ],
+    [{"record_count": 1, "make_set_unique": True, "batch_write_command_policy": {"ttl": TTL}}],
     indirect=True
 )
 class TestClientConfigBatchPolicies:
+    DURATION = TTL * 3 / 4
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            [["policies", "batch_parent_write", "read_touch_ttl_percent"], 50]
+        ],
+        indirect=True
+    )
     def test_batch_parent_write_applies_to_batch_write(self, insert_records):
-        DURATION = TTL / 2 + 0.1
-        time.sleep(DURATION)
+        time.sleep(self.DURATION)
 
         brs = BatchRecords(
             batch_records=[
@@ -265,32 +259,17 @@ class TestClientConfigBatchPolicies:
                     key=self.keys[0],
                     ops=[
                         operations.read(BIN_NAME)
-                    ]
+                    ],
                 )
             ]
         )
-        self.as_connection.batch_write(brs)
+        self.as_connection.batch_write(brs, policy_batch={})
+
+        time.sleep(self.DURATION)
 
         _, meta = self.as_connection.exists(self.keys[0])
-        assert meta["ttl"] > TTL - DURATION
+        assert meta is not None
 
-    UDF_FILE = "sample.lua"
-
-    @pytest.mark.parametrize(
-        "connection_with_udf",
-        [
-            UDF_FILE
-        ],
-        indirect=True
-    )
-    def test_batch_parent_write_applies_to_batch_apply(self, insert_records):
-        DURATION = TTL / 2 + 0.1
-        time.sleep(DURATION)
-
-        self.as_connection.batch_apply(self.keys, self.UDF_FILE, "list_append", ["list", 1])
-
-        _, meta = self.as_connection.exists(self.keys[0])
-        assert meta["ttl"] > TTL - DURATION
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)

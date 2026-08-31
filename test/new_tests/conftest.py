@@ -80,7 +80,14 @@ def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
 
     if hasattr(request, "param"):
-        config |= request.param
+        curr_dict = config
+        print(request.param)
+        keys, value = request.param
+        for i in range(len(keys) - 1):
+            if keys[i] not in curr_dict:
+                curr_dict[keys[i]] = {}
+            curr_dict = curr_dict[keys[i]]
+        curr_dict[keys[-1]] = value
 
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
