@@ -787,7 +787,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_REGEX_REPLACE:
         success = as_operations_string_regex_replace(
-            ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
+            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2,
             regex_flags);
         break;
     case OP_STRING_APPEND:

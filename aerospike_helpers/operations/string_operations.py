@@ -871,7 +871,7 @@ def regex_replace(
         pattern: the regex pattern to match against.
         replacement: the string to replace with.
         regex_flags: The regex flags to use.
-        policy: No-op.
+        policy: String policy.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {

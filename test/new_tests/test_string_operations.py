@@ -479,17 +479,25 @@ class TestStringOperations:
         _, _, bins = self.as_connection.get(KEY)
         assert "aaaa" not in bins
 
-    def test_string_policy_no_fail(self):
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.parametrize(
+        "op, kwargs",
+        [
+            (str_ops.repeat, {"bin_name": STR_BIN_NAME, "count": -1}),
+            (str_ops.regex_replace, {"bin_name": STR_BIN_NAME, "pattern": "(", "replacement": "X"})
+        ]
+    )
+    def test_string_policy_no_fail(self, op, kwargs: dict):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.repeat(bin_name=STR_BIN_NAME, count=-1, policy=policy)
+            op(**kwargs, policy=policy)
         ]
-        self.add_read_op(ops, INT_BIN_NAME)
+        self.add_read_op(ops, STR_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[INT_BIN_NAME] == BINS[INT_BIN_NAME]
+            assert bins[STR_BIN_NAME] == BINS[STR_BIN_NAME]
 
     @pytest.mark.parametrize(
         "op, kwargs, creates_bin",
