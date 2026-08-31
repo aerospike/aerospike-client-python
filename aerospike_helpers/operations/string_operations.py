@@ -166,6 +166,9 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
     Create string ``starts_with`` operation that returns true if the bin begins with
     prefix.
 
+    Matching is Unicode canonical, not byte-exact: a prefix in a different
+    normalization form than the source still matches.
+
     Args:
 
         bin_name: name of string bin.
@@ -184,6 +187,9 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
     """
     Create string ``ends_with`` operation that returns true if the bin ends with
     suffix.
+
+    Matching is Unicode canonical, not byte-exact: a suffix in a different
+    normalization form than the source still matches.
 
     Args:
 
