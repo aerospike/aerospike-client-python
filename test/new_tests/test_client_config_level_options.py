@@ -317,7 +317,8 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
-    def test_batch_parent_write_applies_to_batch_apply(self, insert_records):
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_apply(self, insert_records, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
 
         # Apply is a write, so parent read_touch_ttl_percent is not sent. Filtered-out UDF
@@ -325,7 +326,7 @@ class TestClientConfigBatchPolicies:
         # from batch_parent_write.error_detail_verbosity when policy_batch is {}.
         expr_that_fails_eval=exp.GE(exp.Abs(exp.Val("a")), 1).compile()
         brs = self.as_connection.batch_apply(
-            self.keys, "sample", "noop", [], policy_batch={}, policy_batch_apply={"expressions": expr_that_fails_eval}
+            self.keys, "sample", "noop", [], policy_batch_apply={"expressions": expr_that_fails_eval}, **command_policy_kwargs
         )
         br = brs.batch_records[0]
         assert "; exp_trace={" in br.message
@@ -335,10 +336,11 @@ class TestClientConfigBatchPolicies:
         [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
         indirect=True
     )
-    def test_batch_parent_write_applies_to_batch_operate(self, insert_records):
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_operate(self, insert_records, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
         brs = self.as_connection.batch_operate(
-            self.keys, WRITE_OPS, policy_batch={}, policy_batch_write=POLICY_WITH_FILTER_RETURNING_FALSE
+            self.keys, WRITE_OPS, policy_batch_write=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
         )
         assert_batch_record_filtered_out_with_exp_trace(brs)
 
@@ -347,10 +349,11 @@ class TestClientConfigBatchPolicies:
         [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
         indirect=True
     )
-    def test_batch_parent_write_applies_to_batch_remove(self, insert_records):
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_remove(self, insert_records, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
         brs = self.as_connection.batch_remove(
-            self.keys, policy_batch={}, policy_batch_remove=POLICY_WITH_FILTER_RETURNING_FALSE
+            self.keys, policy_batch_remove=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
         )
         assert_batch_record_filtered_out_with_exp_trace(brs)
 
