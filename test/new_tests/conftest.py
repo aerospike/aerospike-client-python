@@ -74,6 +74,10 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
         time.sleep(interval)
     return False
 
+class KeysValue:
+    def __init__(self, keys, value):
+        self.keys = keys
+        self.value = value
 
 def set_nested_keys_and_val(config: dict, kv: KeysValue):
     curr_dict = config
@@ -85,11 +89,6 @@ def set_nested_keys_and_val(config: dict, kv: KeysValue):
             curr_dict[curr_key] = {}
         curr_dict = curr_dict[curr_key]
     curr_dict[keys[-1]] = value
-
-class KeysValue:
-    def __init__(self, keys, value):
-        self.keys = keys
-        self.value = value
 
 @pytest.fixture(scope="class")
 def as_connection(request) -> aerospike.Client:
