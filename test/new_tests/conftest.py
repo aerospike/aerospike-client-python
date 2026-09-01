@@ -75,20 +75,33 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
     return False
 
 
+def set_nested_keys_and_val(config: dict, kv: KeysValue):
+    curr_dict = config
+    keys = kv.keys
+    value = kv.value
+    for i in range(len(keys) - 1):
+        curr_key = keys[i]
+        if curr_key not in curr_dict:
+            curr_dict[curr_key] = {}
+        curr_dict = curr_dict[curr_key]
+    curr_dict[keys[-1]] = value
+
+class KeysValue:
+    def __init__(self, keys, value):
+        self.keys = keys
+        self.value = value
+
 @pytest.fixture(scope="class")
 def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
 
     if hasattr(request, "param"):
-        curr_dict = config
-        print(request.param)
-        keys, value = request.param
-        for i in range(len(keys) - 1):
-            curr_key = keys[i]
-            if curr_key not in curr_dict:
-                curr_dict[curr_key] = {}
-            curr_dict = curr_dict[curr_key]
-        curr_dict[keys[-1]] = value
+        if isinstance(request.param, KeysValue):
+
+            set_nested_keys_and_val(config, request.param)
+        else:
+            for keys_val in request.param:
+                set_nested_keys_and_val(config, keys_val)
 
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
