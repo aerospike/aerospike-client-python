@@ -110,19 +110,18 @@ class TestUdfRemove(object):
         assert not present
 
 
-@pytest.mark.parametrize(
-    "connection_with_udf",
-    [
-        "example.lua"
-    ],
-    indirect=True
-)
 @pytest.mark.usefixtures("connection_with_udf")
 class TestIncorrectCallsToUDFRemove(object):
     """
     These are all tests where udf_remove fails for various reasons,
     So we skip removing and re-adding the UDF before and after each test
     """
+
+    def setup_class(cls):
+        """
+        setup the class attribute indicating the udf to load
+        """
+        cls.udf_to_load = "example.lua"
 
     def test_udf_remove_with_proper_parameters_without_connection(self):
         """

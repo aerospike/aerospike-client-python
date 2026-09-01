@@ -43,7 +43,7 @@ def validate_records(client, keys, validator):
 
 @pytest.mark.parametrize(
     "insert_records",
-    [{"record_count": 500, "make_set_unique": False}],
+    [[500, False]],
     indirect=True
 )
 class TestQueryApply(object):

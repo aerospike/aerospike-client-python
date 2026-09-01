@@ -74,34 +74,12 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
         time.sleep(interval)
     return False
 
-class KeysValue:
-    def __init__(self, keys, value):
-        self.keys = keys
-        self.value = value
-
-def set_nested_keys_and_val(config: dict, kv: KeysValue):
-    curr_dict = config
-    keys = kv.keys
-    value = kv.value
-    for i in range(len(keys) - 1):
-        curr_key = keys[i]
-        if curr_key not in curr_dict:
-            curr_dict[curr_key] = {}
-        curr_dict = curr_dict[curr_key]
-    curr_dict[keys[-1]] = value
 
 @pytest.fixture(scope="class")
 def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
-
-    if hasattr(request, "param"):
-        if isinstance(request.param, KeysValue):
-
-            set_nested_keys_and_val(config, request.param)
-        else:
-            for keys_val in request.param:
-                set_nested_keys_and_val(config, keys_val)
-
+    # TODO: remove. this is a duplicate.
+    request.cls.config = config
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
@@ -177,13 +155,14 @@ def connection_with_udf(request, as_connection):
     """
     Injects an as_client() as a dependency, loads a udf to it,
     and at the end of the test class removes it.
-    Note: if the requesting class does not pass in a param, this is a no-op.
+    Note: if the requesting class does not have a class attr:
+    `udf_to_load`, this is essentially a noop
     """
     udf_status = {"loaded": False, "name": None}
     # if the class doesn't have the correct information,
     # don't bother loading a UDF
-    if hasattr(request, "param"):
-        udf_status["name"] = request.param
+    if hasattr(request.cls, "udf_to_load"):
+        udf_status["name"] = request.cls.udf_to_load
         as_connection.udf_put(udf_status["name"], 0, {})
         udf_status["loaded"] = True
 
@@ -296,16 +275,14 @@ expected_number_bin_values = set()
 
 # Add records around the test
 @pytest.fixture(scope="function")
-def insert_records(request, connection_with_udf):
+def insert_records(request, as_connection):
 
     # - Some tests don't make use of unique sets,
     # so we leave them alone for backwards compatibility
     # - make_set_unique ensures that if a test case's cleanup stage fails to run
     # e.g when the test case's setup fixture fails out,
     # that test case's records does not interfere with future test cases that need to perform a query
-    num_keys = request.param["record_count"]
-    make_set_unique = request.param["make_set_unique"]
-    batch_write_policy = request.param.get("batch_write_command_policy", None)
+    num_keys, make_set_unique = request.param
 
     if make_set_unique:
         set_name = f"{TEST_SET}-{time.time_ns()}"
@@ -313,7 +290,7 @@ def insert_records(request, connection_with_udf):
         set_name = TEST_SET
 
     if make_set_unique is False:
-        connection_with_udf.truncate(TEST_NS, set_name, 0)
+        as_connection.truncate(TEST_NS, set_name, 0)
 
     request.cls.set_name = set_name
     keys = [(TEST_NS, set_name, i) for i in range(num_keys)]
@@ -327,11 +304,11 @@ def insert_records(request, connection_with_udf):
             operations.write(BIN_NAME, i),
             operations.write(MAP_BIN_NAME, {"a": i})
         ]
-        br = Write(key, ops=ops, policy=batch_write_policy)
+        br = Write(key, ops=ops)
         batch_records.append(br)
         expected_number_bin_values.add(i)
 
-    connection_with_udf.batch_write(brs)
+    as_connection.batch_write(brs)
 
     yield
 
