@@ -273,6 +273,7 @@ def generate_policy_kwargs(policy_param_name: str):
     [{"record_count": 1, "make_set_unique": False, "batch_write_command_policy": {"ttl": TTL}}],
     indirect=True
 )
+@pytest.mark.usefixtures("insert_records")
 class TestClientConfigBatchPolicies:
     DURATION = TTL * 3 / 4
     @pytest.mark.parametrize(
@@ -283,7 +284,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
-    def test_batch_parent_write_applies_to_batch_write(self, insert_records, command_policy_kwargs):
+    def test_batch_parent_write_applies_to_batch_write(self, command_policy_kwargs):
         time.sleep(self.DURATION)
 
         brs = BatchRecords(
@@ -318,7 +319,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
-    def test_batch_parent_write_applies_to_batch_apply(self, insert_records, command_policy_kwargs):
+    def test_batch_parent_write_applies_to_batch_apply(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
 
         # Apply is a write, so parent read_touch_ttl_percent is not sent. Filtered-out UDF
@@ -337,7 +338,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
-    def test_batch_parent_write_applies_to_batch_operate(self, insert_records, command_policy_kwargs):
+    def test_batch_parent_write_applies_to_batch_operate(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
         brs = self.as_connection.batch_operate(
             self.keys, WRITE_OPS, policy_batch_write=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
@@ -350,7 +351,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
-    def test_batch_parent_write_applies_to_batch_remove(self, insert_records, command_policy_kwargs):
+    def test_batch_parent_write_applies_to_batch_remove(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
         brs = self.as_connection.batch_remove(
             self.keys, policy_batch_remove=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
@@ -372,7 +373,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch_apply")
-    def test_batch_apply(self, insert_records, command_policy_kwargs):
+    def test_batch_apply(self, command_policy_kwargs):
         self.as_connection.batch_apply(self.keys, "sample", "noop", [], **command_policy_kwargs)
 
         verify_record_ttl(self.as_connection, self.keys[0], 5000)
@@ -385,7 +386,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch_write")
-    def test_batch_write(self, insert_records, command_policy_kwargs):
+    def test_batch_write(self, command_policy_kwargs):
         self.as_connection.batch_operate(self.keys, WRITE_OPS, **command_policy_kwargs)
 
         verify_record_ttl(self.as_connection, self.keys[0], 5000)
@@ -398,7 +399,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch_remove")
-    def test_batch_remove(self, insert_records, command_policy_kwargs):
+    def test_batch_remove(self, command_policy_kwargs):
         # The default generation value in the batch_remove policy should cause this to fail
         brs = self.as_connection.batch_remove(self.keys, **command_policy_kwargs)
         assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
