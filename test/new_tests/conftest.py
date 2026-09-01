@@ -323,10 +323,16 @@ def insert_records(request, connection_with_udf):
     brs = BatchRecords(batch_records=batch_records)
 
     for i, key in enumerate(keys):
-        ops = [
-            operations.write(BIN_NAME, i),
-            operations.write(MAP_BIN_NAME, {"a": i})
-        ]
+        if "bins" not in request.param:
+            ops = [
+                operations.write(BIN_NAME, i),
+                operations.write(MAP_BIN_NAME, {"a": i})
+            ]
+        else:
+            bins = request.param["bins"]
+            ops = [
+                operations.write(bin_name, value) for bin_name, value in bins.items()
+            ]
         br = Write(key, ops=ops, policy=batch_write_policy)
         batch_records.append(br)
         expected_number_bin_values.add(i)
