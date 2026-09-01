@@ -456,23 +456,3 @@ def hydrate_partitions_1000_to_1003(request, as_connection):
 
 AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
 DYN_CONFIG_PATH = "./dyn_config.yml"
-
-
-def setup_record_with_ttl_for_read_touch_ttl_percent(self, as_connection):
-    ttl = 2
-    self.as_connection.put(KEYS[0], bins={"a": 1}, policy={"ttl": ttl})
-    self.policy = {
-        "read_touch_ttl_percent": 50
-    }
-    self.invalid_policy = {
-        "read_touch_ttl_percent": "1"
-    }
-    self.delay = ttl / 2 + 0.1
-
-    yield
-
-    # Some tests call the client remove API
-    try:
-        self.as_connection.remove(KEY)
-    except e.RecordNotFound:
-        pass
