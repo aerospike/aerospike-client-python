@@ -71,6 +71,7 @@ class TestExceptionSubcode:
     @pytest.mark.parametrize(
         "policy_w_verbosity_setting",
         [
+            {},
             {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_NONE},
             {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_SUBCODE},
             {ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE},
