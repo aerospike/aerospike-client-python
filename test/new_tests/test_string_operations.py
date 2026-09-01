@@ -603,10 +603,10 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "op",
         [
-            str_ops.repeat(STR_BIN_NAME, count=RESULT_SIZE_CAP),
-            str_ops.pad_start(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
-            str_ops.pad_end(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
-            str_ops.concat(STR_BIN_NAME, value_list=["*" * RESULT_SIZE_CAP]),
+            str_ops.repeat(STR_BIN_NAME2, count=RESULT_SIZE_CAP),
+            str_ops.pad_start(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.pad_end(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.concat(STR_BIN_NAME2, value_list=["x" * RESULT_SIZE_CAP]),
         ]
     )
     def test_result_size_cap(self, op):
