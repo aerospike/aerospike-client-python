@@ -145,7 +145,7 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     }
 
 
-def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
+def contains(bin_name: str, needle: str, ctx: TypeCTX = None):
     """
     Create string ``contains`` operation that returns true if the bin contains needle.
 
@@ -872,7 +872,6 @@ def regex_replace(
     """
     Create string ``regex_replace`` operation that replaces the first match of pattern
     with replacement. Pass :py:attr:`~aerospike_helpers.string_helpers.RegexFlags.GLOBAL` to replace every match.
-    This server operation accepts regex flags but not string policy flags.
 
     If the bin doesn't exist, this operation will be a no-op.
 
