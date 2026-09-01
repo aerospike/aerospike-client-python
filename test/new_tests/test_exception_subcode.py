@@ -1,5 +1,5 @@
 import pytest
-from .conftest import TEST_NS, TEST_SET, BIN_NAME, DYN_CONFIG_PATH, KeysValue
+from .conftest import TEST_NS, TEST_SET, BIN_NAME, DYN_CONFIG_PATH, ClientConfigKeysValue
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations as list_ops, operations
@@ -81,7 +81,7 @@ class TestExceptionSubcode:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "operate", ERROR_DETAIL_VERBOSITY_SETTING], verbosity_level)
+            ClientConfigKeysValue(["policies", "operate", ERROR_DETAIL_VERBOSITY_SETTING], verbosity_level)
             for verbosity_level in verbosity_levels
         ],
         indirect=True
@@ -99,7 +99,7 @@ class TestExceptionSubcode:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "operate", ERROR_DETAIL_VERBOSITY_SETTING], aerospike.ERROR_DETAIL_NONE)
+            ClientConfigKeysValue(["policies", "operate", ERROR_DETAIL_VERBOSITY_SETTING], aerospike.ERROR_DETAIL_NONE)
         ],
         indirect=True
     )

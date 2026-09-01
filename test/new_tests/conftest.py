@@ -74,12 +74,12 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
         time.sleep(interval)
     return False
 
-class KeysValue:
+class ClientConfigKeysValue:
     def __init__(self, keys, value):
         self.keys = keys
         self.value = value
 
-def set_nested_keys_and_val(config: dict, kv: KeysValue):
+def set_nested_keys_and_val(config: dict, kv: ClientConfigKeysValue):
     curr_dict = config
     keys = kv.keys
     value = kv.value
@@ -95,7 +95,7 @@ def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
 
     if hasattr(request, "param"):
-        if isinstance(request.param, KeysValue):
+        if isinstance(request.param, ClientConfigKeysValue):
 
             set_nested_keys_and_val(config, request.param)
         else:
