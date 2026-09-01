@@ -129,6 +129,9 @@ class TestExceptionSubcode:
             assert br.message is None
             assert br.subcode == 0
 
+    # For the following two tests, we test both the single record batch optimization path
+    # as well as the regular batch codepath
+
     @pytest.mark.parametrize("key_count", [1, 2])
     def test_batch_write_return_error_details(self, key_count):
         brs = BatchRecords(
