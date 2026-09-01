@@ -6,6 +6,7 @@ from aerospike_helpers.operations import string_operations as str_ops, operation
 from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags, WriteFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from contextlib import nullcontext
 
 from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET, TestBaseClass
 from .string_helpers import *
@@ -140,12 +141,12 @@ class TestStringOperations:
 
     def test_byte_length_for_multibyte_codepoint(self):
         ops = [
-            str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
+            str_ops.byte_length(bin_name=NFD_CODEPOINT_BIN_NAME)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == len(BINS[MULTIBYTE_CODEPOINT_BIN_NAME].encode('utf-8'))
+            assert bins[NFD_CODEPOINT_BIN_NAME] == len(BINS[NFD_CODEPOINT_BIN_NAME].encode('utf-8'))
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
@@ -246,19 +247,19 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "pattern, expected_result",
         [
-            (MULTIBYTE_CODEPOINT, True),
+            (NFD_CODEPOINT, True),
             ("π", False)
         ]
     )
     def test_regex_compare(self, pattern: str, expected_result: bool):
         ops = [
-            str_ops.regex_compare(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, pattern=pattern)
+            str_ops.regex_compare(bin_name=NFD_CODEPOINT_BIN_NAME, pattern=pattern)
         ]
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
+            assert bins[NFD_CODEPOINT_BIN_NAME] is expected_result
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
@@ -338,7 +339,7 @@ class TestStringOperations:
         "bin_name, expected_result",
         [
             (UPPERCASE_STR_BIN_NAME, UPPERCASE_STR.lower()),
-            (MULTIBYTE_CODEPOINT_BIN_NAME, MULTIBYTE_CODEPOINT)
+            (NFD_CODEPOINT_BIN_NAME, NFD_CODEPOINT)
         ]
     )
     @kwargs_policy
@@ -356,26 +357,26 @@ class TestStringOperations:
     @kwargs_policy
     def test_casefold(self, kwargs_policy: dict):
         ops = [
-            str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.casefold(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFD_CODEPOINT.casefold()
 
     @kwargs_policy
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
-            str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.normalize_nfc(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFC_CODEPOINT
 
     @kwargs_policy
     def test_trim_start(self, kwargs_policy):
@@ -465,31 +466,40 @@ class TestStringOperations:
             self.as_connection.operate(KEY, ops)
 
     def test_string_policy_update_only(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 3):
-            pytest.xfail("Currently 8.1.3 does not raise a ParamError exception." \
-                "This has already been raised to server team")
-
         policy = StringPolicy(write_flags=WriteFlags.UPDATE_ONLY)
         ops = [
             str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
         ]
-        with pytest.raises(e.InvalidRequest):
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            expected_context = pytest.raises(e.InvalidRequest)
+        else:
+            expected_context = nullcontext()
+
+        with expected_context:
             self.as_connection.operate(KEY, ops)
 
-        _, _, bins = self.as_connection.get(KEY)
-        assert "aaaa" not in bins
+            _, _, bins = self.as_connection.get(KEY)
+            assert "aaaa" not in bins
 
-    def test_string_policy_no_fail(self):
+    @pytest.mark.parametrize(
+        "op, kwargs",
+        [
+            (str_ops.repeat, {"bin_name": STR_BIN_NAME, "count": -1}),
+            (str_ops.regex_replace, {"bin_name": STR_BIN_NAME, "pattern": "(", "replacement": "X"})
+        ]
+    )
+    def test_string_policy_no_fail(self, op, kwargs: dict):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.repeat(bin_name=STR_BIN_NAME, count=-1, policy=policy)
+            op(**kwargs, policy=policy)
         ]
-        self.add_read_op(ops, INT_BIN_NAME)
+        self.add_read_op(ops, STR_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[INT_BIN_NAME] == BINS[INT_BIN_NAME]
+            assert bins[STR_BIN_NAME] == BINS[STR_BIN_NAME]
 
     @pytest.mark.parametrize(
         "op, kwargs, creates_bin",
@@ -536,3 +546,72 @@ class TestStringOperations:
                 assert bins[NON_EXISTENT_BIN_NAME] == ""
             else:
                 assert bins[NON_EXISTENT_BIN_NAME] == NEEDLE
+
+    NFC_CODEPOINT2 = "caf\u00E9"
+    NFD_CODEPOINT2 = "cafe\u0301"
+
+    nfc_param = pytest.mark.parametrize(
+        "bin_substr, str_param",
+        [
+            (NFC_CODEPOINT2, NFD_CODEPOINT2),
+            (NFD_CODEPOINT2, NFC_CODEPOINT2)
+        ]
+    )
+
+    @nfc_param
+    def test_replace_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.replace(bin_name=BIN_NAME, needle=str_param, replacement="tea"),
+            operations.read(BIN_NAME)
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == "tea au lait"
+
+    @nfc_param
+    def test_starts_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.starts_with(bin_name=BIN_NAME, prefix=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
+
+    @nfc_param
+    def test_ends_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = "au lait " + bin_substr
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.ends_with(bin_name=BIN_NAME, suffix=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
+
+    RESULT_SIZE_CAP = 8 * 1024 * 1024
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            str_ops.repeat(STR_BIN_NAME, count=RESULT_SIZE_CAP),
+            str_ops.pad_start(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
+            str_ops.pad_end(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
+            str_ops.concat(STR_BIN_NAME, value_list=["*" * RESULT_SIZE_CAP]),
+        ]
+    )
+    def test_result_size_cap(self, op):
+        ops = [
+            op
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(KEY, ops)
