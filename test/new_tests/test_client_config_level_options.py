@@ -274,6 +274,8 @@ class TestClientConfigBatchPolicies:
                 )
             ]
         )
+        # Read-only batch_write() does not reset TTL as a write would.
+        # It can still read-touch if batch_parent_write.read_touch_ttl_percent from client config is applied.
         self.as_connection.batch_write(brs, **command_policy_kwargs)
 
         time.sleep(self.DURATION)
@@ -323,6 +325,7 @@ class TestClientConfigBatchPolicies:
     )
     @generate_policy_kwargs("policy_batch_remove")
     def test_batch_remove(self, insert_records, command_policy_kwargs):
+        # The default generation value in the batch_remove policy should cause this to fail
         brs = self.as_connection.batch_remove(self.keys, **command_policy_kwargs)
         assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
         assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION
