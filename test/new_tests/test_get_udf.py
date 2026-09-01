@@ -7,7 +7,13 @@ from aerospike import exception as e
 
 import aerospike
 
-
+@pytest.mark.parametrize(
+    "connection_with_udf",
+    [
+        "bin_lua.lua"
+    ],
+    indirect=True
+)
 @pytest.mark.usefixtures("connection_with_udf")
 class TestGetRegistered(object):
     def setup_class(cls):
@@ -15,10 +21,9 @@ class TestGetRegistered(object):
         Set the name of the UDF to load
         store the contents of the file for future comparison
         """
-        cls.udf_to_load = "bin_lua.lua"
         cls.loaded_udf_name = "bin_lua.lua"
         cls.udf_language = aerospike.UDF_TYPE_LUA
-        with open(cls.udf_to_load, "r", newline='') as udf_file:
+        with open(cls.loaded_udf_name, "r", newline='') as udf_file:
             cls.loaded_udf_content = udf_file.read()
 
     def test_udf_get_with_correct_paramters_no_policy(self):
