@@ -559,6 +559,25 @@ class TestStringOperations:
     )
 
     @nfc_param
+    @pytest.mark.parametrize(
+        "op, expected_result",
+        [
+            (str_ops.find, 0),
+            (str_ops.contains, True)
+        ]
+    )
+    def test_read_across_normalization_forms(self, op, expected_result, bin_substr, str_param):
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: bin_substr})
+
+        ops = [
+            op(bin_name=BIN_NAME, needle=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == expected_result
+
+    @nfc_param
     def test_replace_across_normalization_forms(self, bin_substr, str_param):
         STR_TO_REPL = bin_substr + " au lait"
         BIN_NAME = "str"
