@@ -42,6 +42,9 @@ enum Aerospike_send_bool_as_values {
     SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
+// We have a separate op for list join with a non-None separator argument
+// because the expressions for list join with a separator and the one without it
+// take up different amounts of space in memory when allocating the list of as_exp_entry's
 #define LIST_OP_NAMES_EXCEPT_LIST_APPEND                                       \
     X(LIST_APPEND_ITEMS), X(LIST_INSERT), X(LIST_INSERT_ITEMS), X(LIST_POP),   \
         X(LIST_POP_RANGE), X(LIST_REMOVE), X(LIST_REMOVE_RANGE),               \
@@ -61,7 +64,8 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
         X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
-        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN),     \
+        X(LIST_JOIN_SEPARATOR)
 
 // clang-format off
 #define STRING_OP_NAMES                                                        \
@@ -88,6 +92,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_OVERWRITE), \
     X(STRING_CONCAT), \
     X(STRING_SNIP), \
+    X(STRING_SNIP_START), \
     X(STRING_REPLACE), \
     X(STRING_REPLACE_ALL), \
     X(STRING_UPPER), \
@@ -103,8 +108,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_REGEX_REPLACE), \
     X(STRING_APPEND), \
     X(STRING_PREPEND), \
-    X(STRING_TO_STRING),
-// clang-format on
+    X(STRING_TO_STRING), // clang-format on
 
 enum {
 #define X(op_name) OP_##op_name
@@ -179,8 +183,9 @@ enum Aerospike_map_operations {
     X(BIT_GET), \
     X(BIT_COUNT), \
     X(BIT_LSCAN), \
-    X(BIT_RSCAN)
-// clang-format on
+    X(BIT_RSCAN), \
+    X(BIT_B64_ENCODE), \
+    X(BIT_B64_ENCODE_RANGE) // clang-format on
 
 enum aerospike_bitwise_operations {
 #define X(op_name) OP_##op_name

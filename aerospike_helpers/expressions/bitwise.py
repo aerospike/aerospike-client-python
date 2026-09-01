@@ -722,3 +722,41 @@ class BitGetInt(_BaseExpr):
             expr = exp.BitGetInt(8, 8, True, exp.BlobBin("c")).compile()
         """
         self._children = (bit_offset, bit_size, 1 if sign else 0, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+
+
+class BitB64Encode(_BaseExpr):
+    """
+    Create an expression that performs a :py:meth:`~aerospike_helpers.operations.bitwise_operations.bit_b64_encode`
+    operation.
+    """
+
+    def __init__(
+        self,
+        byte_offset: int,
+        byte_size: int | None,
+        invert_size: bool,
+        bin: "TypeBinName",
+    ):
+        """
+        Args:
+            byte_offset (int): Byte offset into the blob. Negative values count from the end.
+            byte_size (int): Number of bytes to encode.
+            invert_size (bool): When :py:obj:`True`, counts back from the blob end instead of from ``byte_offset``.
+            bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
+
+        :return: String expression.
+        """
+        bin = bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
+        if byte_size:
+            self._op = aerospike._OP_BIT_B64_ENCODE_RANGE
+            self._children = (
+                byte_offset,
+                byte_size,
+                invert_size,
+                bin
+            )
+        else:
+            self._op = aerospike._OP_BIT_B64_ENCODE
+            self._children = (
+                bin,
+            )

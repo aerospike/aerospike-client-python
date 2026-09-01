@@ -26,6 +26,7 @@ class TestExceptionSubcode:
             aerospike.SUB_PARAM_BITS_SIZE_OUT_OF_RANGE,
             aerospike.SUB_PARAM_BITS_RESIZE_EXCEEDED,
             aerospike.SUB_PARAM_BIN_COUNT_TOO_LARGE,
+            aerospike.SUB_PARAM_STRING_CTX_MALFORMED,
             aerospike.SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED,
             aerospike.SUB_UNAVAIL_REPLICA_UNAVAILABLE,
             aerospike.SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY,
@@ -52,6 +53,7 @@ class TestExceptionSubcode:
             aerospike.SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH,
             aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED,
             aerospike.SUB_OPNOT_STRING_UTF8_INVALID,
+            aerospike.SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED,
             aerospike.SUB_OPNOT_STRING_B64_INVALID
         ]
     )

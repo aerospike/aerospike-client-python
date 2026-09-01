@@ -2,6 +2,7 @@
 import pytest
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
 
 import aerospike
 
@@ -26,7 +27,15 @@ class TestNewListOperationsHelpers(object):
 
         self.test_key = "test", "demo", "new_list_op"
         self.test_bin = "list"
-        self.as_connection.put(self.test_key, {self.test_bin: self.test_list})
+        self.as_connection.put(
+            self.test_key,
+            {
+                self.test_bin: self.test_list,
+                "empty_list": [],
+                "list_of_one_str": ["a"],
+                "list_of_strs": ["a", "b", "c"]
+            }
+        )
         self.keys.append(self.test_key)
 
         yield
@@ -474,3 +483,30 @@ class TestNewListOperationsHelpers(object):
                                                 persist_index=persist_index, ctx=None)
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, [operation])
+
+    @pytest.mark.parametrize(
+        "bin_name, separator, expected",
+        [
+            ("list_of_strs", None, "abc"),
+            ("list_of_strs", "#", "a#b#c"),
+            # Edge cases
+            ("empty_list", None, ""),
+            ("list_of_one_str", None, "a")
+        ]
+    )
+    @expect_server_version_earlier_than_8_1_3_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
+    def test_list_join(self, bin_name: str, separator: str | None, expected: str):
+        ops = [
+            list_operations.list_join(bin_name=bin_name, separator=separator)
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.test_key, ops)
+            assert bins[bin_name] == expected
+
+    def test_list_join_fail(self):
+        ops = [
+            list_operations.list_join(bin_name="list")
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.test_key, ops)

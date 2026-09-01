@@ -14,9 +14,16 @@
 # limitations under the License.
 ##########################################################################
 """
-String expressions contain expressions for reading and modifying strings. Most of
-these operations are from the standard :mod:`String API <aerospike_helpers.operations.string_operations>`.
+String expressions contain expressions for reading and modifying strings.
 
+These expressions mirror the operations from :mod:`String API <aerospike_helpers.operations.string_operations>`.
+
+Requires server version 8.1.3 or later.
+
+Unlike operate-level string ops, these macros do not take a ``ctx`` parameter. To target
+a string nested inside a list or map, extract the leaf with
+:py:class:`~aerospike_helpers.expressions.list.ListGetByIndex` or
+:py:class:`~aerospike_helpers.expressions.map.MapGetByKey` and pass the result as the operand expression.
 """
 
 
@@ -269,7 +276,7 @@ class IsNumeric(_BaseExpr):
 
         Returns:
 
-            true if the string is a numeric value, false otherwise.
+            (bool expression)
         """
         self._fixed = {
             aerospike._STR_EXP_NUMERIC_TYPE_KEY: numeric_type
@@ -410,10 +417,11 @@ class ToString(_BaseExpr):
 
             bin: A bin expression to apply this function to.
                 If this argument is a string, the bin must contain a string.
+                Valid operand expressions are INT, FLOAT, STR, BOOL, or BLOB.
 
         Returns:
 
-            The string in the bin with the value converted to a string.
+            (String expression)
 
         """
         self._children = (_convert_bin_name_to_expr(bin),)
@@ -541,21 +549,26 @@ class Concat(_WriteOp):
 
 
 class Snip(_WriteOp):
-    _op = aerospike._OP_STRING_SNIP
 
-    def __init__(self, policy: StringPolicy, start: int, end: int, bin: "TypeBinName"):
+    def __init__(self, policy: StringPolicy, start: int, end: int | None, bin: "TypeBinName"):
         """
         Args:
 
-            policy: String policy.
+            policy: String policy. ``policy`` is not sent if ``end`` is :py:obj:`None`.
             start: First codepoint to remove, inclusive.
-            end: One past the last codepoint to remove, exclusive.
+            end: One past the last codepoint to remove, exclusive. If :py:obj:`None`,
+                then remove from ``start`` through the end of the string.
             bin: A bin expression to apply this function to.
 
         Returns:
 
             The string in the bin with the value snipped.
         """
+        if end:
+            self._op = aerospike._OP_STRING_SNIP
+        else:
+            self._op = aerospike._OP_STRING_SNIP_START
+
         super().__init__(policy)
         self._fixed |= {
             aerospike._STR_EXP_START_KEY: start,
@@ -822,7 +835,7 @@ class RegexReplace(_WriteOp):
         """
         Args:
 
-            policy: No-op.
+            policy: String policy.
             pattern: the regex pattern to match against.
             replacement: the string to replace with.
             regex_flags: The regex flags to use.
