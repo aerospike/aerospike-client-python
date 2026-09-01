@@ -835,7 +835,7 @@ class RegexReplace(_WriteOp):
         """
         Args:
 
-            policy: No-op.
+            policy: String policy.
             pattern: the regex pattern to match against.
             replacement: the string to replace with.
             regex_flags: The regex flags to use.

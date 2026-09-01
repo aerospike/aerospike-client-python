@@ -62,11 +62,11 @@ class TestExpressions:
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
             ),
             (
-                str_expr.RegexCompare(pattern=BINS[MULTIBYTE_CODEPOINT_BIN_NAME], regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern=BINS[NFD_CODEPOINT_BIN_NAME], regex_flags=RegexFlags.DEFAULT, bin=NFD_CODEPOINT_BIN_NAME),
                 True
             ),
             (
-                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=NFD_CODEPOINT_BIN_NAME),
                 False
             ),
             (
@@ -103,16 +103,16 @@ class TestExpressions:
     @pytest.mark.parametrize(
         "expr",
         [
-            str_expr.SubStr(start="1", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SubStrRange(start="1", end=4, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SubStrRange(start=1, end="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.CharAt(index="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Contains(needle=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
-            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStr(start="1", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start="1", end=4, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start=1, end="4", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.CharAt(index="4", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.Contains(needle=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SplitSeparator(bin=NFD_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
+            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
         ]
     )
     def test_invalid_param(self, expr):
@@ -200,12 +200,12 @@ class TestExpressions:
                 UPPERCASE_STR.lower()
             ),
             (
-                str_expr.CaseFold, {"bin": MULTIBYTE_CODEPOINT_BIN_NAME},
-                MULTIBYTE_CODEPOINT.casefold()
+                str_expr.CaseFold, {"bin": NFD_CODEPOINT_BIN_NAME},
+                NFD_CODEPOINT.casefold()
             ),
             (
-                str_expr.NormalizeNFC, {"bin": MULTIBYTE_CODEPOINT_BIN_NAME},
-                NORMALIZED_CODEPOINT
+                str_expr.NormalizeNFC, {"bin": NFD_CODEPOINT_BIN_NAME},
+                NFC_CODEPOINT
             ),
             (
                 str_expr.TrimStart, {"bin": SURROUNDING_WHITESPACE_BIN_NAME},

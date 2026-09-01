@@ -74,8 +74,11 @@ class WriteFlags(IntEnum):
 
     UPDATE_ONLY = 2
     """
-	 Update existing values only. Mutually exclusive with
-	 :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
+     Update existing values only. Mutually exclusive with
+     :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
+
+     Valid on all string modify ops. This disables bin creation,
+     so a missing bin is a silent no-op rather than a create.
     """
 
     NO_FAIL = 4
