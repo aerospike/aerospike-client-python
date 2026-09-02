@@ -236,8 +236,6 @@ def test_setting_batch_policies():
         config["policies"][policy] = {}
     aerospike.client(config)
 
-TTL = 2
-
 BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG = [
     KeysValue(["policies", "batch_parent_write", "error_detail_verbosity"], aerospike.ERROR_DETAIL_EXP_TRACE),
     KeysValue(["policies", "batch", "error_detail_verbosity"], aerospike.ERROR_DETAIL_NONE),
@@ -268,11 +266,20 @@ def generate_policy_kwargs(policy_param_name: str):
         ]
     )
 
-@pytest.mark.parametrize(
+TTL = 2
+
+insert_one_record = pytest.mark.parametrize(
+    "insert_records",
+    [{"record_count": 1, "make_set_unique": False}],
+    indirect=True
+)
+
+insert_one_record_with_short_ttl = pytest.mark.parametrize(
     "insert_records",
     [{"record_count": 1, "make_set_unique": False, "batch_write_command_policy": {"ttl": TTL}}],
     indirect=True
 )
+
 @pytest.mark.usefixtures("insert_records")
 class TestClientConfigBatchPolicies:
     DURATION = TTL * 3 / 4
@@ -284,6 +291,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
+    @insert_one_record_with_short_ttl
     def test_batch_parent_write_applies_to_batch_write(self, command_policy_kwargs):
         time.sleep(self.DURATION)
 
@@ -319,6 +327,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch")
+    @insert_one_record
     def test_batch_parent_write_applies_to_batch_apply(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
 
@@ -337,6 +346,7 @@ class TestClientConfigBatchPolicies:
         [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
         indirect=True
     )
+    @insert_one_record
     @generate_policy_kwargs("policy_batch")
     def test_batch_parent_write_applies_to_batch_operate(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
@@ -350,6 +360,7 @@ class TestClientConfigBatchPolicies:
         [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
         indirect=True
     )
+    @insert_one_record
     @generate_policy_kwargs("policy_batch")
     def test_batch_parent_write_applies_to_batch_remove(self, command_policy_kwargs):
         skip_if_exp_trace_unsupported()
@@ -372,6 +383,7 @@ class TestClientConfigBatchPolicies:
         ],
         indirect=True
     )
+    @insert_one_record
     @generate_policy_kwargs("policy_batch_apply")
     def test_batch_apply(self, command_policy_kwargs):
         self.as_connection.batch_apply(self.keys, "sample", "noop", [], **command_policy_kwargs)
@@ -386,6 +398,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch_write")
+    @insert_one_record
     def test_batch_write(self, command_policy_kwargs):
         self.as_connection.batch_operate(self.keys, WRITE_OPS, **command_policy_kwargs)
 
@@ -399,6 +412,7 @@ class TestClientConfigBatchPolicies:
         indirect=True
     )
     @generate_policy_kwargs("policy_batch_remove")
+    @insert_one_record
     def test_batch_remove(self, command_policy_kwargs):
         # The default generation value in the batch_remove policy should cause this to fail
         brs = self.as_connection.batch_remove(self.keys, **command_policy_kwargs)
