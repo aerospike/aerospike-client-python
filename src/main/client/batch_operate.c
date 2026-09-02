@@ -99,7 +99,7 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
     return success;
 }
 
-extern bool as_op_is_write[];
+AS_EXTERN extern bool as_op_is_write[];
 
 /**
  *******************************************************************************************************
