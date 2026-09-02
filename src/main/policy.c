@@ -40,7 +40,7 @@
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
 
-#define POLICY_INIT(__policy)                                                  \
+#define VALIDATE_POLICY_TYPE(policy)                                           \
     as_error_reset(err);                                                       \
     if (!py_policy || py_policy == Py_None) {                                  \
         return err->code;                                                      \
@@ -48,7 +48,10 @@
     if (!PyDict_Check(py_policy)) {                                            \
         return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
                                "policy must be a dict");                       \
-    }                                                                          \
+    }
+
+#define POLICY_INIT(__policy)                                                  \
+    VALIDATE_POLICY_TYPE(__policy)                                             \
     __policy##_init(policy);
 
 #define POLICY_UPDATE() *policy_p = policy;
@@ -880,10 +883,14 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
+                                         as_policy_batch_write *config_policy,
                                          as_dynamic_pool *dynamic_pool,
                                          as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_write);
+    VALIDATE_POLICY_TYPE(policy)
+
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
@@ -922,9 +929,12 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
+                                        as_policy_batch_read *config_policy,
                                         as_dynamic_pool *dynamic_pool,
                                         as_exp **exp_list_p)
 {
+    (void)config_policy;
+
     POLICY_INIT(as_policy_batch_read);
 
     if (self->validate_keys) {
@@ -959,10 +969,14 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
+                                         as_policy_batch_apply *config_policy,
                                          as_dynamic_pool *dynamic_pool,
                                          as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_apply);
+    VALIDATE_POLICY_TYPE(policy)
+
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
@@ -998,10 +1012,14 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
                                           as_policy_batch_remove **policy_p,
+                                          as_policy_batch_remove *config_policy,
                                           as_dynamic_pool *dynamic_pool,
                                           as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_remove);
+    VALIDATE_POLICY_TYPE(policy)
+
+    // There is no copy helper function in the C client
+    *policy = *config_policy;
 
     if (self->validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(

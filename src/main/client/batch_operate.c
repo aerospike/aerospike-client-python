@@ -99,6 +99,8 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
     return success;
 }
 
+AS_EXTERN extern bool as_op_is_write[];
+
 /**
  *******************************************************************************************************
  * This function invokes csdk's API's.
@@ -160,6 +162,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         goto CLEANUP;
     }
 
+    bool has_write_op = false;
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
 
@@ -172,6 +175,10 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, &ops,
                    &operation, &return_type) != AEROSPIKE_OK) {
             goto CLEANUP;
+        }
+
+        if (as_op_is_write[ops.binops.entries[i].op]) {
+            has_write_op = true;
         }
     }
 
@@ -207,10 +214,19 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &dynamic_pool,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        as_policy_batch *config_batch_policy_ref = NULL;
+        if (has_write_op) {
+            config_batch_policy_ref =
+                &self->as->config.policies.batch_parent_write;
+        }
+        else {
+            config_batch_policy_ref = &self->as->config.policies.batch;
+        }
+
+        if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p, config_batch_policy_ref,
+                                     &dynamic_pool,
+                                     &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -218,8 +234,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch_write) {
         if (pyobject_to_batch_write_policy(
                 self, err, py_policy_batch_write, &policy_batch_write,
-                &policy_batch_write_p, &dynamic_pool,
-                &batch_write_exp_list_p) != AEROSPIKE_OK) {
+                &policy_batch_write_p, &self->as->config.policies.batch_write,
+                &dynamic_pool, &batch_write_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

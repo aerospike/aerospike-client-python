@@ -5,16 +5,19 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch.records import Write, BatchRecords, Read
+from aerospike_helpers.batch.records import Read, Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
+from aerospike_helpers import expressions as exp
 import copy
 from contextlib import nullcontext
 import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl, wait_for_job_completion
-import warnings
+from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME, WRITE_OPS, ClientConfigKeysValue
+from .as_status_codes import AerospikeStatus
+from . import as_errors
+
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -233,6 +236,188 @@ def test_setting_batch_policies():
         config["policies"][policy] = {}
     aerospike.client(config)
 
+BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG = [
+    ClientConfigKeysValue(["policies", "batch_parent_write", "error_detail_verbosity"], aerospike.ERROR_DETAIL_EXP_TRACE),
+    ClientConfigKeysValue(["policies", "batch", "error_detail_verbosity"], aerospike.ERROR_DETAIL_NONE),
+]
+# Must read a bin. Constant filters (e.g. 1 == 0) are metadata-only and the server
+# omits exp_trace even at ERROR_DETAIL_EXP_TRACE.
+POLICY_WITH_FILTER_RETURNING_FALSE = {"expressions": exp.Eq(exp.IntBin(BIN_NAME), exp.Val(99999)).compile()}
+
+
+def skip_if_exp_trace_unsupported():
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+
+
+def assert_batch_record_filtered_out_with_exp_trace(batch_records):
+    br = batch_records.batch_records[0]
+    assert br.result == as_errors.AEROSPIKE_FILTERED_OUT
+    assert "; exp_trace={" in br.message
+
+
+def generate_policy_kwargs(policy_param_name: str):
+    return pytest.mark.parametrize(
+        "command_policy_kwargs",
+        [
+            {},
+            {policy_param_name: None},
+            {policy_param_name: {}}
+        ]
+    )
+
+TTL = 2
+
+insert_one_record = pytest.mark.parametrize(
+    "insert_records",
+    [{"record_count": 1, "make_set_unique": False}],
+    indirect=True
+)
+
+insert_one_record_with_short_ttl = pytest.mark.parametrize(
+    "insert_records",
+    [{"record_count": 1, "make_set_unique": False, "batch_write_command_policy": {"ttl": TTL}}],
+    indirect=True
+)
+
+@pytest.mark.usefixtures("insert_records")
+class TestClientConfigBatchPolicies:
+    DURATION = TTL * 3 / 4
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            ClientConfigKeysValue(["policies", "batch_parent_write", "read_touch_ttl_percent"], 50)
+        ],
+        indirect=True
+    )
+    @generate_policy_kwargs("policy_batch")
+    @insert_one_record_with_short_ttl
+    def test_batch_parent_write_applies_to_batch_write(self, command_policy_kwargs):
+        time.sleep(self.DURATION)
+
+        brs = BatchRecords(
+            batch_records=[
+                Read(
+                    key=self.keys[0],
+                    ops=[
+                        operations.read(BIN_NAME)
+                    ],
+                )
+            ]
+        )
+        # Read-only batch_write() does not reset TTL as a write would.
+        # It can still read-touch if batch_parent_write.read_touch_ttl_percent from client config is applied.
+        self.as_connection.batch_write(brs, **command_policy_kwargs)
+
+        time.sleep(self.DURATION)
+
+        _, meta = self.as_connection.exists(self.keys[0])
+        assert meta is not None
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
+        indirect=True
+    )
+    @pytest.mark.parametrize(
+        "connection_with_udf",
+        [
+            "sample.lua"
+        ],
+        indirect=True
+    )
+    @generate_policy_kwargs("policy_batch")
+    @insert_one_record
+    def test_batch_parent_write_applies_to_batch_apply(self, command_policy_kwargs):
+        skip_if_exp_trace_unsupported()
+
+        # Apply is a write, so parent read_touch_ttl_percent is not sent. Filtered-out UDF
+        # rows also omit field-45 detail. An expression eval failure still carries exp_trace
+        # from batch_parent_write.error_detail_verbosity when policy_batch is {}.
+        expr_that_fails_eval=exp.GE(exp.Abs(exp.Val("a")), 1).compile()
+        brs = self.as_connection.batch_apply(
+            self.keys, "sample", "noop", [], policy_batch_apply={"expressions": expr_that_fails_eval}, **command_policy_kwargs
+        )
+        br = brs.batch_records[0]
+        assert "; exp_trace={" in br.message
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
+        indirect=True
+    )
+    @insert_one_record
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_operate(self, command_policy_kwargs):
+        skip_if_exp_trace_unsupported()
+        brs = self.as_connection.batch_operate(
+            self.keys, WRITE_OPS, policy_batch_write=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
+        )
+        assert_batch_record_filtered_out_with_exp_trace(brs)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG],
+        indirect=True
+    )
+    @insert_one_record
+    @generate_policy_kwargs("policy_batch")
+    def test_batch_parent_write_applies_to_batch_remove(self, command_policy_kwargs):
+        skip_if_exp_trace_unsupported()
+        brs = self.as_connection.batch_remove(
+            self.keys, policy_batch_remove=POLICY_WITH_FILTER_RETURNING_FALSE, **command_policy_kwargs
+        )
+        assert_batch_record_filtered_out_with_exp_trace(brs)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            ClientConfigKeysValue(["policies", "batch_apply", "ttl"], 5000)
+        ],
+        indirect=True
+    )
+    @pytest.mark.parametrize(
+        "connection_with_udf",
+        [
+            "sample.lua"
+        ],
+        indirect=True
+    )
+    @insert_one_record
+    @generate_policy_kwargs("policy_batch_apply")
+    def test_batch_apply(self, command_policy_kwargs):
+        self.as_connection.batch_apply(self.keys, "sample", "noop", [], **command_policy_kwargs)
+
+        verify_record_ttl(self.as_connection, self.keys[0], 5000)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            ClientConfigKeysValue(["policies", "batch_write", "ttl"], 5000)
+        ],
+        indirect=True
+    )
+    @generate_policy_kwargs("policy_batch_write")
+    @insert_one_record
+    def test_batch_write(self, command_policy_kwargs):
+        self.as_connection.batch_operate(self.keys, WRITE_OPS, **command_policy_kwargs)
+
+        verify_record_ttl(self.as_connection, self.keys[0], 5000)
+
+    @pytest.mark.parametrize(
+        "as_connection",
+        [
+            ClientConfigKeysValue(["policies", "batch_remove", "gen"], aerospike.POLICY_GEN_EQ)
+        ],
+        indirect=True
+    )
+    @generate_policy_kwargs("policy_batch_remove")
+    @insert_one_record
+    def test_batch_remove(self, command_policy_kwargs):
+        # The default generation value in the batch_remove policy should cause this to fail
+        brs = self.as_connection.batch_remove(self.keys, **command_policy_kwargs)
+        assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)

@@ -177,7 +177,7 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &dynamic_pool,
+                &self->as->config.policies.batch_parent_write, &dynamic_pool,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -186,8 +186,8 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     if (py_policy_batch_remove) {
         if (pyobject_to_batch_remove_policy(
                 self, err, py_policy_batch_remove, &policy_batch_remove,
-                &policy_batch_remove_p, &dynamic_pool,
-                &batch_remove_exp_list_p) != AEROSPIKE_OK) {
+                &policy_batch_remove_p, &self->as->config.policies.batch_remove,
+                &dynamic_pool, &batch_remove_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
