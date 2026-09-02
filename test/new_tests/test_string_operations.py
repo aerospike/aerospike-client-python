@@ -563,6 +563,25 @@ class TestStringOperations:
     )
 
     @nfc_param
+    @pytest.mark.parametrize(
+        "op, expected_result",
+        [
+            (str_ops.find, 0),
+            (str_ops.contains, True)
+        ]
+    )
+    def test_read_across_normalization_forms(self, op, expected_result, bin_substr, str_param):
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: bin_substr})
+
+        ops = [
+            op(bin_name=BIN_NAME, needle=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == expected_result
+
+    @nfc_param
     def test_replace_across_normalization_forms(self, bin_substr, str_param):
         STR_TO_REPL = bin_substr + " au lait"
         BIN_NAME = "str"
@@ -607,10 +626,10 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "op",
         [
-            str_ops.repeat(STR_BIN_NAME, count=RESULT_SIZE_CAP),
-            str_ops.pad_start(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
-            str_ops.pad_end(STR_BIN_NAME, target_length=RESULT_SIZE_CAP, pad_string="*"),
-            str_ops.concat(STR_BIN_NAME, value_list=["*" * RESULT_SIZE_CAP]),
+            str_ops.repeat(STR_BIN_NAME2, count=RESULT_SIZE_CAP),
+            str_ops.pad_start(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.pad_end(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.concat(STR_BIN_NAME2, value_list=["x" * RESULT_SIZE_CAP]),
         ]
     )
     def test_result_size_cap(self, op):
