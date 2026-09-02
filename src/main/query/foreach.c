@@ -167,6 +167,9 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
 
     bool is_query_results = py_callback == NULL;
 
+    bool is_ps_backed_up = false;
+    as_partitions_status *backed_up_part_status = NULL;
+
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -218,6 +221,24 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
         goto CLEANUP;
     }
 
+    if (is_query_results) {
+        if (self->query.parts_all) {
+            ssize_t num_bytes =
+                sizeof(as_partitions_status) +
+                sizeof(as_partition_status) * self->query.parts_all->part_count;
+            backed_up_part_status = cf_malloc(num_bytes);
+            if (!backed_up_part_status) {
+                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to back up partitions status");
+                goto CLEANUP;
+            }
+
+            memcpy(backed_up_part_status, self->query.parts_all, num_bytes);
+            backed_up_part_status->ref_count = 1;
+        }
+        is_ps_backed_up = true;
+    }
+
     Py_BEGIN_ALLOW_THREADS
 
     // Invoke operation
@@ -266,12 +287,24 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
+        if (is_ps_backed_up) {
+            // If parts_all is non-NULL, the cursor has been moved
+            if (self->query.parts_all) {
+                as_partitions_status_release(self->query.parts_all);
+            }
+            self->query.parts_all = backed_up_part_status;
+        }
+
         if (is_query_results) {
             Py_XDECREF(data.py_obj);
         }
 
         raise_exception(&err);
         return NULL;
+    }
+
+    if (backed_up_part_status) {
+        as_partitions_status_release(backed_up_part_status);
     }
 
     if (is_query_results) {
