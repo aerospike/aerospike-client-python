@@ -14,7 +14,7 @@ import time
 import glob
 import re
 import os
-from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME, WRITE_OPS, KeysValue
+from .conftest import verify_record_ttl, wait_for_job_completion, BIN_NAME, WRITE_OPS, ClientConfigKeysValue
 from .as_status_codes import AerospikeStatus
 from . import as_errors
 
@@ -237,8 +237,8 @@ def test_setting_batch_policies():
     aerospike.client(config)
 
 BATCH_PARENT_WRITE_ERROR_DETAIL_CONFIG = [
-    KeysValue(["policies", "batch_parent_write", "error_detail_verbosity"], aerospike.ERROR_DETAIL_EXP_TRACE),
-    KeysValue(["policies", "batch", "error_detail_verbosity"], aerospike.ERROR_DETAIL_NONE),
+    ClientConfigKeysValue(["policies", "batch_parent_write", "error_detail_verbosity"], aerospike.ERROR_DETAIL_EXP_TRACE),
+    ClientConfigKeysValue(["policies", "batch", "error_detail_verbosity"], aerospike.ERROR_DETAIL_NONE),
 ]
 # Must read a bin. Constant filters (e.g. 1 == 0) are metadata-only and the server
 # omits exp_trace even at ERROR_DETAIL_EXP_TRACE.
@@ -286,7 +286,7 @@ class TestClientConfigBatchPolicies:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "batch_parent_write", "read_touch_ttl_percent"], 50)
+            ClientConfigKeysValue(["policies", "batch_parent_write", "read_touch_ttl_percent"], 50)
         ],
         indirect=True
     )
@@ -372,7 +372,7 @@ class TestClientConfigBatchPolicies:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "batch_apply", "ttl"], 5000)
+            ClientConfigKeysValue(["policies", "batch_apply", "ttl"], 5000)
         ],
         indirect=True
     )
@@ -393,7 +393,7 @@ class TestClientConfigBatchPolicies:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "batch_write", "ttl"], 5000)
+            ClientConfigKeysValue(["policies", "batch_write", "ttl"], 5000)
         ],
         indirect=True
     )
@@ -407,7 +407,7 @@ class TestClientConfigBatchPolicies:
     @pytest.mark.parametrize(
         "as_connection",
         [
-            KeysValue(["policies", "batch_remove", "gen"], aerospike.POLICY_GEN_EQ)
+            ClientConfigKeysValue(["policies", "batch_remove", "gen"], aerospike.POLICY_GEN_EQ)
         ],
         indirect=True
     )
