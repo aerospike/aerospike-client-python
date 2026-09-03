@@ -28,6 +28,7 @@
 #include <aerospike/as_hll_operations.h>
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_string_operations.h>
 
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
@@ -41,6 +42,9 @@ enum Aerospike_send_bool_as_values {
     SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
+// We have a separate op for list join with a non-None separator argument
+// because the expressions for list join with a separator and the one without it
+// take up different amounts of space in memory when allocating the list of as_exp_entry's
 #define LIST_OP_NAMES_EXCEPT_LIST_APPEND                                       \
     X(LIST_APPEND_ITEMS), X(LIST_INSERT), X(LIST_INSERT_ITEMS), X(LIST_POP),   \
         X(LIST_POP_RANGE), X(LIST_REMOVE), X(LIST_REMOVE_RANGE),               \
@@ -60,12 +64,57 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
         X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
-        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN),     \
+        X(LIST_JOIN_SEPARATOR)
 
-enum Aerospike_list_operations {
+// clang-format off
+#define STRING_OP_NAMES                                                        \
+    X(STRING_STRLEN), \
+    X(STRING_SUBSTR), \
+    X(STRING_SUBSTR_RANGE), \
+    X(STRING_CHAR_AT), \
+    X(STRING_FIND), \
+    X(STRING_CONTAINS), \
+    X(STRING_STARTS_WITH), \
+    X(STRING_ENDS_WITH), \
+    X(STRING_TO_INTEGER), \
+    X(STRING_TO_DOUBLE), \
+    X(STRING_BYTE_LENGTH), \
+    X(STRING_IS_NUMERIC), \
+    X(STRING_IS_UPPER), \
+    X(STRING_IS_LOWER), \
+    X(STRING_TO_BLOB), \
+    X(STRING_SPLIT), \
+    X(STRING_SPLIT_SEPARATOR), \
+    X(STRING_B64_DECODE), \
+    X(STRING_REGEX_COMPARE), \
+    X(STRING_INSERT), \
+    X(STRING_OVERWRITE), \
+    X(STRING_CONCAT), \
+    X(STRING_SNIP), \
+    X(STRING_SNIP_START), \
+    X(STRING_REPLACE), \
+    X(STRING_REPLACE_ALL), \
+    X(STRING_UPPER), \
+    X(STRING_LOWER), \
+    X(STRING_CASE_FOLD), \
+    X(STRING_NORMALIZE_NFC), \
+    X(STRING_TRIM_START), \
+    X(STRING_TRIM_END), \
+    X(STRING_TRIM), \
+    X(STRING_PAD_START), \
+    X(STRING_PAD_END), \
+    X(STRING_REPEAT), \
+    X(STRING_REGEX_REPLACE), \
+    X(STRING_APPEND), \
+    X(STRING_PREPEND), \
+    X(STRING_TO_STRING), // clang-format on
+
+enum {
 #define X(op_name) OP_##op_name
     X(LIST_APPEND) = 1001,
-    LIST_OP_NAMES_EXCEPT_LIST_APPEND
+    LIST_OP_NAMES_EXCEPT_LIST_APPEND,
+    STRING_OP_NAMES
 #undef X
 };
 
@@ -116,25 +165,33 @@ enum Aerospike_map_operations {
     OP_MAP_CREATE
 };
 
+// clang-format off
+#define BIT_OP_NAMES_EXCEPT_RESIZE                                             \
+    X(BIT_INSERT), \
+    X(BIT_REMOVE), \
+    X(BIT_SET), \
+    X(BIT_OR), \
+    X(BIT_XOR), \
+    X(BIT_AND), \
+    X(BIT_NOT), \
+    X(BIT_LSHIFT), \
+    X(BIT_RSHIFT), \
+    X(BIT_ADD), \
+    X(BIT_SUBTRACT), \
+    X(BIT_GET_INT), \
+    X(BIT_SET_INT), \
+    X(BIT_GET), \
+    X(BIT_COUNT), \
+    X(BIT_LSCAN), \
+    X(BIT_RSCAN), \
+    X(BIT_B64_ENCODE), \
+    X(BIT_B64_ENCODE_RANGE) // clang-format on
+
 enum aerospike_bitwise_operations {
-    OP_BIT_RESIZE = 2000,
-    OP_BIT_INSERT,
-    OP_BIT_REMOVE,
-    OP_BIT_SET,
-    OP_BIT_OR,
-    OP_BIT_XOR,
-    OP_BIT_AND,
-    OP_BIT_NOT,
-    OP_BIT_LSHIFT,
-    OP_BIT_RSHIFT,
-    OP_BIT_ADD,
-    OP_BIT_SUBTRACT,
-    OP_BIT_GET_INT,
-    OP_BIT_SET_INT,
-    OP_BIT_GET,
-    OP_BIT_COUNT,
-    OP_BIT_LSCAN,
-    OP_BIT_RSCAN
+#define X(op_name) OP_##op_name
+    X(BIT_RESIZE) = 2000,
+    BIT_OP_NAMES_EXCEPT_RESIZE
+#undef X
 };
 
 enum aerospike_hll_operations {
@@ -175,6 +232,24 @@ enum {
 #define _CDT_FLAGS_KEY "cdt_flags"
 #define _CDT_APPLY_MOD_EXP_KEY "mod_exp"
 #define _CDT_CTX_FILTER_EXPR_KEY "filter_expr"
+
+#define _STR_EXP_START_KEY "start"
+#define _STR_EXP_END_KEY "end"
+#define _STR_EXP_INDEX_KEY "index"
+#define _STR_EXP_NEEDLE_KEY "needle"
+#define _STR_EXP_REPLACEMENT_KEY "replacement"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_PREFIX_KEY "prefix"
+#define _STR_EXP_SUFFIX_KEY "suffix"
+#define _STR_EXP_SEPARATOR_KEY "separator"
+#define _STR_EXP_PATTERN_KEY "pattern"
+#define _STR_EXP_REGEX_FLAGS_KEY "regex_flags"
+#define _STR_EXP_POLICY_KEY "str_policy"
+#define _STR_EXP_TARGET_LENGTH_KEY "target_length"
+#define _STR_EXP_PAD_STRING_KEY "pad_string"
+#define _STR_EXP_OCCURRENCE_KEY "occurrence"
+#define _STR_EXP_COUNT_KEY "count"
+#define _STR_EXP_NUMERIC_TYPE_KEY "numeric_type"
 
 enum aerospike_regex_constants {
     REGEX_NONE = 0,
@@ -284,24 +359,30 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
+                                         as_policy_batch_write *config_policy,
                                          as_exp **exp_list_p);
 
+// Here, config_policy is not used and is only present to make batch_write.c's
+// code simpler to implement
 as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
+                                        as_policy_batch_read *config_policy,
                                         as_exp **exp_list_p);
 
 as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
+                                         as_policy_batch_apply *config_policy,
                                          as_exp **exp_list_p);
 
 as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
                                           as_policy_batch_remove **policy_p,
+                                          as_policy_batch_remove *config_policy,
                                           as_exp **exp_list_p);
 
 // metrics_policy must be declared already

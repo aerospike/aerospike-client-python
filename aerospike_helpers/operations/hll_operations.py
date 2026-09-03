@@ -29,7 +29,9 @@ in space and speed in dealing with extremely large datasets.
     .. seealso:: `HyperLogLog (Data Type) more info. \
         <https://docs.aerospike.com/server/guide/data-types/hll#operations>`_.
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import hll_operations as hll_ops
@@ -78,24 +80,30 @@ Example::
     # Pass in Amy's key
     _, _, res = client.operate(keys[0], ops)
     print("Estimated items viewed intersection:", res["viewed"])
-    # Estimated items viewed intersection: 251
-    # Actual intersection: 250
+    print("Actual intersection: 250")
 
     # Find out how many unique products Amy, Farnsworth, and Scruffy have viewed.
     ops = [hll_ops.hll_get_union_count("viewed", viewed)]
     _, _, res = client.operate(keys[0], ops)
 
     print("Estimated items viewed union:", res["viewed"])
-    # Estimated items viewed union: 1010
-    # Actual union: 1000
+    print("Actual union: 1000")
 
     # Find the similarity of Amy, Farnsworth, and Scruffy's product views.
     ops = [hll_ops.hll_get_similarity("viewed", viewed)]
     _, _, res = client.operate(keys[0], ops)
 
     print("Estimated items viewed similarity: %f%%" % (res["viewed"] * 100))
-    # Estimated items viewed similarity: 24.888393%
-    # Actual similarity: 25%
+    print("Actual similarity: 25%")
+
+.. testoutput::
+
+    Estimated items viewed intersection: 251
+    Actual intersection: 250
+    Estimated items viewed union: 1010
+    Actual union: 1000
+    Estimated items viewed similarity: 24.888393%
+    Actual similarity: 25%
 
 """
 

@@ -31,6 +31,7 @@ class TestSetIndex:
                 "sindex-admin"
             ]
         )
+        time.sleep(2)
 
         config = TestBaseClass.get_connection_config()
         config["user"] = USERNAME_AND_PASSWORD

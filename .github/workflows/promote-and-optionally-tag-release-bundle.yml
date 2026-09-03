@@ -45,7 +45,7 @@ jobs:
       env:
         RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
 
-    - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
+    - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@df68d17cd7b577287b56cbbca5621a5cea0bf803
       with:
         bundle-name: ${{ env.RELEASE_BUNDLE_NAME }}
         version: ${{ env.RELEASE_BUNDLE_VERSION }}

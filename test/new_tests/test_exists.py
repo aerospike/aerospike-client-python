@@ -123,6 +123,7 @@ class TestExists:
             (("test", "demo", 20), {"name": "John"}, None, {"total_timeout": 2}),
         ],
     )
+    @pytest.mark.skip(reason="This test case can fail in test environments with e2e latency of more than 2ms")
     def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
         try:
             put_data(self.as_connection, key, record, meta, policy)

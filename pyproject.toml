@@ -57,3 +57,11 @@ dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 
 distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 # Example formatted version: 1.2.3+42.ge174a1f.dirty
+
+# These operations are still supported in server < 8.1.3,
+# and these operations are used in many places throughout the test suite.
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*aerospike_helpers\\.operations\\.operations\\.append.*string.*:DeprecationWarning",
+    "ignore:.*aerospike_helpers\\.operations\\.operations\\.prepend.*string.*:DeprecationWarning",
+]

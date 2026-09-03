@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2018 Aerospike, Inc.
+# Copyright 2018-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +14,12 @@
 # limitations under the License.
 ##########################################################################
 
-from __future__ import print_function
 import argparse
+from .. import Example
 
 import aerospike
 from aerospike import exception as as_exceptions
+from aerospike_helpers.operations import list_operations, operations
 '''
 This provides a rough implementation of an expandable list for Aerospike
 It utilizes a metadata record to provide information about associated subrecords.
@@ -65,7 +65,7 @@ class ASMetadataRecordTooLarge(Exception):
     pass
 
 
-class ClientSideBigList(object):
+class ClientSideBigList:
     '''
     Abstraction around an unbounded size list for Aerospike. Relies on a top level record
     containing metadata about subrecords. When a subrecord fills up, a new subrecord is created
@@ -172,7 +172,7 @@ class ClientSideBigList(object):
                 )
                 keys.append(key)
 
-            subrecords = self.client.get_many(keys)
+            subrecords = self.client.batch_read(keys)
             entries = self._get_items_from_subrecords(subrecords)
 
             # Try to get subrecords beyond the listed amount.
@@ -243,8 +243,11 @@ class ClientSideBigList(object):
         subrecord_userkey = self._make_user_key(subrecord_number)
         subrecord_record_key = (self.ns, self.set, subrecord_userkey)
         try:
-            self.client.list_append(
-                subrecord_record_key, self.subrecord_list_bin, item)
+            ops = [
+                list_operations.list_append(self.subrecord_list_bin, item)
+            ]
+            self.client.operate(
+                subrecord_record_key, ops)
         except as_exceptions.RecordTooBig as e:
             if retries_remaining == 0:
                 raise e
@@ -260,7 +263,10 @@ class ClientSideBigList(object):
         update_policy = {'gen': aerospike.POLICY_GEN_EQ}
         meta = {'gen': generation}
         try:
-            self.client.increment(self.metadata_key, self.subrecourd_count_name, 1, meta=meta, policy=update_policy)
+            ops = [
+                operations.increment(self.subrecourd_count_name, 1)
+            ]
+            self.client.operate(self.metadata_key, ops, meta=meta, policy=update_policy)
         except as_exceptions.RecordTooBig:
             raise ASMetadataRecordTooLarge
         except as_exceptions.RecordGenerationError:
@@ -286,7 +292,8 @@ class ClientSideBigList(object):
         entries = []
         # If a subrecord was included in the header of the top level record, but the matching subrecord
         # was not found, ignore it.
-        for _, _, sr_bins in subrecords:
+        for br in subrecords.batch_records:
+            sr_bins = br.record[2]
             if sr_bins:
                 entries.extend(sr_bins[self.subrecord_list_bin])
         return entries
@@ -314,61 +321,32 @@ class ClientSideBigList(object):
         # Instantiate the generator and return it.
         return sr_iter()
 
+class ClientSideBigListExample(Example):
+    def run(self):
+        '''
+        Simple tests demonstrating the functionality.
+        If the database is set up with a small enough write block-size, several subrecords
+        will be created.
+        '''
+        item_count = 1000
 
-def main():
-    '''
-    Simple tests demonstrating the functionality.
-    If the database is set up with a small enough write block-size, several subrecords
-    will be created.
-    '''
+        ldt = ClientSideBigList(self.client, 'person1_friends')
 
-    optparser = argparse.ArgumentParser()
+        for i in range(item_count):
+            # Store a reasonably large item
+            ldt.add_item('friend{}'.format(i) * 100)
 
-    optparser.add_argument(
-        "--host", type=str, default="127.0.0.1", metavar="<ADDRESS>",
-        help="Address of Aerospike server.")
+        print("Stored {} items".format(item_count))
 
-    optparser.add_argument(
-        "--port", type=int, default=3000, metavar="<PORT>",
-        help="Port of the Aerospike server.")
+        items = ldt.get_all_entries()
+        _, _, bins = ldt.get_metadata_record()
+        print(bins)
+        print("Known subrecord count is: {}".format(bins['sr_count']))
+        print("Fetched {} items:".format(len(items)))
 
-    optparser.add_argument(
-        "--namespace", type=str, default="test", metavar="<NS>",
-        help="Namespace to use for this example")
+        count = 0
+        for sr in ldt.subrecord_iterator():
+            if sr:
+                count = count + 1
 
-    optparser.add_argument(
-        "-s", "--set", type=str, default="demo", metavar="<SET>",
-        help="Set to use for this example")
-
-    optparser.add_argument(
-        "-i", "--items", type=int, default=1000, metavar="<ITEMS>",
-        help="Number of items to store into the big list")
-
-    options = optparser.parse_args()
-    print(options)
-
-    client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
-    ldt = ClientSideBigList(client, 'person1_friends')
-
-    for i in range(options.items):
-        # Store a reasonably large item
-        ldt.add_item('friend{}'.format(i) * 100)
-
-    print("Stored {} items".format(options.items))
-
-    items = ldt.get_all_entries()
-    _, _, bins = ldt.get_metadata_record()
-    print(bins)
-    print("Known subrecord count is: {}".format(bins['sr_count']))
-    print("Fetched {} items:".format(len(items)))
-
-    count = 0
-    for sr in ldt.subrecord_iterator():
-        if sr:
-            count = count + 1
-
-    print("Records yielded: {}".format(count))
-
-
-if __name__ == '__main__':
-    main()
+        print("Records yielded: {}".format(count))

@@ -48,7 +48,9 @@ class IntAnd(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", a & 0xff == 0x11
             expr = exp.Eq(exp.IntAnd(exp.IntBin("a"), 0xff), 0x11).compile()
@@ -71,10 +73,12 @@ class IntOr(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", a | 0x10 not == 0
-            expr = exp.NE(exp.IntOr(IntBin("a"), 0x10), 0).compile()
+            expr = exp.NE(exp.IntOr(exp.IntBin("a"), 0x10), 0).compile()
         """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -94,7 +98,9 @@ class IntXOr(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", "b", a ^ b == 16
             expr = exp.Eq(exp.IntXOr(exp.IntBin("a"), exp.IntBin("b")), 16).compile()
@@ -116,7 +122,9 @@ class IntNot(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", ~ a == 7
             expr = exp.Eq(exp.IntNot(exp.IntBin("a")), 7).compile()
@@ -139,7 +147,9 @@ class IntLeftShift(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", a << 8 > 0xff
             expr = exp.GT(exp.IntLeftShift(exp.IntBin("a"), 8), 0xff).compile()
@@ -162,7 +172,9 @@ class IntRightShift(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", a >>> 8 > 0xff
             expr = exp.GT(exp.IntRightShift(exp.IntBin("a"), 8), 0xff).compile()
@@ -185,7 +197,9 @@ class IntArithmeticRightShift(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", a >> 8 > 0xff
             expr = exp.GT(exp.IntArithmeticRightShift(exp.IntBin("a"), 8), 0xff).compile()
@@ -207,7 +221,9 @@ class IntCount(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", count(a) == 4
             expr = exp.Eq(exp.IntCount(exp.IntBin("a")), 4).compile()
@@ -234,7 +250,9 @@ class IntLeftScan(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", lscan(a, True) == 4
             expr = exp.GT(exp.IntLeftScan(exp.IntBin("a"), True), 4).compile()
@@ -262,7 +280,9 @@ class IntRightScan(_BaseExpr):
 
         :return: (integer value)
 
-        Example::
+        Example:
+
+        .. testcode::
 
             # for int bin "a", rscan(a, True) == 4
             expr = exp.GT(exp.IntRightScan(exp.IntBin("a"), True), 4).compile()

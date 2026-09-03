@@ -37,6 +37,8 @@ def assert_each_record_bins(records, check_func):
 
 @pytest.fixture(scope="class")
 def clean_test_demo_namespace(as_connection):
+    as_connection.truncate("test", None, 0)
+
     names = ["Alice", "Bob", "John", "Jane"]
     for i in range(100):
         key = "test", "demo", i
@@ -207,7 +209,10 @@ class TestQueryExpressions(object):
 
     def test_string_regex(self):
         expr = exp.CmpRegex(aerospike.REGEX_ICASE, ".*O.*", exp.StrBin("name"))
-        results = self.query.results(policy={"expressions": expr.compile()})
+
+        with pytest.warns(DeprecationWarning):
+            results = self.query.results(policy={"expressions": expr.compile()})
+
         assert len(results) == 50
         assert_each_record_bins(results, lambda b: b["name"] in ("Bob", "John"))
 

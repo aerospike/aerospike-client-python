@@ -37,6 +37,7 @@
 #include "hll_operations.h"
 #include "pythoncapi_compat.h"
 #include "expression_operations.h"
+#include "cdt_operation_utils.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -46,8 +47,6 @@
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
-static inline bool isListOp(int op);
-static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
 static inline bool isHllOp(int op);
 static inline bool isExprOp(int op);
@@ -201,7 +200,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     return 0;
 }
 
-static inline bool isListOp(int op)
+static inline bool use_operate_conversion_helper(int op)
 {
     return (
         op == OP_LIST_APPEND || op == OP_LIST_APPEND_ITEMS ||
@@ -219,21 +218,19 @@ static inline bool isListOp(int op)
         op == OP_LIST_REMOVE_BY_VALUE_LIST ||
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE);
-}
-
-static inline bool isNewMapOp(int op)
-{
-    return (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
-            op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
-            op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL);
+        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        op == OP_LIST_JOIN || op == OP_LIST_JOIN_SEPARATOR ||
+        (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
+        (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
+         op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_VALUE_RANK_RANGE_REL ||
+         op == OP_MAP_GET_BY_KEY_INDEX_RANGE_REL));
 }
 
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_RSCAN;
+    int bit_end = OP_BIT_B64_ENCODE;
     return (op >= bit_start && op <= bit_end);
 }
 
@@ -309,6 +306,13 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
+#define DEPRECATED_PREPEND_NAME                                                \
+    "aerospike_helpers.operations.operations.prepend"
+#define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
+
+#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+    "%s is deprecated for strings in server 8.1.3 or higher."
+
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
                  as_static_pool *static_pool, as_operations *ops, long *op,
@@ -344,7 +348,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
     PyObject *py_map_policy = NULL;
     PyObject *py_return_type = NULL;
     // For map_create operation
-    PyObject *py_map_order = NULL;
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;
@@ -353,18 +356,11 @@ as_status add_op(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    /* Handle the list operations with a helper in the cdt_list_operate.c file */
-    if (isListOp(operation)) {
-        return add_list_op(
+    if (use_operate_conversion_helper(operation)) {
+        return as_operations_add_from_pyobject(
             self, err, py_operation_dict, unicodeStrVector, static_pool, ops,
             operation, ret_type,
             SERIALIZER_PYTHON); //This hardcoding matches current behavior
-    }
-
-    if (isNewMapOp(operation)) {
-        return add_new_map_op(self, err, py_operation_dict, unicodeStrVector,
-                              static_pool, ops, operation, ret_type,
-                              SERIALIZER_PYTHON);
     }
 
     if (isBitOp(operation)) {
@@ -424,7 +420,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else if (strcmp(name, "map_order") == 0) {
-                py_map_order = value;
+                continue;
             }
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
@@ -614,6 +610,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
+            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                          DEPRECATION_MESSAGE_TEMPLATE,
+                                          DEPRECATED_APPEND_NAME);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       DEPRECATION_MESSAGE_TEMPLATE,
+                                       DEPRECATED_APPEND_NAME);
+            }
+
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_append_str(ops, bin, val);
@@ -647,6 +652,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
         break;
     case AS_OPERATOR_PREPEND:
         if (PyUnicode_Check(py_value)) {
+            int retval = PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                          DEPRECATION_MESSAGE_TEMPLATE,
+                                          DEPRECATED_PREPEND_NAME);
+            if (retval == -1) {
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       DEPRECATION_MESSAGE_TEMPLATE,
+                                       DEPRECATED_PREPEND_NAME);
+            }
+
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
             val = strdup(PyBytes_AsString(py_ustr1));
             as_operations_add_prepend_str(ops, bin, val);
@@ -731,7 +745,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
         as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
         break;
     case OP_MAP_CREATE:;
-        as_map_order order = (as_map_order)PyLong_AsLong(py_map_order);
+        int tmp_value;
+        if (get_enum_from_py_dict(err, py_operation_dict, "map_order",
+                                  &tmp_value, AS_MAP_UNORDERED,
+                                  AS_MAP_KEY_VALUE_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        as_map_order order = (as_map_order)tmp_value;
+
         bool persist_index = PyObject_IsTrue(py_persist_index);
         as_operations_map_create_all(ops, bin, ctx_ref, order, persist_index);
         break;

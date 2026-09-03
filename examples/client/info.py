@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,119 +16,36 @@
 ##########################################################################
 
 
-from __future__ import print_function
 
-import aerospike
-import sys
+from .. import Example
 
-from optparse import OptionParser
 
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options] [REQUEST]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
+class Info(Example):
+    def run(self):
+        # Default info request
         request = "statistics"
-        if len(args) > 0:
-            request = ' '.join(args)
 
-        for node, (err, res) in list(client.info_all(request).items()):
-            if res is not None:
-                res = res.strip()
-                if len(res) > 0:
-                    entries = res.split(';')
-                    if len(entries) > 1:
-                        print("{0}:".format(node))
-                        for entry in entries:
-                            entry = entry.strip()
-                            if len(entry) > 0:
-                                count = 0
-                                if "=" in entry:
-                                    (name, value) = entry.split('=')
-                                    if count > 0:
-                                        print(
-                                            "      {0}: {1}".format(name, value))
-                                    else:
-                                        print(
-                                            "    - {0}: {1}".format(name, value))
-                                    count += 1
-                    else:
-                        print("{0}: {1}".format(node, res))
+        # TODO: needs review
+        response = self.client.info_all(request)
+        for node, (_, res) in response.items():
+            if res is None:
+                continue
 
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        exitCode = 2
+            res = res.strip()
+            if len(res) == 0:
+                continue
 
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
+            entries = res.split(';')
+            if len(entries) <= 1:
+                print("{0}: {1}".format(node, res))
 
-    client.close()
+            print("{0}:".format(node))
+            for entry in entries:
+                entry = entry.strip()
+                if len(entry) == 0:
+                    continue
+                if "=" not in entry:
+                    continue
 
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+                (name, value) = entry.split('=')
+                print("    - {0}: {1}".format(name, value))

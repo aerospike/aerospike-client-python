@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,97 +15,16 @@
 # limitations under the License.
 ##########################################################################
 
-from __future__ import print_function
+from .. import Example
 
-import aerospike
-import sys
 
-from optparse import OptionParser
+class Scan(Example):
+    def run(self):
+        s = self.client.scan(self.namespace, self.set_name)
 
-##########################################################################
-# Options Parsing
-##########################################################################
-
-usage = "usage: %prog [options]"
-
-optparser = OptionParser(usage=usage, add_help_option=False)
-
-optparser.add_option(
-    "-h", "--host", dest="host", type="string", default="127.0.0.1", metavar="<ADDRESS>",
-    help="Address of Aerospike server.")
-
-optparser.add_option(
-    "-U", "--username", dest="username", type="string", metavar="<USERNAME>",
-    help="Username to connect to database.")
-
-optparser.add_option(
-    "-P", "--password", dest="password", type="string", metavar="<PASSWORD>",
-    help="Password to connect to database.")
-
-optparser.add_option(
-    "-p", "--port", dest="port", type="int", default=3000, metavar="<PORT>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "--help", dest="help", action="store_true",
-    help="Displays this message.")
-
-optparser.add_option(
-    "-n", "--namespace", dest="namespace", type="string", default="test", metavar="<NS>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-s", "--set", dest="set", type="string", default="demo", metavar="<SET>",
-    help="Port of the Aerospike server.")
-
-optparser.add_option(
-    "-b", "--bins", dest="bins", type="string", action="append",
-    help="Bins to select from each record.")
-
-(options, args) = optparser.parse_args()
-
-if options.help:
-    optparser.print_help()
-    print()
-    sys.exit(1)
-
-##########################################################################
-# Client Configuration
-##########################################################################
-
-config = {
-    'hosts': [(options.host, options.port)]
-}
-
-##########################################################################
-# Application
-##########################################################################
-
-exitCode = 0
-
-try:
-
-    # ----------------------------------------------------------------------------
-    # Connect to Cluster
-    # ----------------------------------------------------------------------------
-
-    client = aerospike.client(config).connect(
-        options.username, options.password)
-
-    # ----------------------------------------------------------------------------
-    # Perform Operation
-    # ----------------------------------------------------------------------------
-
-    try:
-
-        namespace = options.namespace if options.namespace and options.namespace != 'None' else None
-        set = options.set if options.set and options.set != 'None' else None
-
-        s = client.scan(namespace, set)
-
-        if options.bins and len(options.bins) > 0:
-            # project specified bins
-            s.select(*options.bins)
+        bins = [self.BIN_NAME]
+        # project specified bins
+        s.select(*bins)
 
         records = []
 
@@ -118,28 +37,4 @@ try:
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback)
 
-        print("---")
-        if len(records) == 1:
-            print("OK, 1 record found.")
-        else:
-            print("OK, %d records found." % len(records))
-
-    except Exception as e:
-        print("error: {0}".format(e), file=sys.stderr)
-        rc = 1
-
-    # ----------------------------------------------------------------------------
-    # Close Connection to Cluster
-    # ----------------------------------------------------------------------------
-
-    client.close()
-
-except Exception as eargs:
-    print("error: {0}".format(eargs), file=sys.stderr)
-    exitCode = 3
-
-##########################################################################
-# Exit
-##########################################################################
-
-sys.exit(exitCode)
+        print("OK, %d records found." % len(records))

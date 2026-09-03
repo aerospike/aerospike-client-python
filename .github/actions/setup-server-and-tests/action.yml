@@ -1,5 +1,5 @@
 name: 'Run server and configure tests'
-description: 'Run server in a Docker container. Also configure python client dev tests'
+description: 'Run server in a Docker container. Also configure python client integration tests'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
 outputs:
@@ -35,7 +35,7 @@ runs:
   using: "composite"
   steps:
   # Start up server
-  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@CLIENT-4793-setup-aerospike-server-use-named-volumes-instead-of-bind-mounts-to-support-windows-and-macos-runners
+  - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@bd168dedaa4fc0b17a560541779d815540eded2d # v3.7.0
     id: setup-as-server
     with:
       server-container-repo: database-docker-virtual/aerospike-server${{ inputs.server-edition == 'enterprise' && '-enterprise' || '' }}
@@ -47,10 +47,12 @@ runs:
       oidc-provider: ${{ inputs.oidc-provider-name }}
       oidc-audience: ${{ inputs.oidc-audience }}
       server-tag: ${{ inputs.server-tag }}
+      tools-tag: 13.0.2_1
       # This way doesn't work, so pass a custom server config for now with this setting enabled
       # Problem is the shared action is overriding the entrypoint script that parses this env var
       # env-vars: DEFAULT_TTL=2592000;
       config-file: ./.github/workflows/aerospike${{ inputs.server-edition == 'community' && '-ce' || '' }}.conf
+      enable-bash-trace-mode: "true"
 
   - name: Get config.conf
     run: |

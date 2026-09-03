@@ -30,7 +30,9 @@ Offset examples:
     * -1: rightmost bit in the map
     * -4: 3 bits from rightmost
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import bitwise_operations
@@ -52,13 +54,11 @@ Example::
 
     _, _, bins = client.get(key)
     print("5 bytes: ", bins)
-    # 5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     _, _, _ = client.operate(key, ops)
 
     _, _, newbins = client.get(key)
     print("After resize to 10 bytes: ", newbins)
-    # After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
 
     # EXAMPLE 2: shrink the five_ones bin to a bytesize of 5 from the front.
 
@@ -71,13 +71,20 @@ Example::
     _, _, _ = client.operate(key, ops)
     _, _, newbins = client.get(key)
     print("After resize to 5 bytes again: ", newbins)
-    # After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
     # Cleanup and close the connection to the Aerospike cluster.
     client.remove(key)
     client.close()
 
-Example::
+.. testoutput::
+
+    5 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    After resize to 10 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00'}
+    After resize to 5 bytes again:  {'bitwise1': b'\\x00\\x00\\x00\\x00\\x00'}
+
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as e
@@ -106,7 +113,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     # Example 2: modify bits using the 'or' op, then read bits
     # 0 = offset
@@ -119,7 +125,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\xff\x01\x01\x01\x01'}
 
     # Example 3: modify bits using the 'remove' op, then read bits'
     # offset = 0
@@ -131,9 +136,14 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01'}
 
     client.close()
+
+.. testoutput::
+
+    {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\xff\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\x01\\x01\\x01'}
 
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
@@ -168,8 +178,8 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
         byte_size (int): The new size of the bytes.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
         resize_flags (int): :ref:`aerospike_bitwise_resize_flag` modifying the resize behavior
-            (default ``aerospike.BIT_RESIZE_DEFAULT``), such as ``aerospike.BIT_RESIZE_GROW_ONLY |
-            aerospike.BIT_RESIZE_FROM_FRONT``.
+            (default :py:data:`aerospike.BIT_RESIZE_DEFAULT`), such as :py:data:`aerospike.BIT_RESIZE_GROW_ONLY` |
+            :py:data:`aerospike.BIT_RESIZE_FROM_FRONT`.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -653,4 +663,39 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         BIT_SIZE_KEY: bit_size,
         VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
+    }
+
+
+def bit_b64_encode(
+        bin_name: str,
+        byte_offset: int = 0,
+        byte_size: int | None = None,
+        invert_size: bool = False,
+        ctx: list | None = None
+):
+    """
+    Create bit "b64 encode" operation that returns the base64 text of ``byte_size`` bytes starting from ``byte_offset``.
+
+    Requires server version 8.1.3 or later.
+
+    Args:
+        bin_name (str): The name of the bin containing the map.
+        byte_offset (int): Which byte index to start from. A negative value counts back from the end of the blob.
+        byte_size (int | None): How many bytes starting from ``byte_offset`` to select. If :py:obj:`None`, selects from
+            ``byte_offset`` through the end of the blob.
+        invert_size (bool): When :py:obj:`True`, ``byte_size`` counts back from the
+            blob end rather than forward from ``byte_offset``, so a ``byte_size`` of 0 means to the
+            end of the blob.
+
+    Returns:
+        A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
+    """
+    return {
+        OP_KEY: aerospike._OP_BIT_B64_ENCODE,
+        BIN_KEY: bin_name,
+        BYTE_OFFSET_KEY: byte_offset,
+        BYTE_SIZE_KEY: byte_size,
+        "invert_size": invert_size,
+        "ctx": ctx
     }
