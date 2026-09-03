@@ -566,6 +566,7 @@ class TestStringOperations:
             (str_ops.contains, True)
         ]
     )
+    @pytest.mark.xfail("This currently fails on server 8.1.3 RC3. This should pass on RC4, and we can tell if the result is XPASS")
     def test_read_across_normalization_forms(self, op, expected_result, bin_substr, str_param):
         BIN_NAME = "str"
         self.as_connection.put(KEY, bins={BIN_NAME: bin_substr})
