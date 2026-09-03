@@ -1,3 +1,8 @@
+function noop(rec)
+  aerospike:update(rec)
+  return 0
+end
+
 function list_append(rec, bin, value)
   local l = rec[bin]
   list.append(l, value)

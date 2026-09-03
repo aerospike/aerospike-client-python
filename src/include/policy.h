@@ -359,24 +359,30 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
+                                         as_policy_batch_write *config_policy,
                                          as_exp **exp_list_p);
 
+// Here, config_policy is not used and is only present to make batch_write.c's
+// code simpler to implement
 as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
+                                        as_policy_batch_read *config_policy,
                                         as_exp **exp_list_p);
 
 as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
+                                         as_policy_batch_apply *config_policy,
                                          as_exp **exp_list_p);
 
 as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
                                           as_policy_batch_remove **policy_p,
+                                          as_policy_batch_remove *config_policy,
                                           as_exp **exp_list_p);
 
 // metrics_policy must be declared already

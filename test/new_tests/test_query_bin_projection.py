@@ -20,9 +20,7 @@ class TestQueryBinProjection:
         ),
         pytest.mark.parametrize(
             "insert_records",
-            [
-                [500, False]
-            ],
+            [{"record_count": 500, "make_set_unique": False}],
             indirect=True
         )
     ]
