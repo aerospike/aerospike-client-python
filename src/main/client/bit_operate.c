@@ -54,7 +54,7 @@ static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
 static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
                                               PyObject *op_dict,
                                               uint8_t **value,
-                                              Py_ssize_t *byte_count);
+                                              uint32_t *byte_count);
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
@@ -411,7 +411,7 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
 static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
                                               PyObject *op_dict,
                                               uint8_t **value,
-                                              Py_ssize_t *byte_count)
+                                              uint32_t *byte_count)
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
@@ -435,7 +435,7 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
         if (value_size == -1 && PyErr_Occurred()) {
             goto error;
         }
-        *byte_count = value_size;
+        *byte_count = (uint32_t)value_size;
     }
     else {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
