@@ -2733,8 +2733,8 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         }
 
         int pad = 0;
-        status =
-            get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad);
+        status = get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad,
+                                      false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }

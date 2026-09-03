@@ -53,6 +53,34 @@ class WriteFlags(IntEnum):
     Default. Does not suppress an in-operation execution failure.
     """
 
+    CREATE_ONLY = 1
+    """
+    Create new values only. Valid only on:
+
+    - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.concat`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.append`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.prepend`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.pad_start`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.pad_end`
+    - :py:meth:`~aerospike_helpers.operations.string_operations.repeat`
+
+    and their corresponding expressions.
+
+    Raises :py:exc:`~aerospike.exception.BinExistsError` if the bin already exists. Mutually exclusive with
+    :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`. Invalid with a CDT context path.
+    """
+
+    UPDATE_ONLY = 2
+    """
+     Update existing values only. Mutually exclusive with
+     :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
+
+     Valid on all string modify ops. This disables bin creation,
+     so a missing bin is a silent no-op rather than a create.
+    """
+
     NO_FAIL = 4
     """
     Suppress an operation failure with the bin unchanged.
@@ -70,8 +98,13 @@ class NumericType(IntEnum):
     ANY = 0
     #: Match only integers.
     INT = 1
-    #: Match only floating-point numbers.
+
     FLOAT = 2
+    """
+    Match only floating-point numbers. Stricter than parsing as a double:
+    the string must contain a ``.`` followed by a digit, so ``"5"`` is false under
+    this option, but true under :py:attr:`~aerospike_helpers.string_helpers.NumericType.ANY`.
+    """
 
 
 class StringPolicy:
