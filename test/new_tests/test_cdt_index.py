@@ -583,7 +583,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 ctx_list_index,
                 policy,
             )
-            assert False
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "Set should be string, unicode or None"
 
@@ -663,6 +662,23 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             )
 
         assert excinfo.value.code == 20
+
+    def test_neg_cdtindex_with_incorrect_cdt_ctx(self):
+        policy = {}
+
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "numeric_list",
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_list_cdt_index",
+                {"ctx": False},
+                policy,
+            )
+
+        assert err_info.value.code == -2
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """

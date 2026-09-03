@@ -5,7 +5,7 @@ import pytest
 
 import aerospike
 
-from aerospike_helpers.expressions import Add, Cond, Def, GE, IntBin, LT, Let, Unknown, Var
+from aerospike_helpers.expressions import Add, Cond, Def, GE, IntBin, LT, Let, Unknown, Var, BlobBin
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
@@ -28,6 +28,8 @@ class TestExpressionsOperations(TestBaseClass):
             "age": 10,
             "balance": 100,
             "key": 10,
+            "blob": b'124',
+            "blob_array": bytearray("array", "utf-8"),
             "ilist_bin": [
                 1,
                 2,
@@ -66,6 +68,18 @@ class TestExpressionsOperations(TestBaseClass):
                 aerospike.EXP_READ_DEFAULT,
                 "test_name2",
                 {"test_name2": 150},
+            ),
+            (
+                Let(Def("bytes", BlobBin("blob")), Var("bytes")),
+                aerospike.EXP_READ_DEFAULT,
+                "test_name3",
+                {"test_name3": b'124'},
+            ),
+            (
+                Let(Def("bytearray", BlobBin("blob_array")), Var("bytearray")),
+                aerospike.EXP_READ_DEFAULT,
+                "test_name4",
+                {"test_name4": bytearray("array", "utf-8")},
             ),
         ],
     )

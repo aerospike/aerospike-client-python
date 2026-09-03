@@ -65,6 +65,9 @@ optparser.add_option(
     "-v", "--verbose", dest="verbose", action="store_true", metavar="<PORT>",
     help="Verbose output.")
 
+optparser.add_option(
+    "-b", "--bytes", dest="bytes", type="int", default=0, metavar="<BYTES>",
+    help="Set the number of bytes to be placed in each record")
 
 (options, args) = optparser.parse_args()
 
@@ -131,12 +134,18 @@ try:
         print()
 
         start = time.time()
+        if options.bytes:
+            byte_values = [bytes([i % 256]) for i in range(options.bytes)]
+            record = {'key': count, 'list': byte_values}
+        else:
+            record = {'key': count}
+
 
         # run the operatons
         while True:
             count += 1
             keyt = (options.namespace, options.set, count)
-            client.put(keyt, {'key': count})
+            client.put(keyt, record)
 
     except KeyboardInterrupt:
         total_summary()

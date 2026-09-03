@@ -133,6 +133,9 @@ static PyObject *convert_python_args_to_c_and_create_index(
         goto CLEANUP;
     }
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
     as_cdt_ctx ctx;
@@ -152,11 +155,8 @@ static PyObject *convert_python_args_to_c_and_create_index(
             goto CLEANUP2;
         }
 
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
-
         if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+                        &dynamic_pool) != AEROSPIKE_OK) {
             goto CLEANUP2;
         }
     }
@@ -164,8 +164,8 @@ static PyObject *convert_python_args_to_c_and_create_index(
     as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
     as_exp *expr = NULL;
-    if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err,
-                                            false) != AEROSPIKE_OK) {
+    if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err, false,
+                                            &dynamic_pool) != AEROSPIKE_OK) {
         goto CLEANUP3;
     }
 

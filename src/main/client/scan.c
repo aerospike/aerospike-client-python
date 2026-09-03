@@ -96,11 +96,11 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     // For converting expressions.
     as_exp *exp_list_p = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     // Initialize error
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
 
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -144,7 +144,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list_p, true);
+                                &dynamic_pool, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -180,10 +180,9 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
                         "Function name should be string");
         goto CLEANUP;
     }
-
     if (py_args && (Py_None != py_args)) {
-        pyobject_to_list(self, &err, py_args, &arglist, &static_pool,
-                         SERIALIZER_PYTHON);
+        pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
+                         SERIALIZER_NONE);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -247,6 +246,8 @@ CLEANUP:
     if (is_scan_init) {
         as_scan_destroy(&scan);
     }
+
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

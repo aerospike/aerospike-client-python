@@ -66,13 +66,14 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     // For converting expressions.
     as_exp *exp_list_p = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
     // Initialisation flags
     bool key_initialised = false;
 
     // Initialize error
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
 
     if (!PyList_Check(py_arglist)) {
         PyErr_SetString(PyExc_TypeError,
@@ -101,8 +102,8 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python list to as_list
-    pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool,
-                     SERIALIZER_PYTHON);
+    pyobject_to_list(self, &err, py_arglist, &arglist, &dynamic_pool,
+                     SERIALIZER_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -110,7 +111,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_apply
     pyobject_to_policy_apply(self, &err, py_policy, &apply_policy,
                              &apply_policy_p, &self->as->config.policies.apply,
-                             &exp_list_p);
+                             &dynamic_pool, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -147,6 +148,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
+
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
@@ -165,6 +167,7 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, py_key, Py_None, py_module, py_function,

@@ -49,7 +49,7 @@
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, config_policy,                              \
+                                      &__policy, config_policy, &dynamic_pool,               \
                                       &expr_p) != AEROSPIKE_OK) {                            \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
@@ -143,8 +143,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     // setup for op conversion
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
 
     as_vector garbage_list;
     as_vector *garbage_list_p = NULL;
@@ -168,7 +168,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     if (py_policy != NULL) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy, &batch_policy, &batch_policy_p,
-                &self->as->config.policies.batch_parent_write,
+                &self->as->config.policies.batch_parent_write, &dynamic_pool,
                 &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
@@ -315,7 +315,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP_ON_ERROR;
                 }
 
-                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
+                if (add_op(self, err, py_op, unicodeStrVector, &dynamic_pool,
                            ops, &operation, &return_type) != AEROSPIKE_OK) {
                     goto CLEANUP_ON_ERROR;
                 }
@@ -414,9 +414,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
 
             as_list *arglist = NULL;
-            pyobject_to_list(self, err, py_args, &arglist, &static_pool,
-                             SERIALIZER_PYTHON);
+
+            pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
+                             SERIALIZER_NONE);
             Py_DECREF(py_args);
+
             if (err->code != AEROSPIKE_OK) {
                 goto CLEANUP_ON_ERROR;
             }
@@ -568,6 +570,8 @@ CLEANUP4:
     }
 
     as_vector_destroy(unicodeStrVector);
+
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);
