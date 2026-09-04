@@ -429,17 +429,21 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
 
         value_size = PyBytes_Size(py_val);
         if (PyErr_Occurred()) {
-            goto error;
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
         }
     }
     else if (PyByteArray_Check(py_val)) {
         *value = (uint8_t *)PyByteArray_AsString(py_val);
         if (PyErr_Occurred()) {
-            goto error;
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
         }
+
         value_size = PyByteArray_Size(py_val);
         if (value_size == -1 && PyErr_Occurred()) {
-            goto error;
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
         }
     }
     else {
@@ -455,9 +459,6 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
     *byte_count = (uint32_t)value_size;
 
     return AEROSPIKE_OK;
-error:
-    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                           key);
 }
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
