@@ -409,22 +409,20 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
 }
 
 static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
-                                              PyObject *op_dict,
+                                              PyObject *py_op_dict,
                                               uint8_t **value,
                                               uint32_t *byte_count)
 {
-    PyObject *py_val = PyDict_GetItemString(op_dict, key);
+    PyObject *py_val = PyDict_GetItemString(py_op_dict, key);
     if (!py_val) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key)
+        goto error;
     }
 
     Py_ssize_t value_size = 0;
     if (PyBytes_Check(py_val)) {
         *value = (uint8_t *)PyBytes_AsString(py_val);
         if (PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
+            goto error;
         }
 
         value_size = PyBytes_Size(py_val);
@@ -455,6 +453,7 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
     *byte_count = (uint32_t)value_size;
 
     return AEROSPIKE_OK;
+
 error:
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
                            key);
