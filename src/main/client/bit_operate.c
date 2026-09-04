@@ -419,6 +419,7 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
                                key)
     }
 
+    Py_ssize_t value_size = 0;
     if (PyBytes_Check(py_val)) {
         *value = (uint8_t *)PyBytes_AsString(py_val);
         if (PyErr_Occurred()) {
@@ -426,27 +427,32 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
                                    "Failed to convert %s", key);
         }
 
-        Py_ssize_t value_size = PyBytes_Size(py_val);
+        value_size = PyBytes_Size(py_val);
         if (PyErr_Occurred()) {
             goto error;
         }
-        *byte_count = (uint32_t)value_size;
     }
     else if (PyByteArray_Check(py_val)) {
         *value = (uint8_t *)PyByteArray_AsString(py_val);
         if (PyErr_Occurred()) {
             goto error;
         }
-        Py_ssize_t value_size = PyByteArray_Size(py_val);
+        value_size = PyByteArray_Size(py_val);
         if (value_size == -1 && PyErr_Occurred()) {
             goto error;
         }
-        *byte_count = (uint32_t)value_size;
     }
     else {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be bytes or byte array", key);
     }
+
+    // This prevents unexpected truncating of the bytes
+    if (value_size > UINT32_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Bytes size must not be larger than UINT32_MAX");
+    }
+    *byte_count = (uint32_t)value_size;
 
     return AEROSPIKE_OK;
 error:
