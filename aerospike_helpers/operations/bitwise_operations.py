@@ -148,6 +148,8 @@ Example:
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
+import warnings
+
 
 BIN_KEY = "bin"
 BYTE_SIZE_KEY = "byte_size"
@@ -240,6 +242,11 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_SET,
         BIN_KEY: bin_name,
@@ -350,6 +357,11 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_AND,
         BIN_KEY: bin_name,
@@ -424,6 +436,11 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_INSERT,
         BIN_KEY: bin_name,
@@ -535,6 +552,11 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_OR,
         BIN_KEY: bin_name,
@@ -655,6 +677,11 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release.",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_XOR,
         BIN_KEY: bin_name,
