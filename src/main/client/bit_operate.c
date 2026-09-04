@@ -425,6 +425,12 @@ static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Failed to convert %s", key);
         }
+
+        Py_ssize_t value_size = PyBytes_Size(py_val);
+        if (PyErr_Occurred()) {
+            goto error;
+        }
+        *byte_count = (uint32_t)value_size;
     }
     else if (PyByteArray_Check(py_val)) {
         *value = (uint8_t *)PyByteArray_AsString(py_val);
