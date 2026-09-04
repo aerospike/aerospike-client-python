@@ -148,6 +148,8 @@ Example:
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
+import warnings
+
 
 BIN_KEY = "bin"
 BYTE_SIZE_KEY = "byte_size"
@@ -229,7 +231,8 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be set.
         bit_size (int): How many bits of value to write.
-        value_byte_size (int): Size of value in bytes.
+        value_byte_size (int): Deprecated. Size of value in bytes.
+            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): The value to be set.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -237,6 +240,11 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_SET,
         BIN_KEY: bin_name,
@@ -336,7 +344,8 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
-        value_byte_size (int): Length of value in bytes.
+        value_byte_size (int): Deprecated. Length of value in bytes.
+            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): Bytes to be used in and operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -344,6 +353,11 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_AND,
         BIN_KEY: bin_name,
@@ -406,7 +420,8 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
     Args:
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): The offset where the bytes will be inserted.
-        value_byte_size (int): Size of value in bytes.
+        value_byte_size (int): Deprecated. Size of value in bytes.
+            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): The value to be inserted.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -415,6 +430,11 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_INSERT,
         BIN_KEY: bin_name,
@@ -515,7 +535,8 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to or.
-        value_byte_size (int): Length of value in bytes.
+        value_byte_size (int): Deprecated. Length of value in bytes.
+            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes | bytearray): Value to be used in or operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -523,6 +544,11 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_OR,
         BIN_KEY: bin_name,
@@ -632,7 +658,8 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to xor.
-        value_byte_size (int): Length of value in bytes.
+        value_byte_size (int): Deprecated. Length of value in bytes.
+            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes | bytearray): Value to be used in xor operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -640,6 +667,11 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
+    warnings.warn(
+        "value_byte_size is deprecated and will be removed in the next major client release.",
+        DeprecationWarning
+    )
+
     return {
         OP_KEY: aerospike.OP_BIT_XOR,
         BIN_KEY: bin_name,

@@ -1716,3 +1716,32 @@ class TestBitwiseOperations(object):
         ]
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize(
+        "op, args",
+        [
+            (
+                bitwise_operations.bit_insert,
+                ["bin", 0, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_and,
+                ["bin", 0, 8, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_or,
+                ["bin", 0, 1, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_xor,
+                ["bin", 0, 1, 1, bytearray([3])],
+            ),
+            (
+                bitwise_operations.bit_set,
+                ["bin", 0, 1, 1, bytearray([3])]
+            )
+        ]
+    )
+    def test_deprecation_warnings_for_value_byte_size(self, op, args):
+        with pytest.warns(DeprecationWarning):
+            op(*args)
