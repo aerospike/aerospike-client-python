@@ -79,6 +79,8 @@ jobs:
       with:
         egress-policy: audit
 
+    - run: sw_vers
+
     - name: Get artifact name for status message and to download artifact
       run: |
         if [[ ${{ inputs.build-from-tar-gz }} == true ]]; then
