@@ -115,7 +115,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -346,12 +347,19 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
 
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
     aerospike_udf_remove(self->as, &err, info_policy_p, filename);
     Py_END_ALLOW_THREADS
+
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    aerospike_udf_remove_wait(self->as, &err, info_policy_p, filename, 0);
 
 CLEANUP:
 
@@ -414,7 +422,8 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
 
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -519,7 +528,8 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
     as_policy_info *info_policy_p = NULL, info_policy;
 
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

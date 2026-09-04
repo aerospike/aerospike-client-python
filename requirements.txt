@@ -1,1 +1,3 @@
-build==0.10.0
+build==1.2.2.post1
+delvewheel==1.12.0; platform_system == "Windows"
+delocate==0.13.0; platform_system == "Darwin"

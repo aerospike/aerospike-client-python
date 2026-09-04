@@ -149,14 +149,21 @@ class TestTruncate(object):
         with pytest.raises(e.ParamError):
             self.as_connection.truncate("test", "truncate", invalid_nanos)
 
-    @pytest.mark.parametrize("fake_namespace, fake_set", (("", "truncate"), ("test", "")))
-    def test_truncate_empty_container_names(self, fake_namespace, fake_set):
-        with pytest.raises(e.ClientError):
+    @pytest.mark.parametrize(
+        "fake_namespace, fake_set, expected_exc",
+        [
+            ("", "truncate", e.NamespaceNotFound),
+            ("test", "", e.InvalidRequest)
+        ]
+    )
+    def test_truncate_empty_container_names(self, fake_namespace, fake_set, expected_exc):
+        with pytest.raises(expected_exc):
             self.as_connection.truncate(fake_namespace, fake_set, 0)
         self._assert_truncation_status(self.truncated_keys, exists=True)
 
+    # TODO: this server's actual error message doesn't make sense to me
     def test_nanos_argument_before_cf_epoch(self):
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.truncate("test", "truncate", 1)
 
     def test_nanos_argument_too_large(self):
@@ -166,11 +173,12 @@ class TestTruncate(object):
     def test_nanos_argument_between_int64_and_uint64(self):
         # This may stop raising a client error in 2264
         # as the value will no longer be in the future then
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.truncate("test", "truncate", 2**63 + 1)
 
+    # TODO: this server's actual error message doesn't make sense to me
     def test_nanos_argument_between_int32_and_uint32(self):
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.truncate("test", "truncate", 2**31 + 1)
 
     def test_nanos_argument_negative(self):
@@ -179,7 +187,7 @@ class TestTruncate(object):
 
     def test_nanos_argument_in_future(self):
         future_time = self.truncate_threshold + 10**12  # 1000 seconds more
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.truncate("test", "truncate", future_time)
 
     def test_no_nanos_arg(self):

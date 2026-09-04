@@ -25,6 +25,7 @@
 #include "exceptions.h"
 #include "exception_types.h"
 #include "macros.h"
+#include "pythoncapi_compat.h"
 
 static PyObject *py_exc_module;
 
@@ -48,10 +49,8 @@ struct exception_def {
 
 // Used to create instances of the above struct
 #define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
-    {                                                                          \
-        class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,  \
-            attrs                                                              \
-    }
+    {class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,     \
+     attrs}
 
 // Base exception names
 #define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
@@ -69,8 +68,8 @@ struct exception_def {
 #define NO_ERROR_CODE 0
 
 // Same order as the tuple of args passed into the exception
-const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
-                                           "line", "in_doubt", NULL};
+const char *const aerospike_err_attrs[] = {
+    "code", "msg", "file", "line", "in_doubt", "subcode", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -376,29 +375,10 @@ void remove_exception(as_error *err)
     }
 }
 
-// We have this as a separate method because both raise_exception and raise_exception_old need to use it
-void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                  PyObject *py_tuple)
-{
-    for (unsigned long i = 0;
-         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
-         i++) {
-        // Here, we are assuming the number of attrs is the same as the number of tuple members
-        PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
-        if (py_arg == NULL) {
-            // Don't fail out if number of attrs > number of tuple members
-            // This condition should never be true, though
-            PyErr_Clear();
-            break;
-        }
-        PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
-    }
-}
-
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
-    raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
+    raise_exception_base(err, Py_None, Py_None, Py_None, Py_None, Py_None);
 }
 
 void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
@@ -413,30 +393,54 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
 #endif
 
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
+    if (py_module_dict == NULL) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    bool found = false;
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
-    bool found = false;
-
     while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
-        if (PyObject_HasAttrString(py_exc_class, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
-            if (py_code == Py_None) {
+        PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
+        if (py_code == NULL) {
+            if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+                PyErr_Clear();
                 continue;
             }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                break;
-            }
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+
+        // Code will always exist as long as the exception class exists,
+        // so we don't need a strong reference here.
+        Py_DECREF(py_code);
+        if (py_code == Py_None) {
+            continue;
+        }
+        long code = PyLong_AsLong(py_code);
+        if (code == -1 && PyErr_Occurred()) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+        else if (err->code == code) {
+            found = true;
+            break;
         }
     }
+
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
-        PyObject *base_exception =
-            PyDict_GetItemString(py_module_dict, "AerospikeError");
-        if (base_exception) {
-            py_exc_class = base_exception;
+        PyObject *py_base_exception =
+            PyDict_GetItemString(py_module_dict, AEROSPIKE_ERR_EXCEPTION_NAME);
+        if (py_base_exception == NULL) {
+            if (!PyErr_Occurred()) {
+                PyErr_SetString(
+                    PyExc_Exception,
+                    "Unable to find AerospikeError in aerospike.exception");
+            }
+            goto CHAIN_PREV_EXC_AND_RETURN;
         }
+
+        py_exc_class = py_base_exception;
     }
 
     const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
@@ -444,35 +448,61 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                                   py_name};
     for (unsigned long i = 0;
          i < sizeof(py_extra_attrs) / sizeof(py_extra_attrs[0]); i++) {
-        PyObject *py_exc_extra_attr =
-            PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
-        if (py_exc_extra_attr) {
-            PyObject_SetAttrString(py_exc_class, extra_attrs[i],
-                                   py_extra_attrs[i]);
+        int retval =
+            PyObject_HasAttrStringWithError(py_exc_class, extra_attrs[i]);
+        if (retval == 1) {
+            int retval = PyObject_SetAttrString(py_exc_class, extra_attrs[i],
+                                                py_extra_attrs[i]);
+            if (retval == -1) {
+                goto CHAIN_PREV_EXC_AND_RETURN;
+            }
         }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            // We are sure that we want to ignore this
-            PyErr_Clear();
-        }
-        else {
-            // This happens if the code that converts a C client error to a Python exception fails.
+        else if (retval == -1) {
             // The caller of this function should be returning because of an exception anyways
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
     }
 
-    // Convert borrowed reference of exception class to strong reference
-    Py_INCREF(py_exc_class);
-
     // Convert C error to Python exception
-    PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_exc_class, py_err);
+    PyObject *py_err_tuple = NULL;
+    create_py_tuple_from_as_error(err, &py_err_tuple);
+    if (!py_err_tuple) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    Py_ssize_t tuple_size = PyTuple_Size(py_err_tuple);
+    if (tuple_size == -1) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    for (Py_ssize_t i = 0; i < tuple_size; i++) {
+        // Here, we are assuming the number of attrs is the same as the number of tuple members
+        PyObject *py_arg = PyTuple_GetItem(py_err_tuple, i);
+        if (py_arg == NULL) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+        int retval = PyObject_SetAttrString(py_exc_class,
+                                            aerospike_err_attrs[i], py_arg);
+        if (retval == -1) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+    }
+
+    PyObject *py_subcode = PyLong_FromUInt32(err->subcode);
+    if (!py_subcode) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    // Subcode is not included as last element in tuple
+    int retval = PyObject_SetAttrString(
+        py_exc_class, aerospike_err_attrs[tuple_size], py_subcode);
+    if (retval == -1) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
 
     // Raise exception
-    PyErr_SetObject(py_exc_class, py_err);
-    Py_DECREF(py_exc_class);
-    Py_DECREF(py_err);
+    PyErr_SetObject(py_exc_class, py_err_tuple);
+    Py_DECREF(py_err_tuple);
 
 CHAIN_PREV_EXC_AND_RETURN:
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12

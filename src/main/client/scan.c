@@ -43,10 +43,23 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeScan_Type;
+
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
-    return AerospikeScan_New(self, args, kwds);
+    AerospikeScan *scan = AerospikeScan_Type_New(&AerospikeScan_Type, self);
+    if (!scan) {
+        return NULL;
+    }
+
+    if (AerospikeScan_Type.tp_init((PyObject *)scan, args, kwds) == -1) {
+        Py_DECREF(scan);
+        return NULL;
+    }
+
+    return scan;
 }
 
 /**
@@ -71,8 +84,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     as_list *arglist = NULL;
     as_policy_scan scan_policy;
     as_policy_scan *scan_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
     as_error err;
     as_scan scan;
     uint64_t scan_id = 0;
@@ -83,7 +94,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     PyObject *py_ustr3 = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_static_pool static_pool;
@@ -134,7 +144,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p);
+                                &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -191,14 +201,18 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
+            as_policy_info info_policy;
+            as_policy_info *info_policy_p = NULL;
             if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
+                pyobject_to_policy_info(
+                    &err, py_policy, &info_policy, &info_policy_p,
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_SCAN);
                 if (err.code != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
             }
+
             Py_BEGIN_ALLOW_THREADS
             aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
             Py_END_ALLOW_THREADS

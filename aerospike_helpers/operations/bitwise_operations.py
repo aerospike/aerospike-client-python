@@ -30,7 +30,9 @@ Offset examples:
     * -1: rightmost bit in the map
     * -4: 3 bits from rightmost
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import bitwise_operations
@@ -52,13 +54,11 @@ Example::
 
     _, _, bins = client.get(key)
     print("5 bytes: ", bins)
-    # 5 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     _, _, _ = client.operate(key, ops)
 
     _, _, newbins = client.get(key)
     print("After resize to 10 bytes: ", newbins)
-    # After resize to 10 bytes:  {'bitwise1': b'\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'}
 
     # EXAMPLE 2: shrink the five_ones bin to a bytesize of 5 from the front.
 
@@ -71,13 +71,20 @@ Example::
     _, _, _ = client.operate(key, ops)
     _, _, newbins = client.get(key)
     print("After resize to 5 bytes again: ", newbins)
-    # After resize to 5 bytes again:  {'bitwise1': b'\x00\x00\x00\x00\x00'}
 
     # Cleanup and close the connection to the Aerospike cluster.
     client.remove(key)
     client.close()
 
-Example::
+.. testoutput::
+
+    5 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    After resize to 10 bytes:  {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00'}
+    After resize to 5 bytes again:  {'bitwise1': b'\\x00\\x00\\x00\\x00\\x00'}
+
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike import exception as e
@@ -106,7 +113,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01\x01\x01'}
 
     # Example 2: modify bits using the 'or' op, then read bits
     # 0 = offset
@@ -119,7 +125,6 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\xff\x01\x01\x01\x01'}
 
     # Example 3: modify bits using the 'remove' op, then read bits'
     # offset = 0
@@ -131,11 +136,16 @@ Example::
     ]
     _, _, results = client.operate(key, ops)
     print(results)
-    # {'bitwise1': b'\x01\x01\x01'}
 
     client.close()
 
-.. seealso:: `Bits (Data Types) <https://docs.aerospike.com/server/guide/data-types/blob#bitwise-operations>`_.
+.. testoutput::
+
+    {'bitwise1': b'\\x01\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\xff\\x01\\x01\\x01\\x01'}
+    {'bitwise1': b'\\x01\\x01\\x01'}
+
+.. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
 
@@ -158,7 +168,8 @@ ACTION_KEY = "action"
 
 
 def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
-    """Creates a bit_resize_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_resize_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
 
     Change the size of a bytes bin stored in a record on the Aerospike Server.
 
@@ -167,8 +178,8 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
         byte_size (int): The new size of the bytes.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
         resize_flags (int): :ref:`aerospike_bitwise_resize_flag` modifying the resize behavior
-            (default ``aerospike.BIT_RESIZE_DEFAULT``), such as ``aerospike.BIT_RESIZE_GROW_ONLY |
-            aerospike.BIT_RESIZE_FROM_FRONT``.
+            (default :py:data:`aerospike.BIT_RESIZE_DEFAULT`), such as :py:data:`aerospike.BIT_RESIZE_GROW_ONLY` |
+            :py:data:`aerospike.BIT_RESIZE_FROM_FRONT`.
 
     Returns:
         A dictionary usable in operate or operate_ordered. The format of the dictionary
@@ -184,7 +195,8 @@ def bit_resize(bin_name: str, byte_size, policy=None, resize_flags: int = 0):
 
 
 def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
-    """Creates a bit_remove_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_remove_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
 
     Remove bytes from bitmap at byte_offset for byte_size.
 
@@ -208,7 +220,8 @@ def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
 
 
 def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
-    """Creates a bit_set_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_set_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
 
     Set the value on a bitmap at bit_offset for bit_size in a record on the Aerospike Server.
 
@@ -238,8 +251,36 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     }
 
 
+def bit_set_int(bin_name: str, bit_offset: int, bit_size: int, value: int, policy: dict = None):
+    """Creates a bit_set_int_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
+
+    Set the value on a bitmap starting at bit_offset for bit_size in a record on the Aerospike Server.
+
+    Args:
+        bin_name (str): The name of the bin containing the blob value.
+        bit_offset (int): The offset where the bits will be set.
+        bit_size (int): How many bits of value to write. (maximum of 64 bits)
+        value (int): The signed 64-bit integer value to be set. This integer is applied as big endian.
+        policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
+
+    Returns:
+        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        should be considered an internal detail, and subject to change.
+    """
+    return {
+        OP_KEY: aerospike.OP_BIT_SET_INT,
+        BIN_KEY: bin_name,
+        POLICY_KEY: policy,
+        BIT_OFFSET_KEY: bit_offset,
+        BIT_SIZE_KEY: bit_size,
+        VALUE_KEY: value,
+    }
+
+
 def bit_count(bin_name: str, bit_offset, bit_size):
-    """Creates a bit_count_operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a bit_count_operation to be used with :meth:`aerospike.Client.operate` or
+        :meth:`aerospike.Client.operate_ordered`.
 
     Server returns an integer count of all set bits starting at bit_offset for bit_size bits.
 
@@ -268,7 +309,8 @@ def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=Non
         bit_size (int): How many bits of value to add.
         value (int): The value to be added.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
-        action (aerospike.constant): Action taken if an overflow/underflow occurs.
+        action (int): Action taken if an overflow/underflow occurs.
+            See :ref:`Bitwise Overflow <aerospike_bitwise_overflow>` for more information.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -484,8 +526,8 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to or.
-        value_byte_size (int): Deprecated. Length of value in bytes.
-        value (bytes/byte array): Value to be used in or operation.
+        value_byte_size (int): Length of value in bytes.
+        value (bytes | bytearray): Value to be used in or operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -571,7 +613,8 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
         bit_size (int): How many bits of value to subtract.
         value (int): The value to be subtracted.
         sign (bool): True: treat value as signed, False: treat value as unsigned.
-        action (aerospike.constant): Action taken if an overflow/underflow occurs.
+        action (int): Action taken if an overflow/underflow occurs.
+            See :ref:`Bitwise Overflow <aerospike_bitwise_overflow>` for more information.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -603,8 +646,8 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to xor.
-        value_byte_size (int): Deprecated. Length of value in bytes.
-        value (bytes/byte array): Value to be used in xor operation.
+        value_byte_size (int): Length of value in bytes.
+        value (bytes | bytearray): Value to be used in xor operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
     Returns:
@@ -619,4 +662,39 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         BIT_SIZE_KEY: bit_size,
         VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
+    }
+
+
+def bit_b64_encode(
+        bin_name: str,
+        byte_offset: int = 0,
+        byte_size: int | None = None,
+        invert_size: bool = False,
+        ctx: list | None = None
+):
+    """
+    Create bit "b64 encode" operation that returns the base64 text of ``byte_size`` bytes starting from ``byte_offset``.
+
+    Requires server version 8.1.3 or later.
+
+    Args:
+        bin_name (str): The name of the bin containing the map.
+        byte_offset (int): Which byte index to start from. A negative value counts back from the end of the blob.
+        byte_size (int | None): How many bytes starting from ``byte_offset`` to select. If :py:obj:`None`, selects from
+            ``byte_offset`` through the end of the blob.
+        invert_size (bool): When :py:obj:`True`, ``byte_size`` counts back from the
+            blob end rather than forward from ``byte_offset``, so a ``byte_size`` of 0 means to the
+            end of the blob.
+
+    Returns:
+        A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
+    """
+    return {
+        OP_KEY: aerospike._OP_BIT_B64_ENCODE,
+        BIN_KEY: bin_name,
+        BYTE_OFFSET_KEY: byte_offset,
+        BYTE_SIZE_KEY: byte_size,
+        "invert_size": invert_size,
+        "ctx": ctx
     }

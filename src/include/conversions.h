@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "types.h"
 
@@ -46,6 +47,8 @@
 #define FIELD_NAME_BATCH_FUNCTION "function"
 #define FIELD_NAME_BATCH_ARGS "args"
 #define FIELD_NAME_BATCH_INDOUBT "in_doubt"
+#define FIELD_NAME_BATCH_SUBCODE "subcode"
+#define FIELD_NAME_BATCH_MESSAGE "message"
 
 #define BATCH_TYPE_READ 0
 #define BATCH_TYPE_WRITE 1
@@ -60,10 +63,6 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 
 as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files,
                                    PyObject **py_files);
-
-as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
-                                        char str_array_ptr[][AS_ROLE_SIZE],
-                                        PyObject *py_list);
 
 as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
                                      int element_size, char **str_array_ptr,
@@ -109,35 +108,18 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
 
-as_status val_to_pyobject_cnvt_list_to_map(AerospikeClient *self, as_error *err,
-                                           const as_val *val,
-                                           PyObject **py_map);
-
 as_status map_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_map *map, PyObject **py_map);
 
 as_status list_to_pyobject(AerospikeClient *self, as_error *err,
                            const as_list *list, PyObject **py_list);
 
-as_status as_list_of_map_to_py_tuple_list(AerospikeClient *self, as_error *err,
-                                          const as_list *list,
-                                          PyObject **py_list);
-
 as_status record_to_pyobject(AerospikeClient *self, as_error *err,
                              const as_record *rec, const as_key *key,
                              PyObject **obj);
 
-as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
-                                   const as_record *rec, PyObject **obj);
-
 as_status operate_bins_to_pyobject(AerospikeClient *self, as_error *err,
                                    const as_record *rec, PyObject **py_bins);
-
-as_status record_to_pyobject_cnvt_list_to_map(AerospikeClient *self,
-                                              as_error *err,
-                                              const as_record *rec,
-                                              const as_key *key,
-                                              PyObject **obj);
 
 as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj);
 
@@ -145,15 +127,9 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
                                PyObject **obj);
 
 as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
-                           const as_record *rec, PyObject **obj,
-                           bool cnvt_list_to_map);
+                           const as_record *rec, PyObject **obj);
 
-void error_to_pyobject(const as_error *err, PyObject **obj);
-
-as_status pyobject_to_astype_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_value, as_val **val,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+void create_py_tuple_from_as_error(const as_error *err, PyObject **obj);
 
 as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
                                    PyObject *py_as_privilege,
@@ -179,21 +155,11 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_binop *binop,
                                    char *bin, as_static_pool *static_pool);
 
-as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
-                                   PyObject *py_bin, char **bin);
-
-as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
-                             as_error *err);
-
-as_status as_batch_read_results_to_pyobject(as_error *err,
-                                            AerospikeClient *client,
-                                            const as_batch_read *results,
-                                            uint32_t size,
-                                            PyObject **py_records);
-
-as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
-                                         as_batch_read_records *records,
-                                         PyObject **py_recs);
+// Both as_operations and as_record have ttl and gen fields,
+// so we have ttl and gen as separate parameters instead of accepting either as_operations or as_record
+as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
+                             uint16_t *gen_ref, as_error *err,
+                             bool validate_keys);
 
 as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
@@ -203,8 +169,11 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type);
 
-as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
-                           as_exp **exp_list, as_error *err);
+// allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
+// if false, the Python object should only be a compiled Python expression object from aerospike_helpers
+as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
+                                   as_exp **exp_list, as_error *err,
+                                   bool allow_base64_encoded_exprs);
 
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
@@ -227,6 +196,13 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
 
+// This is shared for Python client API calls where the C client API returns as_batch_result or as_batch_base_record
+// Then it extracts the subcode and detailed error message and sets it in a BatchRecord instance.
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message);
+
 PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                                             struct as_cluster_s *cluster);
 PyObject *create_py_node_from_as_node(as_error *error_p,
@@ -247,7 +223,29 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *class_name,
                                             PyObject *py_arg);
 
-// Error indicator must always be checked after this call
-// Constructor parameter name needed for constructing error message
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                      const char *param_name_of_pyobj);
+// Convert a Python integer into a fixed-width integer and verify it is within that range
+// We return an unsigned long long because it should be able to fit all fixed-width int types up to uint64_t
+// Returns -1 on error. Error indicator can be checked to verify if error occurred
+// TODO: replace this with new API calls in Python 3.14
+unsigned long long
+convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
+                                             unsigned long long max_bound);
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
+
+// Returns NULL on error.
+const char *convert_pyobject_to_str(PyObject *py_obj);
+
+// Returns NULL on error.
+PyObject *
+create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                              as_cluster_stats *stats);
+
+as_status as_string_policy_init_from_pyobject(as_error *err,
+                                              as_string_policy *policy,
+                                              PyObject *py_string_policy);

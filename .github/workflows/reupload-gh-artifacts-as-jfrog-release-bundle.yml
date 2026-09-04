@@ -1,0 +1,116 @@
+on:
+  workflow_call:
+    inputs:
+      jfrog_build_id:
+        required: true
+        type: string
+      next_release_version:
+        required: true
+        type: string
+      latest_tag:
+        required: true
+        type: string
+
+jobs:
+  reupload-artifacts-as-one-artifact-in-github:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    env:
+      ARTIFACT_NAME: build-artifacts
+    outputs:
+      artifact-name: ${{ env.ARTIFACT_NAME }}
+    steps:
+    - uses: aerospike/shared-workflows/.github/actions/collect-build-artifacts@df68d17cd7b577287b56cbbca5621a5cea0bf803
+      with:
+        # This is the default name, but setting here explicitly in case updating this composite action causes artifact name
+        # to change unexpectedly.
+        output-name: ${{ env.ARTIFACT_NAME }}
+
+    - name: Verify package version
+      shell: python
+      working-directory: ${{ env.ARTIFACT_NAME }}
+      env:
+        EXPECTED_PACKAGE_VERSION: ${{ inputs.next_release_version }}
+      run: |
+        from packaging.utils import parse_wheel_filename, parse_sdist_filename
+        import os
+
+        files = os.listdir('.')
+        for file in files:
+          print("Parsing", file)
+
+          if file.endswith('.whl'):
+            name, version, build, tags = parse_wheel_filename(file)
+          elif file.endswith('.tar.gz'):
+            name, version = parse_sdist_filename(file)
+          else:
+            print(f"Found invalid package file {file}")
+            exit(1)
+          assert name == "aerospike"
+
+          expected_version = os.environ["EXPECTED_PACKAGE_VERSION"]
+
+          print("Expected version:", expected_version)
+          print("Actual version:", version.__str__())
+
+          assert version.__str__() == expected_version
+
+    # Verified that nowhere else in the pipeline (including artifact-publisher) calls twine check
+    - name: Make sure package README is renderable in PyPI
+      run: |
+        # TODO: eventually should add this to requirements.txt for CI/CD pipeline
+        python3 -m pip install twine==7.0.0
+        twine check "$ARTIFACT_NAME"/*
+
+  upload-artifacts-to-jfrog:
+    needs: [
+      reupload-artifacts-as-one-artifact-in-github
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@df68d17cd7b577287b56cbbca5621a5cea0bf803
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
+      # Have to override the default artifact name because we are not signing the artifacts
+      gh-artifact-name: ${{ needs.reupload-artifacts-as-one-artifact-in-github.outputs.artifact-name }}
+      jf-build-id: ${{ inputs.jfrog_build_id }}
+      jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803
+      dry-run: false
+    permissions:
+      contents: read
+      id-token: write
+      actions: write
+
+  create-release-bundle:
+    needs: [
+      upload-artifacts-to-jfrog
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@df68d17cd7b577287b56cbbca5621a5cea0bf803
+    with:
+      jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      jf-build-names: |
+        ${{ vars.JFROG_BUILD_NAME }}:${{ inputs.jfrog_build_id }}
+      jf-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      # JFrog release bundle version
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803 # Should match the version in your 'uses:' line
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+
+  promote-release-bundle-to-test:
+    needs: [
+      create-release-bundle
+    ]
+    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
+    with:
+      jfrog-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
+      release-bundle-name: ${{ vars.JFROG_RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ inputs.next_release_version }}
+      release-bundle-tag: ${{ inputs.latest_tag }}
+      new-environment: TEST
+    permissions:
+      id-token: write

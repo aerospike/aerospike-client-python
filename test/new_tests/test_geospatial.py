@@ -31,17 +31,17 @@ def get_geo_object():
 
 def add_geo_indexes(connection):
     try:
-        connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
+        connection.index_single_value_create("test", "demo", "loc", aerospike.INDEX_GEO2DSPHERE, "loc_index")
     except (e.IndexFoundError):
         pass
 
     try:
-        connection.index_geo2dsphere_create("test", "demo", "loc_polygon", "loc_polygon_index")
+        connection.index_single_value_create("test", "demo", "loc_polygon", aerospike.INDEX_GEO2DSPHERE, "loc_polygon_index")
     except (e.IndexFoundError):
         pass
 
     try:
-        connection.index_geo2dsphere_create("test", "demo", "loc_circle", "loc_circle_index")
+        connection.index_single_value_create("test", "demo", "loc_circle", aerospike.INDEX_GEO2DSPHERE, "loc_circle_index")
     except (e.IndexFoundError):
         pass
 
@@ -343,7 +343,7 @@ class TestGeospatial(object):
             keys.append(key)
 
         try:
-            self.as_connection.index_geo2dsphere_create("test", None, "loc", "loc_index_no_set")
+            self.as_connection.index_single_value_create("test", None, "loc", aerospike.INDEX_GEO2DSPHERE, "loc_index_no_set")
         except (e.IndexFoundError):
             pass
 
@@ -780,7 +780,7 @@ class TestGeospatial(object):
         except Exception:
             pass
 
-        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
+        status = self.as_connection.index_single_value_create("test", "demo", "loc", aerospike.INDEX_GEO2DSPHERE, "loc_index")
 
         assert status == 0
 
@@ -794,7 +794,7 @@ class TestGeospatial(object):
         except Exception:
             pass
 
-        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 180000})
+        status = self.as_connection.index_single_value_create("test", "demo", "loc", aerospike.INDEX_GEO2DSPHERE, "loc_index", {"timeout": 180000})
 
         assert status == 0
 
@@ -1154,7 +1154,7 @@ class TestGeospatial(object):
         set_name = "a" * 100
 
         with pytest.raises(e.InvalidRequest) as err_info:
-            self.as_connection.index_geo2dsphere_create("test", set_name, "loc", "loc_index_creation_should_fail")
+            self.as_connection.index_single_value_create("test", set_name, "loc", aerospike.INDEX_GEO2DSPHERE, "loc_index_creation_should_fail")
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID

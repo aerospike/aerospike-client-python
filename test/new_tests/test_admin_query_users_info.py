@@ -4,6 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .conftest import check_user_dictionary
 
 import aerospike
 
@@ -56,21 +57,16 @@ class TestQueryUsersInfo(TestBaseClass):
 
         # Usage test; doesn't actually test if the server records user data
         user_details = user_details.get("example-test")
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
-        assert user_details.get("read_info") == 0
-        assert user_details.get("write_info") == 0
-        assert user_details.get("conns_in_use") == 0
+        check_user_dictionary(user_details)
 
     def test_query_users_info_with_invalid_timeout_policy_value(self):
 
         policy = {"timeout": 0.1}
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_users_info(policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_query_users_info_with_proper_timeout_policy_value(self):
 
@@ -107,9 +103,7 @@ class TestQueryUsersInfo(TestBaseClass):
         Invoke query_users() with policy as string
         """
         policy = ""
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_users_info(policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "policy must be a dict"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "policy must be a dict"

@@ -71,7 +71,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.increment(key, "age", 5, {}, policy)
@@ -94,7 +94,7 @@ class TestIncrement(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "max_retries": 0}
         self.as_connection.increment(key, "age", 5, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -122,11 +122,12 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1200
         }
 
-        meta = {"gen": 10, "ttl": 1200}
+        meta = {"gen": 10}
         self.as_connection.increment(key, "age", 5, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -146,13 +147,14 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         self.as_connection.increment(key, "age", 5, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -172,13 +174,14 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
 
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
 
         #  Since the generations are not equal, this should raise an error
         #  And not increment.
@@ -200,13 +203,14 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1200}
+        meta = {"gen": gen}
         #  since gen is equal to the server version, this should raise an error
         with pytest.raises(e.RecordGenerationError) as err_info:
             self.as_connection.increment(key, "age", 5, meta, policy)
@@ -226,13 +230,14 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1200
         }
         (key, meta) = self.as_connection.exists(key)
 
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1200}
+        meta = {"gen": gen + 5}
         self.as_connection.increment(key, "age", 5, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -355,13 +360,11 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         bins = {"age": 10}
         self.as_connection.put(key, bins)
-        try:
+        with pytest.raises((SystemError, Exception)) as excinfo:
             self.as_connection.increment(key, "age", 68786586756785785745)
-        # except SystemError:
-        #       pass
-        except Exception as exception:
-            assert exception.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-            assert exception.msg == "integer value exceeds sys.maxsize"
+        if excinfo.type == Exception:
+            assert excinfo.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+            assert excinfo.value.msg == "integer value exceeds sys.maxsize"
 
     def test_increment_with_string_value(self):
         """

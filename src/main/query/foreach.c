@@ -15,12 +15,15 @@
  ******************************************************************************/
 #include <Python.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
 #include <aerospike/as_partition.h>
 #include <aerospike/as_arraylist.h>
+#include <aerospike/as_vector.h>
+#include <aerospike/aerospike_query.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -30,15 +33,16 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-    as_error error;
     PyObject *callback;
     AerospikeClient *client;
     int partition_query;
+    as_vector thread_errors;
+    pthread_mutex_t thread_errors_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
 {
-    bool rval = true;
+    bool retval = true;
 
     if (!val) {
         return false;
@@ -46,7 +50,6 @@ static bool each_result(const as_val *val, void *udata)
 
     // Extract callback user-data
     LocalData *data = (LocalData *)udata;
-    as_error *err = &data->error;
     PyObject *py_callback = data->callback;
 
     // Python Function Arguments and Result Value
@@ -59,14 +62,14 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
-    val_to_pyobject(data->client, err, val, &py_result);
+    // Use local thread error so we don't need to pass the main error to the callback
+    // We want to avoid resetting the main error in case it was already set by another thread.
+    as_error thread_err_local;
+    as_error_init(&thread_err_local);
+    val_to_pyobject(data->client, &thread_err_local, val, &py_result);
 
-    // The record could not be converted to a python object
-    if (!py_result) {
-        //TBD set error here
-        // Must release the interpreter lock before returning
-        PyGILState_Release(gstate);
-        return true;
+    if (thread_err_local.code != AEROSPIKE_OK) {
+        goto EXIT_CALLBACK;
     }
 
     // Build Python Function Arguments
@@ -100,28 +103,30 @@ static bool each_result(const as_val *val, void *udata)
     if (!py_return) {
         // an exception was raised, handle it (someday)
         // for now, we bail from the loop
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+        as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
                         "Callback function contains an error");
-        rval = false;
+        retval = false;
     }
-    else if (PyBool_Check(py_return)) {
-        if (Py_False == py_return) {
-            rval = false;
-        }
-        else {
-            rval = true;
-        }
-        Py_DECREF(py_return);
+    else if (py_return == Py_False) {
+        retval = false;
     }
-    else {
-        rval = true;
-        Py_DECREF(py_return);
+    Py_XDECREF(py_return);
+
+EXIT_CALLBACK:
+    if (thread_err_local.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->thread_errors_mutex);
+        as_error *stored_err_ref = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err_ref, &thread_err_local);
+        as_vector_append(&data->thread_errors, &stored_err_ref);
+        pthread_mutex_unlock(&data->thread_errors_mutex);
+
+        retval = false;
     }
 
     // Release Python State
     PyGILState_Release(gstate);
 
-    return rval;
+    return retval;
 }
 
 PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
@@ -148,15 +153,18 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     data.client = self->client;
     data.partition_query = 0;
 
-    as_error_init(&data.error);
+    // Main error
+    as_error err;
+    as_error_init(&err);
+    // Stores errors reported by individual threads when they call the each_result callback
+    as_vector_init(&data.thread_errors, sizeof(as_error *), 16);
+    pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
-    as_error err;
     as_policy_query query_policy;
     as_policy_query *query_policy_p = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -164,7 +172,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     as_partitions_status *ps = NULL;
 
     // Initialize error
-    as_error_init(&err);
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -180,7 +187,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_query(
         self->client, &err, py_policy, &query_policy, &query_policy_p,
-        &self->client->as->config.policies.query, &exp_list, &exp_list_p);
+        &self->client->as->config.policies.query, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -213,9 +220,9 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
             as_partition_filter_set_partitions(partition_filter_p, ps);
         }
 
-        aerospike_query_partitions(self->client->as, &data.error,
-                                   query_policy_p, &self->query,
-                                   partition_filter_p, each_result, &data);
+        aerospike_query_partitions(self->client->as, &err, query_policy_p,
+                                   &self->query, partition_filter_p,
+                                   each_result, &data);
 
         if (ps) {
             as_partitions_status_release(ps);
@@ -228,9 +235,11 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
-    if (data.error.code != AEROSPIKE_OK) {
-        as_error_update(&data.error, data.error.code, NULL);
-        goto CLEANUP;
+    // Promote any thread-level error if the main error was not set
+    if (err.code == AEROSPIKE_OK && data.thread_errors.size > 0) {
+        as_error *vector_item =
+            (as_error *)as_vector_get_ptr(&data.thread_errors, 0);
+        as_error_copy(&err, vector_item);
     }
 
 CLEANUP:
@@ -243,15 +252,15 @@ CLEANUP:
     }
     self->query.apply.arglist = NULL;
 
-    if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-        if (err.code != AEROSPIKE_OK) {
-            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
-                                 Py_None);
-        }
-        if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
-                                 Py_None, Py_None);
-        }
+    for (uint32_t i = 0; i < data.thread_errors.size; ++i) {
+        void *err_ptr = as_vector_get_ptr(&data.thread_errors, i);
+        cf_free(err_ptr);
+    }
+    as_vector_destroy(&data.thread_errors);
+    pthread_mutex_destroy(&data.thread_errors_mutex);
+
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 

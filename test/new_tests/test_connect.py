@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from contextlib import nullcontext
 
 
 @contextmanager
@@ -83,30 +84,63 @@ class TestConnect(object):
         with open_as_connection(config) as client:
             assert client.is_connected()
 
+    def test_connect_positive_string_host_and_port(self):
+        """
+        Invoke connect() with a single "hostname[:tlsname]:port" string
+        entry (CLIENT-4841). connection_config's host entry has a tls-name
+        as a third tuple element when TLS is enabled, so build the
+        equivalent string for both the 2- and 3-element tuple cases.
+        """
+        config = self.connection_config.copy()
+        host_entry = config["hosts"][0]
+        if len(host_entry) == 3:
+            addr, port, tls_name = host_entry
+            config["hosts"] = [f"{addr}:{tls_name}:{port}"]
+        else:
+            addr, port = host_entry
+            config["hosts"] = [f"{addr}:{port}"]
+
+        with open_as_connection(config) as client:
+            assert client.is_connected()
+
     def test_connect_positive_shm_key(self):
         """
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
             assert client.shm_key() == 3
 
-    # TODO: this test doesn't actually check if min_conns_per_node works properly
+    # This test doesn't actually check if the options work properly
     # It just checks that the setting is configured in the Python client (basically a coverage test)
-    def test_connect_positive_min_conns_per_node(self):
+    @pytest.mark.parametrize(
+        "other_config",
+        [
+            {"min_conns_per_node": 0},
+            {"app_id": "app_name"}
+        ]
+    )
+    def test_connect_positive_config_options(self, other_config):
         """
         Invoke connect() with min_conns_per_node specified
         """
         config = self.connection_config.copy()
-        config["min_conns_per_node"] = 0
+        config.update(other_config)
 
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
+
+    def test_invalid_app_id(self):
+        config = self.connection_config.copy()
+        config["app_id"] = 1
+
+        with pytest.raises(TypeError):
+            aerospike.client(config)
 
     def test_connect_positive_shm_key_default(self):
         """
@@ -131,18 +165,28 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
-    def test_connect_positive_cluster_name(self):
+    @pytest.mark.parametrize(
+        "cluster_name",
+        [
+            None,
+            # This test case is for code coverage purposes
+            "invalid-cluster-name"
+        ]
+    )
+    def test_connect_with_cluster_name(self, cluster_name):
         """
         Invoke connect() giving a cluster name
         """
         config = self.connection_config.copy()
-        config["cluster_name"] = "test-cluster"
+        config["cluster_name"] = cluster_name
 
-        with pytest.raises(e.ClientError) as err_info:
-            self.client = aerospike.client(config).connect()
+        if cluster_name is None:
+            cm = nullcontext()
+        else:
+            cm = pytest.raises(e.ClientError)
 
-        assert err_info.value.code == -1
+        with cm:
+            self.client = aerospike.client(config)
 
     def test_connect_positive_reconnect(self):
         """
@@ -190,7 +234,39 @@ class TestConnect(object):
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({"hosts": [("127.0.0.1", "3000")]}, e.ParamError, -2, "Invalid host -> The host port must be an integer"),
+            # String host formats (CLIENT-4841). These target an unused
+            # address/port so parsing succeeds but the connection attempt
+            # itself fails, proving the string was accepted rather than
+            # rejected as invalid.
+            ({"hosts": ["[::1]:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["127.0.0.1:tls1:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["[::1]:tls1:2000"]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
+            ({"hosts": ["127.0.0.1:1:2:3"]}, e.ParamError, -2, "Invalid host"),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "a" * 64, "password": "password"},
+                e.ParamError,
+                -2,
+                "Username length exceeds the maximum of 63 characters",
+            ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "username", "password": "a" * 64},
+                e.ParamError,
+                -2,
+                "Password length exceeds the maximum of 63 characters",
+            ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "", "password": "password"},
+                e.ParamError,
+                -2,
+                "Username must not be empty",
+            ),
+            (
+                {"hosts": [("127.0.0.1", 3000)], "user": "username", "password": ""},
+                e.ParamError,
+                -2,
+                "Password must not be empty",
+            ),
         ],
         ids=[
             "config not dict",
@@ -199,9 +275,17 @@ class TestConnect(object):
             "hosts missing address",
             "hosts port is incorrect",
             "hosts port is string",
+            "string host ipv6 and port",
+            "string host, tls name, and port",
+            "string host ipv6, tls name, and port",
+            "string host with too many colons",
+            "username too long",
+            "password too long",
+            "username empty",
+            "password empty",
         ],
     )
-    def test_connect_invalid_configs(self, config, err, err_code, err_msg):
+    def test_connect_invalid_configs(self, config, err, err_code, err_msg, request):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 
@@ -210,3 +294,31 @@ class TestConnect(object):
         else:
             assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg
+
+    @pytest.mark.parametrize(
+        "username, password, err_msg",
+        [
+            ("a" * 64, "password", "Username length exceeds the maximum of 63 characters"),
+            ("username", "a" * 64, "Password length exceeds the maximum of 63 characters"),
+            ("", "password", "Username must not be empty"),
+            ("username", "", "Password must not be empty"),
+        ],
+        ids=[
+            "username too long",
+            "password too long",
+            "username empty",
+            "password empty",
+        ],
+    )
+    def test_connect_call_with_too_long_credentials(self, username, password, err_msg):
+        """
+        Invoke connect(username, password) directly with an invalid username/password.
+        """
+        config = self.connection_config.copy()
+
+        with open_as_connection(config) as client:
+            client.close()
+            with pytest.raises(e.ParamError) as err_info:
+                client.connect(username, password)
+            assert err_info.value.code == -2
+            assert err_info.value.msg == err_msg

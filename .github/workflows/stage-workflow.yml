@@ -1,0 +1,161 @@
+run-name: Stage workflow
+name: Stage workflow
+
+permissions:
+  contents: write
+  id-token: write
+  statuses: write
+  actions: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      server-tag:
+        required: true
+        description: 'Server docker image tag'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  get-last-release-bundle-info:
+    uses: ./.github/workflows/get-latest-release-bundle.yml
+    permissions:
+      id-token: write
+
+  get-this-jfrog-build-info:
+    outputs:
+      jfrog_build_id: ${{ steps.get-jfrog-build-id.outputs.id }}
+      # Used downstream for labelling the JFrog build with a version
+      next-release-version: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      # Used downstream to tag the release bundle
+      latest-tag: ${{ steps.get-latest-tag.outputs.latest_tag }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-depth: 0
+
+    - id: get-next-release-version
+      run: echo "next_release_version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      shell: bash -ex {0}
+
+    - name: Fail out if not running on stage
+      env:
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+      run: |
+        if [[ "$GITHUB_REF_NAME" != "stage" ]]; then
+          echo "This workflow must run in the stage branch."
+          exit 1
+        fi
+
+    - name: Safeguard to make sure there's changes in stage to be promoted
+      id: get-latest-tag
+      shell: bash -ex {0}
+      env:
+        NEXT_RELEASE_VERSION: ${{ steps.get-next-release-version.outputs.next_release_version }}
+      run: |
+        latest_tag=$(git describe --tags --exact-match HEAD)
+        if [[ "$latest_tag" == "$NEXT_RELEASE_VERSION" ]]; then
+          echo "We have not merged any changes to stage since the last release yet." >&2
+          exit 1
+        fi
+        echo latest_tag="$latest_tag" >> "$GITHUB_OUTPUT"
+
+    - id: get-jfrog-build-id
+      # Following this convention to be consistent with company policy (instead of using tags for JFrog build id)
+      run: echo id=${{ github.run_id }}-${{ github.run_attempt }} >> "$GITHUB_OUTPUT"
+
+  compare-last-release-bundle-rev-with-latest-stage-tag:
+    needs: [
+      get-last-release-bundle-info,
+      get-this-jfrog-build-info
+    ]
+    uses: ./.github/workflows/decide-to-run-integration-tests.yml
+    with:
+      # If no release bundle was found, default to comparing stage with the latest release
+      earlier_rev: ${{ needs.get-last-release-bundle-info.outputs.found-release-bundle == 'true' && needs.get-last-release-bundle-info.outputs.release-bundle-tag || 'origin/master' }}
+      later_rev: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}
+    permissions:
+      contents: read
+
+  build-artifacts:
+    needs: [
+      get-this-jfrog-build-info,
+      compare-last-release-bundle-rev-with-latest-stage-tag
+    ]
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      run_tests: false
+      publish-build-info: true
+      # Needed for collecting build info
+      jf-build-id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
+    permissions:
+      contents: read
+      # For shared reusable workflows
+      id-token: write
+      statuses: write
+    secrets: inherit
+
+  run-stage-tests:
+    needs: [
+      compare-last-release-bundle-rev-with-latest-stage-tag,
+      build-artifacts
+    ]
+    if: |
+      !cancelled() &&
+      (
+        needs.build-artifacts.result == 'success'
+        &&
+        needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.run_integration_tests == 'true'
+      )
+    uses: ./.github/workflows/stage-tests.yml
+    # Need to pass in JFrog secrets
+    secrets: inherit
+    with:
+      python-versions-to-test: ${{ needs.build-artifacts.outputs.python-versions }}
+      # Need to use the same version of tests designed for the client version we're promoting
+      rev-of-integration-tests: ${{ needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.later_rev_tag }}
+      server-tag: ${{ inputs.server-tag }}
+      run-integration-tests-on-macos-x86: false
+
+  # Stage tests have passed or skipped
+  # so it is safe to promote the release bundle to TEST
+  # We store the subsequent jobs after the stage tests in a separate reusable workflow...
+  # because if stage tests were skipped, all subsequent jobs will be skipped by default too (both direct and indirect descendents)
+  # This means we have to add a manual check for each subsequent job that checks if the stage tests were skipped in order to run them
+  # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
+  reupload-gh-artifacts-as-jfrog-release-bundle-and-promote-to-test:
+    needs: [
+      compare-last-release-bundle-rev-with-latest-stage-tag,
+      get-this-jfrog-build-info,
+      build-artifacts,
+      run-stage-tests
+    ]
+    if: |
+      !cancelled()
+      &&
+      (
+      needs.run-stage-tests.result == 'success'
+      ||
+        (
+        needs.compare-last-release-bundle-rev-with-latest-stage-tag.outputs.run_integration_tests == 'false'
+        &&
+        needs.build-artifacts.result == 'success'
+        &&
+        needs.run-stage-tests.result == 'skipped'
+        )
+      )
+    uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
+    with:
+      jfrog_build_id: ${{ needs.get-this-jfrog-build-info.outputs.jfrog_build_id }}
+      next_release_version: ${{ needs.get-this-jfrog-build-info.outputs.next-release-version }}
+      latest_tag: ${{ needs.get-this-jfrog-build-info.outputs.latest-tag }}

@@ -37,6 +37,8 @@ def assert_each_record_bins(records, check_func):
 
 @pytest.fixture(scope="class")
 def clean_test_demo_namespace(as_connection):
+    as_connection.truncate("test", None, 0)
+
     names = ["Alice", "Bob", "John", "Jane"]
     for i in range(100):
         key = "test", "demo", i
@@ -207,7 +209,10 @@ class TestQueryExpressions(object):
 
     def test_string_regex(self):
         expr = exp.CmpRegex(aerospike.REGEX_ICASE, ".*O.*", exp.StrBin("name"))
-        results = self.query.results(policy={"expressions": expr.compile()})
+
+        with pytest.warns(DeprecationWarning):
+            results = self.query.results(policy={"expressions": expr.compile()})
+
         assert len(results) == 50
         assert_each_record_bins(results, lambda b: b["name"] in ("Bob", "John"))
 
@@ -328,7 +333,7 @@ class TestQueryExpressions(object):
         """
         for i in range(7):
             key = "test", "ttl", i
-            self.as_connection.put(key, {"time": "earlier"}, meta={"ttl": 100})
+            self.as_connection.put(key, {"time": "earlier"}, policy={"ttl": 100})
 
         # 150 second range for record TTLs should be enough, we are storing with
         # Current time + 100s and current time +5000s, so only one of the group should be found
@@ -338,7 +343,7 @@ class TestQueryExpressions(object):
         # Store 5 records after the cutoff
         for i in range(7, 12):
             key = "test", "ttl", i
-            self.as_connection.put(key, {"time": "later"}, meta={"ttl": 1000})
+            self.as_connection.put(key, {"time": "later"}, policy={"ttl": 1000})
 
         query = self.as_connection.query("test", "ttl")
 

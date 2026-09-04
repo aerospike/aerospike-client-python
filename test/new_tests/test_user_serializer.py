@@ -49,15 +49,7 @@ class TestUserSerializer(object):
         Setup class
         """
         cls.client = TestBaseClass.get_new_connection()
-
-        TestUserSerializer.skip_old_server = True
-        versioninfo = TestUserSerializer.client.info_all("version")
-        for keys in versioninfo:
-            for value in versioninfo[keys]:
-                if value is not None:
-                    versionlist = value[value.find("build") + 6 : value.find("\n")].split(".")
-                    if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
-                        TestUserSerializer.skip_old_server = False
+        TestUserSerializer.skip_old_server = False
 
     def teardown_class(cls):
         TestUserSerializer.client.close()
@@ -173,12 +165,10 @@ class TestUserSerializer(object):
         Invoke put() for float data record with user serializer.
         """
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             aerospike.set_serializer(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Parameter must be a callable"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Parameter must be a callable"
 
     def test_put_with_float_data_user_deserializer_none(self):
         """
@@ -200,12 +190,10 @@ class TestUserSerializer(object):
 
         self.delete_keys.append(key)
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             aerospike.set_deserializer(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Parameter must be a callable"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Parameter must be a callable"
 
     def test_put_with_mixed_data_user_serializer(self):
         pytest.xfail(reason="Need Python 2/3 compatible bytearray for strings")

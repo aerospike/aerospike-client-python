@@ -26,7 +26,7 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
 
     uint32_t interval;
     if (py_interval) {
-        interval = convert_pyobject_to_uint32_t(py_interval, "interval");
+        interval = convert_pyobject_to_uint32_t(py_interval);
         if (PyErr_Occurred()) {
             goto error;
         }
