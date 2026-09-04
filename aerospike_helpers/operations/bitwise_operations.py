@@ -225,14 +225,11 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
 
     Set the value on a bitmap at bit_offset for bit_size in a record on the Aerospike Server.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
-    now.
-
     Args:
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be set.
         bit_size (int): How many bits of value to write.
-        value_byte_size (int): Deprecated. Size of value in bytes.
+        value_byte_size (int): Size of value in bytes.
         value (bytes, bytearray): The value to be set.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -335,14 +332,11 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
-    now.
-
     Args:
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
-        value_byte_size (int): Deprecated. Length of value in bytes.
+        value_byte_size (int): Length of value in bytes.
         value (bytes, bytearray): Bytes to be used in and operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -356,6 +350,7 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
+        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 
@@ -408,13 +403,10 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
     Server inserts the bytes from value into the bitmap at byte_offset.
     No value is returned.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
-    now.
-
     Args:
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): The offset where the bytes will be inserted.
-        value_byte_size (int): Deprecated. Size of value in bytes.
+        value_byte_size (int): Size of value in bytes.
         value (bytes, bytearray): The value to be inserted.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -518,9 +510,6 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
     at bit_offset for bit_size.
 
     Server returns nothing.
-
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
-    now.
 
     Args:
         bin_name (str): The name of the bin containing the map.
@@ -638,9 +627,6 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
-
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
-    now.
 
     Args:
         bin_name (str): The name of the bin containing the map.
