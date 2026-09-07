@@ -598,10 +598,10 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     "In the next major client release, when this %s object is executed, a "    \
     "ParamError will be raised."
 
-// CLIENT-3879: remove_bin() raises ClientError instead of ParamError when
-// validate_keys is True and an invalid policy dictionary key is passed.
-// Fixing this outright would be a breaking change, so for now we keep the
-// existing (incorrect) behavior and just warn ahead of the next major release.
+// remove_bin() raises ClientError instead of ParamError when validate_keys
+// is True and an invalid policy dictionary key is passed. Fixing this
+// outright would be a breaking change, so for now we keep the existing
+// (incorrect) behavior and just warn ahead of the next major release.
 #define REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE                                  \
     "remove_bin() raised a ClientError because the policy dictionary "         \
     "contained an invalid key. In the next major client release, a "           \

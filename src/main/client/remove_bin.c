@@ -28,12 +28,12 @@
 #include "policy.h"
 
 /**
- * CLIENT-3879: an invalid policy dictionary key should raise ParamError, not
- * ClientError, which is what happens once pyobject_to_policy_write clobbers
- * the specific error it already set. Fixing that outright would be a
- * breaking change, so for now we only warn about the future behavior change
- * here, matching the exact condition pyobject_to_policy_write itself uses to
- * decide whether to run the invalid-key check.
+ * An invalid policy dictionary key should raise ParamError, not ClientError,
+ * which is what happens once pyobject_to_policy_write clobbers the specific
+ * error it already set. Fixing that outright would be a breaking change, so
+ * for now we only warn about the future behavior change here, matching the
+ * exact condition pyobject_to_policy_write itself uses to decide whether to
+ * run the invalid-key check.
  *
  * Returns true if the warning was promoted to a real exception (warnings as
  * errors), in which case the caller must bail out immediately without

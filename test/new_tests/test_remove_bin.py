@@ -269,9 +269,9 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with incorrect policy
 
-        CLIENT-3879: an invalid policy dictionary key should raise ParamError,
-        but for now still raises ClientError (to avoid a breaking change) and
-        warns that this will change in the next major release.
+        An invalid policy dictionary key should raise ParamError, but for now
+        still raises ClientError (to avoid a breaking change) and warns that
+        this will change in the next major release.
         """
         key = ("test", "demo", 1)
         policy = {"time": 1001}
@@ -364,10 +364,10 @@ class TestRemovebin(object):
 
     def test_neg_remove_bin_with_invalid_policy_key_warns(self, put_data):
         """
-        CLIENT-3879: remove_bin() should raise ParamError for an invalid policy
-        dictionary key (with validate_keys enabled), but for now it still
-        raises ClientError to avoid a breaking change, and warns that this
-        will change in the next major release.
+        remove_bin() should raise ParamError for an invalid policy dictionary
+        key (with validate_keys enabled), but for now it still raises
+        ClientError to avoid a breaking change, and warns that this will
+        change in the next major release.
         """
         key = ("test", "demo", "remove_bin_invalid_policy_key")
         put_data(self.as_connection, key, {"age": 30})
@@ -380,8 +380,8 @@ class TestRemovebin(object):
 
     def test_neg_remove_bin_with_incorrect_policy_value_does_not_warn(self):
         """
-        CLIENT-3879: an invalid policy *value* (as opposed to an invalid key)
-        is a different, unrelated failure mode and should not trigger the
+        An invalid policy *value* (as opposed to an invalid key) is a
+        different, unrelated failure mode and should not trigger the
         ParamError-in-the-future deprecation warning.
         """
         key = ("test", "demo", 1)
