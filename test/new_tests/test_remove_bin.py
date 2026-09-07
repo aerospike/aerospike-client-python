@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 import warnings
+from contextlib import nullcontext
 
 from .test_base_class import TestBaseClass
 import aerospike
@@ -269,14 +270,23 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with incorrect policy
 
-        An invalid policy dictionary key should raise ParamError, but for now
-        still raises ClientError (to avoid a breaking change) and warns that
-        this will change in the next major release.
+        With validate_keys enabled, an invalid policy dictionary key should
+        raise ParamError, but for now still raises ClientError (to avoid a
+        breaking change) and warns that this will change in the next major
+        release. With validate_keys disabled, the invalid key is silently
+        ignored and the operation succeeds, matching every other API method.
         """
         key = ("test", "demo", 1)
         policy = {"time": 1001}
-        with pytest.warns(DeprecationWarning, match="ParamError will be raised instead"):
-            with pytest.raises((e.ClientError, e.RecordNotFound)):
+        if self.config["validate_keys"]:
+            warns_context = pytest.warns(DeprecationWarning, match="ParamError will be raised instead")
+            raises_context = pytest.raises((e.ClientError, e.RecordNotFound))
+        else:
+            warns_context = nullcontext()
+            raises_context = nullcontext()
+
+        with warns_context:
+            with raises_context:
                 self.as_connection.remove_bin(key, ["age"], {}, policy)
 
     def test_neg_remove_bin_with_no_parameters(self):
@@ -369,6 +379,9 @@ class TestRemovebin(object):
         ClientError to avoid a breaking change, and warns that this will
         change in the next major release.
         """
+        if not self.config["validate_keys"]:
+            pytest.skip("Only applicable when validate_keys is enabled")
+
         key = ("test", "demo", "remove_bin_invalid_policy_key")
         put_data(self.as_connection, key, {"age": 30})
 
