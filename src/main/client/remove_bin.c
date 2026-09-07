@@ -52,6 +52,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_write *write_policy_p = NULL;
     as_key key;
     bool key_initialized = false;
+    bool warning_became_exception = false;
     as_record rec;
     char *binName = NULL;
     int count = 0;
@@ -71,6 +72,28 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         goto CLEANUP;
     }
     key_initialized = true;
+
+    // CLIENT-3879: an invalid policy dictionary key should raise ParamError,
+    // not ClientError, which is what happens below once pyobject_to_policy_write
+    // clobbers the specific error it already set. Fixing that outright would be
+    // a breaking change, so for now we only warn about the future behavior
+    // change here, matching the exact condition pyobject_to_policy_write itself
+    // uses to decide whether to run the invalid-key check.
+    if (py_policy && py_policy != Py_None && self->validate_keys) {
+        as_status key_check_retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_write_policy_valid_keys,
+            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+        if (key_check_retval == 0) {
+            int retval =
+                PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                 REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE);
+            if (retval == -1) {
+                warning_became_exception = true;
+                goto CLEANUP;
+            }
+        }
+        as_error_reset(err);
+    }
 
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
@@ -122,6 +145,10 @@ CLEANUP:
 
     if (key_initialized) {
         as_key_destroy(&key);
+    }
+
+    if (warning_became_exception) {
+        return NULL;
     }
 
     if (err->code != AEROSPIKE_OK) {

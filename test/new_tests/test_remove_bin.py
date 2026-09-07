@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import warnings
 
 from .test_base_class import TestBaseClass
 import aerospike
@@ -267,11 +268,16 @@ class TestRemovebin(object):
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
         Invoke remove_bin() with incorrect policy
+
+        CLIENT-3879: an invalid policy dictionary key should raise ParamError,
+        but for now still raises ClientError (to avoid a breaking change) and
+        warns that this will change in the next major release.
         """
         key = ("test", "demo", 1)
         policy = {"time": 1001}
-        with pytest.raises((e.ClientError, e.RecordNotFound)):
-            self.as_connection.remove_bin(key, ["age"], {}, policy)
+        with pytest.warns(DeprecationWarning, match="ParamError will be raised instead"):
+            with pytest.raises((e.ClientError, e.RecordNotFound)):
+                self.as_connection.remove_bin(key, ["age"], {}, policy)
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
@@ -355,6 +361,35 @@ class TestRemovebin(object):
         with pytest.raises(e.ClientError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
         assert exceptionInfo.value.code == -1
+
+    def test_neg_remove_bin_with_invalid_policy_key_warns(self, put_data):
+        """
+        CLIENT-3879: remove_bin() should raise ParamError for an invalid policy
+        dictionary key (with validate_keys enabled), but for now it still
+        raises ClientError to avoid a breaking change, and warns that this
+        will change in the next major release.
+        """
+        key = ("test", "demo", "remove_bin_invalid_policy_key")
+        put_data(self.as_connection, key, {"age": 30})
+
+        with pytest.warns(DeprecationWarning, match="ParamError will be raised instead") as warn_record:
+            with pytest.raises(e.ClientError) as exceptionInfo:
+                self.as_connection.remove_bin(key, ["age"], {}, {"not_a_real_key": 123})
+        assert exceptionInfo.value.code == -1
+        assert len(warn_record) == 1
+
+    def test_neg_remove_bin_with_incorrect_policy_value_does_not_warn(self):
+        """
+        CLIENT-3879: an invalid policy *value* (as opposed to an invalid key)
+        is a different, unrelated failure mode and should not trigger the
+        ParamError-in-the-future deprecation warning.
+        """
+        key = ("test", "demo", 1)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            with pytest.raises(e.ClientError):
+                self.as_connection.remove_bin(key, ["age"], {}, {"total_timeout": 0.5})
 
     @pytest.mark.parametrize(
         "key, bin_for_removal, ex_code",
