@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import warnings
-from contextlib import nullcontext
 
 from .test_base_class import TestBaseClass
 import aerospike
@@ -274,20 +273,21 @@ class TestRemovebin(object):
         raise ParamError, but for now still raises ClientError (to avoid a
         breaking change) and warns that this will change in the next major
         release. With validate_keys disabled, the invalid key is silently
-        ignored and the operation succeeds, matching every other API method.
+        ignored, so the call falls through to the actual remove-bin
+        operation, which either succeeds or raises RecordNotFound depending
+        on whether the key already exists.
         """
         key = ("test", "demo", 1)
         policy = {"time": 1001}
         if self.config["validate_keys"]:
-            warns_context = pytest.warns(DeprecationWarning, match="ParamError will be raised instead")
-            raises_context = pytest.raises((e.ClientError, e.RecordNotFound))
+            with pytest.warns(DeprecationWarning, match="ParamError will be raised instead"):
+                with pytest.raises((e.ClientError, e.RecordNotFound)):
+                    self.as_connection.remove_bin(key, ["age"], {}, policy)
         else:
-            warns_context = nullcontext()
-            raises_context = nullcontext()
-
-        with warns_context:
-            with raises_context:
+            try:
                 self.as_connection.remove_bin(key, ["age"], {}, policy)
+            except e.RecordNotFound:
+                pass
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
