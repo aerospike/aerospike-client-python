@@ -28,6 +28,39 @@
 #include "policy.h"
 
 /**
+ * CLIENT-3879: an invalid policy dictionary key should raise ParamError, not
+ * ClientError, which is what happens once pyobject_to_policy_write clobbers
+ * the specific error it already set. Fixing that outright would be a
+ * breaking change, so for now we only warn about the future behavior change
+ * here, matching the exact condition pyobject_to_policy_write itself uses to
+ * decide whether to run the invalid-key check.
+ *
+ * Returns true if the warning was promoted to a real exception (warnings as
+ * errors), in which case the caller must bail out immediately without
+ * raising anything else.
+ */
+static bool warn_if_invalid_remove_bin_policy_key(AerospikeClient *self,
+                                                  as_error *err,
+                                                  PyObject *py_policy)
+{
+    if (!py_policy || py_policy == Py_None || !self->validate_keys) {
+        return false;
+    }
+
+    as_status retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_write_policy_valid_keys,
+        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+    as_error_reset(err);
+
+    if (retval != 0) {
+        return false;
+    }
+
+    return PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                            REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE) == -1;
+}
+
+/**
  ******************************************************************************************************
  * Removes a bin from a record.
  *
@@ -73,26 +106,9 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
     key_initialized = true;
 
-    // CLIENT-3879: an invalid policy dictionary key should raise ParamError,
-    // not ClientError, which is what happens below once pyobject_to_policy_write
-    // clobbers the specific error it already set. Fixing that outright would be
-    // a breaking change, so for now we only warn about the future behavior
-    // change here, matching the exact condition pyobject_to_policy_write itself
-    // uses to decide whether to run the invalid-key check.
-    if (py_policy && py_policy != Py_None && self->validate_keys) {
-        as_status key_check_retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_write_policy_valid_keys,
-            POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-        if (key_check_retval == 0) {
-            int retval =
-                PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                 REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE);
-            if (retval == -1) {
-                warning_became_exception = true;
-                goto CLEANUP;
-            }
-        }
-        as_error_reset(err);
+    if (warn_if_invalid_remove_bin_policy_key(self, err, py_policy)) {
+        warning_became_exception = true;
+        goto CLEANUP;
     }
 
     // Convert python policy object to as_policy_write
