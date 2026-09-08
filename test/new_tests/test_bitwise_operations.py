@@ -959,7 +959,7 @@ class TestBitwiseOperations(object):
 
     def test_bit_insert_value_byte_size_smaller_than_value(self):
         """
-        Perform a bitwise insert op where value_byte_size is smaller than the bitmap
+        Perform a bitwise insert op where value is smaller than the bitmap
         being modified.
         """
         value = bytearray([3] * 2)
