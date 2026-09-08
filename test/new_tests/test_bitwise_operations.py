@@ -957,12 +957,18 @@ class TestBitwiseOperations(object):
         expected_result = bytearray([3] * 6 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
 
-    def test_bit_insert_value_byte_size_smaller_than_value(self):
+    @pytest.mark.parametrize(
+        "value",
+        [
+            bytearray([3] * 2),
+            bytes([3] * 2)
+        ]
+    )
+    def test_bit_insert_value_byte_size_smaller_than_value(self, value):
         """
         Perform a bitwise insert op where value is smaller than the bitmap
         being modified.
         """
-        value = bytearray([3] * 2)
         ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, len(value) + 10, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
@@ -970,6 +976,14 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([3] * 2 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
+
+    def test_bit_insert_bytes_larger_than_uint32_max(self):
+        value = bytearray([0] * 2**32)
+        ops = [
+            bitwise_operations.bit_insert(self.five_255_bin, 0, 1, value, None)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, ops)
 
     def test_bit_insert_nonexistent_bin_name(self):
         """
