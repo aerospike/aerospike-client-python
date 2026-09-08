@@ -242,7 +242,8 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     """
     warnings.warn(
         "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning
+        DeprecationWarning,
+        stacklevel=2
     )
 
     return {
@@ -355,7 +356,8 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     """
     warnings.warn(
         "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning
+        DeprecationWarning,
+        stacklevel=2
     )
 
     return {
@@ -432,7 +434,8 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
     """
     warnings.warn(
         "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning
+        DeprecationWarning,
+        stacklevel=2
     )
 
     return {
@@ -546,7 +549,8 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
     """
     warnings.warn(
         "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning
+        DeprecationWarning,
+        stacklevel=2
     )
 
     return {
@@ -669,7 +673,8 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     """
     warnings.warn(
         "value_byte_size is deprecated and will be removed in the next major client release.",
-        DeprecationWarning
+        DeprecationWarning,
+        stacklevel=2
     )
 
     return {
