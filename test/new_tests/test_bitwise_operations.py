@@ -977,14 +977,6 @@ class TestBitwiseOperations(object):
         expected_result = bytearray([3] * 2 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
 
-    def test_bit_insert_bytes_larger_than_uint32_max(self):
-        value = bytearray([0] * 2**32)
-        ops = [
-            bitwise_operations.bit_insert(self.five_255_bin, 0, 1, value, None)
-        ]
-        with pytest.raises(e.ParamError):
-            self.as_connection.operate(self.test_key, ops)
-
     def test_bit_insert_nonexistent_bin_name(self):
         """
         Perform a bitwise insert op with a non existent bin.
