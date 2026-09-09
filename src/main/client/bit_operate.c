@@ -33,7 +33,6 @@
 #define BYTE_OFFSET_KEY "byte_offset"
 #define BIT_OFFSET_KEY "bit_offset"
 #define BIT_SIZE_KEY "bit_size"
-#define VALUE_BYTE_SIZE_KEY "value_byte_size"
 #define VALUE_KEY "value"
 #define COUNT_KEY "count"
 #define OFFSET_KEY "offset"
