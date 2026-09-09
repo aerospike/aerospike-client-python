@@ -24,18 +24,19 @@ The expressions base module provide expressions for:
 
 """
 
-# from __future__ import annotations
-from typing import Union, Any
+from __future__ import annotations
 import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
-from aerospike_helpers.cdt_ctx import _cdt_ctx
 
-TypeComparisonArg = Union[_BaseExpr, Any]
-TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any
+    from aerospike_helpers.cdt_ctx import _cdt_ctx
+    from .resources import TypeComparisonArg, TypeGeo
 
 
 ###################
@@ -210,7 +211,7 @@ class BoolBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (boolean bin)
 
@@ -234,7 +235,7 @@ class IntBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (integer bin)
 
@@ -258,7 +259,7 @@ class StrBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (string bin)
 
@@ -282,7 +283,7 @@ class FloatBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (float bin)
 
@@ -306,7 +307,7 @@ class BlobBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (blob bin)
 
@@ -330,7 +331,7 @@ class GeoBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (GeoJSON bin)
 
@@ -354,7 +355,7 @@ class ListBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (list bin)
 
@@ -386,7 +387,7 @@ class MapBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (map bin)
 
@@ -412,7 +413,7 @@ class HLLBin(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): Bin name.
+            bin: Bin name.
 
         :return: (HyperLogLog bin)
 
@@ -436,7 +437,7 @@ class BinExists(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): bin name.
+            bin: bin name.
 
         :return: (boolean value): True if bin exists, False otherwise.
 
@@ -460,7 +461,7 @@ class BinType(_BaseExpr):
 
     def __init__(self, bin: str):
         """Args:
-            bin (str): bin name.
+            bin: bin name.
 
         :return: (integer value): returns the bin type.
 
@@ -684,7 +685,7 @@ class DigestMod(_BaseExpr):
 
     def __init__(self, mod: int):
         """Args:
-            mod (int): Divisor used to divide the digest to get a remainder.
+            mod: Divisor used to divide the digest to get a remainder.
 
         :return: (integer value): Value in range 0 and mod (exclusive).
 
@@ -710,8 +711,8 @@ class Eq(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `==`.
-            expr1 (TypeComparisonArg): Right argument to `==`.
+            expr0: Left argument to `==`.
+            expr1: Right argument to `==`.
 
         :return: (boolean value)
 
@@ -732,8 +733,8 @@ class NE(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `not ==`.
-            expr1 (TypeComparisonArg): Right argument to `not ==`.
+            expr0: Left argument to `not ==`.
+            expr1: Right argument to `not ==`.
 
         :return: (boolean value)
 
@@ -754,8 +755,8 @@ class GT(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `>`.
-            expr1 (TypeComparisonArg): Right argument to `>`.
+            expr0: Left argument to `>`.
+            expr1: Right argument to `>`.
 
         :return: (boolean value)
 
@@ -776,8 +777,8 @@ class GE(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `>=`.
-            expr1 (TypeComparisonArg): Right argument to `>=`.
+            expr0: Left argument to `>=`.
+            expr1: Right argument to `>=`.
 
         :return: (boolean value)
 
@@ -798,8 +799,8 @@ class LT(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `<`.
-            expr1 (TypeComparisonArg): Right argument to `<`.
+            expr0: Left argument to `<`.
+            expr1: Right argument to `<`.
 
         :return: (boolean value)
 
@@ -820,8 +821,8 @@ class LE(_BaseExpr):
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
-            expr0 (TypeComparisonArg): Left argument to `<=`.
-            expr1 (TypeComparisonArg): Right argument to `<=`.
+            expr0: Left argument to `<=`.
+            expr1: Right argument to `<=`.
 
         :return: (boolean value)
 
@@ -846,12 +847,11 @@ class CmpRegex(_BaseExpr):
 
     _op = _ExprOp.CMP_REGEX
 
-    def __init__(self, options: int, regex_str: str, cmp_str: Union[_BaseExpr, str]):
-
+    def __init__(self, options: int, regex_str: str, cmp_str: _BaseExpr | str):
         """Args:
-            options (int) :ref:`regex_constants`: One of the aerospike regex constants, :ref:`regex_constants`.
-            regex_str (str): POSIX regex string.
-            cmp_str (Union[_BaseExpr, str]): String expression to compare against.
+            options: One of the aerospike regex constants :ref:`regex_constants`.
+            regex_str: POSIX regex string.
+            cmp_str: String expression to compare against.
 
         :return: (boolean value)
 
@@ -876,8 +876,8 @@ class CmpGeo(_BaseExpr):
 
     def __init__(self, expr0: "TypeGeo", expr1: "TypeGeo"):
         """Args:
-            expr0 (TypeGeo): Left expression in comparison.
-            expr1 (TypeGeo): Right expression in comparison.
+            expr0: Left expression in comparison.
+            expr1: Right expression in comparison.
 
         :return: (boolean value)
 
@@ -903,7 +903,7 @@ class Not(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): Variable amount of expressions to be negated.
+            `*exprs`: Variable amount of expressions to be negated.
 
         :return: (boolean value)
 
@@ -926,7 +926,7 @@ class And(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): Variable amount of expressions to be ANDed together.
+            `*exprs`: Variable amount of expressions to be ANDed together.
 
         :return: (boolean value)
 
@@ -951,7 +951,7 @@ class Or(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): Variable amount of expressions to be ORed together.
+            `*exprs`: Variable amount of expressions to be ORed together.
 
         :return: (boolean value)
 
@@ -974,7 +974,7 @@ class Exclusive(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): Variable amount of expressions to be checked.
+            `*exprs`: Variable amount of expressions to be checked.
 
         :return: (boolean value)
 
@@ -1016,7 +1016,7 @@ class Cond(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): bool exp1, action exp1, bool exp2, action exp2, ..., action-default
+            `*exprs`: bool exp1, action exp1, bool exp2, action exp2, ..., action-default
 
         :return: (boolean value)
 
@@ -1089,7 +1089,7 @@ class Let(_BaseExpr):
 
     def __init__(self, *exprs: _BaseExpr):
         """Args:
-            `*exprs` (_BaseExpr): Variable number of :class:`~aerospike_helpers.expressions.base.Def` expressions
+            `*exprs`: Variable number of :class:`~aerospike_helpers.expressions.base.Def` expressions
                 followed by a scoped expression.
 
         :return: (result of scoped expression)
@@ -1117,8 +1117,8 @@ class Def(_BaseExpr):
 
     def __init__(self, var_name: str, expr: _BaseExpr):
         """Args:
-            `var_name` (str): Variable name.
-            `expr` (_BaseExpr): Variable is set to result of this expression.
+            `var_name`: Variable name.
+            `expr`: Variable is set to result of this expression.
 
         :return: (a variable name expression pair)
 
@@ -1146,7 +1146,7 @@ class Var(_BaseExpr):
 
     def __init__(self, var_name: str):
         """Args:
-            `var_name` (str): Variable name.
+            `var_name`: Variable name.
 
         :return: (value stored in variable)
 

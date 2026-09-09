@@ -19,7 +19,6 @@ Bitwise operator expressions provide support for bitwise operators like `&` and 
 """
 
 # from __future__ import annotations
-from typing import Union
 
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
@@ -29,8 +28,9 @@ from aerospike_helpers.expressions.resources import _ExprOp
 # Bitwise Operator Expressions
 ##############################
 
-TypeInteger = Union[_BaseExpr, int]
-TypeBool = Union[_BaseExpr, bool]
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .resources import TypeInteger, TypeBool
 
 
 class IntAnd(_BaseExpr):
@@ -44,7 +44,7 @@ class IntAnd(_BaseExpr):
 
     def __init__(self, *exprs: "TypeInteger"):
         """Args:
-            `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise ANDed.
+            `*exprs`: A variable amount of integer expressions or values to be bitwise ANDed.
 
         :return: (integer value)
 
@@ -69,7 +69,7 @@ class IntOr(_BaseExpr):
 
     def __init__(self, *exprs: "TypeInteger"):
         """Args:
-            `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise ORed.
+            `*exprs`: A variable amount of integer expressions or values to be bitwise ORed.
 
         :return: (integer value)
 
@@ -94,7 +94,7 @@ class IntXOr(_BaseExpr):
 
     def __init__(self, *exprs: "TypeInteger"):
         """Args:
-            `*exprs` (TypeInteger): A variable amount of integer expressions or values to be bitwise XORed.
+            `*exprs`: A variable amount of integer expressions or values to be bitwise XORed.
 
         :return: (integer value)
 
@@ -118,7 +118,7 @@ class IntNot(_BaseExpr):
 
     def __init__(self, expr: "TypeInteger"):
         """Args:
-            `expr` (TypeInteger): An integer value or expression to be bitwise negated.
+            `expr`: An integer value or expression to be bitwise negated.
 
         :return: (integer value)
 
@@ -142,8 +142,8 @@ class IntLeftShift(_BaseExpr):
 
     def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to be left shifted.
-            `shift` (TypeInteger): An integer value or expression for number of bits to left shift `value` by.
+            `value`: An integer value or expression to be left shifted.
+            `shift`: An integer value or expression for number of bits to left shift `value` by.
 
         :return: (integer value)
 
@@ -167,8 +167,8 @@ class IntRightShift(_BaseExpr):
 
     def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to be right shifted.
-            `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
+            `value`: An integer value or expression to be right shifted.
+            `shift`: An integer value or expression for number of bits to right shift `value` by.
 
         :return: (integer value)
 
@@ -192,8 +192,8 @@ class IntArithmeticRightShift(_BaseExpr):
 
     def __init__(self, value: "TypeInteger", shift: "TypeInteger"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to be right shifted.
-            `shift` (TypeInteger): An integer value or expression for number of bits to right shift `value` by.
+            `value`: An integer value or expression to be right shifted.
+            `shift`: An integer value or expression for number of bits to right shift `value` by.
 
         :return: (integer value)
 
@@ -217,7 +217,7 @@ class IntCount(_BaseExpr):
 
     def __init__(self, value: "TypeInteger"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to have bits counted.
+            `value`: An integer value or expression to have bits counted.
 
         :return: (integer value)
 
@@ -245,8 +245,8 @@ class IntLeftScan(_BaseExpr):
 
     def __init__(self, value: "TypeInteger", search: "TypeBool"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to be scanned.
-            `search` (TypeBool): A bool expression or value to scan for.
+            `value`: An integer value or expression to be scanned.
+            `search`: A bool expression or value to scan for.
 
         :return: (integer value)
 
@@ -275,8 +275,8 @@ class IntRightScan(_BaseExpr):
 
     def __init__(self, value: "TypeInteger", search: "TypeBool"):
         """Args:
-            `value` (TypeInteger): An integer value or expression to be scanned.
-            `search` (TypeBool): A bool expression or value to scan for.
+            `value`: An integer value or expression to be scanned.
+            `search`: A bool expression or value to scan for.
 
         :return: (integer value)
 
