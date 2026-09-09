@@ -120,7 +120,7 @@ Example:
     # value to OR: 0xff
     # value size is 1 byte
     ops = [
-        bitwise_operations.bit_or(five_one_bin, 0, 8, 1, bytearray([255]), bit_policy),
+        bitwise_operations.bit_or(five_one_bin, 0, 8, bytearray([255]), bit_policy),
         bitwise_operations.bit_get(five_one_bin, 0, 40)
     ]
     _, _, results = client.operate(key, ops)
