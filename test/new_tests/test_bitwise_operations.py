@@ -366,7 +366,7 @@ class TestBitwiseOperations(object):
         Perform a bit_set op with a value larger than the bit_map being modified.
         """
         value = bytearray()
-        for x in range(0, 5):
+        for x in range(6):
             value.append(255)
         ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 48, 6, value, None)]
         with pytest.raises(e.OpNotApplicable):
@@ -678,7 +678,7 @@ class TestBitwiseOperations(object):
         being modified.
         """
         value = bytearray()
-        for x in range(0, 5):
+        for x in range(0, 6):
             value.append(0)
         ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 48, 6, value, None)]
 
@@ -957,13 +957,19 @@ class TestBitwiseOperations(object):
         expected_result = bytearray([3] * 6 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
 
-    def test_bit_insert_value_byte_size_smaller_than_value(self):
+    @pytest.mark.parametrize(
+        "value",
+        [
+            bytearray([3] * 2),
+            bytes([3] * 2)
+        ]
+    )
+    def test_bit_insert_value_byte_size_smaller_than_value(self, value):
         """
-        Perform a bitwise insert op where value_byte_size is smaller than the bitmap
+        Perform a bitwise insert op where value is smaller than the bitmap
         being modified.
         """
-        value = bytearray([3] * 6)
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 2, value, None)]
+        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, len(value) + 10, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -983,16 +989,6 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([3])
         assert bins["bad_name"] == expected_result
-
-    def test_bit_insert_bad_arg_type(self):
-        """
-        Perform a bitwise insert op with a float byte_size.
-        """
-        value = bytearray([3])
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 1.5, value, None)]
-
-        with pytest.raises(e.ParamError):
-            self.as_connection.operate(self.test_key, ops)
 
     def test_bit_lscan(self):
         """
@@ -1716,3 +1712,32 @@ class TestBitwiseOperations(object):
         ]
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize(
+        "op, args",
+        [
+            (
+                bitwise_operations.bit_insert,
+                ["bin", 0, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_and,
+                ["bin", 0, 8, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_or,
+                ["bin", 0, 1, 1, bytearray([3])]
+            ),
+            (
+                bitwise_operations.bit_xor,
+                ["bin", 0, 1, 1, bytearray([3])],
+            ),
+            (
+                bitwise_operations.bit_set,
+                ["bin", 0, 1, 1, bytearray([3])]
+            )
+        ]
+    )
+    def test_deprecation_warnings_for_value_byte_size(self, op, args):
+        with pytest.warns(DeprecationWarning):
+            op(*args)
