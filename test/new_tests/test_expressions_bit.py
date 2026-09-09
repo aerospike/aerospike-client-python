@@ -25,7 +25,7 @@ from aerospike_helpers.expressions import (
     Eq,
 )
 from aerospike_helpers.operations import expression_operations as expr_ops
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail
 
 import aerospike
 from . import as_errors
@@ -358,7 +358,7 @@ class TestExpressions(TestBaseClass):
             (0, None, False, base64.b64encode(BASE64_BYTES).decode("utf-8"))
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_bit_b64_encode(self, byte_offset, byte_size, invert_size, expected):
         bin = "base64_bytes"

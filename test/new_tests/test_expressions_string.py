@@ -9,7 +9,7 @@ from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail, TEST_NS, TEST_SET
 KEY = (TEST_NS, TEST_SET, 1)
 
 
@@ -87,7 +87,7 @@ class TestExpressions:
             ),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     def test_reading_str_bins(self, expr, expected_result):
         compiled_expr = expr.compile()
         ops = [
@@ -262,7 +262,7 @@ class TestExpressions:
         ]
     )
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     def test_expression_write(self, kwargs_policy: dict, expr, expr_kwargs: dict, expected_result):
         compiled_expr = expr(**expr_kwargs, **kwargs_policy).compile()
         ops = [

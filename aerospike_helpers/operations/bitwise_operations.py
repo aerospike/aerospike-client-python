@@ -698,7 +698,7 @@ def bit_b64_encode(
     """
     Create bit "b64 encode" operation that returns the base64 text of ``byte_size`` bytes starting from ``byte_offset``.
 
-    Requires server version 8.1.3 or later.
+    Requires server version 8.2.0 or later.
 
     Args:
         bin_name (str): The name of the bin containing the map.
