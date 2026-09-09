@@ -57,8 +57,7 @@ class MapPut(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
             key (TypeKey): Key value or value expression to put into map.
             value (TypeValue): Value or value expression to put into map.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -97,8 +96,7 @@ class MapPutItems(_BaseExpr):
                 objects.
             policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
             map (map): Map or map expression of items to put into target map.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -139,8 +137,7 @@ class MapIncrement(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`Map policies <aerospike_map_policies>`.
             key (TypeKey): Key value or value expression element to increment.
             value (TypeValue): Increment element by value expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -177,8 +174,7 @@ class MapClear(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -206,8 +202,7 @@ class MapRemoveByKey(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             key (TypeKey): Key value or value expression of key to element to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -238,8 +233,7 @@ class MapRemoveByKeyList(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             key (List[TypeKey]): List of key values or a list expression of keys to elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -282,8 +276,7 @@ class MapRemoveByKeyRange(_BaseExpr):
                 objects.
             begin (TypeValue): Begin value expression.
             end (TypeValue): End value expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -320,8 +313,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
                 objects.
             key (TypeKey): Key value or expression for key to start removing from.
             index (TypeIndex): Index integer or integer expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -365,8 +357,7 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
             key (TypeKey): Key value or expression for key to start removing from.
             index (TypeIndex): Index integer or integer expression.
             count (TypeCount): Integer expression for how many elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -402,8 +393,7 @@ class MapRemoveByValue(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             value (TypeValue): Value or value expression to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -435,8 +425,7 @@ class MapRemoveByValueList(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             values (TypeListValue): List of values or list expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -479,8 +468,7 @@ class MapRemoveByValueRange(_BaseExpr):
                 objects.
             begin (TypeValue): Begin value or value expression for range.
             end (TypeValue): End value or value expression for range.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -521,8 +509,7 @@ class MapRemoveByValueRelRankRangeToEnd(_BaseExpr):
                 objects.
             value (TypeValue): Value or value expression to start removing from.
             rank (TypeRank): Integer or integer expression of rank.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -566,8 +553,7 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
             value (TypeValue): Value or value expression to start removing from.
             rank (TypeRank): Integer or integer expression of rank.
             count (TypeCount): Integer count or integer expression for how many elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -601,8 +587,7 @@ class MapRemoveByIndex(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Index integer or integer expression of element to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -633,8 +618,7 @@ class MapRemoveByIndexRangeToEnd(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -674,8 +658,7 @@ class MapRemoveByIndexRange(_BaseExpr):
                 objects.
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
             count (TypeCount): Integer or integer expression, how many elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -708,8 +691,7 @@ class MapRemoveByRank(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Map expression.
 
@@ -740,8 +722,7 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -781,8 +762,7 @@ class MapRemoveByRankRange(_BaseExpr):
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
             count (TypeCount): Count integer or integer expression of elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Map expression.
@@ -819,8 +799,7 @@ class MapSize(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Integer expression.
 
@@ -853,8 +832,7 @@ class MapGetByKey(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             value_type (int): The value type that will be returned by this expression (ResultType).
             key (TypeKey): Key value or value expression of element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Expression.
 
@@ -901,8 +879,7 @@ class MapGetByKeyRange(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             begin (TypeKey): Key value or expression.
             end (TypeKey): Key value or expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -948,8 +925,7 @@ class MapGetByKeyList(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
             keys (TypeKeyList): List of key values or list expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -997,8 +973,7 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             key (TypeKey): Key value or value expression.
             index (TypeIndex): Index integer or integer value expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1049,8 +1024,7 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
             key (TypeKey): Key value or value expression.
             index (TypeIndex): Index integer or integer value expression.
             count (TypeCount): Integer count or integer value expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1102,8 +1076,7 @@ class MapGetByValue(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
             value (TypeValue): Value or value expression of element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1149,8 +1122,7 @@ class MapGetByValueRange(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             value_begin (TypeValue): Value or value expression of first element to get.
             value_end (TypeValue): Value or value expression of ending element.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1195,8 +1167,7 @@ class MapGetByValueList(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
             value (TypeListValue): List or list expression of values of elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1240,8 +1211,7 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             value (TypeValue): Value or value expression to get items relative to.
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1287,8 +1257,7 @@ class MapGetByValueRelRankRange(_BaseExpr):
             value (TypeValue): Value or value expression to get items relative to.
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             count (TypeCount): Integer value or integer value expression, how many elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1333,8 +1302,7 @@ class MapGetByIndex(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             value_type (int): The value type that will be returned by this expression (ResultType).
             index (TypeIndex): Integer or integer expression of index to get element at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Expression.
 
@@ -1374,8 +1342,7 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1419,8 +1386,7 @@ class MapGetByIndexRange(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
             count (TypeCount): Integer or integer expression for count of elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1463,8 +1429,7 @@ class MapGetByRank(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             value_type (int): The value type that will be returned by this expression (ResultType).
             rank (TypeRank): Rank integer or integer expression of element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
 
         :return: Expression.
 
@@ -1497,8 +1462,7 @@ class MapGetByRankRangeToEnd(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
             rank (TypeRank): Rank integer or integer expression of first element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1542,8 +1506,7 @@ class MapGetByRankRange(_BaseExpr):
                 This should be one of the :ref:`map_return_types` values.
             rank (TypeRank): Rank integer or integer expression of first element to get.
             count (TypeCount): Count integer or integer expression for how many elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin`.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
