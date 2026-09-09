@@ -374,7 +374,7 @@ class TestPathExprOperations:
                 ctx=[
                     cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
                 ],
-                flags=4
+                flags=4 | aerospike.EXP_PATH_SELECT_VALUE
             )
         ]
         with self.expected_context_for_pos_tests:
