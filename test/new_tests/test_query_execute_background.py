@@ -41,6 +41,11 @@ def validate_records(client, keys, validator):
 
 
 
+@pytest.mark.parametrize(
+    "insert_records",
+    [{"record_count": 500, "make_set_unique": False}],
+    indirect=True
+)
 class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
@@ -52,7 +57,7 @@ class TestQueryApply(object):
     def setup(self, connection_with_config_funcs):
         pass
 
-    def test_background_execute_return_val(self, clean_test_background):
+    def test_background_execute_return_val(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -62,8 +67,10 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
-    @pytest.mark.xfail(reason="This started failing when adding support for bin projection due to query.ttl not being applied")
-    def test_background_with_ttl(self, clean_test_background):
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_with_ttl(self, insert_records):
         """
         Ensure that ttl is set for the record found with background query
         """
@@ -87,7 +94,7 @@ class TestQueryApply(object):
         skew_tolerance_secs = 50
         assert meta["ttl"] in range(query.ttl - skew_tolerance_secs, query.ttl + skew_tolerance_secs)
 
-    def test_background_execute_no_predicate(self, clean_test_background):
+    def test_background_execute_no_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to all records
         """
@@ -103,7 +110,7 @@ class TestQueryApply(object):
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_exp_everywhere(self, clean_test_background):
+    def test_background_execute_exp_everywhere(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to records that match the exp
         """
@@ -137,7 +144,7 @@ class TestQueryApply(object):
                 assert bins.get(test_bin) is None
 
     @pytest.mark.xfail(reason="predicate and exp used at same time")
-    def test_background_execute_exp_and_predicate(self, clean_test_background):
+    def test_background_execute_exp_and_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() gets applied to records that match the predicate
         NOTE: the predicate overrides the exp
@@ -165,7 +172,7 @@ class TestQueryApply(object):
             else:
                 assert bins.get(test_bin) is None
 
-    def test_background_execute_with_ops_and_exp(self, clean_test_background):
+    def test_background_execute_with_ops_and_exp(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to records that match the expressions.
         """
@@ -198,7 +205,7 @@ class TestQueryApply(object):
             else:
                 assert bins.get(test_bin) is None
 
-    def test_background_execute_with_ops(self, clean_test_background):
+    def test_background_execute_with_ops(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to all records
         """
@@ -217,7 +224,7 @@ class TestQueryApply(object):
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
-    def test_background_execute_with_ops_and_preds(self, clean_test_background):
+    def test_background_execute_with_ops_and_preds(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to records that match the predicate
         """
@@ -247,12 +254,14 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.add_ops(ops)
-        query.execute_background()
-        time.sleep(3)
+        job_id = query.execute_background()
+
+        # This makes sure that the execute background query doesn't interfere with any following tests
+        wait_for_job_completion(self.as_connection, job_id, time_limit_secs=5)
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_sindex_predicate(self, clean_test_background):
+    def test_background_execute_sindex_predicate(self, insert_records):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -272,7 +281,7 @@ class TestQueryApply(object):
         _, _, num_5_record = self.as_connection.get((TEST_NS, TEST_SET, 5))
         assert num_5_record[test_bin] == "aerospike"
 
-    def test_background_execute_sindex_exp(self, clean_test_background):
+    def test_background_execute_sindex_exp(self, insert_records):
         """
         Ensure that Query.execute_background() only applies to records matched by
         the specified predicate
@@ -301,7 +310,7 @@ class TestQueryApply(object):
         #  Records with number < 10 should have had the udf applied
         validate_records(self.as_connection, keys[:10], lambda rec: rec[test_bin] == "aerospike")
 
-    def test_background_execute_with_policy(self, clean_test_background):
+    def test_background_execute_with_policy(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -311,7 +320,9 @@ class TestQueryApply(object):
         res = query.execute_background({"socket_timeout": 180000})
         assert isinstance(res, (int, long))
 
-    def test_background_execute_with_policy_kwarg(self, clean_test_background):
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_execute_with_policy_kwarg(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -321,7 +332,9 @@ class TestQueryApply(object):
         res = query.execute_background(policy={})
         assert isinstance(res, (int, long))
 
-    def test_background_execute_with_invalid_policy_type(self, clean_test_background):
+        wait_for_job_completion(self.as_connection, res, time_limit_secs=5)
+
+    def test_background_execute_with_invalid_policy_type(self, insert_records):
         """
         Ensure that Query.execute_background() returns an int like object
         """
@@ -373,3 +386,21 @@ class TestQueryApply(object):
         records = query.results()
         for _, _, bins in records:
             assert bins[BIN_NAME] == 3
+
+    def test_add_ops_then_apply(self, query):
+        query.add_ops(WRITE_OPS)
+        test_bin = "tz"
+        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+
+        with pytest.raises(exception.ParamError) as excinfo:
+            query.execute_background()
+        assert excinfo.value.msg == "Cannot combine query operations with aggregation"
+
+    def test_apply_then_add_ops(self, query):
+        test_bin = "tz"
+        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+        query.add_ops(WRITE_OPS)
+
+        with pytest.raises(exception.ParamError) as excinfo:
+            query.execute_background()
+        assert excinfo.value.msg == "Cannot combine query operations with aggregation"

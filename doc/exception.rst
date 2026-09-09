@@ -47,7 +47,11 @@ Base Class
 
     .. py:attribute:: msg
 
-        The human-readable error message.
+        The human-readable error message. When ``error_detail_verbosity`` is :py:data:`aerospike.ERROR_DETAIL_EXP_TRACE`
+        and the server returns expression trace diagnostics, a bounded, escaped
+        `; exp_trace={...}` suffix may be appended to this message.
+
+        The maximum string size for this field is 1023 bytes.
 
     .. py:attribute:: file
 

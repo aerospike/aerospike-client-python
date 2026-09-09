@@ -48,9 +48,11 @@ class BatchRecord:
 
         Attributes:
             key: The aerospike key to operate on.
-            record: The record corresponding to the requested key.
+            record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
             result: The status code of the command.
             in_doubt: Is it possible that the write command completed even though an error was generated. \
+            subcode: Server error detail subcode for this record, or zero when absent.
+            message: Server error detail message for this record, or :py:obj:`None` when absent.
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
@@ -58,11 +60,15 @@ class BatchRecord:
     record: tuple | None
     result: int
     in_doubt: bool
+    subcode: int
+    message: str | None
 
     def __init__(self, key: tuple) -> None:
         self.key = key
         self.record = None
         self.result = 0
+        self.message = None
+        self.subcode = 0
         self.in_doubt = False
 
 

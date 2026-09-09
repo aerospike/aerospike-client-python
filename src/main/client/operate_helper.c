@@ -39,7 +39,8 @@ const char *op_code_to_names[] = {
 #define X(op_name) [OP_##op_name] = #op_name
     X(LIST_APPEND),
     LIST_OP_NAMES_EXCEPT_LIST_APPEND,
-    STRING_OP_NAMES X(BIT_RESIZE),
+    X(STRING_STRLEN),
+    STRING_OP_NAMES_EXCEPT_STRLEN X(BIT_RESIZE),
     BIT_OP_NAMES_EXCEPT_RESIZE,
     X(MAP_REMOVE_BY_KEY_INDEX_RANGE_REL),
     X(MAP_REMOVE_BY_VALUE_RANK_RANGE_REL),
@@ -191,14 +192,17 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     }
 
-    int64_t order_type_int;
+    as_list_order list_order = AS_LIST_UNORDERED;
+    int tmp_value;
     switch (operation_code) {
     case OP_LIST_SET_ORDER:
     case OP_LIST_CREATE:
-        if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
-            AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(err, op_dict, AS_PY_LIST_ORDER, &tmp_value,
+                                  AS_LIST_UNORDERED, AS_LIST_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto exit;
         }
+        list_order = (as_list_order)tmp_value;
     }
 
     bool ctx_in_use = false;
@@ -288,6 +292,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     switch (operation_code) {
     case OP_STRING_SUBSTR:
     case OP_STRING_SUBSTR_RANGE:
+    // OP_STRING_SNIP_START isn't used here because we don't need to worry about heap allocating
+    // memory for operations, unlike with expressions
     case OP_STRING_SNIP:
         if (get_int64_t(err, STRING_OP_START_KEY, op_dict, &start) !=
             AEROSPIKE_OK) {
@@ -308,8 +314,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     int64_t end = 0;
     switch (operation_code) {
-    case OP_STRING_SUBSTR_RANGE:
-    case OP_STRING_SNIP: {
+    case OP_STRING_SUBSTR_RANGE: {
         as_status status = get_int64_t(err, "end", op_dict, &end);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
@@ -330,11 +335,11 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     as_string_numeric_type numeric_type = AS_STRING_NUMERIC_ANY;
     as_string_regex_flags regex_flags = AS_STRING_REGEX_FLAGS_NONE;
-    int64_t tmp_value;
     switch (operation_code) {
     case OP_STRING_IS_NUMERIC: {
-        if (get_int64_t(err, "numeric_type", op_dict, &tmp_value) !=
-            AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(
+                err, op_dict, "numeric_type", &tmp_value, AS_STRING_NUMERIC_ANY,
+                AS_STRING_NUMERIC_FLOAT, false, NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         numeric_type = (as_string_numeric_type)tmp_value;
@@ -342,8 +347,10 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     }
     case OP_STRING_REGEX_COMPARE:
     case OP_STRING_REGEX_REPLACE: {
-        if (get_int64_t(err, "regex_flags", op_dict, &tmp_value) !=
-            AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(err, op_dict, "regex_flags", &tmp_value,
+                                  AS_STRING_REGEX_FLAGS_NONE,
+                                  AS_STRING_REGEX_FLAGS_GLOBAL * 2 - 1, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
         regex_flags = (as_string_regex_flags)tmp_value;
@@ -369,6 +376,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_STRING_REGEX_REPLACE:
     case OP_STRING_APPEND:
     case OP_STRING_PREPEND:
+    case OP_LIST_JOIN:
         switch (operation_code) {
         case OP_STRING_FIND:
         case OP_STRING_CONTAINS:
@@ -383,6 +391,9 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             str_attr_key = "suffix";
             break;
         case OP_STRING_SPLIT_SEPARATOR:
+        // OP_LIST_JOIN_SEPARATOR isn't used here because we don't need to worry about heap allocating
+        // memory for operations, unlike with expressions
+        case OP_LIST_JOIN:
             str_attr_key = "separator";
             break;
         case OP_STRING_REGEX_COMPARE:
@@ -401,8 +412,10 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             break;
         }
 
+        bool is_str_attr_value1_optional = operation_code == OP_LIST_JOIN;
         if (get_str(err, str_attr_key, op_dict, unicodeStrVector,
-                    &str_attr_value1, false) != AEROSPIKE_OK) {
+                    &str_attr_value1,
+                    is_str_attr_value1_optional) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -413,7 +426,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_STRING_REPLACE_ALL:
     case OP_STRING_REGEX_REPLACE:
         if (get_str(err, "replacement", op_dict, unicodeStrVector,
-                    &str_attr_value2, true) != AEROSPIKE_OK) {
+                    &str_attr_value2, false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
     }
@@ -557,18 +570,19 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             ops, bin, ctx_ref, val1, val2, return_type);
         break;
     case OP_LIST_SET_ORDER:
-        success = as_operations_list_set_order(ops, bin, ctx_ref,
-                                               (as_list_order)order_type_int);
+        success = as_operations_list_set_order(ops, bin, ctx_ref, list_order);
         break;
     case OP_LIST_SORT: {
-        int64_t sort_flags;
+        as_list_sort_flags sort_flags;
 
-        if (get_int64_t(err, AS_PY_LIST_SORT_FLAGS, op_dict, &sort_flags) !=
-            AEROSPIKE_OK) {
+        if (get_enum_from_py_dict(err, op_dict, AS_PY_LIST_SORT_FLAGS,
+                                  &tmp_value, AS_LIST_SORT_DEFAULT,
+                                  AS_LIST_SORT_DROP_DUPLICATES, false,
+                                  NULL) != AEROSPIKE_OK) {
             goto CLEANUP_VAL2_ON_ERROR;
         }
-        success = as_operations_list_sort(ops, bin, ctx_ref,
-                                          (as_list_sort_flags)sort_flags);
+        sort_flags = (as_list_sort_flags)tmp_value;
+        success = as_operations_list_sort(ops, bin, ctx_ref, sort_flags);
         break;
     }
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
@@ -593,8 +607,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
             goto CLEANUP_VAL2_ON_ERROR;
         }
 
-        success = as_operations_list_create_all(ops, bin, ctx_ref,
-                                                (as_list_order)order_type_int,
+        success = as_operations_list_create_all(ops, bin, ctx_ref, list_order,
                                                 pad, persist_index);
         break;
     }
@@ -626,6 +639,15 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         else {
             success = as_operations_list_remove_by_value_rel_rank_range_to_end(
                 ops, bin, ctx_ref, val1, rank, return_type);
+        }
+        break;
+    case OP_LIST_JOIN:
+        if (str_attr_value1) {
+            success = as_operations_list_join_separator(ops, bin, ctx_ref,
+                                                        str_attr_value1);
+        }
+        else {
+            success = as_operations_list_join(ops, bin, ctx_ref);
         }
         break;
     case OP_STRING_STRLEN:
@@ -705,10 +727,25 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         success = as_operations_string_concat_list(
             ops, bin, ctx_ref, &str_policy, (as_list *)val1);
         break;
-    case OP_STRING_SNIP:
-        success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,
-                                            start, end);
+    case OP_STRING_SNIP: {
+        int64_t end = 0;
+        bool end_found = false;
+        as_status status =
+            get_optional_int64_t(err, "end", op_dict, &end, &end_found);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_VAL2_ON_ERROR;
+        }
+
+        if (end_found) {
+            success = as_operations_string_snip(ops, bin, ctx_ref, &str_policy,
+                                                start, end);
+        }
+        else {
+            success = as_operations_string_snip_start(ops, bin, ctx_ref,
+                                                      &str_policy, start);
+        }
         break;
+    }
     case OP_STRING_REPLACE:
         success = as_operations_string_replace(
             ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2);
@@ -755,7 +792,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         break;
     case OP_STRING_REGEX_REPLACE:
         success = as_operations_string_regex_replace(
-            ops, bin, ctx_ref, NULL, str_attr_value1, str_attr_value2,
+            ops, bin, ctx_ref, &str_policy, str_attr_value1, str_attr_value2,
             regex_flags);
         break;
     case OP_STRING_APPEND:
@@ -766,7 +803,9 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         success = as_operations_string_prepend(ops, bin, ctx_ref, &str_policy,
                                                str_attr_value1);
         break;
-
+    case OP_STRING_TO_STRING:
+        success = as_operations_to_string(ops, bin);
+        break;
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         if (range_specified) {
             success = as_operations_map_remove_by_value_rel_rank_range(

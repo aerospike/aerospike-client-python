@@ -408,6 +408,10 @@ Assume this boilerplate code is run before all examples below:
 
         This function can also be used to apply a record UDF.
 
+        This method cannot be used together with :meth:`~aerospike.Query.add_ops` on the same :class:`~aerospike.Query`
+        object. Executing the query as either a foreground or background query will raise a
+        :exc:`~aerospike.exception.ParamError` if both have been set.
+
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/develop/client/python/data-types/>`_.
@@ -495,6 +499,10 @@ Assume this boilerplate code is run before all examples below:
 
         If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
         during the query.
+
+        This method cannot be used together with :meth:`~aerospike.Query.apply` on the same :class:`~aerospike.Query`
+        object. Executing the query as either a foreground or background query will raise a
+        :exc:`~aerospike.exception.ParamError` if both have been set.
 
         :param ops: `list` A list of operations generated from :ref:`aerospike_operation_helpers.operations`.
 

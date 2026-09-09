@@ -6,23 +6,28 @@ from aerospike_helpers.operations import string_operations as str_ops, operation
 from aerospike_helpers.string_helpers import NumericType, StringPolicy, RegexFlags, WriteFlags
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from contextlib import nullcontext
 
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
-from .test_base_class import TestBaseClass
+from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET, TestBaseClass
 from .string_helpers import *
+KEY = (TEST_NS, TEST_SET, 1)
 
 
+@expect_server_version_earlier_than_8_1_3_to_fail
 class TestStringOperations:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
+        try:
+            self.as_connection.remove(KEY)
+        except e.RecordNotFound:
+            pass
+
         self.as_connection.put(
             key=KEY,
-            bins=BINS
+            bins=BINS,
         )
 
         yield
-
-        self.as_connection.remove(KEY)
 
     root_level_and_nested_str = pytest.mark.parametrize(
         "bin_name, kwargs_with_ctx",
@@ -42,80 +47,38 @@ class TestStringOperations:
     )
 
     @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_strlen(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.strlen(bin_name=bin_name, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-            assert bins[bin_name] == len(EXAMPLE_STR)
-
     @pytest.mark.parametrize(
-        "op",
+        "op_method, kwargs, expected_result",
         [
-            str_ops.substr,
-            str_ops.substr_range
+            (str_ops.strlen, {}, len(EXAMPLE_STR)),
+            (str_ops.substr, {"start": START_IDX}, EXAMPLE_STR[START_IDX:]),
+            (str_ops.substr_range, {"start": START_IDX, "end": START_IDX + 2}, EXAMPLE_STR[START_IDX:START_IDX + 2]),
+            (str_ops.char_at, {"index": START_IDX}, EXAMPLE_STR[START_IDX]),
+            (str_ops.char_at, {"index": -1}, EXAMPLE_STR[-1]),
+            (str_ops.find, {"needle": NEEDLE}, 0),
+            (str_ops.find, {"needle": NEEDLE, "occurrence": 1}, 0),
+            (str_ops.find, {"needle": NEEDLE, "occurrence": 2}, 4),
+            (str_ops.contains, {"needle": NEEDLE}, True),
+            (str_ops.starts_with, {"prefix": NEEDLE}, True),
+            (str_ops.starts_with, {"prefix": NOT_IN_EXAMPLE_STR}, False),
+            (str_ops.ends_with, {"suffix": NEEDLE}, True),
+            (str_ops.ends_with, {"suffix": NOT_IN_EXAMPLE_STR}, False),
+            (str_ops.byte_length, {}, len(EXAMPLE_STR)),
+            (str_ops.is_numeric, {}, False),
+            (str_ops.is_upper, {}, False),
+            (str_ops.is_lower, {}, True),
+            (str_ops.to_blob, {}, bytes(EXAMPLE_STR, encoding="utf-8")),
+            (str_ops.split, {}, list(EXAMPLE_STR)),
         ]
     )
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_substr(self, bin_name: str, kwargs_with_ctx: dict, op: dict):
-        kwargs = kwargs_with_ctx.copy()
-        if op == str_ops.substr_range:
-            kwargs = kwargs_with_ctx | {"end": START_IDX + 2}
-
+    def test_string_read_op_on_str_value(self, op_method, bin_name: str, kwargs_with_ctx: dict, kwargs: dict, expected_result):
         ops = [
-            op(bin_name=bin_name, start=START_IDX, **kwargs)
+            op_method(bin_name=bin_name, **kwargs_with_ctx, **kwargs)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[bin_name] == expected_result
 
-            if "end" not in kwargs:
-                assert bins[bin_name] == EXAMPLE_STR[START_IDX:]
-            else:
-                end = kwargs["end"]
-                assert bins[bin_name] == EXAMPLE_STR[START_IDX:end]
-
-    @pytest.mark.parametrize(
-        "index",
-        [
-            START_IDX,
-            -1
-        ]
-    )
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_char_at(self, index: int, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.char_at(bin_name=bin_name, index=index, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR[index]
-
-    @pytest.mark.parametrize(
-        "occurrence_kwargs, expected_idx",
-        [
-            ({}, 0),
-            ({"occurrence": 1}, 0),
-            ({"occurrence": 2}, 4)
-        ]
-    )
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_find(self, occurrence_kwargs: dict, expected_idx: int, bin_name: str, kwargs_with_ctx: dict):
-        kwargs_with_ctx = kwargs_with_ctx | occurrence_kwargs
-        ops = [
-            str_ops.find(bin_name=bin_name, needle=NEEDLE, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == expected_idx
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_find_not_found(self):
         ops = [
             str_ops.find(bin_name=STR_BIN_NAME, needle=NOT_IN_EXAMPLE_STR)
@@ -125,18 +88,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] == -1
 
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_contains(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.contains(bin_name=bin_name, needle=NEEDLE, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] is True
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_contains_not_found(self):
         ops = [
             str_ops.contains(bin_name=STR_BIN_NAME, needle=NOT_IN_EXAMPLE_STR)
@@ -146,18 +97,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] is False
 
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_starts_with(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.starts_with(bin_name=bin_name, prefix=NEEDLE, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] is True
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_starts_with_returns_false(self):
         ops = [
             str_ops.starts_with(bin_name=STR_BIN_NAME, prefix=NOT_IN_EXAMPLE_STR)
@@ -167,28 +106,6 @@ class TestStringOperations:
 
             assert bins[STR_BIN_NAME] is False
 
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_ends_with(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.ends_with(bin_name=bin_name, suffix=NEEDLE, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] is True
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_ends_with_returns_false(self):
-        ops = [
-            str_ops.ends_with(bin_name=STR_BIN_NAME, suffix=NOT_IN_EXAMPLE_STR)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[STR_BIN_NAME] is False
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_integer(self):
         ops = [
             str_ops.to_integer(bin_name=STR_WITH_INT_BIN_NAME)
@@ -205,7 +122,6 @@ class TestStringOperations:
             str_ops.to_double
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_numeric_fail(self, op):
         ops = [
             op(bin_name=STR_BIN_NAME)
@@ -214,7 +130,6 @@ class TestStringOperations:
         with pytest.raises(e.ServerError):
             self.as_connection.operate(KEY, ops)
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_to_double(self):
         ops = [
             str_ops.to_double(bin_name=STR_WITH_DOUBLE_BIN_NAME)
@@ -224,36 +139,22 @@ class TestStringOperations:
 
             assert bins[STR_WITH_DOUBLE_BIN_NAME] == float(STRING_WITH_DOUBLE)
 
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_byte_length(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.byte_length(bin_name=bin_name, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == len(EXAMPLE_STR)
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_byte_length_for_multibyte_codepoint(self):
         ops = [
-            str_ops.byte_length(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME)
+            str_ops.byte_length(bin_name=NFD_CODEPOINT_BIN_NAME)
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == len(BINS[MULTIBYTE_CODEPOINT_BIN_NAME].encode('utf-8'))
+            assert bins[NFD_CODEPOINT_BIN_NAME] == len(BINS[NFD_CODEPOINT_BIN_NAME].encode('utf-8'))
 
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
-            (STR_BIN_NAME, False),
             (STR_WITH_INT_BIN_NAME, True),
             (STR_WITH_DOUBLE_BIN_NAME, True),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_numeric(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_numeric(bin_name=bin_name)
@@ -274,7 +175,6 @@ class TestStringOperations:
             (NumericType.FLOAT, STR_WITH_INT_BIN_NAME, False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_numeric_type(self, numeric_type: NumericType, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_numeric(bin_name=bin_name, numeric_type=numeric_type)
@@ -287,11 +187,9 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
-            (STR_BIN_NAME, False),
             (UPPERCASE_STR_BIN_NAME, True)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_upper(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_upper(bin_name=bin_name)
@@ -304,11 +202,9 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
-            (STR_BIN_NAME, True),
             (UPPERCASE_STR_BIN_NAME, False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_is_lower(self, bin_name: str, expected_result: bool):
         ops = [
             str_ops.is_lower(bin_name=bin_name)
@@ -318,28 +214,6 @@ class TestStringOperations:
 
             assert bins[bin_name] is expected_result
 
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_to_blob(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.to_blob(bin_name=bin_name, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == bytes(EXAMPLE_STR, encoding="utf-8")
-
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_split(self, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.split(bin_name=bin_name, **kwargs_with_ctx)
-        ]
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == list(EXAMPLE_STR)
-
     @pytest.mark.parametrize(
         "separator",
         [
@@ -347,7 +221,6 @@ class TestStringOperations:
             ","
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_split_with_separator(self, separator: str):
         ops = [
             str_ops.split_separator(bin_name=STR_WITH_DOUBLE_BIN_NAME, separator=separator)
@@ -361,7 +234,6 @@ class TestStringOperations:
             else:
                 assert bins[STR_WITH_DOUBLE_BIN_NAME] == [STRING_WITH_DOUBLE]
 
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_base64_decode(self):
         ops = [
             str_ops.base64_decode(bin_name=BASE64_ENCODED_BIN_NAME)
@@ -375,20 +247,38 @@ class TestStringOperations:
     @pytest.mark.parametrize(
         "pattern, expected_result",
         [
-            (MULTIBYTE_CODEPOINT, True),
+            (NFD_CODEPOINT, True),
             ("π", False)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_compare(self, pattern: str, expected_result: bool):
         ops = [
-            str_ops.regex_compare(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, pattern=pattern)
+            str_ops.regex_compare(bin_name=NFD_CODEPOINT_BIN_NAME, pattern=pattern)
         ]
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] is expected_result
+            assert bins[NFD_CODEPOINT_BIN_NAME] is expected_result
+
+    @pytest.mark.parametrize(
+        "bin_name, expected_result",
+        [
+            (INT_BIN_NAME, str(BINS[INT_BIN_NAME])),
+            (DOUBLE_BIN_NAME, str(BINS[INT_BIN_NAME])),
+            (STR_BIN_NAME, BINS[STR_BIN_NAME]),
+            (BLOB_BIN_NAME, bytes.decode(BINS[BLOB_BIN_NAME]))
+        ]
+    )
+    def test_to_string(self, bin_name: str, expected_result: str):
+        ops = [
+            str_ops.to_string(bin_name=bin_name)
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            assert bins[bin_name] == expected_result
 
     # Write operations
 
@@ -400,18 +290,35 @@ class TestStringOperations:
         ops.append(op)
 
     @pytest.mark.parametrize(
-        "index, expected_value",
+        "op, kwargs, expected_value",
         [
-            (1, EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]),
-            (-1, EXAMPLE_STR[:-1] + NEEDLE + EXAMPLE_STR[-1:])
+            (str_ops.insert, {"index": 1, "value": NEEDLE}, EXAMPLE_STR[:1] + NEEDLE + EXAMPLE_STR[1:]),
+            (str_ops.insert, {"index": -1, "value": NEEDLE}, EXAMPLE_STR[:-1] + NEEDLE + EXAMPLE_STR[-1:]),
+            (str_ops.overwrite, {"index": 1, "value": SINGLE_CHAR}, EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]),
+            (str_ops.overwrite, {"index": 0, "value": EXAMPLE_STR + "a"}, EXAMPLE_STR + "a"),
+            (str_ops.append, {"value": NEEDLE}, EXAMPLE_STR + NEEDLE),
+            (str_ops.prepend, {"value": NEEDLE}, NEEDLE + EXAMPLE_STR),
+            (str_ops.concat, {"value_list": [NEEDLE]}, EXAMPLE_STR + NEEDLE),
+            (str_ops.concat, {"value_list": [NEEDLE, NEEDLE]}, EXAMPLE_STR + NEEDLE * 2),
+            (str_ops.snip, {"start": START_IDX, "end": len(EXAMPLE_STR) - 1}, EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]),
+            (str_ops.replace, {"needle": NEEDLE, "replacement": SINGLE_CHAR}, EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)),
+            (str_ops.replace_all, {"needle": NEEDLE, "replacement": SINGLE_CHAR}, EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)),
+            (str_ops.upper, {}, EXAMPLE_STR.upper()),
+            (str_ops.pad_start, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR) + 2}, 2 * PAD_STRING + EXAMPLE_STR),
+            (str_ops.pad_start, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR)}, EXAMPLE_STR),
+            (str_ops.pad_start, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR) - 1}, EXAMPLE_STR),
+            (str_ops.pad_end, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR) + 2}, EXAMPLE_STR + 2 * PAD_STRING),
+            (str_ops.pad_end, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR)}, EXAMPLE_STR),
+            (str_ops.pad_end, {"pad_string": PAD_STRING, "target_length": len(EXAMPLE_STR) - 1}, EXAMPLE_STR),
+            (str_ops.repeat, {"count": 1}, EXAMPLE_STR),
+            (str_ops.repeat, {"count": 2}, EXAMPLE_STR * 2)
         ]
     )
     @root_level_and_nested_str
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_insert(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
+    def test_string_write_op_on_str_value(self, op, expected_value: str, kwargs: dict, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         ops = [
-            str_ops.insert(bin_name=bin_name, index=index, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
+            op(bin_name=bin_name, **kwargs, **kwargs_policy, **kwargs_with_ctx)
         ]
         self.add_read_op(ops, bin_name)
 
@@ -419,89 +326,6 @@ class TestStringOperations:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[bin_name] == expected_value
-
-    @pytest.mark.parametrize(
-        "index, expected_value",
-        [
-            (1, EXAMPLE_STR[:1] + SINGLE_CHAR + EXAMPLE_STR[2:]),
-        ]
-    )
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_overwrite_single_char(self, index: int, expected_value: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.overwrite(bin_name=bin_name, index=index, value=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == expected_value
-
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_overwrite_past_string_length(self):
-        NEW_STR = EXAMPLE_STR + "a"
-        ops = [
-            str_ops.overwrite(bin_name=STR_BIN_NAME, index=0, value=NEW_STR)
-        ]
-        self.add_read_op(ops, STR_BIN_NAME)
-
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[STR_BIN_NAME] == NEW_STR
-
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_append(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.append(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR + NEEDLE
-
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_prepend(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.prepend(bin_name=bin_name, value=NEEDLE, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == NEEDLE + EXAMPLE_STR
-
-    @pytest.mark.parametrize(
-        "value_list",
-        [
-            [NEEDLE],
-            [NEEDLE, NEEDLE]
-        ]
-    )
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_concat(self, value_list: list[str], kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.concat(bin_name=bin_name, value_list=value_list, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR + "".join(value_list)
 
     def test_concat_with_non_str_in_list(self):
         ops = [
@@ -512,78 +336,13 @@ class TestStringOperations:
             self.as_connection.operate(KEY, ops)
 
     @pytest.mark.parametrize(
-        "end_kwargs",
-        [
-            {"end": len(EXAMPLE_STR) - 1}
-        ]
-    )
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_snip(self, end_kwargs, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-
-        START_IDX = 1
-        ops = [
-            str_ops.snip(bin_name=bin_name, start=START_IDX, **end_kwargs, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
-
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.replace(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)
-
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_replace_all(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.replace_all(bin_name=bin_name, needle=NEEDLE, replacement=SINGLE_CHAR, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)
-
-    @root_level_and_nested_str
-    @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_upper(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.upper(bin_name=bin_name, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR.upper()
-
-    @pytest.mark.parametrize(
         "bin_name, expected_result",
         [
             (UPPERCASE_STR_BIN_NAME, UPPERCASE_STR.lower()),
-            (MULTIBYTE_CODEPOINT_BIN_NAME, MULTIBYTE_CODEPOINT)
+            (NFD_CODEPOINT_BIN_NAME, NFD_CODEPOINT)
         ]
     )
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_lower(self, kwargs_policy: dict, bin_name: str, expected_result: str):
         ops = [
             str_ops.lower(bin_name=bin_name, **kwargs_policy)
@@ -596,33 +355,30 @@ class TestStringOperations:
             assert bins[bin_name] == expected_result
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_casefold(self, kwargs_policy: dict):
         ops = [
-            str_ops.casefold(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.casefold(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == MULTIBYTE_CODEPOINT.casefold()
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFD_CODEPOINT.casefold()
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_normalize_nfc(self, kwargs_policy):
         ops = [
-            str_ops.normalize_nfc(bin_name=MULTIBYTE_CODEPOINT_BIN_NAME, **kwargs_policy)
+            str_ops.normalize_nfc(bin_name=NFD_CODEPOINT_BIN_NAME, **kwargs_policy)
         ]
-        self.add_read_op(ops, MULTIBYTE_CODEPOINT_BIN_NAME)
+        self.add_read_op(ops, NFD_CODEPOINT_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[MULTIBYTE_CODEPOINT_BIN_NAME] == NORMALIZED_CODEPOINT
+            assert bins[NFD_CODEPOINT_BIN_NAME] == NFC_CODEPOINT
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim_start(self, kwargs_policy):
         ops = [
             str_ops.trim_start(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -635,7 +391,6 @@ class TestStringOperations:
             assert bins[SURROUNDING_WHITESPACE_BIN_NAME] == EXAMPLE_STR_WITH_SURROUNDING_WHITESPACE[1:]
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim_end(self, kwargs_policy):
         ops = [
             str_ops.trim_end(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -649,7 +404,6 @@ class TestStringOperations:
 
 
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_trim(self, kwargs_policy):
         ops = [
             str_ops.trim(bin_name=SURROUNDING_WHITESPACE_BIN_NAME, **kwargs_policy)
@@ -663,72 +417,6 @@ class TestStringOperations:
 
     @kwargs_policy
     @root_level_and_nested_str
-    @pytest.mark.parametrize(
-        "target_length, expected_results",
-        [
-            (len(EXAMPLE_STR) + 2, 2 * PAD_STRING + EXAMPLE_STR),
-            (len(EXAMPLE_STR), EXAMPLE_STR),
-            (len(EXAMPLE_STR) - 1, EXAMPLE_STR)
-        ]
-    )
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_pad_start(self, target_length: int, expected_results: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.pad_start(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == expected_results
-
-    @kwargs_policy
-    @root_level_and_nested_str
-    @pytest.mark.parametrize(
-        "target_length, expected_results",
-        [
-            (len(EXAMPLE_STR) + 2, EXAMPLE_STR + 2 * PAD_STRING),
-            (len(EXAMPLE_STR), EXAMPLE_STR),
-            (len(EXAMPLE_STR) - 1, EXAMPLE_STR)
-        ]
-    )
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_pad_end(self, target_length: int, expected_results: str, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.pad_end(bin_name=bin_name, pad_string=PAD_STRING, target_length=target_length, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == expected_results
-
-    @kwargs_policy
-    @root_level_and_nested_str
-    @pytest.mark.parametrize(
-        "count",
-        [
-            1,
-            2,
-        ]
-    )
-    @expect_server_version_earlier_than_8_1_3_to_fail
-    def test_repeat(self, count: int, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
-        ops = [
-            str_ops.repeat(bin_name=bin_name, count=count, **kwargs_policy, **kwargs_with_ctx)
-        ]
-        self.add_read_op(ops, bin_name)
-
-        with self.expected_context_for_pos_tests:
-            _, _, bins = self.as_connection.operate(KEY, ops)
-
-            assert bins[bin_name] == EXAMPLE_STR * count
-
-    @kwargs_policy
-    @root_level_and_nested_str
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_replace(self, kwargs_policy: dict, bin_name: str, kwargs_with_ctx: dict):
         PATTERN = "asdf"
         ops = [
@@ -752,7 +440,6 @@ class TestStringOperations:
             (STR_BIN_NAME, RegexFlags.GLOBAL, "asdf", NEW_STR * 2)
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
     def test_regex_flags(self, bin_name: str, regex_flags: RegexFlags, pattern: str, expected_results: str):
         ops = [
             str_ops.regex_replace(bin_name=bin_name, pattern=pattern, replacement=NEW_STR, regex_flags=regex_flags)
@@ -764,14 +451,187 @@ class TestStringOperations:
 
             assert bins[bin_name] == expected_results
 
-    def test_string_policy_no_fail(self):
+    def test_string_policy_create_only(self):
+        policy = StringPolicy(write_flags=WriteFlags.CREATE_ONLY)
+        ops = [
+            str_ops.insert(bin_name=STR_BIN_NAME, index=0, value="a", policy=policy)
+        ]
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            expected_exc = e.InvalidRequest
+        else:
+            expected_exc = e.BinExistsError
+
+        with pytest.raises(expected_exc):
+            self.as_connection.operate(KEY, ops)
+
+    def test_string_policy_update_only(self):
+        policy = StringPolicy(write_flags=WriteFlags.UPDATE_ONLY)
+        ops = [
+            str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
+        ]
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            expected_context = pytest.raises(e.InvalidRequest)
+        else:
+            expected_context = nullcontext()
+
+        with expected_context:
+            self.as_connection.operate(KEY, ops)
+
+            _, _, bins = self.as_connection.get(KEY)
+            assert "aaaa" not in bins
+
+    @pytest.mark.parametrize(
+        "op, kwargs",
+        [
+            (str_ops.repeat, {"bin_name": STR_BIN_NAME, "count": -1}),
+            (str_ops.regex_replace, {"bin_name": STR_BIN_NAME, "pattern": "(", "replacement": "X"})
+        ]
+    )
+    def test_string_policy_no_fail(self, op, kwargs: dict):
         policy = StringPolicy(write_flags=WriteFlags.NO_FAIL)
         ops = [
-            str_ops.insert(bin_name=NON_STR_BIN_NAME, index=0, value="a", policy=policy)
+            op(**kwargs, policy=policy)
         ]
-        self.add_read_op(ops, NON_STR_BIN_NAME)
+        self.add_read_op(ops, STR_BIN_NAME)
 
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
-            assert bins[NON_STR_BIN_NAME] == BINS[NON_STR_BIN_NAME]
+            assert bins[STR_BIN_NAME] == BINS[STR_BIN_NAME]
+
+    @pytest.mark.parametrize(
+        "op, kwargs, creates_bin",
+        [
+            # Positive
+            (str_ops.append, {"value": NEEDLE}, True),
+            (str_ops.prepend, {"value": NEEDLE}, True),
+            (str_ops.concat, {"value_list": [NEEDLE]}, True),
+            (str_ops.overwrite, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.insert, {"index": 0, "value": NEEDLE}, True),
+            (str_ops.pad_start, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.pad_end, {"target_length": 4, "pad_string": NEEDLE}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            (str_ops.repeat, {"count": 2}, True),
+            # Negative
+            (str_ops.snip, {"start": 0, "end": 1}, False),
+            (str_ops.replace, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.replace_all, {"needle": "a", "replacement": "b"}, False),
+            (str_ops.upper, {}, False),
+            (str_ops.lower, {}, False),
+            (str_ops.casefold, {}, False),
+            (str_ops.normalize_nfc, {}, False),
+            (str_ops.trim_start, {}, False),
+            (str_ops.trim_end, {}, False),
+            (str_ops.trim, {}, False),
+            (str_ops.regex_replace, {"pattern": "a", "replacement": "b"}, False),
+            (str_ops.to_string, {}, False),
+        ]
+    )
+    def test_string_ops_on_nonexistent_bin(self, op, kwargs: dict, creates_bin: bool):
+        ops = [
+            op(bin_name=NON_EXISTENT_BIN_NAME, **kwargs),
+            operations.read(NON_EXISTENT_BIN_NAME)
+        ]
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+
+            if creates_bin is False:
+                assert bins[NON_EXISTENT_BIN_NAME] is None
+                return
+
+            if op == str_ops.repeat:
+                assert bins[NON_EXISTENT_BIN_NAME] == ""
+            else:
+                assert bins[NON_EXISTENT_BIN_NAME] == NEEDLE
+
+    NFC_CODEPOINT2 = "caf\u00E9"
+    NFD_CODEPOINT2 = "cafe\u0301"
+
+    nfc_param = pytest.mark.parametrize(
+        "bin_substr, str_param",
+        [
+            (NFC_CODEPOINT2, NFD_CODEPOINT2),
+            (NFD_CODEPOINT2, NFC_CODEPOINT2)
+        ]
+    )
+
+    @nfc_param
+    @pytest.mark.parametrize(
+        "op, expected_result",
+        [
+            (str_ops.find, 0),
+            (str_ops.contains, True)
+        ]
+    )
+    @pytest.mark.xfail(reason="This currently fails on server 8.1.3 RC3. This should pass on RC4, and we can tell if the result is XPASS")
+    def test_read_across_normalization_forms(self, op, expected_result, bin_substr, str_param):
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: bin_substr})
+
+        ops = [
+            op(bin_name=BIN_NAME, needle=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == expected_result
+
+    @nfc_param
+    def test_replace_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.replace(bin_name=BIN_NAME, needle=str_param, replacement="tea"),
+            operations.read(BIN_NAME)
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] == "tea au lait"
+
+    @nfc_param
+    def test_starts_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = bin_substr + " au lait"
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.starts_with(bin_name=BIN_NAME, prefix=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
+
+    @nfc_param
+    def test_ends_with_across_normalization_forms(self, bin_substr, str_param):
+        STR_TO_REPL = "au lait " + bin_substr
+        BIN_NAME = "str"
+        self.as_connection.put(KEY, bins={BIN_NAME: STR_TO_REPL})
+
+        ops = [
+            str_ops.ends_with(bin_name=BIN_NAME, suffix=str_param),
+        ]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(KEY, ops)
+            assert bins[BIN_NAME] is True
+
+    RESULT_SIZE_CAP = 8 * 1024 * 1024
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            str_ops.repeat(STR_BIN_NAME2, count=RESULT_SIZE_CAP),
+            str_ops.pad_start(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.pad_end(STR_BIN_NAME2, target_length=RESULT_SIZE_CAP // 4 + 1, pad_string="*"),
+            str_ops.concat(STR_BIN_NAME2, value_list=["x" * RESULT_SIZE_CAP]),
+        ]
+    )
+    def test_result_size_cap(self, op):
+        ops = [
+            op
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(KEY, ops)
