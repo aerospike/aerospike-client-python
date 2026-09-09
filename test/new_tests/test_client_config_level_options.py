@@ -246,8 +246,8 @@ POLICY_WITH_FILTER_RETURNING_FALSE = {"expressions": exp.Eq(exp.IntBin(BIN_NAME)
 
 
 def skip_if_exp_trace_unsupported():
-    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-        pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+        pytest.skip("Expression tracing only supported in server 8.2.0 or higher")
 
 
 def assert_batch_record_filtered_out_with_exp_trace(batch_records):

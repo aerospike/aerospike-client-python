@@ -43,7 +43,7 @@ from aerospike_helpers.expressions import (
     ResultType,
     Val
 )
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail
 
 import aerospike
 from . import as_errors
@@ -958,7 +958,7 @@ class TestExpressions(TestBaseClass):
             ("list_of_one_str", "b"),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_list_join(self, bin_name, expected):
         expr = ListJoin(None, None, bin_name).compile()
