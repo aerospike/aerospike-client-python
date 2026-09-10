@@ -226,14 +226,6 @@ PyDoc_STRVAR(index_blob_create_doc,
 \n\
 Create a blob index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(
-    index_cdt_create_doc,
-    "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
-\n\
-Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
-numeric, string or GeoJSON values (as defined by index_datatype) \
-on records of the specified ns, set whose bin is a list or map.");
-
 PyDoc_STRVAR(get_cdtctx_base64_doc,
              "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
 \n\
@@ -474,8 +466,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
     {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
      METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
-    {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
-     METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
     {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
      METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
