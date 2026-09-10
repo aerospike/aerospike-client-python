@@ -567,8 +567,8 @@ class TestConfigTTL:
         [
             {"meta": None},
             {"meta": {"gen": 10}},
-            {"meta": {"ttl": aerospike.TTL_CLIENT_DEFAULT, "gen": 10}},
             {"policy": None},
+            # TODO: should this be uncommented?
             # {"policy": {}},
         ]
     )

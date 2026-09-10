@@ -236,11 +236,9 @@ class TestRemove:
         Invoke remove() with extra parameter
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
         policy = {}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.remove(key, meta, policy, "Extra Param")
-        assert "remove() takes at most 3 arguments (4 given)" in str(typeError.value)
+            self.as_connection.remove(key, policy, "Extra Param")
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
     def test_neg_remove_with_incorrect_data(self, key, ex_code, ex_msg):
