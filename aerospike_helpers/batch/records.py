@@ -74,7 +74,7 @@ class Write(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for this command
+            meta (dict): the expected generation for this record
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
@@ -127,7 +127,7 @@ class Read(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for this command
+            meta (dict): the expected generation for this record
             read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """

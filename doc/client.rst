@@ -154,7 +154,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
-        :param dict meta: record metadata to be set. see :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. see :ref:`metadata_dict`.
         :param dict policy: see :ref:`aerospike_write_policies`.
 
         :param serializer: override the serialization mode of the client \
@@ -317,7 +317,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -370,7 +370,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :return: a :ref:`aerospike_record_tuple`.
@@ -471,7 +471,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -803,7 +803,7 @@ String Operations
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -828,7 +828,7 @@ String Operations
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to prepend to the bin value.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -863,7 +863,7 @@ Numeric Operations
         :param str bin: the name of the bin.
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -2009,7 +2009,9 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"gen"`` (:class:`int`): record generation
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. This field is read only.
+    * ``"gen"`` (:class:`int`): record generation. If passing as input, this is the expected record generation.
+        If returned as an output, this is the current record generation.
 
 .. _aerospike_policies:
 
