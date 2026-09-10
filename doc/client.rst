@@ -493,16 +493,6 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note::
-            **Known issue:** if the client config's ``validate_keys`` option is :py:obj:`True` and
-            *policy* contains an invalid dictionary key, this method raises
-            :py:class:`~aerospike.exception.ClientError` instead of the
-            :py:class:`~aerospike.exception.ParamError` that every other method raises in this
-            situation (see :func:`aerospike.client`'s ``validate_keys`` option). Changing this
-            outright would be a breaking change, so it is deferred to the next major client
-            release. A :exc:`DeprecationWarning` is raised in the meantime to warn ahead of that
-            change.
-
         .. testcode::
 
             # Insert record
