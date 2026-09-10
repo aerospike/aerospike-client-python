@@ -68,8 +68,7 @@ enum Aerospike_send_bool_as_values {
         X(LIST_JOIN_SEPARATOR)
 
 // clang-format off
-#define STRING_OP_NAMES                                                        \
-    X(STRING_STRLEN), \
+#define STRING_OP_NAMES_EXCEPT_STRLEN                                                        \
     X(STRING_SUBSTR), \
     X(STRING_SUBSTR_RANGE), \
     X(STRING_CHAR_AT), \
@@ -114,7 +113,8 @@ enum {
 #define X(op_name) OP_##op_name
     X(LIST_APPEND) = 1001,
     LIST_OP_NAMES_EXCEPT_LIST_APPEND,
-    STRING_OP_NAMES
+    X(STRING_STRLEN) = 1200,
+    STRING_OP_NAMES_EXCEPT_STRLEN
 #undef X
 };
 

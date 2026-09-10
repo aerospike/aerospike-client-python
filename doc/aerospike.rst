@@ -515,6 +515,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Traceback (most recent call last):
                 aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
+            .. note::
+                **Known exception:** :meth:`~aerospike.Client.remove_bin` raises
+                :py:class:`~aerospike.exception.ClientError` instead of
+                :py:class:`~aerospike.exception.ParamError` for an invalid policy
+                dictionary key. This is scheduled to be fixed in the next major
+                client release; see :meth:`~aerospike.Client.remove_bin` for
+                details.
+
         * **hosts** (:class:`list`)
             A list identifying a node (or multiple nodes) in the cluster. Each entry may be
             either a tuple or a string.

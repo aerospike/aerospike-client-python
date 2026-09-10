@@ -33,7 +33,6 @@
 #define BYTE_OFFSET_KEY "byte_offset"
 #define BIT_OFFSET_KEY "bit_offset"
 #define BIT_SIZE_KEY "bit_size"
-#define VALUE_BYTE_SIZE_KEY "value_byte_size"
 #define VALUE_KEY "value"
 #define COUNT_KEY "count"
 #define OFFSET_KEY "offset"
@@ -51,8 +50,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
 static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
                                       as_bit_resize_flags *resize_flags);
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value);
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              uint32_t *byte_count);
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
@@ -176,13 +177,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_INSERT:
     case OP_BIT_OR:
     case OP_BIT_XOR:
-        if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                    &value_byte_size) != AEROSPIKE_OK) {
-            goto exit;
-        }
-
-        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict,
-                                   &uint8_array_value) != AEROSPIKE_OK) {
+        if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict,
+                                         &uint8_array_value,
+                                         &value_byte_size) != AEROSPIKE_OK) {
             goto exit;
         }
         break;
@@ -409,8 +406,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value)
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              uint32_t *byte_count)
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
@@ -418,8 +417,15 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
                                key)
     }
 
+    Py_ssize_t value_size = 0;
     if (PyBytes_Check(py_val)) {
         *value = (uint8_t *)PyBytes_AsString(py_val);
+        if (PyErr_Occurred()) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
+        }
+
+        value_size = PyBytes_Size(py_val);
         if (PyErr_Occurred()) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Failed to convert %s", key);
@@ -431,11 +437,24 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Failed to convert %s", key);
         }
+
+        value_size = PyByteArray_Size(py_val);
+        if (value_size == -1 && PyErr_Occurred()) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
+        }
     }
     else {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be bytes or byte array", key);
     }
+
+    // This prevents unexpected truncating of the bytes
+    if (value_size > UINT32_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Bytes size must not be larger than UINT32_MAX");
+    }
+    *byte_count = (uint32_t)value_size;
 
     return AEROSPIKE_OK;
 }

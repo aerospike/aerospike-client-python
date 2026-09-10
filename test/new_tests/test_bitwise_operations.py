@@ -312,7 +312,7 @@ class TestBitwiseOperations(object):
         rand_byte = random.randint(0, 255)
         value.append(rand_byte)
         rand_offset = random.randint(0, 4) * 8
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, rand_offset, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, rand_offset, 8, value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -327,7 +327,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(255)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 4, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 4, 8, value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -344,7 +344,7 @@ class TestBitwiseOperations(object):
         num_bytes = random.randint(1, 5)
         for x in range(0, num_bytes):
             value.append(rand_byte)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, (num_bytes * 8), num_bytes, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, (num_bytes * 8), value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -357,7 +357,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(255)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 41, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 41, 8, value, None)]
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
 
@@ -366,9 +366,9 @@ class TestBitwiseOperations(object):
         Perform a bit_set op with a value larger than the bit_map being modified.
         """
         value = bytearray()
-        for x in range(0, 5):
+        for x in range(6):
             value.append(255)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 48, 6, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 48, value, None)]
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
 
@@ -378,7 +378,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(255)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 16, 1, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 16, value, None)]
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
 
@@ -387,7 +387,7 @@ class TestBitwiseOperations(object):
         Perform a bit_set op with an unsupported float.
         """
         value = 85323.9
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, 8, value, None)]
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
 
@@ -397,7 +397,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(255)
-        ops = [bitwise_operations.bit_set("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_set("bad_name", 0, 8, value, None)]
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
 
@@ -612,7 +612,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(0)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -626,7 +626,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(0)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 7, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 7, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -642,7 +642,7 @@ class TestBitwiseOperations(object):
         value.append(1)
         value.append(1)
         value.append(1)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 8, 17, 3, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 8, 17, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -656,7 +656,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(0)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 41, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 41, 8, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -667,7 +667,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(0)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 16, 1, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 16, value, None)]
 
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
@@ -678,9 +678,9 @@ class TestBitwiseOperations(object):
         being modified.
         """
         value = bytearray()
-        for x in range(0, 5):
+        for x in range(0, 6):
             value.append(0)
-        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 48, 6, value, None)]
+        ops = [bitwise_operations.bit_and(self.five_255_bin, 0, 48, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -691,7 +691,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(0)
-        ops = [bitwise_operations.bit_and("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_and("bad_name", 0, 8, value, None)]
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
@@ -700,7 +700,7 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise and op with a non existent bin name.
         """
-        ops = [bitwise_operations.bit_and("bad_name", 0, 8, 1, 1.5, None)]
+        ops = [bitwise_operations.bit_and("bad_name", 0, 8, 1.5, None)]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
@@ -898,7 +898,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise insert op.
         """
         value = bytearray([3])
-        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 0, 1, value, None)]
+        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 0, value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -910,7 +910,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise insert op.
         """
         value = bytearray([3] * 3)
-        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 0, 3, value, None)]
+        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 0, value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -922,7 +922,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise insert op with multiple bytes and a non 0 offset.
         """
         value = bytearray([3] * 3)
-        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 2, 3, value, None)]
+        ops = [bitwise_operations.bit_insert(self.test_bin_zeroes, 2, value, None)]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -935,7 +935,7 @@ class TestBitwiseOperations(object):
         the bitmap being modified. Places 0 untill proper offset is reached.
         """
         value = bytearray([3])
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 9, 1, value, None)]
+        ops = [bitwise_operations.bit_insert(self.five_255_bin, 9, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -949,7 +949,7 @@ class TestBitwiseOperations(object):
         being modified.
         """
         value = bytearray([3] * 6)
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 6, value, None)]
+        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -957,13 +957,19 @@ class TestBitwiseOperations(object):
         expected_result = bytearray([3] * 6 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
 
-    def test_bit_insert_value_byte_size_smaller_than_value(self):
+    @pytest.mark.parametrize(
+        "value",
+        [
+            bytearray([3] * 2),
+            bytes([3] * 2)
+        ]
+    )
+    def test_bit_insert_value_byte_size_smaller_than_value(self, value):
         """
-        Perform a bitwise insert op where value_byte_size is smaller than the bitmap
+        Perform a bitwise insert op where value is smaller than the bitmap
         being modified.
         """
-        value = bytearray([3] * 6)
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 2, value, None)]
+        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -976,23 +982,13 @@ class TestBitwiseOperations(object):
         Perform a bitwise insert op with a non existent bin.
         """
         value = bytearray([3])
-        ops = [bitwise_operations.bit_insert("bad_name", 0, 1, value, None)]
+        ops = [bitwise_operations.bit_insert("bad_name", 0, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([3])
         assert bins["bad_name"] == expected_result
-
-    def test_bit_insert_bad_arg_type(self):
-        """
-        Perform a bitwise insert op with a float byte_size.
-        """
-        value = bytearray([3])
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 1.5, value, None)]
-
-        with pytest.raises(e.ParamError):
-            self.as_connection.operate(self.test_key, ops)
 
     def test_bit_lscan(self):
         """
@@ -1200,7 +1196,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(8)
-        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1213,7 +1209,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise or op on multiple bytes.
         """
         value = bytearray([8] * 5)
-        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 40, 5, value, None)]
+        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 40, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1226,7 +1222,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise or op.
         """
         value = bytearray([255])
-        ops = [bitwise_operations.bit_or(self.five_255_bin, 7, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_or(self.five_255_bin, 7, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1240,7 +1236,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(8)
-        ops = [bitwise_operations.bit_or(self.test_bin_ones, 41, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_or(self.test_bin_ones, 41, 8, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -1251,7 +1247,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(8)
-        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 9, 1, value, None)]
+        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 9, value, None)]
 
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
@@ -1261,7 +1257,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise or op with bit_size > bitmap.
         """
         value = bytearray([8] * 6)
-        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 41, 6, value, None)]
+        ops = [bitwise_operations.bit_or(self.test_bin_ones, 0, 41, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -1271,7 +1267,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise or op with a non existent bin.
         """
         value = bytearray([8])
-        ops = [bitwise_operations.bit_or("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_or("bad_name", 0, 8, value, None)]
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
@@ -1281,7 +1277,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise or op with an integer for value.
         """
         value = 1
-        ops = [bitwise_operations.bit_or("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_or("bad_name", 0, 8, value, None)]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
@@ -1548,7 +1544,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op.
         """
         value = bytearray([1])
-        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1561,7 +1557,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op on multiple bytes.
         """
         value = bytearray([8] * 5)
-        ops = [bitwise_operations.bit_xor(self.five_255_bin, 0, 40, 5, value, None)]
+        ops = [bitwise_operations.bit_xor(self.five_255_bin, 0, 40, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1574,7 +1570,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op.
         """
         value = bytearray([0])
-        ops = [bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1588,7 +1584,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(8)
-        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 41, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 41, 8, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -1599,7 +1595,7 @@ class TestBitwiseOperations(object):
         """
         value = bytearray()
         value.append(8)
-        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 9, 1, value, None)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 9, value, None)]
 
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
@@ -1609,7 +1605,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op with bit_size > bitmap.
         """
         value = bytearray([8] * 6)
-        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 41, 6, value, None)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_ones, 0, 41, value, None)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -1619,7 +1615,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op with a non existent bin.
         """
         value = bytearray([8])
-        ops = [bitwise_operations.bit_xor("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_xor("bad_name", 0, 8, value, None)]
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
@@ -1629,7 +1625,7 @@ class TestBitwiseOperations(object):
         Perform a bitwise xor op with an integer for value.
         """
         value = 1
-        ops = [bitwise_operations.bit_xor("bad_name", 0, 8, 1, value, None)]
+        ops = [bitwise_operations.bit_xor("bad_name", 0, 8, value, None)]
 
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_key, ops)
@@ -1642,7 +1638,7 @@ class TestBitwiseOperations(object):
         bit_policy = {
             "bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY,
         }
-        ops = [bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, 1, value, bit_policy)]
+        ops = [bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, value, bit_policy)]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1705,7 +1701,7 @@ class TestBitwiseOperations(object):
                 id="invalid shift"
             ),
             pytest.param(
-                bitwise_operations.bit_insert(BIN_NAME_FOR_INVALID_PARAMS, byte_offset="1", value_byte_size=1, value=1),
+                bitwise_operations.bit_insert(BIN_NAME_FOR_INVALID_PARAMS, byte_offset="1", value=1),
                 id="invalid byte offset"
             ),
         ]
