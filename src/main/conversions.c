@@ -826,14 +826,8 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
 
             free(key_repr);
 
-            if (warning_failed) {
-                // Fail out
-                goto CLEANUP_KEY_AND_EXIT_LOOP;
-            }
-
-            // Warning raised. Skip this key
-            as_val_destroy(key);
-            continue;
+            // Fail out
+            goto CLEANUP_KEY_AND_EXIT_LOOP;
         }
 
         as_val_new_from_pyobject(self, err, py_val, &val, static_pool,
