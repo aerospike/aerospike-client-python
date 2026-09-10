@@ -136,7 +136,7 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
     static char *kwlist[] = {"key", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:remove", kwlist, &py_key,
                                     &py_policy) == false) {
         return NULL;
     }
