@@ -410,7 +410,7 @@ Record Commands
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
-        :param dict meta: record generation to be set. see :ref:`metadata_dict`
+        :param dict meta: record generation to compare. see :ref:`metadata_dict`
         :param dict policy: see :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
