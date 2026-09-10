@@ -142,7 +142,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    check_and_set_meta(py_meta, &rec.ttl, &rec.gen, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec.gen, err, self->validate_keys);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

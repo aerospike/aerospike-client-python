@@ -1612,7 +1612,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         }
     }
 
-    check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec->gen, err, self->validate_keys);
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
@@ -2451,9 +2451,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
  * Returns: error code.
  *******************************************************************************************************
  */
-as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
-                             uint16_t *gen_ref, as_error *err,
-                             bool validate_keys)
+as_status check_and_set_meta(PyObject *py_meta, uint16_t *gen_ref,
+                             as_error *err, bool validate_keys)
 {
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {
@@ -2472,39 +2471,7 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         }
 
         PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-        uint32_t ttl = 0;
         uint16_t gen = 0;
-        if (py_ttl) {
-            int retval =
-                PyErr_WarnEx(PyExc_DeprecationWarning,
-                             META_TTL_DEPRECATION_MESSAGE, STACK_LEVEL);
-            if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       META_TTL_DEPRECATION_MESSAGE);
-            }
-
-            if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsLong(py_ttl);
-            }
-            else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Ttl should be an int or long");
-            }
-
-            if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "integer value for ttl exceeds sys.maxsize");
-            }
-            *ttl_ref = ttl;
-        }
-        else {
-            // Metadata dict was present, but ttl field did not exist
-            *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
-        }
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
@@ -2527,10 +2494,6 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
     else if (py_meta && (py_meta != Py_None)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
-    }
-    else {
-        // Metadata dict was not set by user
-        *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     return err->code;
 }

@@ -38,7 +38,6 @@ class TestRemove:
     @pytest.mark.parametrize(
         "kwargs",
         [
-            {"meta": {"gen": 0}},
             {"policy": {"generation": 0, "total_timeout": 180000}},
         ]
     )
@@ -48,14 +47,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
 
-        if "meta" in kwargs:
-            cm = pytest.warns(DeprecationWarning)
-        else:
-            cm = nullcontext()
-
-        with cm:
-            retobj = self.as_connection.remove(key, **kwargs)
-
+        retobj = self.as_connection.remove(key, **kwargs)
         assert retobj == 0
 
         with pytest.raises(e.RecordNotFound) as exception:
