@@ -453,7 +453,7 @@ Record Commands
 
             # Try to remove it with the wrong generation
             try:
-                client.remove(keyTuple, policy={'gen': aerospike.POLICY_GEN_EQ, "generation": 5})
+                client.remove(keyTuple, policy={'gen': aerospike.POLICY_GEN_EQ, 'generation': 5})
             except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
 
