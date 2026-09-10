@@ -520,3 +520,16 @@
    fun:AerospikeClient_InfoAll_Invoke
    fun:AerospikeClient_InfoAll
 }
+
+{
+   Known memory leak that intermittently shows up
+   Memcheck:Leak
+   ...
+   fun:SSL_CTX_new_ex
+   fun:as_tls_context_setup
+   fun:as_cluster_create
+   fun:aerospike_connect
+   fun:AerospikeClientConnect
+   fun:AerospikeClient_Type_Init
+   fun:AerospikeClient_New
+}

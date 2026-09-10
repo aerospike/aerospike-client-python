@@ -727,7 +727,7 @@ class TestGetPut:
             self.as_connection.put(key, rec, meta, policy)
         assert excinfo.value.code == 3
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
             assert "AEROSPIKE_ERR_RECORD_GENERATION" in excinfo.value.msg
 
         (key, meta, bins) = self.as_connection.get(key)
