@@ -766,9 +766,9 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-#define DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR                                 \
+#define INVALID_MAP_KEY_WITHOUT_WITHOUT_VALUE_REPR                             \
     "Attempted to store a map with an invalid map key type"
-#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+#define INVALID_MAP_KEY_WITH_VALUE_REPR                                        \
     "Attempted to store a map with key %s, which is an invalid type"
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
@@ -817,11 +817,11 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
 
             if (!key_repr) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
+                                INVALID_MAP_KEY_WITHOUT_WITHOUT_VALUE_REPR);
             }
             else {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+                                INVALID_MAP_KEY_WITH_VALUE_REPR, key_repr);
             }
 
             free(key_repr);
