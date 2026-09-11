@@ -247,7 +247,6 @@ get_bound_int_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
         *found_ref = true;
     }
     *int_pointer = int64;
-
     return err->code;
 }
 
