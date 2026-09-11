@@ -55,7 +55,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record rec;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
@@ -99,7 +98,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, &err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p, false);
+                             &exp_list_p, false);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;

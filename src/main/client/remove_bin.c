@@ -28,6 +28,39 @@
 #include "policy.h"
 
 /**
+ * An invalid policy dictionary key should raise ParamError, not ClientError,
+ * which is what happens once pyobject_to_policy_write clobbers the specific
+ * error it already set. Fixing that outright would be a breaking change, so
+ * for now we only warn about the future behavior change here, matching the
+ * exact condition pyobject_to_policy_write itself uses to decide whether to
+ * run the invalid-key check.
+ *
+ * Returns true if the warning was promoted to a real exception (warnings as
+ * errors), in which case the caller must bail out immediately without
+ * raising anything else.
+ */
+static bool warn_if_invalid_remove_bin_policy_key(AerospikeClient *self,
+                                                  as_error *err,
+                                                  PyObject *py_policy)
+{
+    if (!py_policy || py_policy == Py_None || !self->validate_keys) {
+        return false;
+    }
+
+    as_status retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_write_policy_valid_keys,
+        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+    as_error_reset(err);
+
+    if (retval != 0) {
+        return false;
+    }
+
+    return PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                            REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE) == -1;
+}
+
+/**
  ******************************************************************************************************
  * Removes a bin from a record.
  *
@@ -52,19 +85,21 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_write *write_policy_p = NULL;
     as_key key;
     bool key_initialized = false;
+    bool warning_became_exception = false;
     as_record rec;
     char *binName = NULL;
     int count = 0;
     PyObject *py_ustr = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Get the bin list size;
     Py_ssize_t size = PyList_Size(py_binList);
     // Initialize record
     as_record_inita(&rec, size);
+    // as_record_inita defaults ttl to 0 (namespace default). Use the write policy ttl instead.
+    rec.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     // Convert python key object to as_key
     pyobject_to_key(err, py_key, &key);
@@ -73,10 +108,15 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
     key_initialized = true;
 
+    if (warn_if_invalid_remove_bin_policy_key(self, err, py_policy)) {
+        warning_became_exception = true;
+        goto CLEANUP;
+    }
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p, false);
+                             &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
@@ -104,7 +144,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    check_and_set_meta(py_meta, &rec.ttl, &rec.gen, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec.gen, err, self->validate_keys);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -123,6 +163,10 @@ CLEANUP:
 
     if (key_initialized) {
         as_key_destroy(&key);
+    }
+
+    if (warning_became_exception) {
+        return NULL;
     }
 
     if (err->code != AEROSPIKE_OK) {

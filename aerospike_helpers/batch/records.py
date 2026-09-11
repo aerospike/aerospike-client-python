@@ -38,13 +38,16 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+        :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+        containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
+            subcode (int): Server error detail subcode for this record, or zero when absent.
+            message (str | None): Server error detail message for this record, or :py:obj:`None` when absent.
             in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
@@ -54,6 +57,8 @@ class BatchRecord:
         self.key = key
         self.record = None
         self.result = 0
+        self.message = None
+        self.subcode = 0
         self.in_doubt = False
 
 
@@ -69,7 +74,7 @@ class Write(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for this command
+            meta (dict): the expected generation for this record
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
@@ -78,11 +83,13 @@ class Write(BatchRecord):
         self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Write
 
             bin_name = "a"
@@ -120,8 +127,8 @@ class Read(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for this command
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
+            meta (dict): the expected generation for this record
+            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
 
@@ -134,11 +141,13 @@ class Read(BatchRecord):
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Read to read bin "a" from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Read
 
             bin_name = "a"
@@ -186,12 +195,15 @@ class Apply(BatchRecord):
         self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
             # Assume that "test_func" takes a bin name string as an argument.
             # Assume the appropriate UDF module has already been registered.
             import aerospike_helpers.operations as op
+            from aerospike_helpers.batch.records import Apply
 
 
             module = "my_lua"
@@ -234,7 +246,9 @@ class Remove(BatchRecord):
 
     def __init__(self, key: tuple, policy: "TypeBatchPolicyRemove" = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Remove to remove the record.
             import aerospike_helpers.operations as op
@@ -245,7 +259,7 @@ class Remove(BatchRecord):
             user_key = 1
             key = (namespace, set, user_key)
 
-            br = Remove(key, ops)
+            br = Remove(key)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
@@ -272,7 +286,9 @@ class BatchRecords:
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             import aerospike
             import aerospike_helpers.operations.operations as op
@@ -322,12 +338,15 @@ class BatchRecords:
             for br in brs.batch_records:
                 print(br.result)
                 print(br.record)
-            # 0
-            # (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
-            # 0
-            # (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
-            # 0
-            # (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 1, bytearray(b'...')), {...}, {})
+            0
+            (('test', 'demo', 2, bytearray(b'...')), {...}, {'id': 100})
+            0
+            (('test', 'demo', 3, bytearray(b'...')), {...}, {'id': 1})
         """
 
         if batch_records is None:

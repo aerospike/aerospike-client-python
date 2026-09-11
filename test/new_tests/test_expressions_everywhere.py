@@ -417,7 +417,7 @@ class TestPredEveryWhere(object):
 
         for i in range(5):
             key = "test", "pred_ttl", i
-            self.as_connection.put(key, {"time": "earlier"}, meta={"ttl": 100})
+            self.as_connection.put(key, {"time": "earlier"}, policy={"ttl": 100})
 
         # 150 second range for record TTLs should be enough, we are storing with
         # Current time + 100s and current time +5000s, so only one of the group should be found
@@ -426,7 +426,7 @@ class TestPredEveryWhere(object):
 
         for i in range(5, 10):
             key = "test", "pred_ttl", i
-            self.as_connection.put(key, {"time": "later"}, meta={"ttl": 1000})
+            self.as_connection.put(key, {"time": "later"}, policy={"ttl": 1000})
 
         results = []
 
@@ -578,7 +578,7 @@ class TestPredEveryWhere(object):
         Call remove with expressions in policy.
         """
         expr = exp.Eq(exp.IntBin("account_id"), 1)
-        self.as_connection.remove(self.keys[0], {"expressions": expr.compile()})
+        self.as_connection.remove(self.keys[0], policy={"expressions": expr.compile()})
 
         rec = self.as_connection.exists(self.keys[0])
         assert rec[1] is None

@@ -41,7 +41,7 @@
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-                                        PyObject *py_meta, PyObject *py_policy)
+                                        PyObject *py_policy)
 {
 
     // Aerospike Client Arguments
@@ -51,7 +51,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     as_key key;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
@@ -83,36 +82,9 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         pyobject_to_policy_remove(
             self, &err, py_policy, &remove_policy, &remove_policy_p,
-            &self->as->config.policies.remove, &exp_list, &exp_list_p);
+            &self->as->config.policies.remove, &exp_list_p);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
-        }
-        else {
-            if (py_meta && PyDict_Check(py_meta)) {
-                PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-
-                if (py_gen) {
-                    if (PyLong_Check(py_gen)) {
-                        remove_policy_p->generation =
-                            (uint16_t)PyLong_AsLong(py_gen);
-                    }
-                    else if (PyLong_Check(py_gen)) {
-                        remove_policy_p->generation =
-                            (uint16_t)PyLong_AsLongLong(py_gen);
-                        if ((uint16_t)-1 == remove_policy_p->generation &&
-                            PyErr_Occurred()) {
-                            as_error_update(
-                                &err, AEROSPIKE_ERR_PARAM,
-                                "integer value for gen exceeds sys.maxsize");
-                            goto CLEANUP;
-                        }
-                    }
-                    else {
-                        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                        "Generation should be an int or long");
-                    }
-                }
-            }
         }
     }
 
@@ -159,17 +131,16 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
     // Python Function Arguments
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
-    PyObject *py_meta = NULL;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"key", "meta", "policy", NULL};
+    static char *kwlist[] = {"key", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
-                                    &py_meta, &py_policy) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:remove", kwlist, &py_key,
+                                    &py_policy) == false) {
         return NULL;
     }
 
     // Invoke Operation
-    return AerospikeClient_Remove_Invoke(self, py_key, py_meta, py_policy);
+    return AerospikeClient_Remove_Invoke(self, py_key, py_policy);
 }

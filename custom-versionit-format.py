@@ -2,9 +2,11 @@ from parver import Version
 import versioningit
 from typing import Any, Dict, Union
 import pathlib
+import re
 
 import versioningit.basics
 import versioningit.git
+import versioningit.next_version
 import os
 
 # Take in <version> and <string> as input
@@ -22,6 +24,11 @@ def append_to_local(version_str: str, value: str) -> str:
     version = version.replace(local=new_local)
     return version.__str__()
 
+def is_central_branch(branch: str | None) -> bool:
+    return type(branch) == str and re.match(r'^(dev|stage|master).*', branch)
+
+building_on_central_branch = False
+
 def my_vcs(
         project_dir: Union[str, pathlib.Path],
         params: Dict[str, Any]
@@ -30,11 +37,38 @@ def my_vcs(
         project_dir=project_dir,
         params=params
     )
-    if vcs_description.state == "exact":
-        # We don't want the format step to be skipped
+
+    print("Branch:", vcs_description.branch)
+    if is_central_branch(vcs_description.branch):
+        print("We are on a central branch")
+        # Need to set flag to override latest tag with release version in tag2version for central branches
+        global building_on_central_branch
+        building_on_central_branch = True
+
+        # Skip the format step. (i.e wheel should have the release version)
+        vcs_description.state = "exact"
+    elif vcs_description.state == "exact":
+        print("We are on a feature branch")
+        # We don't want the format step to be skipped (we always want the build to have the latest tag in the version)
         # Workaround: https://github.com/jwodder/versioningit/issues/42#issuecomment-1235573432
         vcs_description.state = "exact_"
     return vcs_description
+
+def my_tag2version(
+    tag: str,
+    params: Dict[str, Any]
+):
+    if building_on_central_branch:
+        print("my_next_version: we are on a central branch")
+        version_with_dev_number = Version.parse(tag, strict=True)
+        # Get release version
+        version = version_with_dev_number.replace(dev=None)
+        version = version.__str__()
+    else:
+        version = versioningit.basics.basic_tag2version(tag=tag, params=params)
+
+    print(f"tag2version: {version}")
+    return version
 
 def my_format(
         description: versioningit.VCSDescription,

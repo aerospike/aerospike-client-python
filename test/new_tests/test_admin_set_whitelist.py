@@ -127,44 +127,37 @@ class TestSetWhitelist(TestBaseClass):
         """
         Incorrect role name
         """
-        try:
+        with pytest.raises(e.InvalidRole) as excinfo:
             self.client.admin_set_whitelist(role="bad-role-name", whitelist=["10.0.2.0/24"])
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_set_whitelist_incorrect_role_type(self):
         """
         Incorrect role type
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_whitelist(role=None, whitelist=["10.0.2.0/24"])
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string."
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string."
 
     def test_admin_set_whitelist_incorrect_whitelist(self):
         """
         Incorrect role name
         """
-        try:
+        with pytest.raises(e.InvalidWhitelist) as excinfo:
             self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=["bad_IP"])
-        except e.InvalidWhitelist as exception:
-            assert exception.code == 73
-            assert exception.msg == "AEROSPIKE_INVALID_WHITELIST"
+        assert excinfo.value.code == 73
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_WHITELIST"
 
     def test_admin_set_whitelist_incorrect_whitelist_type(self):
         """
         Incorrect role type
         """
-        try:
-            self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Whitelist must be a list of IP strings."
+        with pytest.raises(e.ParamError) as excinfo:
+            self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=1)
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Whitelist must be a list of IP strings, or None."
 
     def test_admin_set_whitelist_forbiden_host(self):
         """

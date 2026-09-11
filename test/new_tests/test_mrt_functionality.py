@@ -1,5 +1,7 @@
 import pytest
 from aerospike import exception as e
+from aerospike_helpers.batch import records as br
+from aerospike_helpers.operations import operations as op
 import aerospike
 from .test_base_class import TestBaseClass
 import time
@@ -102,3 +104,27 @@ class TestMRTBasicFunctionality:
         self.as_connection.commit(mrt)
         with pytest.raises(e.TransactionAlreadyCommitted):
             self.as_connection.abort(mrt)
+
+    def test_batch_write(self):
+        mrt = aerospike.Transaction()
+        policy = {
+            "txn": mrt
+        }
+        brs = br.BatchRecords(
+            [
+                br.Write(
+                    key=("test", "demo", 1),
+                    ops=[
+                        op.write("new", 10)
+                    ]
+                ),
+                br.Write(
+                    key=("test", "demo", 2),
+                    ops=[
+                        op.write("a", 5)
+                    ]
+                )
+            ]
+        )
+        self.as_connection.batch_write(brs, policy)
+        self.as_connection.commit(mrt)

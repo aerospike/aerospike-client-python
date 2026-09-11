@@ -8,7 +8,6 @@ aerospike\_helpers\.operations\.operations module
 
 .. automodule:: aerospike_helpers.operations.operations
     :members:
-    :exclude-members: select_by_path, modify_by_path
     :undoc-members:
     :show-inheritance:
 
@@ -42,6 +41,15 @@ aerospike\_helpers\.operations\.hll\_operations module
 .. automodule:: aerospike_helpers.operations.hll_operations
     :members:
     :undoc-members:
+    :show-inheritance:
+
+aerospike\_helpers\.operations\.string\_operations module
+---------------------------------------------------------
+
+.. automodule:: aerospike_helpers.operations.string_operations
+    :members:
+    :undoc-members:
+    :member-order: bysource
     :show-inheritance:
 
 aerospike\_helpers\.operations\.expression\_operations module

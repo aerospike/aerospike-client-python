@@ -18,13 +18,7 @@
 
 #include <Python.h>
 #include <aerospike/as_status.h>
-
-/*
- * Structure to hold user's log_callback object
- */
-typedef struct Aerospike_log_callback {
-    PyObject *callback;
-} AerospikeLogCallback;
+#include <aerospike/as_log.h>
 
 /**
  * Set log level for C-SDK
@@ -40,3 +34,5 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
                                     PyObject *kwds);
 
 void Aerospike_Enable_Default_Logging();
+
+#define LOG_LEVEL_OFF -1

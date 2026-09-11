@@ -3,6 +3,7 @@ from typing import Union
 class AerospikeError(Exception):
     # When attributes are first assigned to exception class, they have an initial value of None
     code: Union[int, None]
+    subcode: Union[int, None]
     msg: Union[str, None]
     file: Union[str, None]
     line: Union[int, None]
@@ -92,6 +93,9 @@ class BinNameError(RecordError):
 
 class BinIncompatibleType(RecordError):
     pass
+
+class BinExistsError(RecordError):
+     pass
 
 class IndexError(ServerError):
     name: Union[str, None]

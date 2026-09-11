@@ -1,107 +1,63 @@
 name: Build artifacts
-run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }})
+run-name: |
+  Build artifacts (
+  run_tests=${{ inputs.run_tests }},
+  server-tag=${{ inputs.server-tag }}
+  test-file=${{ inputs.test-file }}
+  )
 
 # Builds manylinux wheels and source distribution
 # Optionally run tests on manylinux wheels
 # Then upload artifacts to Github
 
+permissions:
+  id-token: write
+  statuses: write
+  contents: read
+
 on:
   workflow_dispatch:
-    inputs:
-      # There may be a case where we want to test these build debug flags on all platforms that support them
-      unoptimized:
-        description: 'macOS or Linux: Apply -O0 flag?'
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        description: 'macOS: Build wheels for debugging?'
-        type: boolean
-        required: false
-        default: false
+    inputs: &inputs
       run_tests:
         description: "Run integration tests with the wheels after building them"
         required: true
         type: boolean
-        default: false
-      registry-name:
-        type: string
-        required: true
-        description: Registry name
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: true
-        description: Image name
-        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag (e.g to test a client backport version)'
+        # latest tag is not supported in JFrog
+        required: false
+        description: 'Server docker image tag'
       test-file:
         required: false
+        type: string
         default: ''
         description: 'new_tests/<value>'
+      run-integration-tests-on-macos-x86:
+        required: false
+        default: true
+        type: boolean
+        description: 'If false, only run import test'
+      publish-build-info:
+        required: false
+        default: false
+        description: Only used upstream by stage workflow
+        type: boolean
+      # NOT used by workflow dispatch
+      jf-build-id:
+        required: false
+        default: ''
+        description: If publishing build info is true
+        type: string
 
   workflow_call:
-    inputs:
-      # The "dev" tests test the artifacts against a server
-      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
-      run_tests:
-        required: false
-        type: boolean
-        default: false
-      # workflow_call hack
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
-      # This input is only used in workflow_call events
-      sha-to-build-and-test:
-        description: A calling workflow may want to run this workflow on a different ref than the calling workflow's ref
-        type: string
-        # Make it required to make things simple
-        required: true
-      # A calling workflow doesn't actually set values to the inputs below
-      # But that workflow needs to have default values for these inputs
-      unoptimized:
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        type: boolean
-        required: false
-        default: false
-      registry-name:
-        type: string
-        required: false
-        default: 'docker.io'
-      image-name:
-        type: string
-        required: false
-        default: 'aerospike/aerospike-server-enterprise'
-      server-tag:
-        type: string
-        required: false
-        default: 'latest'
-      test-file:
-        required: false
-        type: string
-        default: ''
-    secrets:
-      DOCKER_HUB_BOT_USERNAME:
-        required: true
-      DOCKER_HUB_BOT_PW:
-        required: true
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
-        required: true
+    inputs: *inputs
+    outputs:
+      python-versions:
+        value: ${{ jobs.build-wheels.outputs.python-versions }}
 
 jobs:
   build-sdist:
     uses: ./.github/workflows/build-sdist.yml
-    with:
-      sha_to_build: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
 
   build-wheels:
     strategy:
@@ -114,16 +70,13 @@ jobs:
           "win_amd64"
         ]
       fail-fast: false
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      # Can't use env context here, so just copy from build-sdist env var
-      sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
-      unoptimized: ${{ inputs.unoptimized }}
-      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
-      registry-name: ${{ inputs.registry-name }}
-      image-name: ${{ inputs.image-name }}
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
+      run-integration-tests-on-macos-x86: ${{ inputs.run-integration-tests-on-macos-x86 }}
+      publish-build-info: ${{ inputs.publish-build-info }}
+      jf-build-id: ${{ inputs.jf-build-id }}
     secrets: inherit

@@ -88,7 +88,6 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     as_policy_query *query_policy_p = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -109,7 +108,7 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     // Convert python policy object to as_policy_query
     pyobject_to_policy_query(
         self->client, &err, py_policy, &query_policy, &query_policy_p,
-        &self->client->as->config.policies.query, &exp_list, &exp_list_p);
+        &self->client->as->config.policies.query, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

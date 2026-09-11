@@ -7,36 +7,37 @@ from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
 
 import aerospike
-import warnings
 
-class TestScan(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        self.test_ns = "test"
-        self.test_set = "demo"
 
+@pytest.fixture(autouse=True, scope="class")
+def setup(request, as_connection):
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
+
+    for i in range(19):
+        key = ("test", "demo", i)
+        rec = {"name": "name%s" % (str(i)), "age": i}
+        as_connection.put(key, rec)
+
+    key = ("test", "demo", 122)
+    llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
+    # Creates a record with the key 122, with one bytearray key.
+    request.cls.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
+    as_connection.operate(key, llist)
+    request.cls.record_count = 20
+
+    def teardown():
         for i in range(19):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "age": i}
-            as_connection.put(key, rec)
-
-        key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
-        # Creates a record with the key 122, with one bytearray key.
-        self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
-        as_connection.operate(key, llist)
-        self.record_count = 20
-
-        def teardown():
-            for i in range(19):
-                key = ("test", "demo", i)
-                as_connection.remove(key)
-
-            key = ("test", "demo", 122)
             as_connection.remove(key)
 
-        request.addfinalizer(teardown)
+        key = ("test", "demo", 122)
+        as_connection.remove(key)
 
+    request.addfinalizer(teardown)
+
+
+class TestScan(TestBaseClass):
     def test_scan_with_existent_ns_and_set(self):
 
         records = []
@@ -403,6 +404,18 @@ class TestScan(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_scan_with_invalid_set_type(self):
+        """
+        Invoke scan() with a set argument that is neither a string nor None.
+        This should raise a ParamError instead of silently scanning the
+        entire namespace (CLIENT-4053).
+        """
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.scan(self.test_ns, 123)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_info.value.msg == "Set should be string, unicode or None"
+
     def test_scan_with_select_bin_integer(self):
         """
         Invoke scan() with select bin is of type integer.
@@ -468,11 +481,6 @@ class TestScan(TestBaseClass):
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
 
-    def test_creating_scan_using_constructor_in_aerospike_module(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=DeprecationWarning)
-            scan = aerospike.Scan("test", "demo")
-            assert len(w) == 1
-
-        with pytest.raises(e.ClientError):
-            scan.select("bin1")
+    def test_creating_scan_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Scan("test", "demo")

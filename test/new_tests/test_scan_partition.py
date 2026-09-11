@@ -6,72 +6,8 @@ from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
 
+@pytest.mark.usefixtures("hydrate_partitions_1000_to_1003")
 class TestScanPartition(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        self.test_ns = "test"
-        self.test_set = "demo"
-
-        self.partition_1000_count = 0
-        self.partition_1001_count = 0
-        self.partition_1002_count = 0
-        self.partition_1003_count = 0
-
-        as_connection.truncate(self.test_ns, None, 0)
-
-        for i in range(1, 100000):
-            put = 0
-            key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
-
-            if rec_partition == 1000:
-                self.partition_1000_count += 1
-                put = 1
-            if rec_partition == 1001:
-                self.partition_1001_count += 1
-                put = 1
-            if rec_partition == 1002:
-                self.partition_1002_count += 1
-                put = 1
-            if rec_partition == 1003:
-                self.partition_1003_count += 1
-                put = 1
-            if put:
-                rec = {
-                    "i": i,
-                    "s": "xyz",
-                    "l": [2, 4, 8, 16, 32, None, 128, 256],
-                    "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
-                }
-                as_connection.put(key, rec)
-        # print(f"{self.partition_1000_count} records are put in partition 1000, \
-        #         {self.partition_1001_count} records are put in partition 1001, \
-        #         {self.partition_1002_count} records are put in partition 1002, \
-        #         {self.partition_1003_count} records are put in partition 1003")
-
-        def teardown():
-            for i in range(1, 100000):
-                put = 0
-                key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
-
-                if rec_partition == 1000:
-                    self.partition_1000_count += 1
-                    put = 1
-                if rec_partition == 1001:
-                    self.partition_1001_count += 1
-                    put = 1
-                if rec_partition == 1002:
-                    self.partition_1002_count += 1
-                    put = 1
-                if rec_partition == 1003:
-                    self.partition_1003_count += 1
-                    put = 1
-                if put:
-                    as_connection.remove(key)
-
-        request.addfinalizer(teardown)
-
     def test_scan_partition_with_existent_ns_and_set(self):
 
         records = []

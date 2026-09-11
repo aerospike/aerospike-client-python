@@ -21,3 +21,4 @@ from aerospike_helpers.expressions.list import *  # noqa: F401, F403
 from aerospike_helpers.expressions.map import *  # noqa: F401, F403
 from aerospike_helpers.expressions.arithmetic import *  # noqa: F401, F403
 from aerospike_helpers.expressions.bitwise_operators import *  # noqa: F401, F403
+from aerospike_helpers.expressions.string import *  # noqa: F401, F403

@@ -135,7 +135,6 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     as_policy_scan *scan_policy_p = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -175,7 +174,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_scan(
         self->client, &data.error, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list, &exp_list_p, false);
+        &self->client->as->config.policies.scan, &exp_list_p, false);
 
     if (data.error.code != AEROSPIKE_OK) {
         goto CLEANUP;

@@ -112,15 +112,21 @@ class TestValidateKeys:
         if self.config["validate_keys"]:
             assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg
 
-    def test_invalid_metadata_dictionary_key(self):
-        INVALID_METADATA_KEY = "generation"
+    @pytest.mark.parametrize(
+        "metadata_key",
+        [
+            "generation",
+            "ttl"
+        ]
+    )
+    def test_invalid_metadata_dictionary_key(self, metadata_key):
         if self.config["validate_keys"]:
-            EXPECTED_ERROR_MESSAGE = f"\"{INVALID_METADATA_KEY}\" is an invalid record metadata dictionary key"
+            EXPECTED_ERROR_MESSAGE = f"\"{metadata_key}\" is an invalid record metadata dictionary key"
             context = EXPECTED_CONTEXT_IF_VALIDATE_KEYS_ENABLED
         else:
             context = nullcontext()
 
-        meta = {"ttl": 30, INVALID_METADATA_KEY: 1}
+        meta = {metadata_key: 1}
         with context as excinfo:
             self.as_connection.put(key=KEY, bins={"a": 1}, meta=meta)
 

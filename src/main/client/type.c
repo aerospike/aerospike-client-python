@@ -17,12 +17,14 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_log_macros.h>
 
 #include "pythoncapi_compat.h"
 #include "admin.h"
@@ -51,6 +53,10 @@ enum {
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
+    INIT_USER_TOO_LONG_ERR,
+    INIT_PASSWORD_TOO_LONG_ERR,
+    INIT_USER_EMPTY_ERR,
+    INIT_PASSWORD_EMPTY_ERR,
 };
 
 /*******************************************************************************
@@ -220,14 +226,6 @@ PyDoc_STRVAR(index_blob_create_doc,
 \n\
 Create a blob index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(
-    index_cdt_create_doc,
-    "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
-\n\
-Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
-numeric, string or GeoJSON values (as defined by index_datatype) \
-on records of the specified ns, set whose bin is a list or map.");
-
 PyDoc_STRVAR(get_cdtctx_base64_doc,
              "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
 \n\
@@ -322,6 +320,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Checks current connection state."},
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
+    {"get_policies", (PyCFunction)AerospikeClient_Get_Policies,
+     METH_VARARGS | METH_KEYWORDS,
+     "Get the client's currently effective policies."},
 
     {"get_stats", (PyCFunction)AerospikeClient_GetStats, METH_NOARGS, NULL},
 
@@ -465,14 +466,16 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
     {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
      METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
-    {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
-     METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
     {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
      METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
      METH_VARARGS | METH_KEYWORDS, index_remove_doc},
+
+    {"index_single_value_create",
+     (PyCFunction)AerospikeClient_Index_Single_Value_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
     {"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
      METH_VARARGS | METH_KEYWORDS, index_list_create_doc},
     {"index_map_keys_create",
@@ -481,6 +484,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"index_map_values_create",
      (PyCFunction)AerospikeClient_Index_Map_Values_Create,
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
+    {"index_set_create", (PyCFunction)AerospikeClient_Index_Set_Create,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+
     {"index_geo2dsphere_create",
      (PyCFunction)AerospikeClient_Index_2dsphere_Create,
      METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},
@@ -570,6 +576,8 @@ internal_error:
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
+    as_log_trace("Starting to create a new client...");
+
     PyObject *py_config = NULL;
     int error_code = 0;
     as_error constructor_err;
@@ -773,24 +781,34 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                             strdup((char *)PyUnicode_AsUTF8(py_tls_name));
                     }
                 }
-            }
-            else if (PyUnicode_Check(py_host)) {
-                addr = strdup(strtok((char *)PyUnicode_AsUTF8(py_host), ":"));
-                addr = strtok(addr, ":");
-                char *temp = strtok(NULL, ":");
-                if (NULL != temp) {
-                    port = (uint16_t)atoi(temp);
-                }
-            }
-            if (addr) {
-                if (tls_name) {
-                    as_config_tls_add_host(&config, addr, tls_name, port);
-                    free(tls_name);
+
+                if (addr) {
+                    if (tls_name) {
+                        as_config_tls_add_host(&config, addr, tls_name, port);
+                        free(tls_name);
+                    }
+                    else {
+                        as_config_add_host(&config, addr, port);
+                    }
+                    free(addr);
                 }
                 else {
-                    as_config_add_host(&config, addr, port);
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
-                free(addr);
+            }
+            else if (PyUnicode_Check(py_host)) {
+                // Accepts "hostname[:tlsname][:port]", including bracketed
+                // IPv6 addresses, e.g. "host:3000", "host:tlsname:3000",
+                // "[::1]:3000", "[::1]:tlsname:3000" (CLIENT-4841). Parsing
+                // is delegated to the C client, which copies the string
+                // instead of mutating the Python-owned buffer.
+                const char *host_str = PyUnicode_AsUTF8(py_host);
+                if (!host_str ||
+                    !as_config_add_hosts(&config, host_str, port)) {
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
+                }
             }
             else {
                 error_code = INIT_INVALID_ADRR_ERR;
@@ -1220,7 +1238,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_app_id = NULL;
     retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
-    if (retval == 1) {
+    if (retval == 1 && !Py_IsNone(py_app_id)) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
             Py_DECREF(py_app_id);
@@ -1286,6 +1304,22 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyUnicode_Check(py_user_pwd)) {
         char *username = (char *)PyUnicode_AsUTF8(py_user_name);
         char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
+        if (strlen(username) == 0) {
+            error_code = INIT_USER_EMPTY_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(password) == 0) {
+            error_code = INIT_PASSWORD_EMPTY_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(username) >= AS_USER_SIZE) {
+            error_code = INIT_USER_TOO_LONG_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+        if (strlen(password) >= AS_PASSWORD_SIZE) {
+            error_code = INIT_PASSWORD_TOO_LONG_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
         as_config_set_user(&config, username, password);
     }
 
@@ -1362,6 +1396,28 @@ CONSTRUCTOR_ERROR:
     case INIT_INVALID_AUTHMODE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Specify valid auth_mode");
+        break;
+    }
+    case INIT_USER_TOO_LONG_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Username length exceeds the maximum of %d characters",
+                        AS_USER_SIZE - 1);
+        break;
+    }
+    case INIT_PASSWORD_TOO_LONG_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Password length exceeds the maximum of %d characters",
+                        AS_PASSWORD_SIZE - 1);
+        break;
+    }
+    case INIT_USER_EMPTY_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Username must not be empty");
+        break;
+    }
+    case INIT_PASSWORD_EMPTY_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "Password must not be empty");
         break;
     }
     default:
@@ -1524,7 +1580,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeClient_Type = {
+PyTypeObject AerospikeClient_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
         FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
     sizeof(AerospikeClient),                  // tp_basicsize

@@ -39,9 +39,7 @@ class TestGetNodeNames(object):
         unconnected_client = aerospike.client(config)
         unconnected_client.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             unconnected_client.get_node_names()
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
-            assert exception.msg == "No connection to aerospike cluster."
+        assert excinfo.value.code == 11
+        assert excinfo.value.msg == "No connection to aerospike cluster."
