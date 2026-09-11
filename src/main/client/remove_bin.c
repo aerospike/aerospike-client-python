@@ -28,18 +28,21 @@
 #include "policy.h"
 
 /**
- * An invalid policy dictionary key should raise ParamError, not ClientError,
- * which is what happens once pyobject_to_policy_write clobbers the specific
- * error it already set. Fixing that outright would be a breaking change, so
- * for now we only warn about the future behavior change here, matching the
- * exact condition pyobject_to_policy_write itself uses to decide whether to
- * run the invalid-key check.
+ * remove_bin() overwrites pyobject_to_policy_write() errors with a generic
+ * ClientError ("Incorrect policy"). That hides the ParamError for an invalid
+ * policy dictionary key, which is the CLIENT-3879 bug, but the same overwrite
+ * also hides other ParamErrors from the converter (non-dict policy, invalid
+ * field types, bad txn, etc.). Dropping the overwrite would change all of
+ * those, so detect the invalid-key case first and keep the overwrite for
+ * every other conversion failure.
  *
- * Returns true if the warning was promoted to a real exception (warnings as
- * errors), in which case the caller must bail out immediately without
- * raising anything else.
+ * The guard matches pyobject_to_policy_write(): only check keys when a policy
+ * is present and validate_keys is enabled. Non-dicts are left to the
+ * converter so they still become ClientError.
+ *
+ * Returns true if err is already set and the caller must skip conversion.
  */
-static bool warn_if_invalid_remove_bin_policy_key(AerospikeClient *self,
+static bool set_param_error_if_invalid_policy_key(AerospikeClient *self,
                                                   as_error *err,
                                                   PyObject *py_policy)
 {
@@ -47,17 +50,19 @@ static bool warn_if_invalid_remove_bin_policy_key(AerospikeClient *self,
         return false;
     }
 
-    as_status retval = does_py_dict_contain_valid_keys(
-        err, py_policy, py_write_policy_valid_keys,
-        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
-    as_error_reset(err);
-
-    if (retval != 0) {
+    if (!PyDict_Check(py_policy)) {
         return false;
     }
 
-    return PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                            REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE) == -1;
+    as_status retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_write_policy_valid_keys,
+        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        return true;
+    }
+    return retval == 0;
 }
 
 /**
@@ -85,7 +90,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_write *write_policy_p = NULL;
     as_key key;
     bool key_initialized = false;
-    bool warning_became_exception = false;
     as_record rec;
     char *binName = NULL;
     int count = 0;
@@ -108,8 +112,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
     key_initialized = true;
 
-    if (warn_if_invalid_remove_bin_policy_key(self, err, py_policy)) {
-        warning_became_exception = true;
+    if (set_param_error_if_invalid_policy_key(self, err, py_policy)) {
         goto CLEANUP;
     }
 
@@ -163,10 +166,6 @@ CLEANUP:
 
     if (key_initialized) {
         as_key_destroy(&key);
-    }
-
-    if (warning_became_exception) {
-        return NULL;
     }
 
     if (err->code != AEROSPIKE_OK) {
