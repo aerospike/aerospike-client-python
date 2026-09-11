@@ -55,7 +55,10 @@ class WriteFlags(IntEnum):
 
     CREATE_ONLY = 1
     """
-    Create new values only. Valid only on:
+    Apply the operation only if the bin does not already exist.
+
+    Against a live bin, the server returns :py:exc:`~aerospike.exception.BinExistsError`. This is valid only on the
+    eight additive create ops:
 
     - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
     - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
@@ -68,24 +71,35 @@ class WriteFlags(IntEnum):
 
     and their corresponding expressions.
 
-    Raises :py:exc:`~aerospike.exception.BinExistsError` if the bin already exists. Mutually exclusive with
-    :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`. Invalid with a CDT context path.
+    #. On any other string modify operations, the server rejects it
+       with :py:exc:`~aerospike.exception.InvalidRequest`.
+    #. When this flag combined with :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`,
+       :py:exc:`~aerospike.exception.InvalidRequest` is raised.
+    #. When this flag is passed for a CDT context path, :py:exc:`~aerospike.exception.InvalidRequest` is raised.
+
+    None of those three rejections is suppressible by :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.NO_FAIL`:
+    the server raises them while parsing the operation's arguments, upstream of every ``NO_FAIL`` test.
     """
 
     UPDATE_ONLY = 2
     """
-     Update existing values only. Mutually exclusive with
-     :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
+    Apply the operation only to an existing bin, disabling bin creation.
 
-     Valid on all string modify ops. This disables bin creation,
-     so a missing bin is a silent no-op rather than a create.
+    On a missing bin the operation is a silent no-op and the bin is not created.
+    Valid on all string modify ops. Mutually exclusive with
+    :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`; combining the two raises
+    :py:exc:`~aerospike.exception.InvalidRequest`.
     """
 
     NO_FAIL = 4
     """
-    Suppress an operation failure with the bin unchanged.
+    Do not raise an error when the modify itself cannot be applied.
 
-    Does not suppress wrong-type errors.
+    The operation becomes a silent success and the bin is left at its unmodified
+    prior value. This flag does not suppress every failure.
+    :py:exc:`~aerospike.exception.BinIncompatibleType` and ill-formed UTF-8 in the
+    bin surface regardless of the flag, as do the argument-parsing rejections
+    listed on :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`.
     """
 
 

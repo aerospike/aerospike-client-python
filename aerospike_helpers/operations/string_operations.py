@@ -212,7 +212,8 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_integer`` operation that parses the string as an unsigned 64-bit integer.
-    Raises :exc:`~aerospike.exception.OpNotApplicable` if the bin cannot be parsed as an integer.
+    Raises :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED`
+    if the bin cannot be parsed as an integer.
 
     Args:
 
@@ -229,7 +230,14 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 def to_double(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_double`` operation that parses the string as a 64-bit float.
-    Returns :exc:`~aerospike.exception.OpNotApplicable` if the bin cannot be parsed as a double.
+
+
+    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED`
+    if the bin cannot be parsed as a double.
+
+    :meth:`~aerospike_helpers.operations.string_operations.is_numeric` is not a reliable pre-flight for this op:
+    :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` requires a `.` followed by a digit, so `"5"` is false
+    under :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` even though it parses as a double.
 
     Args:
 
@@ -379,6 +387,9 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
     Create string ``b64_decode`` operation that treats the bin as base64 text and
     returns the decoded bytes as a blob.
 
+    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_B64_INVALID` if the
+    bin does not hold valid base64.
+
     Args:
 
         bin_name: name of string bin.
@@ -418,7 +429,8 @@ def to_string(bin_name: str):
     bin to its string representation.
 
     Raises :exc:`~aerospike.exception.BinIncompatibleType` for
-    any other bin type. This top-level operation does not accept ctx and does not
+    any other bin type. A blob bin whose bytes are not valid UTF-8 returns :exc:`~aerospike.exception.OpNotApplicable`
+    with :py:data:`aerospike.SUB_OPNOT_STRING_UTF8_INVALID`. This top-level operation does not accept ctx and does not
     send a msgpack payload.
 
     Args:
@@ -560,12 +572,18 @@ def snip(bin_name: str, start: int, end: int | None = None, policy: StringPolicy
 
     If the bin doesn't exist, this operation will be a no-op.
 
+    .. note::
+
+        The server's snip argument list is positional — ``start``, ``end``, ``flags`` —
+        so this 1-arg form cannot carry policy flags without also supplying an
+        explicit end.
+
     Args:
 
         bin_name: name of string bin.
-        start: First codepoint to remove, inclusive.
+        start: First codepoint to remove, inclusive. Negative start counts from the end of the string.
         end: One past the last codepoint to remove, exclusive. If :py:obj:`None`, remove from ``start`` to end of
-            string.
+            string, truncating it.
         policy: String policy. If end is :py:obj:`None`, ``policy`` is not sent.
         ctx: Optional path into a string nested inside a list or map.
     """
@@ -610,6 +628,7 @@ def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPoli
     Create string ``replace_all`` operation that replaces every occurrence of needle
     with replacement.
 
+    Needle matching is Unicode canonical, not byte-exact.
     If the bin doesn't exist, this operation will be a no-op.
 
     Args:
@@ -881,7 +900,8 @@ def regex_replace(
         pattern: the regex pattern to match against.
         replacement: the string to replace with.
         regex_flags: The regex flags to use.
-        policy: String policy.
+        policy: String policy. :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.NO_FAIL` also suppresses a regex
+            compile failure.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {
