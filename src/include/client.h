@@ -157,7 +157,7 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
                                  PyObject *kwds);
 
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-                                        PyObject *py_meta, PyObject *py_policy);
+                                        PyObject *py_policy);
 
 /**
  * Remove bin from the database.
@@ -373,15 +373,6 @@ PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
 
 PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary cdt index
- *
- *		client.index_cdt_create(namespace, set, bin, index_type, index_datatype, index_name, ctx, policy)
- *
- */
-PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds);
 
 /**
  * Create secondary geospatial index

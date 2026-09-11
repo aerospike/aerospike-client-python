@@ -152,11 +152,9 @@ Record Commands
 
         Create a new record, or remove / add bins to a record.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
-        :param dict meta: record metadata to be set. see :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. see :ref:`metadata_dict`.
         :param dict policy: see :ref:`aerospike_write_policies`.
 
         :param serializer: override the serialization mode of the client \
@@ -317,11 +315,9 @@ Record Commands
         (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. )
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -372,11 +368,9 @@ Record Commands
 
         Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :return: a :ref:`aerospike_record_tuple`.
@@ -414,13 +408,9 @@ Record Commands
 
         Touch the given record, setting its time-to-live and incrementing its generation.
 
-        .. versionchanged:: 19.1.0
-
-            Deprecated the ``meta["ttl"]`` parameter. Use the ``val`` parameter instead.
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
-        :param dict meta: record metadata to be set. see :ref:`metadata_dict`
+        :param dict meta: record generation to compare. see :ref:`metadata_dict`
         :param dict policy: see :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -446,16 +436,11 @@ Record Commands
             {'ttl': 2592000, 'gen': 1}
             {'ttl': 120, 'gen': 2}
 
-    .. method:: remove(key[meta: dict[, policy: dict]])
+    .. method:: remove(key[, policy: dict])
 
         Remove a record matching the *key* from the cluster.
 
-        .. versionchanged:: 19.1.0
-
-            Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
         :param dict policy: see :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -468,7 +453,7 @@ Record Commands
 
             # Try to remove it with the wrong generation
             try:
-                client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
+                client.remove(keyTuple, policy={'gen': aerospike.POLICY_GEN_EQ, 'generation': 5})
             except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
 
@@ -484,11 +469,9 @@ Record Commands
         Remove a list of bins from a record with a given *key*. Equivalent to \
         setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -817,12 +800,10 @@ String Operations
 
         Append a string to the string value in bin.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -844,12 +825,10 @@ String Operations
 
         Prepend the string value in *bin* with the string *val*.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to prepend to the bin value.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -880,13 +859,11 @@ Numeric Operations
 
         Increment the integer value in *bin* by the integer *val*.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict meta: record generation to compare. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1519,24 +1496,6 @@ Index Operations
 
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
 
-    .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
-
-        .. deprecated:: 19.1.0 Use the other non-deprecated index methods to create an index with a list of contexts.
-
-        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
-        numeric, string, or GeoJSON values (as defined by *index_datatype*)
-        on records of the specified *ns*, *set* whose bin is a list or map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
-        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
-        :param str index_name: the name of the index.
-        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
     .. index::
         single: Admin Operations
 
@@ -2032,8 +1991,9 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS` for possible special values.
-    * ``"gen"`` (:class:`int`): record generation
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. This field is read only.
+    * ``"gen"`` (:class:`int`): record generation. If passing as input, this is the expected record generation.
+        If returned as an output, this is the current record generation.
 
 .. _aerospike_policies:
 

@@ -951,7 +951,7 @@ DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
 
-DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", "ttl", NULL)
+DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", NULL)
 
 // Use a struct to create pairs of pyobjects and list of strings defined above
 // When we initialize the module, we create sets for the valid keys that the client can use later
