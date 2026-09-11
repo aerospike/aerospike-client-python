@@ -38,7 +38,6 @@ class TestRemove:
     @pytest.mark.parametrize(
         "kwargs",
         [
-            {"meta": {"gen": 0}},
             {"policy": {"generation": 0, "total_timeout": 180000}},
         ]
     )
@@ -48,14 +47,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
 
-        if "meta" in kwargs:
-            cm = pytest.warns(DeprecationWarning)
-        else:
-            cm = nullcontext()
-
-        with cm:
-            retobj = self.as_connection.remove(key, **kwargs)
-
+        retobj = self.as_connection.remove(key, **kwargs)
         assert retobj == 0
 
         with pytest.raises(e.RecordNotFound) as exception:
@@ -244,11 +236,9 @@ class TestRemove:
         Invoke remove() with extra parameter
         """
         key = ("test", "demo", 1)
-        meta = {"gen": 0}
         policy = {}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.remove(key, meta, policy, "Extra Param")
-        assert "remove() takes at most 3 arguments (4 given)" in str(typeError.value)
+            self.as_connection.remove(key, policy, "Extra Param")
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", key_neg)
     def test_neg_remove_with_incorrect_data(self, key, ex_code, ex_msg):
