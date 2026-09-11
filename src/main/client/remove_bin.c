@@ -98,6 +98,8 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_ssize_t size = PyList_Size(py_binList);
     // Initialize record
     as_record_inita(&rec, size);
+    // as_record_inita defaults ttl to 0 (namespace default). Use the write policy ttl instead.
+    rec.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     // Convert python key object to as_key
     pyobject_to_key(err, py_key, &key);
@@ -142,7 +144,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    check_and_set_meta(py_meta, &rec.gen, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec.gen, &rec.ttl, err, self->validate_keys);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

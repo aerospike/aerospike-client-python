@@ -944,6 +944,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations ops;
     Py_ssize_t size = PyList_Size(py_list);
     as_operations_inita(&ops, size);
+    // as_operations_inita defaults ttl to 0 (namespace default). Use the operate policy ttl instead.
+    ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     if (py_policy) {
         if (pyobject_to_policy_operate(self, err, py_policy, &operate_policy,
@@ -958,8 +960,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     memset(&static_pool, 0, sizeof(static_pool));
     CHECK_CONNECTED(err);
 
-    if (check_and_set_meta(py_meta, &ops.gen, err, self->validate_keys) !=
-        AEROSPIKE_OK) {
+    if (check_and_set_meta(py_meta, &ops.gen, &ops.ttl, err,
+                           self->validate_keys) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -1109,6 +1111,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_operations ops;
     Py_ssize_t ops_list_size = PyList_Size(py_list);
     as_operations_inita(&ops, ops_list_size);
+    // as_operations_inita defaults ttl to 0 (namespace default). Use the operate policy ttl instead.
+    ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     // For expressions conversion.
     as_exp *exp_list_p = NULL;
@@ -1129,8 +1133,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         }
     }
 
-    if (check_and_set_meta(py_meta, &ops.gen, err, self->validate_keys) !=
-        AEROSPIKE_OK) {
+    if (check_and_set_meta(py_meta, &ops.gen, &ops.ttl, err,
+                           self->validate_keys) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
