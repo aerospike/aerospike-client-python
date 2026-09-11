@@ -157,7 +157,7 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
                                  PyObject *kwds);
 
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-                                        PyObject *py_meta, PyObject *py_policy);
+                                        PyObject *py_policy);
 
 /**
  * Remove bin from the database.
