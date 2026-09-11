@@ -101,6 +101,9 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     // as_record_inita defaults ttl to 0 (namespace default). Use the write policy ttl instead.
     rec.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     // Convert python key object to as_key
     pyobject_to_key(err, py_key, &key);
     if (err->code != AEROSPIKE_OK) {
@@ -116,7 +119,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list_p, false);
+                             &dynamic_pool, &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
@@ -154,6 +157,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
 
     as_record_destroy(&rec);
 
