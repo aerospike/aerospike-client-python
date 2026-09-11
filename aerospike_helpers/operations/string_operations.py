@@ -232,8 +232,8 @@ def to_double(bin_name: str, ctx: TypeCTX = None):
     Create string ``to_double`` operation that parses the string as a 64-bit float.
 
 
-    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`SUB_OPNOT_STRING_CONVERSION_FAILED` if the bin
-    cannot be parsed as a double.
+    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED`
+        if the bin cannot be parsed as a double.
 
     :meth:`~aerospike_helpers.operations.string_operations.is_numeric` is not a reliable pre-flight for this op:
     :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` requires a `.` followed by a digit, so `"5"` is false
