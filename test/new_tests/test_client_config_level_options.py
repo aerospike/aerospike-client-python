@@ -568,8 +568,7 @@ class TestConfigTTL:
             {"meta": None},
             {"meta": {"gen": 10}},
             {"policy": None},
-            # TODO: should this be uncommented?
-            # {"policy": {}},
+            {"policy": {}},
         ]
     )
 
