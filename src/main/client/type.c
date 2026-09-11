@@ -211,21 +211,6 @@ PyDoc_STRVAR(udf_get_doc, "udf_get(module[, language[, policy]]) -> str\n\
 \n\
 Return the content of a UDF module which is registered with the cluster.");
 
-PyDoc_STRVAR(index_integer_create_doc,
-             "index_integer_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create an integer index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(index_string_create_doc,
-             "index_string_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a string index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(index_blob_create_doc,
-             "index_blob_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a blob index with index_name on the bin in the specified ns, set.");
-
 PyDoc_STRVAR(get_cdtctx_base64_doc,
              "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
 \n\
@@ -255,11 +240,6 @@ PyDoc_STRVAR(
 \n\
 Create an index named index_name for numeric, string or GeoJSON values (as defined by index_datatype) \
 on records of the specified ns, set whose bin is a map. The index will include the values of the map.");
-
-PyDoc_STRVAR(index_geo2dsphere_create_doc,
-             "index_geo2dsphere_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
 
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
@@ -460,12 +440,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // SECONDARY INDEX OPERATONS
 
-    {"index_integer_create", (PyCFunction)AerospikeClient_Index_Integer_Create,
-     METH_VARARGS | METH_KEYWORDS, index_integer_create_doc},
-    {"index_string_create", (PyCFunction)AerospikeClient_Index_String_Create,
-     METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
-    {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
-     METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
     {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
      METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
@@ -486,10 +460,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
     {"index_set_create", (PyCFunction)AerospikeClient_Index_Set_Create,
      METH_VARARGS | METH_KEYWORDS, NULL},
-
-    {"index_geo2dsphere_create",
-     (PyCFunction)AerospikeClient_Index_2dsphere_Create,
-     METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},
 
     // BATCH OPERATIONS
 
