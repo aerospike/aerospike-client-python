@@ -1,4 +1,4 @@
-from .. import Example
+from ... import Example
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import expression_operations as expr_ops
 

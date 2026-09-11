@@ -7,6 +7,7 @@ from aerospike_helpers.operations import (
     list_operations,
     hll_operations,
 )
+from aerospike_helpers import cdt_ctx
 import aerospike
 from aerospike import exception as e
 
@@ -30,6 +31,12 @@ class TestInvalidOptions:
                 bin_name="bitwise",
                 byte_size=1,
                 resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY * 2,
+            ),
+            map_operations.map_create(
+                bin_name="map",
+                map_order=aerospike.MAP_KEY_VALUE_ORDERED + 1,
+                persist_index=False,
+                ctx=[cdt_ctx.cdt_ctx_list_index(0)]
             ),
             map_operations.map_put(
                 bin_name="map",

@@ -766,6 +766,11 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+#define DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR                                 \
+    "Attempted to store a map with an invalid map key type"
+#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+    "Attempted to store a map with key %s, which is an invalid type"
+
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
                           as_static_pool *static_pool, int serializer_type)
@@ -801,17 +806,73 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         as_val_new_from_pyobject(self, err, py_key, &key, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            break;
+            goto EXIT_LOOP;
         }
+
+        bool is_map_key_valid_type = key->type == AS_STRING ||
+                                     key->type == AS_INTEGER ||
+                                     key->type == AS_BYTES;
+        if (!is_map_key_valid_type) {
+            char *key_repr = as_val_tostring(key);
+            int warning_failed = 0;
+
+            if (!key_repr) {
+                warning_failed = PyErr_WarnEx(
+                    PyExc_DeprecationWarning,
+                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR, STACK_LEVEL);
+            }
+            else {
+                warning_failed =
+                    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                                     DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+            }
+
+            if (warning_failed) {
+                // Warning could not be raised or was converted to an error.
+                if (!key_repr) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
+                }
+                else {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    DEPRECATION_MESSAGE_TEMPLATE, key_repr);
+                }
+            }
+
+            free(key_repr);
+
+            if (warning_failed) {
+                // Fail out
+                goto CLEANUP_KEY_AND_EXIT_LOOP;
+            }
+
+            // Warning raised. Skip this key
+            as_val_destroy(key);
+            continue;
+        }
+
         as_val_new_from_pyobject(self, err, py_val, &val, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            if (key) {
-                as_val_destroy(key);
-            }
-            break;
+            goto CLEANUP_KEY_AND_EXIT_LOOP;
         }
-        as_map_set(*map, key, val);
+
+        int retval = as_map_set(*map, key, val);
+        if (retval != 0) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to convert Python dictionary to a C client as_map.");
+            goto CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP;
+        }
+
+        continue;
+
+    CLEANUP_KEY_VAL_PAIR_AND_EXIT_LOOP:
+        as_val_destroy(val);
+    CLEANUP_KEY_AND_EXIT_LOOP:
+        as_val_destroy(key);
+    EXIT_LOOP:
+        break;
     }
 
     if (err->code != AEROSPIKE_OK) {
@@ -2672,8 +2733,8 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         }
 
         int pad = 0;
-        status =
-            get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad);
+        status = get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad,
+                                      false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
@@ -2858,6 +2919,48 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
     return AEROSPIKE_OK;
 }
 
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message)
+{
+    PyObject *py_subcode = PyLong_FromUnsignedLong(subcode);
+    if (!py_subcode) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to convert BatchRecord.subcode");
+    }
+    int retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_SUBCODE, py_subcode);
+    Py_DECREF(py_subcode);
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.subcode");
+    }
+
+    if (message) {
+        PyObject *py_message = PyUnicode_FromString(message);
+        if (!py_message) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Failed to convert BatchRecord.message");
+        }
+
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, py_message);
+        Py_DECREF(py_message);
+    }
+    else {
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, Py_None);
+    }
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.message");
+    }
+    return err->code;
+}
+
 // checking_if_records_exist:
 // false if we want to get the record metadata and bins
 // true if we only care about the record's metadata
@@ -2866,11 +2969,11 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist)
 {
-    as_status *result_code = &(bres->result);
+    as_status *batch_result_code = &(bres->result);
     as_record *result_rec = &(bres->record);
     bool in_doubt = bres->in_doubt;
 
-    PyObject *py_res = PyLong_FromLong((long)*result_code);
+    PyObject *py_res = PyLong_FromLong((long)*batch_result_code);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
     Py_DECREF(py_res);
 
@@ -2879,25 +2982,34 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                            py_in_doubt);
     Py_DECREF(py_in_doubt);
 
-    if (*result_code == AEROSPIKE_OK) {
-        PyObject *rec = NULL;
-        if (!checking_if_records_exist) {
-            record_to_pyobject(self, err, result_rec, bres->key, &rec);
-        }
-        else {
-            PyObject *py_result_key = NULL;
-            PyObject *py_result_meta = NULL;
-
-            key_to_pyobject(err, bres->key, &py_result_key);
-            metadata_to_pyobject(err, &(bres->record), &py_result_meta);
-
-            rec = PyTuple_New(2);
-            PyTuple_SetItem(rec, 0, py_result_key);
-            PyTuple_SetItem(rec, 1, py_result_meta);
-        }
-        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
-        Py_DECREF(rec);
+    set_error_details_in_py_batch_record(err, py_batch_record, bres->subcode,
+                                         bres->message);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
     }
+
+    if (*batch_result_code != AEROSPIKE_OK) {
+        // Don't insert record tuple or 2-tuple containing key and meta
+        return err->code;
+    }
+
+    PyObject *py_rec = NULL;
+    if (!checking_if_records_exist) {
+        record_to_pyobject(self, err, result_rec, bres->key, &py_rec);
+    }
+    else {
+        PyObject *py_result_key = NULL;
+        PyObject *py_result_meta = NULL;
+
+        key_to_pyobject(err, bres->key, &py_result_key);
+        metadata_to_pyobject(err, &(bres->record), &py_result_meta);
+
+        py_rec = PyTuple_New(2);
+        PyTuple_SetItem(py_rec, 0, py_result_key);
+        PyTuple_SetItem(py_rec, 1, py_result_meta);
+    }
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, py_rec);
+    Py_DECREF(py_rec);
 
     return err->code;
 }

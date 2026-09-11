@@ -1312,3 +1312,39 @@ class ListGetByRankRange(_BaseExpr):
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class ListJoin(_BaseExpr):
+    """
+    Create expression that concatenates the string items of a list and
+    returns the results as a single string.
+
+    Every item must be a string. An empty list yields an empty string,
+    and a single-item list yields that item with no separator applied.
+    """
+
+    def __init__(
+        self, ctx: "TypeCTX",
+        separator: str | None,
+        bin: "TypeBinName",
+    ):
+        """Args:
+            ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+                objects.
+            separator (str | None): If set to a :class:`str`, this will be inserted between consecutive items.
+                If set to :py:obj:`None`, there will be no separator inserted between items.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                an expression that returns a list value.
+
+        :return: Expression.
+        """
+        if separator:
+            self._op = aerospike._OP_LIST_JOIN_SEPARATOR
+        else:
+            self._op = aerospike._OP_LIST_JOIN
+
+        self._children = (bin if isinstance(bin, _BaseExpr) else ListBin(bin),)
+        if self._op == aerospike._OP_LIST_JOIN_SEPARATOR:
+            self._fixed = {aerospike._STR_EXP_SEPARATOR_KEY: separator}
+        if ctx is not None:
+            self._fixed[_Keys.CTX_KEY] = ctx

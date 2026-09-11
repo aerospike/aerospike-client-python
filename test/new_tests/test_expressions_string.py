@@ -4,12 +4,12 @@ import base64
 from aerospike_helpers.expressions import string as str_expr, IntBin, FloatBin, BlobBin
 from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.operations import operations
-from aerospike_helpers.string_helpers import NumericType, RegexFlags
+from aerospike_helpers.string_helpers import NumericType, RegexFlags, WriteFlags
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
 from .string_helpers import *
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail, TEST_NS, TEST_SET
 KEY = (TEST_NS, TEST_SET, 1)
 
 
@@ -62,11 +62,11 @@ class TestExpressions:
                 bytearray(base64.b64decode(BASE64_ENCODED_STR))
             ),
             (
-                str_expr.RegexCompare(pattern=BINS[MULTIBYTE_CODEPOINT_BIN_NAME], regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern=BINS[NFD_CODEPOINT_BIN_NAME], regex_flags=RegexFlags.DEFAULT, bin=NFD_CODEPOINT_BIN_NAME),
                 True
             ),
             (
-                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+                str_expr.RegexCompare(pattern="π", regex_flags=RegexFlags.DEFAULT, bin=NFD_CODEPOINT_BIN_NAME),
                 False
             ),
             (
@@ -87,7 +87,7 @@ class TestExpressions:
             ),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     def test_reading_str_bins(self, expr, expected_result):
         compiled_expr = expr.compile()
         ops = [
@@ -103,16 +103,16 @@ class TestExpressions:
     @pytest.mark.parametrize(
         "expr",
         [
-            str_expr.SubStr(start="1", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SubStrRange(start="1", end=4, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SubStrRange(start=1, end="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.CharAt(index="4", bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.Contains(needle=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
-            str_expr.SplitSeparator(bin=MULTIBYTE_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
-            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=MULTIBYTE_CODEPOINT_BIN_NAME),
+            str_expr.SubStr(start="1", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start="1", end=4, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SubStrRange(start=1, end="4", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.CharAt(index="4", bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.Find(needle=BYTEARRAY_VAL, occurrence=1, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.Contains(needle=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.StartsWith(prefix=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.EndsWith(suffix=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
+            str_expr.SplitSeparator(bin=NFD_CODEPOINT_BIN_NAME, separator=BYTEARRAY_VAL),
+            str_expr.RegexCompare(pattern=BYTEARRAY_VAL, bin=NFD_CODEPOINT_BIN_NAME),
         ]
     )
     def test_invalid_param(self, expr):
@@ -176,6 +176,10 @@ class TestExpressions:
                 EXAMPLE_STR + NEEDLE + NEEDLE
             ),
             (
+                str_expr.Snip, {"start": START_IDX, "end": None, "bin": STR_BIN_NAME},
+                EXAMPLE_STR[:START_IDX]
+            ),
+            (
                 str_expr.Snip, {"start": START_IDX, "end": len(EXAMPLE_STR) - 1, "bin": STR_BIN_NAME},
                 EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]
             ),
@@ -196,12 +200,12 @@ class TestExpressions:
                 UPPERCASE_STR.lower()
             ),
             (
-                str_expr.CaseFold, {"bin": MULTIBYTE_CODEPOINT_BIN_NAME},
-                MULTIBYTE_CODEPOINT.casefold()
+                str_expr.CaseFold, {"bin": NFD_CODEPOINT_BIN_NAME},
+                NFD_CODEPOINT.casefold()
             ),
             (
-                str_expr.NormalizeNFC, {"bin": MULTIBYTE_CODEPOINT_BIN_NAME},
-                NORMALIZED_CODEPOINT
+                str_expr.NormalizeNFC, {"bin": NFD_CODEPOINT_BIN_NAME},
+                NFC_CODEPOINT
             ),
             (
                 str_expr.TrimStart, {"bin": SURROUNDING_WHITESPACE_BIN_NAME},
@@ -250,11 +254,15 @@ class TestExpressions:
             (
                 str_expr.RegexReplace, {"pattern": "asdf", "replacement": "1234", "regex_flags": RegexFlags.DEFAULT, "bin": STR_BIN_NAME},
                 "1234asdf"
+            ),
+            (
+                str_expr.RegexReplace, {"pattern": "ASDF", "replacement": "1234", "regex_flags": RegexFlags.DEFAULT | RegexFlags.CASE_INSENSITIVE, "bin": STR_BIN_NAME},
+                "1234asdf"
             )
         ]
     )
     @kwargs_policy
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     def test_expression_write(self, kwargs_policy: dict, expr, expr_kwargs: dict, expected_result):
         compiled_expr = expr(**expr_kwargs, **kwargs_policy).compile()
         ops = [

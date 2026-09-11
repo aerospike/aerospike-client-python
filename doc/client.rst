@@ -477,7 +477,7 @@ Record Commands
 
         .. testoutput::
 
-            Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
@@ -492,6 +492,16 @@ Record Commands
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note::
+            **Known issue:** if the client config's ``validate_keys`` option is :py:obj:`True` and
+            *policy* contains an invalid dictionary key, this method raises
+            :py:class:`~aerospike.exception.ClientError` instead of the
+            :py:class:`~aerospike.exception.ParamError` that every other method raises in this
+            situation (see :func:`aerospike.client`'s ``validate_keys`` option). Changing this
+            outright would be a breaking change, so it is deferred to the next major client
+            release. A :exc:`DeprecationWarning` is raised in the meantime to warn ahead of that
+            change.
 
         .. testcode::
 
@@ -1233,6 +1243,39 @@ Info Operations
         Expose the value of the shm_key for this client if shared-memory cluster tending is enabled,
 
         :rtype: :class:`int` or :py:obj:`None`
+
+    .. method:: get_policies() -> dict
+
+        Return the client's currently effective policies, i.e. the config-level default policies
+        set via the ``policies`` key of the config dictionary passed to :func:`aerospike.client`,
+        merged with the library's own defaults for any values that weren't set. This reads live
+        config, so it also reflects any changes applied via :class:`aerospike.ConfigProvider`.
+
+        The returned :class:`dict` has one key per policy type (``"read"``, ``"write"``, ``"apply"``,
+        ``"remove"``, ``"query"``, ``"scan"``, ``"operate"``, ``"info"``, ``"admin"``, ``"batch"``,
+        ``"batch_parent_write"``, ``"batch_apply"``, ``"batch_write"``, ``"batch_remove"``,
+        ``"txn_verify"``, ``"txn_roll"``), each mapping to a flat :class:`dict` of that policy's
+        fields, using the same keys and constant values documented under :ref:`aerospike_policies`.
+
+        The config-level ``"metrics"`` policy (set via the ``policies`` config dict's ``metrics``
+        key) is not included, since it is a :class:`~aerospike_helpers.metrics.MetricsPolicy`
+        object rather than a policy dict.
+
+        :return: a :class:`dict` of policy dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. testcode::
+
+            policies = client.get_policies()
+            print(sorted(policies.keys()))
+            print(policies["read"]["total_timeout"])
+
+        .. testoutput::
+
+            ['admin', 'apply', 'batch', 'batch_apply', 'batch_parent_write', 'batch_remove', 'batch_write', 'info', 'operate', 'query', 'read', 'remove', 'scan', 'txn_roll', 'txn_verify', 'write']
+            1000
+
+        .. versionadded:: 19.3.0
 
     .. method:: truncate(namespace, set, nanos[, policy: dict])
 

@@ -404,6 +404,18 @@ class TestScan(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_scan_with_invalid_set_type(self):
+        """
+        Invoke scan() with a set argument that is neither a string nor None.
+        This should raise a ParamError instead of silently scanning the
+        entire namespace (CLIENT-4053).
+        """
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.scan(self.test_ns, 123)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_info.value.msg == "Set should be string, unicode or None"
+
     def test_scan_with_select_bin_integer(self):
         """
         Invoke scan() with select bin is of type integer.

@@ -42,6 +42,9 @@ enum Aerospike_send_bool_as_values {
     SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
+// We have a separate op for list join with a non-None separator argument
+// because the expressions for list join with a separator and the one without it
+// take up different amounts of space in memory when allocating the list of as_exp_entry's
 #define LIST_OP_NAMES_EXCEPT_LIST_APPEND                                       \
     X(LIST_APPEND_ITEMS), X(LIST_INSERT), X(LIST_INSERT_ITEMS), X(LIST_POP),   \
         X(LIST_POP_RANGE), X(LIST_REMOVE), X(LIST_REMOVE_RANGE),               \
@@ -61,11 +64,11 @@ enum Aerospike_send_bool_as_values {
         X(LIST_REMOVE_BY_REL_RANK_RANGE_TO_END),                               \
         X(LIST_REMOVE_BY_REL_RANK_RANGE),                                      \
         X(LIST_REMOVE_BY_INDEX_RANGE_TO_END),                                  \
-        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE)
+        X(LIST_REMOVE_BY_RANK_RANGE_TO_END), X(LIST_CREATE), X(LIST_JOIN),     \
+        X(LIST_JOIN_SEPARATOR)
 
 // clang-format off
-#define STRING_OP_NAMES                                                        \
-    X(STRING_STRLEN), \
+#define STRING_OP_NAMES_EXCEPT_STRLEN                                                        \
     X(STRING_SUBSTR), \
     X(STRING_SUBSTR_RANGE), \
     X(STRING_CHAR_AT), \
@@ -88,6 +91,7 @@ enum Aerospike_send_bool_as_values {
     X(STRING_OVERWRITE), \
     X(STRING_CONCAT), \
     X(STRING_SNIP), \
+    X(STRING_SNIP_START), \
     X(STRING_REPLACE), \
     X(STRING_REPLACE_ALL), \
     X(STRING_UPPER), \
@@ -103,14 +107,14 @@ enum Aerospike_send_bool_as_values {
     X(STRING_REGEX_REPLACE), \
     X(STRING_APPEND), \
     X(STRING_PREPEND), \
-    X(STRING_TO_STRING),
-// clang-format on
+    X(STRING_TO_STRING), // clang-format on
 
 enum {
 #define X(op_name) OP_##op_name
     X(LIST_APPEND) = 1001,
     LIST_OP_NAMES_EXCEPT_LIST_APPEND,
-    STRING_OP_NAMES
+    X(STRING_STRLEN) = 1200,
+    STRING_OP_NAMES_EXCEPT_STRLEN
 #undef X
 };
 
@@ -179,8 +183,9 @@ enum Aerospike_map_operations {
     X(BIT_GET), \
     X(BIT_COUNT), \
     X(BIT_LSCAN), \
-    X(BIT_RSCAN)
-// clang-format on
+    X(BIT_RSCAN), \
+    X(BIT_B64_ENCODE), \
+    X(BIT_B64_ENCODE_RANGE) // clang-format on
 
 enum aerospike_bitwise_operations {
 #define X(op_name) OP_##op_name
@@ -354,24 +359,30 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_write *policy,
                                          as_policy_batch_write **policy_p,
+                                         as_policy_batch_write *config_policy,
                                          as_exp **exp_list_p);
 
+// Here, config_policy is not used and is only present to make batch_write.c's
+// code simpler to implement
 as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         PyObject *py_policy,
                                         as_policy_batch_read *policy,
                                         as_policy_batch_read **policy_p,
+                                        as_policy_batch_read *config_policy,
                                         as_exp **exp_list_p);
 
 as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
+                                         as_policy_batch_apply *config_policy,
                                          as_exp **exp_list_p);
 
 as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           PyObject *py_policy,
                                           as_policy_batch_remove *policy,
                                           as_policy_batch_remove **policy_p,
+                                          as_policy_batch_remove *config_policy,
                                           as_exp **exp_list_p);
 
 // metrics_policy must be declared already

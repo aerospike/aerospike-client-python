@@ -49,7 +49,8 @@
                 __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
                 garb->policy_to_free = __policy;                                             \
                 if (__conversion_func(self, err, py___policy, __policy,                      \
-                                      &__policy, &expr_p) != AEROSPIKE_OK) {                 \
+                                      &__policy, config_policy,                              \
+                                      &expr_p) != AEROSPIKE_OK) {                            \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
                     /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
@@ -165,10 +166,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
 
     if (py_policy != NULL) {
-        if (pyobject_to_policy_batch(self, err, py_policy, &batch_policy,
-                                     &batch_policy_p,
-                                     &self->as->config.policies.batch,
-                                     &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(
+                self, err, py_policy, &batch_policy, &batch_policy_p,
+                &self->as->config.policies.batch_parent_write,
+                &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP4;
         }
     }
@@ -321,9 +322,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
         }
         switch (batch_type) {
-        case AS_BATCH_READ:;
+        case AS_BATCH_READ: {
 
             as_policy_batch_read *r_policy = NULL;
+            as_policy_batch_read *config_policy = NULL;
             GET_BATCH_POLICY_FROM_PYOBJECT(r_policy, as_policy_batch_read,
                                            pyobject_to_batch_read_policy,
                                            "Read")
@@ -346,10 +348,13 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             rr->policy = r_policy;
 
             break;
-
-        case AS_BATCH_WRITE:;
+        }
+        case AS_BATCH_WRITE: {
 
             as_policy_batch_write *w_policy = NULL;
+            as_policy_batch_write *config_policy =
+                &self->as->config.policies.batch_write;
+
             GET_BATCH_POLICY_FROM_PYOBJECT(w_policy, as_policy_batch_write,
                                            pyobject_to_batch_write_policy,
                                            "Write")
@@ -365,10 +370,13 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             wr->policy = w_policy;
 
             break;
-
-        case AS_BATCH_APPLY:;
+        }
+        case AS_BATCH_APPLY: {
 
             as_policy_batch_apply *a_policy = NULL;
+            as_policy_batch_apply *config_policy =
+                &self->as->config.policies.batch_apply;
+
             GET_BATCH_POLICY_FROM_PYOBJECT(a_policy, as_policy_batch_apply,
                                            pyobject_to_batch_apply_policy,
                                            "Apply")
@@ -427,10 +435,12 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             ar->policy = a_policy;
 
             break;
-
-        case AS_BATCH_REMOVE:;
+        }
+        case AS_BATCH_REMOVE: {
 
             as_policy_batch_remove *re_policy = NULL;
+            as_policy_batch_remove *config_policy =
+                &self->as->config.policies.batch_remove;
             GET_BATCH_POLICY_FROM_PYOBJECT(re_policy, as_policy_batch_remove,
                                            pyobject_to_batch_remove_policy,
                                            "Remove")
@@ -445,7 +455,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             rer->policy = re_policy;
 
             break;
-
+        }
         default:
             as_error_update(err, AEROSPIKE_ERR_PARAM, "batch_type unkown: %d",
                             batch_type);
@@ -498,6 +508,12 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
                                py_in_doubt);
         Py_DECREF(py_in_doubt);
+
+        set_error_details_in_py_batch_record(
+            err, py_batch_record, batch_record->subcode, batch_record->message);
+        if (err->code != AEROSPIKE_OK) {
+            goto CLEANUP_ON_ERROR;
+        }
 
         if (*result_code == AEROSPIKE_OK) {
             PyObject *rec = NULL;
