@@ -2112,11 +2112,40 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
 
     App use: prune least-valuable bins and retry.
 
+.. data:: SUB_PARAM_STRING_OP_PARAMS_INVALID
+
+    String modify op received invalid parameters (empty pad string, negative repeat count, negative pad target length,
+        etc.).
+
+    App use: validate pad/repeat arguments locally before sending.
+
 .. data:: SUB_PARAM_STRING_CTX_MALFORMED
 
     String op ctx envelope is malformed.
 
     App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
+
+.. data:: SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS
+
+    String overwrite resolved index is outside the string bounds.
+
+    App use: double check the string length and recompute the index before retrying.
+
+.. data:: SUB_PARAM_STRING_REGEX_INVALID
+
+    String regex argument is invalid (non-ICU idiom or ICU compile failure at
+    parse).
+
+    The server deliberately uses the same subcode value for ICU compile failures and
+    guided non-ICU rejections.
+
+    App use: validate regex patterns against the ICU dialect before sending.
+
+.. data:: SUB_PARAM_STRING_UTF8_INVALID
+
+    Ill-formed UTF-8 in a string op argument.
+
+    App use: validate application-supplied strings before packing the request.
 
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
