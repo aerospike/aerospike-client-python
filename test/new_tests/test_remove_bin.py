@@ -266,12 +266,23 @@ class TestRemovebin(object):
 
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
-        Invoke remove_bin() with incorrect policy
+        Invoke remove_bin() with an invalid policy dictionary key.
+
+        With validate_keys enabled this raises ParamError. With it disabled,
+        the invalid key is ignored and the call falls through to the
+        remove-bin operation, which succeeds or raises RecordNotFound.
         """
         key = ("test", "demo", 1)
         policy = {"time": 1001}
-        with pytest.raises((e.ClientError, e.RecordNotFound)):
-            self.as_connection.remove_bin(key, ["age"], {}, policy)
+        if self.config["validate_keys"]:
+            with pytest.raises(e.ParamError) as exceptionInfo:
+                self.as_connection.remove_bin(key, ["age"], {}, policy)
+            assert '"time" is an invalid policy dictionary key' in exceptionInfo.value.msg
+        else:
+            try:
+                self.as_connection.remove_bin(key, ["age"], {}, policy)
+            except e.RecordNotFound:
+                pass
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
@@ -347,7 +358,11 @@ class TestRemovebin(object):
 
     def test_neg_remove_bin_with_incorrect_policy_value(self):
         """
-        Invoke remove_bin() with incorrect policy value
+        Invoke remove_bin() with incorrect policy value.
+
+        pyobject_to_policy_write() sets ParamError for an invalid field type,
+        but remove_bin() still overwrites that with ClientError to avoid a
+        broader breaking change. Only invalid policy *keys* are ParamError.
         """
         key = ("test", "demo", 1)
 
@@ -355,6 +370,7 @@ class TestRemovebin(object):
         with pytest.raises(e.ClientError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
         assert exceptionInfo.value.code == -1
+        assert exceptionInfo.value.msg == "Incorrect policy"
 
     @pytest.mark.parametrize(
         "key, bin_for_removal, ex_code",

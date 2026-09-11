@@ -28,6 +28,44 @@
 #include "policy.h"
 
 /**
+ * remove_bin() overwrites pyobject_to_policy_write() errors with a generic
+ * ClientError ("Incorrect policy"). That hides the ParamError for an invalid
+ * policy dictionary key, which is the CLIENT-3879 bug, but the same overwrite
+ * also hides other ParamErrors from the converter (non-dict policy, invalid
+ * field types, bad txn, etc.). Dropping the overwrite would change all of
+ * those, so detect the invalid-key case first and keep the overwrite for
+ * every other conversion failure.
+ *
+ * The guard matches pyobject_to_policy_write(): only check keys when a policy
+ * is present and validate_keys is enabled. Non-dicts are left to the
+ * converter so they still become ClientError.
+ *
+ * Returns true if err is already set and the caller must skip conversion.
+ */
+static bool set_param_error_if_invalid_policy_key(AerospikeClient *self,
+                                                  as_error *err,
+                                                  PyObject *py_policy)
+{
+    if (!py_policy || py_policy == Py_None || !self->validate_keys) {
+        return false;
+    }
+
+    if (!PyDict_Check(py_policy)) {
+        return false;
+    }
+
+    as_status retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_write_policy_valid_keys,
+        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        return true;
+    }
+    return retval == 0;
+}
+
+/**
  ******************************************************************************************************
  * Removes a bin from a record.
  *
@@ -72,11 +110,16 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
     key_initialized = true;
 
+    if (set_param_error_if_invalid_policy_key(self, err, py_policy)) {
+        goto CLEANUP;
+    }
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
                              &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
     }
 
