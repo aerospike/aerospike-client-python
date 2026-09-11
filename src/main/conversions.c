@@ -1545,6 +1545,8 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
     const char *name;
 
     as_record_init(rec, size);
+    // as_record_init defaults ttl to 0 (namespace default). Use the write policy ttl instead.
+    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
         if (!PyUnicode_Check(py_bin_name)) {
