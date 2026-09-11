@@ -1545,8 +1545,6 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
     const char *name;
 
     as_record_init(rec, size);
-    // as_record_init defaults ttl to 0 (namespace default). Use the write policy ttl instead.
-    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
         if (!PyUnicode_Check(py_bin_name)) {
@@ -1593,7 +1591,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         }
     }
 
-    check_and_set_meta(py_meta, &rec->gen, &rec->ttl, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec->gen, err, self->validate_keys);
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
@@ -2433,8 +2431,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
  *******************************************************************************************************
  */
 as_status check_and_set_meta(PyObject *py_meta, uint16_t *gen_ref,
-                             uint32_t *ttl_ref, as_error *err,
-                             bool validate_keys)
+                             as_error *err, bool validate_keys)
 {
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {
@@ -2477,9 +2474,6 @@ as_status check_and_set_meta(PyObject *py_meta, uint16_t *gen_ref,
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
     }
-
-    *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
-
     return err->code;
 }
 
