@@ -55,9 +55,10 @@ class WriteFlags(IntEnum):
 
     CREATE_ONLY = 1
     """
-    Apply the operation only if the bin does not already exist. Against a live
-	bin the server returns :py:exc:`~aerospike.exception.BinExistsError`. Valid only on the eight
-	additive create ops:
+    Apply the operation only if the bin does not already exist.
+
+    Against a live bin, the server returns :py:exc:`~aerospike.exception.BinExistsError`. This is valid only on the
+    eight additive create ops:
 
     - :py:meth:`~aerospike_helpers.operations.string_operations.insert`
     - :py:meth:`~aerospike_helpers.operations.string_operations.overwrite`
@@ -82,8 +83,9 @@ class WriteFlags(IntEnum):
 
     UPDATE_ONLY = 2
     """
-    Apply the operation only to an existing bin, disabling bin creation. On a
-    missing bin the operation is a silent no-op and the bin is not created.
+    Apply the operation only to an existing bin, disabling bin creation.
+
+    On a missing bin the operation is a silent no-op and the bin is not created.
     Valid on all string modify ops. Mutually exclusive with
     :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.CREATE_ONLY`; combining the two raises
     :py:exc:`~aerospike.exception.InvalidRequest`.
@@ -91,8 +93,9 @@ class WriteFlags(IntEnum):
 
     NO_FAIL = 4
     """
-    Do not raise an error when the modify itself cannot be applied. The
-    operation becomes a silent success and the bin is left at its unmodified
+    Do not raise an error when the modify itself cannot be applied.
+
+    The operation becomes a silent success and the bin is left at its unmodified
     prior value. This flag does not suppress every failure.
     :py:exc:`~aerospike.exception.BinIncompatibleType` and ill-formed UTF-8 in the
     bin surface regardless of the flag, as do the argument-parsing rejections
