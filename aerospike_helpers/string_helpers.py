@@ -72,7 +72,7 @@ class WriteFlags(IntEnum):
     and their corresponding expressions.
 
     #. On any other string modify operations, the server rejects it
-       with :py:exc:`~aerospike.exception.InvalidRequest` via that op's flag mask.
+       with :py:exc:`~aerospike.exception.InvalidRequest`.
     #. When this flag combined with :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`,
        :py:exc:`~aerospike.exception.InvalidRequest` is raised.
     #. When this flag is passed for a CDT context path, :py:exc:`~aerospike.exception.InvalidRequest` is raised.

@@ -2079,8 +2079,8 @@ Subcodes
     No dispatchable subcode. Used when the parent status alone fully identifies
     the condition. Reserved as 0 across all status families.
 
-Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Subcodes paired with :py:exc:`~aerospike.exception.InvalidRequest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: SUB_PARAM_TTL_INVALID
 
