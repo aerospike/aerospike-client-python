@@ -70,15 +70,14 @@ class WriteFlags(IntEnum):
 
     and their corresponding expressions.
 
-    1. On any other string modify operations, the server rejects it
-    with :py:exc:`~aerospike.exception.InvalidRequest` via that op's flag mask.
-    2. When this flag combined with :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`,
-        :py:exc:`~aerospike.exception.InvalidRequest` is raised.
-    3. when this flag is passed for a CDT context path, :py:exc:`~aerospike.exception.InvalidRequest` is raised.
+    #. On any other string modify operations, the server rejects it
+       with :py:exc:`~aerospike.exception.InvalidRequest` via that op's flag mask.
+    #. When this flag combined with :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.UPDATE_ONLY`,
+       :py:exc:`~aerospike.exception.InvalidRequest` is raised.
+    #. When this flag is passed for a CDT context path, :py:exc:`~aerospike.exception.InvalidRequest` is raised.
 
-    None of those three rejections is
-    suppressible by :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.NO_FAIL`: the server raises them while
-    parsing the operation's arguments, upstream of every ``NO_FAIL`` test.
+    None of those three rejections is suppressible by :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.NO_FAIL`:
+    the server raises them while parsing the operation's arguments, upstream of every ``NO_FAIL`` test.
     """
 
     UPDATE_ONLY = 2
