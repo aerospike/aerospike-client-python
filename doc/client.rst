@@ -1519,24 +1519,6 @@ Index Operations
 
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
 
-    .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
-
-        .. deprecated:: 19.1.0 Use the other non-deprecated index methods to create an index with a list of contexts.
-
-        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
-        numeric, string, or GeoJSON values (as defined by *index_datatype*)
-        on records of the specified *ns*, *set* whose bin is a list or map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
-        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
-        :param str index_name: the name of the index.
-        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
     .. index::
         single: Admin Operations
 
