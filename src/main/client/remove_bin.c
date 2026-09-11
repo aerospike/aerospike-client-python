@@ -28,6 +28,39 @@
 #include "policy.h"
 
 /**
+ * An invalid policy dictionary key should raise ParamError, not ClientError,
+ * which is what happens once pyobject_to_policy_write clobbers the specific
+ * error it already set. Fixing that outright would be a breaking change, so
+ * for now we only warn about the future behavior change here, matching the
+ * exact condition pyobject_to_policy_write itself uses to decide whether to
+ * run the invalid-key check.
+ *
+ * Returns true if the warning was promoted to a real exception (warnings as
+ * errors), in which case the caller must bail out immediately without
+ * raising anything else.
+ */
+static bool warn_if_invalid_remove_bin_policy_key(AerospikeClient *self,
+                                                  as_error *err,
+                                                  PyObject *py_policy)
+{
+    if (!py_policy || py_policy == Py_None || !self->validate_keys) {
+        return false;
+    }
+
+    as_status retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_write_policy_valid_keys,
+        POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE);
+    as_error_reset(err);
+
+    if (retval != 0) {
+        return false;
+    }
+
+    return PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
+                            REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE) == -1;
+}
+
+/**
  ******************************************************************************************************
  * Removes a bin from a record.
  *
@@ -52,13 +85,13 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_write *write_policy_p = NULL;
     as_key key;
     bool key_initialized = false;
+    bool warning_became_exception = false;
     as_record rec;
     char *binName = NULL;
     int count = 0;
     PyObject *py_ustr = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Get the bin list size;
@@ -73,10 +106,15 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
     key_initialized = true;
 
+    if (warn_if_invalid_remove_bin_policy_key(self, err, py_policy)) {
+        warning_became_exception = true;
+        goto CLEANUP;
+    }
+
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, err, py_policy, &write_policy,
                              &write_policy_p, &self->as->config.policies.write,
-                             &exp_list, &exp_list_p);
+                             &exp_list_p, false);
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
         goto CLEANUP;
@@ -89,9 +127,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         if (PyUnicode_Check(py_val)) {
             py_ustr = PyUnicode_AsUTF8String(py_val);
             binName = PyBytes_AsString(py_ustr);
-        }
-        else if (PyString_Check(py_val)) {
-            binName = PyString_AsString(py_val);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -107,58 +142,14 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
-    if (py_meta && PyDict_Check(py_meta)) {
-        PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-
-        if (py_ttl) {
-            if (PyInt_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyInt_AsLong(py_ttl);
-            }
-            else if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLongLong(py_ttl);
-                if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for ttl exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Ttl should be an int or long");
-                goto CLEANUP;
-            }
-        }
-
-        if (py_gen) {
-            if (PyInt_Check(py_gen)) {
-                rec.gen = (uint16_t)PyInt_AsLong(py_gen);
-            }
-            else if (PyLong_Check(py_gen)) {
-                rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
-                if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for gen exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Generation should be an int or long");
-                goto CLEANUP;
-            }
-        }
+    check_and_set_meta(py_meta, &rec.ttl, &rec.gen, err, self->validate_keys);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_key_put(self->as, err, write_policy_p, &key, &rec);
     Py_END_ALLOW_THREADS
-    if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -172,18 +163,12 @@ CLEANUP:
         as_key_destroy(&key);
     }
 
+    if (warning_became_exception) {
+        return NULL;
+    }
+
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -209,7 +194,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
@@ -248,19 +232,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }

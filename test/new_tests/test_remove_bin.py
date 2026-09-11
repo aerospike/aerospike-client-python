@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import warnings
 
 from .test_base_class import TestBaseClass
 import aerospike
@@ -33,7 +34,7 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         record = {"Name": "Herry", "age": 60}
-        policy = {"timeout": 180000}
+        policy = {"total_timeout": 180000}
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
@@ -50,11 +51,12 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
+            "ttl": 1000
         }
-        meta = {"gen": 2, "ttl": 1000}
+        meta = {"gen": 2}
         self.as_connection.remove_bin(key, ["age"], meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -70,14 +72,15 @@ class TestRemovebin(object):
         record = {"Company": "Apple", "years": 30, "address": "202, sillicon Vally"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1000
         }
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1000}
+        meta = {"gen": gen}
 
         self.as_connection.remove_bin(key, ["years"], meta, policy)
 
@@ -125,11 +128,9 @@ class TestRemovebin(object):
         policy = {}
         self.as_connection.remove_bin(key, ["name"], {}, policy)
 
-        try:
+        with pytest.raises(e.RecordNotFound) as exceptionInfo:
             _, _, bins = self.as_connection.get(key)
-            assert bins is None
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        assert exceptionInfo.value.code == 2
 
     def test_pos_remove_bin_no_bin(self, put_data):
         """
@@ -138,12 +139,9 @@ class TestRemovebin(object):
         key = ("test", "demo", 1)
         record = {"name": "jeff", "age": 45}
         put_data(self.as_connection, key, record)
-        try:
+        with pytest.raises(e.InvalidRequest) as exceptionInfo:
             self.as_connection.remove_bin(key, [])
-            (key, _, bins) = self.as_connection.get(key)
-            assert bins == record
-        except e.InvalidRequest:
-            pass
+        assert exceptionInfo.value.code == 4
 
     @pytest.mark.parametrize(
         "key, record, bins_for_removal",
@@ -160,11 +158,9 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, bins_for_removal)
 
-        try:
+        with pytest.raises(e.RecordNotFound) as exceptionInfo:
             (key, _, _) = self.as_connection.get(key)
-
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
+        assert exceptionInfo.value.code == 2
 
     @pytest.mark.parametrize(
         "key, record, policy, bin_for_removal",
@@ -173,9 +169,10 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_all"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -183,9 +180,10 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_master"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -193,9 +191,10 @@ class TestRemovebin(object):
                 ("test", "demo", "p_gen_GT"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
+                    "max_retries": 1,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_GT,
+                    "ttl": 1000
                 },
                 "age",
             ),
@@ -205,12 +204,12 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with policy
         """
-        key_digest = self.as_connection.get_key_digest(key[0], key[1], key[2])
+        key_digest = aerospike.calc_digest(key[0], key[1], key[2])
 
         put_data(self.as_connection, key, record)
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1000}
+        meta = {"gen": gen + 5}
 
         self.as_connection.remove_bin(key, [bin_for_removal], meta, policy)
 
@@ -235,12 +234,10 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with none
         """
-        try:
+        with pytest.raises(e.ParamError) as exceptionInfo:
             self.as_connection.remove_bin(None, bin_for_removal)
-
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        assert exceptionInfo.value.code == ex_code
+        assert exceptionInfo.value.msg == ex_msg
 
     def test_neg_remove_bin_with_correct_parameters_without_connection(self):
         """
@@ -251,12 +248,9 @@ class TestRemovebin(object):
         client1.close()
 
         key = ("test", "demo", 1)
-
-        try:
+        with pytest.raises(e.ClusterError) as exceptionInfo:
             client1.remove_bin(key, ["age"])
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert exceptionInfo.value.code == 11
 
     def test_neg_remove_bin_with_incorrect_meta(self):
         """
@@ -264,28 +258,36 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
-        try:
-            self.as_connection.remove_bin(key, ["age"], policy)
-
-        except (e.ClusterError, e.RecordNotFound):
-            pass
+        with pytest.raises(e.ParamError):
+            self.as_connection.remove_bin(key, ["age"], meta=2, policy=policy)
 
     def test_neg_remove_bin_with_incorrect_policy(self):
         """
         Invoke remove_bin() with incorrect policy
+
+        With validate_keys enabled, an invalid policy dictionary key should
+        raise ParamError, but for now still raises ClientError (to avoid a
+        breaking change) and warns that this will change in the next major
+        release. With validate_keys disabled, the invalid key is silently
+        ignored, so the call falls through to the actual remove-bin
+        operation, which either succeeds or raises RecordNotFound depending
+        on whether the key already exists.
         """
         key = ("test", "demo", 1)
-
         policy = {"time": 1001}
-        try:
-            self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-        except (e.ClientError, e.RecordNotFound):
-            pass
+        if self.config["validate_keys"]:
+            with pytest.warns(DeprecationWarning, match="ParamError will be raised instead"):
+                with pytest.raises((e.ClientError, e.RecordNotFound)):
+                    self.as_connection.remove_bin(key, ["age"], {}, policy)
+        else:
+            try:
+                self.as_connection.remove_bin(key, ["age"], {}, policy)
+            except e.RecordNotFound:
+                pass
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
@@ -304,19 +306,19 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
+            "ttl": 1000
         }
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen + 5, "ttl": 1000}
+        meta = {"gen": gen + 5}
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
 
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert exceptionInfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -336,20 +338,18 @@ class TestRemovebin(object):
         record = {"Name": "John", "age": 30, "address": "202, washingtoon"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
+            "ttl": 1000
         }
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
-        meta = {"gen": gen, "ttl": 1000}
-
-        try:
+        meta = {"gen": gen}
+        with pytest.raises(e.RecordGenerationError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert exceptionInfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -368,11 +368,41 @@ class TestRemovebin(object):
         key = ("test", "demo", 1)
 
         policy = {"total_timeout": 0.5}
-        try:
+        with pytest.raises(e.ClientError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
+        assert exceptionInfo.value.code == -1
 
-        except e.ClientError as exception:
-            assert exception.code == -1
+    def test_neg_remove_bin_with_invalid_policy_key_warns(self, put_data):
+        """
+        remove_bin() should raise ParamError for an invalid policy dictionary
+        key (with validate_keys enabled), but for now it still raises
+        ClientError to avoid a breaking change, and warns that this will
+        change in the next major release.
+        """
+        if not self.config["validate_keys"]:
+            pytest.skip("Only applicable when validate_keys is enabled")
+
+        key = ("test", "demo", "remove_bin_invalid_policy_key")
+        put_data(self.as_connection, key, {"age": 30})
+
+        with pytest.warns(DeprecationWarning, match="ParamError will be raised instead") as warn_record:
+            with pytest.raises(e.ClientError) as exceptionInfo:
+                self.as_connection.remove_bin(key, ["age"], {}, {"not_a_real_key": 123})
+        assert exceptionInfo.value.code == -1
+        assert len(warn_record) == 1
+
+    def test_neg_remove_bin_with_incorrect_policy_value_does_not_warn(self):
+        """
+        An invalid policy *value* (as opposed to an invalid key) is a
+        different, unrelated failure mode and should not trigger the
+        ParamError-in-the-future deprecation warning.
+        """
+        key = ("test", "demo", 1)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            with pytest.raises(e.ClientError):
+                self.as_connection.remove_bin(key, ["age"], {}, {"total_timeout": 0.5})
 
     @pytest.mark.parametrize(
         "key, bin_for_removal, ex_code",
@@ -385,11 +415,8 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with non-existent data
         """
-        try:
+        with pytest.raises(e.RecordNotFound):
             self.as_connection.remove_bin(key, bin_for_removal)
-
-        except e.RecordNotFound:
-            pass
 
     def test_neg_remove_bin_with_extra_parameter(self):
         """
@@ -427,3 +454,11 @@ class TestRemovebin(object):
         meta = {"gen": 2**65, "ttl": 2}
         with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, ["age"], meta=meta)
+
+    # TODO: this does not fail as expected
+    # def test_remove_bin_with_bin_name_too_long(self, put_data):
+    #     key = ("test", "demo", 1)
+    #     record = {"Name": "Herry", "age": 60}
+    #     put_data(self.as_connection, key, record)
+    #     with pytest.raises(e.BinNameError):
+    #         self.as_connection.remove_bin(key, ["a" * 16])

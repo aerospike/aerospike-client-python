@@ -28,7 +28,7 @@ class TestSetPassword(TestBaseClass):
             pass
 
         try:
-            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"], {})
+            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
         except e.UserExistsError:
             pass
 
@@ -69,16 +69,14 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword"
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_password(user, password, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 50}
+        policy = {"timeout": 180000}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -91,43 +89,35 @@ class TestSetPassword(TestBaseClass):
         user = None
         password = "newpassword"
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_password(user, password)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_set_password_with_none_password(self):
 
         user = "testsetpassworduser"
         password = None
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_set_password(user, password)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Password should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Password should be a string"
 
     def test_set_password_with_non_existent_user(self):
 
-        policy = {}
         user = "new_user"
         password = "newpassword"
 
-        try:
-            self.client.admin_set_password(user, password, policy)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        with pytest.raises(e.InvalidUser) as excinfo:
+            self.client.admin_set_password(user, password)
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_set_password_with_too_long_password(self):
 
-        policy = {}
         user = "testsetpassworduser"
         password = "newpassword$" * 1000
 
         with pytest.raises(e.ClientError):
-            self.client.admin_set_password(user, password, policy)
+            self.client.admin_set_password(user, password)

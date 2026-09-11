@@ -12,6 +12,10 @@ from threading import Lock
 import time
 from . import base64_helpers
 
+
+from aerospike_helpers.expressions.arithmetic import Add
+from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -59,184 +63,134 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
 class TestQuery(TestBaseClass):
-    def setup_class(cls):
-        client = TestBaseClass.get_new_connection()
-
+    # TODO: This fixture should be split up to speed up this test class
+    @pytest.fixture(autouse=True, scope="class")
+    def setupClass(self, as_connection):
         try:
-            client.index_integer_create("test", "demo", "test_age", "age_index")
+            as_connection.index_single_value_create("test", "demo", "test_age", aerospike.INDEX_INTEGER, "age_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_string_create("test", "demo", "addr", "addr_index")
+            as_connection.index_single_value_create("test", "demo", "addr", aerospike.INDEX_STRING, "addr_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", "age1", "age_index1")
+            as_connection.index_single_value_create("test", "demo", "age1", aerospike.INDEX_INTEGER, "age_index1")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
+            as_connection.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_INTEGER, "numeric_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
+            as_connection.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
+            as_connection.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_INTEGER, "numeric_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
+            as_connection.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_values_index"
+            as_connection.index_map_values_create(
+                "test", "demo", "numeric_map", aerospike.INDEX_INTEGER, "numeric_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_values_create(
+            as_connection.index_map_values_create(
                 "test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_values_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", None, "test_age_none", "age_index_none")
+            as_connection.index_single_value_create("test", None, "test_age_none", aerospike.INDEX_INTEGER, "age_index_none")
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
+            as_connection.index_single_value_create("test", "demo", bytearray("sal\0kj", "utf-8"), aerospike.INDEX_INTEGER, "sal_index")
         except e.IndexFoundError:
             pass
 
+        if (int(TestBaseClass.major_ver), int(TestBaseClass.minor_ver)) >= (7, 0):
+            # These indexes are only used for server 7.0+ tests
+            try:
+                as_connection.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
+            except e.IndexFoundError:
+                pass
+
+            try:
+                as_connection.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
+            except e.IndexFoundError:
+                pass
+
+            try:
+                as_connection.index_map_values_create(
+                    "test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_values_index"
+                )
+            except e.IndexFoundError:
+                pass
+
         try:
-            client.index_cdt_create(
+            as_connection.index_single_value_create(
                 "test",
                 "demo",
                 "numeric_list",
-                aerospike.INDEX_TYPE_DEFAULT,
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 "numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                None,
+                ctx_list_index,
             )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_cdt_create(
+            as_connection.index_single_value_create(
                 "test",
                 "demo",
                 "numeric_map",
-                aerospike.INDEX_TYPE_DEFAULT,
-                aerospike.INDEX_NUMERIC,
+                aerospike.INDEX_INTEGER,
                 "numeric_map_cdt_index",
-                {"ctx": ctx_map_index},
+                None,
+                ctx_map_index,
             )
         except e.IndexFoundError:
             pass
 
-        client.close()
-
-    def teardown_class(cls):
-        client = TestBaseClass.get_new_connection()
-
-        policy = {}
-        try:
-            client.index_remove("test", "age_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "age_index1", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "addr_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "numeric_list_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "string_list_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "numeric_map_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "string_map_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "numeric_map_values_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "string_map_values_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "age_index_none", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "sal_index")
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "numeric_list_cdt_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        try:
-            client.index_remove("test", "numeric_map_cdt_index", policy)
-        except e.IndexNotFound:
-            pass
-
-        client.close()
-
-    @pytest.fixture(autouse=True)
-    def setup_method(self, request, as_connection):
-        """
-        Setup method.
-        """
         for i in range(5):
             key = ("test", "demo", i)
+            # 5x5 box, then 10x10 box, ... until 25x25 box
+            box_coordinates = [[0, 0], [5 * (i + 1), 0], [5 * (i + 1), 5 * (i + 1)], [0, 5 * (i + 1)], [0, 0]]
             rec = {
+                "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
+                "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
                 "numeric_list": [i, i + 1, i + 2],
                 "string_list": ["str" + str(i), "str" + str(i + 1), "str" + str(i + 2)],
                 "numeric_map": {"a": i, "b": i + 1, "c": i + 2},
                 "string_map": {"a": "a" + str(i), "b": "b" + str(i + 1), "c": "c" + str(i + 2)},
+                "blob_list": [i.to_bytes(length=1, byteorder='big')],
+                "blob_map": {
+                    i.to_bytes(length=1, byteorder='big'): i.to_bytes(length=1, byteorder='big')
+                },
                 "test_age_none": 1,
                 "test_age": i,
                 "no": i,
+                "blob": i.to_bytes(length=1, byteorder='big')
             }
             as_connection.put(key, rec)
         for i in range(5, 10):
@@ -252,20 +206,93 @@ class TestQuery(TestBaseClass):
         rec = {"test_age_none": 1}
         as_connection.put(key, rec)
 
-        def teardown():
-            """
-            Teardown method.
-            """
-            for i in range(10):
-                key = ("test", "demo", i)
-                as_connection.remove(key)
+        yield
 
-            key = ("test", "demo", 122)
-            as_connection.remove(key)
-            key = ("test", None, 145)
+        policy = {}
+        try:
+            as_connection.index_remove("test", "age_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "age_index1", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "addr_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "numeric_list_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "string_list_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "numeric_map_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "string_map_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "numeric_map_values_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "string_map_values_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "age_index_none", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "sal_index")
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "numeric_list_cdt_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        try:
+            as_connection.index_remove("test", "numeric_map_cdt_index", policy)
+        except e.IndexNotFound:
+            pass
+
+        blob_index_names_to_remove = [
+            "blob_list_index",
+            "blob_map_keys_index",
+            "blob_map_values_index"
+        ]
+        for name in blob_index_names_to_remove:
+            try:
+                as_connection.index_remove("test", name, policy)
+            except e.IndexNotFound:
+                pass
+
+        for i in range(10):
+            key = ("test", "demo", i)
             as_connection.remove(key)
 
-        request.addfinalizer(teardown)
+        key = ("test", "demo", 122)
+        as_connection.remove(key)
+        key = ("test", None, 145)
+        as_connection.remove(key)
 
     def test_query_with_correct_parameters_hi(self):
         """
@@ -273,7 +300,8 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where(p.equals("test_age", 1))
+        # Here we explicitly test that ctx accepts None
+        query.where(p.equals("test_age", 1), None)
 
         records = []
 
@@ -334,17 +362,8 @@ class TestQuery(TestBaseClass):
         def callback(input_tuple):
             pass
 
-        try:
+        with pytest.raises(e.IndexNotFound):
             query.foreach(callback)
-        except e.IndexNotFound:
-            # before server version 6.0 IndexNotFound was not retryable
-            assert self.server_version < [6, 0]
-        except e.MaxRetriesExceeded as err_info:
-            err_code = err_info.code
-            # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
-            # because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
-            assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
-            assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.msg
 
     def test_query_with_where_incorrect(self):
         """
@@ -372,18 +391,22 @@ class TestQuery(TestBaseClass):
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             query.where(p.equals("test_age", None))
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "predicate is invalid."
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "predicate is invalid."
+    def test_query_where_called_multiple_times(self):
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals("test_age", 165))
+        with pytest.raises(e.ClientError):
+            query.where(p.equals("test_age", 150))
 
     def test_query_with_policy(self):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 180000}
+        policy = {"total_timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -704,7 +727,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
-            query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+            query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER, 1, 3)
 
     def test_removed_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
         """
@@ -759,7 +782,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 1000}  # noqa: F841
+        policy = {"total_timeout": 1000}  # noqa: F841
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
@@ -891,6 +914,12 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_query_select_multiple_times(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.select("a")
+        with pytest.raises(e.ClientError):
+            query.select("a")
+
     def test_query_with_argument_to_where_is_empty_string(self):
 
         query = self.as_connection.query("test", "demo")
@@ -925,7 +954,7 @@ class TestQuery(TestBaseClass):
         foreach should raise an error since the ns
         is invalid
         """
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             query = self.as_connection.query("fake_namespace", "demo1")
 
             def callback(input_tuple):
@@ -936,7 +965,7 @@ class TestQuery(TestBaseClass):
             query.foreach(callback)
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_query_with_ns_not_string(self):
         """
@@ -985,14 +1014,14 @@ class TestQuery(TestBaseClass):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC)
+        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER)
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_one_end_args(self):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1)
+        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_INTEGER, 1)
 
     def test_query_with_list_cdt_ctx(self):
         """
@@ -1011,7 +1040,7 @@ class TestQuery(TestBaseClass):
 
         query = self.as_connection.query("test", "demo")
         query.select("numeric_list")
-        query.where(p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+        query.where(p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ctx_list_index)
 
         records = []
 
@@ -1026,6 +1055,22 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
+    def test_query_with_list_cdt_ctx_and_invalid_bin(self):
+        """
+        Make sure that ctx is being cleaned up properly
+        """
+        query = self.as_connection.query("test", "demo")
+
+        # Invalid bin
+        with pytest.raises(e.ParamError):
+            query.where(p.range(5, aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+
+    def test_query_with_invalid_predicate_type(self):
+        query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            # 2 is outside valid values for predicate types
+            query.where((2, aerospike.INDEX_BLOB, "bin", bytearray(b'123')))
+
     def test_query_with_map_cdt_ctx(self):
         """
         Invoke query() with cdt_ctx and correct arguments
@@ -1038,7 +1083,7 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("numeric_map")
 
-        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_map_index})
+        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ctx_map_index)
 
         records = []
 
@@ -1067,4 +1112,237 @@ class TestQuery(TestBaseClass):
     def test_query_with_base64_cdt_ctx(self, get_cdtctx_base64_parent):
         get_cdtctx_base64 = base64_helpers.get_cdtctx_base64_method(self, get_cdtctx_base64_parent)
         bs_b4_cdt = get_cdtctx_base64(ctx_list_index)
+
+    def test_query_with_invalid_list_cdt_ctx_dict(self):
+        """
+        Invoke query() with cdt_ctx containing incorrect arguments
+        """
+        query = self.as_connection.query("test", "demo")
+
+        with pytest.raises(e.ParamError):
+            query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), ['not a ctx list'])
+
+    def test_query_with_base64_cdt_ctx(self):
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"
+
+    def test_query_blob_bin_equal(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+            pytest.skip("Blob indexes are only supported in server 7.0+")
+
+        self.as_connection.index_single_value_create("test", "demo", "blob", aerospike.INDEX_BLOB, "blob_index")
+
+        query = self.as_connection.query("test", "demo")
+        blob_val = int.to_bytes(4, length=1, byteorder='big')
+        query.where(p.equals("blob", blob_val))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+
+        assert records
+        assert len(records) == 1
+
+        self.as_connection.index_remove("test", "blob_index")
+
+    @pytest.mark.parametrize(
+        "indexed_bin_name, index_type",
+        [
+            ("blob_list", aerospike.INDEX_TYPE_LIST),
+            ("blob_map", aerospike.INDEX_TYPE_MAPKEYS),
+            ("blob_map", aerospike.INDEX_TYPE_MAPVALUES),
+        ]
+    )
+    def test_query_blob_bin_contains(self, indexed_bin_name, index_type):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+            pytest.skip("Blob indexes are only supported in server 7.0+")
+
+        # Index creation is in the setup function
+        query = self.as_connection.query("test", "demo")
+        # In the previous test, we passed in a bytes for the predicate's value parameter
+        # Now pass in a bytearray (which is also valid)
+        blob_val = int.to_bytes(1, length=1, byteorder='big')
+        blob_val = bytearray(blob_val)
+        query.where(p.contains(indexed_bin_name, index_type, blob_val))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
+
+    def test_query_with_none_bin_and_where(self):
+        query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where(p.equals(None, 1))
+
+    @pytest.mark.parametrize(
+        "duration",
+        [
+            aerospike.QUERY_DURATION_LONG,
+            aerospike.QUERY_DURATION_SHORT,
+            aerospike.QUERY_DURATION_LONG_RELAX_AP
+        ]
+    )
+    def test_query_expected_duration(self, duration: int):
+        if duration == aerospike.QUERY_DURATION_LONG_RELAX_AP and TestBaseClass.strong_consistency_enabled:
+            pytest.skip("Using aerospike.QUERY_DURATION_LONG_RELAX_AP will fail if server is in SC mode")
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": duration
+        }
+        query.results(policy=policy)
+
+    def test_query_invalid_expected_duration(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": "t"
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results(policy=policy)
+        assert excinfo.value.msg == "expected_duration is invalid"
+
+    def test_query_with_invalid_expr(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where_with_expr(4, p.equals("test_age", 165))
+
+    INT_BIN_EXPR = Add(IntBin("test_age"), IntBin("no"))
+    GEO_POLYGON_BIN_EXPR = GeoBin("geo_polygon")
+    GEO_POINT_BIN_EXPR = GeoBin("geo_point")
+
+    INDEX_EXPR_NAME = "index_expr"
+
+    # Should contain each records' geo_point bin geographically
+    # Note: we have to convert meters so that it covers the latitude and longitude (they are in different units)
+    CIRCLE_RADIUS_METERS = 629000
+    GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], CIRCLE_RADIUS_METERS]})
+
+    LIST_EXPR = ListBin("numeric_list")
+    BLOB_EXPR = BlobBin("blob")
+
+    @pytest.fixture
+    def index_expr_cleanup(self):
+        yield
+        self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
+
+    @pytest.mark.parametrize(
+        "expr, index_type, index_datatype, predicate, expected_rec_count",
+        [
+            # Test every predicate to make sure it accepts a bin name of None
+
+            # Only the first record
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_INTEGER, p.equals(None, 2), 1),
+            # The first two records
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_INTEGER, p.between(None, 0, 2), 2),
+            (
+                GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_contains_geojson_point(
+                    None,
+                    # Only the 25x25 box should contain this point
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]}).dumps()
+                ),
+                1
+            ),
+            # Same test as above, but with a different predicate
+            (
+                GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_geojson_region(None, GEOJSON_CIRCLE.dumps()),
+                # The circle should cover all 5 points
+                5
+            ),
+            # Same test as above but with a different pred
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_radius(None, 0, 0, CIRCLE_RADIUS_METERS),
+                5
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_INTEGER,
+                p.contains(None, aerospike.INDEX_TYPE_LIST, 0),
+                # Only the first record
+                1
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_INTEGER,
+                p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
+                # Only the first two records
+                2
+            ),
+            # Test blobs with where_with_*() calls for code coverage
+            (
+                BLOB_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_BLOB,
+                p.equals(None, (0).to_bytes(length=1, byteorder='big')),
+                # Only the first record
+                1
+            )
+        ]
+    )
+    @pytest.mark.parametrize("use_index_name", [False, True])
+    def test_query_with_expr_or_index_name(
+        self,
+        expr,
+        index_type,
+        index_datatype,
+        predicate,
+        expected_rec_count,
+        index_expr_cleanup,
+        use_index_name
+    ):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Querying with expressions isn't supported yet")
+
+        expr = expr.compile()
+        self.as_connection.index_expr_create(ns="test", set="demo", index_type=index_type,
+                                             index_datatype=index_datatype,
+                                             expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
+
+        # Verify where_*() methods return a Query object as well
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name:
+            query = query.where_with_index_name(self.INDEX_EXPR_NAME, predicate)
+        else:
+            query = query.where_with_expr(expr, predicate)
+
+        recs = query.results()
+        assert len(recs) == expected_rec_count
+
+        # We should also be able to query using the base64 encoded string for an expression
+        query2: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name is False:
+            expr_base64_encoded = self.as_connection.get_expression_base64(expr)
+            query2 = query2.where_with_expr(expr_base64_encoded, predicate)
+            recs = query2.results()
+            assert len(recs) == expected_rec_count
+
+    def test_creating_query_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Query("test", "demo")

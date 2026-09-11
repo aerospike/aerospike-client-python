@@ -15,28 +15,80 @@ nodes and establishes connections to them. It also gets the partition map of
 the cluster, which is how it knows where every record actually lives.
 
 The client handles the connections, including re-establishing them ahead of
-executing an operation. It keeps track of changes to the cluster through
+executing an command. It keeps track of changes to the cluster through
 a cluster-tending thread.
 
 .. seealso::
     `Client Architecture
-    <https://www.aerospike.com/docs/architecture/clients.html>`_ and
-    `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
+    <https://aerospike.com/docs/database/learn/architecture/clients/>`_ and
+    `Distribution layer <https://aerospike.com/docs/database/learn/architecture/#distribution-layer>`_.
 
 Boilerplate Code For Examples
 -----------------------------
 
-Assume every in-line example runs this code beforehand:
+Assume this code runs before the code examples:
+
+.. Would prefer to have an external Python script to reduce code duplication here.
+.. But there's no way to call a Python script for testsetup
+
+.. testsetup::
+
+    # Imports
+    import aerospike
+    from aerospike import exception as ex
+    import sys
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
+
+.. code-block:: python
+
+    # Imports
+    import aerospike
+    from aerospike import exception as ex
+    import sys
+
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)]
+    }
+
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config)
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
 
 .. warning::
     Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
-.. include:: examples/boilerplate.py
-    :code: python
+Code example cleanup:
+
+.. testcleanup::
+
+    client.truncate('test', "demo", 0)
+    client.close()
+
+.. code-block:: python
+
+    client.truncate('test', "demo", 0)
+    client.close()
 
 Basic example:
 
-::
+.. testcode::
+
+    keyTuple = ('test', 'demo', 1)
 
     # Write a record
     client.put(keyTuple, {'name': 'John Doe', 'age': 32})
@@ -46,6 +98,8 @@ Basic example:
 
 Methods
 =======
+
+To create a new client, use :meth:`aerospike.client`.
 
 .. _aerospike_connection_operations:
 
@@ -69,13 +123,13 @@ Connection
             Python client 5.0.0 and up will fail to connect to Aerospike server 4.8.x or older.
             If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
+        .. seealso:: `Configure access control <https://aerospike.com/docs/database/manage/security/rbac/>`_.
 
     .. method:: is_connected()
 
         Tests the connections between the client and the nodes of the cluster.
         If the result is ``False``, the client will require another call to
-        :meth:`~aerospike.connect`.
+        :meth:`~aerospike.Client.connect`.
 
         :rtype: :class:`bool`
 
@@ -88,15 +142,17 @@ Connection
 
         You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
-Record Operations
------------------
+Record Commands
+---------------
 
 .. class:: Client
     :noindex:
 
-    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_PYTHON]]])
+    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_NONE]]])
 
         Create a new record, or remove / add bins to a record.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
@@ -112,8 +168,21 @@ Record Operations
 
         Example:
 
-        .. include:: examples/put.py
-            :code: python
+        .. testcode::
+
+            keyTuple = ('test', 'demo', 2)
+
+            # Insert a record with bin1
+            client.put(keyTuple, {'bin1': 4})
+
+            # Insert another bin named bin2
+            client.put(keyTuple, {'bin2': "value"})
+
+            # Remove bin1 from this record
+            client.put(keyTuple, {'bin2': aerospike.null()})
+
+            # Removing the last bin should delete this record
+            client.put(keyTuple, {'bin1': aerospike.null()})
 
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
@@ -130,8 +199,29 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/exists.py
-            :code: python
+        .. testcode::
+
+            keyTuple = ('test', 'demo', 3)
+
+            # Check non-existent record
+            (key, meta) = client.exists(keyTuple)
+
+            print(key)
+            print(meta)
+
+            # Check existing record
+            client.put(keyTuple, {'bin1': 4})
+            (key, meta) = client.exists(keyTuple)
+
+            print(key)
+            print(meta)
+
+        .. testoutput::
+
+            ('test', 'demo', 3, bytearray(b'...'))
+            None
+            ('test', 'demo', 3, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
 
         .. versionchanged:: 2.0.3
 
@@ -146,8 +236,29 @@ Record Operations
 
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. include:: examples/get.py
-            :code: python
+        .. testcode::
+
+            # Get nonexistent record
+            keyTuple = ('test', 'demo', 4)
+            try:
+                client.get(keyTuple)
+            except ex.RecordNotFound as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            # Get existing record
+            client.put(keyTuple, {'bin1': 4})
+            (key, meta, bins) = client.get(keyTuple)
+
+            print(key)
+            print(meta)
+            print(bins)
+
+        .. testoutput::
+
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
+            ('test', 'demo', None, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
 
         .. versionchanged:: 2.0.0
 
@@ -165,14 +276,147 @@ Record Operations
 
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. include:: examples/select.py
-            :code: python
+        .. testcode::
+
+            # Record to select from
+            keyTuple = ('test', 'demo', 5)
+            client.put(keyTuple, {'bin1': 4, 'bin2': 3})
+
+            # Only get bin1
+            (key, meta, bins) = client.select(keyTuple, ['bin1'])
+
+            # Similar output to get()
+            print(key)
+            print(meta)
+            print(bins)
+
+            # Get all bins
+            (key, meta, bins) = client.select(keyTuple, ['bin1', 'bin2'])
+            print(bins)
+
+            # Get nonexistent bin
+            (key, meta, bins) = client.select(keyTuple, ['bin3'])
+            print(bins)
+
+        .. testoutput::
+
+            ('test', 'demo', 5, bytearray(b'...'))
+            {'ttl': 2592000, 'gen': 1}
+            {'bin1': 4}
+            {'bin1': 4, 'bin2': 3}
+            {}
 
         .. versionchanged:: 2.0.0
+
+    .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+
+        Lookup a record by key, then perform specified operations.
+
+        Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
+        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
+        (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
+        :py:obj:`None` value. )
+
+        .. include:: ./deprecate_meta_ttl.rst
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a :ref:`aerospike_record_tuple`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. testcode::
+
+            from aerospike_helpers.operations import operations
+
+            # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 6)
+            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
+            ops = [
+                operations.increment("age", 1000),
+                operations.write("name", "J."),
+                operations.prepend("name", "Phillip "),
+                operations.append("name", " Fry"),
+                operations.read("name"),
+                operations.read("career"),
+                operations.read("age")
+            ]
+            (key, meta, bins) = client.operate(keyTuple, ops)
+
+            print(key)
+            # The generation should only increment once
+            # A transaction is *atomic*
+            print(meta)
+            print(bins) # Will display all bins selected by read operations
+
+        .. testoutput::
+
+            ('test', 'demo', 6, bytearray(b"..."))
+            {'ttl': 2592000, 'gen': 2}
+            {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
+
+        .. note::
+
+            :meth:`operate` can now have multiple write operations on a single
+            bin.
+
+        .. versionchanged:: 2.1.3
+
+    .. method:: operate_ordered(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+
+        Lookup a record by key, then perform specified operations. \
+        The results will be returned as a list of (bin-name, result) tuples. The order of the \
+        elements in the list will correspond to the order of the operations \
+        from the input parameters.
+
+        Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
+
+        .. include:: ./deprecate_meta_ttl.rst
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+
+        :return: a :ref:`aerospike_record_tuple`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. testcode::
+
+            from aerospike_helpers.operations import operations
+
+            # Add name, update age, and return attributes
+            keyTuple = ('test', 'demo', 7)
+            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
+            ops = [
+                operations.increment("age", 1000),
+                operations.write("name", "J."),
+                operations.prepend("name", "Phillip "),
+                operations.append("name", " Fry"),
+                operations.read("name"),
+                operations.read("career"),
+                operations.read("age")
+            ]
+            (key, meta, bins) = client.operate_ordered(keyTuple, ops)
+
+            # Same output for key and meta as operate()
+            # But read operations are outputted as bin-value pairs
+            print(bins)
+
+        .. testoutput::
+
+            [('name', 'Phillip J. Fry'), ('career', 'delivery boy'), ('age', 1025)]
+
+        .. versionchanged:: 2.1.3
 
     .. method:: touch(key[, val=0[, meta: dict[, policy: dict]]])
 
         Touch the given record, setting its time-to-live and incrementing its generation.
+
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta["ttl"]`` parameter. Use the ``val`` parameter instead.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
@@ -181,12 +425,34 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/touch.py
-            :code: python
+        .. testcode::
+
+            # Insert record and get its metadata
+            keyTuple = ('test', 'demo', 8)
+            client.put(keyTuple, bins = {"bin1": 4})
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
+
+            # Explicitly set TTL to 120
+            # and increment generation
+            client.touch(keyTuple, 120)
+
+            # Record metadata should be updated
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
+
+        .. testoutput::
+
+            {'ttl': 2592000, 'gen': 1}
+            {'ttl': 120, 'gen': 2}
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
         Remove a record matching the *key* from the cluster.
+
+        .. versionchanged:: 19.1.0
+
+            Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
@@ -194,32 +460,31 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/remove.py
-            :code: python
+        .. testcode::
 
-    .. method:: get_key_digest(ns, set, key) -> bytearray
+            # Insert a record
+            keyTuple = ('test', 'demo', 9)
+            client.put(keyTuple, {"bin1": 4})
 
-        Calculate the digest of a particular key. See :ref:`aerospike_key_tuple`.
+            # Try to remove it with the wrong generation
+            try:
+                client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
 
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param key: the primary key identifier of the record within the set.
-        :type key: :py:class:`str` or :py:class:`int`
+            # Remove it ignoring generation
+            client.remove(keyTuple)
 
-        :return: a RIPEMD-160 digest of the input tuple.
+        .. testoutput::
 
-        :rtype: :class:`bytearray`
-
-        .. include:: examples/get_key_digest.py
-            :code: python
-
-        .. deprecated:: 2.0.1
-            use the function :func:`aerospike.calc_digest` instead.
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
-        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.put`.
+        setting those bins to :meth:`aerospike.null` with a :meth:`~aerospike.Client.put`.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
@@ -228,97 +493,61 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/remove_bin.py
-            :code: python
+        .. note::
+            **Known issue:** if the client config's ``validate_keys`` option is :py:obj:`True` and
+            *policy* contains an invalid dictionary key, this method raises
+            :py:class:`~aerospike.exception.ClientError` instead of the
+            :py:class:`~aerospike.exception.ParamError` that every other method raises in this
+            situation (see :func:`aerospike.client`'s ``validate_keys`` option). Changing this
+            outright would be a breaking change, so it is deferred to the next major client
+            release. A :exc:`DeprecationWarning` is raised in the meantime to warn ahead of that
+            change.
+
+        .. testcode::
+
+            # Insert record
+            bins = {"bin1": 0, "bin2": 1}
+            keyTuple = ('test', 'demo', 10)
+            client.put(keyTuple, bins)
+
+            # Remove bin1
+            client.remove_bin(keyTuple, ['bin1'])
+
+            # Only bin2 shold remain
+            (keyTuple, meta, bins) = client.get(keyTuple)
+            print(bins)
+
+        .. testoutput::
+
+            {'bin2': 1}
 
     .. index::
-        single: Batch Operations
+        single: Batched Commands
 
-Batch Operations
+Batched Commands
 ----------------
 
 .. class:: Client
     :noindex:
 
-    .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
+    .. note::
 
-        Batch-read multiple records, and return them as a :class:`list`.
+        The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
+        a ``result`` value of ``0`` if one of the following is true:
 
-        Any record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple.
+            * All commands are successful.
+            * One or more commands failed because:
 
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
+                - A record was filtered out by an expression
+                - The record was not found
 
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        Otherwise:
 
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/get_many.py
-            :code: python
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
-
-        Batch-read metadata for multiple keys.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata in \
-        their tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of (key, metadata) :class:`tuple` for each record.
-
-        .. include:: examples/exists_many.py
-            :code: python
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
-
-        Batch-read specific bins from multiple records.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata and bins in its tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple` to read from.
-        :param list bins: a list of bin names to read from the records.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        .. include:: examples/select_many.py
-            :code: python
-
-    .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
-
-        Batch-read multiple records, and return them as a :class:`list`.
-
-        Any record that does not exist will have a exception type value as metadata \
-        and :py:obj:`None` value as bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param list ops: a list of operations to apply.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/batch_get_ops.py
-            :code: python
-
-    The following batch methods will return a :class:`BatchRecords` object with
-    a ``result`` value of ``0`` if one of the following is true:
-
-        * All transactions are successful.
-        * One or more transactions failed because:
-
-            - A record was filtered out by an expression
-            - The record was not found
-
-    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://docs.aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
-
-    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-    and each batch record contains the result of that transaction.
+            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an exception will be raised.
+            * If the underlying C client throws an error, the returned :class:`~aerospike_helpers.batch.records.BatchRecords` object will have a ``result`` value equal to an
+              `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
+              :class:`~aerospike_helpers.batch.records.BatchRecords` object has a list of batch records called ``batch_records``,
+              and each batch record contains the result of that command.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
@@ -327,36 +556,154 @@ Batch Operations
         This method allows different sub-commands for each key in the batch.
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
-        :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A :class:`~aerospike_helpers.batch.records.BatchRecords` object used to specify the operations to carry out.
         :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_write.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.batch import records as br
+            from aerospike_helpers.operations import operations as op
+
+            # Keys
+            # Only insert two records with the first and second key
+            keyTuples = [
+                ('test', 'demo', 'Robert'),
+                ('test', 'demo', 'Daniel'),
+                ('test', 'demo', 'Patrick'),
+            ]
+            client.put(keyTuples[0], {'id': 100, 'balance': 400})
+            client.put(keyTuples[1], {'id': 101, 'balance': 200})
+            client.put(keyTuples[2], {'id': 102, 'balance': 300})
+
+            # Apply different operations to different keys
+            batchRecords = br.BatchRecords(
+                [
+                    # Remove Robert from system
+                    br.Remove(
+                        key = keyTuples[0],
+                    ),
+                    # Modify Daniel's ID and balance
+                    br.Write(
+                        key = keyTuples[1],
+                        ops = [
+                            op.write("id", 200),
+                            op.write("balance", 100),
+                            op.read("id"),
+                        ],
+                    ),
+                    # Read Patrick's ID
+                    br.Read(
+                        key = keyTuples[2],
+                        ops=[
+                            op.read("id")
+                        ],
+                        policy=None
+                    ),
+                ]
+            )
+
+            client.batch_write(batchRecords)
+
+            # batch_write modifies its BatchRecords argument.
+            # Results for each BatchRecord will be set in the result, record, and in_doubt fields.
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+            # Note how written bins return None if their values aren't read
+            # And removed records have an empty bins dictionary
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
+            0
+            (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
 
         .. note:: Requires server version >= 6.0.0.
 
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
 
-    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
+    .. method:: batch_read(keys: list, [bins: list], [policy: dict]) -> BatchRecords
 
-        Perform the same read/write transactions on multiple keys.
+        Read multiple records.
+
+        If a list of bin names is not provided, return all the bins for each record.
+
+        If a list of bin names is provided, return only these bins for the given list of records.
+
+        If an empty list of bin names is provided, only the metadata of each record will be returned.
+        Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
+
+        :param list keys: The key tuples of the records to fetch.
+        :param bins: List of bin names to fetch for each record.
+        :type bins: list[str] or None
+        :param dict policy: See :ref:`aerospike_batch_policies`.
+
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
+
+        .. note:: Requires server version >= 6.0.0.
+
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
+
+        Perform the same read/write operations on multiple keys.
+
+        .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
+            This bug was fixed in version 14.0.0.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
         :param dict policy_batch_write: See :ref:`aerospike_batch_write_policies`.
+        :param int ttl: The time-to-live (expiration) of each record in seconds.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_operate.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers.operations import operations as op
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(1, 4)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Increment ID by 100 and balance by 500 for all employees
+            ops = [
+                op.increment("id", 100),
+                op.increment("balance", 500),
+                op.read("balance")
+            ]
+
+            batchRecords = client.batch_operate(keys, ops)
+            print(batchRecords.result)
+
+            # Print each individual transaction's results
+            # and record if it was read from
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee1', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 700})
+            0: (('test', 'demo', 'employee2', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 900})
+            0: (('test', 'demo', 'employee3', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': None, 'balance': 800})
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -372,10 +719,41 @@ Batch Operations
         :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_apply.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(4, 7)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            # Apply a user defined function (UDF) to a batch
+            # of records using batch_apply.
+            client.udf_put("./examples/batch_apply.lua")
+
+            args = ["balance", 0.5, 100]
+            batchRecords = client.batch_apply(keys, "batch_apply", "tax", args)
+
+            print(batchRecords.result)
+
+            for batchRecord in batchRecords.batch_records:
+                print(f"{batchRecord.result}: {batchRecord.record}")
+
+            # Cleanup
+            client.udf_remove('batch_apply.lua')
+
+        .. testoutput::
+
+            0
+            0: (('test', 'demo', 'employee4', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 0.0})
+            0: (('test', 'demo', 'employee5', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 100.0})
+            0: (('test', 'demo', 'employee6', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'SUCCESS': 50.0})
 
         .. include:: examples/batch_apply.lua
             :code: lua
@@ -392,10 +770,37 @@ Batch Operations
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
-        .. include:: examples/batch_remove.py
-            :code: python
+        .. testcode::
+
+            # Insert 3 records
+            keys = [("test", "demo", f"employee{i}") for i in range(7, 10)]
+            bins = [
+                {"id": 100, "balance": 200},
+                {"id": 101, "balance": 400},
+                {"id": 102, "balance": 300}
+            ]
+            for key, bin in zip(keys, bins):
+                client.put(key, bin)
+
+            batchRecords = client.batch_remove(keys)
+
+            # A result of 0 means success
+            print(batchRecords.result)
+            for batchRecord in batchRecords.batch_records:
+                print(batchRecord.result)
+                print(batchRecord.record)
+
+        .. testoutput::
+
+            0
+            0
+            (('test', 'demo', 'employee7', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee8', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            0
+            (('test', 'demo', 'employee9', bytearray(b"...")), {'ttl': 4294967295, 'gen': 0}, {})
 
     .. index::
         single: String Operations
@@ -412,6 +817,8 @@ String Operations
 
         Append a string to the string value in bin.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param str val: the string to append to the bin value.
@@ -420,16 +827,24 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
 
+        .. testcode::
+
+            keyTuple = ('test', 'demo', 11)
             client.put(keyTuple, {'bin1': 'Martin Luther King'})
             client.append(keyTuple, 'bin1', ' jr.')
             (_, _, bins) = client.get(keyTuple)
-            print(bins) # Martin Luther King jr.
+            print(bins)
+
+        .. testoutput::
+
+            {'bin1': 'Martin Luther King jr.'}
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
         Prepend the string value in *bin* with the string *val*.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
@@ -439,12 +854,17 @@ String Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'bin1': 'Freeman'})
-            client.prepend(keyTuple, 'bin1', ' Gordon ')
+            client.prepend(keyTuple, 'bin1', 'Gordon ')
             (_, _, bins) = client.get(keyTuple)
-            print(bins) # Gordon Freeman
+            print(bins)
+
+        .. testoutput::
+
+            {'bin1': 'Gordon Freeman'}
 
     .. index::
         single: Numeric Operations
@@ -460,28 +880,36 @@ Numeric Operations
 
         Increment the integer value in *bin* by the integer *val*.
 
+        .. include:: ./deprecate_meta_ttl.rst
+
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
+        :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: :py:data:`aerospike.POLICY_EXISTS_CREATE_OR_REPLACE` nor :py:data:`aerospike.POLICY_EXISTS_REPLACE`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Start with 100 lives
+            keyTuple = ('test', 'demo', 12)
             client.put(keyTuple, {'lives': 100})
 
             # Gain health
             client.increment(keyTuple, 'lives', 10)
             (key, meta, bins) = client.get(keyTuple)
-            print(bins) # 110
+            print("Lives:", bins["lives"])
 
             # Take damage
             client.increment(keyTuple, 'lives', -90)
             (key, meta, bins) = client.get(keyTuple)
-            print(bins) # 20
+            print("Lives:", bins["lives"])
+
+        .. testoutput::
+
+            Lives: 110
+            Lives: 20
 
     .. index::
         single: List Operations
@@ -503,68 +931,65 @@ Map Operations
                 Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
                 The code supporting these methods will be removed in a coming release.
 
-    .. index::
-        single: Multi-Ops
-
-Single-Record Transactions
+Transactions
 --------------------------
 
 .. class:: Client
     :noindex:
 
-    .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+    .. method:: commit(transaction: aerospike.Transaction) -> int
 
-        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*.
+        Attempt to commit the given transaction. First, the expected record versions are
+        sent to the server nodes for verification. If all nodes return success, the transaction is
+        committed. Otherwise, the transaction is aborted.
 
-        Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
-        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
-        (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
-        :py:obj:`None` value. )
+        Requires server version 8.0+
 
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :return: a :ref:`aerospike_record_tuple`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :param transaction: Transaction.
+        :type transaction: :py:class:`aerospike.Transaction`
+        :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
-        .. include:: examples/operate.py
-            :code: python
+    .. method:: abort(transaction: aerospike.Transaction) -> int
 
-        .. note::
+        Abort and rollback the given transaction.
 
-            :meth:`operate` can now have multiple write operations on a single
-            bin.
+        Requires server version 8.0+
 
-        .. versionchanged:: 2.1.3
+        :param transaction: Transaction.
+        :type transaction: :py:class:`aerospike.Transaction`
+        :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
 
-    .. method:: operate_ordered(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
-
-        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
-        The results will be returned as a list of (bin-name, result) tuples. The order of the \
-        elements in the list will correspond to the order of the operations \
-        from the input parameters.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-
-        :return: a :ref:`aerospike_record_tuple`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. include:: examples/operate_ordered.py
-            :code: python
-
-        .. versionchanged:: 2.1.3
+    .. _aerospike_udf_operations:
 
     .. index::
         single: User Defined Functions
 
-    .. _aerospike_udf_operations:
-
 User Defined Functions
 ----------------------
+
+.. testcode:: udf
+
+    import aerospike
+
+    config = {
+        'hosts': [ ('127.0.0.1', 3000)],
+        'lua': { 'user_path': '~/lua-scripts/'}
+    }
+    client2 = aerospike.client(config)
+    # Register the UDF module and copy it to the Lua 'user_path'
+    client2.udf_put('./examples/scan/my_udf.lua')
+
+    print("Before remove:", client2.udf_list())
+
+    client2.udf_remove('my_udf.lua')
+    print("After remove:", client2.udf_list())
+
+    client2.close()
+
+.. testoutput:: udf
+
+    Before remove: [{'name': 'my_udf.lua', 'hash': bytearray(b'...'), 'type': 0, 'content': bytearray(b'...')}]
+    After remove: []
 
 .. class:: Client
     :noindex:
@@ -573,39 +998,22 @@ User Defined Functions
 
         Register a UDF module with the cluster.
 
+        This waits for the UDF to be added to all nodes in the server before returning.
+
         :param str filename: the path to the UDF module to be registered with the cluster.
         :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. note::
-        To run this example, do not run the boilerplate code.
-
-    .. code-block:: python
-        :emphasize-lines: 5,9
-
-        import aerospike
-
-        config = {
-            'hosts': [ ('127.0.0.1', 3000)],
-            'lua': { 'user_path': '/path/to/lua/user_path'}
-        }
-        client = aerospike.client(config).connect()
-        # Register the UDF module and copy it to the Lua 'user_path'
-        client.udf_put('/path/to/my_module.lua')
-        client.close()
-
     .. method:: udf_remove(module[, policy: dict])
 
-        Remove a  previously registered UDF module from the cluster.
+        Remove a previously registered UDF module from the cluster.
+
+        This waits for the UDF to be removed from the server completely before returning.
 
         :param str module: the UDF module to be deregistered from the cluster.
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            client.udf_remove('my_module.lua')
 
     .. method:: udf_list([policy: dict]) -> []
 
@@ -615,26 +1023,12 @@ User Defined Functions
         :rtype: :class:`list`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            print(client.udf_list())
-            # [
-            #    {'content': bytearray(b''),
-            #    'hash': bytearray(b'195e39ceb51c110950bd'),
-            #    'name': 'my_udf1.lua',
-            #    'type': 0},
-            #    {'content': bytearray(b''),
-            #    'hash': bytearray(b'8a2528e8475271877b3b'),
-            #    'name': 'stream_udf.lua',
-            #    'type': 0}
-            # ]
-
-    .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
+    .. method:: udf_get(module: str[, language: int = aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
         Return the content of a UDF module which is registered with the cluster.
 
         :param str module: the UDF module to read from the cluster.
-        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`
+        :param int language: :data:`aerospike.UDF_TYPE_LUA`
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -652,8 +1046,8 @@ User Defined Functions
                  :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <https://docs.aerospike.com/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_.
+        .. seealso:: `Record UDFs <https://aerospike.com/docs/database/learn/architecture/udf/#record-udfs>`_ \
+          and `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -668,10 +1062,10 @@ User Defined Functions
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the scan.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_scan_policies`.
+        :param dict policy: optional dictionary that takes in both :ref:`aerospike_scan_policies` and :ref:`aerospike_info_policies`.
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_SCAN`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
@@ -681,14 +1075,14 @@ User Defined Functions
         This method blocks until the query is complete.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
+        :param str set: the set name. Should be :py:obj:`None` if you want to query all records in the *ns* including ones that don't belong to a set.
         :param tuple predicate: the `tuple` produced by one of the :mod:`aerospike.predicates` methods.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_write_policies`.
+        :param dict policy: optional dictionary that takes in both :ref:`aerospike_write_policies` and :ref:`aerospike_info_policies`.
         :rtype: :class:`int`
-        :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
+        :return: a job ID that can be used with :meth:`job_info` to check the status of the :py:data:`aerospike.JOB_QUERY`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. method:: job_info(job_id, module[, policy: dict]) -> dict
@@ -704,24 +1098,6 @@ User Defined Functions
         :param int job_id: the job ID returned by :meth:`scan_apply` or :meth:`query_apply`.
         :param module: one of :ref:`aerospike_job_constants`.
         :param policy: optional :ref:`aerospike_info_policies`.
-        :returns: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: scan_info(scan_id) -> dict
-
-        .. deprecated:: 1.0.50
-            Use :meth:`job_info` instead.
-
-        Return the status of a scan running in the background.
-
-
-        The returned :class:`dict` contains these keys:
-
-            * ``"status"``: see :ref:`aerospike_scan_constants` for possible values.
-            * ``"records_scanned"``: number of scanned records.
-            * ``"progress_pct"``: progress percentage of the job
-
-        :param int scan_id: the scan ID returned by :meth:`scan_apply`.
         :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -741,12 +1117,15 @@ Info Operations
         :return: a :class:`list` of node info dictionaries.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Assuming two nodes
             nodes = client.get_node_names()
             print(nodes)
-            # [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+
+        .. testoutput::
+
+            [{'address': '...', 'port': ..., 'node_name': '...'}...]
 
         .. versionchanged:: 6.0.0
 
@@ -757,12 +1136,15 @@ Info Operations
         :return: a :class:`list` of node address tuples.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             # Assuming two nodes
             nodes = client.get_nodes()
             print(nodes)
-            # [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
+
+        .. testoutput::
+
+            [('127.0.0.1', 3000)...]
 
         .. versionchanged:: 3.0.0
 
@@ -772,7 +1154,7 @@ Info Operations
 
         Send an info *command* to a single node specified by *host name*.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param str host: a node name. Example: 'BCER199932C'
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
@@ -780,22 +1162,25 @@ Info Operations
 
         .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
 
-    .. method:: info_all(command[, policy: dict]]) -> {}
+    .. method:: info_all(command[, policy: dict]]) -> dict
 
         Send an info command to all nodes in the cluster to which the client is connected.
 
         If any of the individual requests fail, this will raise an exception.
 
-        :param str command: see `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: see `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
+        :rtype: :class:`dict` mapping the node name to a tuple with the second element being the info response string or :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. testcode::
 
             response = client.info_all("namespaces")
             print(response)
-            # {'BB9020011AC4202': (None, 'test\n')}
+
+        .. testoutput::
+
+            {'...': (None, 'test\n')}
 
         .. versionadded:: 3.0.0
 
@@ -803,66 +1188,12 @@ Info Operations
 
         Send an info *command* to a single random node.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/database/reference/info>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionchanged:: 6.0.0
-
-    .. method:: info_node(command, host[, policy: dict]) -> str
-
-        .. deprecated:: 6.0.0
-            Use :meth:`info_single_node` to send a request to a single node.
-
-        Send an info command to a single node specified by host.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`str`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 3.0.0
-
-        .. warning:: for client versions < 3.0.0 :meth:`~aerospike.client.info_node` will not work when using TLS
-
-    .. method:: info(command[, hosts[, policy: dict]]) -> {}
-
-        .. deprecated:: 3.0.0
-            Use :meth:`info_all` to send a request to the entire cluster.
-
-        Send an info command to all nodes in the cluster, and optionally filter responses to only include certain nodes.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_
-        :param list hosts: a :class:`list` containing ``(address, port)`` tuples. If specified, only send the command to these hosts. Example: ``[('127.0.0.1', 3000)]``
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            response = client.info(command)
-            client.close()
-            # {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
-
-        .. note::
-                Sending requests to specific nodes can be better handled with a simple Python function such as:
-
-                .. code-block:: python
-
-                    def info_to_host_list(client, request, hosts, policy=None):
-                        output = {}
-                        for host in hosts:
-                            try:
-                                response = client.info_node(request, host, policy)
-                                output[host] = response
-                            except Exception as e:
-                                #  Handle the error gracefully here
-                                output[host] = e
-                        return output
-
-        .. versionchanged:: 3.0.0
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy: dict]) -> str
 
@@ -872,11 +1203,11 @@ Info Operations
 
         :param str data_center: The data center to apply the filter to.
         :param str namespace: The namespace to apply the filter to.
-        :param AerospikeExpression expression_filter: The filter to set. See expressions at :py:mod:`aerospike_helpers`.
+        :param TypeExpression expression_filter: The compiled expression filter to set. See expressions at :py:mod:`aerospike_helpers`.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `xdr-set-filter Info Command Reference <https://docs.aerospike.com/reference/info#xdr-set-filter>`_.
+        .. seealso:: `xdr-set-filter Info Command Reference <https://aerospike.com/docs/database/reference/info#xdr-set-filter>`_.
 
         .. versionchanged:: 5.0.0
 
@@ -888,11 +1219,22 @@ Info Operations
 
         See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
 
-        :param AerospikeExpression expression: the compiled expression.
+        :param TypeExpression expression: the compiled expression. See expressions at :py:mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_expression_base64.py
-            :code: python
+        .. testcode::
+
+            from aerospike_helpers import expressions as exp
+
+            # Compile expression
+            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
+
+            base64 = client.get_expression_base64(expr)
+            print(base64)
+
+        .. testoutput::
+
+            kwGTUQKkYmluMQY=
 
         .. deprecated:: 11.0.0
             :ref:`aerospike.get_expression_base64` should be used instead.
@@ -903,12 +1245,45 @@ Info Operations
 
         :rtype: :class:`int` or :py:obj:`None`
 
+    .. method:: get_policies() -> dict
+
+        Return the client's currently effective policies, i.e. the config-level default policies
+        set via the ``policies`` key of the config dictionary passed to :func:`aerospike.client`,
+        merged with the library's own defaults for any values that weren't set. This reads live
+        config, so it also reflects any changes applied via :class:`aerospike.ConfigProvider`.
+
+        The returned :class:`dict` has one key per policy type (``"read"``, ``"write"``, ``"apply"``,
+        ``"remove"``, ``"query"``, ``"scan"``, ``"operate"``, ``"info"``, ``"admin"``, ``"batch"``,
+        ``"batch_parent_write"``, ``"batch_apply"``, ``"batch_write"``, ``"batch_remove"``,
+        ``"txn_verify"``, ``"txn_roll"``), each mapping to a flat :class:`dict` of that policy's
+        fields, using the same keys and constant values documented under :ref:`aerospike_policies`.
+
+        The config-level ``"metrics"`` policy (set via the ``policies`` config dict's ``metrics``
+        key) is not included, since it is a :class:`~aerospike_helpers.metrics.MetricsPolicy`
+        object rather than a policy dict.
+
+        :return: a :class:`dict` of policy dictionaries.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. testcode::
+
+            policies = client.get_policies()
+            print(sorted(policies.keys()))
+            print(policies["read"]["total_timeout"])
+
+        .. testoutput::
+
+            ['admin', 'apply', 'batch', 'batch_apply', 'batch_parent_write', 'batch_remove', 'batch_write', 'info', 'operate', 'query', 'read', 'remove', 'scan', 'txn_roll', 'txn_verify', 'write']
+            1000
+
+        .. versionadded:: 19.3.0
+
     .. method:: truncate(namespace, set, nanos[, policy: dict])
 
         Remove all records in the namespace / set whose last updated time is older than the given time.
 
         This method is many orders of magnitude faster than deleting records one at a time.
-        See `Truncate command reference <https://docs.aerospike.com/reference/info#truncate>`_.
+        See `Truncate command reference <https://aerospike.com/docs/database/reference/info#truncate>`_.
 
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
@@ -916,18 +1291,37 @@ Info Operations
 
         :param str namespace: The namespace to truncate.
         :param str set: The set to truncate. Pass in :py:obj:`None` to truncate a namespace instead.
-        :param long nanos:  A cutoff threshold where records last updated before the threshold will be removed.
+        :param int nanos:  A cutoff threshold where records last updated before the threshold will be removed.
             Units are in nanoseconds since the UNIX epoch ``(1970-01-01)``.
             A value of ``0`` indicates that all records in the set should be truncated regardless of update time.
             The value must not be in the future.
         :param dict policy: See :ref:`aerospike_info_policies`.
-        :rtype: Status indicating the success of the operation.
+        :return: Status indicating the success of the operation.
+        :rtype: int
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires Aerospike server version >= 3.12
 
-        .. include:: examples/truncate.py
-            :code: python
+        .. testcode::
+
+            import time
+
+            client.put(("test", "demo", "key1"), {"bin": 4})
+
+            time.sleep(1)
+            # Take threshold time
+            current_time = time.time()
+            time.sleep(1)
+
+            client.put(("test", "demo", "key2"), {"bin": 5})
+
+            threshold_ns = int(current_time * 10**9)
+            # Remove all items in set `demo` created before threshold time
+            # Record using key1 should be removed
+            client.truncate('test', 'demo', threshold_ns)
+
+            # Remove all items in namespace
+            # client.truncate('test', None, 0)
 
     .. index::
         single: Index Operations
@@ -938,123 +1332,103 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_string_create(ns, set, bin, index_name[, policy: dict])
+    .. method:: index_single_value_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create a string index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index on a single value with a given type.
 
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param str ns: the namespace containing the value.
+        :param str set: the set containing the value.
+        :param str bin: the name of the bin containing the value.
+        :param int index_datatype: the type of the value being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
+        :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_integer_create(ns, set, bin, index_name[, policy])
+    .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an integer index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
+        Create a secondary index for all of a list's values, where all the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy: dict])
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a list.
+        Create a secondary index on all of a map's keys, where all of the keys are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note:: Requires server version >= 3.8.0
-
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy: dict])
-
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the keys of the map.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
 
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy: dict])
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an index named *index_name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a map. The index will include the values of the map.
+        Create a secondary index on all of a map's values, where all of the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
+        :param int index_datatype: the type of the values being indexed. See :ref:`aerospike_index_datatypes`.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
+        :param dict | None ctx: an optional :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods. Defaults to :py:obj:`None`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
 
-        .. code-block:: python
+        .. testcode::
 
             import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
-            # create a secondary index for string values of test.demo records whose 'fav_movies' bin is a map
+            # create a secondary index for string keys of test.demo records whose 'fav_movies' bin is a map
             client.index_map_keys_create('test', 'demo', 'fav_movies', aerospike.INDEX_STRING, 'demo_fav_movies_titles_idx')
             # create a secondary index for integer values of test.demo records whose 'fav_movies' bin is a map
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
-            client.close()
 
-    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy: dict])
+    .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
 
-        Create a geospatial 2D spherical index with *index_name* on the *bin* \
-        in the specified *ns*, *set*.
+        Create secondary index on an expression.
 
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
+        :param str ns: The namespace to be indexed.
+        :param str set: The set to be indexed.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
+        :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
+    .. method:: index_set_create(ns, set, name, policy: dict = None)
 
-        .. note:: Requires server version >= 3.7.0
-
-        .. code-block:: python
-
-            import aerospike
-
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
-            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-            client.close()
-
-
-    .. method:: index_remove(ns, index_name[, policy: dict])
-
-        Remove the index with *index_name* from the namespace.
+        Create a set index.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str index_name: the name of the index.
+        :param str set: the set name.
+        :param str name: the name of the index.
+        :param dict | None policy: optional :ref:`aerospike_info_policies`.
+
+        .. note:: Requires server version >= 18.2.0
+
+    .. method:: index_remove(ns: str, name: str[, policy: dict])
+
+        Remove the index with *name* from the namespace.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1067,12 +1441,103 @@ Index Operations
         :param list ctx: Aerospike CDT context: generated by aerospike CDT ctx helper :mod:`aerospike_helpers`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. include:: examples/get_cdtctx_base64.py
-            :code: python
+        .. testcode::
+
+            import aerospike
+            from aerospike_helpers import cdt_ctx
+
+            ctxs = [cdt_ctx.cdt_ctx_list_index(0)]
+            ctxs_base64 = client.get_cdtctx_base64(ctxs)
+            print("Base64 encoding of ctxs:", ctxs_base64)
+
+        .. testoutput::
+
+            Base64 encoding of ctxs: khAA
 
         .. deprecated:: 11.0.0
             :ref:`aerospike.get_cdtctx_base64` should be used instead.
 
+    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a string index with *index_name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_integer_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create an integer index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a blob index with *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
+
+        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
+
+        Create a geospatial 2D spherical index with *name* on the *bin* \
+        in the specified *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
+
+        .. note:: Requires server version >= 3.7.0
+
+        .. testcode::
+
+            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+
+    .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: list[, policy: dict])
+
+        .. deprecated:: 19.1.0 Use the other non-deprecated index methods to create an index with a list of contexts.
+
+        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
+        numeric, string, or GeoJSON values (as defined by *index_datatype*)
+        on records of the specified *ns*, *set* whose bin is a list or map.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of bin the secondary index is built on.
+        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
+        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_datatypes`.
+        :param str index_name: the name of the index.
+        :param dict ctx: a :class:`list` of contexts produced by :mod:`aerospike_helpers.cdt_ctx` methods.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
     .. index::
         single: Admin Operations
@@ -1089,7 +1554,7 @@ connected to a Community Edition cluster (see
 A user is validated by the client against the server whenever a \
 connection is established through the use of a username and password \
 (passwords hashed using bcrypt). \
-When security is enabled, each operation is validated against the \
+When security is enabled, each command is validated against the \
 user\'s roles. Users are assigned roles, which are collections of \
 :ref:`aerospike_privilege_dict`.
 
@@ -1099,8 +1564,12 @@ user\'s roles. Users are assigned roles, which are collections of \
     from aerospike import exception as ex
     import time
 
-    config = {'hosts': [('127.0.0.1', 3000)] }
-    client = aerospike.client(config).connect('ipji', 'life is good')
+    config = {
+        'hosts': [('127.0.0.1', 3000)],
+        'user': 'ipji',
+        'password': 'life is good'
+    }
+    client = aerospike.client(config)
 
     try:
         dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
@@ -1108,13 +1577,13 @@ user\'s roles. Users are assigned roles, which are collections of \
         client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
         client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
         time.sleep(1)
-        print(client.admin_query_user('dev'))
-        print(admin_query_users())
+        print(client.admin_query_user_info('dev'))
+        print(admin_query_users_info())
     except ex.AdminError as e:
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
 
-.. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
+.. seealso:: `Configure access control <https://aerospike.com/docs/database/manage/security/rbac/>`_.
 
 .. class:: Client
     :noindex:
@@ -1183,7 +1652,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy: dict]) -> {}
+    .. method:: admin_get_role(role[, policy: dict]) -> dict
 
         Get a :class:`dict` of privileges, whitelist, and quotas associated with a role.
 
@@ -1194,7 +1663,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_roles([policy: dict]) -> {}
+    .. method:: admin_get_roles([policy: dict]) -> dict
 
         Get the names of all roles and their attributes.
 
@@ -1204,7 +1673,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_role(role[, policy: dict]) -> []
+    .. method:: admin_query_role(role[, policy: dict]) -> list
 
         Get the :class:`list` of privileges associated with a role.
 
@@ -1215,7 +1684,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_roles([policy: dict]) -> {}
+    .. method:: admin_query_roles([policy: dict]) -> dict
 
         Get all named roles and their privileges.
 
@@ -1225,87 +1694,125 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_create_user(username, password, roles[, policy: dict])
+    .. method:: admin_create_pki_user(user: str, roles: list[, policy: dict])
+
+        Create a user and grant it roles. PKI users are authenticated via TLS and a certificate instead of a password.
+
+        .. warning:: This function should only be called for server versions 8.1+. If this function is called for older server versions,
+            an error will be returned.
+
+        :param str user: the username to be added to the Aerospike cluster.
+        :param list roles: the list of role names assigned to the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_create_user(user, password, roles[, policy: dict])
 
         Create a user and grant it roles.
 
-        :param str username: the username to be added to the Aerospike cluster.
+        :param str user: the username to be added to the Aerospike cluster.
         :param str password: the password associated with the given username.
         :param list roles: the list of role names assigned to the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_drop_user(username[, policy: dict])
+    .. method:: admin_drop_user(user[, policy: dict])
 
         Drop the user with a specified username from the cluster.
 
-        :param str username: the username to be dropped from the aerospike cluster.
+        :param str user: the username to be dropped from the aerospike cluster.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_change_password(username, password[, policy: dict])
+    .. method:: admin_change_password(user, password[, policy: dict])
 
         Change the password of a user.
 
         This operation can only be performed by that same user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_password(username, password[, policy: dict])
+    .. method:: admin_set_password(user, password[, policy: dict])
 
         Set the password of a user by a user administrator.
 
-        :param str username: the username to be added to the aerospike cluster.
+        :param str user: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_grant_roles(username, roles[, policy: dict])
+    .. method:: admin_grant_roles(user, roles[, policy: dict])
 
         Add roles to a user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_revoke_roles(username, roles[, policy: dict])
+    .. method:: admin_revoke_roles(user, roles[, policy: dict])
 
         Remove roles from a user.
 
-        :param str username: the username to have the roles revoked.
+        :param str user: the username to have the roles revoked.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_query_user (username[, policy: dict]) -> []
+    .. method:: admin_query_user_info (user: str[, policy: dict]) -> dict
 
-        Return the list of roles granted to the specified user.
+        Retrieve roles and other info for a given user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
-        :return: a :class:`list` of role names.
+        :return: a :class:`dict` of user data. See :ref:`admin_user_dict`.
 
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+    .. method:: admin_query_users_info ([policy: dict]) -> dict
 
-    .. method:: admin_query_users ([policy: dict]) -> {}
-
-        Get the roles of all users.
+        Retrieve roles and other info for all users.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
-        :return: a :class:`dict` of roles keyed by username.
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        :return: a :class:`dict` mapping usernames to user dictionaries. See :ref:`admin_user_dict`.
+
+Metrics
+-------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: get_stats()
+
+        Retrieve aerospike client instance statistics.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.ClusterStats`
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
+
+        Enable extended periodic cluster and node latency metrics.
+
+        :param MetricsPolicy policy: Optional metrics policy
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: disable_metrics()
+
+        Disable extended periodic cluster and node latency metrics.
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
 Scan and Query Constructors
 ---------------------------
@@ -1335,13 +1842,45 @@ Scan and Query Constructors
         See :ref:`aerospike.Query` for more details.
 
         :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
+        :param str set: optional specified set name. Otherwise, all records in the specified namespace will be queried.
         :return: an :py:class:`aerospike.Query` class.
 
-.. index::
-    single: Other Methods
+.. _admin_user_dict:
+
+User Dictionary
+===============
+
+The user dictionary has the following key-value pairs:
+
+    * ``"read_info"`` (:class:`list`): list of read statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: read quota in records per second (:class:`int`)
+
+       * 1: single record read command rate (TPS) (:class:`int`)
+
+       * 2: read scan/query record per second rate (RPS) (:class:`int`)
+
+       * 3: number of limitless read scans/queries (:class:`int`)
+
+    Future server releases may add additional statistics.
+
+    * ``"write_info"`` (:class:`list`): list of write statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: write quota in records per second (:class:`int`)
+
+       * 1: single record write command rate (TPS) (:class:`int`)
+
+       * 2: write scan/query record per second rate (RPS) (:class:`int`)
+
+       * 3: number of limitless write scans/queries (:class:`int`)
+
+    Future server releases may add additional statistics.
+
+    * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
+
+    * ``"roles"`` (:class:`list`): list of assigned role names. Each role name is a :class:`str`.
 
 Tuples
 ======
@@ -1385,14 +1924,14 @@ Key Tuple
     * How to use the key tuple in a `put` operation
     * How to fetch the key tuple in a `get` operation
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
         # NOTE: change this to your Aerospike server's seed node address
         seedNode = ('127.0.0.1', 3000)
         config = config = {'hosts': [seedNode]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # The key tuple comprises the following:
         namespaceName = 'test'
@@ -1401,7 +1940,7 @@ Key Tuple
         keyTuple = (namespaceName, setName, primaryKeyName)
 
         # Insert a record
-        recordBins = {'bin1':0, 'bin2':1}
+        recordBins = {'bin1': 0, 'bin2': 1}
         client.put(keyTuple, recordBins)
 
         # Now fetch that record
@@ -1412,14 +1951,14 @@ Key Tuple
         # and there is the record's digest
         print(key)
 
-        # Expected output:
-        # ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
-
         # Cleanup
         client.remove(keyTuple)
-        client.close()
 
-    .. seealso:: `Data Model: Keys and Digests <https://docs.aerospike.com/server/architecture/data-model#records>`_.
+    .. testoutput::
+
+        ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
+
+    .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#keys-and-digests>`_.
 
 .. _aerospike_record_tuple:
 
@@ -1428,7 +1967,7 @@ Record Tuple
 
 .. object:: record
 
-    The record tuple which is returned by various read operations. It has the structure:
+    The record tuple which is returned by various read commands. It has the structure:
 
     ``(key, meta, bins)``
 
@@ -1449,16 +1988,16 @@ Record Tuple
         * bins (:class:`dict`)
             Contains bin-name/bin-value pairs.
 
-    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from :meth:`~aerospike.Client.get()`:
 
-        .. code-block:: python
+        .. testcode::
 
             import aerospike
 
             # NOTE: change this to your Aerospike server's seed node address
             seedNode = ('127.0.0.1', 3000)
             config = {'hosts': [seedNode]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             namespaceName = 'test'
             setName = 'setname'
@@ -1466,26 +2005,27 @@ Record Tuple
             keyTuple = (namespaceName, setName, primaryKeyName)
 
             # Insert a record
-            recordBins = {'bin1':0, 'bin2':1}
+            recordBins = {'bin1': 0, 'bin2': 1}
             client.put(keyTuple, recordBins)
 
             # Now fetch that record
             (key, meta, bins) = client.get(keyTuple)
 
             # Generation is 1 because this is the first time we wrote the record
-            print(meta)
-
-            # Expected output:
-            # {'ttl': 2592000, 'gen': 1}
+            print("Metadata:", meta)
 
             # The bin-value pairs we inserted
-            print(bins)
-            {'bin1': 0, 'bin2': 1}
+            print("Bins:", bins)
 
             client.remove(keyTuple)
-            client.close()
 
-    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+        .. testoutput::
+
+            Metadata: {'ttl': 2592000, 'gen': 1}
+            Bins: {'bin1': 0, 'bin2': 1}
+
+
+    .. seealso:: `Data Model: Records <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
 .. _metadata_dict:
 
@@ -1494,13 +2034,143 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS` for possible special values.
     * ``"gen"`` (:class:`int`): record generation
 
 .. _aerospike_policies:
 
 Policies
 ========
+
+.. _aerospike_base_policies:
+
+Base Policies
+-------------
+
+.. object:: policy
+
+    Base policies that apply to some other policies.
+
+    .. hlist::
+        :columns: 1
+
+        * **max_retries** (:class:`int`)
+            Maximum number of retries before aborting the current command. The initial attempt is not counted as a
+            retry.
+
+            If max_retries is exceeded:
+
+            - For query policies, the command will the last suberror that was received.
+            - For the other policies, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
+
+            Default for :ref:`aerospike_read_policies` and :ref:`aerospike_batch_policies`: ``2``
+            Default for the other policies: ``0``
+
+            .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+                if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
+            |
+            | Default: ``0``
+        * **socket_timeout** (:class:`int`)
+            | Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and
+            | total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
+                If ``socket_timeout`` is ``0``, there will be no socket idle limit.
+            |
+            | Default: ``30000``
+        * **total_timeout** (:class:`int`)
+            | Total command timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol.
+            | The client will most likely timeout first, but the server also has the capability to timeout the command.
+            |
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will
+            | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
+            |
+            | If ``total_timeout`` is zero, there will be no total time limit on the client side.
+            | However, the server converts zero timeouts to the server configuration field
+            | ``transaction-max-ms`` (default ``1000ms``) for all commands except queries. For short
+            | queries (``expected_duration`` == :data:`aerospike.QUERY_DURATION_SHORT`), the server
+            | converts zero timeouts to a hard-coded ``1000ms``. For long queries, there is no
+            | timeout conversion on the server.
+            |
+            | Default for :ref:`aerospike_query_policies` and :ref:`aerospike_scan_policies`: ``0``
+            | Default for the other policies: ``1000``
+        * **timeout_delay** (:class:`int`)
+            Number of milliseconds to wait after a socket read times out before closing the socket for
+            good. If set to zero, this feature will be disabled.
+
+            If, upon performing a database operation, the host finds the socket it was using timing out
+            while reading, the client will receive a timeout error.  However, we don't always want to
+            close that socket right away; doing so introduces unwanted latencies.  It might be possible
+            to recover the socket, thus saving the socket for future re-use.
+
+            The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+            milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+            away, effectively disabling this feature.
+
+            Please note that this feature only applies to sockets being read; write timeouts are not
+            affected by this setting.
+
+            The value must be an unsigned 32-bit integer.
+
+            Default: ``3000``
+        * **connect_timeout** (:class:`int`)
+            Socket connect timeout in milliseconds. If ``connect_timeout`` greater than zero, it will
+            be applied to creating a connection plus optional user authentication. Otherwise,
+            ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
+
+            If base policy's ``connect_timeout`` (not the config-level ``connect_timeout``), socket and total timeouts
+            are zero, the actual socket connect timeout is hardcoded to ``2000ms``.
+
+            ``connect_timeout`` is useful when new connection creation is expensive (i.e TLS connections)
+            and it's acceptable to allow extra time to create a new connection compared to using an
+            existing connection from the pool.
+
+            This only applies to regular commands, not info commands.
+
+            This value is limited to a 32-bit unsigned integer.
+
+            Default: ``0``
+        * **compress** (:class:`bool`)
+            | Compress client requests and server responses.
+            |
+            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In
+            | addition, tell the server to compress it's response on read commands. The server response compression threshold is
+            | also 128 bytes.
+            |
+            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent
+            | over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
+            |
+            | Default: ``False``
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
+            |
+            | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
+
+        * **txn** (:class:`aerospike.Transaction`)
+
+            NOTE: this policy does not work for config level policies.
+
+            Transaction command identifier.
+
+            Default: :py:obj:`None`
+
+        * **error_detail_verbosity** (:class:`int`)
+
+            Request server error detail fields in responses. Use one of :ref:`error_detail_verbosity_levels`.
+
+            When enabled and the server returns error details, :py:attr:`aerospike.exception.AerospikeError.subcode` will contain the
+            numeric subcode and :py:attr:`aerospike.exception.AerospikeError.msg` will contain the server-authored message.
 
 .. _aerospike_write_policies:
 
@@ -1511,56 +2181,24 @@ Write Policies
 
     A :class:`dict` of optional write policies, which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
-              If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **exists**
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
+        * **ttl**
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if
+            the write command:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1573,16 +2211,17 @@ Write Policies
             | Perform durable delete
             |
             | Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **compression_threshold** (:class:`int`)
             Compress data for transmission if the object size is greater than a given number of bytes.
 
             Default: ``0``, meaning 'never compress'
+
+        * **replica**
+            Algorithm used to determine target node. One of the :ref:`POLICY_REPLICA` values.
+
+            Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
+
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_read_policies:
 
@@ -1593,43 +2232,11 @@ Read Policies
 
     A :class:`dict` of optional read policies, which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``2``
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
         * **deserialize** (:class:`bool`)
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
@@ -1639,9 +2246,9 @@ Read Policies
             |
             | Default: :data:`aerospike.POLICY_KEY_DIGEST`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1652,16 +2259,30 @@ Read Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_operate_policies:
 
@@ -1672,55 +2293,45 @@ Operate Policies
 
     A :class:`dict` of optional operate policies, which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an
+            operate command contains a write operation and either:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1730,9 +2341,9 @@ Operate Policies
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1751,12 +2362,11 @@ Operate Policies
             | Perform durable delete
             |
             | Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+        * **deserialize** :class:`bool`
+            | Should raw bytes representing a list or map be deserialized to a Python list or map. Set to false for backup programs that just need access to raw bytes.
             |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
+            | Default: :py:obj:`True`
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_apply_policies:
 
@@ -1767,74 +2377,30 @@ Apply Policies
 
     A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
-        * **gen**
-            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
-            |
-            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
+            command doesn't have an apply policy with a ``ttl`` value that overrides this field.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
             | Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_remove_policies:
 
@@ -1845,46 +2411,11 @@ Remove Policies
 
     A :class:`dict` of optional remove policies, which are applicable to :meth:`~Client.remove`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1897,6 +2428,8 @@ Remove Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **generation** (:class:`int`)
+            | The generation of the record. This value is limited to a 16-bit unsigned integer.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -1907,14 +2440,7 @@ Remove Policies
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
-            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
+            | Default: :py:data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
 .. _aerospike_batch_policies:
 
@@ -1923,52 +2449,17 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.get_many`, :meth:`~aerospike.exists_many` and :meth:`~aerospike.select_many`.
+    A :class:`dict` of optional batch policies.
+
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``2``
-
-            .. warning: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times if the client timed out previous  transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the transaction is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total transaction timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the transaction.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | Default: ``False``
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
 
             .. versionadded:: 3.7.0
 
@@ -1979,6 +2470,26 @@ Batch Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1988,7 +2499,7 @@ Batch Policies
             |
             | Default ``False``
         * **allow_inline** (:class:`bool`)
-            | Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol.
+            | Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate service threads.  This field is only relevant for the new batch index protocol.
             |
             | Default ``True``
         * **allow_inline_ssd** (:class:`bool`)
@@ -2000,23 +2511,10 @@ Batch Policies
 
             Default: ``False``
 
-        * **send_set_name** (:class:`bool`)
-            |
-            |   .. deprecated:: in client version 7.0.0, the client ignores this policy and always sends set name to the server.
-            |
-            | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis.
-            |
-            | Default: ``False``
         * **deserialize** (:class:`bool`)
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **respond_all_keys** :class:`bool`
             Should all batch keys be attempted regardless of errors. This field is used on both the client and server.
             The client handles node specific errors and the server handles key specific errors.
@@ -2042,15 +2540,12 @@ Batch Write Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.batch_write`, :meth:`~aerospike.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch write policies, which are applicable to :meth:`~aerospike.Client.batch_write`, :meth:`~aerospike.Client.batch_operate` and :class:`Write <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2068,9 +2563,27 @@ Batch Write Policies
             |
             | Default: ``False``
         * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+        * **ttl** :class:`int`
+            The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
+            used if:
+            1. A :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+
+               a. Doesn't contain a metadata dictionary with a ``ttl`` value.
+               b. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            2. A :meth:`~aerospike.Client.batch_operate` call:
+
+               a. Doesn't pass in a `ttl` argument.
+               b. Passes in `aerospike.TTL_CLIENT_DEFAULT` to the `ttl` parameter.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
+
+            Default: ``0``
+
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_batch_apply_policies:
 
@@ -2079,15 +2592,12 @@ Batch Apply Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch apply policies, which are applicable to :meth:`~aerospike.Client.batch_apply`, and :class:`Apply <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
 
-        * **key**
-            | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
-            |
-            | Default: :data:`aerospike.POLICY_KEY_DIGEST`
+        * .. include:: ./key_option_with_union_precedence.rst
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
@@ -2095,24 +2605,21 @@ Batch Apply Policies
         * **ttl** int
             | Time to live (expiration) of the record in seconds.
             |
-            | 0 which means that the
-            | record will adopt the default TTL value from the namespace.
+            | See :ref:`TTL_CONSTANTS` for possible special values.
             |
-            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
-            | which means that the record
-            | will get an internal "void_time" of zero, and thus will never expire.
-            |
-            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
-            | which means that the record
-            |
-            | ttl will not change when the record is updated.
             | Note that the TTL value will be employed ONLY on write/update calls.
             |
-            | Default: 0
+            | Default: ``0``
+        * **durable_delete** :class:`bool`
+            | If the command results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
+            |
+            | Default: :py:obj:`False` (do not tombstone deleted records).
         * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_batch_remove_policies:
 
@@ -2121,7 +2628,7 @@ Batch Remove Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
+    A :class:`dict` of optional batch remove policies, which are applicable to :meth:`~aerospike.Client.batch_remove`, and :class:`Remove <aerospike_helpers.batch.records>`.
 
     .. hlist::
         :columns: 1
@@ -2147,7 +2654,7 @@ Batch Remove Policies
             |
             | Default: ``False``
         * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
 
@@ -2164,17 +2671,36 @@ Batch Read Policies
         :columns: 1
 
         * **read_mode_ap**
-            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.POLICY_READ_MODE_AP_ONE`
             |
-            | Default: :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
+            | Default: :data:`aerospike.POLICY_READ_MODE_AP_ONE`
         * **read_mode_sc**
             | One of the :ref:`POLICY_READ_MODE_SC` values such as :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
             |
             | Default: :data:`aerospike.POLICY_READ_MODE_SC_SESSION`
         * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
 .. _aerospike_info_policies:
 
@@ -2183,13 +2709,15 @@ Info Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.info_all`, :meth:`~aerospike.info_single_node`, :meth:`~aerospike.info_random_node` and index operations.
+    A :class:`dict` of optional info policies, which are applicable to :meth:`~aerospike.Client.info_all`, :meth:`~aerospike.Client.info_single_node`, :meth:`~aerospike.Client.info_random_node` and index operations.
 
     .. hlist::
         :columns: 1
 
         * **timeout** (:class:`int`)
             | Read timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_admin_policies:
@@ -2206,6 +2734,8 @@ Admin Policies
 
         * **timeout** (:class:`int`)
             | Admin operation timeout in milliseconds
+            |
+            | Default: ``1000``
 
 
 .. _aerospike_list_policies:
@@ -2223,12 +2753,12 @@ List Policies
 
         * **write_flags**
             | Write flags for the operation.
-            | One of the :ref:`aerospike_list_write_flag` values such as :data:`aerospike.LIST_WRITE_DEFAULT`
+            | One of the :ref:`aerospike_list_write_flag` values.
             |
             | Default: :data:`aerospike.LIST_WRITE_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
         * **list_order**
             | Ordering to maintain for the list.
@@ -2238,7 +2768,7 @@ List Policies
 
     Example:
 
-     .. code-block:: python
+    .. testcode::
 
         list_policy = {
             "write_flags": aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED,
@@ -2252,20 +2782,10 @@ Map Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional map policies, which are applicable to map operations. Only one of ``map_write_mode`` or ``map_write_flags`` should
-    be provided. ``map_write_mode`` should be used for Aerospike Server versions < `4.3.0` and ``map_write_flags`` should be used for Aerospike server versions
-    greater than or equal to `4.3.0` .
+    A :class:`dict` of optional map policies, which are applicable to map operations.
 
     .. hlist::
         :columns: 1
-
-        * **map_write_mode**
-            | Write mode for the map operation.
-            | One of the :ref:`aerospike_map_write_mode` values such as :data:`aerospike.MAP_UPDATE`
-            |
-            | Default: :data:`aerospike.MAP_UPDATE`
-
-            .. note:: This should only be used for Server version < 4.3.0.
 
         * **map_write_flags**
             | Write flags for the map operation.
@@ -2274,7 +2794,7 @@ Map Policies
             | Default: :data:`aerospike.MAP_WRITE_FLAGS_DEFAULT`
             |
             | Values should be or'd together:
-            | ``aerospike.LIST_WRITE_ADD_UNIQUE | aerospike.LIST_WRITE_INSERT_BOUNDED``
+            | :py:data:`aerospike.LIST_WRITE_ADD_UNIQUE` | :py:data:`aerospike.LIST_WRITE_INSERT_BOUNDED`
 
             .. note:: This is only valid for Aerospike Server versions >= 4.3.0.
 
@@ -2284,20 +2804,21 @@ Map Policies
             |
             | Default: :data:`aerospike.MAP_UNORDERED`
 
+        * **persist_index** (:class:`bool`)
+            | If :py:obj:`True`, persist map index. A map index improves lookup performance,
+            | but requires more storage. A map index can be created for a top-level
+            | ordered map only. Nested and unordered map indexes are not supported.
+            |
+            | Default: :py:obj:`False`
+
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         # Server >= 4.3.0
         map_policy = {
             'map_order': aerospike.MAP_UNORDERED,
             'map_write_flags': aerospike.MAP_WRITE_FLAGS_CREATE_ONLY
-        }
-
-        # Server < 4.3.0
-        map_policy = {
-            'map_order': aerospike.MAP_UNORDERED,
-            'map_write_mode': aerospike.MAP_CREATE_ONLY
         }
 
 .. _aerospike_bit_policies:
@@ -2322,7 +2843,7 @@ Bit Policies
 
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         bit_policy = {
             'bit_write_flags': aerospike.BIT_WRITE_UPDATE_ONLY
@@ -2350,7 +2871,7 @@ HyperLogLog Policies
 
     Example:
 
-    .. code-block:: python
+    .. testcode::
 
         HLL_policy = {
             'flags': aerospike.HLL_WRITE_UPDATE_ONLY
@@ -2375,8 +2896,8 @@ Role Objects
 
         * ``"privileges"``: a :class:`list` of :ref:`aerospike_privilege_dict`.
         * ``"whitelist"``: a :class:`list` of IP address strings.
-        * ``"read_quota"``: a :class:`int` representing the allowed read transactions per second.
-        * ``"write_quota"``: a :class:`int` representing the allowed write transactions per second.
+        * ``"read_quota"``: a :class:`int` representing the allowed read commands per second.
+        * ``"write_quota"``: a :class:`int` representing the allowed write commands per second.
 
 .. _aerospike_privilege_dict:
 
@@ -2398,7 +2919,7 @@ Privilege Objects
 
             If not specified, the privilege applies to the entire namespace.
 
-    Example::
+    .. testcode::
 
         {'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}
 
@@ -2434,6 +2955,8 @@ Partition Objects
 
     Default: ``{}`` (All partitions will be queried/scanned).
 
+    .. TODO more thorough example needed here.
+
     .. code-block:: python
 
         # Example of a query policy using partition_filter.
@@ -2441,7 +2964,7 @@ Partition Objects
         # partition_status is most easily used to resume a query
         # and can be obtained by calling Query.get_partitions_status()
         partition_status = {
-            0: {0, False, Flase, bytearray([0]*20)}...
+            0: {0, False, False, bytearray([0]*20)}...
         }
 
         policy = {
@@ -2464,28 +2987,25 @@ Partition Objects
 
     The dictionary contains these key-value pairs:
 
-    * ``"retry"``: :class:`str` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
+    * ``"retry"``: :class:`bool` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
 
-        This maps to a boolean value.
-    * ``"done"``: :class:`str` represents whether all partitions were finished.
-
-        This maps to a boolean value.
+    * ``"done"``: :class:`bool` represents whether all partitions were finished.
 
     In addition, the dictionary contains keys of the partition IDs (:class:`int`),
-    and each partition ID is mapped to a dictionary containing the status details of a partition.
+    and each partition ID is mapped to a tuple containing the status details of a partition.
 
-    Each partition ID has a dictionary with the following keys:
+    That tuple has the following values in this order:
 
     .. hlist::
         :columns: 1
 
-        * ``"id"``: :class:`int` represents a partition ID number
-        * ``"init"``: :class:`bool` represents whether the digest being queried was calculated.
-        * ``"retry"``: :class:`bool` represents whether this partition should be retried.
-        * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
+        * ``id``: :class:`int` represents a partition ID number
+        * ``init``: :class:`bool` represents whether the digest being queried was calculated.
+        * ``retry``: :class:`bool` represents whether this partition should be retried.
+        * ``digest``: :class:`bytearray` represents the digest of the record being queried.
 
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
+        * ``bval``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
@@ -2495,7 +3015,7 @@ Partition Objects
 
        # Here is the form of partition_status.
        # partition_status = {
-       #     0: (0, False, Flase, bytearray([0]*20), 0)...
+       #     0: (0, False, False, bytearray([0]*20), 0)...
        # }
        partition_status = query.get_partitions_status()
 

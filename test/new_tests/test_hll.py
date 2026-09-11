@@ -2,6 +2,7 @@
 import pytest
 from aerospike import exception as e
 from aerospike_helpers.operations import hll_operations
+from aerospike_helpers import HyperLogLog
 from math import sqrt
 
 
@@ -172,8 +173,9 @@ class TestHLL(object):
         Invoke hll_get_intersect_count().
         """
 
-        records = [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys[:1])]
-        ops = [hll_operations.hll_get_intersect_count("hll_binl", records)]
+        hll_bin_values = [br.record[2]["hll_binu"] for br in
+                          self.as_connection.batch_read(self.test_keys[:1]).batch_records]
+        ops = [hll_operations.hll_get_intersect_count("hll_binl", hll_bin_values)]
         rel_error = self.relative_intersect_error(8, [100, 5], 5)
         actual_intersect = 5
 
@@ -184,9 +186,9 @@ class TestHLL(object):
         """
         Invoke hll_get_intersect_count() on min hash bins.
         """
-        records = [record[2]["mh_bin"] for record in self.as_connection.get_many(self.test_keys[:4])]
+        hll_bins = [br.record[2]["mh_bin"] for br in self.as_connection.batch_read(self.test_keys[:4]).batch_records]
 
-        ops = [hll_operations.hll_get_intersect_count("mh_bin", records)]
+        ops = [hll_operations.hll_get_intersect_count("mh_bin", hll_bins)]
 
         _, _, res = self.as_connection.operate(self.test_keys[4], ops)
         assert res["mh_bin"] == 1
@@ -197,9 +199,10 @@ class TestHLL(object):
         Invoke hll_get_intersect_count() with expected failures.
         """
 
-        records = [record[2][bin] for record in self.as_connection.get_many(self.test_keys[: hll_bins - 1])]
+        hll_bins = [br.record[2][bin] for br in
+                    self.as_connection.batch_read(self.test_keys[:hll_bins - 1]).batch_records]
 
-        ops = [hll_operations.hll_get_intersect_count(bin, records)]
+        ops = [hll_operations.hll_get_intersect_count(bin, hll_bins)]
 
         with pytest.raises(expected_result):
             self.as_connection.operate(self.test_keys[4], ops)
@@ -224,9 +227,10 @@ class TestHLL(object):
         Invoke hll_get_similarity() with expected errors.
         """
 
-        records = [record[2][bin] for record in self.as_connection.get_many(self.test_keys[: hll_bins - 1])]
+        hll_bin_values = [br.record[2][bin] for br in
+                          self.as_connection.batch_read(self.test_keys[: hll_bins - 1]).batch_records]
 
-        ops = [hll_operations.hll_get_similarity(bin, records)]
+        ops = [hll_operations.hll_get_similarity(bin, hll_bin_values)]
 
         with pytest.raises(expected_result):
             self.as_connection.operate(self.test_keys[4], ops)
@@ -236,9 +240,10 @@ class TestHLL(object):
         Invoke hll_get_union().
         """
 
-        records = [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys)]
+        hll_bin_values = [br.record[2]["hll_binu"] for br in
+                          self.as_connection.batch_read(self.test_keys).batch_records]
 
-        ops = [hll_operations.hll_get_union("hll_bin", [records[4]])]
+        ops = [hll_operations.hll_get_union("hll_bin", [hll_bin_values[4]])]
 
         _, _, union_hll = self.as_connection.operate(self.test_keys[4], ops)
 
@@ -256,9 +261,6 @@ class TestHLL(object):
         """
         Invoke hll_get_union() with expected errors.
         """
-
-        [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys)]
-
         ops = [hll_operations.hll_get_union("hll_bin", [])]
 
         with pytest.raises(e.InvalidRequest):
@@ -269,9 +271,9 @@ class TestHLL(object):
         Invoke hll_get_union_count().
         """
 
-        records = [record[2]["hll_bin"] for record in self.as_connection.get_many(self.test_keys)]
+        hll_bin_values = [br.record[2]["hll_bin"] for br in self.as_connection.batch_read(self.test_keys).batch_records]
 
-        ops = [hll_operations.hll_get_union_count("hll_binu", records)]
+        ops = [hll_operations.hll_get_union_count("hll_binu", hll_bin_values)]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
 
@@ -396,9 +398,10 @@ class TestHLL(object):
         Invoke hll_set_union() expecting failures.
         """
 
-        records = [record[2]["hll_binl"] for record in self.as_connection.get_many(self.test_keys)]
+        hll_bin_values = [br.record[2]["hll_binl"] for br in
+                          self.as_connection.batch_read(self.test_keys).batch_records]
 
-        ops = [hll_operations.hll_set_union(bin, records, policy)]
+        ops = [hll_operations.hll_set_union(bin, hll_bin_values, policy)]
 
         with pytest.raises(expected_result):
             self.as_connection.operate(self.test_keys[4], ops)
@@ -412,9 +415,10 @@ class TestHLL(object):
         Invoke hll_set_union().
         """
 
-        records = [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys)]
+        hll_bin_values = [br.record[2]["hll_binu"] for br in
+                          self.as_connection.batch_read(self.test_keys).batch_records]
 
-        ops = [hll_operations.hll_set_union(bin, [records[4]], policy)]
+        ops = [hll_operations.hll_set_union(bin, [hll_bin_values[4]], policy)]
 
         _, _, _ = self.as_connection.operate(self.test_keys[4], ops)
 
@@ -440,7 +444,7 @@ class TestHLL(object):
         ops = [hll_operations.hll_add(bin, ["key1", "key2", "key3"], policy=policy)]
 
         with pytest.raises(expected_result):
-            self.as_connection.operate(self.test_keys[0], ops, policy)
+            self.as_connection.operate(self.test_keys[0], ops)
 
     def test_pos_hll_update(self):
         """
@@ -451,3 +455,56 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
 
         assert res["hll_bine"] == 3
+
+    def test_get_put_operate_hll(self):
+        """
+        Can you read and write HLL bins to the server and still perform HLL operations on those bins?
+        """
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+        assert type(rec["mh_bin"]) == HyperLogLog
+
+        self.as_connection.put(self.test_keys[0], {"mh_bin": rec["mh_bin"]})
+
+        # mh_bin should return the same results as before reading and rewritting the bin
+        ops = [hll_operations.hll_describe("mh_bin")]
+        _, _, res = self.as_connection.operate(self.test_keys[0], ops)
+        assert res["mh_bin"] == [6, 12]
+
+    def test_put_get_hll_list(self):
+        """
+        This is to cover putting nested HLLs in the server
+        Since the conversion for nested HLLs to the C client equivalent is separate from top-level HLLs
+        """
+        # Test setup to retrieve an HLL bin
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+
+        self.as_connection.put(
+            self.test_keys[0],
+            {
+                "hll_list": [
+                    rec["hll_bin"]
+                ]
+            }
+        )
+        # Verify we stored the HLL in the list as an HLL type
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+        assert type(rec["hll_list"][0]) == HyperLogLog
+
+    def test_hll_superclass(self):
+        assert issubclass(HyperLogLog, bytes)
+
+    def test_hll_str_repr(self):
+        bytes_obj = b'asdf'
+        hll = HyperLogLog(bytes_obj)
+
+        expected_repr = f"{hll.__class__.__name__}({bytes_obj.__repr__()})"
+        assert str(hll) == expected_repr
+        assert repr(hll) == expected_repr
+
+        hll_from_eval = eval(expected_repr)
+        # We compare HLL instances by comparing their bytes values
+        assert hll == hll_from_eval
+
+        # Negative test for comparing HLL values
+        different_hll = HyperLogLog(b'asdff')
+        assert different_hll != hll_from_eval

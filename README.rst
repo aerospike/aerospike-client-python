@@ -11,13 +11,21 @@ Aerospike Python Client
 Compatibility
 -------------
 
-The Python client for Aerospike works with Python 3.7 - 3.11 running on
-**64-bit** macOS 10.15+ and Linux (RHEL/CentOS 7 & 8; Debian 8, 9 & 10; Ubuntu
-18.04 & 20.04; Alpine Linux).
+The Python client for Aerospike works with Python 3.10 - 3.14 and supports the following OS'es:
+
+* macOS 14, 15, 26
+* RHEL 9 and 10
+* Amazon Linux 2023
+* Debian 12 and 13
+* Ubuntu 22.04 and 24.04
+* Windows (x64)
+
+The client is also verified to run on these operating systems, but we do not officially support them (i.e we don't distribute wheels or prioritize fixing bugs for these OSes):
+
+* Alpine Linux
 
 **NOTE:** Aerospike Python client 5.0.0 and up MUST be used with Aerospike server 4.9 or later.
 If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
-
 
 Install
 -------
@@ -86,12 +94,15 @@ Examples
 
 Example applications are provided in the `examples directory of the GitHub repository <https://github.com/aerospike/aerospike-client-python/tree/master/examples/client>`__
 
-For examples, to run the ``kvs.py``:
+For examples, to run all code examples:
 
 ::
 
-    python examples/client/kvs.py
+    python3 -m examples.run_all_examples
 
+To run a specific code example from ``examples/client/kvs.py``:
+
+    python3 -m examples.run_all_examples KVS
 
 Benchmarks
 ----------

@@ -16,6 +16,7 @@
 
 #include <Python.h>
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "operate.h"
 #include "exceptions.h"
 #include "policy.h"
 
@@ -78,12 +80,13 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
         }
         Py_DECREF(py_key);
 
-        as_batch_result_to_BatchRecord(data->client, &err, res,
-                                       py_batch_record);
+        as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record,
+                                       false);
         if (err.code != AEROSPIKE_OK) {
             as_log_error(
                 "as_batch_result_to_BatchRecord failed at results index: %d",
                 i);
+            Py_DECREF(py_batch_record);
             success = false;
             break;
         }
@@ -96,6 +99,8 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
     return success;
 }
 
+AS_EXTERN extern bool as_op_is_write[];
+
 /**
  *******************************************************************************************************
  * This function invokes csdk's API's.
@@ -107,11 +112,13 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
  * @param py_ops                    The list containing op dictionaries.
  * @param py_policy_batch      		Python dict used to populate policy_batch.
  * @param py_policy_batch_write     Python dict used to populate policy_batch_write.
+ * @param py_ttl                    TTL value to set for each record.
  *******************************************************************************************************
  */
 static PyObject *AerospikeClient_Batch_Operate_Invoke(
     AerospikeClient *self, as_error *err, PyObject *py_keys, PyObject *py_ops,
-    PyObject *py_policy_batch, PyObject *py_policy_batch_write)
+    PyObject *py_policy_batch, PyObject *py_policy_batch_write,
+    PyObject *py_ttl)
 {
     long operation;
     long return_type = -1;
@@ -126,10 +133,8 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     as_batch_init(&batch, 0);
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
 
-    as_exp batch_write_exp_list;
     as_exp *batch_write_exp_list_p = NULL;
 
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -157,6 +162,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         goto CLEANUP;
     }
 
+    bool has_write_op = false;
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
 
@@ -169,6 +175,10 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
                    &operation, &return_type) != AEROSPIKE_OK) {
             goto CLEANUP;
+        }
+
+        if (as_op_is_write[ops.binops.entries[i].op]) {
+            has_write_op = true;
         }
     }
 
@@ -204,10 +214,18 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
+        as_policy_batch *config_batch_policy_ref = NULL;
+        if (has_write_op) {
+            config_batch_policy_ref =
+                &self->as->config.policies.batch_parent_write;
+        }
+        else {
+            config_batch_policy_ref = &self->as->config.policies.batch;
+        }
+
+        if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p, config_batch_policy_ref,
+                                     &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -215,10 +233,19 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch_write) {
         if (pyobject_to_batch_write_policy(
                 self, err, py_policy_batch_write, &policy_batch_write,
-                &policy_batch_write_p, &batch_write_exp_list,
+                &policy_batch_write_p, &self->as->config.policies.batch_write,
                 &batch_write_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
+    }
+
+    if (py_ttl == NULL || py_ttl == Py_None) {
+        // If ttl in this transaction's batch write policy isn't set, use the client config's default batch write
+        // policy ttl
+        ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+    }
+    else {
+        ops.ttl = (uint32_t)PyLong_AsLong(py_ttl);
     }
 
     // import batch_records helper
@@ -305,12 +332,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-
+        raise_exception(err);
         return NULL;
     }
 
@@ -339,15 +361,16 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
     PyObject *py_keys = NULL;
     PyObject *py_ops = NULL;
     PyObject *py_results = NULL;
+    PyObject *py_ttl = NULL;
 
     as_error_init(&err);
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"keys", "ops", "policy_batch",
-                             "policy_batch_write", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_Operate", kwlist,
+    static char *kwlist[] = {
+        "keys", "ops", "policy_batch", "policy_batch_write", "ttl", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OOO:batch_Operate", kwlist,
                                     &py_keys, &py_ops, &py_policy_batch,
-                                    &py_policy_batch_write) == false) {
+                                    &py_policy_batch_write, &py_ttl) == false) {
         return NULL;
     }
 
@@ -355,29 +378,36 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_ops) || !PyList_Size(py_ops)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "ops should be a list of op dictionaries");
-        goto ERROR;
+        goto error;
     }
 
     // required arg so don't need to check for NULL
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
-        goto ERROR;
+        goto error;
+    }
+
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
+    }
+
+    if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "ttl should be an integer");
+        goto error;
     }
 
     py_results = AerospikeClient_Batch_Operate_Invoke(
-        self, &err, py_keys, py_ops, py_policy_batch, py_policy_batch_write);
+        self, &err, py_keys, py_ops, py_policy_batch, py_policy_batch_write,
+        py_ttl);
 
     return py_results;
 
-ERROR:
+error:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
     }
 
     return NULL;

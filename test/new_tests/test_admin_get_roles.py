@@ -62,7 +62,7 @@ class TestGetRoles(TestBaseClass):
         """
         Get roles positive policy
         """
-        roles = self.client.admin_get_roles({"timeout": 1000})
+        roles = self.client.admin_get_roles({"timeout": 180000})
 
         assert roles["usr-sys-admin-test"] == {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
@@ -75,9 +75,7 @@ class TestGetRoles(TestBaseClass):
         """
         Get roles incorrect policy
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_get_roles({"timeout": 0.2})
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"

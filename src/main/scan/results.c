@@ -71,7 +71,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     PyObject *py_policy = NULL;
     PyObject *py_results = NULL;
     PyObject *py_nodename = NULL;
-    PyObject *py_ustr = NULL;
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
@@ -85,7 +84,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     static char *kwlist[] = {"policy", "nodename", NULL};
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     as_partition_filter partition_filter = {0};
@@ -113,7 +111,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     // Convert python policy object to as_policy_scan
     pyobject_to_policy_scan(
         self->client, &err, py_policy, &scan_policy, &scan_policy_p,
-        &self->client->as->config.policies.scan, &exp_list, &exp_list_p);
+        &self->client->as->config.policies.scan, &exp_list_p, false);
     if (err.code != AEROSPIKE_OK) {
         as_error_update(&err, err.code, NULL);
         goto CLEANUP;
@@ -136,18 +134,8 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	 * If the user specified a nodename, validate and convert it to a char*
 	 */
     if (py_nodename) {
-        if (PyString_Check(py_nodename)) {
-            nodename = PyString_AsString(py_nodename);
-        }
-        else if (PyUnicode_Check(py_nodename)) {
-            /* The decoding could fail, so we need to check for null */
-            py_ustr = PyUnicode_AsUTF8String(py_nodename);
-            if (!py_ustr) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid unicode nodename");
-                goto CLEANUP;
-            }
-            nodename = PyBytes_AsString(py_ustr);
+        if (PyUnicode_Check(py_nodename)) {
+            nodename = (char *)PyUnicode_AsUTF8(py_nodename);
         }
         else {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -189,15 +177,9 @@ CLEANUP:
         as_exp_destroy(exp_list_p);
     }
 
-    Py_XDECREF(py_ustr);
-
     if (err.code != AEROSPIKE_OK) {
         Py_XDECREF(py_results);
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

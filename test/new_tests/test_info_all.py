@@ -3,6 +3,8 @@
 import pytest
 
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
+from contextlib import nullcontext
 
 import aerospike
 
@@ -35,6 +37,9 @@ class TestInfo(object):
         Test to see whether a namespace, set,
         and bin exist after a key is added
         """
+        if container_type == "bins" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         key = ("test", "demo", "list_key")
         rec = {"names": ["John", "Marlen", "Steve"]}
 
@@ -66,10 +71,17 @@ class TestInfo(object):
 
         request = "fake_request_string_not_real"
         # hosts = [host for host in self.connection_config["hosts"]]
-        nodes_info = self.as_connection.info_all(request)
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            expectation = pytest.raises(e.InvalidRequest)
+        else:
+            expectation = nullcontext()
 
-        assert isinstance(nodes_info, dict)
-        assert nodes_info.values() is not None
+        with expectation:
+            nodes_info = self.as_connection.info_all(request)
+
+        if type(expectation) == nullcontext:
+            assert isinstance(nodes_info, dict)
+            assert nodes_info.values() is not None
 
     def test_info_all_with_none_request(self):
         """

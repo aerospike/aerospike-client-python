@@ -1,0 +1,7 @@
+version: 1.0.0
+dynamic:
+  metrics:
+    enable: false
+static:
+  client:
+    config_interval: 1000

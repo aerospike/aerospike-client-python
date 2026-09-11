@@ -41,7 +41,6 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
     static char *kwlist[] = {"policy", NULL};
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
@@ -65,7 +64,7 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
     if (pyobject_to_policy_write(self->client, &err, py_policy, &write_policy,
                                  &write_policy_p,
                                  &self->client->as->config.policies.write,
-                                 &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+                                 &exp_list_p, false) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -82,11 +81,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

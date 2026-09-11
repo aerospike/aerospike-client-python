@@ -106,7 +106,7 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
         goto CLEANUP;
     }
 
-    if (PyString_Check(py_geodata)) {
+    if (PyUnicode_Check(py_geodata)) {
         initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
         if (!initresult) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -122,11 +122,7 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return -1;
     }
 
@@ -158,7 +154,7 @@ AerospikeGeospatial *self;
                         "Unable to call get data in str format");
         goto CLEANUP;
     }
-    char *initresult_str = PyString_AsString(initresult);
+    char *initresult_str = (char *)PyUnicode_AsUTF8(initresult);
     new_repr_str = (char *)malloc(strlen(initresult_str) + 3);
     memset(new_repr_str, '\0', strlen(initresult_str) + 3);
     snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'",
@@ -168,18 +164,14 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         if (new_repr_str) {
             free(new_repr_str);
         }
         return NULL;
     }
 
-    py_return = PyString_FromString(new_repr_str);
+    py_return = PyUnicode_FromString(new_repr_str);
     Py_XDECREF(initresult);
     free(new_repr_str);
     return py_return;
@@ -210,11 +202,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
     return initresult;
@@ -231,9 +219,10 @@ static void AerospikeGeospatial_Type_Dealloc(AerospikeGeospatial *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 static PyTypeObject AerospikeGeospatial_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Geospatial", // tp_name
-    sizeof(AerospikeGeospatial),                           // tp_basicsize
-    0,                                                     // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Geospatial"), // tp_name
+    sizeof(AerospikeGeospatial),                 // tp_basicsize
+    0,                                           // tp_itemsize
     (destructor)AerospikeGeospatial_Type_Dealloc,
     // tp_dealloc
     0,                             // tp_print
@@ -322,11 +311,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Data(PyObject *parent, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
     }
     return NULL;
 }
@@ -346,7 +331,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
         return NULL;
     }
 
-    if (PyString_Check(py_geodata)) {
+    if (PyUnicode_Check(py_geodata)) {
         AerospikeGeospatial *self =
             (AerospikeGeospatial *)AerospikeGeospatial_Type.tp_new(
                 &AerospikeGeospatial_Type, args, kwds);
@@ -364,11 +349,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
     }
     return NULL;
 }

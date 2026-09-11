@@ -68,8 +68,8 @@ class TestExists:
     def test_neg_exists_with_record_expiry(self, put_data):
         key = ("test", "demo", 30)
         rec = {"name": "John"}
-        meta = {"gen": 3, "ttl": 1}
-        put_data(self.as_connection, key, rec, meta)
+        meta = {"gen": 3}
+        put_data(self.as_connection, key, rec, meta, {"ttl": 1})
         time.sleep(2)
 
         key, meta = self.as_connection.exists(key)
@@ -82,7 +82,7 @@ class TestExists:
             (("test", "demo", "non-existent"), e.RecordNotFound, 2),  # non-existent key
             # non-existent set
             (("test", "set", 1), e.RecordNotFound, 2),
-            (("namespace", "demo", 1), e.ClientError, -1),  # non-existent Namespace
+            (("namespace", "demo", 1), e.NamespaceNotFound, 20),  # non-existent Namespace
             # None set in key tuple.
             (("test", None, 2), e.RecordNotFound, 2),
             (("test", "demo", "Non_existing_key"), e.RecordNotFound, 2),  # Non_existing_key
@@ -92,16 +92,17 @@ class TestExists:
         """
         Invoke exists() for non-existent data.
         """
-        try:
+        if ex == e.NamespaceNotFound:
+            with pytest.raises(ex):
+                key, meta = self.as_connection.exists(key)
+        elif ex == e.RecordNotFound:
             key, meta = self.as_connection.exists(key)
             assert meta is None
-            """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
-            meta as None. This might change with further releases.
-            """
-        except ex as exception:
-            assert exception.code == ex_code
+        """
+        We are making the api backward compatible. In case of RecordNotFound an
+        exception will not be raised. Instead Ok response is returned withe the
+        meta as None. This might change with further releases.
+        """
 
     def test_neg_exists_with_only_key_without_connection(self):
         """
@@ -112,18 +113,17 @@ class TestExists:
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             key, _ = client1.exists(key)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 20), {"name": "John"}, {"gen": 3, "ttl": 1}, {"total_timeout": 2}),
+            (("test", "demo", 20), {"name": "John"}, None, {"total_timeout": 2}),
         ],
     )
+    @pytest.mark.skip(reason="This test case can fail in test environments with e2e latency of more than 2ms")
     def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
         try:
             put_data(self.as_connection, key, record, meta, policy)

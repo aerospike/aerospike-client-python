@@ -9,34 +9,35 @@ from .as_status_codes import AerospikeStatus
 import aerospike
 
 
-class TestScan(TestBaseClass):
-    @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
-        self.test_ns = "test"
-        self.test_set = "demo"
+@pytest.fixture(autouse=True, scope="class")
+def setup(request, as_connection):
+    request.cls.test_ns = "test"
+    request.cls.test_set = "demo"
 
+    for i in range(19):
+        key = ("test", "demo", i)
+        rec = {"name": "name%s" % (str(i)), "age": i}
+        as_connection.put(key, rec)
+
+    key = ("test", "demo", 122)
+    llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
+    # Creates a record with the key 122, with one bytearray key.
+    request.cls.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
+    as_connection.operate(key, llist)
+    request.cls.record_count = 20
+
+    def teardown():
         for i in range(19):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "age": i}
-            as_connection.put(key, rec)
-
-        key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
-        # Creates a record with the key 122, with one bytearray key.
-        self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
-        as_connection.operate(key, llist)
-        self.record_count = 20
-
-        def teardown():
-            for i in range(19):
-                key = ("test", "demo", i)
-                as_connection.remove(key)
-
-            key = ("test", "demo", 122)
             as_connection.remove(key)
 
-        request.addfinalizer(teardown)
+        key = ("test", "demo", 122)
+        as_connection.remove(key)
 
+    request.addfinalizer(teardown)
+
+
+class TestScan(TestBaseClass):
     def test_scan_with_existent_ns_and_set(self):
 
         records = []
@@ -65,7 +66,7 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
-    def test_scan_with_timeout_policy(self):
+    def test_scan_with_policy(self):
 
         records = []
 
@@ -75,7 +76,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 180000})
+        scan_obj.foreach(callback, {"total_timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER})
 
         assert len(records) == self.record_count
 
@@ -387,10 +388,10 @@ class TestScan(TestBaseClass):
             _, _, bins = input_tuple
             records.append(bins)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             scan_obj.foreach(callback)
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_scan_with_none_ns_and_set(self):
 
@@ -402,6 +403,18 @@ class TestScan(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_scan_with_invalid_set_type(self):
+        """
+        Invoke scan() with a set argument that is neither a string nor None.
+        This should raise a ParamError instead of silently scanning the
+        entire namespace (CLIENT-4053).
+        """
+        with pytest.raises(e.ParamError) as err_info:
+            self.as_connection.scan(self.test_ns, 123)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+        assert err_info.value.msg == "Set should be string, unicode or None"
 
     def test_scan_with_select_bin_integer(self):
         """
@@ -467,3 +480,7 @@ class TestScan(TestBaseClass):
 
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
+
+    def test_creating_scan_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Scan("test", "demo")

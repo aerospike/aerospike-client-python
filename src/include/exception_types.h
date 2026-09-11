@@ -59,6 +59,7 @@ struct exceptions {
     PyObject *ConnectionError;
     PyObject *BatchFailed;            //-16
     PyObject *NoResponse;             //-15
+    PyObject *MaxErrorRateExceeded;   //-14
     PyObject *MaxRetriesExceeded;     //-12
     PyObject *TLSError;               //-9
     PyObject *InvalidNodeError;       //-8

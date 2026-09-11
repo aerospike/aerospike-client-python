@@ -261,7 +261,7 @@ class TestNewRelativeMapOperations(object):
         self.test_bin = "map"
         self.as_connection.put(self.test_key, {self.test_bin: self.test_map})
 
-        map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+        map_policy = {"map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
         operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
         self.as_connection.operate(self.test_key, operations)
         self.keys.append(self.test_key)

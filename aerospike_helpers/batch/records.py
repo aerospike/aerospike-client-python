@@ -15,6 +15,7 @@
 ##########################################################################
 
 import typing as ty
+from typing import Optional
 
 TypeOps = ty.List[ty.Dict]
 TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
@@ -37,14 +38,17 @@ class BatchRecord:
 
         BatchRecord should usually be read from as a result and not created by the user. Its subclasses can be used as
         input to batch_write.
-        Client methods :meth:`~Client.batch_apply`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_remove`
-        with batch_records field as a list of these BatchRecord objects containing the batch request results.
+        Client methods :meth:`~aerospike.Client.batch_apply`, :meth:`~aerospike.Client.batch_operate`,
+        :meth:`~aerospike.Client.batch_remove` with batch_records field as a list of these BatchRecord objects
+        containing the batch request results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            subcode (int): Server error detail subcode for this record, or zero when absent.
+            message (str | None): Server error detail message for this record, or :py:obj:`None` when absent.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
@@ -53,35 +57,41 @@ class BatchRecord:
         self.key = key
         self.record = None
         self.result = 0
+        self.message = None
+        self.subcode = 0
         self.in_doubt = False
 
 
 class Write(BatchRecord):
-    """ Write is used for executing Batch write operations with batch_write and retrieving batch write results.
+    """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
+
+        .. include:: ./deprecate_meta_ttl.rst
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
+            key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for the operations in this BatchRecord
+            meta (dict): the metadata to set for this command
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
 
     def __init__(
-        self, key: tuple, ops: "TypeOps", meta: "dict" = None, policy: "TypeBatchPolicyWrite" = None
+        self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Write
 
             bin_name = "a"
@@ -108,19 +118,22 @@ class Write(BatchRecord):
 
 
 class Read(BatchRecord):
-    """ Read is used for executing Batch read operations with batch_write and retrieving results.
+    """ Read is used for executing Batch read commands with batch_write and retrieving results.
+
+        .. deprecated:: 19.1.0 Deprecated the ``"ttl"`` option in the ``meta`` parameter. Use the policy parameter in a
+            :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
 
         Attributes:
-            key (:obj:`tuple`): The aerospike key to operate on.
+            key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for the operations in this BatchRecord
-            read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
+            meta (dict): the metadata to set for this command
+            read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
 
@@ -129,15 +142,17 @@ class Read(BatchRecord):
         key: tuple,
         ops: ty.Union[TypeOps, None],
         read_all_bins: bool = False,
-        meta: "dict" = None,
+        meta: Optional[dict] = None,
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Read to read bin "a" from the record.
             import aerospike
-            import aerospike_helpers.operations as op
+            from aerospike_helpers.operations import operations as op
             from aerospike_helpers.batch.records import Read
 
             bin_name = "a"
@@ -164,7 +179,7 @@ class Read(BatchRecord):
 
 
 class Apply(BatchRecord):
-    """ BatchApply is used for executing Batch UDF (user defined function) apply operations with batch_write and
+    """ BatchApply is used for executing Batch UDF (user defined function) apply commands with batch_write and
         retrieving results.
 
         Attributes:
@@ -173,12 +188,10 @@ class Apply(BatchRecord):
             function (str): Name of the UDF to invoke.
             args (:obj:`list`): List of arguments to pass to the UDF.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
-                on the record at key.
             policy (:ref:`aerospike_batch_apply_policies`, optional): An optional dictionary of batch apply policy
                 flags.
     """
@@ -187,12 +200,15 @@ class Apply(BatchRecord):
         self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
     ) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
             # Assume that "test_func" takes a bin name string as an argument.
             # Assume the appropriate UDF module has already been registered.
             import aerospike_helpers.operations as op
+            from aerospike_helpers.batch.records import Apply
 
 
             module = "my_lua"
@@ -220,24 +236,24 @@ class Apply(BatchRecord):
 
 
 class Remove(BatchRecord):
-    """ Remove is used for executing Batch remove operations with batch_write and retrieving results.
+    """ Remove is used for executing Batch remove commands with batch_write and retrieving results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
-            result (int): The status code of the operation.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            result (int): The status code of the command.
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
-                on the record at key.
             policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
                 flags.
     """
 
     def __init__(self, key: tuple, policy: "TypeBatchPolicyRemove" = None) -> None:
         """
-        Example::
+        Example:
+
+        .. testcode::
 
             # Create a batch Remove to remove the record.
             import aerospike_helpers.operations as op
@@ -248,7 +264,7 @@ class Remove(BatchRecord):
             user_key = 1
             key = (namespace, set, user_key)
 
-            br = Remove(key, ops)
+            br = Remove(key)
         """
         super().__init__(key)
         self._type = _Types.REMOVE
@@ -264,45 +280,57 @@ class BatchRecords:
 
         Attributes:
             batch_records (list): A list of BatchRecord subtype objects used to \
-            define batch operations and hold results. BatchRecord Types can be Remove, Write, \
+            define batched commands and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
             result (int): The status code of the last batch call that used this BatchRecords.
-            0 if all batch subtransactions succeeded (or if the only failures were FILTERED_OUT or RECORD_NOT_FOUND)
-            non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
+                ``0`` if all batched commands succeeded (or if the only failures were \
+                    ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
+                Not ``0`` if an error occurred. The most common error is ``-16`` \
+                    (One or more batched commands failed).
     """
 
-    def __init__(self, batch_records: TypeBatchRecordList = None) -> None:
+    def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
-        Example::
+        Example:
 
-            # Create a BatchRecords to remove a record, write a bin, and read a bin.
-            # Assume client is an instantiated and connected aerospike cleint.
-            import aerospike_helpers.operations as op
+        .. testcode::
 
+            import aerospike
+            import aerospike_helpers.operations.operations as op
+            from aerospike_helpers.batch.records import BatchRecords, Remove, Write, Read
+
+            # Setup
+            config = {
+                "hosts": [("127.0.0.1", 3000)]
+            }
+            client = aerospike.client(config)
 
             namespace = "test"
-            set = "demo"
-            bin_name = "id"
+            set_ = "demo"
             keys = [
-                (namespace, set, 1),
-                (namespace, set, 2),
-                (namespace, set, 3)
+                (namespace, set_, 1),
+                (namespace, set_, 2),
+                (namespace, set_, 3),
             ]
+            bin_name = "id"
+            for key in keys:
+                client.put(key, {bin_name: 1})
 
+            # Create a BatchRecords to remove a record, write a bin, and read a bin.
             brs = BatchRecords(
                 [
                     Remove(
-                        key=(namespace, set, 1),
+                        key=keys[0],
                     ),
                     Write(
-                        key=(namespace, set, 100),
+                        key=keys[1],
                         ops=[
                             op.write(bin_name, 100),
                             op.read(bin_name),
                         ]
                     ),
-                    BatchRead(
-                        key=(namespace, set, 333),
+                    Read(
+                        key=keys[2],
                         ops=[
                             op.read(bin_name)
                         ]
@@ -312,6 +340,18 @@ class BatchRecords:
 
             # Note this call will mutate brs and set results in it.
             client.batch_write(brs)
+            for br in brs.batch_records:
+                print(br.result)
+                print(br.record)
+
+        .. testoutput::
+
+            0
+            (('test', 'demo', 1, bytearray(b'...')), {...}, {})
+            0
+            (('test', 'demo', 2, bytearray(b'...')), {...}, {'id': 100})
+            0
+            (('test', 'demo', 3, bytearray(b'...')), {...}, {'id': 1})
         """
 
         if batch_records is None:

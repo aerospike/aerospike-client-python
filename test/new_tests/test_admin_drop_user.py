@@ -57,16 +57,16 @@ class TestDropUser(object):
         time.sleep(2)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_info = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_drop_user(user, policy)
 
         assert status == 0
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -76,38 +76,34 @@ class TestDropUser(object):
         """
         Invoke drop_user() with policy none
         """
-        policy = {"timeout": 1000}
-        try:
-            self.client.admin_drop_user(None, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        with pytest.raises(e.ParamError) as excinfo:
+            self.client.admin_drop_user(None)
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_drop_user_positive(self):
         """
         Invoke drop_user() with correct arguments.
         """
-        policy = {"timeout": 1000}
         user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
-        status = self.client.admin_drop_user(user, policy)
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
+        status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(2)
 
         try:
-            user_details = self.client.admin_query_user(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -117,26 +113,25 @@ class TestDropUser(object):
         """
         Invoke drop_user() with correct arguments.
         """
-        policy = {"timeout": 1000}
         user = "foo-test"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(1)
 
         try:
-            user_details = self.client.admin_query_user(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -146,46 +141,40 @@ class TestDropUser(object):
         """
         Invoke drop_user() with non-existent user.
         """
-        policy = {}
         user = "foo-test"
         try:
-            self.client.admin_query_user(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_drop_user(user)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_policy_incorrect(self):
         """
         Invoke drop_user() with policy incorrect
         """
-        policy = {"timeout": 1000}
         user = "incorrect-policy"
         password = "foo1"
         roles = ["read", "read-write", "sys-admin"]
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
         policy = {"timeout": 0.2}
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             status = self.client.admin_drop_user(user, policy)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "timeout is invalid"
 
         status = self.client.admin_drop_user(user)
 
@@ -193,43 +182,38 @@ class TestDropUser(object):
         """
         Invoke drop_user() with extra argument.
         """
-        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_drop_user("foo-test", policy, "")
+            self.client.admin_drop_user("foo-test", None, "")
 
         assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(typeError.value)
 
     @pytest.mark.xfail(reason="It is no longer possible to create a user with" "a name too long")
     def test_drop_user_with_too_long_username(self):
 
-        policy = {}
         user = "user$" * 1000
         password = "user10"
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
-        try:
-            self.client.admin_drop_user(user, policy)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        with pytest.raises(e.InvalidUser) as excinfo:
+            self.client.admin_drop_user(user)
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_drop_user_with_special_characters_in_username(self):
 
-        policy = {}
         user = "!#Q#AEQ@#$%&^*((^&*~~~````"
         password = "user4"
         roles = ["read-write"]
 
         try:
-            status = self.client.admin_create_user(user, password, roles, policy)
+            status = self.client.admin_create_user(user, password, roles)
             assert status == 0
             time.sleep(1)
         except Exception:

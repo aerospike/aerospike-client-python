@@ -9,40 +9,113 @@ Overview
 --------
 
 Aerospike expressions are a small domain specific language that allow for filtering
-records in transactions by manipulating and comparing bins and record metadata.
+records in commands by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 .. note::
-  See `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+  See `Expressions <https://aerospike.com/docs/develop/expressions>`_.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
 such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
-while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
+while passing them other expressions and constants as arguments, and finally calling the
+:meth:`~aerospike_helpers.expressions.resources._BaseExpr.compile` method.
 
-Example::
+Example:
+
+.. testcode::
 
     # See if integer bin "bin_name" contains a value equal to 10.
     from aerospike_helpers import expressions as exp
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 
-By passing these compiled expressions to transactions via the "expressions" policy field,
-these transactions will filter the results.
+By passing a compiled expression to a command via the "expressions" policy field,
+the command will filter the results.
 
 Example:
 
-.. include:: examples/expressions/top.py
-  :code: python
+.. testsetup::
+
+  import aerospike
+  config = {"hosts": [("127.0.0.1", 3000)]}
+  client = aerospike.client(config)
+
+  keys = [("test", "demo", i) for i in range(1, 5)]
+  client.batch_remove(keys=keys)
+
+  client.close()
+
+.. testcode::
+
+  import aerospike
+  from aerospike_helpers import expressions as exp
+  import pprint
+
+  # Connect to database
+  config = {"hosts": [("127.0.0.1", 3000)]}
+  client = aerospike.client(config)
+
+  # Write player records to database
+  keys = [("test", "demo", i) for i in range(1, 5)]
+  records = [
+              {'user': "Chief"  , 'scores': [6, 12, 4, 21], 'kd': 1.2},
+              {'user': "Arbiter", 'scores': [5, 10, 5, 8] , 'kd': 1.0},
+              {'user': "Johnson", 'scores': [8, 17, 20, 5], 'kd': 0.9},
+              {'user': "Regret" , 'scores': [4, 2, 3, 5]  , 'kd': 0.3}
+          ]
+  for key, record in zip(keys, records):
+      client.put(key, record)
+
+  # Example #1: Get players with a K/D ratio >= 1.0
+
+  kdGreaterThan1 = exp.GE(exp.FloatBin("kd"), 1.0).compile()
+  policy = {"expressions": kdGreaterThan1}
+  brs = client.batch_read(keys, policy=policy)
+
+  # Pretty print records' bins
+  for br in brs.batch_records:
+      # error code for FILTERED_OUT = 27
+      pprint.pprint(br.record[2] if br.result != 27 else None)
+
+  # Example #2: Get player with scores higher than 20
+  # By nesting expressions, we can create complicated filters
+
+  # Get top score
+  getTopScore = exp.ListGetByRank(
+                  None,
+                  aerospike.LIST_RETURN_VALUE,
+                  exp.ResultType.INTEGER,
+                  -1,
+                  exp.ListBin("scores")
+                  )
+  # ...then compare it
+  scoreHigherThan20 = exp.GE(getTopScore, 20).compile()
+  policy = {"expressions": scoreHigherThan20}
+  brs = client.batch_read(keys, policy=policy)
+
+  for br in brs.batch_records:
+      pprint.pprint(br.record[2] if br.result != 27 else None)
+
+.. testoutput::
+
+  {'kd': 1.2, 'scores': [6, 12, 4, 21], 'user': 'Chief'}
+  {'kd': 1.0, 'scores': [5, 10, 5, 8], 'user': 'Arbiter'}
+  None
+  None
+  {'kd': 1.2, 'scores': [6, 12, 4, 21], 'user': 'Chief'}
+  None
+  {'kd': 0.9, 'scores': [8, 17, 20, 5], 'user': 'Johnson'}
+  None
+
 
 Currently, Aerospike expressions are supported for:
-- Record operations
-- Batch operations
-- Transactions
-- UDF apply methods (apply, scan apply, and query apply)
-- Query invoke methods (foreach, results, execute background)
-- Scan invoke methods (same as query invoke methods)
+  * Record commands
+  * Batched commands
+  * UDF apply methods (apply, scan apply, and query apply)
+  * Query invoke methods (foreach, results, execute background)
+  * Scan invoke methods (same as query invoke methods)
 
 Filter Behavior
 ---------------
@@ -50,19 +123,11 @@ Filter Behavior
 This section describes the behavior of methods when a record is filtered out by an expression.
 
 For:
-  * Record operations
+  * Record commands
   * Numeric operations
   * String operations
-  * Single record transactions
 
 An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
-
-For:
-  * :meth:`~aerospike.Client.get_many`
-  * :meth:`~aerospike.Client.exists_many`
-  * :meth:`~aerospike.Client.select_many`
-
-The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
 
 For:
 
@@ -74,11 +139,6 @@ The filtered out record's:
 
     * ``BatchRecord.record`` is set to :py:obj:`None`
     * ``BatchRecord.result`` is set to ``27``
-
-For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
-
-  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
-  * ``bins`` is set to :py:obj:`None`.
 
 Terminology
 -----------
@@ -104,7 +164,7 @@ this means that the data type returned may vary (usually depending on the ``retu
 
     Currently, Aerospike expressions for the python client do not support comparing ``as_python_bytes`` blobs.
 
-    Comparisons between constant map values and map expressions are also unsupported.
+    Only comparisons between **key ordered** map values and map expressions are supported.
 
 Expression Type Aliases
 -----------------------
@@ -170,7 +230,14 @@ The following documentation uses type aliases that map to standard Python types.
 
 .. note:: Requires server version >= 5.2.0
 
-Assume all in-line examples run this code beforehand::
+Assume all in-line examples run this code beforehand:
+
+.. testsetup::
+
+    import aerospike
+    import aerospike_helpers.expressions as exp
+
+.. code-block:: Python
 
     import aerospike
     import aerospike_helpers.expressions as exp
@@ -181,6 +248,8 @@ aerospike\_helpers\.expressions\.base module
 .. automodule:: aerospike_helpers.expressions.base
     :members:
     :special-members:
+    :show-inheritance:
+    :private-members: _Key
 
 aerospike\_helpers\.expressions\.list module
 --------------------------------------------
@@ -224,13 +293,22 @@ aerospike\_helpers\.expressions\.bitwise_operators module
     :members:
     :special-members:
 
+aerospike\_helpers\.expressions\.string module
+----------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.string
+    :members:
+    :special-members:
 
 aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
-.. automodule:: aerospike_helpers.expressions.resources
+.. autodata:: aerospike_helpers.expressions.resources.TypeExpression
 
-    .. autoclass:: ResultType
-      :members:
-      :undoc-members:
-      :member-order: bysource
+.. autoclass:: aerospike_helpers.expressions.resources.ResultType
+  :members:
+  :undoc-members:
+
+.. autoclass:: aerospike_helpers.expressions.resources._BaseExpr
+
+.. automethod:: aerospike_helpers.expressions.resources._BaseExpr.compile

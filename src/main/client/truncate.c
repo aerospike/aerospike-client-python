@@ -35,7 +35,8 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     as_status status = AEROSPIKE_OK;
 
     pyobject_to_policy_info(err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+                            &self->as->config.policies.info,
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
 
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect Policy");
@@ -45,8 +46,6 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     status =
         aerospike_truncate(self->as, err, info_policy_p, namespace, set, nanos);
     if (status != AEROSPIKE_OK) {
-        // The truncate operation failed. Update the err->code and return
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Truncate operation failed");
         return NULL;
     }
 
@@ -65,7 +64,6 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     PyObject *py_ns = NULL;
     PyObject *py_nanos = NULL;
     PyObject *py_policy = NULL;
-    PyObject *py_ustr = NULL;
     PyObject *ret_val = NULL;
     long long temp_long;
     as_error err;
@@ -83,21 +81,19 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    // Start conversion of the namespace parameter
-    if (PyString_Check(py_ns)) {
-        namespace = strdup(PyString_AsString(py_ns));
-        // If we failed to copy the string, exit
-        if (!namespace) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Memory allocation failed");
-            goto CLEANUP;
-        }
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
     }
-    else if (PyUnicode_Check(py_ns)) {
-        py_ustr = PyUnicode_AsUTF8String(py_ns);
-        namespace = strdup(PyBytes_AsString(py_ustr));
-        Py_DECREF(py_ustr);
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
+    // Start conversion of the namespace parameter
+    if (PyUnicode_Check(py_ns)) {
+        namespace = strdup((char *)PyUnicode_AsUTF8(py_ns));
         // If we failed to copy the string, exit
         if (!namespace) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -112,19 +108,8 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     }
 
     // Start conversion of the set parameter
-    if (PyString_Check(py_set)) {
-        set = strdup(PyString_AsString(py_set));
-        // If we called strdup, and it failed we need to exit
-        if (!set) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Memory allocation failed");
-            goto CLEANUP;
-        }
-    }
-    else if (PyUnicode_Check(py_set)) {
-        py_ustr = PyUnicode_AsUTF8String(py_set);
-        set = strdup(PyBytes_AsString(py_ustr));
-        Py_DECREF(py_ustr);
+    if (PyUnicode_Check(py_set)) {
+        set = strdup((char *)PyUnicode_AsUTF8(py_set));
         // If we called strdup, and it failed we need to exit
         if (!set) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -159,24 +144,6 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
             goto CLEANUP;
         }
     }
-    else if (PyInt_Check(py_nanos)) {
-        long tempInt;
-        tempInt = PyInt_AsLong(py_nanos);
-
-        if (tempInt == -1 && PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Nanoseconds value out of range for long");
-            goto CLEANUP;
-        }
-
-        if (tempInt < 0) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Nanoseconds value must be a positive value");
-            goto CLEANUP;
-        }
-
-        nanos = (uint64_t)tempInt;
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Nanoseconds must be a long type");
@@ -196,12 +163,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         // If there was a returned value, we need to lower it's ref count here
         Py_XDECREF(ret_val);
         return NULL;

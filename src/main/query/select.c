@@ -33,14 +33,31 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 {
     TRACE();
 
+    // If add_ops() was called on this Query object before.
+    if (as_operations_defined(self->query.ops)) {
+        int retval = PyErr_WarnFormat(
+            PyExc_DeprecationWarning, STACK_LEVEL,
+            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Query");
+        if (retval == -1) {
+            return NULL;
+        }
+    }
+
     int nbins = (int)PyTuple_Size(args);
     char *bin = NULL;
     PyObject *py_ubin = NULL;
     as_error err;
     as_error_init(&err);
 
-    if (!self || !self->client->as) {
+    if (!self || (self->client && !self->client->as)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    else if (!self->client) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "This query object was created with aerospike.Query() "
+                        "and is invalid. Use aerospike.Client.query() instead "
+                        "to create the query object.");
         goto CLEANUP;
     }
 
@@ -50,7 +67,14 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    as_query_select_init(&self->query, nbins);
+    // Query object should still be safe to use if this fails
+    bool success = as_query_select_init(&self->query, nbins);
+    if (!success) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.select() cannot be called more than once on the "
+                        "same instance.");
+        goto CLEANUP;
+    }
 
     for (int i = 0; i < nbins; i++) {
         PyObject *py_bin = PyTuple_GetItem(args, i);
@@ -58,9 +82,9 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
             py_ubin = PyUnicode_AsUTF8String(py_bin);
             bin = PyBytes_AsString(py_ubin);
         }
-        else if (PyString_Check(py_bin)) {
+        else if (PyUnicode_Check(py_bin)) {
             // TRACE();
-            bin = PyString_AsString(py_bin);
+            bin = (char *)PyUnicode_AsUTF8(py_bin);
         }
         else if (PyByteArray_Check(py_bin)) {
             bin = PyByteArray_AsString(py_bin);
@@ -69,11 +93,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
             // TRACE();
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "Bin name should be of type string");
-            PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
-            PyObject *exception_type = raise_exception(&err);
-            PyErr_SetObject(exception_type, py_err);
-            Py_DECREF(py_err);
+            raise_exception(&err);
             return NULL;
         }
 
@@ -87,11 +107,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

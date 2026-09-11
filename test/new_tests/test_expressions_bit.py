@@ -21,10 +21,14 @@ from aerospike_helpers.expressions import (
     BitSetInt,
     BitSubtract,
     BitXor,
+    BitB64Encode,
     Eq,
 )
+from aerospike_helpers.operations import expression_operations as expr_ops
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail
 
 import aerospike
+from . import as_errors
 
 # Constants
 _NUM_RECORDS = 9
@@ -46,10 +50,11 @@ GEO_POLY = aerospike.GeoJSON(
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -62,6 +67,10 @@ class TestUsrDefinedClass:
         self.data = i
 
 
+BASE64_BYTES = b'1234'
+import base64
+
+
 class TestExpressions(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -70,8 +79,11 @@ class TestExpressions(TestBaseClass):
 
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
-            rec = {"1bits_bin": bytearray([1] * 8)}
-            self.as_connection.put(key, rec)
+            self.rec = {
+                "1bits_bin": bytearray([1] * 8),
+                "base64_bytes": BASE64_BYTES
+            }
+            self.as_connection.put(key, self.rec)
 
         def teardown():
             for i in range(_NUM_RECORDS):
@@ -339,3 +351,23 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "byte_offset, byte_size, invert_size, expected",
+        [
+            (0, None, False, base64.b64encode(BASE64_BYTES).decode("utf-8"))
+        ]
+    )
+    @expect_server_version_earlier_than_8_2_0_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
+    def test_bit_b64_encode(self, byte_offset, byte_size, invert_size, expected):
+        bin = "base64_bytes"
+        expr = BitB64Encode(byte_offset, byte_size, invert_size, bin).compile()
+        ops = [
+            expr_ops.expression_read(bin, expr)
+        ]
+        key = ("test", "demo", 1)
+
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(key, ops)
+            assert bins[bin] == expected

@@ -21,7 +21,6 @@ class TestSelect(object):
             "b": {"key": "asd';q;'1';"},
             "c": 1234,
             "d": "!@#@#$QSDAsd;as",
-            "n": None,
             ("a" * 14): "long_bin_14",
         }
 
@@ -131,11 +130,11 @@ class TestSelect(object):
 
     def test_select_with_key_with_existent_and_non_existent_bins_to_select(self):
 
-        bins_to_select = ["c", "d", "n", "fake"]
+        bins_to_select = ["c", "d", "fake"]
 
         _, meta, bins = self.as_connection.select(self.test_key, bins_to_select)
 
-        assert bins == {"c": 1234, "d": "!@#@#$QSDAsd;as", "n": None}
+        assert bins == {"c": 1234, "d": "!@#@#$QSDAsd;as"}
         assert meta is not None
 
     def test_select_with_key_and_non_existent_bin_in_middle(self):
@@ -240,8 +239,8 @@ class TestSelect(object):
 
     @pytest.mark.skip(reason="Behavior is unexpected, but not wrong")
     def test_select_with_very_long_bin_name(self):
-        bins_to_select = ["a" * 10000]  # max bin name size is 14
-        # internally this only sends the first 14 characters to
+        bins_to_select = ["a" * 10000]  # max bin name size is 15
+        # internally this only sends the first 15 characters to
         # the select function
         _, _, rec = self.as_connection.select(self.test_key, bins_to_select)
         assert rec["a" * 14] == "long_bin_14"

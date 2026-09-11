@@ -23,29 +23,29 @@ It also enables queries for regions that contain a given point using:
 
 On the client side, wrapping geospatial data in an instance of the
 :class:`aerospike.GeoJSON` class enables serialization of the data into the
-correct type during a write operation, such as :meth:`~aerospike.Client.put`.
+correct type during a write operation, such as in :meth:`~aerospike.Client.put`.
 
 When reading a record from the server, bins with geospatial data will be
 deserialized into a :class:`~aerospike.GeoJSON` instance.
 
 .. seealso::
     `Geospatial Index and Query
-    <https://docs.aerospike.com/server/guide/data-types/geospatial>`_.
+    <https://aerospike.com/docs/develop/data-types/geospatial/>`_.
 
 .. _example:
 
 Example
 -------
 
-.. code-block:: python
+.. testcode::
 
     import aerospike
     from aerospike import GeoJSON
 
     config = { 'hosts': [ ('127.0.0.1', 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
-    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo3')
 
     # Create GeoJSON point using WGS84 coordinates.
     latitude = 28.608389
@@ -53,9 +53,6 @@ Example
     loc = GeoJSON({'type': "Point",
                     'coordinates': [longitude, latitude]})
     print(loc)
-
-    # Expected output:
-    # {"type": "Point", "coordinates": [-80.604333, 28.608389]}
 
     # Alternatively, create the GeoJSON point from a string
     loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
@@ -69,12 +66,14 @@ Example
     (k, m, b) = client.get(('test', 'pads', 'launchpad1'))
     print(b)
 
-    # Expected output:
-    # {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'}
-
     # Cleanup
     client.remove(('test', 'pads', 'launchpad1'))
     client.close()
+
+.. testoutput::
+
+    {"type": "Point", "coordinates": [-80.604333, 28.608389]}
+    {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'}
 
 Methods
 =======
@@ -93,7 +92,7 @@ Methods
 
         :param dict geo_data: a :class:`dict` representing the geospatial data.
 
-    .. method:: unwrap() -> dict of geospatial data
+    .. method:: unwrap() -> dict
 
         Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class.
 
@@ -105,7 +104,7 @@ Methods
 
         :param str raw_geo: a GeoJSON string representation.
 
-    .. method:: dumps() -> a GeoJSON string
+    .. method:: dumps() -> str
 
         Gets the geospatial data contained in the :class:`~aerospike.GeoJSON` class as a GeoJSON string.
 

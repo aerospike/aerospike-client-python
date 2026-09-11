@@ -77,12 +77,13 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
         }
         Py_DECREF(py_key);
 
-        as_batch_result_to_BatchRecord(data->client, &err, res,
-                                       py_batch_record);
+        as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record,
+                                       false);
         if (err.code != AEROSPIKE_OK) {
             as_log_error(
                 "as_batch_result_to_BatchRecord failed at results index: %d",
                 i);
+            Py_DECREF(py_batch_record);
             success = false;
             break;
         }
@@ -123,10 +124,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     as_batch_init(&batch, 0);
 
     // For expressions conversion.
-    as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
-
-    as_exp batch_apply_exp_list;
     as_exp *batch_apply_exp_list_p = NULL;
 
     PyObject *br_instance = NULL;
@@ -181,7 +179,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
+                &self->as->config.policies.batch_parent_write,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -190,7 +188,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     if (py_policy_batch_apply) {
         if (pyobject_to_batch_apply_policy(
                 self, err, py_policy_batch_apply, &policy_batch_apply,
-                &policy_batch_apply_p, &batch_apply_exp_list,
+                &policy_batch_apply_p, &self->as->config.policies.batch_apply,
                 &batch_apply_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -287,12 +285,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-
+        raise_exception(err);
         return NULL;
     }
 
@@ -342,23 +335,28 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyUnicode_Check(py_mod)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "module must be a string");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyUnicode_Check(py_func)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "function must be a string");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyList_Check(py_args)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "args must be a list of arguments for the UDF");
-        goto ERROR;
+        goto error;
+    }
+
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
     }
 
     py_results = AerospikeClient_Batch_Apply_Invoke(
@@ -367,14 +365,10 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
 
     return py_results;
 
-ERROR:
+error:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
     }
 
     return NULL;

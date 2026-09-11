@@ -2,7 +2,7 @@
 Resources used by all expressions.
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from itertools import chain
 from typing import List, Optional, Tuple, Union, Dict, Any
 
@@ -73,6 +73,8 @@ class _ExprOp:  # TODO replace this with an enum
     META_KEY_EXISTS = 70
     META_SINCE_UPDATE_TIME = 71
     META_IS_TOMBSTONE = 72
+    META_MEMORY_SIZE = 73
+    META_RECORD_SIZE = 74
 
     REC_KEY = 80
     BIN = 81
@@ -84,8 +86,9 @@ class _ExprOp:  # TODO replace this with an enum
     LET = 125
     DEF = 126
 
-    # virtual ops
+    _AS_EXP_CODE_AS_VAL = 128
 
+    # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
     _AS_EXP_CODE_CDT_LIST_MOD = 141
@@ -103,11 +106,20 @@ class _ExprOp:  # TODO replace this with an enum
     VAL = 200
 
 
+class ReturnType:
+    # Define here because we aren't including this constant in the Python client
+    # But it exists in the C client
+    LIST_RETURN_INVERTED = 0x10000
+    MAP_RETURN_INVERTED = 0x10000
+
+
+# These enum constants must match the values for C client's as_exp_type.
+# These are passed as arguments to ModifyByPath and SelectByPath expressions
 class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
@@ -131,6 +143,8 @@ TypeResultType = Optional[int]
 TypeFixedEle = Union[int, float, str, bytes, dict]
 TypeFixed = Optional[Dict[str, TypeFixedEle]]
 TypeCompiledOp = Tuple[int, TypeResultType, TypeFixed, int]
+
+#: Compiled expression that can be passed to the Python client API.
 TypeExpression = List[TypeCompiledOp]
 
 TypeChild = Union[int, float, str, bytes, _AtomExpr]
@@ -140,14 +154,13 @@ TypeAny = Union[_AtomExpr, Any]
 
 
 class _BaseExpr(_AtomExpr):
-    _op = 0
-    # type: int
-    _rt = None
-    # type: 'TypeResultType'
-    _fixed = None
-    # type: 'TypeFixed'
-    _children = ()
-    # type: 'TypeChildren'
+    """
+    Base class for all expressions.
+    """
+    _op: int = 0
+    _rt: TypeResultType = None
+    _fixed: TypeFixed = None
+    _children: TypeChildren = ()
 
     def _get_op(self) -> TypeCompiledOp:
         return (self._op, self._rt, self._fixed, len(self._children))
@@ -161,8 +174,10 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
+        """
+        Returns an expression object that can be passed to the Python client API.
+        """
         expression = [self._get_op()]
-        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

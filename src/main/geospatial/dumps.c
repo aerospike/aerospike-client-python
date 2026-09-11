@@ -45,7 +45,7 @@ PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
                         "Unable to load json module");
     }
     else {
-        PyObject *py_funcname = PyString_FromString("dumps");
+        PyObject *py_funcname = PyUnicode_FromString("dumps");
         initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
                                                 geo_data, NULL);
         Py_DECREF(json_module);
@@ -81,11 +81,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

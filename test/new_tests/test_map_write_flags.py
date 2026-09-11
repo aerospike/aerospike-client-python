@@ -90,7 +90,7 @@ class TestMapWriteFlags(object):
             map_ops.map_put("map", "new", "new", map_policy=map_policy),
         ]
 
-        with pytest.raises(e.AerospikeError):
+        with pytest.raises(e.ElementNotFoundError):
             self.as_connection.operate(key, ops)
 
         _, _, bins = self.as_connection.get(key)

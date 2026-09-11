@@ -39,9 +39,13 @@ def maps_have_same_values(map1, map2):
 
 
 def sort_map(client, test_key, test_bin):
-    map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+    map_policy = {"map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
     operations = [map_ops.map_set_policy(test_bin, map_policy)]
     client.operate(test_key, operations)
+
+
+# Used in one test case
+MAP_WITH_ONE_KEY_BIN_NAME = "map_w_one_key"
 
 
 class TestNewListOperationsHelpers(object):
@@ -59,9 +63,12 @@ class TestNewListOperationsHelpers(object):
         # boolean < integer
         self.test_map = {"a": 5, "b": 4, "c": 3, "d": 2, "e": 1, "f": True, "g": False}
 
+        self.unsorted_map_bin = "unsorted_map"
+        self.unsorted_map = {"a": 1, "c": 3, "b": 2}
+
         self.test_key = "test", "demo", "new_map_op"
         self.test_bin = "map"
-        self.as_connection.put(self.test_key, {self.test_bin: self.test_map})
+        self.as_connection.put(self.test_key, {self.test_bin: self.test_map, self.unsorted_map_bin: self.unsorted_map})
         self.keys.append(self.test_key)
 
         yield
@@ -76,10 +83,26 @@ class TestNewListOperationsHelpers(object):
         """
         Test setting map policy with an operation
         """
-        map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_VALUE_ORDERED}
+        map_policy = {
+            "map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY,
+            "map_order": aerospike.MAP_KEY_VALUE_ORDERED,
+            "persist_index": True
+        }
         operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
 
         self.as_connection.operate(self.test_key, operations)
+
+    def test_map_policy_invalid_persist_index(self):
+        map_policy = {
+            "persist_index": 1
+        }
+        operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, operations)
+
+    # Default persist index value should be tested automatically
+    # from other tests that don't set the persist index option
 
     def test_map_put(self):
         operations = [map_ops.map_put(self.test_bin, "new", "map_put")]
@@ -199,6 +222,48 @@ class TestNewListOperationsHelpers(object):
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
         assert "b" not in res_map
 
+    # For the rest of the map_remove* operations, there are test cases that produce an empty map
+    @pytest.mark.parametrize(
+        "op",
+        [
+            map_ops.map_remove_by_key(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                key="a",
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_index(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                index=0,
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_rank(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                rank=0,
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_value(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                value=1,
+                return_type=aerospike.MAP_RETURN_NONE
+            )
+        ]
+    )
+    def test_map_remove_ops_causing_empty_map(self, op):
+        # Add a map bin with one key on the fly
+        bins = {
+            MAP_WITH_ONE_KEY_BIN_NAME: {"a": 1}
+        }
+        self.as_connection.put(self.test_key, bins)
+
+        ops = [
+            op
+        ]
+        self.as_connection.operate(self.test_key, ops)
+
+        _, _, bins = self.as_connection.get(self.test_key)
+        # "a" should've been deleted
+        assert bins[MAP_WITH_ONE_KEY_BIN_NAME] == {}
+
     def test_map_remove_by_index_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_remove_by_index_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY)]
@@ -292,11 +357,32 @@ class TestNewListOperationsHelpers(object):
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals == ["f", "e"]
 
+    @pytest.mark.parametrize(
+            "map_return_type",
+            [
+                aerospike.MAP_RETURN_ORDERED_MAP,
+                aerospike.MAP_RETURN_UNORDERED_MAP
+            ]
+    )
+    def test_map_return_types(self, map_return_type):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 3):
+            pytest.skip("It only applies to >= 6.3 enterprise edition")
+
+        operations = [
+            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], map_return_type)
+        ]
+        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.unsorted_map_bin)
+
+        # The C client will always reorder maps using their keys
+        # so it doesn't matter whether the user requests an unordered or ordered map
+        # Both will return the same results
+        assert list(ret_vals.items()) == list({"a": 1, "b": 2, "c": 3}.items())
+
     def test_map_get_exists_by_key_list(self):
         if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
-            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_EXISTS)
+            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], aerospike.MAP_RETURN_EXISTS)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
@@ -370,3 +456,14 @@ class TestNewListOperationsHelpers(object):
         operations = [map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals is True
+
+    def test_map_create(self):
+        # This should create an empty dictionary
+        # map_create only works if a map does not already exist at the given bin and context path
+        operations = [
+            map_ops.map_create(bin_name="new_map", map_order=aerospike.MAP_KEY_ORDERED, persist_index=False, ctx=None)
+        ]
+        get_map_result_from_operation(self.as_connection, self.test_key, operations, "new_map")
+
+        res_map = self.as_connection.get(self.test_key)[2]["new_map"]
+        assert res_map == {}

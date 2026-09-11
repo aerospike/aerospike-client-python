@@ -15,8 +15,10 @@
  ******************************************************************************/
 
 #include <Python.h>
+#include <string.h>
 
 #include <aerospike/aerospike.h>
+#include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 
 #include "client.h"
@@ -36,7 +38,7 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject *AerospikeClientConnect(AerospikeClient *self)
+int AerospikeClientConnect(AerospikeClient *self)
 {
     as_error err;
     as_error_init(&err);
@@ -136,18 +138,12 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-
-        return NULL;
+        raise_exception(&err);
+        return -1;
     }
     self->is_conn_16 = true;
     self->has_connected = true;
-    Py_INCREF(self);
-    return (PyObject *)self;
+    return 0;
 }
 
 /**
@@ -182,14 +178,47 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    if (py_username && PyString_Check(py_username) && py_password &&
-        PyString_Check(py_password)) {
-        char *username = PyString_AsString(py_username);
-        char *password = PyString_AsString(py_password);
+    if (py_username && PyUnicode_Check(py_username) && py_password &&
+        PyUnicode_Check(py_password)) {
+        char *username = (char *)PyUnicode_AsUTF8(py_username);
+        char *password = (char *)PyUnicode_AsUTF8(py_password);
+        if (strlen(username) == 0) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Username must not be empty");
+            raise_exception(&err);
+            return NULL;
+        }
+        if (strlen(password) == 0) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Password must not be empty");
+            raise_exception(&err);
+            return NULL;
+        }
+        if (strlen(username) >= AS_USER_SIZE) {
+            as_error_update(
+                &err, AEROSPIKE_ERR_PARAM,
+                "Username length exceeds the maximum of %d characters",
+                AS_USER_SIZE - 1);
+            raise_exception(&err);
+            return NULL;
+        }
+        if (strlen(password) >= AS_PASSWORD_SIZE) {
+            as_error_update(
+                &err, AEROSPIKE_ERR_PARAM,
+                "Password length exceeds the maximum of %d characters",
+                AS_PASSWORD_SIZE - 1);
+            raise_exception(&err);
+            return NULL;
+        }
         as_config_set_user(&self->as->config, username, password);
     }
 
-    return AerospikeClientConnect(self);
+    if (AerospikeClientConnect(self) == -1) {
+        return NULL;
+    }
+
+    Py_INCREF(self);
+    return (PyObject *)self;
 }
 
 /**
@@ -256,11 +285,7 @@ PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

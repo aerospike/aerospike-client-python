@@ -31,6 +31,17 @@
 AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
                                      PyObject *kwds)
 {
+    if (self->scan.select.size) {
+        // If select() was called on this Scan object before.
+
+        int retval = PyErr_WarnFormat(
+            PyExc_DeprecationWarning, STACK_LEVEL,
+            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Scan");
+        if (retval == -1) {
+            return NULL;
+        }
+    }
+
     // Python function arguments.
     PyObject *py_ops = NULL;
     // Python function keyword arguments.
@@ -94,11 +105,7 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

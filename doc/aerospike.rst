@@ -11,11 +11,11 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters.
+:py:mod:`aerospike` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 Methods
 =======
@@ -45,16 +45,16 @@ Client
 
     Simple example:
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
-
         # Configure the client to first connect to a cluster node at 127.0.0.1
         # The client will learn about the other nodes in the cluster from the seed node.
-        # Also sets a top level policy for read operations
+        # Also sets a top level policy for read commands
         config = {
-            'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'read': {total_timeout': 1000}},
+           'hosts':    [ ('127.0.0.1', 3000) ],
+           'policies': {'read': {'total_timeout': 1000}}
+        }
         client = aerospike.client(config)
 
     Connecting using TLS example:
@@ -64,8 +64,6 @@ Client
         import aerospike
         import sys
 
-        # NOTE: Use of TLS requires Aerospike Enterprise version >= 3.11
-        # and client version 2.1.0 or greater
         tls_name = "some-server-tls-name"
         tls_ip = "127.0.0.1"
         tls_port = 4333
@@ -76,18 +74,16 @@ Client
         tls_host_tuple = (tls_ip, tls_port, tls_name)
         hosts = [tls_host_tuple]
 
-        # Example configuration which will use TLS with the specifed cafile
+        # Example configuration which will use TLS with the specified cafile
         tls_config = {
             "cafile": "/path/to/cacert.pem",
             "enable": True
         }
-
-        client = aerospike.client({
-            "hosts": hosts,
-            "tls": tls_config
-        })
         try:
-            client.connect()
+            client = aerospike.client({
+                "hosts": hosts,
+                "tls": tls_config
+            })
         except Exception as e:
             print(e)
             print("Failed to connect")
@@ -104,15 +100,14 @@ Geospatial
     :param dict geo_data: a :class:`dict` representing the geospatial data.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
         # Create GeoJSON point using WGS84 coordinates.
         latitude = 45.920278
         longitude = 63.342222
-        loc = aerospike.geodata({'type': 'Point',
-                                 'coordinates': [longitude, latitude]})
+        loc = aerospike.geodata({'type': 'Point', 'coordinates': [longitude, latitude]})
 
     .. versionadded:: 1.0.54
 
@@ -124,7 +119,7 @@ Geospatial
     :param dict geojson_str: a :class:`str` of raw GeoJSON.
     :return: an instance of the :py:class:`aerospike.GeoJSON` class.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
 
@@ -153,19 +148,24 @@ Types
 
     :return: a type representing a wildcard value.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
         #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
         operations = [list_ops.list_get_by_value('list_bin', [1, aerospike.CDTWildcard()], aerospike.LIST_RETURN_VALUE)]
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -177,19 +177,24 @@ Types
 
     :return: a type representing an infinite value.
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
+        client.put(key, bins={"list_bin": [[1, 2, 3], [2, 3, 4], [1, 'a']]})
+
         #  get all values of the form [1, ...] from a list of lists.
-        #  For example if list is [[1, 2, 3], [2, 3, 4], [1, 'a']], this operation will match
-        #  [1, 2, 3] and [1, 'a']
         operations = [list_ops.list_get_by_value_range('list_bin', aerospike.LIST_RETURN_VALUE, [1],  [1, aerospike.CDTInfinite()])]
         _, _, bins = client.operate(key, operations)
+        print(bins["list_bin"])
+
+    .. testoutput::
+
+        [[1, 2, 3], [1, 'a']]
 
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
@@ -209,16 +214,16 @@ Serialization
     Register a user-defined serializer available to all `Client`
     instances.
 
-    :param callable callback: the function to invoke for serialization.
+    :param typing.Callable callback: the function to invoke for serialization.
 
 
     .. seealso:: To use this function with :meth:`Client.put`, \
         the argument to the serializer parameter should be :const:`aerospike.SERIALIZER_USER`.
 
-    .. code-block:: python
+    .. testcode::
 
         def my_serializer(val):
-            return json.dumps(val)
+           return json.dumps(val)
 
         aerospike.set_serializer(my_serializer)
 
@@ -233,7 +238,7 @@ Serialization
     of type `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_
     through this deserializer.
 
-    :param callable callback: the function to invoke for deserialization.
+    :param typing.Callable callback: the function to invoke for deserialization.
 
 .. py:function:: unset_serializers()
 
@@ -250,63 +255,163 @@ The following example shows the three modes of serialization:
 2. Class-level user functions
 3. Instance-level user functions
 
-.. include:: examples/serializer.py
-    :code: python
+.. testcode::
 
-Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
-(record ``foo3`` uses the same encoding as ``foo2``)
-If we read the data for each record using ``aql``, it outputs the following data:
+    import aerospike
+    import json
 
-.. code-block:: sql
+    # Serializers and deserializers
+    # Both local and global serializers use json library
+    # Functions print which one is being used
 
-    aql> select bin from test.demo where PK='foo1'
-    +-------------------------------------------------------------+--------+
-    | bin                                                         | PK     |
-    +-------------------------------------------------------------+--------+
-    | 80 04 95 09 00 00 00 00 00 00 00 4B 01 4B 02 4B 03 87 94 2E | "foo1" |
-    +-------------------------------------------------------------+--------+
-    1 row in set (0.000 secs)
+    def classSerializer(obj):
+        print("Using class serializer")
+        return json.dumps(obj)
 
-    OK
+    def classDeserializer(bytes):
+        print("Using class deserializer")
+        return json.loads(bytes)
 
-    aql> select bin from test.demo where PK='foo2'
-    +----------------------------+--------+
-    | bin                        | PK     |
-    +----------------------------+--------+
-    | 5B 31 2C 20 32 2C 20 33 5D | "foo2" |
-    +----------------------------+--------+
-    1 row in set (0.001 secs)
+    def localSerializer(obj):
+        print("Using local serializer")
+        return json.dumps(obj)
 
-    OK
+    def localDeserializer(bytes):
+        print("Using local deserializer")
+        return json.loads(bytes)
 
+    # First client has class-level serializer set in aerospike module
+    aerospike.set_serializer(classSerializer)
+    aerospike.set_deserializer(classDeserializer)
+    config = {
+        'hosts': [('127.0.0.1', 3000)]
+    }
+    client = aerospike.client(config)
+
+    # Second client has instance-level serializer set in client config
+    config['serialization'] = (localSerializer, localDeserializer)
+    client2 = aerospike.client(config)
+
+    # Keys: foo1, foo2, foo3
+    keys = [('test', 'demo', f'foo{i}') for i in range(1, 4)]
+    # Tuple is an unsupported type
+    tupleBin = {'bin': (1, 2, 3)}
+
+    # Use the aerospike module-level serializer
+    client.put(keys[0], tupleBin, serializer=aerospike.SERIALIZER_USER)
+
+    (_, _, bins) = client.get(keys[0])
+    print(bins)
+
+    # Second client uses instance-level, user-defined serialization
+    # Instance-level serializer overrides class-level serializer
+    client2.put(keys[2], tupleBin, serializer=aerospike.SERIALIZER_USER)
+    (_, _, bins) = client2.get(keys[2])
+    print(bins)
+
+    # Cleanup
+    client.batch_remove(keys)
+    client.close()
+    client2.close()
+    aerospike.unset_serializers()
+
+.. testoutput::
+
+    Using class serializer
+    Using class deserializer
+    {'bin': [1, 2, 3]}
+    Using local serializer
+    Using local deserializer
+    {'bin': [1, 2, 3]}
 
 Logging
 -------
 
-.. py:function:: set_log_handler(callback)
+.. _logging_default_behavior:
 
-    Enables aerospike log handler
+Default behavior
+^^^^^^^^^^^^^^^^
 
-    :param optional callable callback: the function used as the logging handler.
+By default:
 
-    .. note:: The callback function must have the five parameters (level, func, path, line, msg)
+- The client has a default log level of :py:obj:`aerospike.LOG_LEVEL_ERROR`.
+- The client's default log handler is set and prints logs in this format: ``<process id>:<counter> <error message>``.
+  For each log, the counter starts at 1 and increments by 1.
 
-        .. code-block:: python
+The following example shows several different methods to configuring logging for the Aerospike Python Client:
 
-            import aerospike
+.. testcode::
 
-        from __future__ import print_function
-        import aerospike
+    # Enable the logging at application start, before connecting to the server.
+    import aerospike
 
-        aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
-        aerospike.set_log_handler(callback)
+    ## SETTING THE LOG HANDLER ##
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
+    # Set default log handler to print to the console
+    aerospike.set_log_handler()
+
+    def log_callback(level, func, path, line, msg):
+        print("[{}] {}".format(func, msg))
+
+    # Set log handler to custom callback function (defined above)
+    aerospike.set_log_handler(log_callback)
 
 
-.. py:function:: set_log_level(log_level)
+    ## SETTING THE LOG LEVEL ##
 
-    Declare the logging level threshold for the log handler.
+    # disables log handling
+    aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
 
-    :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
+    # Enables log handling and sets level to LOG_LEVEL_TRACE
+    aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+    # Create a client and connect it to the cluster
+    # This line will print use log_callback to print logs with a log level of TRACE
+    config = {
+        "hosts": [
+            ("127.0.0.1", 3000)
+        ]
+    }
+    client = aerospike.client(config)
+
+.. testoutput::
+
+    [AerospikeClient_Type_Init] Starting to create a new client...
+    [as_node_refresh_peers] Update peers for node 127.0.0.1:3000
+    [as_cluster_add_nodes_copy] Add node ... 127.0.0.1:3000
+    [as_node_refresh_partitions] Update partition map for node 127.0.0.1:3000
+
+.. testcleanup::
+
+    # Clears saved log handler and disable logging
+    aerospike.set_log_handler(None)
+
+.. py:function:: set_log_handler(log_handler: Optional[Callable[[int, str, str, int, str], None]])
+
+    Set logging callback globally across all clients.
+
+    When no argument is passed, the default log handler is used. See :ref:`logging_default_behavior` for more details.
+
+    When callback is :py:obj:`None`, the saved log handler is cleared.
+
+    When a callable is passed, it must have these five parameters in this order:
+
+    .. code-block:: python
+
+        def callback(level: int, function: str, path: str, line: int, message: str):
+            pass
+
+    :param typing.Callable | None log_handler: the function used as the logging handler.
+
+.. py:function:: set_log_level(loglevel)
+
+    Declare the logging level threshold for the log handler. If setting log level to :py:obj:`aerospike.LOG_LEVEL_OFF`,
+    the current log handler does not get reset.
+
+    :param int loglevel: one of the :ref:`aerospike_log_levels` constant values.
 
 Other
 -----
@@ -322,13 +427,17 @@ Other
     :return: a RIPEMD-160 digest of the input tuple.
     :rtype: :class:`bytearray`
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         import pprint
 
-        digest = aerospike.calc_digest("test", "demo", 1 )
-        pp.pprint(digest)
+        digest = aerospike.calc_digest("test", "demo", 1)
+        pprint.pprint(digest)
+
+    .. testoutput::
+
+        bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
 
 .. _client_config:
 
@@ -344,14 +453,95 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any:
+
+                - :ref:`aerospike_policies`
+                - :ref:`metadata_dict`
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. testcode::
+
+                import aerospike
+
+                config = {
+                   "validate_keys": True,
+                   "hosts": [
+                      ("127.0.0.1", 3000)
+                   ],
+                   # The correct key is "user", but "username" may be used by accident
+                   "username": "user",
+                   "password": "password"
+                }
+                client = aerospike.client(config)
+
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "username" is an invalid client config dictionary key
+
+            Invalid policy example:
+
+            .. testcode::
+
+                import aerospike
+
+                config = {
+                   "validate_keys": True,
+                   "hosts": [
+                       ("127.0.0.1", 3000)
+                   ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                   "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                client.get(key, policy=policy)
+
+            .. testoutput::
+
+                Traceback (most recent call last):
+                aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
+
+            .. note::
+                **Known exception:** :meth:`~aerospike.Client.remove_bin` raises
+                :py:class:`~aerospike.exception.ClientError` instead of
+                :py:class:`~aerospike.exception.ParamError` for an invalid policy
+                dictionary key. This is scheduled to be fixed in the next major
+                client release; see :meth:`~aerospike.Client.remove_bin` for
+                details.
+
         * **hosts** (:class:`list`)
-            A list of tuples identifying a node (or multiple nodes) in the cluster.
+            A list identifying a node (or multiple nodes) in the cluster. Each entry may be
+            either a tuple or a string.
 
             The tuple is in this format: ``(address, port, [tls-name])``
 
             * address: :class:`str`
             * port: :class:`int`
             * tls-name: :class:`str`
+
+            The string form is ``"address[:tls-name]:[port]"``, e.g.:
+
+            * ``"address:port"``
+            * ``"address:tls-name:port"``
+            * ``"[ipv6-address]:port"``
+            * ``"[ipv6-address]:tls-name:port"``
+
+            IPv6 addresses must be enclosed in square brackets to distinguish the address's
+            own colons from the ``:tls-name`` and ``:port`` separators.
 
             The client will connect to the first available node in the list called the *seed node*.
             From there, it will learn about the cluster and its partition map.
@@ -360,9 +550,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
             server configuration file, as well as the server's CA certificate.
 
         * **user** (:class:`str`)
-            (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
+            (Optional) A defined user with roles in the cluster. See :meth:`aerospike.Client.admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
+        * **config_provider** (:class:`aerospike.ConfigProvider`)
+            (Optional) Dynamic configuration provider.
+
+            An alternate way to enable dynamic config is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            to the path of the config file before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
@@ -377,7 +572,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``./``
 
         * **policies** (:class:`dict`)
-            A :class:`dict` of policies
+            A :class:`dict` of policies. Note that these policies do not accept expressions.
 
             * **read** (:class:`dict`)
                 Contains :ref:`aerospike_read_policies`.
@@ -394,9 +589,61 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
+                Default parent batch policy used in batch read commands.
+
+                This applies to these methods when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_read`
+                    * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
+
+                Contains :ref:`aerospike_batch_policies`.
+            * **batch_remove** (:class:`dict`)
+                Default delete policy used in batch remove commands.
+
+                This policy applies to these when a command-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_remove`
+                    * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_remove_policies`.
+            * **batch_apply** (:class:`dict`)
+                Default user defined function policy used in batch UDF apply commands.
+
+                This policy applies to these when a command-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_apply_policies`.
+            * **batch_write** (:class:`dict`)
+                Default batch write policy when a command-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+
+                    * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
+
+                Contains :ref:`aerospike_batch_write_policies`.
+            * **batch_parent_write** (:class:`dict`)
+                Default parent batch policy used in batch write commands.
+
+                This policy applies to these when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * :meth:`~aerospike.Client.batch_remove`
+
                 Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
+            * **admin** (:class:`dict`)
+                Contains :ref:`aerospike_admin_policies`.
+            * **txn_verify** (:class:`dict`)
+                Default transaction policy when verifying record versions in a batch. Contains :ref:`aerospike_batch_policies`.
+            * **txn_roll** (:class:`dict`)
+                Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
+                Contains :ref:`aerospike_batch_policies`.
+            * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -427,7 +674,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
-                Representing the number of times to retry a transaction
+                Representing the number of times to retry a command
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 
@@ -453,7 +700,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
@@ -477,7 +724,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Take over tending if the cluster hasn't been checked for this many seconds
 
                 Default: ``30``
-            * **shm_key**
+            * **shm_key** (:class:`int`)
                 Explicitly set the shm key for this client.
 
                 If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
@@ -486,10 +733,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 It is still possible to specify a key when using **use_shared_connection** = `True`.
 
-                Default: ``0xA8000000``
+                Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://developer.aerospike.com/client/c/shm>`_
+                    `Shared Memory <https://aerospike.com/docs/develop/client/c/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -498,7 +745,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://www.aerospike.com/docs/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -579,24 +826,72 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``16``
         * **max_socket_idle** (:class:`int`)
-            Maximum socket idle time in seconds.
+            Maximum socket idle in seconds. Connection pools will discard sockets that have been idle longer than the maximum.
 
-            Connection pools will discard sockets that have been idle longer than the maximum.
-            It's important to set this value to a few seconds less than the server's \
-            `proto-fd-idle-ms <https://docs.aerospike.com/reference/configuration#proto-fd-idle-ms>`_, \
+            Connection pools are now implemented by a LIFO stack.
+            Connections at the tail of the stack will always be the least used.
+            These connections are checked for ``max_socket_idle`` once every 30 tend iterations (usually 30 seconds).
+
+            If server's ``proto-fd-idle-ms`` is greater than zero,
+            then ``max_socket_idle`` should be at least a few seconds less than the server's ``proto-fd-idle-ms``,
             so the client does not attempt to use a socket that has already been reaped by the server.
 
-            The value is limited to 24 hours (86400 seconds).
+            If server's ``proto-fd-idle-ms`` is zero (no reap), then ``max_socket_idle`` should also be zero.
+            Connections retrieved from a pool in commands will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
+            Idle connections will still be trimmed down from peak connections to min connections \
+            (``min_conns_per_node`` and ``async_min_conns_per_node``) using a hard-coded 55 second limit in the cluster tend thread.
 
-            Default:
+            Default: ``0``
 
-                * ``0`` (disabled) for non-TLS connections
-                * ``55`` for TLS connections
+        * **min_conns_per_node** (:class:`int`)
+            Minimum number of synchronous connections allowed per server node. Preallocate minimum
+            connections on client node creation.  The client will periodically allocate new connections
+            if count falls below min connections.
 
+            Server ``proto-fd-idle-ms`` and client ``max_socket_idle`` should be set to zero (no reap) if
+            ``min_conns_per_node`` is greater than zero.  Reaping connections can defeat the purpose
+            of keeping connections in reserve for a future burst of activity.
+
+            Default: ``0``
         * **max_conns_per_node** (:class:`int`)
             Maximum number of pipeline connections allowed for each node
+
+            Default: ``100``
+        * **max_error_rate** (:class:`int`)
+            Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns
+            :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate``
+            is zero, there is no error limit.
+
+            The counted error types are any error that causes the connection to close (socket errors and client timeouts),
+            server device overload and server timeouts.
+
+            .. admonition:: Circuit Breaker Feature
+
+                The circuit breaker functionality uses the ``max_error_rate`` and ``error_rate_window``
+                configuration options to progressively slow down connection attempts in order to let
+                the server catch up with client requests. When the ``max_error_rate`` is reached,
+                the client waits for the duration of the ``error_rate_window`` before trying again. The
+                client also decreases the allowable errors by half until network stability
+                is achieved. (i.e the client no longer exceeds the max error rate per window). Then the client doubles the
+                allowed max error rate for each successive window until it is restored to the value set by the user,
+                or the default value if not set.
+
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded`
+            stops being returned.
+
+            Default: ``100``
+        * **error_rate_window** (:class:`int`)
+            The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is
+            defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
+            reset to zero and backoff state is removed on all nodes.
+
+            If the user sets both ``max_error_rate`` and ``error_rate_window`` such that the ratio of ``max_error_rate``
+            to ``error_rate_window`` is less than 1 or greater than 100, both
+            options will be reset to their respective default values.
+
+            Default: ``1``
         * **tend_interval** (:class:`int`)
-            Polling interval in milliseconds for tending the cluster
+            Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
@@ -605,18 +900,38 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Compress data for transmission if the object size is greater than a given number of bytes
 
             Default: ``0``, meaning 'never compress'
-        * **cluster_name** (:class:`str`)
-            Only server nodes matching this name will be used when determining the cluster name.
+        * **cluster_name** (:class:`str` | :class:`None`)
+            Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
+            in the service section in each server configuration. This ensures that the specified
+            seed nodes belong to the expected cluster on startup. If not, the client will refuse
+            to add the node to the client's view of the cluster.
+
+            Default: :py:obj:`None`
+        * **app_id** (:class:`str` | :class:`None`)
+            Application identifier.
+
+            If this is set to :py:obj:`None`, this is set to the client's username by default. If client doesn't have a username,
+            this is set to ``not-set``.
+
+            Default: :py:obj:`None`
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
+            ``rack_aware``, ``POLICY_REPLICA_PREFER_RACK`` and server rack configuration must also be set to enable this functionality.
+
             Default: ``0``
+
+        * **rack_ids** (:class:`list`)
+            List of preferred racks in order of preference. If ``rack_ids`` is set, ``rack_id`` is ignored.
+
+            ``rack_aware``, ``POLICY_REPLICA_PREFER_RACK`` and server rack configuration must also be set to enable this functionality.
+
         * **rack_aware** (:class:`bool`)
             Track server rack data.
 
             This is useful for:
 
-                - Directing read operations to run on the same rack as the client.
+                - Directing read commands to run on the same rack as the client.
                 - Lowering cloud provider costs when nodes are distributed across different availability zones (represented as racks).
 
             In order to enable this functionality:
@@ -627,33 +942,42 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **use_services_alternate** (:class:`bool`)
-            Flag to signify if "services-alternate" should be used instead of "services".
+            Flag to signify if alternate IP address discovery info commands should be used.
+
+            If false, use:
+
+            - IP address: ``service-clear-std``
+            - TLS IP address: ``service-tls-std``
+            - Peers addresses: ``peers-clear-std``
+            - Peers TLS addresses: ``peers-tls-std``
+
+            If true, use:
+
+            - IP address: ``service-clear-alt``
+            - TLS IP address: ``service-tls-alt``
+            - Peers addresses: ``peers-clear-alt``
+            - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========
-
-.. _aerospike_operators:
-
-Operators
----------
-
-Operators for the single-record, multi-operation transaction method :py:meth:`Client.operate`.
-
-.. note::
-
-    Starting version 3.4.0, it is highly recommended to use the :ref:`aerospike_operation_helpers.operations` \
-    to create the arguments for :py:meth:`Client.operate` and :py:meth:`Client.operate_ordered`
-    Old style operators are deprecated. The docs for old style operators were removed in client 6.0.0.
 
 Policy Options
 --------------
@@ -776,7 +1100,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 .. data:: POLICY_KEY_SEND
 
-    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server.
+
+    .. note:: This option instructs the server to validate the digest by calculating it again from the key sent by the
+        client. Unless this is the explicit intent of the developer, this should be avoided.
 
 .. _POLICY_REPLICA:
 
@@ -808,6 +1135,18 @@ Specifies which partition replica to read from.
 
     If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
 
+.. data:: POLICY_REPLICA_RANDOM
+
+    Distribute reads and writes across all nodes in cluster in round-robin fashion.
+
+    This option is useful on reads when the replication factor equals the number
+    of nodes in the cluster and the overhead of requesting proles is not desired.
+
+    This option could temporarily be useful on writes when the client can't connect
+    to a node, but that node is reachable via a proxy from a different node.
+
+    This option can also be used to test server proxies.
+
 .. _TTL_CONSTANTS:
 
 TTL Constants
@@ -826,6 +1165,13 @@ Specifies the TTL constants.
 .. data:: TTL_DONT_UPDATE
 
     Do not change the current TTL of the record.
+
+.. data:: TTL_CLIENT_DEFAULT
+
+    NOTE: only applies to the policies mentioned below.
+
+    Use the applicable policy ttl in write, operate, batch write, and scan policies.
+    If the policy is not defined for the command, use the default client-level policy's ttl.
 
 .. _auth_mode:
 
@@ -860,38 +1206,10 @@ Specifies the type of authentication to be used when communicating with the serv
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
 
-.. _aerospike_scan_constants:
+.. data:: AUTH_PKI
 
-Scan Constants
---------------
-
-.. data:: SCAN_PRIORITY
-
-    .. deprecated:: 3.10.0
-        Scan priority has been replaced by the ``records_per_second`` policy (see Scan :ref:`aerospike_scan_policies`).
-        Scan priority will be removed in a coming release.
-
-.. data:: SCAN_STATUS_ABORTED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_COMPLETED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_INPROGRESS
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_UNDEF
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. versionadded:: 1.0.39
+    Authentication and authorization based on a certificate.  No user name or
+    password needs to be configured.  Requires TLS and a client certificate.
 
 .. _aerospike_job_constants:
 
@@ -924,10 +1242,6 @@ Job Statuses
 Serialization Constants
 -----------------------
 
-.. data:: SERIALIZER_PYTHON
-
-    Use the cPickle serializer to handle unsupported types (default)
-
 .. data:: SERIALIZER_USER
 
     Use a user-defined serializer to handle unsupported types. Must have \
@@ -935,7 +1249,7 @@ Serialization Constants
 
 .. data:: SERIALIZER_NONE
 
-    Do not serialize bins whose data type is unsupported
+    Do not serialize bins whose data type is unsupported (default)
 
 .. versionadded:: 1.0.47
 
@@ -946,21 +1260,13 @@ Send Bool Constants
 
 Specifies how the Python client will write Python booleans.
 
-.. data:: PY_BYTES
-
-    Write Python Booleans as PY_BYTES_BLOBs.
-
-    This is Python's native boolean type.
-
 .. data:: INTEGER
 
-    Write Python Booleans as integers.
+    Write Python Booleans as `server integers <https://aerospike.com/docs/develop/data-types/scalar/#integer>`_.
 
 .. data:: AS_BOOL
 
-    Write Python Booleans as ``as_bools``.
-
-    This is the Aerospike server's boolean type.
+    Write Python Booleans as `server booleans <https://aerospike.com/docs/develop/data-types/scalar/#boolean>`_.
 
 List
 ----
@@ -1031,6 +1337,10 @@ Return types used by various list operations.
 
     Return value for single key read and value list for range read.
 
+.. data:: LIST_RETURN_EXISTS
+
+    Return true if count of items selected > 0.
+
 .. _aerospike_list_order:
 
 List Order
@@ -1046,6 +1356,9 @@ Flags used by list order.
 
     Ordered list.
 
+.. note::
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
+
 .. _aerospike_list_sort_flag:
 
 List Sort Flags
@@ -1053,11 +1366,11 @@ List Sort Flags
 
 Flags used by list sort.
 
-.. data:: aerospike.LIST_SORT_DEFAULT
+.. data:: LIST_SORT_DEFAULT
 
     Default. Preserve duplicates when sorting the list.
 
-.. data:: aerospike.LIST_SORT_DROP_DUPLICATES
+.. data:: LIST_SORT_DROP_DUPLICATES
 
     Drop duplicate values when sorting the list.
 
@@ -1092,27 +1405,6 @@ Flags used by map write flag.
 .. data:: MAP_WRITE_FLAGS_PARTIAL
 
     Allow other valid map items to be committed if a map item is denied due to write flag constraints.
-
-.. _aerospike_map_write_mode:
-
-Map Write Mode
-^^^^^^^^^^^^^^
-
-Flags used by map *write mode*.
-
-.. note:: This should only be used for Server version < 4.3.0
-
-.. data:: MAP_UPDATE
-
-    Default. Allow create or update.
-
-.. data:: MAP_CREATE_ONLY
-
-    If the key already exists, the item will be denied. If the key does not exist, a new item will be created.
-
-.. data:: MAP_UPDATE_ONLY
-
-    If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
 
 .. _aerospike_map_order:
 
@@ -1179,6 +1471,20 @@ Return types used by various map operations.
     Note that key/value pairs will be returned as a list of keys and values next to each other:
 
         ``[key1, value1, key2, value2, ...]``
+
+.. data:: MAP_RETURN_EXISTS
+
+    Return true if count of items selected > 0.
+
+.. data:: MAP_RETURN_UNORDERED_MAP
+
+    Return unordered map.
+
+    For the Python client, this return type returns the same results as :data:`aerospike.MAP_RETURN_ORDERED_MAP`.
+
+.. data:: MAP_RETURN_ORDERED_MAP
+
+    Return ordered map.
 
 Bitwise
 -------
@@ -1409,46 +1715,63 @@ Bin Types
     (int): 24
 
 
-.. _aerospike_misc_constants:
+.. _aerospike_index_datatypes:
 
-Miscellaneous
--------------
-
-.. data:: __version__
-
-    A :class:`str` containing the module's version.
-
-    .. versionadded:: 1.0.54
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
-
+Index data types
+----------------
 .. data:: INDEX_STRING
 
     An index whose values are of the aerospike string data type.
 
 .. data:: INDEX_NUMERIC
 
+    .. deprecated:: 19.3.0 Use :py:data:`~aerospike.INDEX_INTEGER` instead.
+
     An index whose values are of the aerospike integer data type.
+
+.. data:: INDEX_BLOB
+
+    An index whose values are of the aerospike blob data type.
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type.
+    An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
+.. data:: INDEX_INTEGER
+
+    An index whose values are of the aerospike integer data type.
+
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
+
+.. _aerospike_index_types:
+
+Index Types
+-----------
+
+.. data:: INDEX_TYPE_DEFAULT
+
+    Index a single scalar value.
 
 .. data:: INDEX_TYPE_LIST
 
-    Index a bin whose contents is an aerospike list.
+    Index all of a list's values.
 
 .. data:: INDEX_TYPE_MAPKEYS
 
-    Index the keys of a bin whose contents is an aerospike map.
+    Index all of a map's keys.
 
 .. data:: INDEX_TYPE_MAPVALUES
 
-    Index the values of a bin whose contents is an aerospike map.
+    Index all of a map's values.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 
@@ -1520,7 +1843,7 @@ Permission codes define the type of permission granted for a user's role.
 
 Regex Flag Values
 ------------------
-Flags used by the :class:`aerospike_operation_helpers.expressions.base.CmpRegex` Aerospike expression.
+Flags used by the :class:`aerospike_helpers.expressions.base.CmpRegex` Aerospike expression.
 See :ref:`aerospike_operation_helpers.expressions` for more information.
 
 .. data:: REGEX_NONE
@@ -1542,3 +1865,520 @@ See :ref:`aerospike_operation_helpers.expressions` for more information.
 .. data:: REGEX_NEWLINE
 
     Match-any-character operators don't match a newline.
+
+.. _query_duration_constants:
+
+Query Duration
+--------------
+
+.. data:: QUERY_DURATION_LONG
+
+     The query is expected to return more than 100 records per node. The server optimizes for a
+     large record set in the following ways:
+
+     * Allow query to be run in multiple threads using the server's query threading configuration.
+     * Do not relax read consistency for AP namespaces.
+     * Add the query to the server's query monitor.
+     * Do not add the overall latency to the server's latency histogram.
+     * Do not allow server timeouts.
+
+.. data:: QUERY_DURATION_SHORT
+
+     The query is expected to return less than 100 records per node. The server optimizes for a
+     small record set in the following ways:
+
+     * Always run the query in one thread and ignore the server's query threading configuration.
+     * Allow query to be inlined directly on the server's service thread.
+     * Relax read consistency for AP namespaces.
+     * Do not add the query to the server's query monitor.
+     * Add the overall latency to the server's latency histogram.
+     * Allow server timeouts. The default server timeout for a short query is 1 second.
+
+.. data:: QUERY_DURATION_LONG_RELAX_AP
+
+     Treat query as a LONG query, but relax read consistency for AP namespaces.
+     This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _mrt_commit_status_constants:
+
+Transaction Commit Status
+-------------------------
+
+.. data:: COMMIT_OK
+
+    Commit succeeded.
+
+.. data:: COMMIT_ALREADY_COMMITTED
+
+    Transaction has already been committed.
+
+.. data:: COMMIT_ROLL_FORWARD_ABANDONED
+
+    Client roll forward abandoned. Server will eventually commit the transaction.
+
+.. data:: COMMIT_CLOSE_ABANDONED
+
+    Transaction has been rolled forward, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. _mrt_abort_status_constants:
+
+Transaction Abort Status
+------------------------
+
+.. data:: ABORT_OK
+
+    Abort succeeded.
+
+.. data:: ABORT_ALREADY_ABORTED
+
+    Transaction has already been aborted.
+
+.. data:: ABORT_ROLL_BACK_ABANDONED
+
+    Client roll back abandoned. Server will eventually abort the transaction.
+
+.. data:: ABORT_CLOSE_ABANDONED
+
+    Transaction has been rolled back, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. data:: ABORT_COMMIT_FAILED
+
+    Abort was refused because a commit failed in-doubt and may still advance.
+    Retry the commit to resolve the transaction safely.
+
+.. _mrt_state:
+
+Transaction State
+------------------------------
+
+.. data:: TXN_STATE_OPEN
+
+.. data:: TXN_STATE_VERIFIED
+
+.. data:: TXN_STATE_COMMITTED
+
+.. data:: TXN_STATE_ABORTED
+
+.. data:: TXN_STATE_COMMIT_FAILED
+
+    A commit failed in-doubt and may still advance, so abort is not allowed
+    in this state. Retry the commit to resolve the transaction safely.
+
+.. _exp_path_select_flags:
+
+Path Expression Select Flags
+----------------------------
+
+.. data:: EXP_PATH_SELECT_MATCHING_TREE
+
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes.
+
+.. data:: EXP_PATH_SELECT_VALUE
+
+    Return the list of the values of the nodes finally selected by the context.
+
+    For maps, this returns the value of each (key, value) pair.
+
+.. data:: EXP_PATH_SELECT_LIST_VALUE
+
+    Return the list of the values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a list.
+
+.. data:: EXP_PATH_SELECT_MAP_VALUE
+
+    Return the list of map values of the nodes finally selected by the context.
+    This is a synonym for :data:`aerospike.EXP_PATH_SELECT_VALUE` to make it clear in your
+    source code that you're expecting a map.  See also :data:`aerospike.EXP_PATH_SELECT_MAP_KEY_VALUE`.
+
+.. data:: EXP_PATH_SELECT_MAP_KEY
+
+    Return the list of map keys of the nodes finally selected by the context.
+
+.. data:: EXP_PATH_SELECT_MAP_KEY_VALUE
+
+    Returns the list of map (key, value) pairs of the nodes finally selected
+    by the context. This is a synonym for setting both
+    :data:`aerospike.EXP_PATH_SELECT_MAP_KEY` and :data:`aerospike.EXP_PATH_SELECT_MAP_VALUE` bits together.
+    The list is formatted as ``[key0, value0, key1, value1...]``.
+
+.. data:: EXP_PATH_SELECT_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g selects as an integer when the value is a string),
+    do not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+.. _exp_path_modify_flags:
+
+Path Expression Modify Flags
+----------------------------
+
+.. data:: EXP_PATH_MODIFY_DEFAULT
+
+    If the expression in the context hits an invalid type, the operation
+    will fail.  This is the default behavior.
+
+.. data:: EXP_PATH_MODIFY_NO_FAIL
+
+    If the expression in the context hits an invalid type (e.g., selects as an integer when the value is a string), do
+    not fail the operation; just ignore those elements. Interpret UNKNOWN as false instead.
+
+.. _exp_loopvar_metadata:
+
+Path Expression Loop Variable Metadata
+--------------------------------------
+
+.. data:: EXP_LOOPVAR_KEY
+
+    The key associated with this value if part of a key-value pair of a map.
+
+.. data:: EXP_LOOPVAR_VALUE
+
+    List item, or value from a map key-value pair.
+
+.. data:: EXP_LOOPVAR_INDEX
+
+    The index if this element was part of a list.
+
+.. _error_detail_verbosity_levels:
+
+Error Detail Verbosity Levels
+-----------------------------
+
+Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
+
+.. data:: ERROR_DETAIL_NONE
+
+    No error details requested (default).
+
+.. data:: ERROR_DETAIL_SUBCODE
+
+    Request subcode only from the server on error responses.
+
+.. data:: ERROR_DETAIL_MESSAGE
+
+    Request subcode and human-readable message from the server on error responses.
+
+.. data:: ERROR_DETAIL_EXP_TRACE
+
+    Request subcode and human-readable message from the server on error responses,
+    as well as expression trace diagnostics appended to :py:attr:`aerospike.exception.AerospikeError.msg` when present.
+
+    Expression trace text is best-effort diagnostic output. It may be truncated
+    to fit the maximum number of characters for :py:attr:`aerospike.exception.AerospikeError.msg`, may include operand
+    values, and is not a machine-readable API.
+
+.. _subcodes:
+
+Subcodes
+--------
+
+.. data:: SUB_NONE
+
+    No dispatchable subcode. Used when the parent status alone fully identifies
+    the condition. Reserved as 0 across all status families.
+
+Subcodes paired with :py:exc:`~aerospike.exception.InvalidRequest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_PARAM_TTL_INVALID
+
+    Per-record TTL exceeds the namespace's max-ttl.
+
+    App use: clamp the TTL to the namespace max and retry.
+
+.. data:: SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE
+
+    Bit op offset lands past the blob (or above the proto cap).
+
+    App use: refresh the bin size, recompute the offset, retry.
+
+.. data:: SUB_PARAM_BITS_SIZE_OUT_OF_RANGE
+
+    Bit op size is out of range (e.g. zero, or too large).
+
+    App use: clamp the size dimension (vs. offset) and retry.
+
+.. data:: SUB_PARAM_BITS_RESIZE_EXCEEDED
+
+    Blob resize would exceed the max blob size allowed for a record.
+
+    App use: backpressure or partition the dynamically-sized blob.
+
+.. data:: SUB_PARAM_BIN_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit.
+
+    App use: prune least-valuable bins and retry.
+
+.. data:: SUB_PARAM_STRING_OP_PARAMS_INVALID
+
+    String modify op received invalid parameters (empty pad string, negative repeat count, negative pad target length,
+        etc.).
+
+    App use: validate pad/repeat arguments locally before sending.
+
+.. data:: SUB_PARAM_STRING_CTX_MALFORMED
+
+    String op ctx envelope is malformed.
+
+    App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
+
+.. data:: SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS
+
+    String overwrite resolved index is outside the string bounds.
+
+    App use: double check the string length and recompute the index before retrying.
+
+.. data:: SUB_PARAM_STRING_REGEX_INVALID
+
+    String regex argument is invalid (non-ICU idiom or ICU compile failure at
+    parse).
+
+    The server deliberately uses the same subcode value for ICU compile failures and
+    guided non-ICU rejections.
+
+    App use: validate regex patterns against the ICU dialect before sending.
+
+.. data:: SUB_PARAM_STRING_UTF8_INVALID
+
+    Ill-formed UTF-8 in a string op argument.
+
+    App use: validate application-supplied strings before packing the request.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED
+
+    Cluster is still resolving initial partition balance at startup.
+
+    App use: wait a fixed backoff (~1s) and retry; failing over is
+    pointless since every node is unresolved at once.
+
+.. data:: SUB_UNAVAIL_REPLICA_UNAVAILABLE
+
+    A needed replica is unavailable (likely a partition split).
+
+    App use: an SC reader may downgrade to read-mode=any if safe, or
+    back off longer than for transient unavailability.
+
+Subcodes paired with :py:exc:`~aerospike.exception.UnsupportedFeature`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY
+
+    MRT attempted against a non-SC (AP) namespace.
+
+    App use: route the MRT to an SC namespace, or use a non-MRT path.
+
+.. data:: SUB_UNSUPP_FEAT_GENERIC
+
+    Requested feature is unsupported in this context (generic).
+
+    App use: same dispatch as :py:data:`~aerospike.SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY`; kept
+    distinct to preserve the sole live emit (MRT-monitor AP check).
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNotFound`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP
+
+    HLL op needs an existing bin and can't auto-create one.
+
+    App use: dispatch a one-time init op with default index_bits,
+    then retry the count/fold.
+
+Subcodes paired with :py:exc:`~aerospike.exception.BinNameError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_BIN_NAME_COUNT_TOO_LARGE
+
+    Write would exceed the per-record bin-count limit (UDF path).
+
+    App use: prune least-valuable bins and retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.ForbiddenError`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FORBID_XDR_FILTER_BLOCKED
+
+    Write bounced by an XDR ship filter at the destination.
+
+    App use: suppress retry; optionally record the digest for audit.
+
+.. data:: SUB_FORBID_SET_COUNT_STOP_WRITES
+
+    Set-level record-count stop-writes limit reached.
+
+    App use: route new records to another set, or archive old ones.
+
+.. data:: SUB_FORBID_SET_SIZE_STOP_WRITES
+
+    Set-level size stop-writes limit reached.
+
+    App use: backpressure or route to a different set (not ns-wide).
+
+.. data:: SUB_FORBID_CLOCK_SKEW_STOP_WRITES
+
+    Writes stopped due to cluster clock skew.
+
+    App use: page on-call to investigate NTP / time-source drift.
+
+.. data:: SUB_FORBID_REPLACE_CONFLICT_RESOLVING
+
+    REPLACE / CREATE_OR_REPLACE forbidden while resolving conflicts.
+
+    App use: back off and retry once the cluster stabilizes.
+
+.. data:: SUB_FORBID_TRUNCATED
+
+    Write forbidden because the set/namespace is mid-truncate.
+
+    App use: retry shortly after the truncate completes (transient).
+
+.. data:: SUB_FORBID_MASKING_POLICY_BLOCKED
+
+    Access blocked by a data-masking policy.
+
+    App use: elevate role / impersonate, or route to an admin queue.
+
+.. data:: SUB_FORBID_DURABILITY_VIOLATION
+
+    Non-durable delete forbidden (would violate durability).
+
+    App use: upgrade the delete to durable, or skip the shortcut.
+
+.. data:: SUB_FORBID_MASKING_ROLE_VIOLATION
+
+    Caller's role lacks unmasked access.
+
+    App use: prompt the user to escalate / switch role (distinct
+    from auth not configured).
+
+Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS
+
+    List index is outside the current element range.
+
+    App use: refresh the cached list size, clamp the index, retry.
+
+.. data:: SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS
+
+    Requested rank is past the current population.
+
+    App use: clamp top-N rank to the element count and retry.
+
+.. data:: SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW
+
+    Insert would exceed an ordered+bounded list's cap.
+
+    App use: roll to a fresh bin/key partition, or apply backpressure.
+
+.. data:: SUB_OPNOT_HLL_INDEX_BITS_UNSET
+
+    HLL op needs index_bits but the sketch has none set.
+
+    App use: dispatch a one-time init with default index_bits, retry.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS
+
+    Union needs to reduce index_bits but folding isn't allowed.
+
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or fold sources to the smaller
+    precision first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS
+
+    As above, for the minhash dimension.
+
+    App use: retry with :py:data:`aerospike.HLL_WRITE_ALLOW_FOLD`, or align sources first.
+
+.. data:: SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH
+
+    Fold blocked because the sketch carries minhash bits.
+
+    App use: switch to a strip-minhash-then-fold path.
+
+.. data:: SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE
+
+    Fold target index_bits >= current (fold can only reduce).
+
+    App use: clamp target to current-1 and retry, or skip the fold.
+
+.. data:: SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH
+
+    Intersect inputs have mismatched minhash parameters.
+
+    App use: harmonize sketches (fold/strip minhash) before retry.
+
+.. data:: SUB_OPNOT_STRING_CONVERSION_FAILED
+
+    String conversion failed.
+
+    App use: inspect source and requested destination encoding/type.
+
+.. data:: SUB_OPNOT_STRING_UTF8_INVALID
+
+    Source blob/string is not valid UTF-8.
+
+    App use: validate or transcode input before retry.
+
+.. data:: SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED
+
+    Regex pattern exceeded a server limit for an ``OP_NOT_APPLICABLE`` string operation.
+
+    App use: simplify the pattern or reduce input size before retry.
+
+.. data:: SUB_OPNOT_STRING_B64_INVALID
+
+    Base64 input is malformed for a string operation.
+
+    App use: validate or sanitize base64 input before retry.
+
+Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_FILTERED_META
+
+    Record filtered out by a metadata-only filter expression.
+
+    App use: treat as a normal expected miss (no-op).
+
+.. data:: SUB_FILTERED_BINS
+
+    Record filtered out by a bin-reading filter expression.
+
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META`; split out to meter metadata-vs-bin misses.
+
+.. data:: SUB_FILTERED_META_EVAL_FAILED
+
+    A metadata filter expression failed to evaluate.
+
+    App use: treat as an expression bug - log digest, alert, no retry.
+
+.. data:: SUB_FILTERED_BINS_EVAL_FAILED
+
+    A bin filter expression failed to evaluate.
+
+    App use: as :py:data:`~aerospike.SUB_FILTERED_META_EVAL_FAILED`.
+
+Subcodes paired with server error code ``AEROSPIKE_MRT_BLOCKED``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. data:: SUB_MRT_BLOCKED_RECORD_LOCKED
+
+    Record is provisionally locked by another MRT.
+
+    App use: a non-MRT writer backs off with jittered retry until the
+    MRT commits or expires.
+
+.. data:: SUB_MRT_BLOCKED_ID_MISMATCH
+
+    Op belongs to a different MRT than the one holding the lock.
+
+    App use: abort the whole MRT - retrying this op alone can never
+    succeed within the current MRT.

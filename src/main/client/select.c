@@ -57,7 +57,6 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     char **bins = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
@@ -92,14 +91,14 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
         for (int i = 0; i < size; i++) {
             PyObject *py_val = PyList_GetItem(py_bins, i);
             bins[i] = (char *)alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
-            if (PyString_Check(py_val)) {
-                strncpy(bins[i], PyString_AsString(py_val),
+            if (PyUnicode_Check(py_val)) {
+                strncpy(bins[i], (char *)PyUnicode_AsUTF8(py_val),
                         AS_BIN_NAME_MAX_LEN);
                 bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
             }
             else if (PyUnicode_Check(py_val)) {
                 py_ustr = PyUnicode_AsUTF8String(py_val);
-                strncpy(bins[i], PyString_AsString(py_val),
+                strncpy(bins[i], (char *)PyUnicode_AsUTF8(py_val),
                         AS_BIN_NAME_MAX_LEN);
                 Py_CLEAR(py_ustr);
                 bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
@@ -126,8 +125,8 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
                 Py_CLEAR(py_ustr);
                 bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
             }
-            else if (PyString_Check(py_val)) {
-                strncpy(bins[i], PyString_AsString(py_val),
+            else if (PyUnicode_Check(py_val)) {
+                strncpy(bins[i], (char *)PyUnicode_AsUTF8(py_val),
                         AS_BIN_NAME_MAX_LEN);
                 bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
             }
@@ -145,8 +144,7 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
+                            &self->as->config.policies.read, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -160,9 +158,6 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     if (err.code == AEROSPIKE_OK) {
         select_succeeded = true;
         record_to_pyobject(self, &err, rec, &key, &py_rec);
-    }
-    else {
-        as_error_update(&err, err.code, NULL);
     }
 
 CLEANUP:
@@ -185,17 +180,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 

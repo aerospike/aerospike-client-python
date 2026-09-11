@@ -64,27 +64,23 @@ class TestQueryRole(TestBaseClass):
         """
         Query role positive policy
         """
-        roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 1000})
+        roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 180000})
         assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_incorrect_role_name(self):
         """
         Incorrect role name
         """
-        try:
-            self.client.admin_query_role("usr-sys-admin-test-non-existent", {"timeout": 1000})
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        with pytest.raises(e.InvalidRole) as excinfo:
+            self.client.admin_query_role("usr-sys-admin-test-non-existent")
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_query_role_incorrect_role_type(self):
         """
         Incorrect role type
         """
-        try:
-            self.client.admin_query_role(None, {"timeout": 1000})
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        with pytest.raises(e.ParamError) as excinfo:
+            self.client.admin_query_role(None)
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"

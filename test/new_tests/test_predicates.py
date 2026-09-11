@@ -1,4 +1,6 @@
 from aerospike import predicates as as_predicates
+# Explicitly test that we can import submodule this way
+import aerospike.predicates  # noqa: F401
 import pytest
 
 PREDICATE_METHDOS = [

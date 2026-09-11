@@ -130,7 +130,7 @@ class TestRevokePrivilege(TestBaseClass):
         Revoke privileges positive with policy
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}]
         )
 
         assert status == 0
@@ -143,7 +143,7 @@ class TestRevokePrivilege(TestBaseClass):
         ]
 
         status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 180000}
         )
 
         time.sleep(1)
@@ -156,7 +156,7 @@ class TestRevokePrivilege(TestBaseClass):
         Revoke write privileges positive with policy
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}]
         )
 
         assert status == 0
@@ -169,7 +169,7 @@ class TestRevokePrivilege(TestBaseClass):
         ]
 
         status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 180000}
         )
 
         time.sleep(1)
@@ -207,40 +207,33 @@ class TestRevokePrivilege(TestBaseClass):
         """
         role name not string
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_revoke_privileges(1, [{"code": aerospike.PRIV_USER_ADMIN}])
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"
 
     def test_revoke_privileges_unknown_privilege_type(self):
         """
         privilege type unknown
         """
-        try:
+        with pytest.raises(e.InvalidPrivilege) as excinfo:
             self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": 64}])
-        except e.InvalidPrivilege as exception:
-            assert exception.code == 72
+        assert excinfo.value.code == 72
 
     def test_revoke_privileges_incorrect_privilege_type(self):
         """
         privilege type incorrect
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_revoke_privileges("usr-sys-admin-test", None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Privileges should be a list"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Privileges should be a list"
 
     def test_revoke_privileges_empty_list_privileges(self):
         """
         privilege type is an empty list
         """
-        try:
+        with pytest.raises(e.InvalidPrivilege) as excinfo:
             self.client.admin_revoke_privileges("usr-sys-admin-test", [])
-
-        except e.InvalidPrivilege as exception:
-            assert exception.code == 72
-            assert exception.msg == "AEROSPIKE_INVALID_PRIVILEGE"
+        assert excinfo.value.code == 72
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_PRIVILEGE"

@@ -51,7 +51,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     as_key key;
 
     // For converting expressions.
-    as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
     // Initialisation flags
@@ -83,7 +82,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         pyobject_to_policy_remove(
             self, &err, py_policy, &remove_policy, &remove_policy_p,
-            &self->as->config.policies.remove, &exp_list, &exp_list_p);
+            &self->as->config.policies.remove, &exp_list_p);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -92,9 +91,9 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
                 PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
 
                 if (py_gen) {
-                    if (PyInt_Check(py_gen)) {
+                    if (PyLong_Check(py_gen)) {
                         remove_policy_p->generation =
-                            (uint16_t)PyInt_AsLong(py_gen);
+                            (uint16_t)PyLong_AsLong(py_gen);
                     }
                     else if (PyLong_Check(py_gen)) {
                         remove_policy_p->generation =
@@ -120,9 +119,6 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_BEGIN_ALLOW_THREADS
     aerospike_key_remove(self->as, &err, remove_policy_p, &key);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
 
@@ -136,17 +132,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -181,6 +167,17 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
                                     &py_meta, &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_meta) {
+        int retval = PyErr_WarnEx(
+            PyExc_DeprecationWarning,
+            "meta parameter is deprecated and will be removed in the "
+            "next client major release",
+            STACK_LEVEL);
+        if (retval == -1) {
+            return NULL;
+        }
     }
 
     // Invoke Operation

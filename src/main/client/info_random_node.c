@@ -61,7 +61,8 @@ static PyObject *AerospikeClient_InfoRandomNode_Invoke(as_error *err,
     if (py_policy) {
         if (pyobject_to_policy_info(
                 err, py_policy, &info_policy, &info_policy_p,
-                &self->as->config.policies.info) != AEROSPIKE_OK) {
+                &self->as->config.policies.info, self->validate_keys,
+                SECOND_AS_POLICY_NONE) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -108,11 +109,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
         return NULL;
     }
 

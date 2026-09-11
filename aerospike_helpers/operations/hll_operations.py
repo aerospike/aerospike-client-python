@@ -14,8 +14,11 @@
 # limitations under the License.
 ##########################################################################
 """
-Helper functions to create HyperLogLog operation dictionary arguments for
-the :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike client.
+Helper functions to create HyperLogLog operation dictionary arguments for:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
+
 HyperLogLog bins and operations allow for your application to form fast, reasonable approximations
 of members in the union or intersection between multiple HyperLogLog bins.
 HyperLogLog’s estimates are a balance between complete accuracy and efficient savings
@@ -26,7 +29,9 @@ in space and speed in dealing with extremely large datasets.
     .. seealso:: `HyperLogLog (Data Type) more info. \
         <https://docs.aerospike.com/server/guide/data-types/hll#operations>`_.
 
-Example::
+Example:
+
+.. testcode::
 
     import aerospike
     from aerospike_helpers.operations import hll_operations as hll_ops
@@ -38,7 +43,7 @@ Example::
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
     # Create a client and connect it to the cluster.
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     # Create customer keys
     TEST_NS = "test"
@@ -75,24 +80,30 @@ Example::
     # Pass in Amy's key
     _, _, res = client.operate(keys[0], ops)
     print("Estimated items viewed intersection:", res["viewed"])
-    # Estimated items viewed intersection: 251
-    # Actual intersection: 250
+    print("Actual intersection: 250")
 
     # Find out how many unique products Amy, Farnsworth, and Scruffy have viewed.
     ops = [hll_ops.hll_get_union_count("viewed", viewed)]
     _, _, res = client.operate(keys[0], ops)
 
     print("Estimated items viewed union:", res["viewed"])
-    # Estimated items viewed union: 1010
-    # Actual union: 1000
+    print("Actual union: 1000")
 
     # Find the similarity of Amy, Farnsworth, and Scruffy's product views.
     ops = [hll_ops.hll_get_similarity("viewed", viewed)]
     _, _, res = client.operate(keys[0], ops)
 
     print("Estimated items viewed similarity: %f%%" % (res["viewed"] * 100))
-    # Estimated items viewed similarity: 24.888393%
-    # Actual similarity: 25%
+    print("Actual similarity: 25%")
+
+.. testoutput::
+
+    Estimated items viewed intersection: 251
+    Actual intersection: 250
+    Estimated items viewed union: 1010
+    Actual union: 1000
+    Estimated items viewed similarity: 24.888393%
+    Actual similarity: 25%
 
 """
 
