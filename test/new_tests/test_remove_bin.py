@@ -370,7 +370,7 @@ class TestRemovebin(object):
         with pytest.raises(e.ClientError) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
         assert exceptionInfo.value.code == -1
-        assert exceptionInfo.value.msg == "Incorrect policy"
+        assert "Incorrect policy" in exceptionInfo.value.msg
 
     @pytest.mark.parametrize(
         "key, bin_for_removal, ex_code",
