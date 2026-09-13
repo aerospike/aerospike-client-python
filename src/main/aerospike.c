@@ -59,16 +59,6 @@ config = {\n\
 }\n\
 client = aerospike.client(config)");
 
-PyDoc_STRVAR(get_expression_base64_doc,
-             "get_expression_base64(compiled_expression: list) -> str\n\
-\n\
-Get the base64 representation of a compiled aerospike expression.");
-
-PyDoc_STRVAR(get_cdtctx_base64_doc,
-             "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
-\n\
-Get the base64 representation of a compiled aerospike CDT ctx.");
-
 static PyMethodDef aerospike_methods[] = {
 
     //Serialization
@@ -104,10 +94,10 @@ static PyMethodDef aerospike_methods[] = {
     // The client base64 methods are now deprecated
 
     {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
-     METH_VARARGS | METH_KEYWORDS, get_expression_base64_doc},
+     METH_VARARGS | METH_KEYWORDS, NULL},
 
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
-     METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
+     METH_VARARGS | METH_KEYWORDS, NULL},
 
     {NULL}};
 
