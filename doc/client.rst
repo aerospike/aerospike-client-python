@@ -878,26 +878,6 @@ Numeric Operations
             Lives: 110
             Lives: 20
 
-    .. index::
-        single: List Operations
-
-List Operations
----------------
-
-    .. note:: Please see :mod:`aerospike_helpers.operations.list_operations` for the new way to use list operations.
-                Old style list operations are deprecated. The docs for old style list operations were removed in client 6.0.0.
-                The code supporting these methods will be removed in a coming release.
-
-    .. index::
-        single: Map Operations
-
-Map Operations
---------------
-
-    .. note:: Please see :mod:`aerospike_helpers.operations.map_operations` for the new way to use map operations.
-                Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
-                The code supporting these methods will be removed in a coming release.
-
 Transactions
 --------------------------
 

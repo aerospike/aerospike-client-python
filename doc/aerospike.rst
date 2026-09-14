@@ -657,12 +657,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default key policy.
 
                 See :ref:`POLICY_KEY` for possible values.
-            * **exists**
-                **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-
-                Default exists policy.
-
-                See :ref:`POLICY_EXISTS` for possible values.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -886,12 +880,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
-        * **compression_threshold** (:class:`int`)
-            **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-
-            Compress data for transmission if the object size is greater than a given number of bytes
-
-            Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str` | :class:`None`)
             Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
             in the service section in each server configuration. This ensures that the specified

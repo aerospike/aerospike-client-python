@@ -481,7 +481,6 @@ def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
     config["policies"]["total_timeout"] = 1
     config["policies"]["max_retries"] = 1
-    config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
     config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
     config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
     config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
@@ -493,7 +492,6 @@ def test_config_level_misc_options():
     config["max_conns_per_node"] = 16
     config["connect_timeout"] = 16
     config["use_shared_connection"] = False
-    config["compression_threshold"] = 50
     config["cluster_name"] = "test"
     config["max_socket_idle"] = 20
     config["fail_if_not_connected"] = True

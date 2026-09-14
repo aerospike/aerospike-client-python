@@ -50,7 +50,6 @@ enum {
     INIT_INVALID_ADRR_ERR,
     INIT_SERIALIZE_ERR,
     INIT_DESERIALIZE_ERR,
-    INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
     INIT_USER_TOO_LONG_ERR,
@@ -954,12 +953,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.batch.base.max_retries = long_max_retries;
         }
 
-        PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
-        if (py_exists && PyLong_Check(py_exists)) {
-            long long_exists = PyLong_AsLong(py_exists);
-            config.policies.write.exists = long_exists;
-        }
-
         PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
         if (py_replica && PyLong_Check(py_replica)) {
             long long_replica = PyLong_AsLong(py_replica);
@@ -1177,20 +1170,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    //compression_threshold
-    PyObject *py_compression_threshold =
-        PyDict_GetItemString(py_config, "compression_threshold");
-    if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
-        int compression_value = PyLong_AsLong(py_compression_threshold);
-        if (compression_value >= 0) {
-            config.policies.write.compression_threshold = compression_value;
-        }
-        else {
-            error_code = INIT_COMPRESSION_ERR;
-            goto CONSTRUCTOR_ERROR;
-        }
-    }
-
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
     if (py_tend_interval && PyLong_Check(py_tend_interval)) {
@@ -1351,11 +1330,6 @@ CONSTRUCTOR_ERROR:
     case INIT_DESERIALIZE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Deserializer must be callable");
-        break;
-    }
-    case INIT_COMPRESSION_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Compression value must not be negative");
         break;
     }
     case INIT_POLICY_PARAM_ERR: {
