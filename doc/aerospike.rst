@@ -657,12 +657,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default key policy.
 
                 See :ref:`POLICY_KEY` for possible values.
-            * **exists**
-                **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-
-                Default exists policy.
-
-                See :ref:`POLICY_EXISTS` for possible values.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
