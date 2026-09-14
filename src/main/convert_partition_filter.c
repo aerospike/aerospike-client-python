@@ -181,7 +181,7 @@ as_status convert_partition_filter(AerospikeClient *self,
                     &filter->digest);
 
     if (parts_stat && PyDict_Check(parts_stat)) {
-        Py_ssize_t partitions_status_size = PyDict_Size(part_stat);
+        Py_ssize_t partitions_status_size = PyDict_Size(parts_stat);
         if (PyErr_Occurred()) {
             as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
