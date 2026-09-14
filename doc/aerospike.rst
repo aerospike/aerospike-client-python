@@ -1715,12 +1715,6 @@ Index data types
 
     An index whose values are of the aerospike string data type.
 
-.. data:: INDEX_NUMERIC
-
-    .. deprecated:: 19.3.0 Use :py:data:`~aerospike.INDEX_INTEGER` instead.
-
-    An index whose values are of the aerospike integer data type.
-
 .. data:: INDEX_BLOB
 
     An index whose values are of the aerospike blob data type.
