@@ -344,44 +344,9 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
 /*******************************************************************************
  * SECONDARY INDEX OPERATIONS
  ******************************************************************************/
-/**
- * Create secondary integer index
- *
- *		client.index_integer_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
-                                               PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary string index
- *
- *		client.index_string_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
-                                              PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary string index
- *
- *		client.index_blob_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary geospatial index
- *
- *		client.index_2dsphere_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
-                                                PyObject *args, PyObject *kwds);
 
 /**
  * Remove secondary index
