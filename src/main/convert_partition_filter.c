@@ -181,113 +181,127 @@ as_status convert_partition_filter(AerospikeClient *self,
                     &filter->digest);
 
     if (parts_stat && PyDict_Check(parts_stat)) {
-
-        PyObject *py_done =
-            PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_DONE);
-        if (!py_done) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "partition_status dict missing key '%s'",
-                            PARTITIONS_STATUS_KEY_DONE);
+        Py_ssize_t partitions_status_size = PyDict_Size(part_stat);
+        if (PyErr_Occurred()) {
+            as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Failed to check if partitions status dictionary is empty");
             goto ERROR_CLEANUP;
         }
-
-        if (PyLong_Check(py_done)) {
-            parts_all->done = (bool)PyLong_AsLong(py_done);
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "partition_status dict key '%s' must be an int",
-                            PARTITIONS_STATUS_KEY_DONE);
-            goto ERROR_CLEANUP;
-        }
-
-        PyObject *py_retry =
-            PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_RETRY);
-        if (!py_retry) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "partition_status dict missing key '%s'",
-                            PARTITIONS_STATUS_KEY_RETRY);
-            goto ERROR_CLEANUP;
-        }
-
-        if (PyLong_Check(py_retry)) {
-            parts_all->retry = (bool)PyLong_AsLong(py_retry);
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "partition_status dict key '%s' must be an int",
-                            PARTITIONS_STATUS_KEY_RETRY);
-            goto ERROR_CLEANUP;
-        }
-
-        for (uint16_t i = 0; i < parts_all->part_count; i++) {
-            ps = &parts_all->parts[i];
-
-            PyObject *key = PyLong_FromLong(ps->part_id);
-            PyObject *status_dict = PyDict_GetItem(parts_stat, key);
-            Py_DECREF(key);
-
-            if (!status_dict || !PyTuple_Check(status_dict)) {
-                as_log_debug("invalid id for part_id: %d", ps->part_id);
-                continue;
-            }
-
-            PyObject *init = PyTuple_GetItem(status_dict, 1);
-            if (init && PyLong_Check(init)) {
-                ps->digest.init = PyLong_AsLong(init);
-            }
-            else if (init) {
+        else if (partitions_status_size > 0) {
+            PyObject *py_done =
+                PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_DONE);
+            if (!py_done) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid init for part_id: %d", ps->part_id);
+                                "partition_status dict missing key '%s'",
+                                PARTITIONS_STATUS_KEY_DONE);
                 goto ERROR_CLEANUP;
             }
 
-            PyObject *retry = PyTuple_GetItem(status_dict, 2);
-            if (retry && PyLong_Check(retry)) {
-                ps->retry = (bool)PyLong_AsLong(retry);
+            if (PyLong_Check(py_done)) {
+                parts_all->done = (bool)PyLong_AsLong(py_done);
             }
-            else if (retry) {
+            else {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid retry for part_id: %d", ps->part_id);
+                                "partition_status dict key '%s' must be an int",
+                                PARTITIONS_STATUS_KEY_DONE);
                 goto ERROR_CLEANUP;
             }
 
-            PyObject *value = PyTuple_GetItem(status_dict, 3);
-            if (value && PyByteArray_Check(value)) {
-                uint8_t *bytes_array = (uint8_t *)PyByteArray_AsString(value);
-                //uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
-                memcpy(ps->digest.value, bytes_array, AS_DIGEST_VALUE_SIZE);
-            }
-            else if (value) {
+            PyObject *py_retry =
+                PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_RETRY);
+            if (!py_retry) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid digest value for part_id: %d",
-                                ps->part_id);
+                                "partition_status dict missing key '%s'",
+                                PARTITIONS_STATUS_KEY_RETRY);
                 goto ERROR_CLEANUP;
             }
 
-            PyObject *py_bval = PyTuple_GetItem(status_dict, 4);
-
-            // NOTE this is done to maintain backwards compatibility with old 4 elemnt tuples
-            // used when only partition scans were supported.
-            if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_IndexError)) {
-                PyErr_Clear();
+            if (PyLong_Check(py_retry)) {
+                parts_all->retry = (bool)PyLong_AsLong(py_retry);
+            }
+            else {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "partition_status dict key '%s' must be an int",
+                                PARTITIONS_STATUS_KEY_RETRY);
+                goto ERROR_CLEANUP;
             }
 
-            if (py_bval && PyLong_Check(py_bval)) {
-                ps->bval = PyLong_AsUnsignedLongLong(py_bval);
-                if (PyErr_Occurred() &&
-                    PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            for (uint16_t i = 0; i < parts_all->part_count; i++) {
+                ps = &parts_all->parts[i];
+
+                PyObject *key = PyLong_FromLong(ps->part_id);
+                PyObject *status_dict = PyDict_GetItem(parts_stat, key);
+                Py_DECREF(key);
+
+                if (!status_dict || !PyTuple_Check(status_dict)) {
+                    as_log_debug("invalid id for part_id: %d", ps->part_id);
+                    continue;
+                }
+
+                PyObject *init = PyTuple_GetItem(status_dict, 1);
+                if (init && PyLong_Check(init)) {
+                    ps->digest.init = PyLong_AsLong(init);
+                }
+                else if (init) {
                     as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    "invalid bval for partition id: %d, bval "
-                                    "must fit in unsigned long long",
+                                    "invalid init for part_id: %d",
                                     ps->part_id);
                     goto ERROR_CLEANUP;
                 }
-            }
-            else if (py_bval) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid bval for part_id: %d", ps->part_id);
-                goto ERROR_CLEANUP;
+
+                PyObject *retry = PyTuple_GetItem(status_dict, 2);
+                if (retry && PyLong_Check(retry)) {
+                    ps->retry = (bool)PyLong_AsLong(retry);
+                }
+                else if (retry) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "invalid retry for part_id: %d",
+                                    ps->part_id);
+                    goto ERROR_CLEANUP;
+                }
+
+                PyObject *value = PyTuple_GetItem(status_dict, 3);
+                if (value && PyByteArray_Check(value)) {
+                    uint8_t *bytes_array =
+                        (uint8_t *)PyByteArray_AsString(value);
+                    //uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
+                    memcpy(ps->digest.value, bytes_array, AS_DIGEST_VALUE_SIZE);
+                }
+                else if (value) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "invalid digest value for part_id: %d",
+                                    ps->part_id);
+                    goto ERROR_CLEANUP;
+                }
+
+                PyObject *py_bval = PyTuple_GetItem(status_dict, 4);
+
+                // NOTE this is done to maintain backwards compatibility with old 4 elemnt tuples
+                // used when only partition scans were supported.
+                if (PyErr_Occurred() &&
+                    PyErr_ExceptionMatches(PyExc_IndexError)) {
+                    PyErr_Clear();
+                }
+
+                if (py_bval && PyLong_Check(py_bval)) {
+                    ps->bval = PyLong_AsUnsignedLongLong(py_bval);
+                    if (PyErr_Occurred() &&
+                        PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                        as_error_update(
+                            err, AEROSPIKE_ERR_PARAM,
+                            "invalid bval for partition id: %d, bval "
+                            "must fit in unsigned long long",
+                            ps->part_id);
+                        goto ERROR_CLEANUP;
+                    }
+                }
+                else if (py_bval) {
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "invalid bval for part_id: %d",
+                                    ps->part_id);
+                    goto ERROR_CLEANUP;
+                }
             }
         }
     }
