@@ -137,27 +137,6 @@ class TestUserSerializer(object):
         assert bins == { 'object': obj1 }
 
         self.delete_keys.append( key )
-
-    def test_put_with_object_data_python_serializer(self):
-
-            Invoke put() for object data record with python serializer.
-
-        key = ( 'test', 'demo', 1 )
-
-        obj1 = SomeClass()
-        rec = {
-                "object" : obj1
-        }
-
-        res = TestUserSerializer.client.put( key, rec , {}, {},
-            aerospike.SERIALIZER_PYTHON)
-
-        assert res == 0
-        _, _, bins = TestUserSerializer.client.get( key )
-
-        assert bins == { 'object': True }
-
-        self.delete_keys.append( key )
     """
 
     def test_put_with_float_data_user_serializer_none(self):
