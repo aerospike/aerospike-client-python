@@ -832,7 +832,7 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "batch_parent_write", "info", "admin", "txn_verify",
                          "txn_roll", "auth_mode",
                          "login_timeout_ms",
-                         "metrics", "read_mode_ap",
+                         "metrics",
                          "max_threads", "thread_pool_size",
                          NULL)
 // clang-format on

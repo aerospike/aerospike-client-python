@@ -898,27 +898,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
         }
-        //global defaults setting
-
-        PyObject *py_ap_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_ap");
-        if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
-            as_policy_read_mode_ap ap_read_mode =
-                (as_policy_read_mode_ap)PyLong_AsLong(py_ap_read_mode);
-            config.policies.read.read_mode_ap = ap_read_mode;
-            config.policies.operate.read_mode_ap = ap_read_mode;
-            config.policies.batch.read_mode_ap = ap_read_mode;
-        }
-
-        PyObject *py_sc_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_sc");
-        if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
-            as_policy_read_mode_sc sc_read_mode =
-                (as_policy_read_mode_sc)PyLong_AsLong(py_sc_read_mode);
-            config.policies.read.read_mode_sc = sc_read_mode;
-            config.policies.operate.read_mode_sc = sc_read_mode;
-            config.policies.batch.read_mode_sc = sc_read_mode;
-        }
 
         // This does not match documentation (should not be in policies),
         //  but leave it for now for customers who may be using it
