@@ -646,18 +646,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Representing the node login timeout in milliseconds.
 
                 Default: ``5000``.
-            * **replica**
-                **Deprecated**: set this in one or all of the following policy dictionaries:
-
-                    * :ref:`aerospike_read_policies`
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default replica policy.
-
-                See :ref:`POLICY_REPLICA` for possible values.
 
                 .. seealso::
                     `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.

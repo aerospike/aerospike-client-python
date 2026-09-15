@@ -831,7 +831,7 @@ DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "batch_remove", "batch_apply", "batch_write",
                          "batch_parent_write", "info", "admin", "txn_verify",
                          "txn_roll", "auth_mode",
-                         "login_timeout_ms", "replica",
+                         "login_timeout_ms",
                          "metrics", "read_mode_ap",
                          "max_threads", "thread_pool_size",
                          NULL)
