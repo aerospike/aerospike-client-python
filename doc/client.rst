@@ -476,16 +476,6 @@ Record Commands
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note::
-            **Known issue:** if the client config's ``validate_keys`` option is :py:obj:`True` and
-            *policy* contains an invalid dictionary key, this method raises
-            :py:class:`~aerospike.exception.ClientError` instead of the
-            :py:class:`~aerospike.exception.ParamError` that every other method raises in this
-            situation (see :func:`aerospike.client`'s ``validate_keys`` option). Changing this
-            outright would be a breaking change, so it is deferred to the next major client
-            release. A :exc:`DeprecationWarning` is raised in the meantime to warn ahead of that
-            change.
-
         .. testcode::
 
             # Insert record
@@ -887,26 +877,6 @@ Numeric Operations
 
             Lives: 110
             Lives: 20
-
-    .. index::
-        single: List Operations
-
-List Operations
----------------
-
-    .. note:: Please see :mod:`aerospike_helpers.operations.list_operations` for the new way to use list operations.
-                Old style list operations are deprecated. The docs for old style list operations were removed in client 6.0.0.
-                The code supporting these methods will be removed in a coming release.
-
-    .. index::
-        single: Map Operations
-
-Map Operations
---------------
-
-    .. note:: Please see :mod:`aerospike_helpers.operations.map_operations` for the new way to use map operations.
-                Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
-                The code supporting these methods will be removed in a coming release.
 
 Transactions
 --------------------------
@@ -1431,70 +1401,6 @@ Index Operations
             Base64 encoding of ctxs: khAA
 
         .. versionchanged:: 7.1.1
-
-    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
-
-        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
-
-        Create a string index with *index_name* on the *bin* in the specified \
-        *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: index_integer_create(ns, set, bin, name[, policy])
-
-        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
-
-        Create an integer index with *name* on the *bin* in the specified \
-        *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: index_blob_create(ns, set, bin, name[, policy])
-
-        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
-
-        Create a blob index with *name* on the *bin* in the specified \
-        *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
-
-        .. deprecated:: 19.1.0 :meth:`index_single_value_create` should be used instead.
-
-        Create a geospatial 2D spherical index with *name* on the *bin* \
-        in the specified *ns*, *set*.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param str bin: the name of bin the secondary index is built on.
-        :param str name: the name of the index.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: :class:`aerospike.GeoJSON`, :mod:`aerospike.predicates`
-
-        .. note:: Requires server version >= 3.7.0
-
-        .. testcode::
-
-            client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
 
     .. index::
         single: Admin Operations
