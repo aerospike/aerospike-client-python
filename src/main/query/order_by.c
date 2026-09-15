@@ -34,7 +34,7 @@
  * this client's existing deferred-validation precedent for where()/select().
  */
 AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
-                                        PyObject *kwds)
+                                       PyObject *kwds)
 {
     char *bin_name = NULL;
     unsigned int type = 0;

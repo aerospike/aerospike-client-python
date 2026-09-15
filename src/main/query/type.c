@@ -57,9 +57,7 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
-PyDoc_STRVAR(
-   order_by_doc,
-   "order_by(bin, type[, direction[, flags]])\n\
+PyDoc_STRVAR(order_by_doc, "order_by(bin, type[, direction[, flags]])\n\
 \n\
 Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
 Must be paired with setting the ``top_k`` attribute. ``type`` is one of the \

@@ -454,8 +454,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [MAX] = EXP_SZ(as_exp_max(NIL)),
         [VECTOR_EUCLIDEAN_DIST] = EXP_SZ(as_exp_vector_dist(
             AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED, NULL, 0, NIL)),
-        [VECTOR_DOT_PRODUCT] = EXP_SZ(as_exp_vector_dist(
-            AS_VECTOR_DISTANCE_DOT_PRODUCT, NULL, 0, NIL)),
+        [VECTOR_DOT_PRODUCT] = EXP_SZ(
+            as_exp_vector_dist(AS_VECTOR_DISTANCE_DOT_PRODUCT, NULL, 0, NIL)),
         [VECTOR_COSINE_SIM] = EXP_SZ(as_exp_vector_dist(
             AS_VECTOR_DISTANCE_COSINE_SIMILARITY, NULL, 0, NIL)),
         [COND] = EXP_SZ(as_exp_cond(NIL)),
@@ -1656,19 +1656,18 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case VECTOR_EUCLIDEAN_DIST:
             // - 2 for the query-vector bytes child + the vector-bin child,
             // mirroring CMP_GEO's 2-children pattern.
-            APPEND_ARRAY(2, as_exp_vector_dist(
-                                AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED, NULL, 0,
-                                NIL));
+            APPEND_ARRAY(
+                2, as_exp_vector_dist(AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED,
+                                      NULL, 0, NIL));
             break;
         case VECTOR_DOT_PRODUCT:
             APPEND_ARRAY(2, as_exp_vector_dist(AS_VECTOR_DISTANCE_DOT_PRODUCT,
-                                                NULL, 0, NIL));
+                                               NULL, 0, NIL));
             break;
         case VECTOR_COSINE_SIM:
-            APPEND_ARRAY(2,
-                         as_exp_vector_dist(
-                             AS_VECTOR_DISTANCE_COSINE_SIMILARITY, NULL, 0,
-                             NIL));
+            APPEND_ARRAY(
+                2, as_exp_vector_dist(AS_VECTOR_DISTANCE_COSINE_SIMILARITY,
+                                      NULL, 0, NIL));
             break;
         case COND:
             APPEND_ARRAY(
