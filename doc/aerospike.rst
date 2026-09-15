@@ -646,12 +646,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Representing the node login timeout in milliseconds.
 
                 Default: ``5000``.
-            * **key**
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Default key policy.
-
-                See :ref:`POLICY_KEY` for possible values.
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 

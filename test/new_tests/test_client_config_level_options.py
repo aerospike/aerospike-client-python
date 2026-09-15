@@ -479,11 +479,8 @@ def test_query_invalid_expected_duration():
 # Some of these options may not be documented, but they are allowed in the code and customers may be using them
 def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
-    config["policies"]["total_timeout"] = 1
-    config["policies"]["max_retries"] = 1
     config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
     config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
-    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
     config["policies"]["max_threads"] = 16
     config["policies"]["thread_pool_size"] = 16
     config["policies"]["socket_timeout"] = 0

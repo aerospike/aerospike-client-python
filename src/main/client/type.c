@@ -899,15 +899,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             }
         }
         //global defaults setting
-        PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
-        if (py_key_policy && PyLong_Check(py_key_policy)) {
-            long long_key_policy = PyLong_AsLong(py_key_policy);
-            config.policies.read.key = long_key_policy;
-            config.policies.write.key = long_key_policy;
-            config.policies.apply.key = long_key_policy;
-            config.policies.operate.key = long_key_policy;
-            config.policies.remove.key = long_key_policy;
-        }
 
         PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
         if (py_replica && PyLong_Check(py_replica)) {
