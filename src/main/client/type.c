@@ -900,19 +900,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
         //global defaults setting
 
-        PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
-        if (py_replica && PyLong_Check(py_replica)) {
-            long long_replica = PyLong_AsLong(py_replica);
-            config.policies.read.replica = long_replica;
-            config.policies.write.replica = long_replica;
-            config.policies.apply.replica = long_replica;
-            config.policies.operate.replica = long_replica;
-            config.policies.remove.replica = long_replica;
-            config.policies.batch.replica = long_replica;
-            config.policies.scan.replica = long_replica;
-            config.policies.query.replica = long_replica;
-        }
-
         PyObject *py_ap_read_mode =
             PyDict_GetItemString(py_policies, "read_mode_ap");
         if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
