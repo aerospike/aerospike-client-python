@@ -1365,6 +1365,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                              false)) {
             bytes->type = AS_BYTES_HLL;
         }
+        else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector",
+                                                  false)) {
+            bytes->type = AS_BYTES_VECTOR;
+        }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");

@@ -50,6 +50,16 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
                                       PyObject *kwds);
 
 /**
+ * Set the ORDER BY clause for a Top-K query (`ORDER BY <bin> LIMIT k`).
+ *
+ *		query.order_by(bin, type[, direction[, flags]])
+ *
+ * Must be paired with setting query.top_k.
+ */
+AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
+                                       PyObject *kwds);
+
+/**
  * Add a list of write operations to the query.
  *
  */

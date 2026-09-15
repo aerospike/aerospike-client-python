@@ -499,12 +499,23 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AS_BYTES_RUBY", .value.integer = AS_BYTES_RUBY},
     {"AS_BYTES_PHP", .value.integer = AS_BYTES_PHP},
     {"AS_BYTES_ERLANG", .value.integer = AS_BYTES_ERLANG},
+    {"AS_BYTES_VECTOR", .value.integer = AS_BYTES_VECTOR},
     {"AS_BYTES_BOOL", .value.integer = AS_BYTES_BOOL},
     {"AS_BYTES_HLL", .value.integer = AS_BYTES_HLL},
     {"AS_BYTES_MAP", .value.integer = AS_BYTES_MAP},
     {"AS_BYTES_LIST", .value.integer = AS_BYTES_LIST},
     {"AS_BYTES_GEOJSON", .value.integer = AS_BYTES_GEOJSON},
     {"AS_BYTES_TYPE_MAX", .value.integer = AS_BYTES_TYPE_MAX},
+
+    /* Query ORDER BY / Top-K (order_by()/top_k) */
+    {"QUERY_ORDER_BY_INTEGER", .value.integer = AS_QUERY_ORDER_BY_INTEGER},
+    {"QUERY_ORDER_BY_DOUBLE", .value.integer = AS_QUERY_ORDER_BY_DOUBLE},
+    {"QUERY_ORDER_BY_STRING", .value.integer = AS_QUERY_ORDER_BY_STRING},
+    {"QUERY_ORDER_BY_BYTES", .value.integer = AS_QUERY_ORDER_BY_BYTES},
+    {"QUERY_ORDER_BY_CASE_INSENSITIVE",
+     .value.integer = AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
+    {"QUERY_ORDER_ASCENDING", .value.integer = AS_ORDER_ASCENDING},
+    {"QUERY_ORDER_DESCENDING", .value.integer = AS_ORDER_DESCENDING},
 
     /* Regex constants from predexp, still used by expressions */
     {"REGEX_NONE", .value.integer = REGEX_NONE},
