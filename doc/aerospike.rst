@@ -636,11 +636,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
                 Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
-            * **total_timeout** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                The default connection timeout in milliseconds
-
             * **auth_mode**
                 The authentication mode with the server.
 
@@ -657,10 +652,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default key policy.
 
                 See :ref:`POLICY_KEY` for possible values.
-            * **max_retries** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Representing the number of times to retry a command
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 
