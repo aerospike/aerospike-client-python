@@ -909,50 +909,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.remove.key = long_key_policy;
         }
 
-        PyObject *py_sock_timeout =
-            PyDict_GetItemString(py_policies, "socket_timeout");
-        if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {
-            long long_timeout = PyLong_AsLong(py_sock_timeout);
-
-            config.policies.write.base.socket_timeout = long_timeout;
-            config.policies.read.base.socket_timeout = long_timeout;
-            config.policies.apply.base.socket_timeout = long_timeout;
-            config.policies.operate.base.socket_timeout = long_timeout;
-            config.policies.query.base.socket_timeout = long_timeout;
-            config.policies.scan.base.socket_timeout = long_timeout;
-            config.policies.remove.base.socket_timeout = long_timeout;
-            config.policies.batch.base.socket_timeout = long_timeout;
-        }
-
-        PyObject *py_total_timeout =
-            PyDict_GetItemString(py_policies, "total_timeout");
-        if (py_total_timeout && PyLong_Check(py_total_timeout)) {
-            long long_total_timeout = PyLong_AsLong(py_total_timeout);
-
-            config.policies.write.base.total_timeout = long_total_timeout;
-            config.policies.read.base.total_timeout = long_total_timeout;
-            config.policies.apply.base.total_timeout = long_total_timeout;
-            config.policies.operate.base.total_timeout = long_total_timeout;
-            config.policies.query.base.total_timeout = long_total_timeout;
-            config.policies.scan.base.total_timeout = long_total_timeout;
-            config.policies.remove.base.total_timeout = long_total_timeout;
-            config.policies.batch.base.total_timeout = long_total_timeout;
-        }
-
-        PyObject *py_max_retry =
-            PyDict_GetItemString(py_policies, "max_retries");
-        if (py_max_retry && PyLong_Check(py_max_retry)) {
-            long long_max_retries = PyLong_AsLong(py_max_retry);
-            config.policies.write.base.max_retries = long_max_retries;
-            config.policies.read.base.max_retries = long_max_retries;
-            config.policies.apply.base.max_retries = long_max_retries;
-            config.policies.operate.base.max_retries = long_max_retries;
-            config.policies.query.base.max_retries = long_max_retries;
-            config.policies.scan.base.max_retries = long_max_retries;
-            config.policies.remove.base.max_retries = long_max_retries;
-            config.policies.batch.base.max_retries = long_max_retries;
-        }
-
         PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
         if (py_replica && PyLong_Check(py_replica)) {
             long long_replica = PyLong_AsLong(py_replica);
