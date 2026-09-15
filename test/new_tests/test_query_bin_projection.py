@@ -93,7 +93,7 @@ class TestQueryBinProjection:
 
     def test_select_bins_then_add_ops_then_foreground_query(self, query):
         query.select(NON_EXISTENT_BIN_NAME)
-        with pytest.warns(e.ParamError):
+        with pytest.raises(e.ParamError):
             query.add_ops(BASIC_READ_BIN_OPS)
 
         records = query.results()
@@ -104,7 +104,7 @@ class TestQueryBinProjection:
 
     def test_add_ops_then_select_bins_then_foreground_query(self, query):
         query.add_ops(BASIC_READ_BIN_OPS)
-        with pytest.warns(e.ParamError):
+        with pytest.raises(e.ParamError):
             query.select(NON_EXISTENT_BIN_NAME)
 
         records = query.results()

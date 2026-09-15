@@ -361,7 +361,7 @@ class TestQueryApply(object):
 
     def test_select_bins_then_add_ops_then_bg_query(self, query):
         query.select(NON_EXISTENT_BIN_NAME)
-        with pytest.warns(exception.ParamError) as record:
+        with pytest.raises(exception.ParamError) as record:
             query.add_ops(WRITE_OPS)
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
@@ -375,7 +375,7 @@ class TestQueryApply(object):
 
     def test_add_ops_then_select_bins_then_bg_query(self, query):
         query.add_ops(WRITE_OPS)
-        with pytest.warns(exception.ParamError) as record:
+        with pytest.raises(exception.ParamError) as record:
             query.select(NON_EXISTENT_BIN_NAME)
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
