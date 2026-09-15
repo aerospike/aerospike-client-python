@@ -664,17 +664,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default replica policy.
 
                 See :ref:`POLICY_REPLICA` for possible values.
-            * **commit_level**
-                **Deprecated**: set this as needed individually in the following policy dictionaries:
-
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default commit level policy.
-
-                See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
                     `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.

@@ -942,16 +942,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.batch.read_mode_sc = sc_read_mode;
         }
 
-        PyObject *py_commit_level =
-            PyDict_GetItemString(py_policies, "commit_level");
-        if (py_commit_level && PyLong_Check(py_commit_level)) {
-            long long_commit_level = PyLong_AsLong(py_commit_level);
-            config.policies.write.commit_level = long_commit_level;
-            config.policies.apply.commit_level = long_commit_level;
-            config.policies.operate.commit_level = long_commit_level;
-            config.policies.remove.commit_level = long_commit_level;
-        }
-
         // This does not match documentation (should not be in policies),
         //  but leave it for now for customers who may be using it
         PyObject *py_max_threads =
