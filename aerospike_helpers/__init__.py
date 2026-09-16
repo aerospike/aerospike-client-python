@@ -74,6 +74,32 @@ class Vector(bytes):
         from aerospike_helpers import Vector
 
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
+
+    .. testcode::
+
+        from aerospike_helpers import Vector
+        import aerospike
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+
+        keyTuple = ("test", "demo", "vec1")
+        client.put(keyTuple, {"embedding": Vector.of_float32([0.1, 0.2, 0.3, 0.4])})
+
+        _, _, bins = client.get(keyTuple)
+        embedding = bins["embedding"]
+        print(embedding.element_type == Vector.ElementType.FLOAT32)
+        print(list(embedding.value))
+
+        client.remove(keyTuple)
+
+    .. testoutput::
+
+        True
+        [0.10000000149011612, 0.20000000298023224, 0.30000001192092896, 0.4000000059604645]
+
+    .. seealso::
+        :meth:`~aerospike.Query.order_by` for using :class:`Vector` bins in a Top-K
+        (nearest-neighbor) vector similarity search query.
     """
 
     VERSION = 1

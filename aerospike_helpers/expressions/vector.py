@@ -109,6 +109,11 @@ class VectorDistance(_BaseExpr):
                 VectorBin("embedding"),
             )
             expr = exp.GT(dist, 0.8).compile()
+
+        .. seealso::
+            :meth:`~aerospike.Query.order_by` for a full Top-K / nearest-neighbor vector
+            search example that projects :class:`VectorDistance` as a query result bin and
+            orders by it.
         """
         try:
             self._op = _METRIC_TO_OP[metric]
