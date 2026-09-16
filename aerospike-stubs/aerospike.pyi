@@ -21,6 +21,7 @@ AS_BYTES_RUBY: Literal[10]
 AS_BYTES_STRING: Literal[3]
 AS_BYTES_TYPE_MAX: Literal[24]
 AS_BYTES_UNDEF: Literal[0]
+AS_BYTES_VECTOR: Literal[16]
 AUTH_EXTERNAL: Literal[1]
 AUTH_EXTERNAL_INSECURE: Literal[2]
 AUTH_INTERNAL: Literal[0]
@@ -293,6 +294,13 @@ UDF_TYPE_LUA: Literal[0]
 QUERY_DURATION_LONG: Literal[0]
 QUERY_DURATION_SHORT: Literal[1]
 QUERY_DURATION_LONG_RELAX_AP: Literal[2]
+QUERY_ORDER_BY_INTEGER: Literal[1]
+QUERY_ORDER_BY_DOUBLE: Literal[2]
+QUERY_ORDER_BY_STRING: Literal[3]
+QUERY_ORDER_BY_BYTES: Literal[4]
+QUERY_ORDER_BY_CASE_INSENSITIVE: Literal[1]
+QUERY_ORDER_ASCENDING: Literal[0]
+QUERY_ORDER_DESCENDING: Literal[1]
 
 COMMIT_OK: Literal[0]
 COMMIT_ALREADY_COMMITTED: Literal[1]
@@ -451,6 +459,7 @@ class Query:
     max_records: int
     records_per_second: int
     ttl: int
+    top_k: int
     def __init__(self, *args, **kwargs) -> None: ...
     def add_ops(self, ops: list) -> None: ...
     def apply(self, module: str, function: str, arguments: list = ...) -> Any: ...
@@ -458,6 +467,7 @@ class Query:
     def foreach(self, callback: Callable, policy: dict = ..., options: dict = ...) -> None: ...
     def get_partitions_status(self) -> tuple: ...
     def is_done(self) -> bool: ...
+    def order_by(self, bin: str, type: int, direction: int = ..., flags: int = ...) -> Query: ...
     def paginate(self) -> None: ...
     def results(self, policy: dict = ..., options: dict = ...) -> list: ...
     # TODO: this isn't an infinite list of bins
