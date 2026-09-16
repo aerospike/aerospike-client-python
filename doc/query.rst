@@ -106,7 +106,9 @@ Fields
 
         Default: ``0`` (record will adopt the default TTL value from the namespace)
 
-    top_k (:class:`int`)
+    .. py:attribute:: top_k
+        :type: int
+
         The number of records to return for a Top-K query (an ``ORDER BY <bin> LIMIT k`` query,
         e.g. a vector similarity / nearest-neighbor search). Must be paired with
         :meth:`~aerospike.Query.order_by`.

@@ -1588,6 +1588,10 @@ Bin Types
 
     (int): 12
 
+.. data:: AS_BYTES_VECTOR
+
+    (int): 16
+
 .. data:: AS_BYTES_BOOL
 
     (int): 17
@@ -1790,6 +1794,61 @@ Query Duration
 
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _query_order_by_constants:
+
+Query Order By / Top-K
+-----------------------
+
+Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` to run a Top-K
+(nearest-neighbor / vector similarity search) query.
+
+.. data:: QUERY_ORDER_BY_INTEGER
+
+     (int): 1
+
+     The bin passed to :meth:`~aerospike.Query.order_by` holds an integer value.
+
+.. data:: QUERY_ORDER_BY_DOUBLE
+
+     (int): 2
+
+     The bin passed to :meth:`~aerospike.Query.order_by` holds a double (float) value. This is the
+     type to use when ordering by a projected :class:`~aerospike_helpers.expressions.vector.VectorDistance`
+     result bin.
+
+.. data:: QUERY_ORDER_BY_STRING
+
+     (int): 3
+
+     The bin passed to :meth:`~aerospike.Query.order_by` holds a string value.
+
+.. data:: QUERY_ORDER_BY_BYTES
+
+     (int): 4
+
+     The bin passed to :meth:`~aerospike.Query.order_by` holds a bytes value.
+
+.. data:: QUERY_ORDER_BY_CASE_INSENSITIVE
+
+     (int): 1
+
+     Optional ``flags`` bit for :meth:`~aerospike.Query.order_by` requesting a case-insensitive sort
+     of a :data:`aerospike.QUERY_ORDER_BY_STRING` bin.
+
+.. data:: QUERY_ORDER_ASCENDING
+
+     (int): 0
+
+     ``direction`` value for :meth:`~aerospike.Query.order_by` requesting ascending order (smallest
+     value first).
+
+.. data:: QUERY_ORDER_DESCENDING
+
+     (int): 1
+
+     ``direction`` value for :meth:`~aerospike.Query.order_by` requesting descending order (largest
+     value first).
 
 .. _mrt_commit_status_constants:
 

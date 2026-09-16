@@ -93,3 +93,4 @@ suberror
 hardcoded
 recurse
 headerless
+bitmask
