@@ -95,6 +95,11 @@ class Vector(bytes):
     _HEADER_SIZE = 8
     _MAX_ELEMENTS_BYTES = 1 << 18  # AS_VECTOR_VALUE_MAX_ELEMENTS_BYTES
 
+    # Declared here (rather than only assigned in __new__/from_bytes) so that
+    # mypy/stubtest can see these instance attributes exist on the class.
+    _element_type: int
+    _dimensions: int
+
     def __new__(cls, element_type_or_bytes, elements=None) -> "Vector":
         # Two calling conventions:
         #   Vector(element_type: int, elements: Sequence)  - normal construction

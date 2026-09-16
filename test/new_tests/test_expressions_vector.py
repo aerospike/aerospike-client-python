@@ -106,10 +106,17 @@ class TestVectorExpressionsIntegration(object):
         ).compile()
 
         # Project the distance as a named result bin via expression_read().
-        _, _, res = self.as_connection.operate(
-            (self.test_ns, self.test_set, "self-match"),
-            [exp_ops.expression_read("dist", dist_expr)],
-        )
+        try:
+            _, _, res = self.as_connection.operate(
+                (self.test_ns, self.test_set, "self-match"),
+                [exp_ops.expression_read("dist", dist_expr)],
+            )
+        except aerospike.exception.InvalidRequest as ex:
+            # Older/stock servers without Vector Phase 1's expression-engine
+            # support (VECTOR-typed bin evaluation in rt_bin_translate)
+            # reject this with AEROSPIKE_ERR_REQUEST_INVALID instead of
+            # evaluating the expression.
+            pytest.skip(f"Server does not support vector-bin expressions: {ex}")
         assert res["dist"] == pytest.approx(1.0, abs=1e-4)
 
     def test_knn_top_k_query_matches_bruteforce(self):
