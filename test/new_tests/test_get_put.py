@@ -144,7 +144,7 @@ class TestGetPut:
         )
 
         config = self.connection_config.copy()
-        config["policies"]["write"] = {"key": aerospike.POLICY_KEY_SEND}
+        config["policies"]["read"] = {"key": aerospike.POLICY_KEY_SEND}
 
         with open_as_connection(config) as client:
             assert client is not None
