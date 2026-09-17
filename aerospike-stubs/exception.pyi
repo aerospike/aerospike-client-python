@@ -21,6 +21,36 @@ class InvalidHostError(ClientError):
 class ParamError(ClientError):
     pass
 
+class ConnectionError(ClientError):
+    pass
+
+class TLSError(ClientError):
+    pass
+
+class BatchFailed(ClientError):
+    pass
+
+class NoResponse(ClientError):
+    pass
+
+class MaxErrorRateExceeded(ClientError):
+    pass
+
+class MaxRetriesExceeded(ClientError):
+    pass
+
+class InvalidNodeError(ClientError):
+    pass
+
+class NoMoreConnectionsError(ClientError):
+    pass
+
+class AsyncConnectionError(ClientError):
+    pass
+
+class ClientAbortError(ClientError):
+    pass
+
 class TransactionFailed(ClientError):
     pass
 
@@ -66,6 +96,27 @@ class ElementExistsError(ServerError):
 class ElementNotFoundError(ServerError):
     pass
 
+class InvalidGeoJSON(ServerError):
+    pass
+
+class LostConflict(ServerError):
+    pass
+
+class ScanAbortedError(ServerError):
+    pass
+
+class BatchDisabledError(ServerError):
+    pass
+
+class BatchMaxRequestError(ServerError):
+    pass
+
+class BatchQueueFullError(ServerError):
+    pass
+
+class QueryAbortedError(ServerError):
+    pass
+
 class RecordError(ServerError):
     key: Union[tuple, None]
     bin: Union[str, None]
@@ -94,6 +145,12 @@ class BinNameError(RecordError):
 class BinIncompatibleType(RecordError):
     pass
 
+class BinExistsError(RecordError):
+    pass
+
+class BinNotFound(RecordError):
+    pass
+
 class IndexError(ServerError):
     name: Union[str, None]
 
@@ -115,7 +172,7 @@ class IndexNameMaxLen(IndexError):
 class IndexNameMaxCount(IndexError):
     pass
 
-class QueryError(AerospikeError):
+class QueryError(ServerError):
     pass
 
 class QueryQueueFull(QueryError):
@@ -124,7 +181,7 @@ class QueryQueueFull(QueryError):
 class QueryTimeout(QueryError):
     pass
 
-class ClusterError(AerospikeError):
+class ClusterError(ServerError):
     pass
 
 class ClusterChangeError(ClusterError):
@@ -183,6 +240,21 @@ class SecuritySchemeNotSupported(AdminError):
 
 class UserExistsError(AdminError):
 	pass
+
+class InvalidWhitelist(AdminError):
+    pass
+
+class NotWhitelisted(AdminError):
+    pass
+
+class QuotasNotEnabled(AdminError):
+    pass
+
+class InvalidQuota(AdminError):
+    pass
+
+class QuotaExceeded(AdminError):
+    pass
 
 class UDFError(ServerError):
     module: Union[str, None]
