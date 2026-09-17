@@ -6,10 +6,10 @@ import aerospike
 # ---------------------------------------------------------------------------
 # Query.min()/Query.max(): convenience methods built on order_by()/top_k(1)
 # internally (see the vendored C client's aerospike_query_min()/
-# aerospike_query_max(), and aerospike-client-nodejs's Query#min/Query#max),
-# to find the minimum/maximum value of a scalar bin across a query's result
-# set. Mirrors test_expressions_vector.py's server-support skip pattern,
-# since both methods ultimately just execute an order_by/top_k query.
+# aerospike_query_max()), to find the minimum/maximum value of a scalar bin
+# across a query's result set. Uses the same server-support skip pattern as
+# test_expressions_vector.py, since both methods ultimately just execute an
+# order_by/top_k query.
 # ---------------------------------------------------------------------------
 
 

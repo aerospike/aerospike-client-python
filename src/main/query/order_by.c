@@ -30,8 +30,7 @@
  * cross-field validation here - the full rule table (bin-name length, k
  * range, type/flag combinations, incompatible-feature rejection, etc.) is
  * enforced by the vendored C client's as_query_validate_topk() at query
- * execution time (surfaced as aerospike.exception.ParamError), matching
- * this client's existing deferred-validation precedent for where()/select().
+ * execution time, surfaced as aerospike.exception.ParamError.
  */
 AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)

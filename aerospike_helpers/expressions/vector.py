@@ -52,8 +52,7 @@ TypeBinName = Union[_BaseExpr, str]
 class VectorDistanceMetric:
     """
     Distance metrics usable with :class:`VectorDistance`. Matches the C
-    client's ``as_vector_distance_metric`` exactly, so these names/values are
-    the same across every Aerospike client.
+    client's ``as_vector_distance_metric`` exactly.
 
     ``EUCLIDEAN_SQUARED`` sorts ascending (smallest distance is the closest
     match); ``DOT_PRODUCT``/``COSINE_SIMILARITY`` sort descending (largest

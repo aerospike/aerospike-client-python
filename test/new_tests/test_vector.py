@@ -5,9 +5,8 @@ import aerospike
 from aerospike_helpers import Vector
 
 # ---------------------------------------------------------------------------
-# Unit tests - no server required. Mirrors test_hll.py's structure, adapted
-# for Vector's construction-time validation (dimension bounds, NaN/Inf,
-# malformed from_bytes() input) instead of HLL's server-side operations.
+# Unit tests - no server required. Covers Vector's construction-time
+# validation (dimension bounds, NaN/Inf, malformed from_bytes() input).
 # ---------------------------------------------------------------------------
 
 
@@ -116,7 +115,7 @@ class TestVectorUnit(object):
 
 # ---------------------------------------------------------------------------
 # Integration tests - require a running server with the Vector particle type
-# (Vector Phase 1 milestone 1). Mirrors HLL's as_connection-based tests.
+# (Vector Phase 1 milestone 1).
 # ---------------------------------------------------------------------------
 
 

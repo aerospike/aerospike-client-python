@@ -66,8 +66,7 @@ class Vector(bytes):
     Represents a vector bin value used for vector similarity search.
 
     Wraps the raw wire-format bytes (an 8-byte header followed by a
-    contiguous little-endian element array), the same way :class:`HyperLogLog`
-    wraps its own opaque byte buffer.
+    contiguous little-endian element array).
 
     Construct with one of the ``Vector.of_*()`` factories::
 
@@ -205,7 +204,7 @@ class Vector(bytes):
                                  self._HEADER_SIZE),
         )
 
-    # Alias matching the design doc / cross-client naming.
+    # Alias for readability.
     elements = value
 
     def element_bytes(self) -> bytes:

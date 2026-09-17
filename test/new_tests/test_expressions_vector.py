@@ -10,9 +10,9 @@ from aerospike_helpers.operations import operations as base_ops
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Verifies VectorBin/VectorDistance compile
-# to the expected shape, mirroring test_expressions_hll.py's coverage bar but
-# purely offline (no as_connection fixture), since expression compile() is a
-# pure-Python operation with no C-extension call involved.
+# to the expected shape, purely offline (no as_connection fixture), since
+# expression compile() is a pure-Python operation with no C-extension call
+# involved.
 # ---------------------------------------------------------------------------
 
 
@@ -58,8 +58,7 @@ class TestVectorExpressionsUnit(object):
 
 
 def aerospike_bin_op():
-    # _AS_EXP_CODE_BIN's Python-side op value (matches base.py's other *Bin
-    # classes, e.g. HLLBin/IntBin/etc, all of which use _ExprOp.BIN).
+    # _AS_EXP_CODE_BIN's Python-side op value, used by VectorBin/etc.
     from aerospike_helpers.expressions.resources import _ExprOp
 
     return _ExprOp.BIN
@@ -69,8 +68,8 @@ def aerospike_bin_op():
 # Integration tests - require a running server with Vector Phase 1 milestone
 # 1 (vector particle type) and milestone 2 (order_by/top_k) support. Skips
 # (rather than hard version-gating, since there is no numbered server
-# release yet at the time of writing - see the design doc's open questions)
-# if the server rejects order_by/top_k as unsupported.
+# release yet at the time of writing) if the server rejects order_by/top_k
+# as unsupported.
 # ---------------------------------------------------------------------------
 
 

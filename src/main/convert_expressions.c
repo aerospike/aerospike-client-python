@@ -1654,8 +1654,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 as_exp_max(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case VECTOR_EUCLIDEAN_DIST:
-            // - 2 for the query-vector bytes child + the vector-bin child,
-            // mirroring CMP_GEO's 2-children pattern.
+            // - 2 for the query-vector bytes child + the vector-bin child.
             APPEND_ARRAY(
                 2, as_exp_vector_dist(AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED,
                                       NULL, 0, NIL));
