@@ -106,6 +106,20 @@ Fields
 
         Default: ``0`` (record will adopt the default TTL value from the namespace)
 
+    .. py:attribute:: top_k
+        :type: int
+
+        The number of records to return for a Top-K query (an ``ORDER BY <bin> LIMIT k`` query,
+        e.g. a vector similarity / nearest-neighbor search). Must be paired with
+        :meth:`~aerospike.Query.order_by`.
+
+        Valid range: ``[1, 1000]``.
+
+        .. note::
+            Requires a server version with Top-K query support.
+
+        Default: ``0`` (Top-K is disabled; :meth:`~aerospike.Query.order_by` is ignored)
+
 Methods
 =======
 
@@ -167,6 +181,140 @@ Assume this boilerplate code is run before all examples below:
 
         :param str index_name: The name of the index.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
+
+    .. _aerospike.Query.order_by:
+
+    .. method:: order_by(bin, type[, direction[, flags]])
+
+        Set the ``ORDER BY <bin> LIMIT k`` clause for a Top-K query. Must be paired with setting
+        :attr:`Query.top_k`.
+
+        This is most commonly used for **vector similarity (nearest-neighbor) search**: project the
+        distance between a stored :class:`~aerospike_helpers.Vector` bin and a query vector using
+        :class:`~aerospike_helpers.expressions.vector.VectorDistance`, then order by that projected
+        distance to retrieve the *k* nearest (or farthest, depending on the metric) records.
+
+        :param str bin: the name of the bin to order by. This can be a stored bin, or the name of a \
+            result bin produced by :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
+            in :meth:`Query.add_ops`, such as a projected :class:`~aerospike_helpers.expressions.vector.VectorDistance`.
+        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing the bin's data \
+            type (e.g. :data:`aerospike.QUERY_ORDER_BY_DOUBLE` for a distance expression's float result).
+        :param int direction: :data:`aerospike.QUERY_ORDER_ASCENDING` (default) or :data:`aerospike.QUERY_ORDER_DESCENDING`.
+        :param int flags: optional bitmask, e.g. :data:`aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE`.
+        :return: ``self``, so calls can be chained.
+
+        .. note::
+            Requires a server version with Top-K query support. Cross-field validation (bin name
+            length, ``top_k`` range, incompatible type/flag/direction combinations, etc.) is performed
+            server-side when the query executes, raising :exc:`~aerospike.exception.ParamError` on
+            violation.
+
+        Example: vector similarity search - find the 2 records whose "embedding" :class:`~aerospike_helpers.Vector` \
+        bin is closest (by squared Euclidean distance) to a query vector:
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike_helpers import Vector
+            from aerospike_helpers.expressions import VectorBin
+            from aerospike_helpers.expressions.vector import VectorDistance, VectorDistanceMetric
+            from aerospike_helpers.operations import expression_operations as exp_ops
+            from aerospike_helpers.operations import operations as ops
+
+            client = aerospike.client({"hosts": [("127.0.0.1", 3000)]})
+
+            # Insert some records, each with an "embedding" Vector bin.
+            vectors = [
+                [0.10, 0.20, 0.30, 0.40],
+                [0.90, 0.80, 0.70, 0.60],
+                [0.15, 0.22, 0.31, 0.42],
+            ]
+            for i, values in enumerate(vectors):
+                client.put(("test", "demo", i), {"embedding": Vector.of_float32(values)})
+
+            # The vector we want to find the nearest neighbors of.
+            query_vector = Vector.of_float32([0.10, 0.20, 0.30, 0.40])
+
+            # Project the distance between "embedding" and query_vector into a "dist" result bin.
+            dist_expr = VectorDistance(
+                VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, VectorBin("embedding")
+            ).compile()
+
+            query = client.query("test", "demo")
+            query.add_ops([
+                ops.read("embedding"),
+                exp_ops.expression_read("dist", dist_expr),
+            ])
+
+            # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
+            query.order_by("dist", aerospike.QUERY_ORDER_BY_DOUBLE, aerospike.QUERY_ORDER_ASCENDING)
+            query.top_k = 2
+
+            records = query.results()
+            for _, _, bins in records:
+                print(round(bins["dist"], 4), list(bins["embedding"].value))
+            # 0.0 [0.10000000149011612, 0.20000000298023224, 0.30000001192092896, 0.4000000059604645]
+            # 0.0034 [0.15000000596046448, 0.2199999988079071, 0.3100000023841858, 0.41999998688697815]
+
+            # Cleanup and close the connection to the Aerospike cluster.
+            for i in range(len(vectors)):
+                client.remove(("test", "demo", i))
+            client.close()
+
+        .. seealso:: :class:`~aerospike_helpers.Vector`, \
+            :class:`~aerospike_helpers.expressions.vector.VectorDistance`, and \
+            :class:`~aerospike_helpers.expressions.vector.VectorDistanceMetric` \
+            for more on vector bins and computing distances between them.
+
+    .. _aerospike.Query.min:
+
+    .. method:: min(bin, type[, policy])
+
+        Find the minimum value of a scalar bin across the query's result set. Built on
+        :meth:`~aerospike.Query.order_by` / :attr:`~aerospike.Query.top_k` internally (equivalent to
+        ``order_by(bin, type, aerospike.QUERY_ORDER_ASCENDING)`` followed by ``top_k = 1``), so it
+        inherits the same restrictions and server support requirements.
+
+        As a side effect, this sets this query's select/order_by/top_k fields: if the query has no
+        projection yet, one is set projecting only ``bin``; if a projection already exists, ``bin``
+        must be part of it, or a :exc:`~aerospike.exception.ParamError` is raised. Records that don't
+        have ``bin``, or have it with a type other than the declared ``type``, are excluded rather than
+        winning the minimum by accident.
+
+        :param str bin: the name of the scalar bin to minimize.
+        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing ``bin``'s data type.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :return: the minimum value found, or ``None`` if no record in the result set qualified.
+
+        .. note::
+            Requires a server version with Top-K query support.
+
+        Example:
+
+        .. code-block:: python
+
+            query = client.query("test", "demo")
+            lowest_score = query.min("score", aerospike.QUERY_ORDER_BY_INTEGER)
+
+        .. seealso:: :meth:`~aerospike.Query.max`
+
+    .. _aerospike.Query.max:
+
+    .. method:: max(bin, type[, policy])
+
+        Find the maximum value of a scalar bin across the query's result set. Same behavior, side
+        effects, and restrictions as :meth:`~aerospike.Query.min`, but ranks descending instead of
+        ascending.
+
+        :param str bin: the name of the scalar bin to maximize.
+        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing ``bin``'s data type.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :return: the maximum value found, or ``None`` if no record in the result set qualified.
+
+        .. note::
+            Requires a server version with Top-K query support.
+
+        .. seealso:: :meth:`~aerospike.Query.min`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 

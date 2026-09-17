@@ -21,6 +21,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_vector_value.h>
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_msgpack_ext.h>
 
@@ -78,6 +79,10 @@ enum expr_ops {
 
     MIN = 50,
     MAX = 51,
+
+    VECTOR_EUCLIDEAN_DIST = 52,
+    VECTOR_DOT_PRODUCT = 53,
+    VECTOR_COSINE_SIM = 54,
 
     META_DIGEST_MOD = 64,
     META_DEVICE_SIZE = 65,
@@ -447,6 +452,12 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [INT_RSCAN] = EXP_SZ(as_exp_int_rscan(NIL, NIL)),
         [MIN] = EXP_SZ(as_exp_min(NIL)),
         [MAX] = EXP_SZ(as_exp_max(NIL)),
+        [VECTOR_EUCLIDEAN_DIST] = EXP_SZ(as_exp_vector_dist(
+            AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED, NULL, 0, NIL)),
+        [VECTOR_DOT_PRODUCT] = EXP_SZ(
+            as_exp_vector_dist(AS_VECTOR_DISTANCE_DOT_PRODUCT, NULL, 0, NIL)),
+        [VECTOR_COSINE_SIM] = EXP_SZ(as_exp_vector_dist(
+            AS_VECTOR_DISTANCE_COSINE_SIMILARITY, NULL, 0, NIL)),
         [COND] = EXP_SZ(as_exp_cond(NIL)),
         [LET] = EXP_SZ(as_exp_let(NIL)),
         [DEF] = EXP_SZ(as_exp_def("", NIL)),
@@ -1641,6 +1652,21 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(
                 2,
                 as_exp_max(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+            break;
+        case VECTOR_EUCLIDEAN_DIST:
+            // - 2 for the query-vector bytes child + the vector-bin child.
+            APPEND_ARRAY(
+                2, as_exp_vector_dist(AS_VECTOR_DISTANCE_EUCLIDEAN_SQUARED,
+                                      NULL, 0, NIL));
+            break;
+        case VECTOR_DOT_PRODUCT:
+            APPEND_ARRAY(2, as_exp_vector_dist(AS_VECTOR_DISTANCE_DOT_PRODUCT,
+                                               NULL, 0, NIL));
+            break;
+        case VECTOR_COSINE_SIM:
+            APPEND_ARRAY(
+                2, as_exp_vector_dist(AS_VECTOR_DISTANCE_COSINE_SIMILARITY,
+                                      NULL, 0, NIL));
             break;
         case COND:
             APPEND_ARRAY(

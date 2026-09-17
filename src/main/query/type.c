@@ -57,6 +57,32 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
+PyDoc_STRVAR(order_by_doc, "order_by(bin, type[, direction[, flags]])\n\
+\n\
+Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
+Must be paired with setting the ``top_k`` attribute. ``type`` is one of the \
+aerospike.QUERY_ORDER_BY_* constants, ``direction`` is aerospike.QUERY_ORDER_ASCENDING \
+(default) or aerospike.QUERY_ORDER_DESCENDING, and ``flags`` is an optional bitmask \
+(e.g. aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE). \
+Cross-field validation (bin-name length, k range, incompatible-feature combinations, \
+server support, etc.) is performed by the server/C client when the query executes, \
+raising aerospike.exception.ParamError on violation.");
+
+PyDoc_STRVAR(min_doc, "min(bin, type[, policy]) -> value\n\
+\n\
+Find the minimum value of a scalar bin across the query's result set, using the \
+order_by()/top_k(1) mechanism internally (equivalent to calling order_by() with \
+aerospike.QUERY_ORDER_ASCENDING and setting top_k to 1). As a side effect, this sets \
+this query's select/order_by/top_k fields: if the query has no projection yet, it is \
+set to project only ``bin``; if it already has one, ``bin`` must be part of it (raises \
+aerospike.exception.ParamError otherwise). ``type`` is one of the aerospike.QUERY_ORDER_BY_* \
+constants. Returns None if no record in the result set has ``bin``.");
+
+PyDoc_STRVAR(max_doc, "max(bin, type[, policy]) -> value\n\
+\n\
+Find the maximum value of a scalar bin across the query's result set. Same behavior, \
+side effects, and restrictions as min(), but ranks descending instead of ascending.");
+
 PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
@@ -100,6 +126,15 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
     {"select", (PyCFunction)AerospikeQuery_Select, METH_VARARGS | METH_KEYWORDS,
      select_doc},
+
+    {"order_by", (PyCFunction)AerospikeQuery_OrderBy,
+     METH_VARARGS | METH_KEYWORDS, order_by_doc},
+
+    {"min", (PyCFunction)AerospikeQuery_Min, METH_VARARGS | METH_KEYWORDS,
+     min_doc},
+
+    {"max", (PyCFunction)AerospikeQuery_Max, METH_VARARGS | METH_KEYWORDS,
+     max_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
     {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
@@ -148,6 +183,11 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 			   (defined as TTL_DONT_UPDATE), which means that the record \
 			   ttl will not change when the record is updated. \
 	 	Note that the TTL value will be employed ONLY on background query writes."},
+    {"top_k", T_UINT,
+     offsetof(AerospikeQuery, query) + offsetof(as_query, top_k), 0,
+     "Top-K limit for an ORDER BY <bin> LIMIT k query. Must be paired with "
+     "order_by(). Validated (range [1, 1000] and every other order_by/top_k "
+     "interaction) at query execution time; see order_by()."},
     {NULL} /* Sentinel */
 };
 

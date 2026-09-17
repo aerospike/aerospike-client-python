@@ -208,6 +208,18 @@ aerospike\_helpers\.expressions\.hll module
     :members:
     :special-members:
 
+aerospike\_helpers\.expressions\.vector module
+------------------------------------------------
+
+.. automodule:: aerospike_helpers.expressions.vector
+    :members:
+    :special-members:
+
+.. seealso::
+    :meth:`~aerospike.Query.order_by` for a full vector similarity (Top-K / nearest-neighbor) \
+    search example combining :class:`~aerospike_helpers.Vector`, :class:`VectorDistance`, and \
+    :meth:`~aerospike.Query.order_by`.
+
 aerospike\_helpers\.expressions\.arithmetic module
 ---------------------------------------------------
 

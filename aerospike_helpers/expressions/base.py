@@ -429,6 +429,31 @@ class HLLBin(_BaseExpr):
         self._fixed = {_Keys.BIN_KEY: bin}
 
 
+class VectorBin(_BaseExpr):
+    """Create an expression that returns a bin as a Vector. Returns the unknown-value
+    if the bin is not a Vector.
+    """
+
+    _op = _ExprOp.BIN
+    _rt = ResultType.VECTOR
+
+    def __init__(self, bin: str):
+        """Args:
+            bin (str): Bin name.
+
+        :return: (Vector bin)
+
+        Example:
+
+        .. testcode::
+
+            # Bin "embedding" is a Vector.
+            from aerospike_helpers.expressions import VectorBin
+            embedding = VectorBin("embedding")
+        """
+        self._fixed = {_Keys.BIN_KEY: bin}
+
+
 class BinExists(_BaseExpr):
     """Create an expression that returns True if bin exists."""
 
