@@ -68,9 +68,7 @@ Cross-field validation (bin-name length, k range, incompatible-feature combinati
 server support, etc.) is performed by the server/C client when the query executes, \
 raising aerospike.exception.ParamError on violation.");
 
-PyDoc_STRVAR(
-    min_doc,
-    "min(bin, type[, policy]) -> value\n\
+PyDoc_STRVAR(min_doc, "min(bin, type[, policy]) -> value\n\
 \n\
 Find the minimum value of a scalar bin across the query's result set, using the \
 order_by()/top_k(1) mechanism internally (equivalent to calling order_by() with \
@@ -80,9 +78,7 @@ set to project only ``bin``; if it already has one, ``bin`` must be part of it (
 aerospike.exception.ParamError otherwise). ``type`` is one of the aerospike.QUERY_ORDER_BY_* \
 constants. Returns None if no record in the result set has ``bin``.");
 
-PyDoc_STRVAR(
-    max_doc,
-    "max(bin, type[, policy]) -> value\n\
+PyDoc_STRVAR(max_doc, "max(bin, type[, policy]) -> value\n\
 \n\
 Find the maximum value of a scalar bin across the query's result set. Same behavior, \
 side effects, and restrictions as min(), but ranks descending instead of ascending.");
