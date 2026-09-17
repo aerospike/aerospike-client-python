@@ -68,6 +68,25 @@ Cross-field validation (bin-name length, k range, incompatible-feature combinati
 server support, etc.) is performed by the server/C client when the query executes, \
 raising aerospike.exception.ParamError on violation.");
 
+PyDoc_STRVAR(
+    min_doc,
+    "min(bin, type[, policy]) -> value\n\
+\n\
+Find the minimum value of a scalar bin across the query's result set, using the \
+order_by()/top_k(1) mechanism internally (equivalent to calling order_by() with \
+aerospike.QUERY_ORDER_ASCENDING and setting top_k to 1). As a side effect, this sets \
+this query's select/order_by/top_k fields: if the query has no projection yet, it is \
+set to project only ``bin``; if it already has one, ``bin`` must be part of it (raises \
+aerospike.exception.ParamError otherwise). ``type`` is one of the aerospike.QUERY_ORDER_BY_* \
+constants. Returns None if no record in the result set has ``bin``.");
+
+PyDoc_STRVAR(
+    max_doc,
+    "max(bin, type[, policy]) -> value\n\
+\n\
+Find the maximum value of a scalar bin across the query's result set. Same behavior, \
+side effects, and restrictions as min(), but ranks descending instead of ascending.");
+
 PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
@@ -114,6 +133,12 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
     {"order_by", (PyCFunction)AerospikeQuery_OrderBy,
      METH_VARARGS | METH_KEYWORDS, order_by_doc},
+
+    {"min", (PyCFunction)AerospikeQuery_Min, METH_VARARGS | METH_KEYWORDS,
+     min_doc},
+
+    {"max", (PyCFunction)AerospikeQuery_Max, METH_VARARGS | METH_KEYWORDS,
+     max_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
     {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,

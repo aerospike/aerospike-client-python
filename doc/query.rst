@@ -266,6 +266,56 @@ Assume this boilerplate code is run before all examples below:
             :class:`~aerospike_helpers.expressions.vector.VectorDistanceMetric` \
             for more on vector bins and computing distances between them.
 
+    .. _aerospike.Query.min:
+
+    .. method:: min(bin, type[, policy])
+
+        Find the minimum value of a scalar bin across the query's result set. Built on
+        :meth:`~aerospike.Query.order_by` / :attr:`~aerospike.Query.top_k` internally (equivalent to
+        ``order_by(bin, type, aerospike.QUERY_ORDER_ASCENDING)`` followed by ``top_k = 1``), so it
+        inherits the same restrictions and server support requirements.
+
+        As a side effect, this sets this query's select/order_by/top_k fields: if the query has no
+        projection yet, one is set projecting only ``bin``; if a projection already exists, ``bin``
+        must be part of it, or a :exc:`~aerospike.exception.ParamError` is raised. Records that don't
+        have ``bin``, or have it with a type other than the declared ``type``, are excluded rather than
+        winning the minimum by accident.
+
+        :param str bin: the name of the scalar bin to minimize.
+        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing ``bin``'s data type.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :return: the minimum value found, or ``None`` if no record in the result set qualified.
+
+        .. note::
+            Requires a server version with Top-K query support.
+
+        Example:
+
+        .. code-block:: python
+
+            query = client.query("test", "demo")
+            lowest_score = query.min("score", aerospike.QUERY_ORDER_BY_INTEGER)
+
+        .. seealso:: :meth:`~aerospike.Query.max`
+
+    .. _aerospike.Query.max:
+
+    .. method:: max(bin, type[, policy])
+
+        Find the maximum value of a scalar bin across the query's result set. Same behavior, side
+        effects, and restrictions as :meth:`~aerospike.Query.min`, but ranks descending instead of
+        ascending.
+
+        :param str bin: the name of the scalar bin to maximize.
+        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing ``bin``'s data type.
+        :param dict policy: optional :ref:`aerospike_query_policies`.
+        :return: the maximum value found, or ``None`` if no record in the result set qualified.
+
+        .. note::
+            Requires a server version with Top-K query support.
+
+        .. seealso:: :meth:`~aerospike.Query.min`
+
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
         Buffer the records resulting from the query, and return them as a \

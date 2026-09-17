@@ -60,6 +60,22 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds);
 
 /**
+ * Find the minimum/maximum value of a scalar bin across the query's result
+ * set, using the order_by()/top_k(1) mechanism internally. Mutates this
+ * query's select/order_by/top_k fields as a side effect - see
+ * AerospikeQuery_OrderBy().
+ *
+ *		value = query.min(bin, type[, policy])
+ *		value = query.max(bin, type[, policy])
+ *
+ * Returns None if no record in the result set qualified.
+ */
+PyObject *AerospikeQuery_Min(AerospikeQuery *self, PyObject *args,
+                             PyObject *kwds);
+PyObject *AerospikeQuery_Max(AerospikeQuery *self, PyObject *args,
+                             PyObject *kwds);
+
+/**
  * Add a list of write operations to the query.
  *
  */
