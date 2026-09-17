@@ -157,7 +157,7 @@ PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
                                  PyObject *kwds);
 
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-                                        PyObject *py_meta, PyObject *py_policy);
+                                        PyObject *py_policy);
 
 /**
  * Remove bin from the database.
@@ -344,53 +344,9 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
 /*******************************************************************************
  * SECONDARY INDEX OPERATIONS
  ******************************************************************************/
-/**
- * Create secondary integer index
- *
- *		client.index_integer_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
-                                               PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary string index
- *
- *		client.index_string_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
-                                              PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary string index
- *
- *		client.index_blob_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary cdt index
- *
- *		client.index_cdt_create(namespace, set, bin, index_type, index_datatype, index_name, ctx, policy)
- *
- */
-PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds);
-
-/**
- * Create secondary geospatial index
- *
- *		client.index_2dsphere_create(namespace, set, bin, index_name, policy)
- *
- */
-PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
-                                                PyObject *args, PyObject *kwds);
 
 /**
  * Remove secondary index
@@ -597,12 +553,3 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     "Operations and bin names are mutually exclusive."                         \
     "In the next major client release, when this %s object is executed, a "    \
     "ParamError will be raised."
-
-// remove_bin() raises ClientError instead of ParamError when validate_keys
-// is True and an invalid policy dictionary key is passed. Fixing this
-// outright would be a breaking change, so for now we keep the existing
-// (incorrect) behavior and just warn ahead of the next major release.
-#define REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE                                  \
-    "remove_bin() raised a ClientError because the policy dictionary "         \
-    "contained an invalid key. In the next major client release, a "           \
-    "ParamError will be raised instead."

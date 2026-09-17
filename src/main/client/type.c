@@ -50,7 +50,6 @@ enum {
     INIT_INVALID_ADRR_ERR,
     INIT_SERIALIZE_ERR,
     INIT_DESERIALIZE_ERR,
-    INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
     INIT_USER_TOO_LONG_ERR,
@@ -211,29 +210,6 @@ PyDoc_STRVAR(udf_get_doc, "udf_get(module[, language[, policy]]) -> str\n\
 \n\
 Return the content of a UDF module which is registered with the cluster.");
 
-PyDoc_STRVAR(index_integer_create_doc,
-             "index_integer_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create an integer index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(index_string_create_doc,
-             "index_string_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a string index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(index_blob_create_doc,
-             "index_blob_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a blob index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(
-    index_cdt_create_doc,
-    "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
-\n\
-Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
-numeric, string or GeoJSON values (as defined by index_datatype) \
-on records of the specified ns, set whose bin is a list or map.");
-
 PyDoc_STRVAR(get_cdtctx_base64_doc,
              "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
 \n\
@@ -263,11 +239,6 @@ PyDoc_STRVAR(
 \n\
 Create an index named index_name for numeric, string or GeoJSON values (as defined by index_datatype) \
 on records of the specified ns, set whose bin is a map. The index will include the values of the map.");
-
-PyDoc_STRVAR(index_geo2dsphere_create_doc,
-             "index_geo2dsphere_create(ns, set, bin, index_name[, policy])\n\
-\n\
-Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
 
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
@@ -468,14 +439,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // SECONDARY INDEX OPERATONS
 
-    {"index_integer_create", (PyCFunction)AerospikeClient_Index_Integer_Create,
-     METH_VARARGS | METH_KEYWORDS, index_integer_create_doc},
-    {"index_string_create", (PyCFunction)AerospikeClient_Index_String_Create,
-     METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
-    {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
-     METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
-    {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
-     METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
     {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
      METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
@@ -496,10 +459,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_map_values_create_doc},
     {"index_set_create", (PyCFunction)AerospikeClient_Index_Set_Create,
      METH_VARARGS | METH_KEYWORDS, NULL},
-
-    {"index_geo2dsphere_create",
-     (PyCFunction)AerospikeClient_Index_2dsphere_Create,
-     METH_VARARGS | METH_KEYWORDS, index_geo2dsphere_create_doc},
 
     // BATCH OPERATIONS
 
@@ -939,109 +898,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
         }
-        //global defaults setting
-        PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
-        if (py_key_policy && PyLong_Check(py_key_policy)) {
-            long long_key_policy = PyLong_AsLong(py_key_policy);
-            config.policies.read.key = long_key_policy;
-            config.policies.write.key = long_key_policy;
-            config.policies.apply.key = long_key_policy;
-            config.policies.operate.key = long_key_policy;
-            config.policies.remove.key = long_key_policy;
-        }
-
-        PyObject *py_sock_timeout =
-            PyDict_GetItemString(py_policies, "socket_timeout");
-        if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {
-            long long_timeout = PyLong_AsLong(py_sock_timeout);
-
-            config.policies.write.base.socket_timeout = long_timeout;
-            config.policies.read.base.socket_timeout = long_timeout;
-            config.policies.apply.base.socket_timeout = long_timeout;
-            config.policies.operate.base.socket_timeout = long_timeout;
-            config.policies.query.base.socket_timeout = long_timeout;
-            config.policies.scan.base.socket_timeout = long_timeout;
-            config.policies.remove.base.socket_timeout = long_timeout;
-            config.policies.batch.base.socket_timeout = long_timeout;
-        }
-
-        PyObject *py_total_timeout =
-            PyDict_GetItemString(py_policies, "total_timeout");
-        if (py_total_timeout && PyLong_Check(py_total_timeout)) {
-            long long_total_timeout = PyLong_AsLong(py_total_timeout);
-
-            config.policies.write.base.total_timeout = long_total_timeout;
-            config.policies.read.base.total_timeout = long_total_timeout;
-            config.policies.apply.base.total_timeout = long_total_timeout;
-            config.policies.operate.base.total_timeout = long_total_timeout;
-            config.policies.query.base.total_timeout = long_total_timeout;
-            config.policies.scan.base.total_timeout = long_total_timeout;
-            config.policies.remove.base.total_timeout = long_total_timeout;
-            config.policies.batch.base.total_timeout = long_total_timeout;
-        }
-
-        PyObject *py_max_retry =
-            PyDict_GetItemString(py_policies, "max_retries");
-        if (py_max_retry && PyLong_Check(py_max_retry)) {
-            long long_max_retries = PyLong_AsLong(py_max_retry);
-            config.policies.write.base.max_retries = long_max_retries;
-            config.policies.read.base.max_retries = long_max_retries;
-            config.policies.apply.base.max_retries = long_max_retries;
-            config.policies.operate.base.max_retries = long_max_retries;
-            config.policies.query.base.max_retries = long_max_retries;
-            config.policies.scan.base.max_retries = long_max_retries;
-            config.policies.remove.base.max_retries = long_max_retries;
-            config.policies.batch.base.max_retries = long_max_retries;
-        }
-
-        PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
-        if (py_exists && PyLong_Check(py_exists)) {
-            long long_exists = PyLong_AsLong(py_exists);
-            config.policies.write.exists = long_exists;
-        }
-
-        PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
-        if (py_replica && PyLong_Check(py_replica)) {
-            long long_replica = PyLong_AsLong(py_replica);
-            config.policies.read.replica = long_replica;
-            config.policies.write.replica = long_replica;
-            config.policies.apply.replica = long_replica;
-            config.policies.operate.replica = long_replica;
-            config.policies.remove.replica = long_replica;
-            config.policies.batch.replica = long_replica;
-            config.policies.scan.replica = long_replica;
-            config.policies.query.replica = long_replica;
-        }
-
-        PyObject *py_ap_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_ap");
-        if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
-            as_policy_read_mode_ap ap_read_mode =
-                (as_policy_read_mode_ap)PyLong_AsLong(py_ap_read_mode);
-            config.policies.read.read_mode_ap = ap_read_mode;
-            config.policies.operate.read_mode_ap = ap_read_mode;
-            config.policies.batch.read_mode_ap = ap_read_mode;
-        }
-
-        PyObject *py_sc_read_mode =
-            PyDict_GetItemString(py_policies, "read_mode_sc");
-        if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
-            as_policy_read_mode_sc sc_read_mode =
-                (as_policy_read_mode_sc)PyLong_AsLong(py_sc_read_mode);
-            config.policies.read.read_mode_sc = sc_read_mode;
-            config.policies.operate.read_mode_sc = sc_read_mode;
-            config.policies.batch.read_mode_sc = sc_read_mode;
-        }
-
-        PyObject *py_commit_level =
-            PyDict_GetItemString(py_policies, "commit_level");
-        if (py_commit_level && PyLong_Check(py_commit_level)) {
-            long long_commit_level = PyLong_AsLong(py_commit_level);
-            config.policies.write.commit_level = long_commit_level;
-            config.policies.apply.commit_level = long_commit_level;
-            config.policies.operate.commit_level = long_commit_level;
-            config.policies.remove.commit_level = long_commit_level;
-        }
 
         // This does not match documentation (should not be in policies),
         //  but leave it for now for customers who may be using it
@@ -1217,20 +1073,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    //compression_threshold
-    PyObject *py_compression_threshold =
-        PyDict_GetItemString(py_config, "compression_threshold");
-    if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
-        int compression_value = PyLong_AsLong(py_compression_threshold);
-        if (compression_value >= 0) {
-            config.policies.write.compression_threshold = compression_value;
-        }
-        else {
-            error_code = INIT_COMPRESSION_ERR;
-            goto CONSTRUCTOR_ERROR;
-        }
-    }
-
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
     if (py_tend_interval && PyLong_Check(py_tend_interval)) {
@@ -1391,11 +1233,6 @@ CONSTRUCTOR_ERROR:
     case INIT_DESERIALIZE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Deserializer must be callable");
-        break;
-    }
-    case INIT_COMPRESSION_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "Compression value must not be negative");
         break;
     }
     case INIT_POLICY_PARAM_ERR: {

@@ -812,15 +812,17 @@ static struct type_name_to_creation_method py_module_types[] = {
     const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
     PyObject *py_##array_name_prefix##_valid_keys = NULL;
 
+// clang-format off
 DEFINE_SET_OF_VALID_KEYS(
     client_config, "lua", "config_provider", "tls", "hosts", "shm",
     "serialization", "policies", "thread_pool_size", "max_threads",
     "min_conns_per_node", "max_conns_per_node", "max_error_rate",
     "error_rate_window", "connect_timeout", "use_shared_connection",
-    "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
+    "send_bool_as", "tend_interval", "cluster_name",
     "strict_types", "rack_aware", "rack_id", "rack_ids",
     "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
     "user", "password", "validate_keys", "app_id", "force_single_node", NULL)
+// clang-format on
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",
@@ -831,15 +833,17 @@ DEFINE_SET_OF_VALID_KEYS(client_config_lua, "system_path", "user_path", NULL
 
 )
 
+// clang-format off
 DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "operate", "remove", "query", "scan", "batch",
                          "batch_remove", "batch_apply", "batch_write",
                          "batch_parent_write", "info", "admin", "txn_verify",
-                         "txn_roll", "total_timeout", "auth_mode",
-                         "login_timeout_ms", "key", "exists", "max_retries",
-                         "replica", "commit_level", "metrics", "read_mode_ap",
-                         "max_threads", "thread_pool_size", "socket_timeout",
+                         "txn_roll", "auth_mode",
+                         "login_timeout_ms",
+                         "metrics",
+                         "max_threads", "thread_pool_size",
                          NULL)
+// clang-format on
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",
@@ -959,7 +963,7 @@ DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
 
-DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", "ttl", NULL)
+DEFINE_SET_OF_VALID_KEYS(record_metadata, "gen", NULL)
 
 // Use a struct to create pairs of pyobjects and list of strings defined above
 // When we initialize the module, we create sets for the valid keys that the client can use later
