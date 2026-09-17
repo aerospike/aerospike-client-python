@@ -354,7 +354,7 @@ class TestScanApply(object):
 
     def test_select_bins_then_add_ops_then_bg_query(self, scan_obj):
         scan_obj.select(NON_EXISTENT_BIN_NAME)
-        with pytest.warns(DeprecationWarning) as record:
+        with pytest.raises(exception.ParamError) as record:
             scan_obj.add_ops(WRITE_OPS)
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
@@ -368,7 +368,7 @@ class TestScanApply(object):
 
     def test_add_ops_then_select_bins_then_bg_query(self, scan_obj):
         scan_obj.add_ops(WRITE_OPS)
-        with pytest.warns(DeprecationWarning) as record:
+        with pytest.raises(exception.ParamError) as record:
             scan_obj.select(NON_EXISTENT_BIN_NAME)
         assert "Operations and bin names are mutually exclusive" in record[0].message.args[0]
 
