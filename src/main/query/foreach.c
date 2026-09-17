@@ -168,6 +168,7 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     bool is_query_results = py_callback == NULL;
 
     as_partitions_status *backed_up_part_status = NULL;
+    bool is_query_state_backed_up = false;
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -222,27 +223,31 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
 
     if (is_query_results) {
         as_partitions_status *backup_source = NULL;
-        if (self->query.parts_all == NULL && ps) {
-            backup_source = ps;
-        }
-        else {
+        if (self->query.parts_all) {
+            // This query is resuming.
+            // If there is a user-provided partitions status, the C client will still ignore it in this case.
             backup_source = self->query.parts_all;
         }
-
-        // There is no user-provided partitions status
-        // So in case this query.results() call fails, just resume from the query's last known good state
-        ssize_t num_bytes =
-            sizeof(as_partitions_status) +
-            sizeof(as_partition_status) * backup_source->part_count;
-        backed_up_part_status = cf_malloc(num_bytes);
-        if (!backed_up_part_status) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to back up partitions status");
-            goto CLEANUP;
+        else if (ps) {
+            // This is a new query object
+            backup_source = ps;
         }
 
-        memcpy(backed_up_part_status, self->query.parts_all, num_bytes);
-        backed_up_part_status->ref_count = 1;
+        if (backup_source) {
+            ssize_t num_bytes =
+                sizeof(as_partitions_status) +
+                sizeof(as_partition_status) * backup_source->part_count;
+            backed_up_part_status = cf_malloc(num_bytes);
+            if (!backed_up_part_status) {
+                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                "Failed to back up partitions status");
+                goto CLEANUP;
+            }
+
+            memcpy(backed_up_part_status, backup_source, num_bytes);
+            backed_up_part_status->ref_count = 1;
+        }
+        is_query_state_backed_up = true;
     }
 
     Py_BEGIN_ALLOW_THREADS
@@ -294,10 +299,12 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
         if (is_query_results) {
-            if (self->query.parts_all) {
-                as_partitions_status_release(self->query.parts_all);
+            if (is_query_state_backed_up) {
+                if (self->query.parts_all) {
+                    as_partitions_status_release(self->query.parts_all);
+                }
+                self->query.parts_all = backed_up_part_status;
             }
-            self->query.parts_all = backed_up_part_status;
 
             Py_XDECREF(data.py_obj);
         }
