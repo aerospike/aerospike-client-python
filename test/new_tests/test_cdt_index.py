@@ -530,7 +530,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 ctx=ctx_list_index,
                 policy=policy,
             )
-            assert False
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "Set should be string, unicode or None"
 
