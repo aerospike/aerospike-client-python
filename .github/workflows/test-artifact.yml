@@ -250,6 +250,8 @@ jobs:
               "--suppressions=./$VALGRIND_SUPP_FILE"
               "--fullpath-after=."
               "--gen-suppressions=all"
+              # Needed to show details about suppressed leaks
+              "--show-error-list=all"
               "--num-callers=500"
               "--show-leak-kinds=definite"
               "--leak-check=full"
@@ -268,9 +270,9 @@ jobs:
         # There's no way to tell unless we see the logs
         test_command=("${VALGRIND_ARGS[@]}" python3 -m pytest -vvs --full-trace "${test_files[@]}" -W error::pytest.PytestUnraisableExceptionWarning)
         if [[ ${{ inputs.run-with-valgrind }} == true && ${{ inputs.run-valgrind-with-massif }} == false ]]; then
-          "${test_command[@]}" 55> >(tee "$VALGRIND_LOG_FILE")
+          "${test_command[@]}"
           # Makes sure that tee finishes
-          wait $!
+          # wait $!
         else
           "${test_command[@]}"
         fi
