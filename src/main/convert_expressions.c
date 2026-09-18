@@ -174,15 +174,15 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 
 static as_status
 get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
-                       as_exp_entry *new_entry, PyObject *py_obj,
-                       intermediate_expr *tmp_expr, as_error *err);
+                       int serializer_type, as_exp_entry *new_entry,
+                       PyObject *py_obj, intermediate_expr *tmp_expr,
+                       as_error *err);
 
-static as_status add_expr_macros(AerospikeClient *self,
-                                 as_dynamic_pool *dynamic_pool,
-                                 as_vector *unicodeStrVector,
-                                 as_vector *intermediate_expr_vector,
-                                 as_exp_entry **expressions, int *bottom,
-                                 int *size, as_error *err);
+static as_status
+add_expr_macros(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
+                int serializer_type, as_vector *unicodeStrVector,
+                as_vector *intermediate_expr_vector, as_exp_entry **expressions,
+                int *bottom, int *size, as_error *err);
 
 static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
                            bool is_ctx_initialized);
@@ -526,8 +526,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 */
 static as_status
 get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
-                       as_exp_entry *new_entry, PyObject *py_obj,
-                       intermediate_expr *temp_expr, as_error *err)
+                       int serializer_type, as_exp_entry *new_entry,
+                       PyObject *py_obj, intermediate_expr *temp_expr,
+                       as_error *err)
 {
     as_error_reset(err);
 
@@ -587,7 +588,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
         if (err->code == AEROSPIKE_OK) {
-            if (serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+            if (serialize_based_on_serializer_policy(self, serializer_type,
                                                      &bytes, py_obj,
                                                      err) != AEROSPIKE_OK) {
                 return err->code;
@@ -601,7 +602,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
         pyobject_to_list(self, err, py_obj, &list, dynamic_pool,
-                         SERIALIZER_PYTHON);
+                         serializer_type);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_list_p = list;
             temp_expr->val_flag = VAL_LIST_P_ACTIVE;
@@ -611,8 +612,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, dynamic_pool,
-                        SERIALIZER_PYTHON);
+        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, serializer_type);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
@@ -647,9 +647,9 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         else {
             as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
             if (err->code == AEROSPIKE_OK) {
-                if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_PYTHON, &bytes, py_obj, err) !=
-                    AEROSPIKE_OK) {
+                if (serialize_based_on_serializer_policy(self, serializer_type,
+                                                         &bytes, py_obj,
+                                                         err) != AEROSPIKE_OK) {
                     return err->code;
                 }
 
@@ -674,12 +674,11 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
 * empty arguments used. Each expression child/value has a intermediate_expr struct in intermediate_expr_vector so the missing values will be copied later.
 * These counts need to be updated if the C client macro changes.
 */
-static as_status add_expr_macros(AerospikeClient *self,
-                                 as_dynamic_pool *dynamic_pool,
-                                 as_vector *unicodeStrVector,
-                                 as_vector *intermediate_expr_vector,
-                                 as_exp_entry **expressions, int *bottom,
-                                 int *size, as_error *err)
+static as_status
+add_expr_macros(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
+                int serializer_type, as_vector *unicodeStrVector,
+                as_vector *intermediate_expr_vector, as_exp_entry **expressions,
+                int *bottom, int *size, as_error *err)
 {
 
     for (int i = 0; i < *size; ++i) {
@@ -769,7 +768,7 @@ static as_status add_expr_macros(AerospikeClient *self,
         case _AS_EXP_CODE_AS_VAL:;
             as_exp_entry tmp_expr;
             if (get_exp_val_from_pyval(
-                    self, dynamic_pool, &tmp_expr,
+                    self, dynamic_pool, serializer_type, &tmp_expr,
                     PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY),
                     temp_expr, err) != AEROSPIKE_OK) {
                 return err->code;
@@ -2057,7 +2056,7 @@ static as_status add_expr_macros(AerospikeClient *self,
                 as_list *values = NULL;
                 as_status status =
                     get_val_list(self, err, AS_PY_VAL_KEY, temp_expr->pydict,
-                                 &values, dynamic_pool);
+                                 &values, dynamic_pool, serializer_type);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
@@ -2314,7 +2313,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
             }
 
             if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
-                            &ctx_in_use, dynamic_pool) != AEROSPIKE_OK) {
+                            &ctx_in_use, dynamic_pool,
+                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -2393,7 +2393,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         goto CLEANUP;
     }
 
-    if (add_expr_macros(self, dynamic_pool, unicodeStrVector,
+    if (add_expr_macros(self, dynamic_pool, SERIALIZER_PYTHON, unicodeStrVector,
                         &intermediate_expr_queue, &c_expr_entries, &bottom,
                         (int *)&size, err) != AEROSPIKE_OK) {
         goto CLEANUP;

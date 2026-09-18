@@ -156,7 +156,7 @@ static PyObject *convert_python_args_to_c_and_create_index(
         }
 
         if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
-                        &dynamic_pool) != AEROSPIKE_OK) {
+                        &dynamic_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             goto CLEANUP2;
         }
     }

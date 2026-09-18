@@ -106,7 +106,7 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
     if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
-                    dynamic_pool) != AEROSPIKE_OK) {                           \
+                    dynamic_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {        \
         return err->code;                                                      \
     }
 
@@ -357,24 +357,27 @@ as_status add_op(AerospikeClient *self, as_error *err,
     }
 
     if (use_operate_conversion_helper(operation)) {
-        return as_operations_add_from_pyobject(self, err, py_operation_dict,
-                                               unicodeStrVector, dynamic_pool,
-                                               ops, operation, ret_type);
+        return as_operations_add_from_pyobject(
+            self, err, py_operation_dict, unicodeStrVector, dynamic_pool, ops,
+            operation, ret_type,
+            SERIALIZER_PYTHON); //This hardcoding matches current behavior
     }
 
     if (isBitOp(operation)) {
         return add_new_bit_op(self, err, py_operation_dict, unicodeStrVector,
-                              ops, operation, ret_type, dynamic_pool);
+                              ops, operation, ret_type, dynamic_pool,
+                              SERIALIZER_PYTHON);
     }
 
     if (isHllOp(operation)) {
         return add_new_hll_op(self, err, py_operation_dict, unicodeStrVector,
-                              dynamic_pool, ops, operation, ret_type);
+                              dynamic_pool, ops, operation, ret_type,
+                              SERIALIZER_PYTHON);
     }
 
     if (isExprOp(operation)) {
         return add_new_expr_op(self, err, py_operation_dict, unicodeStrVector,
-                               ops, operation, dynamic_pool);
+                               ops, operation, dynamic_pool, SERIALIZER_PYTHON);
     }
 
     // TODO: Use set instead of this?

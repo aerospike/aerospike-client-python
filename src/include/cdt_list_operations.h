@@ -26,4 +26,5 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
                                           as_vector *unicodeStrVector,
                                           as_dynamic_pool *dynamic_pool,
                                           as_operations *ops,
-                                          long operation_code, long *ret_type);
+                                          long operation_code, long *ret_type,
+                                          int serializer_type);

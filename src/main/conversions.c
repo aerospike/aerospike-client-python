@@ -2540,7 +2540,8 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
                                        as_cdt_ctx *cdt_ctx,
                                        PyObject *py_cdt_ctx,
-                                       as_dynamic_pool *dynamic_pool)
+                                       as_dynamic_pool *dynamic_pool,
+                                       int serializer_type)
 {
     // TODO: for now we return a status so we have less pointer accesses down the line to the error object
     // in order to maintain performance. But we need to benchmark that pointer accesses don't cause slowdown
@@ -2594,7 +2595,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     case AS_CDT_CTX_MAP_VALUE:
     case CDT_CTX_MAP_KEY_CREATE:
         status = as_val_new_from_pyobject(self, err, py_value, &val,
-                                          dynamic_pool, SERIALIZER_PYTHON);
+                                          dynamic_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
             // as_val_new_from_pyobject can set a generic AEROSPIKE_ERR_CLIENT if we receive a Python type
             // that doesn't map to a server type, so we just set ParamError here to ensure this exception
@@ -2750,7 +2751,7 @@ RETURN:
 // the as_cdt_ctx when it is done.
 as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
-                      as_dynamic_pool *dynamic_pool)
+                      as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     as_status status = AEROSPIKE_OK;
     PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
@@ -2783,7 +2784,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         }
 
         status = as_cdt_ctx_add_from_pyobject(self, err, cdt_ctx, py_cdt_ctx,
-                                              dynamic_pool);
+                                              dynamic_pool, serializer_type);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_ON_ERROR;
         }

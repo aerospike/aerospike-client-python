@@ -59,7 +59,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
                                           as_vector *unicodeStrVector,
                                           as_dynamic_pool *dynamic_pool,
                                           as_operations *ops,
-                                          long operation_code, long *ret_type)
+                                          long operation_code, long *ret_type,
+                                          int serializer_type)
 
 {
     // as_operations_add_* API methods can take ownership of heap allocated as_val
@@ -206,8 +207,8 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
 
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool) !=
-        AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
+                    serializer_type) != AEROSPIKE_OK) {
         goto exit;
     }
     as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
@@ -236,7 +237,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
         }
 
         if (get_asval(self, err, val1_key, op_dict, &val1, dynamic_pool,
-                      true) != AEROSPIKE_OK) {
+                      serializer_type, true) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
         break;
@@ -263,7 +264,7 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_LIST_INSERT_ITEMS:
     case OP_STRING_CONCAT:
         if (get_val_list(self, err, list_values_key, op_dict, (as_list **)&val1,
-                         dynamic_pool) != AEROSPIKE_OK) {
+                         dynamic_pool, serializer_type) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
         break;
@@ -274,12 +275,12 @@ as_status as_operations_add_from_pyobject(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_BY_VALUE_RANGE:
     case OP_LIST_REMOVE_BY_VALUE_RANGE:
         if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val1,
-                      dynamic_pool, false) != AEROSPIKE_OK) {
+                      dynamic_pool, serializer_type, false) != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
 
         if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val2,
-                      dynamic_pool, false) != AEROSPIKE_OK) {
+                      dynamic_pool, serializer_type, false) != AEROSPIKE_OK) {
             goto CLEANUP_VAL1_ON_ERROR;
         }
         break;

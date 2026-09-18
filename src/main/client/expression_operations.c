@@ -28,35 +28,33 @@
 #include "expression_operations.h"
 #include "cdt_operation_utils.h"
 
-static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
-                                  PyObject *op_dict,
-                                  as_vector *unicodeStrVector,
-                                  as_operations *ops,
-                                  as_dynamic_pool *dynamic_pool);
+static as_status
+add_op_expr_read(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                 as_vector *unicodeStrVector, as_operations *ops,
+                 as_dynamic_pool *dynamic_pool, int serializer_type);
 
-static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
-                                   PyObject *op_dict,
-                                   as_vector *unicodeStrVector,
-                                   as_operations *ops,
-                                   as_dynamic_pool *dynamic_pool);
+static as_status
+add_op_expr_write(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                  as_vector *unicodeStrVector, as_operations *ops,
+                  as_dynamic_pool *dynamic_pool, int serializer_type);
 
 /* End forwards*/
 as_status add_new_expr_op(AerospikeClient *self, as_error *err,
                           PyObject *op_dict, as_vector *unicodeStrVector,
                           as_operations *ops, long operation_code,
-                          as_dynamic_pool *dynamic_pool)
+                          as_dynamic_pool *dynamic_pool, int serializer_type)
 
 {
     switch (operation_code) {
 
     case OP_EXPR_READ: {
         return add_op_expr_read(self, err, op_dict, unicodeStrVector, ops,
-                                dynamic_pool);
+                                dynamic_pool, serializer_type);
     }
 
     case OP_EXPR_WRITE: {
         return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops,
-                                 dynamic_pool);
+                                 dynamic_pool, serializer_type);
     }
 
     default:
@@ -68,11 +66,10 @@ as_status add_new_expr_op(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
-                                   PyObject *op_dict,
-                                   as_vector *unicodeStrVector,
-                                   as_operations *ops,
-                                   as_dynamic_pool *dynamic_pool)
+static as_status
+add_op_expr_write(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                  as_vector *unicodeStrVector, as_operations *ops,
+                  as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;
@@ -107,11 +104,10 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
-                                  PyObject *op_dict,
-                                  as_vector *unicodeStrVector,
-                                  as_operations *ops,
-                                  as_dynamic_pool *dynamic_pool)
+static as_status
+add_op_expr_read(AerospikeClient *self, as_error *err, PyObject *op_dict,
+                 as_vector *unicodeStrVector, as_operations *ops,
+                 as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;

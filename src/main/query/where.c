@@ -92,7 +92,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
-                        self->dynamic_pool) != AEROSPIKE_OK) {
+                        self->dynamic_pool,
+                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             goto CLEANUP_AS_CTX_ON_ERROR;
         }
     }

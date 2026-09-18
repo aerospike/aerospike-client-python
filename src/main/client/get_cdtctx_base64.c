@@ -92,8 +92,8 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool) !=
-        AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool,
+                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {
