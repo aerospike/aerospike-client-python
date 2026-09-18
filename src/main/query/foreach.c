@@ -319,6 +319,7 @@ CLEANUP:
                 self->query.parts_all = backed_up_part_status;
                 if (backed_up_part_status) {
                     // query.parts_all is now the owner of the backup, not the query's backup buffer ptr
+                    // If the query object is destroyed, we don't want to double free the partitions status
                     self->partitions_status_backup_buffer = NULL;
                     self->partitions_status_backup_buffer_capacity = 0;
                 }
