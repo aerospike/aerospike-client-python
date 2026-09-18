@@ -84,8 +84,13 @@ typedef struct {
 typedef struct {
     PyObject_HEAD AerospikeClient *client;
     as_query query;
+
+    // This is for query.results() to restore its original partitions status before being called
+    // We don't want to heap allocate a new partitions status every time we call query.results().
+    // And the stack size may be too small to hold the partitions status.
     as_partitions_status *partitions_status_backup_buffer;
     size_t partitions_status_backup_buffer_capacity;
+
     UnicodePyObjects u_objs;
     as_vector *unicodeStrVector;
     as_static_pool *static_pool;
