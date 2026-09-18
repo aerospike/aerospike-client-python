@@ -238,6 +238,8 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
                 sizeof(as_partitions_status) +
                 sizeof(as_partition_status) * backup_source->part_count;
 
+            // The number of partitions is always 4096, but we have this code in case
+            // self->partitions_status_backup_buffer was never initialized before
             if (self->partitions_status_backup_buffer_capacity <
                 backup_size_bytes) {
                 as_partitions_status *new_buffer = cf_malloc(backup_size_bytes);
