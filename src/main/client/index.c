@@ -65,6 +65,9 @@ static PyObject *convert_python_args_to_c_and_create_index(
     as_policy_info *info_policy_p = NULL;
     as_index_task task;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -133,9 +136,6 @@ static PyObject *convert_python_args_to_c_and_create_index(
         goto CLEANUP;
     }
 
-    as_dynamic_pool dynamic_pool;
-    as_dynamic_pool_init(&dynamic_pool);
-
     // TODO: this should be refactored by using a new helper function to parse a ctx list instead of get_cdt_ctx()
     // which only parses a dictionary containing a ctx list
     as_cdt_ctx ctx;
@@ -201,6 +201,8 @@ CLEANUP2:
     Py_XDECREF(py_ctx_dict);
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
+
     Py_XDECREF(py_ustr_set);
     Py_XDECREF(py_ustr_bin);
     Py_XDECREF(py_ustr_name);
