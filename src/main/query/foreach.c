@@ -168,6 +168,8 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     bool is_query_results = py_callback == NULL;
 
     as_partitions_status *backed_up_part_status = NULL;
+    // query.results() may raise an exception before the backup is made
+    // so we don't want to reset the query's current partitions status in this case
     bool is_query_state_backed_up = false;
 
     if (!self || !self->client->as) {
