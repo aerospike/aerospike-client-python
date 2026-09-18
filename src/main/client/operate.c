@@ -94,13 +94,13 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_value, &put_val, dynamic_pool,  \
-                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
 #define CONVERT_KEY_TO_AS_VAL()                                                \
     if (as_val_new_from_pyobject(self, err, py_key, &put_key, dynamic_pool,    \
-                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
@@ -113,7 +113,7 @@ static inline bool isExprOp(int op);
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
     if (as_val_new_from_pyobject(self, err, py_range, &put_range,              \
                                  dynamic_pool,                                 \
-                                 SERIALIZER_NONE) != AEROSPIKE_OK) {           \
+                                 SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
@@ -638,26 +638,21 @@ as_status add_op(AerospikeClient *self, as_error *err,
             Py_DECREF(py_ustr1);
         }
         else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
-            uint32_t b_len = 0;
-            uint8_t *b = NULL;
-
-            if (PyByteArray_Check(py_value)) {
-                b = (uint8_t *)PyByteArray_AsString(py_value);
-                b_len = (uint32_t)PyByteArray_Size(py_value);
-            }
-            else {
-                b = (uint8_t *)PyBytes_AsString(py_value);
-                b_len = (uint32_t)PyBytes_Size(py_value);
-            }
-
-            uint8_t *heap_b = (uint8_t *)malloc(b_len);
-            memcpy(heap_b, b, b_len);
-
-            if (operation == AS_OPERATOR_APPEND) {
-                as_operations_add_append_rawp(ops, bin, heap_b, b_len, true);
-            }
-            else {
-                as_operations_add_prepend_rawp(ops, bin, heap_b, b_len, true);
+            as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+            if (err->code == AEROSPIKE_OK) {
+                if (serialize_based_on_serializer_policy(
+                        self, SERIALIZER_PYTHON, &bytes, py_value, err) !=
+                    AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
+                if (operation == AS_OPERATOR_APPEND) {
+                    as_operations_add_append_rawp(ops, bin, bytes->value,
+                                                  bytes->size, true);
+                }
+                else {
+                    as_operations_add_prepend_rawp(ops, bin, bytes->value,
+                                                   bytes->size, true);
+                }
             }
         }
         else if (!self->strict_types ||

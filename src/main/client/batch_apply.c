@@ -198,7 +198,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     const char *func = PyUnicode_AsUTF8(py_func);
 
     pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
-                     SERIALIZER_NONE);
+                     SERIALIZER_PYTHON);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

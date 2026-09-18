@@ -562,24 +562,10 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj, err) !=
-                AEROSPIKE_OK) {
-                return err->code;
-            }
-            as_exp_entry tmp_entry = as_exp_val(
-                (as_val *)
-                    bytes); //TODO can this be simplified to a buffer and as_exp_bytes?
-            *new_entry = tmp_entry;
-        }
-        else {
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-            as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
-            *new_entry = tmp_entry;
-        }
+        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
+        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
+        as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
+        *new_entry = tmp_entry;
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
@@ -599,11 +585,11 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         *new_entry = tmp_entry;
     }
     else if (PyByteArray_Check(py_obj)) {
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj, err) !=
-                AEROSPIKE_OK) {
+        as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+        if (err->code == AEROSPIKE_OK) {
+            if (serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON,
+                                                     &bytes, py_obj,
+                                                     err) != AEROSPIKE_OK) {
                 return err->code;
             }
             as_exp_entry tmp_entry = as_exp_val(
@@ -611,17 +597,11 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
                     bytes); //TODO can this be simplified to a buffer and as_exp_bytes?
             *new_entry = tmp_entry;
         }
-        else {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_obj);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_obj);
-            as_exp_entry tmp_entry = as_exp_bytes(str, str_len);
-            *new_entry = tmp_entry;
-        }
     }
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
         pyobject_to_list(self, err, py_obj, &list, dynamic_pool,
-                         SERIALIZER_NONE);
+                         SERIALIZER_PYTHON);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_list_p = list;
             temp_expr->val_flag = VAL_LIST_P_ACTIVE;
@@ -631,7 +611,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, SERIALIZER_NONE);
+        pyobject_to_map(self, err, py_obj, &map, dynamic_pool,
+                        SERIALIZER_PYTHON);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
@@ -664,23 +645,16 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
             *new_entry = tmp_entry;
         }
         else {
-            if (self->user_serializer_call_info.callback) {
-                as_bytes *bytes;
+            as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+            if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_obj,
-                        err) != AEROSPIKE_OK) {
+                        self, SERIALIZER_PYTHON, &bytes, py_obj, err) !=
+                    AEROSPIKE_OK) {
                     return err->code;
                 }
 
                 as_exp_entry tmp_entry = as_exp_val((as_val *)bytes);
                 *new_entry = tmp_entry;
-            }
-            else {
-                if (err->code == AEROSPIKE_OK) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to create bin for unknown Python native type.");
-                }
             }
         }
     }

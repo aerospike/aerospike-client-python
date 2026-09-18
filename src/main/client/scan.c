@@ -182,7 +182,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     }
     if (py_args && (Py_None != py_args)) {
         pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
-                         SERIALIZER_NONE);
+                         SERIALIZER_PYTHON);
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }

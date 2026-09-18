@@ -103,7 +103,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python list to as_list
     pyobject_to_list(self, &err, py_arglist, &arglist, &dynamic_pool,
-                     SERIALIZER_NONE);
+                     SERIALIZER_PYTHON);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

@@ -1518,15 +1518,16 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
             *val = (as_val *)as_double_new(d);
         }
         else {
-            as_bytes *bytes;
-            if (err->code == AEROSPIKE_OK) {
-                if (serialize_based_on_serializer_policy(
-                        self, serializer_type, &bytes, dynamic_pool, py_obj,
-                        err) != AEROSPIKE_OK) {
-                    return err->code;
-                }
-                *val = (as_val *)bytes;
+            as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+            if (err->code != AEROSPIKE_OK) {
+                return err->code;
             }
+            if (serialize_based_on_serializer_policy(self, serializer_type,
+                                                     &bytes, py_obj,
+                                                     err) != AEROSPIKE_OK) {
+                return err->code;
+            }
+            *val = (as_val *)bytes;
         }
     }
 
@@ -2377,14 +2378,14 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     else if (PyList_Check(py_value)) {
         as_list *list = NULL;
         pyobject_to_list(self, err, py_value, &list, dynamic_pool,
-                         SERIALIZER_NONE);
+                         SERIALIZER_PYTHON);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)list;
     }
     else if (PyDict_Check(py_value)) {
         as_map *map = NULL;
         pyobject_to_map(self, err, py_value, &map, dynamic_pool,
-                        SERIALIZER_NONE);
+                        SERIALIZER_PYTHON);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)map;
     }
@@ -2405,92 +2406,30 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         Py_XDECREF(geo_data_py_str);
         Py_XDECREF(geo_data);
     }
-    else if (PyByteArray_Check(py_value)) {
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value,
-                    err) != AEROSPIKE_OK) {
-                ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-                binop_bin->valuep = (as_bin_value *)&as_nil;
-                as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to create bin for unknown Python native type.");
-            }
-            else {
-                binop_bin->valuep = (as_bin_value *)bytes;
-            }
-        }
-        else {
-            uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
-            uint32_t str_len = (uint32_t)PyByteArray_Size(py_value);
-            uint8_t *heap_b = (uint8_t *)malloc(str_len);
-            memcpy(heap_b, str, str_len);
-            as_bytes_init_wrap((as_bytes *)&binop_bin->value, heap_b, str_len,
-                               true);
-
-            binop_bin->valuep = &binop_bin->value;
-        }
-    }
-    else if (PyBytes_Check(py_value)) {
-
-        if (self->user_serializer_call_info.callback) {
-            as_bytes *bytes;
-            if (serialize_based_on_serializer_policy(
-                    self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value,
-                    err) != AEROSPIKE_OK) {
-                // Since serialization is unsafe, we cannot use do anything with this value.
-                // A nil bin is created and the error is propogated.
-                ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-                binop_bin->valuep = (as_bin_value *)&as_nil;
-                as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to create bin for unknown Python native type.");
-            }
-            else {
-                binop_bin->valuep = (as_bin_value *)bytes;
-            }
-        }
-        else {
-            uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
-            uint32_t b_len = (uint32_t)PyBytes_Size(py_value);
-            uint8_t *heap_b = (uint8_t *)malloc(b_len);
-            memcpy(heap_b, b, b_len);
-            as_bytes_init_wrap((as_bytes *)&binop_bin->value, heap_b, b_len,
-                               true);
-
-            binop_bin->valuep = &binop_bin->value;
-        }
-    }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)&as_nil;
     }
-    else if (self->user_serializer_call_info.callback) {
-        as_bytes *bytes;
-        if (serialize_based_on_serializer_policy(self, SERIALIZER_NONE, &bytes,
-                                                 dynamic_pool, py_value,
-                                                 err) != AEROSPIKE_OK) {
-            // Since serialization is unsafe, we cannot use do anything with this value.
-            // A nil bin is created and the error is propogated.
-            ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-            binop_bin->valuep = (as_bin_value *)&as_nil;
-            as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to create bin for unknown Python native type.");
+    else if (PyByteArray_Check(py_value)) {
+        as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+        if (err->code != AEROSPIKE_OK) {
+            return;
         }
-        else {
-            ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-            binop_bin->valuep = (as_bin_value *)bytes;
-        }
+        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
+                                             py_value, err);
+        as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
+                           bytes->size, true);
+        binop_bin->valuep = &binop_bin->value;
     }
     else {
-        // Since serialization is unsafe, we cannot use do anything with this value.
-        // A nil bin is created and the error is propogated.
+        as_bytes *bytes = as_dynamic_pool_get_as_bytes(dynamic_pool, err);
+        if (err->code != AEROSPIKE_OK) {
+            return;
+        }
+        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
+                                             py_value, err);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
-        binop_bin->valuep = (as_bin_value *)&as_nil;
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to create bin for unknown Python native type.");
+        binop_bin->valuep = (as_bin_value *)bytes;
     }
     strcpy(binop_bin->name, bin);
 }
@@ -2655,7 +2594,7 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
     case AS_CDT_CTX_MAP_VALUE:
     case CDT_CTX_MAP_KEY_CREATE:
         status = as_val_new_from_pyobject(self, err, py_value, &val,
-                                          dynamic_pool, SERIALIZER_NONE);
+                                          dynamic_pool, SERIALIZER_PYTHON);
         if (status != AEROSPIKE_OK) {
             // as_val_new_from_pyobject can set a generic AEROSPIKE_ERR_CLIENT if we receive a Python type
             // that doesn't map to a server type, so we just set ParamError here to ensure this exception

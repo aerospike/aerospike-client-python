@@ -31,8 +31,8 @@
 #include <aerospike/as_string_operations.h>
 
 enum Aerospike_serializer_values {
-    SERIALIZER_NONE,   /* default handler for serializer type */
-    SERIALIZER_PYTHON, /* Removed */
+    SERIALIZER_NONE, /* default handler for serializer type */
+    SERIALIZER_PYTHON,
     SERIALIZER_JSON,
     SERIALIZER_USER,
 };

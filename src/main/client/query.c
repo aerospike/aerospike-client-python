@@ -372,7 +372,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     }
 
     pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
-                     SERIALIZER_NONE);
+                     SERIALIZER_PYTHON);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

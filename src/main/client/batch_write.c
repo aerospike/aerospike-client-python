@@ -418,7 +418,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             as_list *arglist = NULL;
 
             pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
-                             SERIALIZER_NONE);
+                             SERIALIZER_PYTHON);
             Py_DECREF(py_args);
 
             if (err->code != AEROSPIKE_OK) {

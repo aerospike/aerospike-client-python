@@ -100,7 +100,7 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         return AEROSPIKE_OK;
     }
     return as_val_new_from_pyobject(self, err, py_val, val, dynamic_pool,
-                                    SERIALIZER_NONE);
+                                    SERIALIZER_PYTHON);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
@@ -119,7 +119,7 @@ as_status get_val_list(AerospikeClient *self, as_error *err,
                                "Value must be a list");
     }
     return pyobject_to_list(self, err, py_val, list_val, dynamic_pool,
-                            SERIALIZER_NONE);
+                            SERIALIZER_PYTHON);
 }
 
 as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
