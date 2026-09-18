@@ -84,6 +84,8 @@ typedef struct {
 typedef struct {
     PyObject_HEAD AerospikeClient *client;
     as_query query;
+    as_partitions_status *partitions_status_backup_buffer;
+    size_t partitions_status_backup_buffer_capacity;
     UnicodePyObjects u_objs;
     as_vector *unicodeStrVector;
     as_static_pool *static_pool;

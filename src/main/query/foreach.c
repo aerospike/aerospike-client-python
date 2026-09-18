@@ -234,17 +234,30 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
         }
 
         if (backup_source) {
-            ssize_t num_bytes =
+            size_t backup_size_bytes =
                 sizeof(as_partitions_status) +
                 sizeof(as_partition_status) * backup_source->part_count;
-            backed_up_part_status = cf_malloc(num_bytes);
-            if (!backed_up_part_status) {
-                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                                "Failed to back up partitions status");
-                goto CLEANUP;
+
+            if (self->partitions_status_backup_buffer_capacity <
+                backup_size_bytes) {
+                as_partitions_status *new_buffer = cf_malloc(backup_size_bytes);
+                if (!new_buffer) {
+                    as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Failed to back up partitions status");
+                    goto CLEANUP;
+                }
+
+                if (self->partitions_status_backup_buffer) {
+                    as_partitions_status_release(
+                        self->partitions_status_backup_buffer);
+                }
+                self->partitions_status_backup_buffer = new_buffer;
+                self->partitions_status_backup_buffer_capacity =
+                    backup_size_bytes;
             }
 
-            memcpy(backed_up_part_status, backup_source, num_bytes);
+            backed_up_part_status = self->partitions_status_backup_buffer;
+            memcpy(backed_up_part_status, backup_source, backup_size_bytes);
             backed_up_part_status->ref_count = 1;
         }
         is_query_state_backed_up = true;
@@ -304,6 +317,11 @@ CLEANUP:
                     as_partitions_status_release(self->query.parts_all);
                 }
                 self->query.parts_all = backed_up_part_status;
+                if (backed_up_part_status) {
+                    // query.parts_all is now the owner of the backup, not the query's backup buffer ptr
+                    self->partitions_status_backup_buffer = NULL;
+                    self->partitions_status_backup_buffer_capacity = 0;
+                }
             }
 
             Py_XDECREF(data.py_obj);
@@ -311,10 +329,6 @@ CLEANUP:
 
         raise_exception(&err);
         return NULL;
-    }
-
-    if (backed_up_part_status) {
-        as_partitions_status_release(backed_up_part_status);
     }
 
     if (is_query_results) {
