@@ -564,7 +564,7 @@ class Snip(_WriteOp):
 
             The string in the bin with the value snipped.
         """
-        if end:
+        if end is not None:
             self._op = aerospike._OP_STRING_SNIP
         else:
             self._op = aerospike._OP_STRING_SNIP_START
