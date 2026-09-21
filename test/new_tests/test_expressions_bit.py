@@ -355,7 +355,8 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "byte_offset, byte_size, invert_size, expected",
         [
-            (0, None, False, base64.b64encode(BASE64_BYTES).decode("utf-8"))
+            (0, None, False, base64.b64encode(BASE64_BYTES).decode("utf-8")),
+            (0, 3, False, base64.b64encode(BASE64_BYTES[:3]).decode("utf-8"))
         ]
     )
     @expect_server_version_earlier_than_8_2_0_to_fail

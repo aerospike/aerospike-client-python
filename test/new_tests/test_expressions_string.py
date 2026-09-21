@@ -273,3 +273,12 @@ class TestExpressions:
             _, _, bins = self.as_connection.operate(KEY, ops)
 
             assert bins[STR_BIN_NAME] == expected_result
+
+    def test_invalid_string_policy(self):
+        policy = StringPolicy(write_flags="0")
+        expr = str_expr.Insert(policy, 0, "a", STR_BIN_NAME).compile()
+        ops = [
+            expr_ops.expression_write(STR_BIN_NAME, expr)
+        ]
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)

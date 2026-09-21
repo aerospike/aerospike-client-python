@@ -1346,5 +1346,8 @@ class ListJoin(_BaseExpr):
         self._children = (bin if isinstance(bin, _BaseExpr) else ListBin(bin),)
         if self._op == aerospike._OP_LIST_JOIN_SEPARATOR:
             self._fixed = {aerospike._STR_EXP_SEPARATOR_KEY: separator}
+        else:
+            self._fixed = {}
+
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
