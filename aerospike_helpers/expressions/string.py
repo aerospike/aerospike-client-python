@@ -828,7 +828,7 @@ class RegexReplace(_WriteOp):
         self,
         policy: StringPolicy,
         pattern: str,
-        replacement: int,
+        replacement: str,
         regex_flags: RegexFlags,
         bin: "TypeBinName"
     ):
