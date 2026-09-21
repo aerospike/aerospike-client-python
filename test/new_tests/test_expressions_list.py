@@ -765,13 +765,25 @@ class TestExpressions(TestBaseClass):
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
 
-    def test_setting_end_param_to_none(self):
-        expr = ListRemoveByValueRange(ctx=None, begin=6, end=None, bin="ilist_bin")
+    @pytest.mark.parametrize(
+        "expr, expected_results",
+        [
+            pytest.param(
+                ListRemoveByValueRange(ctx=None, begin=6, end=None, bin="ilist_bin"),
+                [1, 2]
+            ),
+            pytest.param(
+                ListGetByValueRange(ctx=None, return_type=aerospike.LIST_RETURN_VALUE, value_begin=6, value_end=None, bin="ilist_bin"),
+                [6]
+            ),
+        ]
+    )
+    def test_setting_end_param_to_none(self, expr, expected_results):
         ops = [
             expr_ops.expression_read(bin_name="ilist_bin", expression=expr.compile())
         ]
         _, _, bins = self.as_connection.operate(self.first_key, list=ops)
-        assert bins["ilist_bin"] == [1, 2]
+        assert bins["ilist_bin"] == expected_results
 
     @pytest.mark.parametrize(
         "bin_name, expr, expected",
