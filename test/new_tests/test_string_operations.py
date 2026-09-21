@@ -127,7 +127,7 @@ class TestStringOperations:
             op(bin_name=STR_BIN_NAME)
         ]
 
-        with pytest.raises(e.ServerError):
+        with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(KEY, ops)
 
     def test_to_double(self):
