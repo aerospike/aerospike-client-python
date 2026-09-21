@@ -127,7 +127,12 @@ class TestStringOperations:
             op(bin_name=STR_BIN_NAME)
         ]
 
-        with pytest.raises(e.OpNotApplicable):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+            expected_exc = e.InvalidRequest
+        else:
+            expected_exc = e.OpNotApplicable
+
+        with pytest.raises(expected_exc):
             self.as_connection.operate(KEY, ops)
 
     def test_to_double(self):
