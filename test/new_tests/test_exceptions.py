@@ -170,9 +170,19 @@ def test_aerospike_exceptions(
 
 
 def test_transaction_failed_abort_status_defaults_to_none():
-    # abort_status should default to None outside abort()'s in-doubt-commit-failure
-    # path. Asserting the real ABORT_COMMIT_FAILED value isn't covered here — that
-    # needs a genuine in-doubt failure, which this suite can't force deterministically.
+    # abort_status should only be set when TransactionFailed is raised by abort()
+    # due to an in-doubt commit failure. Every other raise path (e.g. commit(),
+    # or a plain raise like this one) should leave it as None.
+    #
+    # NOTE: this only covers the None-default contract. Asserting abort_status
+    # actually equals aerospike.ABORT_COMMIT_FAILED requires abort() to hit a
+    # genuine in-doubt commit failure (a mark-roll-forward timeout/network drop
+    # mid-commit), which this suite has no fixture/infra to force deterministically
+    # (see test_mrt_functionality.py — MRT tests only drive real commit()/abort()
+    # calls against a live server, no mocking or state injection anywhere in
+    # new_tests/). test_abort_fail in test_mrt_functionality.py covers the adjacent,
+    # actually-reachable case (TransactionAlreadyCommitted from the same abort()
+    # error path) to confirm abort_status doesn't leak where it shouldn't.
     with pytest.raises(e.TransactionFailed) as excinfo:
         raise e.TransactionFailed
 
