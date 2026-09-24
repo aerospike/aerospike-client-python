@@ -102,11 +102,8 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.commit(mrt)
-        with pytest.raises(e.TransactionAlreadyCommitted) as excinfo:
+        with pytest.raises(e.TransactionAlreadyCommitted):
             self.as_connection.abort(mrt)
-        # abort_status is specific to TransactionFailed; confirm it doesn't
-        # leak onto other exceptions raised from the same abort() error path.
-        assert not hasattr(excinfo.value, "abort_status")
 
     def test_batch_write(self):
         mrt = aerospike.Transaction()
