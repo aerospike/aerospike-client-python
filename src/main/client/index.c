@@ -283,7 +283,8 @@ AerospikeClient_Index_Create_Helper(AerospikeClient *self, PyObject *args,
         index_datatype, py_ctx, NULL);
 
 CLEANUP_ON_ERROR:
-    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name,
+                         Py_None);
     return NULL;
 }
 
@@ -392,7 +393,8 @@ CLEANUP:
         Py_DECREF(py_ustr_name);
     }
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name,
+                             Py_None);
         return NULL;
     }
 
@@ -556,6 +558,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         py_ctx, NULL);
 
 CLEANUP_ON_ERROR:
-    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
+    raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name,
+                         Py_None);
     return NULL;
 }

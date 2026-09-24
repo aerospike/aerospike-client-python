@@ -37,6 +37,9 @@ base_class_to_attrs = {
     e.UDFError: [
         "module",
         "func"
+    ],
+    e.TransactionFailed: [
+        "abort_status"
     ]
 }
 
@@ -65,6 +68,7 @@ base_class_to_attrs = {
         (e.NoMoreConnectionsError, "NoMoreConnectionsError", AEROSPIKE_ERR_NO_MORE_CONNECTIONS, e.ClientError),
         (e.AsyncConnectionError, "AsyncConnectionError", AEROSPIKE_ERR_ASYNC_CONNECTION, e.ClientError),
         (e.ClientAbortError, "ClientAbortError", AEROSPIKE_ERR_CLIENT_ABORT, e.ClientError),
+        (e.TransactionFailed, "TransactionFailed", -17, e.ClientError),
         # Server errors
         (e.ServerError, None, 1, e.AerospikeError),
         (e.InvalidRequest, None, 4, e.ServerError),
@@ -163,3 +167,13 @@ def test_aerospike_exceptions(
         if issubclass(excinfo.type, base_class):
             for attr in base_class_to_attrs[base_class]:
                 assert hasattr(excinfo.value, attr)
+
+
+def test_transaction_failed_abort_status_defaults_to_none():
+    # abort_status should only be set when TransactionFailed is raised by abort()
+    # due to an in-doubt commit failure. Every other raise path (e.g. commit(),
+    # or a plain raise like this one) should leave it as None.
+    with pytest.raises(e.TransactionFailed) as excinfo:
+        raise e.TransactionFailed
+
+    assert excinfo.value.abort_status is None

@@ -260,7 +260,8 @@ CLEANUP:
     pthread_mutex_destroy(&data.thread_errors_mutex);
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None,
+                             Py_None);
         return NULL;
     }
 
