@@ -174,15 +174,6 @@ Client Errors
 
     Error code: ``-17``
 
-    .. py:attribute:: abort_status
-
-        (Optional) set when this exception was raised by :py:meth:`~aerospike.Client.abort`
-        because a commit already failed on this transaction with an in-doubt outcome
-        (:data:`aerospike.ABORT_COMMIT_FAILED`). The server may still roll the transaction
-        forward, so abort is refused; call :py:meth:`~aerospike.Client.commit` again to
-        resolve the transaction safely. ``None`` in every other case, since
-        ``TransactionFailed`` can also be raised by :py:meth:`~aerospike.Client.commit`.
-
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 .. py:exception:: TransactionAlreadyCommitted

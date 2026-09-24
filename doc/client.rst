@@ -958,12 +958,6 @@ Transactions
         :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
-        :raises: :py:exc:`~aerospike.exception.TransactionFailed` if a commit already failed
-            on this transaction with an in-doubt outcome. The server may still roll the
-            transaction forward, so abort is refused; check
-            ``err.abort_status == aerospike.ABORT_COMMIT_FAILED`` (equivalently,
-            ``transaction.state == aerospike.TXN_STATE_COMMIT_FAILED``), then call
-            :py:meth:`~aerospike.Client.commit` again to resolve the transaction safely.
 
     .. _aerospike_udf_operations:
 

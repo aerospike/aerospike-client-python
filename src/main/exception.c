@@ -73,7 +73,6 @@ const char *const aerospike_err_attrs[] = {
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
-const char *const transaction_failed_attrs[] = {"abort_status", NULL};
 
 // TODO: idea. define this as a list of tuples in python?
 // Base classes must be defined before classes that inherit from them (topological sorting)
@@ -112,7 +111,7 @@ struct exception_def exception_defs[] = {
     EXCEPTION_DEF("ClientAbortError", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_CLIENT_ABORT, NULL),
     EXCEPTION_DEF("TransactionFailed", CLIENT_ERR_EXCEPTION_NAME,
-                  AEROSPIKE_TXN_FAILED, transaction_failed_attrs),
+                  AEROSPIKE_TXN_FAILED, NULL),
     EXCEPTION_DEF("TransactionAlreadyCommitted", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_TXN_ALREADY_COMMITTED, NULL),
     EXCEPTION_DEF("TransactionAlreadyAborted", CLIENT_ERR_EXCEPTION_NAME,
@@ -379,13 +378,12 @@ void remove_exception(as_error *err)
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
-    raise_exception_base(err, Py_None, Py_None, Py_None, Py_None, Py_None,
-                         Py_None);
+    raise_exception_base(err, Py_None, Py_None, Py_None, Py_None, Py_None);
 }
 
 void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
-                          PyObject *py_name, PyObject *py_abort_status)
+                          PyObject *py_name)
 {
 // If there was an exception already raised, we need to chain it to the one we're raising now
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
@@ -445,10 +443,9 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         py_exc_class = py_base_exception;
     }
 
-    const char *extra_attrs[] = {"key",  "bin",  "module",
-                                 "func", "name", "abort_status"};
-    PyObject *py_extra_attrs[] = {py_as_key, py_bin,  py_module,
-                                  py_func,   py_name, py_abort_status};
+    const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
+    PyObject *py_extra_attrs[] = {py_as_key, py_bin, py_module, py_func,
+                                  py_name};
     for (unsigned long i = 0;
          i < sizeof(py_extra_attrs) / sizeof(py_extra_attrs[0]); i++) {
         int retval =

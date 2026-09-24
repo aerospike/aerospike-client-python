@@ -62,15 +62,7 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_abort_status =
-            PyLong_FromUnsignedLong((unsigned long)status);
-        if (py_abort_status == NULL) {
-            raise_exception(&err);
-            return NULL;
-        }
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None,
-                             py_abort_status);
-        Py_DECREF(py_abort_status);
+        raise_exception(&err);
         return NULL;
     }
 

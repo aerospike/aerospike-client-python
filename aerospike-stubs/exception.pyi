@@ -22,7 +22,7 @@ class ParamError(ClientError):
     pass
 
 class TransactionFailed(ClientError):
-    abort_status: Union[int, None]
+    pass
 
 class TransactionAlreadyAborted(ClientError):
     pass
