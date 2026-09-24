@@ -20,6 +20,12 @@
 
 PyObject *AerospikeException_New(void);
 void raise_exception(as_error *err);
+// TODO: not extensible — each exception-specific attribute (key/bin, module/func,
+// name, abort_status, ...) is its own positional param here, so adding a new one means
+// growing this signature and touching every call site, even ones that don't care about it.
+// Consider replacing these with a generic {name, PyObject*} pair array (see exception.c's
+// extra_attrs/py_extra_attrs) so new exception-specific attributes don't require touching
+// this shared signature or unrelated call sites.
 void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name, PyObject *py_abort_status);
