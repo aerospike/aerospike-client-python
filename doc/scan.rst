@@ -569,12 +569,5 @@ Options
             | Whether to run the scan concurrently on all nodes of the cluster.
             |
             | Default ``False``.
-        * **percent** :class:`int`
-            | Deprecated in version 6.0.0, will be removed in a coming release.
-            | No longer available with server 5.6+.
-            | Use scan policy max_records instead.
-            | Percentage of records to return from the scan.
-            |
-            | Default ``100``.
 
     .. versionadded:: 1.0.39

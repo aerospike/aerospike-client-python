@@ -515,14 +515,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Traceback (most recent call last):
                 aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
-            .. note::
-                **Known exception:** :meth:`~aerospike.Client.remove_bin` raises
-                :py:class:`~aerospike.exception.ClientError` instead of
-                :py:class:`~aerospike.exception.ParamError` for an invalid policy
-                dictionary key. This is scheduled to be fixed in the next major
-                client release; see :meth:`~aerospike.Client.remove_bin` for
-                details.
-
         * **hosts** (:class:`list`)
             A list identifying a node (or multiple nodes) in the cluster. Each entry may be
             either a tuple or a string.
@@ -644,11 +636,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
                 Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
-            * **total_timeout** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                The default connection timeout in milliseconds
-
             * **auth_mode**
                 The authentication mode with the server.
 
@@ -659,45 +646,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Representing the node login timeout in milliseconds.
 
                 Default: ``5000``.
-            * **key**
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Default key policy.
-
-                See :ref:`POLICY_KEY` for possible values.
-            * **exists**
-                **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-
-                Default exists policy.
-
-                See :ref:`POLICY_EXISTS` for possible values.
-            * **max_retries** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Representing the number of times to retry a command
-            * **replica**
-                **Deprecated**: set this in one or all of the following policy dictionaries:
-
-                    * :ref:`aerospike_read_policies`
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default replica policy.
-
-                See :ref:`POLICY_REPLICA` for possible values.
-            * **commit_level**
-                **Deprecated**: set this as needed individually in the following policy dictionaries:
-
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default commit level policy.
-
-                See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
                     `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
@@ -894,12 +842,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
-        * **compression_threshold** (:class:`int`)
-            **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-
-            Compress data for transmission if the object size is greater than a given number of bytes
-
-            Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str` | :class:`None`)
             Expected cluster name. If set to a string value, the ``cluster_name`` must match the cluster-name field
             in the service section in each server configuration. This ensures that the specified
