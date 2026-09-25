@@ -1236,7 +1236,8 @@ Info Operations
 
             kwGTUQKkYmluMQY=
 
-        .. versionchanged:: 7.0.0
+        .. deprecated:: 19.3.0
+            :ref:`aerospike.get_expression_base64` should be used instead.
 
     .. method:: shm_key()  ->  int
 
@@ -1453,7 +1454,8 @@ Index Operations
 
             Base64 encoding of ctxs: khAA
 
-        .. versionchanged:: 7.1.1
+        .. deprecated:: 19.3.0
+            :ref:`aerospike.get_cdtctx_base64` should be used instead.
 
     .. method:: index_string_create(ns, set, bin, name[, policy: dict])
 
