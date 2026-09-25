@@ -108,7 +108,7 @@ class TestExceptionSubcode:
             or
             # If running against a unsupported version, we expect subcode to always return 0
             # (and no undefined behavior)
-            (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3)
+            (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0)
         )
         if subcode_should_be_zero:
             assert excinfo.value.subcode == 0
@@ -149,7 +149,7 @@ class TestExceptionSubcode:
         self.as_connection.batch_write(brs, policy_batch={ERROR_DETAIL_VERBOSITY_SETTING: aerospike.ERROR_DETAIL_MESSAGE})
         for br in brs.batch_records:
             assert isinstance(br.message, str)
-            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
                 assert br.subcode == 0
             else:
                 assert br.subcode > 0
@@ -168,7 +168,7 @@ class TestExceptionSubcode:
 
         for br in brs.batch_records:
             assert isinstance(br.message, str)
-            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+            if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
                 assert br.subcode == 0
             else:
                 assert br.subcode > 0
@@ -183,8 +183,8 @@ class TestExceptionSubcode:
         ]
     )
     def test_error_detail_exp_trace(self, verbosity_level):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-            pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+            pytest.skip("Expression tracing only supported in server 8.2.0 or higher")
 
         policy = {
             ERROR_DETAIL_VERBOSITY_SETTING: verbosity_level,
@@ -211,8 +211,8 @@ class TestExceptionSubcode:
     )
     @pytest.mark.usefixtures("setup")
     def test_dyn_config(self, api_method, kwargs):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-            pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+            pytest.skip("Expression tracing only supported in server 8.2.0 or higher")
 
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)

@@ -2014,7 +2014,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             PyObject *py_str_policy =
                 PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
             as_string_policy policy;
-            as_string_policy_init_from_pyobject(err, &policy, py_str_policy);
+            as_status status = as_string_policy_init_from_pyobject(
+                err, &policy, py_str_policy);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
 
             char *value = NULL;
             switch (temp_expr->op) {
@@ -2022,8 +2026,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             case OP_STRING_OVERWRITE:
             case OP_STRING_APPEND:
             case OP_STRING_PREPEND: {
-                as_status status = get_str(
-                    err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
+                status = get_str(err, AS_PY_VAL_KEY, temp_expr->pydict, NULL,
+                                 &value, false);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }

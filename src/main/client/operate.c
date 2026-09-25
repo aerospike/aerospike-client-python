@@ -311,7 +311,7 @@ bool opRequiresKey(int op)
 #define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
 
 #define DEPRECATION_MESSAGE_TEMPLATE                                           \
-    "%s is deprecated for strings in server 8.1.3 or higher."
+    "%s is deprecated for strings in server 8.2.0 or higher."
 
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,

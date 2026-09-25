@@ -377,10 +377,10 @@ def expect_earlier_than_server_version_to_fail(as_connection, request):
         # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
         request.cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
 
-expect_server_version_earlier_than_8_1_3_to_fail = pytest.mark.parametrize(
+expect_server_version_earlier_than_8_2_0_to_fail = pytest.mark.parametrize(
     "expect_earlier_than_server_version_to_fail",
     [
-        (8, 1, 3)
+        (8, 2, 0)
     ],
     indirect=True
 )
