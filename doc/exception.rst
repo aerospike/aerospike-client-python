@@ -112,6 +112,14 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: NoMoreConnectionsError
+
+    Max connections would be exceeded.
+
+    Error code: ``-7``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 .. py:exception:: InvalidNodeError
 
     Node invalid or could not be found.
