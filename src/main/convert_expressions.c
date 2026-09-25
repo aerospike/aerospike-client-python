@@ -244,7 +244,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [META_KEY_EXISTS] = EXP_SZ(as_exp_key_exist()),
         [META_MEMORY_SIZE] = EXP_SZ(as_exp_memory_size()),
         [META_IS_TOMBSTONE] = EXP_SZ(as_exp_is_tombstone()),
-        [META_SINCE_UPDATE_TIME] = EXP_SZ(as_exp_memory_size()),
+        [META_SINCE_UPDATE_TIME] = EXP_SZ(as_exp_since_update()),
         [META_RECORD_SIZE] = EXP_SZ(as_exp_record_size()),
         [REC_KEY] = EXP_SZ(
             as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
