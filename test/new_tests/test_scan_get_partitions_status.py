@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+from aerospike import exception as e
 from .test_base_class import TestBaseClass
 
 
@@ -89,3 +90,9 @@ class TestScanGetPartitionsStatus(TestBaseClass):
 
         stats = scan_obj.get_partitions_status()
         assert stats
+
+    def test_scan_invalid_partition_filter(self):
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        policy = {"partition_filter": []}
+        with pytest.raises(e.ParamError):
+            scan_obj.results(policy)
