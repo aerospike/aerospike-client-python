@@ -627,6 +627,7 @@ static struct module_constant_name_to_value module_constants[] = {
 #define X(op_name) EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_##op_name)
     X(STRING_STRLEN),
     STRING_OP_NAMES_EXCEPT_STRLEN X(BIT_B64_ENCODE),
+    X(BIT_B64_ENCODE_RANGE),
 #undef X
 
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
