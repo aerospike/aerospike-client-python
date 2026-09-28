@@ -3,7 +3,7 @@ import pytest
 import random
 from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail
 
 import aerospike
 from contextlib import nullcontext
@@ -1667,7 +1667,7 @@ class TestBitwiseOperations(object):
             ),
         ]
     )
-    @expect_server_version_earlier_than_8_1_3_to_fail
+    @expect_server_version_earlier_than_8_2_0_to_fail
     @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
     def test_bit_b64_encode(self, kwargs, expected):
         ops = [

@@ -627,6 +627,7 @@ static struct module_constant_name_to_value module_constants[] = {
 #define X(op_name) EXPOSE_MACRO_AS_PRIVATE_FIELD(OP_##op_name)
     X(STRING_STRLEN),
     STRING_OP_NAMES_EXCEPT_STRLEN X(BIT_B64_ENCODE),
+    X(BIT_B64_ENCODE_RANGE),
 #undef X
 
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(ERROR_DETAIL_NONE),
@@ -654,7 +655,15 @@ static struct module_constant_name_to_value module_constants[] = {
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
         SUB_PARAM_BIN_COUNT_TOO_LARGE),
     EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_STRING_OP_PARAMS_INVALID),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
         SUB_PARAM_STRING_CTX_MALFORMED),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_STRING_REGEX_INVALID),
+    EXPOSE_AS_MACRO_WITHOUT_AS_PREFIX_AS_PUBLIC_FIELD(
+        SUB_PARAM_STRING_UTF8_INVALID),
 
     //----------------------------------------------------------------
     // Subcodes paired with AEROSPIKE_ERR_CLUSTER (ERR_UNAVAILABLE)
@@ -825,15 +834,17 @@ DEFINE_SET_OF_VALID_KEYS(client_config_lua, "system_path", "user_path", NULL
 
 )
 
+// clang-format off
 DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
                          "operate", "remove", "query", "scan", "batch",
                          "batch_remove", "batch_apply", "batch_write",
                          "batch_parent_write", "info", "admin", "txn_verify",
-                         "txn_roll", "total_timeout", "auth_mode",
-                         "login_timeout_ms", "key", "max_retries", "replica",
-                         "commit_level", "metrics", "read_mode_ap",
-                         "max_threads", "thread_pool_size", "socket_timeout",
+                         "txn_roll", "auth_mode",
+                         "login_timeout_ms",
+                         "metrics",
+                         "max_threads", "thread_pool_size",
                          NULL)
+// clang-format on
 
 DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
                          "protocols", "cipher_suite", "keyfile", "keyfile_pw",

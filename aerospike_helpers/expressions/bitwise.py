@@ -747,12 +747,12 @@ class BitB64Encode(_BaseExpr):
         :return: String expression.
         """
         bin = bin if isinstance(bin, _BaseExpr) else BlobBin(bin)
-        if byte_size:
+        if byte_size is not None:
             self._op = aerospike._OP_BIT_B64_ENCODE_RANGE
             self._children = (
                 byte_offset,
                 byte_size,
-                invert_size,
+                1 if invert_size else 0,
                 bin
             )
         else:

@@ -636,11 +636,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
                 Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
-            * **total_timeout** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                The default connection timeout in milliseconds
-
             * **auth_mode**
                 The authentication mode with the server.
 
@@ -651,39 +646,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Representing the node login timeout in milliseconds.
 
                 Default: ``5000``.
-            * **key**
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Default key policy.
-
-                See :ref:`POLICY_KEY` for possible values.
-            * **max_retries** (:class:`int`)
-                **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
-
-                Representing the number of times to retry a command
-            * **replica**
-                **Deprecated**: set this in one or all of the following policy dictionaries:
-
-                    * :ref:`aerospike_read_policies`
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default replica policy.
-
-                See :ref:`POLICY_REPLICA` for possible values.
-            * **commit_level**
-                **Deprecated**: set this as needed individually in the following policy dictionaries:
-
-                    * :ref:`aerospike_write_policies`
-                    * :ref:`aerospike_apply_policies`
-                    * :ref:`aerospike_operate_policies`
-                    * :ref:`aerospike_remove_policies`
-
-                Default commit level policy.
-
-                See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
                     `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
@@ -2059,8 +2021,8 @@ Subcodes
     No dispatchable subcode. Used when the parent status alone fully identifies
     the condition. Reserved as 0 across all status families.
 
-Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Subcodes paired with :py:exc:`~aerospike.exception.InvalidRequest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: SUB_PARAM_TTL_INVALID
 
@@ -2092,11 +2054,40 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
 
     App use: prune least-valuable bins and retry.
 
+.. data:: SUB_PARAM_STRING_OP_PARAMS_INVALID
+
+    String modify op received invalid parameters (empty pad string, negative repeat count, negative pad target length,
+        etc.).
+
+    App use: validate pad/repeat arguments locally before sending.
+
 .. data:: SUB_PARAM_STRING_CTX_MALFORMED
 
     String op ctx envelope is malformed.
 
     App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
+
+.. data:: SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS
+
+    String overwrite resolved index is outside the string bounds.
+
+    App use: double check the string length and recompute the index before retrying.
+
+.. data:: SUB_PARAM_STRING_REGEX_INVALID
+
+    String regex argument is invalid (non-ICU idiom or ICU compile failure at
+    parse).
+
+    The server deliberately uses the same subcode value for ICU compile failures and
+    guided non-ICU rejections.
+
+    App use: validate regex patterns against the ICU dialect before sending.
+
+.. data:: SUB_PARAM_STRING_UTF8_INVALID
+
+    Ill-formed UTF-8 in a string op argument.
+
+    App use: validate application-supplied strings before packing the request.
 
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

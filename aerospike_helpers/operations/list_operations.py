@@ -1178,7 +1178,7 @@ def list_join(
     An empty list yields an empty string, and a single-item list yields that item with no separator applied.
     This is the inverse of :py:meth:`~aerospike_helpers.operations.string_operations.split_separator`.
 
-    Requires server version 8.1.3 or later.
+    Requires server version 8.2.0 or later.
 
     Args:
         bin_name (str): The name of the bin containing the list.
@@ -1192,7 +1192,7 @@ def list_join(
         format of the dictionary should be considered an internal detail, and subject to change.
 
     Note:
-        This operation requires server version 8.1.3.0 or greater.
+        This operation requires server version 8.2.0 or greater.
     """
     op_dict = {
         OP_KEY: aerospike._OP_LIST_JOIN,

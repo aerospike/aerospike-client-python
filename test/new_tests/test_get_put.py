@@ -170,7 +170,7 @@ class TestGetPut:
         )
 
         config = self.connection_config.copy()
-        config["policies"] = {"key": aerospike.POLICY_KEY_SEND}
+        config["policies"]["read"] = {"key": aerospike.POLICY_KEY_SEND}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -753,7 +753,7 @@ class TestGetPut:
             self.as_connection.put(key, rec, meta, policy)
         assert excinfo.value.code == 3
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
             assert "AEROSPIKE_ERR_RECORD_GENERATION" in excinfo.value.msg
 
         (key, meta, bins) = self.as_connection.get(key)

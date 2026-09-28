@@ -8,12 +8,12 @@ from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 from contextlib import nullcontext
 
-from .conftest import expect_server_version_earlier_than_8_1_3_to_fail, TEST_NS, TEST_SET, TestBaseClass
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail, TEST_NS, TEST_SET, TestBaseClass
 from .string_helpers import *
 KEY = (TEST_NS, TEST_SET, 1)
 
 
-@expect_server_version_earlier_than_8_1_3_to_fail
+@expect_server_version_earlier_than_8_2_0_to_fail
 class TestStringOperations:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection, expect_earlier_than_server_version_to_fail):
@@ -127,7 +127,12 @@ class TestStringOperations:
             op(bin_name=STR_BIN_NAME)
         ]
 
-        with pytest.raises(e.ServerError):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+            expected_exc = e.InvalidRequest
+        else:
+            expected_exc = e.OpNotApplicable
+
+        with pytest.raises(expected_exc):
             self.as_connection.operate(KEY, ops)
 
     def test_to_double(self):
@@ -301,6 +306,7 @@ class TestStringOperations:
             (str_ops.concat, {"value_list": [NEEDLE]}, EXAMPLE_STR + NEEDLE),
             (str_ops.concat, {"value_list": [NEEDLE, NEEDLE]}, EXAMPLE_STR + NEEDLE * 2),
             (str_ops.snip, {"start": START_IDX, "end": len(EXAMPLE_STR) - 1}, EXAMPLE_STR[:START_IDX] + EXAMPLE_STR[-1]),
+            (str_ops.snip, {"start": START_IDX, "end": None}, EXAMPLE_STR[:START_IDX]),
             (str_ops.replace, {"needle": NEEDLE, "replacement": SINGLE_CHAR}, EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR, 1)),
             (str_ops.replace_all, {"needle": NEEDLE, "replacement": SINGLE_CHAR}, EXAMPLE_STR.replace(NEEDLE, SINGLE_CHAR)),
             (str_ops.upper, {}, EXAMPLE_STR.upper()),
@@ -457,7 +463,7 @@ class TestStringOperations:
             str_ops.insert(bin_name=STR_BIN_NAME, index=0, value="a", policy=policy)
         ]
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
             expected_exc = e.InvalidRequest
         else:
             expected_exc = e.BinExistsError
@@ -471,7 +477,7 @@ class TestStringOperations:
             str_ops.insert(bin_name="aaaa", index=0, value="a", policy=policy)
         ]
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
             expected_context = pytest.raises(e.InvalidRequest)
         else:
             expected_context = nullcontext()
@@ -566,7 +572,6 @@ class TestStringOperations:
             (str_ops.contains, True)
         ]
     )
-    @pytest.mark.xfail(reason="This currently fails on server 8.1.3 RC3. This should pass on RC4, and we can tell if the result is XPASS")
     def test_read_across_normalization_forms(self, op, expected_result, bin_substr, str_param):
         BIN_NAME = "str"
         self.as_connection.put(KEY, bins={BIN_NAME: bin_substr})

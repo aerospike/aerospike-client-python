@@ -246,8 +246,8 @@ POLICY_WITH_FILTER_RETURNING_FALSE = {"expressions": exp.Eq(exp.IntBin(BIN_NAME)
 
 
 def skip_if_exp_trace_unsupported():
-    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 3):
-        pytest.skip("Expression tracing only supported in server 8.1.3 or higher")
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+        pytest.skip("Expression tracing only supported in server 8.2.0 or higher")
 
 
 def assert_batch_record_filtered_out_with_exp_trace(batch_records):
@@ -479,14 +479,8 @@ def test_query_invalid_expected_duration():
 # Some of these options may not be documented, but they are allowed in the code and customers may be using them
 def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
-    config["policies"]["total_timeout"] = 1
-    config["policies"]["max_retries"] = 1
-    config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
-    config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
-    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
     config["policies"]["max_threads"] = 16
     config["policies"]["thread_pool_size"] = 16
-    config["policies"]["socket_timeout"] = 0
     config["thread_pool_size"] = 16
     config["max_threads"] = 16
     config["max_conns_per_node"] = 16

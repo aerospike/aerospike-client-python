@@ -18,7 +18,7 @@ String expressions contain expressions for reading and modifying strings.
 
 These expressions mirror the operations from :mod:`String API <aerospike_helpers.operations.string_operations>`.
 
-Requires server version 8.1.3 or later.
+Requires server version 8.2.0 or later.
 
 Unlike operate-level string ops, these macros do not take a ``ctx`` parameter. To target
 a string nested inside a list or map, extract the leaf with
@@ -564,7 +564,7 @@ class Snip(_WriteOp):
 
             The string in the bin with the value snipped.
         """
-        if end:
+        if end is not None:
             self._op = aerospike._OP_STRING_SNIP
         else:
             self._op = aerospike._OP_STRING_SNIP_START
@@ -828,7 +828,7 @@ class RegexReplace(_WriteOp):
         self,
         policy: StringPolicy,
         pattern: str,
-        replacement: int,
+        replacement: str,
         regex_flags: RegexFlags,
         bin: "TypeBinName"
     ):
