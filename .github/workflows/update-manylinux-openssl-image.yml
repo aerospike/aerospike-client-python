@@ -39,7 +39,7 @@ jobs:
 
     - name: Setup JFrog CLI
       id: setup-jf
-      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      uses: step-security/setup-jfrog-cli@53aeacb709fce45d0baf69a13ec3342f7e2d71a9 # v5.1.0
       env:
         JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
       with:
@@ -69,7 +69,7 @@ jobs:
         password: ${{ steps.setup-jf.outputs.oidc-token }}
 
     - name: Build and push
-      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: ${{ github.workspace }}/aerospike-client-python/.github/workflows
