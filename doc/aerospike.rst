@@ -854,7 +854,13 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``0``
         * **max_conns_per_node** (:class:`int`)
-            Maximum number of pipeline connections allowed for each node
+            Maximum number of synchronous connections allowed per server node.  Synchronous commands
+            will go through retry logic and potentially fail with :py:exc:`~aerospike.exception.NoMoreConnectionsError`
+            if the maximum number of connections would be exceeded.
+
+            The number of connections used per node depends on how many concurrent threads issue
+            database commands plus sub-threads used for parallel multi-node commands (batch, scan,
+            and query). One connection will be used for each thread.
 
             Default: ``100``
         * **max_error_rate** (:class:`int`)
