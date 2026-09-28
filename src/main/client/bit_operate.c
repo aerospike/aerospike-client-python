@@ -63,8 +63,8 @@ extern const char *op_code_to_names[];
 // End forwards
 as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
-                         as_static_pool *static_pool, as_operations *ops,
-                         long operation_code, long *ret_type,
+                         as_operations *ops, long operation_code,
+                         long *ret_type, as_dynamic_pool *dynamic_pool,
                          int serializer_type)
 
 {
@@ -326,7 +326,7 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_B64_ENCODE: {
         bool ctx_in_use = false;
         as_cdt_ctx ctx;
-        if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+        if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                         serializer_type) != AEROSPIKE_OK) {
             goto exit;
         }

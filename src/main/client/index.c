@@ -65,6 +65,9 @@ static PyObject *convert_python_args_to_c_and_create_index(
     as_policy_info *info_policy_p = NULL;
     as_index_task task;
 
+    as_dynamic_pool dynamic_pool;
+    as_dynamic_pool_init(&dynamic_pool);
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -152,11 +155,8 @@ static PyObject *convert_python_args_to_c_and_create_index(
             goto CLEANUP2;
         }
 
-        as_static_pool static_pool;
-        memset(&static_pool, 0, sizeof(static_pool));
-
         if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+                        &dynamic_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             goto CLEANUP2;
         }
     }
@@ -164,8 +164,8 @@ static PyObject *convert_python_args_to_c_and_create_index(
     as_cdt_ctx *ctx_ref = ctx_in_use ? &ctx : NULL;
 
     as_exp *expr = NULL;
-    if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err,
-                                            false) != AEROSPIKE_OK) {
+    if (py_expr && as_exp_new_from_pyobject(self, py_expr, &expr, &err, false,
+                                            &dynamic_pool) != AEROSPIKE_OK) {
         goto CLEANUP3;
     }
 
@@ -201,6 +201,8 @@ CLEANUP2:
     Py_XDECREF(py_ctx_dict);
 
 CLEANUP:
+    as_dynamic_pool_destroy(&dynamic_pool);
+
     Py_XDECREF(py_ustr_set);
     Py_XDECREF(py_ustr_bin);
     Py_XDECREF(py_ustr_name);
