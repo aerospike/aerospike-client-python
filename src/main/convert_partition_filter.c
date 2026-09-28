@@ -180,7 +180,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         parts_setup(filter->begin, filter->count, //cluster->n_partitions,
                     &filter->digest);
 
-    if (parts_stat && PyDict_Check(parts_stat)) {
+    if (parts_stat && PyDict_Check(parts_stat) && PyDict_Size(parts_stat) > 0) {
 
         PyObject *py_done =
             PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_DONE);

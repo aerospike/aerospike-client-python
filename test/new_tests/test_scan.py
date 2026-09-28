@@ -38,6 +38,11 @@ def setup(request, as_connection):
 
 
 class TestScan(TestBaseClass):
+    def test_scan_with_missing_required_args(self):
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        with pytest.raises(TypeError):
+            scan_obj.foreach()
+
     def test_scan_with_existent_ns_and_set(self):
 
         records = []
@@ -484,3 +489,17 @@ class TestScan(TestBaseClass):
     def test_creating_scan_with_class_constructor_fails(self):
         with pytest.raises(TypeError):
             aerospike.Scan("test", "demo")
+
+    def test_scan_invalid_options(self):
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        def callback(input_tuple):
+            pass
+
+        with pytest.raises(e.ParamError):
+            scan_obj.foreach(callback, options={1: False})
+
+    def test_invalid_nodename(self):
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        with pytest.raises(e.ParamError):
+            scan_obj.results(nodename=2)
