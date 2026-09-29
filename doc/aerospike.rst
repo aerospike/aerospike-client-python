@@ -2020,6 +2020,14 @@ Path Expression Select Flags
 Path Expression Modify Flags
 ----------------------------
 
+These flags are the ``flags`` argument of
+:func:`aerospike_helpers.operations.operations.modify_by_path` and
+:class:`aerospike_helpers.expressions.base.ModifyByPath`.
+
+To remove the elements selected by the path, pass
+:class:`aerospike_helpers.expressions.base.RemoveResult` ``.compile()`` as the
+modifying expression. Removal is not a flag in this list.
+
 .. data:: EXP_PATH_MODIFY_DEFAULT
 
     If the expression in the context hits an invalid type, the operation
