@@ -39,7 +39,8 @@ env:
   # pull_request event doesn't support inputs
   # Our JFrog docker repo doesn't automatically update the latest tag, so we can't use it (it currently points to an old nightly build)
   # 8.1 tag is also currently pointing to a dev 8.0 server build as of this writing...
-  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.1' }}
+  # CLIENT-5138: this branch runs dynamic validation against Server 8.2
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.2.0.0-20260908214755' }}
   PLATFORM_TAG: linux_x86_64
   COVERAGE_REPORT_ARTIFACT_NAME: coverage-report
 
@@ -354,6 +355,32 @@ jobs:
       python-version: ${{ matrix.py-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       test-ce: true
+    secrets: inherit
+
+  # Suite run whose deprecated_requests delta must stay 0.
+  # Tests that intentionally call a removed API are excluded here.
+  deprecated-requests:
+    needs: [
+      build,
+      get-env-vars
+    ]
+    uses: ./.github/workflows/test-artifact.yml
+    with:
+      runner-os-json-string: '"${{ needs.build.outputs.runner-os-used-for-build }}"'
+      python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
+      server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
+      assert-deprecated-requests-unchanged: true
+      pytest-extra-args: >-
+        --ignore=new_tests/test_operate.py
+        --ignore=new_tests/test_operate_ordered.py
+        --ignore=new_tests/test_operate_helpers.py
+        --ignore=new_tests/test_expressions_base.py
+        --ignore=new_tests/test_query_expressions.py
+        --ignore=new_tests/test_cdt_index.py
+        --ignore=new_tests/test_index_deprecated.py
+        --ignore=new_tests/test_scan_execute_background.py
+        --ignore=new_tests/test_query_execute_background.py
+        --ignore=new_tests/test_client_config_level_options.py
     secrets: inherit
 
   test-ee:
