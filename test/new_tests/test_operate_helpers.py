@@ -149,51 +149,59 @@ class TestOperate(object):
                 {"asd[;asjk": "ram"},
                 marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
                 [operations.append("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
                 {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operator append_val bytearray_newrecord
                 [
                     operations.append("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_key"),  # with_operator append_val bytes
                 [operations.append("bytes_bin", b"abc"), operations.read("bytes_bin")],
                 {"bytes_bin": b"abc"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_new"),  # with_operator append_val bytes_newrecord
                 [operations.append("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
                 {"bytes_bin": b"asd;as[d'as;d"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operatorprepend_valbytearray
                 [operations.prepend("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
                 {"bytearray_bin": bytearray("abcasd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operatorprepend_valbytearray_newrecord
                 [
                     operations.prepend("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_key"),  # with_operator prepend_val bytes
                 [operations.prepend("bytes_bin", b"abc"), operations.read("bytes_bin")],
                 {"bytes_bin": b"abc"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytes_new"),  # with_operator prepend_val bytes_newrecord
                 [operations.prepend("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
                 {"bytes_bin": b"asd;as[d'as;d"},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # write_bool_positive

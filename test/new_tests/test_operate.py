@@ -155,15 +155,16 @@ class TestOperate(object):
                 {"asd[;asjk": "ram"},
                 marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "bytearray_bin", "val": bytearray("abc", "utf-8")},
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operator append_val bytearray_newrecord
                 [
                     {
@@ -174,16 +175,18 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operatorprepend_valbytearray
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": "bytearray_bin", "val": bytearray("abc", "utf-8")},
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("abcasd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operatorprepend_valbytearray_newrecord
                 [
                     {
@@ -194,6 +197,7 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
         ],
     )
