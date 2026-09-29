@@ -333,7 +333,7 @@ Record Commands
         Lookup a record by key, then perform specified operations.
 
         List, map, bit, HLL, string, and expression operations are functions in
-        :mod:`aerospike_helpers.operations`, not methods on :class:`Client`.
+        :ref:`aerospike_operation_helpers.operations`, not methods on :class:`Client`.
         Each function returns a dictionary. Collect those dictionaries into
         ``list`` and pass it here. There is no ``client.list_append(...)``.
 
@@ -714,7 +714,7 @@ Batched Commands
         Perform the same read/write operations on multiple keys.
 
         This is the batch counterpart of :meth:`~aerospike.Client.operate`.
-        Build ``ops`` with :mod:`aerospike_helpers.operations`.
+        Build ``ops`` with :ref:`aerospike_operation_helpers.operations`.
 
         .. include:: ./batch_node_subbatch.rst
 
