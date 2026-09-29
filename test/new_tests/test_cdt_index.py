@@ -114,6 +114,7 @@ class TestCDTIndex(object):
 
         assert retobj == 0
 
+    @pytest.mark.removed_in_server_9
     def test_pos_cdtindex_with_info_command(self):
         """
         Invoke index_cdt_create() with info command

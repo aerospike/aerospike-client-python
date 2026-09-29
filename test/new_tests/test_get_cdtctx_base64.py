@@ -93,6 +93,7 @@ class TestCDTIndexB64(object):
 
         request.addfinalizer(teardown)
 
+    @pytest.mark.removed_in_server_9
     def test_get_cdtctxb64_with_correct_parameters(self):
         """
         Invoke get_cdtctx_base64() with correct arguments

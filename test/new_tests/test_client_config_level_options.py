@@ -602,15 +602,17 @@ class TestConfigTTL:
             {"key": KEY, "bin": "c", "offset": 1},
             "operate"
         ),
-        (
+        pytest.param(
             aerospike.Client.prepend,
             {"key": KEY, "bin": "a", "val": "a"},
-            "operate"
+            "operate",
+            marks=pytest.mark.removed_in_server_9,
         ),
-        (
+        pytest.param(
             aerospike.Client.append,
             {"key": KEY, "bin": "a", "val": "a"},
-            "operate"
+            "operate",
+            marks=pytest.mark.removed_in_server_9,
         ),
     ])
     def test_apis_with_meta_parameter(self, config_ttl_setup, api_method, kwargs: dict, kwargs_with_ttl: dict):
@@ -683,6 +685,7 @@ class TestConfigTTL:
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["scan"])
+    @pytest.mark.removed_in_server_9
     def test_setting_scan_ttl(self, config_ttl_setup):
         # Tell scan to use client config's scan policy ttl
         scan = self.client.scan("test", "demo")
@@ -698,6 +701,7 @@ class TestConfigTTL:
         verify_record_ttl(self.client, KEY, expected_ttl=self.NEW_TTL)
 
     @pytest.mark.parametrize("policy_name", ["write"])
+    @pytest.mark.removed_in_server_9
     def test_query_client_default_ttl(self, config_ttl_setup):
         # Tell scan to use client config's write policy ttl
         query = self.client.query("test", "demo")

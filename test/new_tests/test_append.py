@@ -8,6 +8,8 @@ import aerospike
 # @pytest.mark.usefixtures("as_connection")
 
 
+# client.append() sends the append operation Server 9.0 removes, for strings and blobs.
+@pytest.mark.removed_in_server_9
 class TestAppend(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
