@@ -1225,7 +1225,13 @@ class LoopVarHLL(LoopVar):
 
 class RemoveResult(_BaseExpr):
     """
-    Indicates entry deletion for :py:class:`ModifyByPath`.
+    Indicates entry deletion for :class:`ModifyByPath` and
+    :func:`aerospike_helpers.operations.operations.modify_by_path`.
+
+    Pass ``RemoveResult().compile()`` as the modifying expression to delete
+    the elements selected by the path. This is how nested list and map entries
+    are removed. It is not a separate client method, and it is not one of the
+    :ref:`exp_path_modify_flags`.
     """
     _op = aerospike._AS_EXP_CODE_REMOVE_RESULT
 
@@ -1268,6 +1274,10 @@ class ModifyByPath(_BaseExpr):
 
     The results of the evaluation of the modifying expression will replace the
     selected element, and the changes are written back to storage.
+
+    To remove the selected elements, pass :class:`RemoveResult` ``.compile()``
+    as ``mod_exp``. The operation form of this expression is
+    :func:`aerospike_helpers.operations.operations.modify_by_path`.
     """
     _op = aerospike._AS_EXP_CODE_CALL_APPLY
 

@@ -42,9 +42,9 @@ Precedence when sources disagree: ``doc/for-ai-agents.rst``.
 Known traps:
 * Ops are helpers in ``aerospike_helpers.operations``, passed to ``client.operate()`` — no ``client.list_append()``.
 * Set ``{"key": aerospike.POLICY_KEY_SEND}`` when the user key matters (default is digest-only).
-* Do not loop ``get``/``exists``/``operate``/``remove``; use ``batch_read``/``batch_operate``/``batch_write``/``batch_remove``.
-* Do not hand-roll batch fan-out; a node sub-batch of size 1 already degrades to the single-record path.
-* Nested CDT removal is ``modify_by_path`` with ``RemoveResult().compile()``, not a separate method.
+* Do not loop single-record calls. Pairs: ``put``/``batch_write``, ``get``/``batch_read``, ``select``/``batch_read`` (``bins``), ``exists``/``batch_read`` with an empty bin list, ``operate``/``batch_operate``, ``remove``/``batch_remove``, ``apply``/``batch_apply``.
+* Do not special-case a one-key batch. A node sub-batch of size 1 already uses the single-record command for ``batch_read``, ``batch_operate``, ``batch_write``, ``batch_remove``, and ``batch_apply``.
+* Nested CDT removal is ``modify_by_path`` with ``RemoveResult().compile()``. The path-modify flags do not delete.
 
 Verifying generated code: ``doc/for-ai-agents.rst``.
 Aerospike agent skills: https://github.com/aerospike/agent-skills (data modeling; this repo is the Python API).

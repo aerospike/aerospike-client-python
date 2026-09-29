@@ -152,6 +152,11 @@ Record Commands
 
         Create a new record, or remove / add bins to a record.
 
+        To write many records in one call, use :meth:`~aerospike.Client.batch_write`
+        instead of calling ``put`` in a loop.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_write`
+
         .. include:: ./deprecate_meta_ttl.rst
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
@@ -187,6 +192,11 @@ Record Commands
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
         Check if a record with a given key exists in the cluster.
+
+        To check many keys, use :meth:`~aerospike.Client.batch_read` with an empty
+        bin list, which returns metadata only. Do not call ``exists`` in a loop.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_read`
 
         Returns the record's key and metadata in a tuple.
 
@@ -229,6 +239,11 @@ Record Commands
 
         Returns a record with a given key.
 
+        To read many records, use :meth:`~aerospike.Client.batch_read`.
+        Do not call ``get`` in a loop.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_read`
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: see :ref:`aerospike_read_policies`.
 
@@ -265,6 +280,11 @@ Record Commands
     .. method:: select(key, bins: list[, policy: dict]) -> (key, meta, bins)
 
         Returns specific bins of a record.
+
+        To project the same bins from many records, pass ``bins`` to
+        :meth:`~aerospike.Client.batch_read`.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_read`
 
         If a bin does not exist, it will not show up in the returned :ref:`aerospike_record_tuple`.
 
@@ -311,6 +331,19 @@ Record Commands
     .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
         Lookup a record by key, then perform specified operations.
+
+        List, map, bit, HLL, string, and expression operations are functions in
+        :mod:`aerospike_helpers.operations`, not methods on :class:`Client`.
+        Each function returns a dictionary. Collect those dictionaries into
+        ``list`` and pass it here. There is no ``client.list_append(...)``.
+
+        To run the same operations on many keys, use
+        :meth:`~aerospike.Client.batch_operate` instead of calling ``operate``
+        in a loop.
+
+        .. seealso::
+            :meth:`~aerospike.Client.batch_operate`
+            :ref:`aerospike_operation_helpers.operations`
 
         Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
         The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
@@ -450,6 +483,11 @@ Record Commands
 
         Remove a record matching the *key* from the cluster.
 
+        To remove many records, use :meth:`~aerospike.Client.batch_remove`
+        instead of calling ``remove`` in a loop.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_remove`
+
         .. versionchanged:: 19.1.0
 
             Deprecated the ``meta`` parameter. Use the policy parameter to set ``gen`` instead.
@@ -556,6 +594,13 @@ Batched Commands
         This method allows different sub-commands for each key in the batch.
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
+        This is the batch counterpart of :meth:`~aerospike.Client.put`.
+        The same call can also carry per-key reads and removes.
+
+        .. include:: ./batch_node_subbatch.rst
+
+        .. seealso:: :meth:`~aerospike.Client.put`
+
         :param BatchRecords batch_records: A :class:`~aerospike_helpers.batch.records.BatchRecords` object used to specify the operations to carry out.
         :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
@@ -634,6 +679,18 @@ Batched Commands
 
         Read multiple records.
 
+        This is the batch counterpart of :meth:`~aerospike.Client.get` and
+        :meth:`~aerospike.Client.select`. With an empty bin list it returns
+        metadata only, which is the batch counterpart of
+        :meth:`~aerospike.Client.exists`.
+
+        .. include:: ./batch_node_subbatch.rst
+
+        .. seealso::
+            :meth:`~aerospike.Client.get`
+            :meth:`~aerospike.Client.exists`
+            :meth:`~aerospike.Client.select`
+
         If a list of bin names is not provided, return all the bins for each record.
 
         If a list of bin names is provided, return only these bins for the given list of records.
@@ -655,6 +712,15 @@ Batched Commands
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write operations on multiple keys.
+
+        This is the batch counterpart of :meth:`~aerospike.Client.operate`.
+        Build ``ops`` with :mod:`aerospike_helpers.operations`.
+
+        .. include:: ./batch_node_subbatch.rst
+
+        .. seealso::
+            :meth:`~aerospike.Client.operate`
+            :ref:`aerospike_operation_helpers.operations`
 
         .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
             This bug was fixed in version 14.0.0.
@@ -711,6 +777,12 @@ Batched Commands
 
         Apply UDF (user defined function) on multiple keys.
 
+        This is the batch counterpart of :meth:`~aerospike.Client.apply`.
+
+        .. include:: ./batch_node_subbatch.rst
+
+        .. seealso:: :meth:`~aerospike.Client.apply`
+
         :param list keys: The keys to operate on.
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the record identified by *key*.
@@ -765,6 +837,12 @@ Batched Commands
         .. note:: Requires server version >= 6.0.0.
 
         Remove multiple records by key.
+
+        This is the batch counterpart of :meth:`~aerospike.Client.remove`.
+
+        .. include:: ./batch_node_subbatch.rst
+
+        .. seealso:: :meth:`~aerospike.Client.remove`
 
         :param list keys: The keys to remove.
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
@@ -1041,6 +1119,12 @@ User Defined Functions
     .. method:: apply(key, module, function, args[, policy: dict])
 
         Apply a registered (see :meth:`udf_put`) record UDF to a particular record.
+
+        To apply the same record UDF to many keys, use
+        :meth:`~aerospike.Client.batch_apply` instead of calling ``apply``
+        in a loop.
+
+        .. seealso:: :meth:`~aerospike.Client.batch_apply`
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param str module: the name of the UDF module.

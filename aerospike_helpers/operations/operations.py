@@ -167,15 +167,66 @@ def modify_by_path(bin_name: str, ctx: list[_cdt_ctx], expr, flags: int):
     The results of the evaluation of the modifying expression will replace the
     selected element, and the changes are written back to storage.
 
+    To remove the selected elements, pass
+    :class:`~aerospike_helpers.expressions.base.RemoveResult` ``.compile()``
+    as ``expr``. There is no separate remove-by-path operation. The ``flags``
+    argument does not select deletion. It only controls type-mismatch behavior.
+    See :ref:`exp_path_modify_flags`.
+
     Args:
         bin_name: Name of bin that this modify operation is performed against
         ctx: List of contexts to select nodes. It is an error for ctx to be :py:obj:`None` or an empty list.
             See :ref:`path_expressions_contexts` for possible contexts.
-        expr: compiled modifying expression.
+        expr: compiled modifying expression. Use
+            :class:`~aerospike_helpers.expressions.base.RemoveResult` to delete
+            the selected elements.
         flags: See :ref:`exp_path_modify_flags` for the set of valid flags for this function.
 
     Returns:
         A dictionary to be passed to operate or operate_ordered.
+
+    Example:
+
+        .. testcode::
+
+            import aerospike
+            from aerospike_helpers import cdt_ctx
+            from aerospike_helpers.expressions.base import RemoveResult
+            from aerospike_helpers.operations import operations
+
+            config = {"hosts": [("127.0.0.1", 3000)]}
+            client = aerospike.client(config)
+
+            key = ("test", "demo", "modify-by-path")
+            client.put(key, {
+                "items": {
+                    "a": {"x": 1, "y": 2},
+                    "b": {"z": 3},
+                }
+            })
+
+            # Delete every second-level map entry under bin "items".
+            ops = [
+                operations.modify_by_path(
+                    "items",
+                    [
+                        cdt_ctx.cdt_ctx_all_children(),
+                        cdt_ctx.cdt_ctx_all_children(),
+                    ],
+                    RemoveResult().compile(),
+                    aerospike.EXP_PATH_MODIFY_DEFAULT,
+                )
+            ]
+            client.operate(key, ops)
+            _, _, bins = client.get(key)
+            print(bins["items"])
+
+            client.remove(key)
+            client.close()
+
+        .. testoutput::
+
+            {'a': {}, 'b': {}}
     """
     op_dict = {
         "op": aerospike._AS_OPERATOR_CDT_MODIFY,
