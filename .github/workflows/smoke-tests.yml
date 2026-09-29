@@ -358,7 +358,7 @@ jobs:
     secrets: inherit
 
   # Suite run whose deprecated_requests delta must stay 0.
-  # Tests that intentionally call a removed API are excluded here.
+  # Cases marked removed_in_server_9 are excluded by test-artifact.yml.
   deprecated-requests:
     needs: [
       build,
@@ -370,17 +370,6 @@ jobs:
       python-version: ${{ needs.get-env-vars.outputs.lowest-supported-python-version }}
       server-tag: ${{ needs.get-env-vars.outputs.server-tag }}
       assert-deprecated-requests-unchanged: true
-      pytest-extra-args: >-
-        --ignore=new_tests/test_operate.py
-        --ignore=new_tests/test_operate_ordered.py
-        --ignore=new_tests/test_operate_helpers.py
-        --ignore=new_tests/test_expressions_base.py
-        --ignore=new_tests/test_query_expressions.py
-        --ignore=new_tests/test_cdt_index.py
-        --ignore=new_tests/test_index_deprecated.py
-        --ignore=new_tests/test_scan_execute_background.py
-        --ignore=new_tests/test_query_execute_background.py
-        --ignore=new_tests/test_client_config_level_options.py
     secrets: inherit
 
   test-ee:

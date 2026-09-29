@@ -59,6 +59,9 @@ distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 # Example formatted version: 1.2.3+42.ge174a1f.dirty
 
 [tool.pytest.ini_options]
+markers = [
+    "removed_in_server_9: calls an API that Aerospike Server 9.0 removes",
+]
 filterwarnings = [
     # These operations are still supported in server < 8.2.0,
     # and these operations are used in many places throughout the test suite.

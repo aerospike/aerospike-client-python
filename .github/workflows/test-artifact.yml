@@ -279,6 +279,11 @@ jobs:
           # shellcheck disable=SC2206
           extra_pytest_args=($PYTEST_EXTRA_ARGS)
         fi
+        if [[ "$ASSERT_DEPRECATED_REQUESTS" == "true" ]]; then
+          # Skip cases marked removed_in_server_9. The marker expression is one
+          # argument, so it is not passed through PYTEST_EXTRA_ARGS word-splitting.
+          extra_pytest_args+=("-m" "not removed_in_server_9")
+        fi
 
         if [[ "$ASSERT_DEPRECATED_REQUESTS" == "true" ]]; then
           deprecated_requests_before=$(python3 deprecated_requests_stat.py)
