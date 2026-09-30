@@ -68,7 +68,7 @@ GeoJSON Predicates
 
     Predicate for finding any point in bin which is within the given shape.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_single_value_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -87,7 +87,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'pads1', 'loc', 'pads_loc_geo1')
+        client.index_single_value_create('test', 'pads1', 'loc', aerospike.INDEX_GEO2DSPHERE, 'pads_loc_geo1')
         bins = {'pad_id': 1,
                 'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
         client.put(('test', 'pads1', 'launchpad1'), bins)
@@ -121,7 +121,7 @@ GeoJSON Predicates
     Predicate helper builds an AeroCircle GeoJSON shape, and returns a
     'within GeoJSON region' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_single_value_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -142,7 +142,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'pads2', 'loc', 'pads_loc_geo2')
+        client.index_single_value_create('test', 'pads2', 'loc', aerospike.INDEX_GEO2DSPHERE, 'pads_loc_geo2')
         bins = {'pad_id': 1,
                 'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
         client.put(('test', 'pads2', 'launchpad1'), bins)
@@ -166,7 +166,7 @@ GeoJSON Predicates
 
     Predicate for finding any regions in the bin which contain the given point.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_single_value_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -185,7 +185,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'launch_centers1', 'area', 'launch_area_geo')
+        client.index_single_value_create('test', 'launch_centers1', 'area', aerospike.INDEX_GEO2DSPHERE, 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
                          'coordinates': [
                           [[-80.590000, 28.60000],
@@ -216,7 +216,7 @@ GeoJSON Predicates
     Predicate helper builds a GeoJSON point, and returns a
     'contains GeoJSON point' predicate.
     Requires a geo2dsphere index
-    (:meth:`~aerospike.Client.index_geo2dsphere_create`) over a *bin*
+    (:meth:`~aerospike.Client.index_single_value_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
     :param Optional[str] bin: the bin name.
@@ -236,7 +236,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'launch_centers2', 'area', 'launch_area_geo2')
+        client.index_single_value_create('test', 'launch_centers2', 'area', aerospike.INDEX_GEO2DSPHERE, 'launch_area_geo2')
         rect = GeoJSON({ 'type': "Polygon",
                          'coordinates': [
                           [[-80.590000, 28.60000],

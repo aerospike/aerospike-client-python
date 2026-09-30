@@ -63,9 +63,5 @@ class TestInvalidOptions:
     )
     def test_invalid_enum_values_emits_warning(self, op):
         ops = [op]
-        try:
-            with pytest.warns(DeprecationWarning):
-                self.as_connection.operate(KEY, ops)
-        # We only care about the client printing the DeprecationWarning; this is not an end to end test
-        except e.ServerError:
-            pass
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(KEY, ops)

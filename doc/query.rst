@@ -149,8 +149,8 @@ Assume this boilerplate code is run before all examples below:
     query = client.query('test', 'demo')
 
     # Queries require a secondary index for each bin name
-    client.index_integer_create("test", "demo", "score", "scoreIndex")
-    client.index_integer_create("test", "demo", "elo", "eloIndex")
+    client.index_single_value_create("test", "demo", "score", aerospike.INDEX_INTEGER, "scoreIndex")
+    client.index_single_value_create("test", "demo", "elo", aerospike.INDEX_INTEGER, "eloIndex")
 
 .. code-block:: Python
 
@@ -190,8 +190,8 @@ Assume this boilerplate code is run before all examples below:
     query = client.query('test', 'demo')
 
     # Queries require a secondary index for each bin name
-    client.index_integer_create("test", "demo", "score", "scoreIndex")
-    client.index_integer_create("test", "demo", "elo", "eloIndex")
+    client.index_single_value_create("test", "demo", "score", aerospike.INDEX_INTEGER, "scoreIndex")
+    client.index_single_value_create("test", "demo", "elo", aerospike.INDEX_INTEGER, "eloIndex")
 
 .. class:: Query
     :noindex:
@@ -455,7 +455,7 @@ Assume this boilerplate code is run before all examples below:
             for key, recordBins in zip(keys, bins):
                 client.put(key, recordBins)
 
-            client.index_integer_create("test", "users", "age", "ageIndex")
+            client.index_single_value_create("test", "users", "age", aerospike.INDEX_INTEGER, "ageIndex")
 
             query = client.query('test', 'users')
             query.apply('example', 'group_count', ['name', 'age', 21])

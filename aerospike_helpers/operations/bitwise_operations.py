@@ -120,7 +120,7 @@ Example:
     # value to OR: 0xff
     # value size is 1 byte
     ops = [
-        bitwise_operations.bit_or(five_one_bin, 0, 8, 1, bytearray([255]), bit_policy),
+        bitwise_operations.bit_or(five_one_bin, 0, 8, bytearray([255]), bit_policy),
         bitwise_operations.bit_get(five_one_bin, 0, 40)
     ]
     _, _, results = client.operate(key, ops)
@@ -148,7 +148,6 @@ Example:
 .. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
-import warnings
 
 
 BIN_KEY = "bin"
@@ -156,7 +155,6 @@ BYTE_SIZE_KEY = "byte_size"
 BYTE_OFFSET_KEY = "byte_offset"
 BIT_OFFSET_KEY = "bit_offset"
 BIT_SIZE_KEY = "bit_size"
-VALUE_BYTE_SIZE_KEY = "value_byte_size"
 VALUE_KEY = "value"
 COUNT_KEY = "count"
 INDEX_KEY = "index"
@@ -221,7 +219,7 @@ def bit_remove(bin_name: str, byte_offset, byte_size, policy=None):
     }
 
 
-def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+def bit_set(bin_name: str, bit_offset, bit_size, value, policy=None):
     """Creates a bit_set_operation to be used with :meth:`aerospike.Client.operate` or
         :meth:`aerospike.Client.operate_ordered`.
 
@@ -231,8 +229,6 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be set.
         bit_size (int): How many bits of value to write.
-        value_byte_size (int): Deprecated. Size of value in bytes.
-            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): The value to be set.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -240,19 +236,12 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
-    warnings.warn(
-        "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
     return {
         OP_KEY: aerospike.OP_BIT_SET,
         BIN_KEY: bin_name,
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
-        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 
@@ -335,7 +324,7 @@ def bit_add(bin_name: str, bit_offset, bit_size, value, sign, action, policy=Non
     }
 
 
-def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+def bit_and(bin_name: str, bit_offset, bit_size, value, policy=None):
     """Creates a bit_and_operation.
 
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
@@ -345,8 +334,6 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
-        value_byte_size (int): Deprecated. Length of value in bytes.
-            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): Bytes to be used in and operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -354,19 +341,12 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    warnings.warn(
-        "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
     return {
         OP_KEY: aerospike.OP_BIT_AND,
         BIN_KEY: bin_name,
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
-        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 
@@ -413,7 +393,7 @@ def bit_get_int(bin_name: str, bit_offset, bit_size, sign):
     }
 
 
-def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
+def bit_insert(bin_name: str, byte_offset, value, policy=None):
     """Creates a bit_insert_operation.
 
     Server inserts the bytes from value into the bitmap at byte_offset.
@@ -422,8 +402,6 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
     Args:
         bin_name (str): The name of the bin containing the map.
         byte_offset (int): The offset where the bytes will be inserted.
-        value_byte_size (int): Deprecated. Size of value in bytes.
-            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes, bytearray): The value to be inserted.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -432,17 +410,10 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    warnings.warn(
-        "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
     return {
         OP_KEY: aerospike.OP_BIT_INSERT,
         BIN_KEY: bin_name,
         BYTE_OFFSET_KEY: byte_offset,
-        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
         POLICY_KEY: policy,
     }
@@ -526,7 +497,7 @@ def bit_not(bin_name: str, bit_offset, bit_size, policy=None):
     }
 
 
-def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+def bit_or(bin_name: str, bit_offset, bit_size, value, policy=None):
     """Creates a bit_or_operation.
 
     Creates a bit or operation. Server performs bitwise or with value and bitmap in bin
@@ -538,8 +509,6 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to or.
-        value_byte_size (int): Deprecated. Length of value in bytes.
-            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes | bytearray): Value to be used in or operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -547,19 +516,12 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    warnings.warn(
-        "value_byte_size is deprecated and will be removed in the next major client release",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
     return {
         OP_KEY: aerospike.OP_BIT_OR,
         BIN_KEY: bin_name,
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
-        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 
@@ -652,7 +614,7 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
     }
 
 
-def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+def bit_xor(bin_name: str, bit_offset, bit_size, value, policy=None):
     """Creates a bit_xor_operation.
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin
@@ -662,8 +624,6 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will start being compared.
         bit_size (int): How many bits of value to xor.
-        value_byte_size (int): Deprecated. Length of value in bytes.
-            This is ignored and ``value``'s size is calculated automatically now.
         value (bytes | bytearray): Value to be used in xor operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
@@ -671,19 +631,12 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         A dictionary usable in :meth:`~aerospike.Client.operate` or :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    warnings.warn(
-        "value_byte_size is deprecated and will be removed in the next major client release.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-
     return {
         OP_KEY: aerospike.OP_BIT_XOR,
         BIN_KEY: bin_name,
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
-        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 

@@ -65,8 +65,6 @@ class BatchRecord:
 class Write(BatchRecord):
     """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
-        .. include:: ./deprecate_meta_ttl.rst
-
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -76,7 +74,7 @@ class Write(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
-            meta (dict): the metadata to set for this command
+            meta (dict): the expected generation for this record
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
@@ -120,9 +118,6 @@ class Write(BatchRecord):
 class Read(BatchRecord):
     """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
-        .. deprecated:: 19.1.0 Deprecated the ``"ttl"`` option in the ``meta`` parameter. Use the policy parameter in a
-            :py:obj:`~aerospike_helpers.batch.records.Write` BatchRecord to set the ``"ttl"`` instead.
-
         Attributes:
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
@@ -132,7 +127,7 @@ class Read(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
-            meta (dict): the metadata to set for this command
+            meta (dict): the expected generation for this record
             read_all_bins (:obj:`bool`, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
