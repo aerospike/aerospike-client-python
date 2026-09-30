@@ -33,16 +33,6 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 {
     TRACE();
 
-    // If add_ops() was called on this Query object before.
-    if (as_operations_defined(self->query.ops)) {
-        int retval = PyErr_WarnFormat(
-            PyExc_DeprecationWarning, STACK_LEVEL,
-            SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE, "Query");
-        if (retval == -1) {
-            return NULL;
-        }
-    }
-
     int nbins = (int)PyTuple_Size(args);
     char *bin = NULL;
     PyObject *py_ubin = NULL;
@@ -58,6 +48,14 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
                         "This query object was created with aerospike.Query() "
                         "and is invalid. Use aerospike.Client.query() instead "
                         "to create the query object.");
+        goto CLEANUP;
+    }
+
+    // If add_ops() was called on this Query object before.
+    if (as_operations_defined(self->query.ops)) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        SELECT_AND_ADD_OPS_ARE_MUTUALLY_EXCLUSIVE_MESSAGE,
+                        "Query");
         goto CLEANUP;
     }
 
