@@ -128,6 +128,7 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "name"},
                 ],
                 {"name": "ramname1"},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
@@ -145,23 +146,25 @@ class TestOperate(object):
                 ],
                 {"write_bin": {"no": 89}},
             ),
-            (
+            pytest.param(
                 ("test", "demo", 1),  # with_bin_bytearray
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": bytearray("asd[;asjk", "utf-8"), "val": "ram"},
                     {"op": aerospike.OPERATOR_READ, "bin": bytearray("asd[;asjk", "utf-8")},
                 ],
                 {"asd[;asjk": "ram"},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "bytearray_bin", "val": bytearray("abc", "utf-8")},
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operator append_val bytearray_newrecord
                 [
                     {
@@ -172,16 +175,18 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_key"),  # with_operatorprepend_valbytearray
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": "bytearray_bin", "val": bytearray("abc", "utf-8")},
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("abcasd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "bytearray_new"),  # with_operatorprepend_valbytearray_newrecord
                 [
                     {
@@ -192,6 +197,7 @@ class TestOperate(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
+                marks=pytest.mark.removed_in_server_9,
             ),
         ],
     )
@@ -221,6 +227,7 @@ class TestOperate(object):
 
         assert bins == {"age": 9.8}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_correct_policy(self):
         """
         Invoke operate() with correct policy
@@ -250,6 +257,7 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_key_digest(self):
         """
         Invoke operate() with correct policy
@@ -294,6 +302,7 @@ class TestOperate(object):
             ),
         ],
     )
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_ignore(self, key, policy, meta, llist):
         """
         Invoke operate() with gen ignore.
@@ -309,6 +318,7 @@ class TestOperate(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_EQ(self):
         """
         Invoke operate() with gen EQ positive.
@@ -355,6 +365,7 @@ class TestOperate(object):
 
         assert meta["ttl"] is not None
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_EQ_not_equal(self):
         """
         Invoke operate() with gen not equal.
@@ -383,6 +394,7 @@ class TestOperate(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_GT_lesser(self):
         """
         Invoke operate() with gen GT lesser.
@@ -433,6 +445,7 @@ class TestOperate(object):
         assert meta["ttl"] <= 1300
         assert meta["ttl"] > 800
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_policy_gen_GT(self):
         """
         Invoke operate() with gen GT positive.
@@ -459,6 +472,7 @@ class TestOperate(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_nonexistent_key(self):
         """
         Invoke operate() with non-existent key
@@ -473,6 +487,7 @@ class TestOperate(object):
         assert bins == {"loc": "mumbai"}
         self.as_connection.remove(key1)
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_nonexistent_bin(self):
         """
         Invoke operate() with non-existent bin
@@ -559,21 +574,23 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", "prepend_int"),  # prepend_with_int
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": "age", "val": 4},
                     {"op": aerospike.OPERATOR_READ, "bin": "age"},
                 ],
                 {"age": 4},
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "append_dict"),  # append_with_dict
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "dict", "val": {"a": 1, "b": 2}},
                     {"op": aerospike.OPERATOR_READ, "bin": "dict"},
                 ],
                 {"dict": {"a": 1, "b": 2}},
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", "incr_string"),  # incr_with_string
@@ -596,33 +613,37 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": "age", "val": 4},  # int
                     {"op": aerospike.OPERATOR_READ, "bin": "age"},
                 ],
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Existing list
                 [
                     {"op": aerospike.OPERATOR_PREPEND, "bin": "list", "val": ["c"]},
                     {"op": aerospike.OPERATOR_READ, "bin": "list"},
                 ],
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Existing dict
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "dict", "val": {"c": 2}},
                     {"op": aerospike.OPERATOR_READ, "bin": "dict"},
                 ],
+                marks=pytest.mark.removed_in_server_9,
             ),
-            (
+            pytest.param(
                 ("test", "demo", "existing_key"),  # Exiting float
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "float", "val": 3.4},
                     {"op": aerospike.OPERATOR_READ, "bin": "float"},
                 ],
+                marks=pytest.mark.removed_in_server_9,
             ),
             (
                 ("test", "demo", 1),  # Existing string
@@ -672,6 +693,7 @@ class TestOperate(object):
         assert bins["geospatial"].unwrap() == {"coordinates": [42.34, 58.62], "type": "Point"}
         TestOperate.client_no_typechecks.remove(key)
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_bin_length_extra_nostricttypes(self):
         """
         Invoke operate() with bin length extra. Strict types disabled
@@ -693,6 +715,7 @@ class TestOperate(object):
 
         assert bins == {"name": "ramname1", "age": 1}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_with_command_invalid_nostricttypes(self):
         """
         Invoke operate() with an invalid command. Strict types disabled
@@ -709,6 +732,7 @@ class TestOperate(object):
 
         assert bins == {"name": "ramname1"}
 
+    @pytest.mark.removed_in_server_9
     def test_pos_operate_prepend_set_to_aerospike_null(self):
         """
         Invoke operate() with prepend command with bin set to aerospike_null
@@ -1241,6 +1265,7 @@ class TestOperate(object):
             self.as_connection.operate(key, llist, {}, policy)
         assert excinfo.value.code == -2
 
+    @pytest.mark.removed_in_server_9
     def test_neg_opearte_on_same_bin(self):
         """
         Invoke operate() on same bin
@@ -1266,6 +1291,7 @@ class TestOperate(object):
             operations.append("name", "ram")
         ]
     )
+    @pytest.mark.removed_in_server_9
     def test_deprecated_ops_raise_warning(self, op):
         key = ("test", "demo", 1)
         ops = [

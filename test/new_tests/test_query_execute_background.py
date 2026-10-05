@@ -224,6 +224,7 @@ class TestQueryApply(object):
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
 
+    @pytest.mark.removed_in_server_9
     def test_background_execute_with_ops_and_preds(self, insert_records):
         """
         Ensure that Query.execute_background() applies ops to records that match the predicate
