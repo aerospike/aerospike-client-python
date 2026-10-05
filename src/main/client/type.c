@@ -32,6 +32,7 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "metrics.h"
 #include "tls_config.h"
 #include "policy_config.h"
 #include "metrics.h"
@@ -1113,12 +1114,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
+            PyMetricsExporterList *config_exporters = NULL;
             int retval = set_as_metrics_policy_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics));
+                &(config.policies.metrics), &config_exporters);
             if (retval != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
+            self->config_metrics_exporters = config_exporters;
         }
 
         PyObject *py_login_timeout =
@@ -1546,6 +1549,24 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     PyObject *py_persistent_item = NULL;
     AerospikeGlobalHosts *global_host = NULL;
     AerospikeClient *client = (AerospikeClient *)self;
+    bool keep_metrics_exporters = false;
+
+    // A shared cluster that outlives this client still calls registered exporters.
+    if (client->use_shared_connection && client->is_conn_16 && client->as) {
+        alias_to_search = return_search_string(client->as);
+        py_persistent_item =
+            PyDict_GetItemString(py_global_hosts, alias_to_search);
+        if (py_persistent_item) {
+            global_host = (AerospikeGlobalHosts *)py_persistent_item;
+            if (client->as == global_host->as && global_host->ref_cnt > 1) {
+                keep_metrics_exporters = true;
+            }
+        }
+        PyMem_Free(alias_to_search);
+        alias_to_search = NULL;
+        py_persistent_item = NULL;
+        global_host = NULL;
+    }
 
     // If the client has never connected
     // It is safe to destroy the aerospike structure
@@ -1582,6 +1603,9 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                 aerospike_destroy(client->as);
             }
         }
+    }
+    if (!keep_metrics_exporters) {
+        aerospike_client_release_all_metrics_exporters(client);
     }
     self->ob_type->tp_free((PyObject *)self);
 }

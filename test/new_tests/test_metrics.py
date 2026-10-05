@@ -1,5 +1,15 @@
 from aerospike import exception as e
-from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NamespaceMetrics
+from aerospike_helpers.metrics import (
+    MetricsPolicy,
+    MetricsListeners,
+    Cluster,
+    Node,
+    ConnectionStats,
+    NamespaceMetrics,
+    MetricsSnapshot,
+    NodeSnapshot,
+    NamespaceSnapshot,
+)
 import pytest
 import shutil
 import glob
@@ -377,6 +387,86 @@ class TestMetrics:
     def test_disable_metrics_invalid_args(self):
         with pytest.raises(TypeError):
             self.as_connection.disable_metrics(1)
+
+    def test_metrics_listeners_deprecated(self):
+        with pytest.warns(DeprecationWarning, match="MetricsListeners is deprecated"):
+            MetricsListeners(
+                enable_listener=MyMetricsListeners.enable,
+                disable_listener=MyMetricsListeners.disable,
+                node_close_listener=MyMetricsListeners.node_close,
+                snapshot_listener=MyMetricsListeners.snapshot,
+            )
+
+    def test_add_exporter_requires_export_method(self):
+        policy = MetricsPolicy(report_dir="")
+        with pytest.raises(TypeError):
+            policy.add_exporter(object())
+
+    def test_exporter_receives_snapshot(self):
+        snapshots = []
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                snapshots.append(snapshot)
+
+        policy = MetricsPolicy(report_dir="", interval=1, labels={"region": "test"})
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert snapshots
+        snapshot = snapshots[-1]
+        assert isinstance(snapshot, MetricsSnapshot)
+        assert snapshot.client_type == "python"
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is False
+        assert snapshot.labels == {"region": "test"}
+        assert snapshot.latency_columns == 7
+        assert snapshot.latency_shift == 1
+        assert isinstance(snapshot.nodes, list)
+        assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
+        assert isinstance(snapshot.app_id, str) and snapshot.app_id
+        for node in snapshot.nodes:
+            assert isinstance(node, NodeSnapshot)
+            assert isinstance(node.sync, ConnectionStats)
+            assert isinstance(node.async_conns, ConnectionStats)
+            for namespace in node.namespaces:
+                assert isinstance(namespace, NamespaceSnapshot)
+                assert set(namespace.latency) == {"conn", "write", "read", "batch", "query"}
+                for buckets in namespace.latency.values():
+                    assert len(buckets) == 7
+
+        assert glob.glob("./metrics-*.log") == []
+
+    def test_exporter_failure_does_not_stop_the_next_exporter(self):
+        calls = []
+
+        class FailingExporter:
+            def export(self, snapshot):
+                calls.append("fail")
+                raise RuntimeError("exporter failed")
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                calls.append("ok")
+
+        policy = MetricsPolicy(report_dir="", interval=1)
+        policy.add_exporter(FailingExporter())
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert "fail" in calls
+        assert "ok" in calls
+
+    def test_empty_report_dir_skips_file_exporter(self):
+        policy = MetricsPolicy(report_dir="", interval=1)
+        self.as_connection.enable_metrics(policy)
+        time.sleep(2)
+        self.as_connection.disable_metrics()
+        assert glob.glob("./metrics-*.log") == []
 
     def test_disable_metrics_throwing_exc(self):
         listeners = MetricsListeners(

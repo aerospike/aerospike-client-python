@@ -1807,6 +1807,14 @@ Metrics
 
         Enable extended periodic cluster and node latency metrics.
 
+        The metrics thread builds a snapshot and calls ``export(snapshot)`` on each exporter
+        registered with :meth:`~aerospike_helpers.metrics.MetricsPolicy.add_exporter`.
+        When no exporter is registered and ``report_dir`` is non-empty, the built-in
+        learn-metrics file exporter is installed. An empty ``report_dir`` installs nothing.
+
+        :class:`~aerospike_helpers.metrics.MetricsListeners` is deprecated and remains until the
+        next major release. :meth:`get_stats` stays available when periodic export is off.
+
         :param MetricsPolicy policy: Optional metrics policy
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.

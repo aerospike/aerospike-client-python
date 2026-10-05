@@ -68,6 +68,8 @@ typedef struct {
     int size;
 } UnicodePyObjects;
 
+typedef struct PyMetricsExporterList PyMetricsExporterList;
+
 typedef struct {
     PyObject_HEAD aerospike *as;
     int is_conn_16;
@@ -79,6 +81,16 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    /*
+     * Exporters registered on the client config metrics policy. Owned here for
+     * the life of this client. The C config holds the same pointers.
+     */
+    PyMetricsExporterList *config_metrics_exporters;
+    /*
+     * Exporters passed to enable_metrics(). Replaced on the next enable and
+     * released after metrics are disabled. Not used for the config policy.
+     */
+    PyMetricsExporterList *active_metrics_exporters;
 } AerospikeClient;
 
 typedef struct {

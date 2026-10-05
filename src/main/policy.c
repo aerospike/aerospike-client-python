@@ -32,6 +32,7 @@
 #include <aerospike/as_cluster.h>
 
 #include "conversions.h"
+#include "metrics.h"
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
@@ -1495,8 +1496,13 @@ error:
 
 int set_as_metrics_policy_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
-                                         as_metrics_policy *metrics_policy)
+                                         as_metrics_policy *metrics_policy,
+                                         PyMetricsExporterList **exporters_out)
 {
+    if (exporters_out) {
+        *exporters_out = NULL;
+    }
+
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
         return as_error_update(
@@ -1641,6 +1647,11 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         labels_attr_name, "dict[str, str]");
+        goto error;
+    }
+
+    if (py_metrics_exporters_from_pyobject(
+            err, py_metrics_policy, metrics_policy, exporters_out) != 0) {
         goto error;
     }
 
