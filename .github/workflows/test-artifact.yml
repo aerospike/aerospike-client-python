@@ -300,7 +300,7 @@ jobs:
     - if: ${{ inputs.run-tests-in-container && contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
       name: Log into JFrog to pull custom manylinux image
       id: setup-jf
-      uses: step-security/setup-jfrog-cli@53aeacb709fce45d0baf69a13ec3342f7e2d71a9 # v5.1.0
+      uses: step-security/setup-jfrog-cli@f67dd6dcfe5fab8d1ebd695c456631275009a39d # v5.2.0
       env:
         JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
         JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
