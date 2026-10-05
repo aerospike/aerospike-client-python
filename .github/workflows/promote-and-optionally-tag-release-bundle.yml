@@ -30,7 +30,7 @@ jobs:
       JF_PROJECT: ${{ inputs.jfrog-project }}
     steps:
     - name: Setup JFrog CLI
-      uses: step-security/setup-jfrog-cli@53aeacb709fce45d0baf69a13ec3342f7e2d71a9 # v5.1.0
+      uses: step-security/setup-jfrog-cli@f67dd6dcfe5fab8d1ebd695c456631275009a39d # v5.2.0
       env:
         JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
         JF_PROJECT: ${{ inputs.jfrog-project }}
