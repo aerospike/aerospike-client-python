@@ -30,6 +30,10 @@ a Python client API method.
 import warnings
 from typing import Optional, Callable, Protocol
 
+# Match as_metrics_latency_unit in the C client.
+LATENCY_MILLISECONDS = 0
+LATENCY_MICROSECONDS = 1
+
 
 class ConnectionStats:
     """Connection statistics.
@@ -207,7 +211,14 @@ class NodeSnapshot:
         sync (:class:`ConnectionStats`): Synchronous connection pool.
         async_conns (:class:`ConnectionStats`): Asynchronous connection pool.
             Named ``async_conns`` because ``async`` is a Python keyword.
+        conn_open_failures (int): Failed attempts to open a connection. Zero unless
+            operational metrics are enabled.
+        conn_tls_handshake_failures (int): Failed TLS handshakes. Zero unless
+            operational metrics are enabled.
+        conn_auth_failures (int): Failed authentications. Zero unless operational
+            metrics are enabled.
         namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
+            Empty unless operational metrics are enabled.
     """
     pass
 
@@ -228,33 +239,39 @@ class MetricsSnapshot:
     The object is a copy. It remains valid after ``export`` returns. Counters and histogram
     buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
 
-    This client records the existing extended profile (latency, errors, and bytes) whenever
-    metrics are enabled. ``usage_metrics_enabled`` is false. There is no usage catalog.
+    Enabling metrics does not turn on operational or usage metrics. Set
+    :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
+    This client does not record a usage catalog, so usage counters stay at zero
+    even when ``usage_metrics_enabled`` is true.
 
     Attributes:
         timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
         metrics_enabled (bool): True when this snapshot was collected with metrics on.
-        operational_metrics_enabled (bool): True when latency, error, and byte counters were collected.
-        usage_metrics_enabled (bool): Always false on this client.
+        operational_metrics_enabled (bool): True when latency, error, byte, CPU, and memory
+            figures were collected.
+        usage_metrics_enabled (bool): True when the policy requested usage metrics.
         cluster_name (str): Cluster name. Empty when the cluster has no name.
         client_type (str): Client language. ``python`` for this client.
         client_version (str): Client version.
         app_id (str): Application identifier.
         labels (dict[str, str]): Static labels from the metrics policy.
-        node_count (int): Nodes in the cluster when the snapshot was built.
         recover_queue_size (int): Sync sockets currently in timeout recovery.
         invalid_node_count (int): Add-node failures in the most recent cluster tend iteration.
         delay_queue_timeout_count (int): Commands that timed out in the delay queue.
         command_count (int): Commands issued. Cumulative.
         retry_count (int): Command retries. Cumulative.
-        cpu (int): Process CPU figure written to the learn-metrics log.
-        mem (int): Process memory figure written to the learn-metrics log.
+        cpu (int): Process CPU percent. Zero unless operational metrics are enabled.
+        mem (int): Process resident set size in bytes. Zero unless operational metrics
+            are enabled.
         event_loops (list[:class:`EventLoopSnapshot`]): Async event-loop gauges.
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
         nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes removed since the
             previous export. Often empty. Replaces the node-close callback for exporters.
+            Empty on :meth:`~aerospike.Client.get_metrics_snapshot`.
         latency_columns (int): Histogram width.
         latency_shift (int): Histogram boundary spacing.
+        latency_unit (int): Histogram bucket unit. :data:`LATENCY_MILLISECONDS` or
+            :data:`LATENCY_MICROSECONDS`.
     """
     pass
 
@@ -337,7 +354,14 @@ class MetricsPolicy:
             Export does not run on the tend thread.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
-            The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+            The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
+        latency_unit (int): Histogram bucket unit. :data:`LATENCY_MILLISECONDS` (default) or
+            :data:`LATENCY_MICROSECONDS`.
+        operational_enabled (bool): Record command-path operational metrics: latency, namespace
+            errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
+            Connection pool gauges are collected whenever metrics are enabled.
+        usage_enabled (bool): Record client-wide feature usage counters. This client does not
+            yet increment a usage catalog, so the counters stay at zero.
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example:
@@ -360,6 +384,9 @@ class MetricsPolicy:
             latency_shift: int = 1,
             labels: dict[str, str] = {},
             exporters: Optional[list] = None,
+            latency_unit: int = LATENCY_MILLISECONDS,
+            operational_enabled: bool = False,
+            usage_enabled: bool = False,
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -367,6 +394,9 @@ class MetricsPolicy:
         self.interval = interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
+        self.latency_unit = latency_unit
+        self.operational_enabled = operational_enabled
+        self.usage_enabled = usage_enabled
         self.labels = labels
         self.exporters = []
         if exporters:

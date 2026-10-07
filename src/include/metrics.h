@@ -24,6 +24,7 @@
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds);
 PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args);
+PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self);
 
 PyObject *AerospikeClient_GetStats(AerospikeClient *self);
 

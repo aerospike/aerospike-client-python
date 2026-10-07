@@ -341,6 +341,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, NULL},
     {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
      METH_NOARGS, NULL},
+    {"get_metrics_snapshot", (PyCFunction)AerospikeClient_GetMetricsSnapshot,
+     METH_NOARGS, NULL},
 
     // ADMIN OPERATIONS
 

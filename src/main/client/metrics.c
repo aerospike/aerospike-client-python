@@ -29,7 +29,8 @@
 #include "policy.h"
 
 // Established-client metrics: snapshot export, deprecated listeners, and the
-// report_dir file exporter. Usage counters are not part of this client.
+// report_dir file exporter. Operational and usage metrics stay off unless the
+// policy enables them. This client does not record a usage catalog.
 
 typedef struct PyMetricsExporter {
     as_metrics_exporter base;
@@ -279,6 +280,19 @@ static PyObject *py_node_list_from_snapshots(as_error *err,
             Py_DECREF(py_list);
             return NULL;
         }
+        if (set_new_attr(err, py_node, "conn_open_failures",
+                         PyLong_FromUnsignedLong(node->conn_open_failures)) !=
+                0 ||
+            set_new_attr(err, py_node, "conn_tls_handshake_failures",
+                         PyLong_FromUnsignedLong(
+                             node->conn_tls_handshake_failures)) != 0 ||
+            set_new_attr(err, py_node, "conn_auth_failures",
+                         PyLong_FromUnsignedLong(node->conn_auth_failures)) !=
+                0) {
+            Py_DECREF(py_node);
+            Py_DECREF(py_list);
+            return NULL;
+        }
 
         PyObject *py_namespaces = PyList_New(node->namespace_count);
         if (!py_namespaces) {
@@ -371,9 +385,7 @@ static PyObject *py_metrics_snapshot(as_error *err,
         goto error;
     }
 
-    if (set_new_attr(err, py_snapshot, "node_count",
-                     PyLong_FromUnsignedLong(snapshot->node_count)) != 0 ||
-        set_new_attr(err, py_snapshot, "recover_queue_size",
+    if (set_new_attr(err, py_snapshot, "recover_queue_size",
                      PyLong_FromUnsignedLong(snapshot->recover_queue_size)) !=
             0 ||
         set_new_attr(err, py_snapshot, "invalid_node_count",
@@ -390,11 +402,13 @@ static PyObject *py_metrics_snapshot(as_error *err,
         set_new_attr(err, py_snapshot, "cpu",
                      PyLong_FromUnsignedLong(snapshot->cpu)) != 0 ||
         set_new_attr(err, py_snapshot, "mem",
-                     PyLong_FromUnsignedLong(snapshot->mem)) != 0 ||
+                     PyLong_FromUnsignedLongLong(snapshot->mem)) != 0 ||
         set_new_attr(err, py_snapshot, "latency_columns",
                      PyLong_FromUnsignedLong(snapshot->latency_columns)) != 0 ||
         set_new_attr(err, py_snapshot, "latency_shift",
-                     PyLong_FromUnsignedLong(snapshot->latency_shift)) != 0) {
+                     PyLong_FromUnsignedLong(snapshot->latency_shift)) != 0 ||
+        set_new_attr(err, py_snapshot, "latency_unit",
+                     PyLong_FromUnsignedLong(snapshot->latency_unit)) != 0) {
         goto error;
     }
 
@@ -731,6 +745,33 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
+}
+
+PyObject *AerospikeClient_GetMetricsSnapshot(AerospikeClient *self)
+{
+    as_error err;
+    as_error_init(&err);
+    as_metrics_snapshot *snapshot = NULL;
+
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_get_metrics_snapshot(self->as, &err, &snapshot);
+    Py_END_ALLOW_THREADS
+
+    if (err.code != AEROSPIKE_OK || snapshot == NULL) {
+        if (snapshot) {
+            as_metrics_snapshot_destroy(snapshot);
+        }
+        raise_exception(&err);
+        return NULL;
+    }
+
+    PyObject *py_snapshot = py_metrics_snapshot(&err, snapshot);
+    as_metrics_snapshot_destroy(snapshot);
+    if (py_snapshot == NULL) {
+        raise_exception(&err);
+        return NULL;
+    }
+    return py_snapshot;
 }
 
 // Regular metrics
