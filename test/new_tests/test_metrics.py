@@ -1,5 +1,17 @@
 from aerospike import exception as e
-from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NamespaceMetrics
+from aerospike_helpers.metrics import (
+    MetricsPolicy,
+    MetricsListeners,
+    Cluster,
+    Node,
+    ConnectionStats,
+    NamespaceMetrics,
+    MetricsSnapshot,
+    NodeSnapshot,
+    NamespaceSnapshot,
+    LATENCY_MILLISECONDS,
+    LATENCY_MICROSECONDS,
+)
 import pytest
 import shutil
 import glob
@@ -328,6 +340,21 @@ class TestMetrics:
                 "latency_shift",
                 "unsigned 8-bit integer"
             ),
+            (
+                MetricsPolicy(latency_unit="ms"),
+                "latency_unit",
+                "unsigned 8-bit integer"
+            ),
+            (
+                MetricsPolicy(operational_enabled=1),
+                "operational_enabled",
+                "bool"
+            ),
+            (
+                MetricsPolicy(usage_enabled="yes"),
+                "usage_enabled",
+                "bool"
+            ),
             # Invalid labels
             (
                 MetricsPolicy(labels={1: "a"}),
@@ -377,6 +404,136 @@ class TestMetrics:
     def test_disable_metrics_invalid_args(self):
         with pytest.raises(TypeError):
             self.as_connection.disable_metrics(1)
+
+    def test_metrics_listeners_deprecated(self):
+        with pytest.warns(DeprecationWarning, match="MetricsListeners is deprecated"):
+            MetricsListeners(
+                enable_listener=MyMetricsListeners.enable,
+                disable_listener=MyMetricsListeners.disable,
+                node_close_listener=MyMetricsListeners.node_close,
+                snapshot_listener=MyMetricsListeners.snapshot,
+            )
+
+    def test_add_exporter_requires_export_method(self):
+        policy = MetricsPolicy(report_dir="")
+        with pytest.raises(TypeError):
+            policy.add_exporter(object())
+
+    def test_exporter_receives_snapshot(self):
+        snapshots = []
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                snapshots.append(snapshot)
+
+        policy = MetricsPolicy(
+            report_dir="",
+            interval=1,
+            labels={"region": "test"},
+            operational_enabled=True,
+        )
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert snapshots
+        live = [item for item in snapshots if item.metrics_enabled]
+        assert live
+        snapshot = live[-1]
+        assert isinstance(snapshot, MetricsSnapshot)
+        assert snapshot.client_type == "python"
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is False
+        assert snapshot.labels == {"region": "test"}
+        assert snapshot.latency_columns == 7
+        assert snapshot.latency_shift == 1
+        assert snapshot.latency_unit == LATENCY_MILLISECONDS
+        assert isinstance(snapshot.mem, int)
+        assert isinstance(snapshot.nodes, list)
+        assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
+        assert isinstance(snapshot.app_id, str) and snapshot.app_id
+        for node in snapshot.nodes:
+            assert isinstance(node, NodeSnapshot)
+            assert isinstance(node.sync, ConnectionStats)
+            assert isinstance(node.async_conns, ConnectionStats)
+            assert isinstance(node.conn_open_failures, int)
+            assert isinstance(node.conn_tls_handshake_failures, int)
+            assert isinstance(node.conn_auth_failures, int)
+            for namespace in node.namespaces:
+                assert isinstance(namespace, NamespaceSnapshot)
+                assert set(namespace.latency) == {"conn", "write", "read", "batch", "query"}
+                for buckets in namespace.latency.values():
+                    assert len(buckets) == 7
+
+        assert glob.glob("./metrics-*.log") == []
+
+    def test_exporter_failure_does_not_stop_the_next_exporter(self):
+        calls = []
+
+        class FailingExporter:
+            def export(self, snapshot):
+                calls.append("fail")
+                raise RuntimeError("exporter failed")
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                calls.append("ok")
+
+        policy = MetricsPolicy(report_dir="", interval=1)
+        policy.add_exporter(FailingExporter())
+        policy.add_exporter(RecordingExporter())
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        assert "fail" in calls
+        assert "ok" in calls
+
+    def test_latency_unit_must_be_a_known_value(self):
+        policy = MetricsPolicy(latency_unit=2)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy)
+        assert excinfo.value.msg == (
+            "MetricsPolicy.latency_unit must be "
+            "LATENCY_MILLISECONDS or LATENCY_MICROSECONDS"
+        )
+
+    def test_get_metrics_snapshot(self):
+        before = self.as_connection.get_metrics_snapshot()
+        assert isinstance(before, MetricsSnapshot)
+        assert before.metrics_enabled is False
+        assert before.operational_metrics_enabled is False
+        assert before.usage_metrics_enabled is False
+        assert before.nodes_departed == []
+        assert before.latency_unit == LATENCY_MILLISECONDS
+
+        policy = MetricsPolicy(
+            report_dir="",
+            operational_enabled=True,
+            usage_enabled=True,
+            latency_unit=LATENCY_MICROSECONDS,
+        )
+        self.as_connection.enable_metrics(policy)
+        snapshot = self.as_connection.get_metrics_snapshot()
+        self.as_connection.disable_metrics()
+
+        assert snapshot.metrics_enabled is True
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is True
+        assert snapshot.latency_unit == LATENCY_MICROSECONDS
+        assert snapshot.nodes_departed == []
+        for node in snapshot.nodes:
+            assert isinstance(node.conn_open_failures, int)
+            assert isinstance(node.conn_tls_handshake_failures, int)
+            assert isinstance(node.conn_auth_failures, int)
+
+    def test_empty_report_dir_skips_file_exporter(self):
+        policy = MetricsPolicy(report_dir="", interval=1)
+        self.as_connection.enable_metrics(policy)
+        time.sleep(2)
+        self.as_connection.disable_metrics()
+        assert glob.glob("./metrics-*.log") == []
 
     def test_disable_metrics_throwing_exc(self):
         listeners = MetricsListeners(

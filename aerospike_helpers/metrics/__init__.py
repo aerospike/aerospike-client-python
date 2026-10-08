@@ -18,13 +18,24 @@
 
 :class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
-callbacks for reading data about the server and client.
+callbacks for reading data about the server and client. :class:`MetricsListeners` is deprecated.
+
+:class:`MetricsSnapshot`, :class:`NodeSnapshot`, and :class:`NamespaceSnapshot` are returned to metrics
+exporters. They are copies of one export and stay valid after ``export`` returns. This client does not
+run asynchronous commands, so snapshots do not include event-loop gauges.
 
 :class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
 a Python client API method.
 """
 
-from typing import Optional, Callable
+import warnings
+from typing import Optional, Callable, Protocol
+
+#: Millisecond latency histogram buckets. This is the default ``MetricsPolicy.latency_unit``.
+LATENCY_MILLISECONDS = 0
+
+#: Microsecond latency histogram buckets.
+LATENCY_MICROSECONDS = 1
 
 
 class ConnectionStats:
@@ -170,8 +181,120 @@ class ClusterStats:
     recover_queue_size: int
 
 
+class NamespaceSnapshot:
+    """Per-namespace counters and latency histograms copied into a metrics snapshot.
+
+    Histogram bucket counts are cumulative since metrics were enabled. Bucket order for the
+    default shape is ``<= 1 ms``, ``> 1 ms``, ``> 2 ms``, ``> 4 ms``, ``> 8 ms``, ``> 16 ms``,
+    ``> 32 ms``.
+
+    Attributes:
+        name (str): Namespace name. Empty when the command had no namespace.
+        errors (int): Command errors that are not counted in a more specific counter.
+        timeouts (int): Command timeouts.
+        key_busy (int): Key busy errors.
+        bytes_in (int): Bytes received from the server.
+        bytes_out (int): Bytes sent to the server.
+        latency (dict[str, list[int]]): Histogram bucket counts keyed by ``conn``, ``write``,
+            ``read``, ``batch``, and ``query``.
+    """
+    pass
+
+
+class NodeSnapshot:
+    """Per-node metrics copied into a metrics snapshot.
+
+    This client keeps separate synchronous and asynchronous connection pools. Both are reported.
+    ``sync`` is the shared connection series.
+
+    Attributes:
+        name (str): Node name.
+        address (str): Node address, without the port.
+        port (int): Node service port.
+        sync (:class:`ConnectionStats`): Synchronous connection pool.
+        async_conns (:class:`ConnectionStats`): Asynchronous connection pool.
+            Named ``async_conns`` because ``async`` is a Python keyword.
+        conn_open_failures (int): Failed attempts to open a connection. Zero unless
+            operational metrics are enabled.
+        conn_tls_handshake_failures (int): Failed TLS handshakes. Zero unless
+            operational metrics are enabled.
+        conn_auth_failures (int): Failed authentications. Zero unless operational
+            metrics are enabled.
+        namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
+            Empty unless operational metrics are enabled.
+    """
+    pass
+
+
+class MetricsSnapshot:
+    """Point-in-time metrics snapshot passed to each exporter.
+
+    The object is a copy. It remains valid after ``export`` returns. Counters and histogram
+    buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
+
+    Enabling metrics does not turn on operational or usage metrics. Set
+    :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
+    This client does not record a usage catalog, so usage counters stay at zero
+    even when ``usage_metrics_enabled`` is true.
+
+    Attributes:
+        timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
+        metrics_enabled (bool): True when this snapshot was collected with metrics on.
+        operational_metrics_enabled (bool): True when latency, error, byte, CPU, and memory
+            figures were collected.
+        usage_metrics_enabled (bool): True when the policy requested usage metrics.
+        cluster_name (str): Cluster name. Empty when the cluster has no name.
+        client_type (str): Client language. ``python`` for this client.
+        client_version (str): Client version.
+        app_id (str): Application identifier.
+        labels (dict[str, str]): Static labels from the metrics policy.
+        recover_queue_size (int): Sync sockets currently in timeout recovery.
+        invalid_node_count (int): Add-node failures in the most recent cluster tend iteration.
+        delay_queue_timeout_count (int): Commands that timed out in the delay queue.
+        command_count (int): Commands issued. Cumulative.
+        retry_count (int): Command retries. Cumulative.
+        cpu (int): Process CPU percent. Zero unless operational metrics are enabled.
+        mem (int): Process resident set size in bytes. Zero unless operational metrics
+            are enabled.
+        nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
+        nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes removed since the
+            previous export. Often empty. Replaces the node-close callback for exporters.
+            Empty on :meth:`~aerospike.Client.get_metrics_snapshot`.
+        latency_columns (int): Histogram width.
+        latency_shift (int): Histogram boundary spacing.
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
+    """
+    pass
+
+
+class MetricsExporter(Protocol):
+    """Receives one metrics snapshot per export interval.
+
+    Any object with an ``export`` method can be registered. Subclassing this protocol is optional.
+    One exporter raising an exception does not skip the others. After repeated failures the client
+    suspends that exporter and retries it later.
+    """
+
+    def export(self, snapshot: MetricsSnapshot) -> None:
+        """Handle one snapshot. The snapshot may be retained after this method returns."""
+
+
+def _require_exporter(exporter) -> None:
+    export = getattr(exporter, "export", None)
+    if not callable(export):
+        raise TypeError(
+            "exporter must be an object with a callable export(snapshot) method"
+        )
+
+
 class MetricsListeners:
     """Metrics listener callbacks.
+
+    .. deprecated::
+        Prefer :meth:`MetricsPolicy.add_exporter`. ``MetricsListeners`` remains until the next
+        major release.
 
     All callbacks must be set.
 
@@ -188,6 +311,12 @@ class MetricsListeners:
             node_close_listener: Callable[[Node], None],
             disable_listener: Callable[[Cluster], None]
     ):
+        warnings.warn(
+            "MetricsListeners is deprecated and will be removed in the next major release. "
+            "Register a metrics exporter with MetricsPolicy.add_exporter().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.enable_listener = enable_listener
         self.snapshot_listener = snapshot_listener
         self.node_close_listener = node_close_listener
@@ -198,23 +327,35 @@ class MetricsPolicy:
     """Client periodic metrics configuration.
 
     Attributes:
-        metrics_listeners (Optional[:py:class:`MetricsListeners`]): Listeners that handles metrics notification events.
-            If set to :py:obj:`None`, the default listener implementation will be used, which writes the metrics
-            snapshot to a file which can later be read and forwarded to OpenTelemetry by a separate offline
-            application. Otherwise, use all listeners set in the class instance.
-
-            The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
-        report_dir (str): Directory path to write metrics log files for listeners that write logs.
+        metrics_listeners (Optional[:py:class:`MetricsListeners`]): Deprecated four-callback listener.
+            If set, those callbacks are used and ``report_dir`` does not also install the file exporter.
+            Prefer :meth:`add_exporter`.
+        exporters (list): Exporters that receive each metrics snapshot. Append with :meth:`add_exporter`.
+            The application owns the exporters. When this list is empty, listeners are not set, and
+            ``report_dir`` is non-empty, enabling metrics installs the built-in learn-metrics file exporter.
+        report_dir (str): Directory for the built-in learn-metrics file exporter.
+            A non-empty path installs that exporter when no exporter has been added and
+            ``metrics_listeners`` is not set. An empty string installs nothing. Collection can still run
+            with no exporter. The default ``"."`` writes log files in the current directory.
         report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
             When report_size_limit is reached or exceeded, the current metrics file is closed and a new
             metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
             size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
             :py:meth:`~aerospike.Client.close()` is called.
-        interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
-            is defined as ``"tend_interval"`` in the client config plus the time to tend all nodes.
+        interval (int): How often the metrics thread exports, measured in cluster tend intervals.
+            The thread sleeps ``interval * tend_interval`` milliseconds (default 30 * 1000).
+            Export does not run on the tend thread.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
-            The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+            The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
+        operational_enabled (bool): Record command-path operational metrics: latency, namespace
+            errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
+            Connection pool gauges are collected whenever metrics are enabled.
+        usage_enabled (bool): Record client-wide feature usage counters. This client does not
+            yet increment a usage catalog, so the counters stay at zero.
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example:
@@ -236,6 +377,10 @@ class MetricsPolicy:
             latency_columns: int = 7,
             latency_shift: int = 1,
             labels: dict[str, str] = {},
+            exporters: Optional[list] = None,
+            latency_unit: int = LATENCY_MILLISECONDS,
+            operational_enabled: bool = False,
+            usage_enabled: bool = False,
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -243,4 +388,20 @@ class MetricsPolicy:
         self.interval = interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
+        self.latency_unit = latency_unit
+        self.operational_enabled = operational_enabled
+        self.usage_enabled = usage_enabled
         self.labels = labels
+        self.exporters = []
+        if exporters:
+            for exporter in exporters:
+                self.add_exporter(exporter)
+
+    def add_exporter(self, exporter) -> None:
+        """Append an exporter. Exporters are called in registration order with the same snapshot.
+
+        Enabling metrics does not take ownership of the exporter object. Keep it alive for as long
+        as metrics stay enabled. The client releases its reference after metrics are disabled.
+        """
+        _require_exporter(exporter)
+        self.exporters.append(exporter)

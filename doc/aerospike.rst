@@ -644,6 +644,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
                 Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
+                Exporters registered here are used when metrics are enabled from this policy.
+                A non-empty ``report_dir`` installs the learn-metrics file exporter when no exporter is registered.
+                Operational and usage metrics stay off unless the policy enables them.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 

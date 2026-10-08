@@ -1805,7 +1805,22 @@ Metrics
 
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
-        Enable extended periodic cluster and node latency metrics.
+        Enable periodic metrics collection and the export timer.
+
+        The metrics thread builds a snapshot and calls ``export(snapshot)`` on each exporter
+        registered with :meth:`~aerospike_helpers.metrics.MetricsPolicy.add_exporter`.
+        When no exporter is registered and :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir`
+        is non-empty, the built-in learn-metrics file exporter is installed. An empty
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir` installs nothing.
+
+        Operational metrics (latency, namespace errors and bytes, CPU, and memory) stay off
+        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is true.
+        Usage metrics stay off unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled`
+        is true. This client does not record a usage catalog.
+
+        :class:`~aerospike_helpers.metrics.MetricsListeners` is deprecated and remains until the
+        next major release. :meth:`get_stats` and :meth:`get_metrics_snapshot` stay available
+        when periodic export is off.
 
         :param MetricsPolicy policy: Optional metrics policy
 
@@ -1815,6 +1830,17 @@ Metrics
 
         Disable extended periodic cluster and node latency metrics.
 
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: get_metrics_snapshot()
+
+        Return an on-demand :class:`~aerospike_helpers.metrics.MetricsSnapshot`.
+
+        This does not depend on the export timer and works when periodic export is off.
+        Gauges are current. Counters stay at their last values. ``nodes_departed`` is empty;
+        departed nodes are attached only on periodic export. The caller may keep the snapshot.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.MetricsSnapshot`
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
 Scan and Query Constructors

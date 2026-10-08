@@ -32,6 +32,7 @@
 #include <aerospike/as_cluster.h>
 
 #include "conversions.h"
+#include "metrics.h"
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
@@ -1493,10 +1494,33 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-int set_as_metrics_policy_using_pyobject(as_error *err,
-                                         PyObject *py_metrics_policy,
-                                         as_metrics_policy *metrics_policy)
+static int set_metrics_bool_field(as_error *err, PyObject *py_metrics_policy,
+                                  const char *name, bool *out)
 {
+    PyObject *py_value = PyObject_GetAttrString(py_metrics_policy, name);
+    if (!py_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               name);
+    }
+    if (!PyBool_Check(py_value)) {
+        Py_DECREF(py_value);
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               INVALID_ATTR_TYPE_ERROR_MSG, name, "bool");
+    }
+    *out = py_value == Py_True;
+    Py_DECREF(py_value);
+    return AEROSPIKE_OK;
+}
+
+int as_metrics_policy_set_using_pyobject(as_error *err,
+                                         PyObject *py_metrics_policy,
+                                         as_metrics_policy *metrics_policy,
+                                         PyMetricsExporterList **exporters_out)
+{
+    if (exporters_out) {
+        *exporters_out = NULL;
+    }
+
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
         return as_error_update(
@@ -1601,6 +1625,38 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         *field_refs[i] = attr_value;
     }
 
+    const char *latency_unit_field_name = "latency_unit";
+    PyObject *py_latency_unit =
+        PyObject_GetAttrString(py_metrics_policy, latency_unit_field_name);
+    if (!py_latency_unit) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        latency_unit_field_name);
+        goto error;
+    }
+    uint8_t latency_unit = convert_pyobject_to_uint8_t(py_latency_unit);
+    Py_DECREF(py_latency_unit);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        latency_unit_field_name, "unsigned 8-bit integer");
+        goto error;
+    }
+    if (latency_unit > AS_METRICS_LATENCY_MICROSECONDS) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.latency_unit must be "
+                        "LATENCY_MILLISECONDS or LATENCY_MICROSECONDS");
+        goto error;
+    }
+    metrics_policy->latency_unit = (as_metrics_latency_unit)latency_unit;
+
+    if (set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
+                               &metrics_policy->operational_enabled) !=
+            AEROSPIKE_OK ||
+        set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
+                               &metrics_policy->usage_enabled) !=
+            AEROSPIKE_OK) {
+        goto error;
+    }
+
     const char *labels_attr_name = "labels";
     PyObject *py_labels =
         PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
@@ -1641,6 +1697,11 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         labels_attr_name, "dict[str, str]");
+        goto error;
+    }
+
+    if (py_metrics_exporters_from_pyobject(
+            err, py_metrics_policy, metrics_policy, exporters_out) != 0) {
         goto error;
     }
 
