@@ -31,8 +31,10 @@ a Python client API method.
 import warnings
 from typing import Optional, Callable, Protocol
 
-# Match as_metrics_latency_unit in the C client.
+#: Millisecond latency histogram buckets. This is the default ``MetricsPolicy.latency_unit``.
 LATENCY_MILLISECONDS = 0
+
+#: Microsecond latency histogram buckets.
 LATENCY_MICROSECONDS = 1
 
 
@@ -260,8 +262,9 @@ class MetricsSnapshot:
             Empty on :meth:`~aerospike.Client.get_metrics_snapshot`.
         latency_columns (int): Histogram width.
         latency_shift (int): Histogram boundary spacing.
-        latency_unit (int): Histogram bucket unit. :data:`LATENCY_MILLISECONDS` or
-            :data:`LATENCY_MICROSECONDS`.
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
     """
     pass
 
@@ -345,8 +348,9 @@ class MetricsPolicy:
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
-        latency_unit (int): Histogram bucket unit. :data:`LATENCY_MILLISECONDS` (default) or
-            :data:`LATENCY_MICROSECONDS`.
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         operational_enabled (bool): Record command-path operational metrics: latency, namespace
             errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
             Connection pool gauges are collected whenever metrics are enabled.
