@@ -1809,8 +1809,9 @@ Metrics
 
         The metrics thread builds a snapshot and calls ``export(snapshot)`` on each exporter
         registered with :meth:`~aerospike_helpers.metrics.MetricsPolicy.add_exporter`.
-        When no exporter is registered and ``report_dir`` is non-empty, the built-in
-        learn-metrics file exporter is installed. An empty ``report_dir`` installs nothing.
+        When no exporter is registered and :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir`
+        is non-empty, the built-in learn-metrics file exporter is installed. An empty
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir` installs nothing.
 
         Operational metrics (latency, namespace errors and bytes, CPU, and memory) stay off
         unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is true.
