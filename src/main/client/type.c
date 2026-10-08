@@ -1105,7 +1105,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
                                                   "metrics", "MetricsPolicy",
                                                   false) == false) {
-            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // as_metrics_policy_set_using_pyobject also checks the type of the pyobject
             // But we want to set a different error message here
             as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
@@ -1117,7 +1117,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
         else {
             PyMetricsExporterList *config_exporters = NULL;
-            int retval = set_as_metrics_policy_using_pyobject(
+            int retval = as_metrics_policy_set_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
                 &(config.policies.metrics), &config_exporters);
             if (retval != AEROSPIKE_OK) {

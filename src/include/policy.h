@@ -392,7 +392,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 // Returns non-zero integer value on error.
 // On error, all memory from this function is freed.
 // On success, *exporters_out owns any exporter wrappers (NULL if none).
-int set_as_metrics_policy_using_pyobject(
+int as_metrics_policy_set_using_pyobject(
     as_error *err, PyObject *py_metrics_policy,
     as_metrics_policy *metrics_policy,
     struct PyMetricsExporterList **exporters_out);

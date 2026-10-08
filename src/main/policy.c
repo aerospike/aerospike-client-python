@@ -1512,7 +1512,7 @@ static int set_metrics_bool_field(as_error *err, PyObject *py_metrics_policy,
     return AEROSPIKE_OK;
 }
 
-int set_as_metrics_policy_using_pyobject(as_error *err,
+int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
                                          as_metrics_policy *metrics_policy,
                                          PyMetricsExporterList **exporters_out)
