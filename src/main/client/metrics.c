@@ -412,35 +412,7 @@ static PyObject *py_metrics_snapshot(as_error *err,
         goto error;
     }
 
-    PyObject *py_event_loops = PyList_New(snapshot->event_loop_count);
-    if (!py_event_loops) {
-        as_error_update(err, AEROSPIKE_ERR, "Failed to create event loop list");
-        goto error;
-    }
-    for (uint32_t i = 0; i < snapshot->event_loop_count; i++) {
-        PyObject *py_loop = create_class_instance_from_module(
-            err, "aerospike_helpers.metrics", "EventLoopSnapshot", NULL);
-        if (!py_loop) {
-            Py_DECREF(py_event_loops);
-            goto error;
-        }
-        if (set_new_attr(
-                err, py_loop, "process_size",
-                PyLong_FromLong(snapshot->event_loops[i].process_size)) != 0 ||
-            set_new_attr(err, py_loop, "queue_size",
-                         PyLong_FromUnsignedLong(
-                             snapshot->event_loops[i].queue_size)) != 0 ||
-            PyList_SetItem(py_event_loops, i, py_loop) == -1) {
-            Py_XDECREF(py_loop);
-            Py_DECREF(py_event_loops);
-            PyErr_Clear();
-            goto error;
-        }
-    }
-    if (set_new_attr(err, py_snapshot, "event_loops", py_event_loops) != 0) {
-        goto error;
-    }
-
+    // This client does not run async commands, so event-loop gauges are not copied.
     PyObject *py_nodes = py_node_list_from_snapshots(err, snapshot->nodes,
                                                      snapshot->nodes_count);
     PyObject *py_departed = py_node_list_from_snapshots(

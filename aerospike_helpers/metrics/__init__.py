@@ -20,8 +20,9 @@
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client. :class:`MetricsListeners` is deprecated.
 
-:class:`MetricsSnapshot`, :class:`NodeSnapshot`, :class:`NamespaceSnapshot`, and :class:`EventLoopSnapshot` are
-returned to metrics exporters. They are copies of one export and stay valid after ``export`` returns.
+:class:`MetricsSnapshot`, :class:`NodeSnapshot`, and :class:`NamespaceSnapshot` are returned to metrics
+exporters. They are copies of one export and stay valid after ``export`` returns. This client does not
+run asynchronous commands, so snapshots do not include event-loop gauges.
 
 :class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
 a Python client API method.
@@ -223,16 +224,6 @@ class NodeSnapshot:
     pass
 
 
-class EventLoopSnapshot:
-    """Asynchronous event-loop gauges. Empty when async event loops are not in use.
-
-    Attributes:
-        process_size (int): Commands in process on the event loop.
-        queue_size (int): Commands queued on the event loop.
-    """
-    pass
-
-
 class MetricsSnapshot:
     """Point-in-time metrics snapshot passed to each exporter.
 
@@ -263,7 +254,6 @@ class MetricsSnapshot:
         cpu (int): Process CPU percent. Zero unless operational metrics are enabled.
         mem (int): Process resident set size in bytes. Zero unless operational metrics
             are enabled.
-        event_loops (list[:class:`EventLoopSnapshot`]): Async event-loop gauges.
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
         nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes removed since the
             previous export. Often empty. Replaces the node-close callback for exporters.
