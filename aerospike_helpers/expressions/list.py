@@ -875,6 +875,7 @@ class ListGetByValueRange(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             value_begin (TypeValue): Value or value expression of first element to get.
             value_end (TypeValue): Value or value expression of ending element.
+                If `value_end` is :py:obj:`None`, the range is greater than or equal to begin.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
                 :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
@@ -888,6 +889,9 @@ class ListGetByValueRange(_BaseExpr):
             # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
             expr = exp.ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, exp.ListBin("a")).compile()
         """
+        if value_end is None:
+            value_end = aerospike.CDTInfinite()
+
         self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
         if inverted:
