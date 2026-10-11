@@ -90,6 +90,15 @@ static PyMethodDef aerospike_methods[] = {
     {"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id, METH_VARARGS,
      "Get partition ID for given digest"},
 
+    // Base64 methods (copied from client)
+    // The client base64 methods are now deprecated
+
+    {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+
+    {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+
     {NULL}};
 
 struct module_constant_name_to_value {
