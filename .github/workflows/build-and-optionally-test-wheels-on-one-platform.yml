@@ -39,7 +39,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for.
         required: false
-        default: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
+        default: '["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]'
       platform-tag:
         # One of these values:
         # - manylinux_x86_64
@@ -124,6 +124,9 @@ jobs:
         echo "runner_os=${hashmap[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
 
         declare -A manylinux_digest
+        # Built from quay.io/pypa/manylinux_2_28:2026.04.25-0, which has no cp315.
+        # Rebuild with update-manylinux-openssl-image.yml (base 2026.09.26-1) and replace these digests
+        # before Linux 3.15 wheels can be built.
         manylinux_digest[manylinux_x86_64]="ee086a7e0d988b829bebe6404125c682190ea336ab3aad17f0c90623b28e2708"
         manylinux_digest[manylinux_aarch64]="183ccef2e4047f722b179d69dde14b99e05b7234724bf00aa31657ae695743f5"
         # This will not fail if map key is not found. Assuming only a blank string will be returned
@@ -154,7 +157,9 @@ jobs:
       # Same as default folder where source repo is cloned
       working-directory: local
       setup-python: true
-      python-version: ${{ matrix.python-version }}
+      # The shared workflow's setup-python step does not set allow-prereleases.
+      # 3.15-dev selects the latest 3.15 build, including 3.15.0rc2, until 3.15.0 final (2026-10-01).
+      python-version: ${{ matrix.python-version == '3.15' && '3.15-dev' || matrix.python-version }}
       publish-build-info: ${{ inputs.publish-build-info }}
       # TODO: I have already raised an issue with dev infra team re: the action not ignoring newlines/spaces for env var
       # names. For now, just put all the env vars in one line.
