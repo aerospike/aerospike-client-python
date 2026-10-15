@@ -23,6 +23,7 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "global_hosts.h"
+#include "metrics.h"
 
 #define MAX_PORT_SIZE 6
 #define MAX_SHM_SIZE 19
@@ -60,6 +61,8 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    bool closed_cluster = false;
+
     if (self->use_shared_connection) {
         alias_to_search = return_search_string(self->as);
         py_persistent_item =
@@ -70,6 +73,9 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
             // It is only safe to do a reference counted close if the
             // local as is pointing to the global as
             if (self->as == global_host->as) {
+                if (global_host->ref_cnt == 1) {
+                    closed_cluster = true;
+                }
                 close_aerospike_object(self->as, &err, alias_to_search,
                                        py_persistent_item, false);
             }
@@ -82,6 +88,10 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
         Py_BEGIN_ALLOW_THREADS
         aerospike_close(self->as, &err);
         Py_END_ALLOW_THREADS
+        closed_cluster = true;
+    }
+    if (closed_cluster && err.code == AEROSPIKE_OK) {
+        aerospike_client_release_active_metrics_exporters(self);
     }
     self->is_conn_16 = false;
 
