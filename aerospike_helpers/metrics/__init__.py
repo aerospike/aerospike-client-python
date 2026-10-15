@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2013-2024 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -191,12 +191,20 @@ class NamespaceSnapshot:
     Attributes:
         name (str): Namespace name. Empty when the command had no namespace.
         errors (int): Command errors that are not counted in a more specific counter.
-        timeouts (int): Command timeouts.
+            Timeouts, key busy, record too big, and device overload are not included.
+        client_timeouts (int): Client timeouts (connect, socket, or total). Not included
+            in ``errors`` or ``server_timeouts``.
+        server_timeouts (int): Server timeouts. Not included in ``errors`` or
+            ``client_timeouts``.
         key_busy (int): Key busy errors.
+        record_too_big (int): Record too big errors. Not included in ``errors``.
+        device_overload (int): Device overload errors. Not included in ``errors``.
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        latency (dict[str, list[int]]): Histogram bucket counts keyed by ``conn``, ``write``,
-            ``read``, ``batch``, and ``query``.
+        latency (dict[str, list[int]]): Command latency histogram bucket counts keyed by
+            ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
+            for total elapsed time, including retries. Empty unless operational metrics are
+            enabled. The learn-metrics file writes a separate per-attempt series.
     """
     pass
 
@@ -214,7 +222,8 @@ class NodeSnapshot:
         sync (:class:`ConnectionStats`): Synchronous connection pool.
         async_conns (:class:`ConnectionStats`): Asynchronous connection pool.
             Named ``async_conns`` because ``async`` is a Python keyword.
-        conn_open_failures (int): Failed attempts to open a connection. Zero unless
+        conn_open_failures (int): Failed attempts to open a connection, including TLS
+            and authentication failures. Cumulative and not sampler-gated. Zero unless
             operational metrics are enabled.
         conn_tls_handshake_failures (int): Failed TLS handshakes. Zero unless
             operational metrics are enabled.
@@ -234,15 +243,15 @@ class MetricsSnapshot:
 
     Enabling metrics does not turn on operational or usage metrics. Set
     :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
-    This client does not record a usage catalog, so usage counters stay at zero
-    even when ``usage_metrics_enabled`` is true.
+    When usage is on, public API calls increment ``api_blocking``, ``api_deferred``,
+    and ``api_background``.
 
     Attributes:
         timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
         metrics_enabled (bool): True when this snapshot was collected with metrics on.
         operational_metrics_enabled (bool): True when latency, error, byte, CPU, and memory
             figures were collected.
-        usage_metrics_enabled (bool): True when the policy requested usage metrics.
+        usage_metrics_enabled (bool): True when feature.api usage counters were collected.
         cluster_name (str): Cluster name. Empty when the cluster has no name.
         client_type (str): Client language. ``python`` for this client.
         client_version (str): Client version.
@@ -250,9 +259,22 @@ class MetricsSnapshot:
         labels (dict[str, str]): Static labels from the metrics policy.
         recover_queue_size (int): Sync sockets currently in timeout recovery.
         invalid_node_count (int): Add-node failures in the most recent cluster tend iteration.
+        validation_open_failures (int): Pre-node connect failures, including TLS and
+            authentication. Cumulative. Zero unless operational metrics are enabled.
+        validation_tls_handshake_failures (int): Pre-node TLS handshake failures. Also
+            included in ``validation_open_failures``. Zero unless operational metrics
+            are enabled.
+        validation_auth_failures (int): Pre-node authentication failures. Also included
+            in ``validation_open_failures``. Zero unless operational metrics are enabled.
         delay_queue_timeout_count (int): Commands that timed out in the delay queue.
         command_count (int): Commands issued. Cumulative.
         retry_count (int): Command retries. Cumulative.
+        api_blocking (int): Public synchronous API calls. Cumulative. Increments only
+            while metrics and usage are enabled.
+        api_deferred (int): Public asynchronous API calls. Cumulative. This client does
+            not run asynchronous commands, so this stays at zero.
+        api_background (int): Public background scan and query API calls. Cumulative.
+            Increments only while metrics and usage are enabled.
         cpu (int): Process CPU percent. Zero unless operational metrics are enabled.
         mem (int): Process resident set size in bytes. Zero unless operational metrics
             are enabled.
@@ -344,7 +366,10 @@ class MetricsPolicy:
             :py:meth:`~aerospike.Client.close()` is called.
         interval (int): How often the metrics thread exports, measured in cluster tend intervals.
             The thread sleeps ``interval * tend_interval`` milliseconds (default 30 * 1000).
-            Export does not run on the tend thread.
+            Used only when ``export_interval`` is empty. Export does not run on the tend thread.
+        export_interval (str): How often the metrics thread exports, as a magnitude and unit.
+            Examples: ``"30s"``, ``"1500ms"``, ``"30m"``, ``"1h"``. A bare number is seconds.
+            An empty string uses ``interval``. When set, this overrides ``interval``.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
@@ -353,9 +378,16 @@ class MetricsPolicy:
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         operational_enabled (bool): Record command-path operational metrics: latency, namespace
             errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
-            Connection pool gauges are collected whenever metrics are enabled.
-        usage_enabled (bool): Record client-wide feature usage counters. This client does not
-            yet increment a usage catalog, so the counters stay at zero.
+            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
+            file still writes CPU, memory, and per-attempt namespace histograms when this is false.
+        usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
+            Other feature usage names are not recorded. Off until explicitly enabled.
+        sampler_range (int): Operational command-path sampler modulus. A command is recorded when
+            operational metrics are enabled, ``sampler_threshold`` is greater than zero, and
+            ``draw % sampler_range < sampler_threshold``. Must be at least 1. Default ``1``.
+        sampler_threshold (int): Operational command-path sampler threshold, from 0 through
+            ``sampler_range``. ``0`` records nothing. The default range ``1`` and threshold ``1``
+            record every command. Range ``10`` and threshold ``1`` record about 10 percent.
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example:
@@ -381,16 +413,22 @@ class MetricsPolicy:
             latency_unit: int = LATENCY_MILLISECONDS,
             operational_enabled: bool = False,
             usage_enabled: bool = False,
+            export_interval: str = "",
+            sampler_range: int = 1,
+            sampler_threshold: int = 1,
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
         self.report_size_limit = report_size_limit
         self.interval = interval
+        self.export_interval = export_interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
         self.latency_unit = latency_unit
         self.operational_enabled = operational_enabled
         self.usage_enabled = usage_enabled
+        self.sampler_range = sampler_range
+        self.sampler_threshold = sampler_threshold
         self.labels = labels
         self.exporters = []
         if exporters:
@@ -405,3 +443,17 @@ class MetricsPolicy:
         """
         _require_exporter(exporter)
         self.exporters.append(exporter)
+
+    def set_sampler_probability(self, probability: float) -> None:
+        """Set the operational sampler to approximately ``probability``.
+
+        ``sampler_range`` becomes 1000000 and ``sampler_threshold`` becomes
+        ``round(probability * 1000000)``. ``probability`` must be from 0 through 1.
+        """
+        if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+            raise TypeError("sampler probability must be a float from 0 through 1")
+        if probability != probability or probability < 0.0 or probability > 1.0:
+            raise ValueError("sampler probability must be from 0 through 1")
+        self.sampler_range = 1000000
+        scaled = probability * 1000000.0 + 0.5
+        self.sampler_threshold = int(scaled)

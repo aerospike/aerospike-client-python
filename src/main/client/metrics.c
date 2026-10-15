@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2024 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,9 @@
 #include "policy.h"
 
 // Established-client metrics: snapshot export, deprecated listeners, and the
-// report_dir file exporter. Operational and usage metrics stay off unless the
-// policy enables them. This client does not record a usage catalog.
+// report_dir file exporter. Operational metrics, usage counters, and the
+// operational sampler stay at the C client defaults unless the policy sets them.
+// Usage counts feature.api.blocking, deferred, and background on public API calls.
 
 typedef struct PyMetricsExporter {
     as_metrics_exporter base;
@@ -175,10 +176,13 @@ static PyObject *py_namespace_snapshot(as_error *err,
         goto error;
     }
 
-    const char *counter_names[] = {"errors", "timeouts", "key_busy", "bytes_in",
-                                   "bytes_out"};
-    uint64_t counters[] = {ns->errors, ns->timeouts, ns->key_busy, ns->bytes_in,
-                           ns->bytes_out};
+    const char *counter_names[] = {
+        "errors",         "client_timeouts", "server_timeouts", "key_busy",
+        "record_too_big", "device_overload", "bytes_in",        "bytes_out"};
+    uint64_t counters[] = {ns->errors,          ns->client_timeouts,
+                           ns->server_timeouts, ns->key_busy,
+                           ns->record_too_big,  ns->device_overload,
+                           ns->bytes_in,        ns->bytes_out};
     for (unsigned long i = 0;
          i < sizeof(counter_names) / sizeof(counter_names[0]); i++) {
         if (set_new_attr(err, py_ns, counter_names[i],
@@ -194,7 +198,9 @@ static PyObject *py_namespace_snapshot(as_error *err,
         goto error;
     }
     for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
-        PyObject *py_buckets = py_bucket_list(err, &ns->latencies[i]);
+        // command_latencies is the snapshot series. latencies is the private
+        // per-attempt series used by the learn-metrics file and listeners.
+        PyObject *py_buckets = py_bucket_list(err, &ns->command_latencies[i]);
         if (!py_buckets) {
             Py_DECREF(py_latency);
             goto error;
@@ -391,6 +397,15 @@ static PyObject *py_metrics_snapshot(as_error *err,
         set_new_attr(err, py_snapshot, "invalid_node_count",
                      PyLong_FromUnsignedLong(snapshot->invalid_node_count)) !=
             0 ||
+        set_new_attr(
+            err, py_snapshot, "validation_open_failures",
+            PyLong_FromUnsignedLong(snapshot->validation_open_failures)) != 0 ||
+        set_new_attr(err, py_snapshot, "validation_tls_handshake_failures",
+                     PyLong_FromUnsignedLong(
+                         snapshot->validation_tls_handshake_failures)) != 0 ||
+        set_new_attr(
+            err, py_snapshot, "validation_auth_failures",
+            PyLong_FromUnsignedLong(snapshot->validation_auth_failures)) != 0 ||
         set_new_attr(err, py_snapshot, "delay_queue_timeout_count",
                      PyLong_FromUnsignedLongLong(
                          snapshot->delay_queue_timeout_count)) != 0 ||
@@ -399,6 +414,15 @@ static PyObject *py_metrics_snapshot(as_error *err,
             0 ||
         set_new_attr(err, py_snapshot, "retry_count",
                      PyLong_FromUnsignedLongLong(snapshot->retry_count)) != 0 ||
+        set_new_attr(err, py_snapshot, "api_blocking",
+                     PyLong_FromUnsignedLongLong(snapshot->api_blocking)) !=
+            0 ||
+        set_new_attr(err, py_snapshot, "api_deferred",
+                     PyLong_FromUnsignedLongLong(snapshot->api_deferred)) !=
+            0 ||
+        set_new_attr(err, py_snapshot, "api_background",
+                     PyLong_FromUnsignedLongLong(snapshot->api_background)) !=
+            0 ||
         set_new_attr(err, py_snapshot, "cpu",
                      PyLong_FromUnsignedLong(snapshot->cpu)) != 0 ||
         set_new_attr(err, py_snapshot, "mem",

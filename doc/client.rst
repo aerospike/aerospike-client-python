@@ -1815,8 +1815,13 @@ Metrics
 
         Operational metrics (latency, namespace errors and bytes, CPU, and memory) stay off
         unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is true.
-        Usage metrics stay off unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled`
-        is true. This client does not record a usage catalog.
+        The learn-metrics file still writes CPU, memory, and per-attempt namespace histograms
+        when operational metrics are off. Usage metrics stay off unless
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled` is true. When usage is
+        on, public API calls increment ``api_blocking``, ``api_deferred``, and ``api_background``.
+        The operational sampler records every command unless
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.sampler_range` and
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.sampler_threshold` select a sample.
 
         :class:`~aerospike_helpers.metrics.MetricsListeners` is deprecated and remains until the
         next major release. :meth:`get_stats` and :meth:`get_metrics_snapshot` stay available

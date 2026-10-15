@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <Python.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
@@ -1512,6 +1513,25 @@ static int set_metrics_bool_field(as_error *err, PyObject *py_metrics_policy,
     return AEROSPIKE_OK;
 }
 
+static int set_metrics_uint32_field(as_error *err, PyObject *py_metrics_policy,
+                                    const char *name, uint32_t *out)
+{
+    PyObject *py_value = PyObject_GetAttrString(py_metrics_policy, name);
+    if (!py_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               name);
+    }
+    uint32_t value = convert_pyobject_to_uint32_t(py_value);
+    Py_DECREF(py_value);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               INVALID_ATTR_TYPE_ERROR_MSG, name,
+                               "unsigned 32-bit integer");
+    }
+    *out = value;
+    return AEROSPIKE_OK;
+}
+
 int as_metrics_policy_set_using_pyobject(as_error *err,
                                          PyObject *py_metrics_policy,
                                          as_metrics_policy *metrics_policy,
@@ -1654,6 +1674,48 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
         set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
                                &metrics_policy->usage_enabled) !=
             AEROSPIKE_OK) {
+        goto error;
+    }
+
+    const char *export_interval_field_name = "export_interval";
+    PyObject *py_export_interval =
+        PyObject_GetAttrString(py_metrics_policy, export_interval_field_name);
+    if (!py_export_interval) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        export_interval_field_name);
+        goto error;
+    }
+    const char *export_interval = convert_pyobject_to_str(py_export_interval);
+    if (!export_interval) {
+        Py_DECREF(py_export_interval);
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        export_interval_field_name, "str");
+        goto error;
+    }
+    if (strlen(export_interval) >= sizeof(metrics_policy->export_interval)) {
+        Py_DECREF(py_export_interval);
+        as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "MetricsPolicy.export_interval must be less than 32 chars");
+        goto error;
+    }
+    strcpy(metrics_policy->export_interval, export_interval);
+    Py_DECREF(py_export_interval);
+
+    if (set_metrics_uint32_field(err, py_metrics_policy, "sampler_range",
+                                 &metrics_policy->sampler_range) !=
+            AEROSPIKE_OK ||
+        set_metrics_uint32_field(err, py_metrics_policy, "sampler_threshold",
+                                 &metrics_policy->sampler_threshold) !=
+            AEROSPIKE_OK) {
+        goto error;
+    }
+    if (metrics_policy->sampler_range < 1 ||
+        metrics_policy->sampler_threshold > metrics_policy->sampler_range) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.sampler_range must be at least 1 and "
+                        "sampler_threshold must be less than or equal to "
+                        "sampler_range");
         goto error;
     }
 

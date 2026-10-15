@@ -355,6 +355,21 @@ class TestMetrics:
                 "usage_enabled",
                 "bool"
             ),
+            (
+                MetricsPolicy(export_interval=30),
+                "export_interval",
+                "str"
+            ),
+            (
+                MetricsPolicy(sampler_range="1"),
+                "sampler_range",
+                "unsigned 32-bit integer"
+            ),
+            (
+                MetricsPolicy(sampler_threshold="1"),
+                "sampler_threshold",
+                "unsigned 32-bit integer"
+            ),
             # Invalid labels
             (
                 MetricsPolicy(labels={1: "a"}),
@@ -389,6 +404,38 @@ class TestMetrics:
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
+
+    def test_metrics_policy_export_interval_too_long(self):
+        policy = MetricsPolicy(export_interval="1" * 32)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.export_interval must be less than 32 chars"
+
+    def test_metrics_policy_export_interval_must_be_a_duration(self):
+        policy = MetricsPolicy(export_interval="30x")
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "Invalid metrics export_interval"
+
+    def test_metrics_policy_sampler_must_be_in_range(self):
+        policy = MetricsPolicy(sampler_range=0, sampler_threshold=0)
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == (
+            "MetricsPolicy.sampler_range must be at least 1 and "
+            "sampler_threshold must be less than or equal to sampler_range"
+        )
+
+    def test_set_sampler_probability(self):
+        policy = MetricsPolicy()
+        policy.set_sampler_probability(0.1)
+        assert policy.sampler_range == 1000000
+        assert policy.sampler_threshold == 100000
+
+        with pytest.raises(ValueError):
+            policy.set_sampler_probability(1.1)
+        with pytest.raises(TypeError):
+            policy.set_sampler_probability(True)
 
     # Use default metrics writer implementation
     # We are checking that enable_metrics() does not seg fault
@@ -450,6 +497,12 @@ class TestMetrics:
         assert snapshot.latency_shift == 1
         assert snapshot.latency_unit == LATENCY_MILLISECONDS
         assert isinstance(snapshot.mem, int)
+        assert isinstance(snapshot.validation_open_failures, int)
+        assert isinstance(snapshot.validation_tls_handshake_failures, int)
+        assert isinstance(snapshot.validation_auth_failures, int)
+        assert isinstance(snapshot.api_blocking, int)
+        assert isinstance(snapshot.api_deferred, int)
+        assert isinstance(snapshot.api_background, int)
         assert isinstance(snapshot.nodes, list)
         assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
         assert isinstance(snapshot.app_id, str) and snapshot.app_id
@@ -462,6 +515,10 @@ class TestMetrics:
             assert isinstance(node.conn_auth_failures, int)
             for namespace in node.namespaces:
                 assert isinstance(namespace, NamespaceSnapshot)
+                assert isinstance(namespace.client_timeouts, int)
+                assert isinstance(namespace.server_timeouts, int)
+                assert isinstance(namespace.record_too_big, int)
+                assert isinstance(namespace.device_overload, int)
                 assert set(namespace.latency) == {"conn", "write", "read", "batch", "query"}
                 for buckets in namespace.latency.values():
                     assert len(buckets) == 7
@@ -515,12 +572,16 @@ class TestMetrics:
             latency_unit=LATENCY_MICROSECONDS,
         )
         self.as_connection.enable_metrics(policy)
+        self.as_connection.put(("test", "metrics", "usage"), {"a": 1})
         snapshot = self.as_connection.get_metrics_snapshot()
         self.as_connection.disable_metrics()
 
         assert snapshot.metrics_enabled is True
         assert snapshot.operational_metrics_enabled is True
         assert snapshot.usage_metrics_enabled is True
+        assert snapshot.api_blocking >= 1
+        assert snapshot.api_deferred == 0
+        assert isinstance(snapshot.api_background, int)
         assert snapshot.latency_unit == LATENCY_MICROSECONDS
         assert snapshot.nodes_departed == []
         for node in snapshot.nodes:

@@ -647,6 +647,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Exporters registered here are used when metrics are enabled from this policy.
                 A non-empty ``report_dir`` installs the learn-metrics file exporter when no exporter is registered.
                 Operational and usage metrics stay off unless the policy enables them.
+                An empty ``export_interval`` uses ``interval``. The operational sampler
+                records every command unless ``sampler_range`` and ``sampler_threshold`` change it.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
