@@ -1842,8 +1842,9 @@ Metrics
         Return an on-demand :class:`~aerospike_helpers.metrics.MetricsSnapshot`.
 
         This does not depend on the export timer and works when periodic export is off.
-        Gauges are current. Counters stay at their last values. ``nodes_departed`` is empty;
-        departed nodes are attached only on periodic export. The caller may keep the snapshot.
+        Gauges are current. Counters stay at their last values. ``nodes_departed`` includes
+        nodes that left and have not yet been cleared by a successful periodic export.
+        The caller may keep the snapshot.
 
         :return: an instance of :py:class:`~aerospike_helpers.metrics.MetricsSnapshot`
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.

@@ -201,10 +201,10 @@ class NamespaceSnapshot:
         device_overload (int): Device overload errors. Not included in ``errors``.
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        latency (dict[str, list[int]]): Command latency histogram bucket counts keyed by
-            ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
-            for total elapsed time, including retries. Empty unless operational metrics are
-            enabled. The learn-metrics file writes a separate per-attempt series.
+        latencies (dict[str, list[int]]): Per-attempt latency histograms keyed by ``conn``,
+            ``write``, ``read``, ``batch``, and ``query``. Same series as the learn-metrics
+            file. Filled when a file writer or metrics listener is installed. Command latency
+            is :attr:`MetricsSnapshot.command_latencies`.
     """
     pass
 
@@ -279,14 +279,20 @@ class MetricsSnapshot:
         mem (int): Process resident set size in bytes. Zero unless operational metrics
             are enabled.
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
-        nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes removed since the
-            previous export. Often empty. Replaces the node-close callback for exporters.
-            Empty on :meth:`~aerospike.Client.get_metrics_snapshot`.
+        nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes that left, one
+            entry per node name. Included in on-demand snapshots. Cleared after a successful
+            periodic export. A node that rejoins keeps its entry until that export.
+        nodes_departed_possibly_truncated (bool): True when ``nodes_departed`` has reached its
+            cap of 256 entries. Later departures may be missing until the next successful export.
         latency_columns (int): Histogram width.
         latency_shift (int): Histogram boundary spacing.
         latency_unit (int): Histogram bucket unit.
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
+        command_latencies (dict[str, list[int]]): Cluster-wide command latency histograms keyed
+            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
+            for total elapsed time, including retries. Empty unless operational metrics are
+            enabled. The learn-metrics file does not write this series.
     """
     pass
 

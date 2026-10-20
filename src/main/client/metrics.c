@@ -162,6 +162,35 @@ static PyObject *py_bucket_list(as_error *err,
     return py_list;
 }
 
+static PyObject *py_latency_dict(as_error *err,
+                                 const as_metrics_latency_snapshot *series)
+{
+    PyObject *py_latency = PyDict_New();
+    if (!py_latency) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Failed to create latency dictionary");
+        return NULL;
+    }
+    for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
+        PyObject *py_buckets = py_bucket_list(err, &series[i]);
+        if (!py_buckets) {
+            Py_DECREF(py_latency);
+            return NULL;
+        }
+        int result =
+            PyDict_SetItemString(py_latency, LATENCY_NAMES[i], py_buckets);
+        Py_DECREF(py_buckets);
+        if (result == -1) {
+            PyErr_Clear();
+            Py_DECREF(py_latency);
+            as_error_update(err, AEROSPIKE_ERR, "Failed to set latencies[%s]",
+                            LATENCY_NAMES[i]);
+            return NULL;
+        }
+    }
+    return py_latency;
+}
+
 static PyObject *py_namespace_snapshot(as_error *err,
                                        const as_metrics_namespace_snapshot *ns)
 {
@@ -191,32 +220,13 @@ static PyObject *py_namespace_snapshot(as_error *err,
         }
     }
 
-    PyObject *py_latency = PyDict_New();
-    if (!py_latency) {
-        as_error_update(err, AEROSPIKE_ERR,
-                        "Failed to create latency dictionary");
+    // ns->latencies is the per-attempt series. Command latency is
+    // snapshot->command_latencies.
+    PyObject *py_latencies = py_latency_dict(err, ns->latencies);
+    if (!py_latencies) {
         goto error;
     }
-    for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
-        // command_latencies is the snapshot series. latencies is the private
-        // per-attempt series used by the learn-metrics file and listeners.
-        PyObject *py_buckets = py_bucket_list(err, &ns->command_latencies[i]);
-        if (!py_buckets) {
-            Py_DECREF(py_latency);
-            goto error;
-        }
-        int result =
-            PyDict_SetItemString(py_latency, LATENCY_NAMES[i], py_buckets);
-        Py_DECREF(py_buckets);
-        if (result == -1) {
-            PyErr_Clear();
-            Py_DECREF(py_latency);
-            as_error_update(err, AEROSPIKE_ERR, "Failed to set latency[%s]",
-                            LATENCY_NAMES[i]);
-            goto error;
-        }
-    }
-    if (set_new_attr(err, py_ns, "latency", py_latency) != 0) {
+    if (set_new_attr(err, py_ns, "latencies", py_latencies) != 0) {
         goto error;
     }
     return py_ns;
@@ -432,7 +442,20 @@ static PyObject *py_metrics_snapshot(as_error *err,
         set_new_attr(err, py_snapshot, "latency_shift",
                      PyLong_FromUnsignedLong(snapshot->latency_shift)) != 0 ||
         set_new_attr(err, py_snapshot, "latency_unit",
-                     PyLong_FromUnsignedLong(snapshot->latency_unit)) != 0) {
+                     PyLong_FromUnsignedLong(snapshot->latency_unit)) != 0 ||
+        set_new_attr(err, py_snapshot, "nodes_departed_possibly_truncated",
+                     PyBool_FromLong(
+                         snapshot->nodes_departed_possibly_truncated)) != 0) {
+        goto error;
+    }
+
+    PyObject *py_command_latencies =
+        py_latency_dict(err, snapshot->command_latencies);
+    if (!py_command_latencies) {
+        goto error;
+    }
+    if (set_new_attr(err, py_snapshot, "command_latencies",
+                     py_command_latencies) != 0) {
         goto error;
     }
 
