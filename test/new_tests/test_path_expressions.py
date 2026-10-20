@@ -4,7 +4,7 @@ import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.operations import hll_operations as hll_ops
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, ResultRemove, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And, Val
+from aerospike_helpers.expressions.base import GE, Eq, LoopVarStr, LoopVarFloat, LoopVarInt, LoopVarMap, LoopVarList, ModifyByPath, SelectByPath, MapBin, LoopVarBool, LoopVarBlob, RemoveResult, LoopVarGeoJson, LoopVarNil, CmpGeo, LoopVarHLL, LE, And, Val
 from aerospike_helpers.expressions.map import MapGetByKey, MapGetKeys, MapGetValues
 from aerospike_helpers.expressions.list import ListSize, InList
 from aerospike_helpers.expressions.arithmetic import Sub
@@ -612,19 +612,18 @@ class TestPathExprOperations:
             assert bins == {self.LIST_BIN_NAME: [self.RECORD_BINS[self.LIST_BIN_NAME][0]]}
 
     @expect_server_version_earlier_than_8_1_1_to_fail
-    def test_expr_result_remove(self):
-        with pytest.warns(DeprecationWarning):
-            ops = [
-                operations.modify_by_path(
-                    bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
-                    ctx=[
-                        cdt_ctx.cdt_ctx_all_children(),
-                        cdt_ctx.cdt_ctx_all_children()
-                    ],
-                    expr=ResultRemove().compile(),
-                    flags=aerospike.EXP_PATH_MODIFY_DEFAULT
-                )
-            ]
+    def test_expr_remove_result(self):
+        ops = [
+            operations.modify_by_path(
+                bin_name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all_children(),
+                    cdt_ctx.cdt_ctx_all_children()
+                ],
+                expr=RemoveResult().compile(),
+                flags=aerospike.EXP_PATH_MODIFY_DEFAULT
+            )
+        ]
 
         with self.expected_context_for_pos_tests:
             self.as_connection.operate(self.key, ops)
@@ -846,15 +845,6 @@ class TestPathExprOperations:
                 # Only the third list element is in [3]
                 [3]
             ),
-            pytest.param(
-                InList(
-                    LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
-                    SECOND_LIST_OF_INTS_BIN_NAME
-                ),
-                # Only the third list element is in SECOND_LIST_OF_INTS_BIN_NAME
-                [3],
-                marks=pytest.mark.xfail(reason="Known bug where server 8.1.2 raises InvalidRequest")
-            ),
         ]
     )
     @expect_server_version_earlier_than_8_1_2_to_fail
@@ -869,6 +859,26 @@ class TestPathExprOperations:
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins[self.LIST_OF_INTS_BIN_NAME] == expected_results
+
+    def test_expr_in_list_referencing_bin(self):
+        # A path-expression filter is evaluated per-element with no access to the record, so
+        # referencing another bin from inside the filter can never resolve. This is not a bug;
+        # the server correctly rejects it with InvalidRequest.
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 1, 2):
+            pytest.skip("Server versions < 8.1.2 will not return an invalid request error."
+                        "We consider this undefined behavior")
+        filter_expr = InList(
+            LoopVarInt(aerospike.EXP_LOOPVAR_VALUE),
+            self.SECOND_LIST_OF_INTS_BIN_NAME
+        ).compile()
+        ctx = [
+            cdt_ctx.cdt_ctx_all_children_with_filter(filter_expr)
+        ]
+        ops = [
+            operations.select_by_path(self.LIST_OF_INTS_BIN_NAME, ctx, aerospike.EXP_PATH_SELECT_LIST_VALUE)
+        ]
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(self.key, ops)
 
     def test_expr_in_map_instead_of_list(self):
         filter_expr = InList(LoopVarInt(aerospike.EXP_LOOPVAR_VALUE), self.MAP_BIN_NAME).compile()

@@ -44,7 +44,7 @@ class TestIndex(object):
         Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "age_index", policy)
@@ -56,7 +56,7 @@ class TestIndex(object):
 
         policy = {}
         with pytest.raises(e.InvalidRequest) as err_info:
-            self.as_connection.index_single_value_create("test", set_name, "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            self.as_connection.index_single_value_create("test", set_name, "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
@@ -67,7 +67,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.NamespaceNotFound) as err_info:
-            self.as_connection.index_single_value_create("fake_namespace", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            self.as_connection.index_single_value_create("fake_namespace", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
@@ -78,7 +78,7 @@ class TestIndex(object):
         It should succeed
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo1", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo1", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "age_index", policy)
@@ -89,7 +89,7 @@ class TestIndex(object):
         Invoke createindex() with a nonexistent bin
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "fake_bin", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "fake_bin", aerospike.INDEX_INTEGER, "age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "age_index", policy)
@@ -101,7 +101,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_single_value_create(None, "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            self.as_connection.index_single_value_create(None, "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -110,7 +110,7 @@ class TestIndex(object):
         # Invoke createindex() with set is None
         policy = {}
 
-        retobj = self.as_connection.index_single_value_create("test", None, "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", None, "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "age_index", policy)
@@ -121,7 +121,7 @@ class TestIndex(object):
         policy = {}
 
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_single_value_create("test", 1, "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            self.as_connection.index_single_value_create("test", 1, "age", aerospike.INDEX_INTEGER, "age_index", policy)
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
 
@@ -131,7 +131,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_single_value_create("test", "demo", None, aerospike.INDEX_NUMERIC, "age_index", policy)
+            self.as_connection.index_single_value_create("test", "demo", None, aerospike.INDEX_INTEGER, "age_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -142,7 +142,7 @@ class TestIndex(object):
         """
         policy = {}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, None, policy)
+            self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, None, policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -154,10 +154,10 @@ class TestIndex(object):
 
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         try:
-            retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
 
@@ -170,12 +170,12 @@ class TestIndex(object):
         multiple times on different bin names
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
         with pytest.raises(e.IndexFoundError):
-            retobj = self.as_connection.index_single_value_create("test", "demo", "no", aerospike.INDEX_NUMERIC, "age_index", policy)
+            retobj = self.as_connection.index_single_value_create("test", "demo", "no", aerospike.INDEX_INTEGER, "age_index", policy)
             self.as_connection.index_remove("test", "age_index", policy)
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
@@ -186,10 +186,10 @@ class TestIndex(object):
         name
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         try:
-            retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index1", policy)
+            retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index1", policy)
             self.as_connection.index_remove("test", "age_index1", policy)
         except e.IndexFoundError:
             assert self.server_version <= [6, 0]
@@ -201,7 +201,7 @@ class TestIndex(object):
         Invoke createindex() with policy
         """
         policy = {"timeout": 180000}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -401,7 +401,7 @@ class TestIndex(object):
         Invoke drop valid index()
         """
         policy = {}
-        self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
         retobj = self.as_connection.index_remove("test", "age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -411,7 +411,7 @@ class TestIndex(object):
         Invoke drop valid index() policy
         """
         policy = {"timeout": 180000}
-        self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+        self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
         retobj = self.as_connection.index_remove("test", "age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -420,7 +420,7 @@ class TestIndex(object):
         # Invoke createindex() with long index name
         policy = {}
         with pytest.raises(e.InvalidRequest):
-            self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "index" * 100, policy)
+            self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "index" * 100, policy)
 
     def test_create_string_index_unicode_positive(self):
         """
@@ -438,7 +438,7 @@ class TestIndex(object):
         Invoke createindex() with correct arguments
         """
         policy = {}
-        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "uni_age_index", policy)
+        retobj = self.as_connection.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "uni_age_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "uni_age_index", policy)
@@ -452,7 +452,7 @@ class TestIndex(object):
         client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
-            client1.index_single_value_create("test", "demo", "age", aerospike.INDEX_NUMERIC, "age_index", policy)
+            client1.index_single_value_create("test", "demo", "age", aerospike.INDEX_INTEGER, "age_index", policy)
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_CLUSTER_ERROR

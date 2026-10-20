@@ -42,6 +42,13 @@ class TestInvalidClientConfig(object):
             aerospike.client({"hosts": [("localhost", 3000), ()]})
         assert "Invalid host" in err.value.msg
 
+    def test_invalid_host_tuple_address_type(self):
+        # A correctly-sized (address, port) tuple whose address isn't a string
+        # (CLIENT-4841).
+        with pytest.raises(e.ParamError) as err:
+            aerospike.client({"hosts": [(123, 3000)]})
+        assert "Invalid host" in err.value.msg
+
     def test_lua_user_path_too_long(self):
         with pytest.raises(e.ParamError) as err:
             aerospike.client({"hosts": [("localhost", 3000)], "lua": {"user_path": "a" * 256}})

@@ -127,7 +127,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist, expected",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
                 {"name": "ramname1"},
@@ -142,7 +142,7 @@ class TestOperate(object):
                 [operations.write("write_bin", {"no": 89}), operations.read("write_bin")],
                 {"write_bin": {"no": 89}},
             ),
-            (
+            pytest.param(
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
@@ -209,7 +209,6 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters
         """
-
         key, _, bins = self.as_connection.operate(key, llist)
 
         assert bins == expected
@@ -274,7 +273,7 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, policy, meta, llist",
         [
-            (
+            pytest.param(
                 ("test", "demo", 1),
                 {
                     "key": aerospike.POLICY_KEY_SEND,
@@ -283,7 +282,7 @@ class TestOperate(object):
                     "ttl": 1200
                 },
                 {"gen": 10},
-                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
             ),
         ],
     )

@@ -30,7 +30,7 @@ jobs:
       JF_PROJECT: ${{ inputs.jfrog-project }}
     steps:
     - name: Setup JFrog CLI
-      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      uses: step-security/setup-jfrog-cli@f67dd6dcfe5fab8d1ebd695c456631275009a39d # v5.2.0
       env:
         JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
         JF_PROJECT: ${{ inputs.jfrog-project }}
@@ -45,7 +45,7 @@ jobs:
       env:
         RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
 
-    - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
+    - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@df68d17cd7b577287b56cbbca5621a5cea0bf803
       with:
         bundle-name: ${{ env.RELEASE_BUNDLE_NAME }}
         version: ${{ env.RELEASE_BUNDLE_VERSION }}

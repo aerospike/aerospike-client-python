@@ -22,7 +22,9 @@ Bin Predicates
     :param int max: the maximum value to be matched with the between operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. code-block:: python
+    .. TODO - these code examples are not complete
+
+    .. code-block:: Python
 
         import aerospike
         from aerospike import predicates as p
@@ -35,7 +37,6 @@ Bin Predicates
         print(res)
         client.close()
 
-
 .. py:function:: equals(bin, val)
 
     Represent a *bin* **=** *val* predicate.
@@ -45,7 +46,9 @@ Bin Predicates
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
-    .. code-block:: python
+    .. TODO - these code examples are not complete
+
+    .. code-block:: Python
 
         import aerospike
         from aerospike import predicates as p
@@ -75,7 +78,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -84,10 +87,10 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+        client.index_geo2dsphere_create('test', 'pads1', 'loc', 'pads_loc_geo1')
         bins = {'pad_id': 1,
                 'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
-        client.put(('test', 'pads', 'launchpad1'), bins)
+        client.put(('test', 'pads1', 'launchpad1'), bins)
 
         # Create a search rectangle which matches screen boundaries:
         # (from the bottom left corner counter-clockwise)
@@ -100,12 +103,16 @@ GeoJSON Predicates
                            [-80.590000, 28.60000]]]})
 
         # Find all points contained in the rectangle.
-        query = client.query('test', 'pads')
+        query = client.query('test', 'pads1')
         query.select('pad_id', 'loc')
         query.where(p.geo_within_geojson_region('loc', scrn.dumps()))
         records = query.results()
         print(records)
         client.close()
+
+    .. testoutput::
+
+        [(('test', 'pads1', None, bytearray(b...)), {'ttl': ..., 'gen': 1}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -126,7 +133,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -135,17 +142,23 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+        client.index_geo2dsphere_create('test', 'pads2', 'loc', 'pads_loc_geo2')
         bins = {'pad_id': 1,
                 'loc': aerospike.geojson('{"type":"Point", "coordinates":[-80.604333, 28.608389]}')}
-        client.put(('test', 'pads', 'launchpad1'), bins)
+        client.put(('test', 'pads2', 'launchpad1'), bins)
 
-        query = client.query('test', 'pads')
+        query = client.query('test', 'pads2')
         query.select('pad_id', 'loc')
         query.where(p.geo_within_radius('loc', -80.605000, 28.60900, 400.0))
         records = query.results()
         print(records)
         client.close()
+
+    .. TODO this needs to be pretty printed...
+
+    .. testoutput::
+
+        [(('test', 'pads2', None, bytearray(b...)), {'ttl': ..., 'gen': 1}, {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -163,7 +176,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -172,7 +185,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
+        client.index_geo2dsphere_create('test', 'launch_centers1', 'area', 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
                          'coordinates': [
                           [[-80.590000, 28.60000],
@@ -181,16 +194,20 @@ GeoJSON Predicates
                            [-80.620000, 28.60000],
                            [-80.590000, 28.60000]]]})
         bins = {'area': rect}
-        client.put(('test', 'launch_centers', 'kennedy space center'), bins)
+        client.put(('test', 'launch_centers1', 'kennedy space center'), bins)
 
         # Find all geo regions containing a point
         point = GeoJSON({'type': "Point",
                          'coordinates': [-80.604333, 28.608389]})
-        query = client.query('test', 'launch_centers')
+        query = client.query('test', 'launch_centers1')
         query.where(p.geo_contains_geojson_point('area', point.dumps()))
         records = query.results()
         print(records)
         client.close()
+
+    .. testoutput::
+
+        [(('test', 'launch_centers1', None, bytearray(b'\x81LL9!\xa0\x00n\xb3x\xcc0\xc6\xad\xc5\xfdau.g')), {'ttl': ..., 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -210,7 +227,7 @@ GeoJSON Predicates
 
     .. note:: Requires server version >= 3.7.0
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import GeoJSON
@@ -219,7 +236,7 @@ GeoJSON Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
+        client.index_geo2dsphere_create('test', 'launch_centers2', 'area', 'launch_area_geo2')
         rect = GeoJSON({ 'type': "Polygon",
                          'coordinates': [
                           [[-80.590000, 28.60000],
@@ -228,14 +245,18 @@ GeoJSON Predicates
                            [-80.620000, 28.60000],
                            [-80.590000, 28.60000]]]})
         bins = {'area': rect}
-        client.put(('test', 'launch_centers', 'kennedy space center'), bins)
+        client.put(('test', 'launch_centers2', 'kennedy space center'), bins)
 
         # Find all geo regions containing a point
-        query = client.query('test', 'launch_centers')
+        query = client.query('test', 'launch_centers2')
         query.where(p.geo_contains_point('area', -80.604333, 28.608389))
         records = query.results()
         print(records)
         client.close()
+
+    .. testoutput::
+
+        [(('test', 'launch_centers2', None, bytearray(b...)), {'ttl': ..., 'gen': 1}, {'area': '{"type": "Polygon", "coordinates": [[[-80.59, 28.6], [-80.59, 28.618], [-80.62, 28.618], [-80.62, 28.6], [-80.59, 28.6]]]}'})]
 
     .. versionadded:: 1.0.58
 
@@ -255,7 +276,7 @@ Map and List Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
@@ -279,6 +300,10 @@ Map and List Predicates
         print(res)
         client.close()
 
+    .. testoutput::
+
+        [(('test', 'demo', None, bytearray(b'\xd0\xd7c\xac\xef&\xe7A\xc0\xd3\x9d\x0b\x01\x17\xc1\xbepq>[')), {'ttl': ..., 'gen': 1}, {'age': 43, 'fav_movies': {'12 Monkeys': 1, 'Brasil': 2}})]
+
 .. py:function:: range(bin, index_type, min, max))
 
     Represent the predicate *bin* **CONTAINS** values **BETWEEN** *min* **AND** \
@@ -292,7 +317,7 @@ Map and List Predicates
 
     .. note:: Requires server version >= 3.8.1
 
-    .. code-block:: python
+    .. testcode::
 
         import aerospike
         from aerospike import predicates as p
@@ -300,12 +325,23 @@ Map and List Predicates
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
         client = aerospike.client(config)
 
-        # create a secondary index for numeric values of test.demo records whose 'age' bin is a list
-        client.index_list_create('test', 'demo', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
+        # create a secondary index for numeric values of test.demo1 records whose 'age' bin is a list
+        client.index_list_create('test', 'demo1', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
+
+        key = ("test", "demo1", "list")
+        client.put(key, bins={"age": [25, 26]})
 
         # query for records whose 'age' bin has a list with numeric values between 20 and 30
-        query = client.query('test', 'demo')
+        query = client.query('test', 'demo1')
         query.where(p.range('age', aerospike.INDEX_TYPE_LIST, 20, 30))
         res = query.results()
         print(res)
+
+    .. testoutput::
+
+        [(('test', 'demo1', None, bytearray(...)), {'ttl': ..., 'gen': 1}, {'age': [25, 26]})]
+
+    .. testcleanup::
+
+        client.truncate('test', None, 0)
         client.close()

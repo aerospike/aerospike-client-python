@@ -38,6 +38,9 @@ class HyperLogLog(bytes):
         _, _, bins = client.get(keyTuple)
         print(bins[BIN_NAME])
 
+        # Cleanup
+        client.remove(keyTuple)
+
     .. testoutput::
 
         HyperLogLog(...)

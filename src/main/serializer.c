@@ -429,6 +429,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         }
         *retval = py_val;
         as_error_update(error_p, AEROSPIKE_OK, NULL);
+        break;
     case AS_BYTES_BLOB: {
         if (self->user_deserializer_call_info.callback) {
             execute_user_callback(&self->user_deserializer_call_info, &bytes,

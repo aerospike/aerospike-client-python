@@ -240,8 +240,8 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
 
     ret_val = Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                             py_bin, py_shape, Py_None, py_indexType);
+    Py_DECREF(py_shape);
     if (ret_val) {
-        Py_DECREF(py_shape);
         return ret_val;
     }
     else {
@@ -339,10 +339,8 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
     PyObject *ret_val =
         Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                       py_bin, py_shape, Py_None, py_indexType);
-    if (ret_val) {
-        Py_DECREF(py_shape);
-    }
-    else {
+    Py_DECREF(py_shape);
+    if (!ret_val) {
         goto CLEANUP;
     }
     return ret_val;

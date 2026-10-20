@@ -37,7 +37,7 @@ deserialized into a :class:`~aerospike.GeoJSON` instance.
 Example
 -------
 
-.. code-block:: python
+.. testcode::
 
     import aerospike
     from aerospike import GeoJSON
@@ -45,7 +45,7 @@ Example
     config = { 'hosts': [ ('127.0.0.1', 3000)]}
     client = aerospike.client(config)
 
-    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
+    client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo3')
 
     # Create GeoJSON point using WGS84 coordinates.
     latitude = 28.608389
@@ -53,9 +53,6 @@ Example
     loc = GeoJSON({'type': "Point",
                     'coordinates': [longitude, latitude]})
     print(loc)
-
-    # Expected output:
-    # {"type": "Point", "coordinates": [-80.604333, 28.608389]}
 
     # Alternatively, create the GeoJSON point from a string
     loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
@@ -69,12 +66,14 @@ Example
     (k, m, b) = client.get(('test', 'pads', 'launchpad1'))
     print(b)
 
-    # Expected output:
-    # {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'}
-
     # Cleanup
     client.remove(('test', 'pads', 'launchpad1'))
     client.close()
+
+.. testoutput::
+
+    {"type": "Point", "coordinates": [-80.604333, 28.608389]}
+    {'pad_id': 1, 'loc': '{"type": "Point", "coordinates": [-80.604333, 28.608389]}'}
 
 Methods
 =======
