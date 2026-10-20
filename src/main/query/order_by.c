@@ -53,8 +53,9 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "sI|II:order_by", kwlist,
                                      &bin_name, &type, &direction, &flags)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "order_by() expects (bin: str, type: int, "
-                        "direction: int = ASCENDING, flags: int = 0)");
+                        "order_by() expects (bin: str, type: QueryOrderByType, "
+                        "direction: QueryOrder = ASCENDING, "
+                        "flags: QueryOrderByFlags = DEFAULT)");
         goto CLEANUP;
     }
 

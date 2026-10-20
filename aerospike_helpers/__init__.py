@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ class HyperLogLog(bytes):
 
 import struct as _struct
 from array import array as _array
+from enum import IntEnum as _IntEnum
 
 
 class Vector(bytes):
@@ -106,7 +107,7 @@ class Vector(bytes):
 
     VERSION = 1
 
-    class ElementType:
+    class ElementType(_IntEnum):
         FLOAT16 = 0x01
         INT32 = 0x02
         FLOAT32 = 0x03  # default
@@ -125,12 +126,16 @@ class Vector(bytes):
 
     # Declared here (rather than only assigned in __new__/from_bytes) so that
     # mypy/stubtest can see these instance attributes exist on the class.
-    _element_type: int
+    _element_type: ElementType
     _dimensions: int
 
-    def __new__(cls, element_type_or_bytes, elements=None) -> "Vector":
+    def __new__(
+        cls,
+        element_type_or_bytes: ElementType | bytes | bytearray,
+        elements=None,
+    ) -> "Vector":
         # Two calling conventions:
-        #   Vector(element_type: int, elements: Sequence)  - normal construction
+        #   Vector(element_type: ElementType, elements: Sequence)  - normal construction
         #   Vector(raw_bytes: bytes)                        - internal decode path,
         #       used by the C extension when deserializing a stored Vector bin
         #       (mirrors create_class_instance_from_module()'s single-positional-arg
@@ -166,7 +171,7 @@ class Vector(bytes):
                                dimensions, 0)
         body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
         self = super().__new__(cls, header + body)
-        self._element_type = element_type
+        self._element_type = cls.ElementType(element_type)
         self._dimensions = dimensions
         return self
 
@@ -190,7 +195,7 @@ class Vector(bytes):
         return cls(cls.ElementType.FLOAT64, data)
 
     @property
-    def element_type(self) -> int:
+    def element_type(self) -> ElementType:
         return self._element_type
 
     @property
@@ -240,7 +245,7 @@ class Vector(bytes):
                 f"{expected_len}, got {len(raw)}"
             )
         self = bytes.__new__(cls, raw[:expected_len])
-        self._element_type = element_type
+        self._element_type = cls.ElementType(element_type)
         self._dimensions = dimensions
         return self
 

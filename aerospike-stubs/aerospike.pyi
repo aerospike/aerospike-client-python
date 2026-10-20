@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Any, Callable, Union, final, Literal, Optional, Final
 
 from aerospike_helpers.batch.records import BatchRecords
@@ -295,13 +296,28 @@ UDF_TYPE_LUA: Literal[0]
 QUERY_DURATION_LONG: Literal[0]
 QUERY_DURATION_SHORT: Literal[1]
 QUERY_DURATION_LONG_RELAX_AP: Literal[2]
-QUERY_ORDER_BY_INTEGER: Literal[1]
-QUERY_ORDER_BY_DOUBLE: Literal[2]
-QUERY_ORDER_BY_STRING: Literal[3]
-QUERY_ORDER_BY_BYTES: Literal[4]
-QUERY_ORDER_BY_CASE_INSENSITIVE: Literal[1]
-QUERY_ORDER_ASCENDING: Literal[0]
-QUERY_ORDER_DESCENDING: Literal[1]
+
+class QueryOrderByType(IntEnum):
+    INTEGER = 1
+    DOUBLE = 2
+    STRING = 3
+    BYTES = 4
+
+class QueryOrder(IntEnum):
+    ASCENDING = 0
+    DESCENDING = 1
+
+class QueryOrderByFlags(IntEnum):
+    DEFAULT = 0
+    CASE_INSENSITIVE = 1
+
+QUERY_ORDER_BY_INTEGER = QueryOrderByType.INTEGER
+QUERY_ORDER_BY_DOUBLE = QueryOrderByType.DOUBLE
+QUERY_ORDER_BY_STRING = QueryOrderByType.STRING
+QUERY_ORDER_BY_BYTES = QueryOrderByType.BYTES
+QUERY_ORDER_BY_CASE_INSENSITIVE = QueryOrderByFlags.CASE_INSENSITIVE
+QUERY_ORDER_ASCENDING = QueryOrder.ASCENDING
+QUERY_ORDER_DESCENDING = QueryOrder.DESCENDING
 
 COMMIT_OK: Literal[0]
 COMMIT_ALREADY_COMMITTED: Literal[1]
@@ -531,7 +547,13 @@ class Query:
     def foreach(self, callback: Callable, policy: dict = ..., options: dict = ...) -> None: ...
     def get_partitions_status(self) -> tuple: ...
     def is_done(self) -> bool: ...
-    def order_by(self, bin: str, type: int, direction: int = ..., flags: int = ...) -> Query: ...
+    def order_by(
+        self,
+        bin: str,
+        type: QueryOrderByType,
+        direction: QueryOrder = ...,
+        flags: QueryOrderByFlags = ...,
+    ) -> Query: ...
     def paginate(self) -> None: ...
     def results(self, policy: dict = ..., options: dict = ...) -> list: ...
     # TODO: this isn't an infinite list of bins

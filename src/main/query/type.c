@@ -60,10 +60,10 @@ If a selected bin does not exist in a record it will not appear in the bins port
 PyDoc_STRVAR(order_by_doc, "order_by(bin, type[, direction[, flags]])\n\
 \n\
 Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
-Must be paired with setting the ``top_k`` attribute. ``type`` is one of the \
-aerospike.QUERY_ORDER_BY_* constants, ``direction`` is aerospike.QUERY_ORDER_ASCENDING \
-(default) or aerospike.QUERY_ORDER_DESCENDING, and ``flags`` is an optional bitmask \
-(e.g. aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE). \
+Must be paired with setting the ``top_k`` attribute. ``type`` is an \
+aerospike.QueryOrderByType value, ``direction`` is an aerospike.QueryOrder value \
+(default aerospike.QueryOrder.ASCENDING), and ``flags`` is an \
+aerospike.QueryOrderByFlags value (default aerospike.QueryOrderByFlags.DEFAULT). \
 Cross-field validation (bin-name length, k range, incompatible-feature combinations, \
 server support, etc.) is performed by the server/C client when the query executes, \
 raising aerospike.exception.ParamError on violation.");

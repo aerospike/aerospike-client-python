@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from enum import IntEnum
+
 import pytest
 
 import aerospike
@@ -11,6 +13,24 @@ from aerospike_helpers import Vector
 
 
 class TestVectorUnit(object):
+    def test_element_type_is_int_enum(self):
+        assert issubclass(Vector.ElementType, IntEnum)
+        assert Vector.ElementType.FLOAT32 == 0x03
+        vector = Vector.of_float32([0.1])
+        assert vector.element_type is Vector.ElementType.FLOAT32
+
+    def test_query_order_constants_are_int_enums(self):
+        assert issubclass(aerospike.QueryOrderByType, IntEnum)
+        assert issubclass(aerospike.QueryOrder, IntEnum)
+        assert issubclass(aerospike.QueryOrderByFlags, IntEnum)
+        assert aerospike.QUERY_ORDER_BY_DOUBLE is aerospike.QueryOrderByType.DOUBLE
+        assert aerospike.QUERY_ORDER_ASCENDING is aerospike.QueryOrder.ASCENDING
+        assert (
+            aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE
+            is aerospike.QueryOrderByFlags.CASE_INSENSITIVE
+        )
+        assert aerospike.QueryOrderByFlags.DEFAULT == 0
+
     def test_of_float32(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
         assert v.element_type == Vector.ElementType.FLOAT32

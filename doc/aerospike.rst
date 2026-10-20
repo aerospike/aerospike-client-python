@@ -1917,52 +1917,78 @@ Query Order By / Top-K
 Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` to run a Top-K
 (nearest-neighbor / vector similarity search) query.
 
+.. class:: QueryOrderByType
+
+    Order-key type for :meth:`~aerospike.Query.order_by`.
+
+    .. attribute:: INTEGER
+
+        The bin holds an integer value.
+
+    .. attribute:: DOUBLE
+
+        The bin holds a double (float) value. Use this when ordering by a projected
+        :class:`~aerospike_helpers.expressions.vector.VectorDistance` result bin.
+
+    .. attribute:: STRING
+
+        The bin holds a string value.
+
+    .. attribute:: BYTES
+
+        The bin holds a bytes value.
+
+.. class:: QueryOrder
+
+    Sort direction for :meth:`~aerospike.Query.order_by`.
+
+    .. attribute:: ASCENDING
+
+        Smallest value first. This is the default.
+
+    .. attribute:: DESCENDING
+
+        Largest value first.
+
+.. class:: QueryOrderByFlags
+
+    Comparison flags for :meth:`~aerospike.Query.order_by`.
+
+    .. attribute:: DEFAULT
+
+        No comparison flags.
+
+    .. attribute:: CASE_INSENSITIVE
+
+        Case-insensitive sort of a :attr:`QueryOrderByType.STRING` bin.
+
 .. data:: QUERY_ORDER_BY_INTEGER
 
-     (int): 1
-
-     The bin passed to :meth:`~aerospike.Query.order_by` holds an integer value.
+     Alias of :attr:`aerospike.QueryOrderByType.INTEGER`.
 
 .. data:: QUERY_ORDER_BY_DOUBLE
 
-     (int): 2
-
-     The bin passed to :meth:`~aerospike.Query.order_by` holds a double (float) value. This is the
-     type to use when ordering by a projected :class:`~aerospike_helpers.expressions.vector.VectorDistance`
-     result bin.
+     Alias of :attr:`aerospike.QueryOrderByType.DOUBLE`.
 
 .. data:: QUERY_ORDER_BY_STRING
 
-     (int): 3
-
-     The bin passed to :meth:`~aerospike.Query.order_by` holds a string value.
+     Alias of :attr:`aerospike.QueryOrderByType.STRING`.
 
 .. data:: QUERY_ORDER_BY_BYTES
 
-     (int): 4
-
-     The bin passed to :meth:`~aerospike.Query.order_by` holds a bytes value.
+     Alias of :attr:`aerospike.QueryOrderByType.BYTES`.
 
 .. data:: QUERY_ORDER_BY_CASE_INSENSITIVE
 
-     (int): 1
-
-     Optional ``flags`` bit for :meth:`~aerospike.Query.order_by` requesting a case-insensitive sort
-     of a :data:`aerospike.QUERY_ORDER_BY_STRING` bin.
+     Alias of :attr:`aerospike.QueryOrderByFlags.CASE_INSENSITIVE`.
 
 .. data:: QUERY_ORDER_ASCENDING
 
-     (int): 0
-
-     ``direction`` value for :meth:`~aerospike.Query.order_by` requesting ascending order (smallest
-     value first).
+     Alias of :attr:`aerospike.QueryOrder.ASCENDING`.
 
 .. data:: QUERY_ORDER_DESCENDING
 
-     (int): 1
-
-     ``direction`` value for :meth:`~aerospike.Query.order_by` requesting descending order (largest
-     value first).
+     Alias of :attr:`aerospike.QueryOrder.DESCENDING`.
 
 .. _mrt_commit_status_constants:
 

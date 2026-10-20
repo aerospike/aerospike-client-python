@@ -276,10 +276,13 @@ Assume this boilerplate code is run before all examples below:
         :param str bin: the name of the bin to order by. This can be a stored bin, or the name of a \
             result bin produced by :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
             in :meth:`Query.add_ops`, such as a projected :class:`~aerospike_helpers.expressions.vector.VectorDistance`.
-        :param int type: one of the ``aerospike.QUERY_ORDER_BY_*`` constants describing the bin's data \
-            type (e.g. :data:`aerospike.QUERY_ORDER_BY_DOUBLE` for a distance expression's float result).
-        :param int direction: :data:`aerospike.QUERY_ORDER_ASCENDING` (default) or :data:`aerospike.QUERY_ORDER_DESCENDING`.
-        :param int flags: optional bitmask, e.g. :data:`aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE`.
+        :param type: an :class:`~aerospike.QueryOrderByType` value, for example \
+            :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result.
+        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` (default) or \
+            :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param flags: an :class:`~aerospike.QueryOrderByFlags` value, for example \
+            :attr:`aerospike.QueryOrderByFlags.CASE_INSENSITIVE`. Defaults to \
+            :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
 
         .. note::
