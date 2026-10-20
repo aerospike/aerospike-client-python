@@ -1962,34 +1962,6 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 
         Case-insensitive sort of a :attr:`QueryOrderByType.STRING` bin.
 
-.. data:: QUERY_ORDER_BY_INTEGER
-
-     Alias of :attr:`aerospike.QueryOrderByType.INTEGER`.
-
-.. data:: QUERY_ORDER_BY_DOUBLE
-
-     Alias of :attr:`aerospike.QueryOrderByType.DOUBLE`.
-
-.. data:: QUERY_ORDER_BY_STRING
-
-     Alias of :attr:`aerospike.QueryOrderByType.STRING`.
-
-.. data:: QUERY_ORDER_BY_BYTES
-
-     Alias of :attr:`aerospike.QueryOrderByType.BYTES`.
-
-.. data:: QUERY_ORDER_BY_CASE_INSENSITIVE
-
-     Alias of :attr:`aerospike.QueryOrderByFlags.CASE_INSENSITIVE`.
-
-.. data:: QUERY_ORDER_ASCENDING
-
-     Alias of :attr:`aerospike.QueryOrder.ASCENDING`.
-
-.. data:: QUERY_ORDER_DESCENDING
-
-     Alias of :attr:`aerospike.QueryOrder.DESCENDING`.
-
 .. _mrt_commit_status_constants:
 
 Transaction Commit Status

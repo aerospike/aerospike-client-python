@@ -329,7 +329,11 @@ Assume this boilerplate code is run before all examples below:
             ])
 
             # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
-            query.order_by("dist", aerospike.QUERY_ORDER_BY_DOUBLE, aerospike.QUERY_ORDER_ASCENDING)
+            query.order_by(
+                "dist",
+                aerospike.QueryOrderByType.DOUBLE,
+                aerospike.QueryOrder.ASCENDING,
+            )
             query.top_k = 2
 
             records = query.results()

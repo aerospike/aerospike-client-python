@@ -511,16 +511,6 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AS_BYTES_GEOJSON", .value.integer = AS_BYTES_GEOJSON},
     {"AS_BYTES_TYPE_MAX", .value.integer = AS_BYTES_TYPE_MAX},
 
-    /* Query ORDER BY / Top-K (order_by()/top_k) */
-    {"QUERY_ORDER_BY_INTEGER", .value.integer = AS_QUERY_ORDER_BY_INTEGER},
-    {"QUERY_ORDER_BY_DOUBLE", .value.integer = AS_QUERY_ORDER_BY_DOUBLE},
-    {"QUERY_ORDER_BY_STRING", .value.integer = AS_QUERY_ORDER_BY_STRING},
-    {"QUERY_ORDER_BY_BYTES", .value.integer = AS_QUERY_ORDER_BY_BYTES},
-    {"QUERY_ORDER_BY_CASE_INSENSITIVE",
-     .value.integer = AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
-    {"QUERY_ORDER_ASCENDING", .value.integer = AS_ORDER_ASCENDING},
-    {"QUERY_ORDER_DESCENDING", .value.integer = AS_ORDER_DESCENDING},
-
     /* Regex constants from predexp, still used by expressions */
     {"REGEX_NONE", .value.integer = REGEX_NONE},
     {"REGEX_EXTENDED", .value.integer = REGEX_EXTENDED},
@@ -1114,19 +1104,6 @@ static PyObject *create_int_enum(const char *enum_name, PyObject *members)
     return enum_cls;
 }
 
-static int alias_enum_member(PyObject *module, PyObject *enum_cls,
-                             const char *attr_name, const char *member_name)
-{
-    PyObject *member = PyObject_GetAttrString(enum_cls, member_name);
-    if (member == NULL) {
-        return -1;
-    }
-
-    int retval = PyObject_SetAttrString(module, attr_name, member);
-    Py_DECREF(member);
-    return retval;
-}
-
 static int add_query_order_enums(PyObject *module)
 {
     PyObject *type_members = PyDict_New();
@@ -1165,27 +1142,6 @@ static int add_query_order_enums(PyObject *module)
         return -1;
     }
 
-    retval = alias_enum_member(module, order_by_type, "QUERY_ORDER_BY_INTEGER",
-                               "INTEGER");
-    if (retval == -1) {
-        return -1;
-    }
-    retval = alias_enum_member(module, order_by_type, "QUERY_ORDER_BY_DOUBLE",
-                               "DOUBLE");
-    if (retval == -1) {
-        return -1;
-    }
-    retval = alias_enum_member(module, order_by_type, "QUERY_ORDER_BY_STRING",
-                               "STRING");
-    if (retval == -1) {
-        return -1;
-    }
-    retval = alias_enum_member(module, order_by_type, "QUERY_ORDER_BY_BYTES",
-                               "BYTES");
-    if (retval == -1) {
-        return -1;
-    }
-
     PyObject *direction_members = PyDict_New();
     if (direction_members == NULL) {
         return -1;
@@ -1211,17 +1167,6 @@ static int add_query_order_enums(PyObject *module)
     retval = PyModule_AddObject(module, "QueryOrder", query_order);
     if (retval == -1) {
         Py_DECREF(query_order);
-        return -1;
-    }
-
-    retval = alias_enum_member(module, query_order, "QUERY_ORDER_ASCENDING",
-                               "ASCENDING");
-    if (retval == -1) {
-        return -1;
-    }
-    retval = alias_enum_member(module, query_order, "QUERY_ORDER_DESCENDING",
-                               "DESCENDING");
-    if (retval == -1) {
         return -1;
     }
 
@@ -1254,11 +1199,7 @@ static int add_query_order_enums(PyObject *module)
         Py_DECREF(order_by_flags);
         return -1;
     }
-
-    retval = alias_enum_member(module, order_by_flags,
-                               "QUERY_ORDER_BY_CASE_INSENSITIVE",
-                               "CASE_INSENSITIVE");
-    return retval;
+    return 0;
 }
 
 PyMODINIT_FUNC PyInit_aerospike(void)

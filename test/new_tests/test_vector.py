@@ -23,13 +23,13 @@ class TestVectorUnit(object):
         assert issubclass(aerospike.QueryOrderByType, IntEnum)
         assert issubclass(aerospike.QueryOrder, IntEnum)
         assert issubclass(aerospike.QueryOrderByFlags, IntEnum)
-        assert aerospike.QUERY_ORDER_BY_DOUBLE is aerospike.QueryOrderByType.DOUBLE
-        assert aerospike.QUERY_ORDER_ASCENDING is aerospike.QueryOrder.ASCENDING
-        assert (
-            aerospike.QUERY_ORDER_BY_CASE_INSENSITIVE
-            is aerospike.QueryOrderByFlags.CASE_INSENSITIVE
-        )
+        assert aerospike.QueryOrderByType.DOUBLE == 2
+        assert aerospike.QueryOrder.ASCENDING == 0
+        assert aerospike.QueryOrderByFlags.CASE_INSENSITIVE == 1
         assert aerospike.QueryOrderByFlags.DEFAULT == 0
+        assert not hasattr(aerospike, "QUERY_ORDER_BY_DOUBLE")
+        assert not hasattr(aerospike, "QUERY_ORDER_ASCENDING")
+        assert not hasattr(aerospike, "QUERY_ORDER_BY_CASE_INSENSITIVE")
 
     def test_of_float32(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])

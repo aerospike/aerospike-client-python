@@ -142,7 +142,7 @@ class TestVectorExpressionsIntegration(object):
 
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr)])
-        query.order_by("dist", aerospike.QUERY_ORDER_BY_DOUBLE, aerospike.QUERY_ORDER_ASCENDING)
+        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrder.ASCENDING)
         query.top_k = 5
 
         try:

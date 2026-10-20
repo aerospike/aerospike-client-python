@@ -170,7 +170,11 @@ try:
             op_helpers.read(bin_name),
             exp_ops.expression_read(dist_bin_name, dist_expr),
         ])
-        query.order_by(dist_bin_name, aerospike.QUERY_ORDER_BY_DOUBLE, aerospike.QUERY_ORDER_ASCENDING)
+        query.order_by(
+            dist_bin_name,
+            aerospike.QueryOrderByType.DOUBLE,
+            aerospike.QueryOrder.ASCENDING,
+        )
         query.top_k = options.top_k
 
         try:
