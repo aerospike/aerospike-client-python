@@ -24,9 +24,6 @@
 #      and a query vector, using aerospike_helpers.expressions.vector.
 #   3. Run a Top-K query (Query.order_by() + Query.top_k) to fetch the k
 #      records whose "embedding" is closest to the query vector.
-#   4. Use Query.min()/Query.max() - convenience methods built on the same
-#      order_by()/top_k mechanism - to find the lowest/highest "id" value
-#      across the whole result set.
 #
 ##########################################################################
 
@@ -187,22 +184,6 @@ try:
         print("Nearest %d records to %s:" % (len(records), query_values))
         for _, _, bins in records:
             print("  dist=%.4f  %s=%s" % (bins[dist_bin_name], bin_name, list(bins[bin_name].value)))
-
-        # ------------------------------------------------------------------------
-        # Query.min()/Query.max(): convenience methods built on the same
-        # order_by()/top_k mechanism used above, but reducing the whole result
-        # set down to a single scalar value instead of returning records.
-        # ------------------------------------------------------------------------
-
-        try:
-            min_id = client.query(namespace, set).min("id", aerospike.QUERY_ORDER_BY_INTEGER)
-            max_id = client.query(namespace, set).max("id", aerospike.QUERY_ORDER_BY_INTEGER)
-
-            print("---")
-            print("Query.min()/Query.max() on 'id': min=%s max=%s" % (min_id, max_id))
-        except aerospike.exception.ParamError as e:
-            print("error: server does not support Top-K queries: {0}".format(e), file=sys.stderr)
-            exitCode = 2
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)
