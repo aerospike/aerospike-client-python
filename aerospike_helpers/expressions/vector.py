@@ -41,6 +41,7 @@ if __doc__:
         """
     )
 
+from enum import IntEnum as _IntEnum
 from typing import Union
 
 from aerospike_helpers.expressions.resources import _BaseExpr, _ExprOp
@@ -49,7 +50,7 @@ from aerospike_helpers.expressions.base import VectorBin
 TypeBinName = Union[_BaseExpr, str]
 
 
-class VectorDistanceMetric:
+class VectorDistanceMetric(_IntEnum):
     """
     Distance metrics usable with :class:`VectorDistance`. Matches the C
     client's ``as_vector_distance_metric`` exactly.
@@ -80,9 +81,14 @@ class VectorDistance(_BaseExpr):
 
     _rt = None  # float result; the C extension infers no explicit result type here.
 
-    def __init__(self, metric: int, query: "aerospike_helpers.Vector", bin: "TypeBinName"):  # noqa: F821
+    def __init__(
+        self,
+        metric: VectorDistanceMetric,
+        query: "aerospike_helpers.Vector",  # noqa: F821
+        bin: "TypeBinName",
+    ):
         """Args:
-            metric (int): One of :class:`VectorDistanceMetric`.
+            metric (VectorDistanceMetric): Distance metric.
             query (aerospike_helpers.Vector): Complete serialized query vector
                 (including its 8-byte header) - must match the stored
                 vector's element type and dimension count, or the expression
