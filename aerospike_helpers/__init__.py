@@ -63,6 +63,7 @@ class HyperLogLog(bytes):
 import struct as _struct
 from array import array as _array
 from enum import IntEnum as _IntEnum
+from typing import Iterable as _Iterable
 
 
 class Vector(bytes):
@@ -176,22 +177,22 @@ class Vector(bytes):
         return self
 
     @classmethod
-    def of_float16(cls, raw_bit_patterns) -> "Vector":
+    def of_float16(cls, raw_bit_patterns: _Iterable[int]) -> "Vector":
         """Construct a FLOAT16 vector from raw fp16 bit patterns (no value
         conversion is performed; each element must already be the encoded
         16-bit IEEE-754-half bit pattern)."""
         return cls(cls.ElementType.FLOAT16, raw_bit_patterns)
 
     @classmethod
-    def of_int32(cls, data) -> "Vector":
+    def of_int32(cls, data: _Iterable[int]) -> "Vector":
         return cls(cls.ElementType.INT32, data)
 
     @classmethod
-    def of_float32(cls, data) -> "Vector":
+    def of_float32(cls, data: _Iterable[float]) -> "Vector":
         return cls(cls.ElementType.FLOAT32, data)
 
     @classmethod
-    def of_float64(cls, data) -> "Vector":
+    def of_float64(cls, data: _Iterable[float]) -> "Vector":
         return cls(cls.ElementType.FLOAT64, data)
 
     @property
