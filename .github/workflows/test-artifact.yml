@@ -156,6 +156,9 @@ jobs:
       uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: ${{ inputs.python-version }}
+        # Needed while 3.15.0 is still a release candidate (final is 2026-10-01).
+        # Stable versions are still preferred when they exist.
+        allow-prereleases: true
 
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
