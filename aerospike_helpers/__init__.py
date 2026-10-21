@@ -210,7 +210,7 @@ class Vector(bytes):
         return _array(
             fmt[1],
             _struct.unpack_from(f"<{self._dimensions}{fmt[1]}", self,
-                                 self._HEADER_SIZE),
+                                 offset=self._HEADER_SIZE),
         )
 
     # Alias for readability.
