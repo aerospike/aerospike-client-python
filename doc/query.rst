@@ -113,10 +113,12 @@ Fields
         e.g. a vector similarity / nearest-neighbor search). Must be paired with
         :meth:`~aerospike.Query.order_by`.
 
-        Valid range: ``[1, 1000]``.
+        Valid range: ``[1, 1000]``. Assigning ``top_k`` again replaces the limit and keeps
+        the order key set by :meth:`~aerospike.Query.order_by`.
 
         .. note::
-            Requires a server version with Top-K query support.
+            Requires a server version with Top-K query support. A value outside ``[1, 1000]``
+            raises :exc:`~aerospike.exception.ParamError` when the query executes.
 
         Default: ``0`` (Top-K is disabled; :meth:`~aerospike.Query.order_by` is ignored)
 
@@ -263,33 +265,42 @@ Assume this boilerplate code is run before all examples below:
 
     .. _aerospike.Query.order_by:
 
-    .. method:: order_by(bin, type[, direction[, flags]])
+    .. method:: order_by(bin, type, direction[, flags])
 
         Set the ``ORDER BY <bin> LIMIT k`` clause for a Top-K query. Must be paired with setting
-        :attr:`Query.top_k`.
+        :attr:`Query.top_k`. Calling ``order_by()`` again replaces the order key and keeps ``top_k``.
 
         This is most commonly used for **vector similarity (nearest-neighbor) search**: project the
         distance between a stored :class:`~aerospike_helpers.Vector` bin and a query vector using
         :class:`~aerospike_helpers.expressions.vector.VectorDistance`, then order by that projected
         distance to retrieve the *k* nearest (or farthest, depending on the metric) records.
 
-        :param str bin: the name of the bin to order by. This can be a stored bin, or the name of a \
-            result bin produced by :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
-            in :meth:`Query.add_ops`, such as a projected :class:`~aerospike_helpers.expressions.vector.VectorDistance`.
+        :param str bin: the name of the bin to order by, 1-15 UTF-8 bytes. This can be a stored bin, \
+            or the name of a result bin produced by \
+            :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
+            in :meth:`Query.add_ops`, such as a projected \
+            :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
+            If a projection is set, the bin must be one of the projected names.
         :param type: an :class:`~aerospike.QueryOrderByType` value, for example \
             :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result.
-        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` (default) or \
-            :attr:`aerospike.QueryOrder.DESCENDING`.
-        :param flags: an :class:`~aerospike.QueryOrderByFlags` value, for example \
-            :attr:`aerospike.QueryOrderByFlags.CASE_INSENSITIVE`. Defaults to \
+        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
+            :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
+        :raises aerospike.exception.ParamError: the bin name, type, direction, or flags are not valid.
 
         .. note::
-            Requires a server version with Top-K query support. Cross-field validation (bin name
-            length, ``top_k`` range, incompatible type/flag/direction combinations, etc.) is performed
-            server-side when the query executes, raising :exc:`~aerospike.exception.ParamError` on
-            violation.
+            A record whose order-by bin is missing, or holds a value of a different type than
+            ``type``, still matches the filter and sorts as ``NIL``. In ``ASC`` those records sort
+            after every type-matching record. In ``DESC`` they sort before them. Over a large set,
+            raise ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
+
+        .. note::
+            Requires a server version with Top-K query support on every node. ``top_k`` outside
+            ``[1, 1000]``, ``max_records``, an aggregate UDF, a background query, or a partition
+            filter resumed from an earlier query raises :exc:`~aerospike.exception.ParamError`
+            before the query is sent.
 
         Example: vector similarity search - find the 2 records whose "embedding" :class:`~aerospike_helpers.Vector` \
         bin is closest (by squared Euclidean distance) to a query vector:

@@ -148,7 +148,10 @@ class TestVectorExpressionsIntegration(object):
         try:
             records = query.results()
         except aerospike.exception.ParamError as ex:
-            if "order_by" in str(ex).lower() or "top_k" in str(ex).lower() or "top-k" in str(ex).lower():
+            error_text = str(ex).lower()
+            order_rejected = "order_by" in error_text or "orderby" in error_text
+            topk_rejected = "top_k" in error_text or "topk" in error_text or "top-k" in error_text
+            if order_rejected or topk_rejected:
                 pytest.skip(f"Server does not support order_by/top_k: {ex}")
             raise
 

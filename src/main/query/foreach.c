@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -209,6 +209,15 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     }
 
     if (set_query_options(&err, py_options, &self->query) != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    as_status topk_status =
+        AerospikeQuery_ValidateTopK(self, &err, false, partition_filter_p, ps);
+    if (topk_status != AEROSPIKE_OK) {
+        if (ps) {
+            as_partitions_status_release(ps);
+        }
         goto CLEANUP;
     }
 

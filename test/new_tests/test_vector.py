@@ -23,10 +23,14 @@ class TestVectorUnit(object):
         assert issubclass(aerospike.QueryOrderByType, IntEnum)
         assert issubclass(aerospike.QueryOrder, IntEnum)
         assert issubclass(aerospike.QueryOrderByFlags, IntEnum)
+        assert aerospike.QueryOrderByType.INTEGER == 1
         assert aerospike.QueryOrderByType.DOUBLE == 2
+        assert aerospike.QueryOrderByType.STRING == 3
+        assert aerospike.QueryOrderByType.BYTES == 4
         assert aerospike.QueryOrder.ASCENDING == 0
-        assert aerospike.QueryOrderByFlags.CASE_INSENSITIVE == 1
+        assert aerospike.QueryOrder.DESCENDING == 1
         assert aerospike.QueryOrderByFlags.DEFAULT == 0
+        assert aerospike.QueryOrderByFlags.CASE_INSENSITIVE == 1
         assert not hasattr(aerospike, "QUERY_ORDER_BY_DOUBLE")
         assert not hasattr(aerospike, "QUERY_ORDER_ASCENDING")
         assert not hasattr(aerospike, "QUERY_ORDER_BY_CASE_INSENSITIVE")

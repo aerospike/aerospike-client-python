@@ -1919,7 +1919,8 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 
 .. class:: QueryOrderByType
 
-    Order-key type for :meth:`~aerospike.Query.order_by`.
+    Order-key type for :meth:`~aerospike.Query.order_by`. Aerospike has no schema, so the
+    caller declares which comparator the server should use.
 
     .. attribute:: INTEGER
 
@@ -1944,23 +1945,24 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 
     .. attribute:: ASCENDING
 
-        Smallest value first. This is the default.
+        Keep the records with the smallest order-key values, smallest first.
 
     .. attribute:: DESCENDING
 
-        Largest value first.
+        Keep the records with the largest order-key values, largest first.
 
 .. class:: QueryOrderByFlags
 
-    Comparison flags for :meth:`~aerospike.Query.order_by`.
+    STRING collation flags for :meth:`~aerospike.Query.order_by`. Flags are rejected for every
+    type other than :attr:`QueryOrderByType.STRING`.
 
     .. attribute:: DEFAULT
 
-        No comparison flags.
+        Case and accents both count.
 
     .. attribute:: CASE_INSENSITIVE
 
-        Case-insensitive sort of a :attr:`QueryOrderByType.STRING` bin.
+        Accents count and case does not.
 
 .. _mrt_commit_status_constants:
 

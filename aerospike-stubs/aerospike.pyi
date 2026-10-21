@@ -543,7 +543,7 @@ class Query:
         self,
         bin: str,
         type: QueryOrderByType,
-        direction: QueryOrder = ...,
+        direction: QueryOrder,
         flags: QueryOrderByFlags = ...,
     ) -> Query: ...
     def paginate(self) -> None: ...
