@@ -263,8 +263,6 @@ Assume this boilerplate code is run before all examples below:
         :param str index_name: The name of the index.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
-    .. _aerospike.Query.order_by:
-
     .. method:: order_by(bin, type, direction[, flags])
 
         Set the ``ORDER BY <bin> LIMIT k`` clause for a Top-K query. Must be paired with setting
