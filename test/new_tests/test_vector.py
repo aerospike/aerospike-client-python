@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import struct
 from enum import IntEnum
 
 import pytest
 
 import aerospike
+from aerospike import exception as e
 from aerospike_helpers import Vector
 
 # ---------------------------------------------------------------------------
@@ -62,15 +64,16 @@ class TestVectorUnit(object):
 
     def test_wire_format_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
-        # 8-byte header: version(1) + element_type(1) + dimensions(4) + reserved(2)
+        # 6-byte header: version(1) + element_type(1) + dimensions(4)
         assert bytes(v)[0] == Vector.VERSION
         assert bytes(v)[1] == Vector.ElementType.FLOAT32
-        assert len(bytes(v)) == 8 + 4 * 4  # header + 4 float32 elements
+        assert bytes(v)[2:6] == (4).to_bytes(4, "little")
+        assert len(bytes(v)) == 6 + 4 * 4  # header + 4 float32 elements
 
     def test_element_bytes_excludes_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
-        assert v.element_bytes() == bytes(v)[8:]
-        assert len(v.element_bytes()) == len(bytes(v)) - 8
+        assert v.element_bytes() == bytes(v)[6:]
+        assert len(v.element_bytes()) == len(bytes(v)) - 6
 
     def test_from_bytes_round_trip(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
@@ -112,13 +115,21 @@ class TestVectorUnit(object):
 
     def test_from_bytes_too_short_header_raises(self):
         with pytest.raises(ValueError):
-            Vector.from_bytes(b"\x01\x03\x04\x00")  # < 8 bytes
+            Vector.from_bytes(b"\x01\x03\x04\x00")  # < 6 bytes
 
     def test_from_bytes_unknown_element_type_raises(self):
-        import struct
-
-        raw = struct.pack("<BBIH", Vector.VERSION, 0xFF, 1, 0) + b"\x00\x00\x00\x00"
+        raw = struct.pack("<BBI", Vector.VERSION, 0xFF, 1) + b"\x00\x00\x00\x00"
         with pytest.raises(ValueError):
+            Vector.from_bytes(raw)
+
+    def test_from_bytes_unsupported_version_raises(self):
+        raw = struct.pack("<BBI", Vector.VERSION + 1, Vector.ElementType.FLOAT32, 1) + b"\x00\x00\x00\x00"
+        with pytest.raises(ValueError, match="Unsupported Vector version"):
+            Vector.from_bytes(raw)
+
+    def test_from_bytes_zero_dimensions_raises(self):
+        raw = struct.pack("<BBI", Vector.VERSION, Vector.ElementType.FLOAT32, 0)
+        with pytest.raises(ValueError, match="dimensions"):
             Vector.from_bytes(raw)
 
     def test_from_bytes_truncated_body_raises(self):
@@ -188,24 +199,17 @@ class TestVectorIntegration(object):
     def test_vector_bin_type_constant(self):
         assert aerospike.AS_BYTES_VECTOR == 16
 
-    def test_vector_nested_in_list_bin(self):
-        vector = Vector.of_float32([0.1, 0.2, 0.3])
-        key = (self.test_ns, self.test_set, "nested-list")
+    @pytest.mark.parametrize(
+        "bin_value",
+        [
+            [Vector.of_float32([0.1, 0.2, 0.3])],
+            {"a": Vector.of_float32([0.5, 0.6])},
+            {"a": [Vector.of_float32([0.7])]},
+        ],
+        ids=["list", "map", "list-in-map"],
+    )
+    def test_vector_nested_in_collection_is_rejected(self, bin_value):
+        key = (self.test_ns, self.test_set, "nested")
         self.test_keys.append(key)
-        self.as_connection.put(key, {"vectors": [vector, vector]})
-        _, _, bins = self.as_connection.get(key)
-
-        assert len(bins["vectors"]) == 2
-        for v in bins["vectors"]:
-            assert isinstance(v, Vector)
-            assert bytes(v) == bytes(vector)
-
-    def test_vector_nested_in_map_bin(self):
-        vector = Vector.of_float32([0.5, 0.6])
-        key = (self.test_ns, self.test_set, "nested-map")
-        self.test_keys.append(key)
-        self.as_connection.put(key, {"vectors": {"a": vector}})
-        _, _, bins = self.as_connection.get(key)
-
-        assert isinstance(bins["vectors"]["a"], Vector)
-        assert bytes(bins["vectors"]["a"]) == bytes(vector)
+        with pytest.raises(e.ParamError):
+            self.as_connection.put(key, {"vectors": bin_value})

@@ -90,7 +90,7 @@ class VectorDistance(_BaseExpr):
         """Args:
             metric (VectorDistanceMetric): Distance metric.
             query (aerospike_helpers.Vector): Complete serialized query vector
-                (including its 8-byte header) - must match the stored
+                (including its 6-byte header) - must match the stored
                 vector's element type and dimension count, or the expression
                 evaluates to the unknown-value.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.VectorBin`

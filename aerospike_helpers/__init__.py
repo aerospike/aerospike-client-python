@@ -70,8 +70,13 @@ class Vector(bytes):
     """
     Represents a vector bin value used for vector similarity search.
 
-    Wraps the raw wire-format bytes (an 8-byte header followed by a
-    contiguous little-endian element array).
+    Wraps the raw wire-format bytes (a 6-byte header followed by a
+    contiguous little-endian element array). The header is the version (1 byte),
+    the element type (1 byte), and the number of dimensions (4 bytes, little-endian).
+
+    A vector can only be stored as a top-level bin value. The server rejects a write
+    that puts a vector in a list or map, at any depth, with
+    :exc:`~aerospike.exception.ParamError`.
 
     Construct with one of the ``Vector.of_*()`` factories::
 
@@ -121,8 +126,8 @@ class Vector(bytes):
         ElementType.FLOAT32: "<f",
         ElementType.FLOAT64: "<d",
     }
-    _HEADER_FMT = "<BBIH"
-    _HEADER_SIZE = 8
+    _HEADER_FMT = "<BBI"
+    _HEADER_SIZE = 6
     _MAX_ELEMENTS_BYTES = 1 << 18  # AS_VECTOR_VALUE_MAX_ELEMENTS_BYTES
 
     # Declared here (rather than only assigned in __new__/from_bytes) so that
@@ -169,7 +174,7 @@ class Vector(bytes):
                     )
 
         header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
-                               dimensions, 0)
+                               dimensions)
         body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
         self = super().__new__(cls, header + body)
         self._element_type = cls.ElementType(element_type)
@@ -218,7 +223,7 @@ class Vector(bytes):
 
     def element_bytes(self) -> bytes:
         """
-        Element data only, no 8-byte header. ``as_exp_vector_dist()``'s query-vector
+        Element data only, no 6-byte header. ``as_exp_vector_dist()``'s query-vector
         argument expects the *complete* serialized vector (header + elements);
         this accessor exists for callers who need the headerless form for other
         reasons.
@@ -228,17 +233,26 @@ class Vector(bytes):
     @classmethod
     def from_bytes(cls, raw: bytes) -> "Vector":
         """
-        Reverse of the wire encode. Validates header size, element-type code,
-        and dimensions-vs-length before trusting the payload.
+        Reverse of the wire encode. Validates header size, version, element-type
+        code, and dimensions before trusting the payload.
         """
         if len(raw) < cls._HEADER_SIZE:
-            raise ValueError("Vector buffer too short: missing 8-byte header")
-        version, element_type, dimensions, _reserved = _struct.unpack_from(
+            raise ValueError("Vector buffer too short: missing 6-byte header")
+        version, element_type, dimensions = _struct.unpack_from(
             cls._HEADER_FMT, raw, 0)
+        if version != cls.VERSION:
+            raise ValueError(
+                f"Unsupported Vector version in wire data: {version}")
         fmt = cls._STRUCT_FMT.get(element_type)
         if fmt is None:
             raise ValueError(
                 f"Unknown Vector element_type in wire data: {element_type}")
+        max_dims = cls._MAX_ELEMENTS_BYTES // _struct.calcsize(fmt)
+        if not (1 <= dimensions <= max_dims):
+            raise ValueError(
+                f"Vector dimensions in wire data must be in [1, {max_dims}] for "
+                f"this element type; got {dimensions}"
+            )
         expected_len = cls._HEADER_SIZE + dimensions * _struct.calcsize(fmt)
         if len(raw) < expected_len:
             raise ValueError(
