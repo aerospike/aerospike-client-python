@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2013-2021 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,3 +58,214 @@ class HyperLogLog(bytes):
 
     def __str__(self) -> str:
         return self.__repr__()
+
+
+import struct as _struct
+from array import array as _array
+from enum import IntEnum as _IntEnum
+from typing import Iterable as _Iterable
+
+
+class Vector(bytes):
+    """
+    Represents a vector bin value used for vector similarity search.
+
+    Wraps the raw wire-format bytes (a 6-byte header followed by a
+    contiguous little-endian element array). The header is the version (1 byte),
+    the element type (1 byte), and the number of dimensions (4 bytes, little-endian).
+
+    A vector can only be stored as a top-level bin value. The server rejects a write
+    that puts a vector in a list or map, at any depth, with
+    :exc:`~aerospike.exception.ParamError`.
+
+    Construct with one of the ``Vector.of_*()`` factories::
+
+        from aerospike_helpers import Vector
+
+        v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
+
+    .. testcode::
+
+        from aerospike_helpers import Vector
+        import aerospike
+
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
+
+        keyTuple = ("test", "demo", "vec1")
+        client.put(keyTuple, {"embedding": Vector.of_float32([0.1, 0.2, 0.3, 0.4])})
+
+        _, _, bins = client.get(keyTuple)
+        embedding = bins["embedding"]
+        print(embedding.element_type == Vector.ElementType.FLOAT32)
+        print(list(embedding.value))
+
+        client.remove(keyTuple)
+
+    .. testoutput::
+
+        True
+        [0.10000000149011612, 0.20000000298023224, 0.30000001192092896, 0.4000000059604645]
+
+    .. seealso::
+        :meth:`~aerospike.Query.order_by` for using :class:`Vector` bins in a Top-K
+        (nearest-neighbor) vector similarity search query.
+    """
+
+    VERSION = 1
+
+    class ElementType(_IntEnum):
+        FLOAT16 = 0x01
+        INT32 = 0x02
+        FLOAT32 = 0x03  # default
+        FLOAT64 = 0x04
+        # No BIN/Hamming type - confirmed absent from the real C client.
+
+    _STRUCT_FMT = {
+        ElementType.FLOAT16: "<H",  # raw fp16 bit pattern, no value conversion
+        ElementType.INT32: "<i",
+        ElementType.FLOAT32: "<f",
+        ElementType.FLOAT64: "<d",
+    }
+    _HEADER_FMT = "<BBI"
+    _HEADER_SIZE = 6
+    _MAX_ELEMENTS_BYTES = 1 << 18  # AS_VECTOR_VALUE_MAX_ELEMENTS_BYTES
+
+    # Declared here (rather than only assigned in __new__/from_bytes) so that
+    # mypy/stubtest can see these instance attributes exist on the class.
+    _element_type: ElementType
+    _dimensions: int
+
+    def __new__(
+        cls,
+        element_type_or_bytes: ElementType | bytes | bytearray,
+        elements=None,
+    ) -> "Vector":
+        # Two calling conventions:
+        #   Vector(element_type: ElementType, elements: Sequence)  - normal construction
+        #   Vector(raw_bytes: bytes)                        - internal decode path,
+        #       used by the C extension when deserializing a stored Vector bin
+        #       (mirrors create_class_instance_from_module()'s single-positional-arg
+        #       calling convention).
+        if elements is None and isinstance(element_type_or_bytes,
+                                            (bytes, bytearray)):
+            return cls.from_bytes(bytes(element_type_or_bytes))
+
+        element_type = element_type_or_bytes
+        fmt = cls._STRUCT_FMT.get(element_type)
+        if fmt is None:
+            raise ValueError(f"Unknown Vector element_type: {element_type}")
+
+        elements = list(elements)
+        dimensions = len(elements)
+        elem_size = _struct.calcsize(fmt)
+        max_dims = cls._MAX_ELEMENTS_BYTES // elem_size
+
+        if not (1 <= dimensions <= max_dims):
+            raise ValueError(
+                f"Vector dimensions must be in [1, {max_dims}] for this element "
+                f"type; got {dimensions}"
+            )
+
+        if element_type in (cls.ElementType.FLOAT32, cls.ElementType.FLOAT64):
+            for e in elements:
+                if e != e or e in (float("inf"), float("-inf")):  # NaN/Inf check
+                    raise ValueError(
+                        "Vector elements must be finite (NaN/Infinity not allowed)"
+                    )
+
+        header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
+                               dimensions)
+        body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
+        self = super().__new__(cls, header + body)
+        self._element_type = cls.ElementType(element_type)
+        self._dimensions = dimensions
+        return self
+
+    @classmethod
+    def of_float16(cls, raw_bit_patterns: _Iterable[int]) -> "Vector":
+        """Construct a FLOAT16 vector from raw fp16 bit patterns (no value
+        conversion is performed; each element must already be the encoded
+        16-bit IEEE-754-half bit pattern)."""
+        return cls(cls.ElementType.FLOAT16, raw_bit_patterns)
+
+    @classmethod
+    def of_int32(cls, data: _Iterable[int]) -> "Vector":
+        return cls(cls.ElementType.INT32, data)
+
+    @classmethod
+    def of_float32(cls, data: _Iterable[float]) -> "Vector":
+        return cls(cls.ElementType.FLOAT32, data)
+
+    @classmethod
+    def of_float64(cls, data: _Iterable[float]) -> "Vector":
+        return cls(cls.ElementType.FLOAT64, data)
+
+    @property
+    def element_type(self) -> ElementType:
+        return self._element_type
+
+    @property
+    def dimensions(self) -> int:
+        return self._dimensions
+
+    @property
+    def value(self) -> _array:
+        """Decoded element array (typed, per element_type)."""
+        fmt = self._STRUCT_FMT[self._element_type]
+        return _array(
+            fmt[1],
+            _struct.unpack_from(f"<{self._dimensions}{fmt[1]}", self,
+                                 offset=self._HEADER_SIZE),
+        )
+
+    # Alias for readability.
+    elements = value
+
+    def element_bytes(self) -> bytes:
+        """
+        Element data only, no 6-byte header. ``as_exp_vector_dist()``'s query-vector
+        argument expects the *complete* serialized vector (header + elements);
+        this accessor exists for callers who need the headerless form for other
+        reasons.
+        """
+        return bytes(self[self._HEADER_SIZE:])
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> "Vector":
+        """
+        Reverse of the wire encode. Validates header size, version, element-type
+        code, and dimensions before trusting the payload.
+        """
+        if len(raw) < cls._HEADER_SIZE:
+            raise ValueError("Vector buffer too short: missing 6-byte header")
+        version, element_type, dimensions = _struct.unpack_from(
+            cls._HEADER_FMT, raw, 0)
+        if version != cls.VERSION:
+            raise ValueError(
+                f"Unsupported Vector version in wire data: {version}")
+        fmt = cls._STRUCT_FMT.get(element_type)
+        if fmt is None:
+            raise ValueError(
+                f"Unknown Vector element_type in wire data: {element_type}")
+        max_dims = cls._MAX_ELEMENTS_BYTES // _struct.calcsize(fmt)
+        if not (1 <= dimensions <= max_dims):
+            raise ValueError(
+                f"Vector dimensions in wire data must be in [1, {max_dims}] for "
+                f"this element type; got {dimensions}"
+            )
+        expected_len = cls._HEADER_SIZE + dimensions * _struct.calcsize(fmt)
+        if len(raw) < expected_len:
+            raise ValueError(
+                f"Vector buffer too short for declared dimensions: need "
+                f"{expected_len}, got {len(raw)}"
+            )
+        self = bytes.__new__(cls, raw[:expected_len])
+        self._element_type = cls.ElementType(element_type)
+        self._dimensions = dimensions
+        return self
+
+    def __repr__(self) -> str:
+        return (f"{self.__class__.__name__}(element_type={self._element_type}, "
+                f"dimensions={self._dimensions}, elements={list(self.value)})")
+
+    __str__ = __repr__

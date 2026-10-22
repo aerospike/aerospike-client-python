@@ -92,6 +92,8 @@ yaml
 suberror
 hardcoded
 recurse
+headerless
+bitmask
 codepoint
 codepoints
 substring

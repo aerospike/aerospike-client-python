@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -503,6 +503,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AS_BYTES_RUBY", .value.integer = AS_BYTES_RUBY},
     {"AS_BYTES_PHP", .value.integer = AS_BYTES_PHP},
     {"AS_BYTES_ERLANG", .value.integer = AS_BYTES_ERLANG},
+    {"AS_BYTES_VECTOR", .value.integer = AS_BYTES_VECTOR},
     {"AS_BYTES_BOOL", .value.integer = AS_BYTES_BOOL},
     {"AS_BYTES_HLL", .value.integer = AS_BYTES_HLL},
     {"AS_BYTES_MAP", .value.integer = AS_BYTES_MAP},
@@ -1058,6 +1059,149 @@ void aerospike_free(void *self)
     Py_XDECREF(py_global_hosts);
 }
 
+static int set_int_enum_member(PyObject *members, const char *name, long value)
+{
+    PyObject *py_value = PyLong_FromLong(value);
+    if (py_value == NULL) {
+        return -1;
+    }
+
+    int retval = PyDict_SetItemString(members, name, py_value);
+    Py_DECREF(py_value);
+    return retval;
+}
+
+static PyObject *create_int_enum(const char *enum_name, PyObject *members)
+{
+    PyObject *enum_module = PyImport_ImportModule("enum");
+    if (enum_module == NULL) {
+        return NULL;
+    }
+
+    PyObject *int_enum = PyObject_GetAttrString(enum_module, "IntEnum");
+    Py_DECREF(enum_module);
+    if (int_enum == NULL) {
+        return NULL;
+    }
+
+    PyObject *args = Py_BuildValue("(sO)", enum_name, members);
+    if (args == NULL) {
+        Py_DECREF(int_enum);
+        return NULL;
+    }
+
+    PyObject *kwargs = Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (kwargs == NULL) {
+        Py_DECREF(args);
+        Py_DECREF(int_enum);
+        return NULL;
+    }
+
+    PyObject *enum_cls = PyObject_Call(int_enum, args, kwargs);
+    Py_DECREF(kwargs);
+    Py_DECREF(args);
+    Py_DECREF(int_enum);
+    return enum_cls;
+}
+
+static int add_query_order_enums(PyObject *module)
+{
+    PyObject *type_members = PyDict_New();
+    if (type_members == NULL) {
+        return -1;
+    }
+
+    int type_members_ok =
+        set_int_enum_member(type_members, "INTEGER", AS_QUERY_ORDER_BY_INTEGER);
+    if (type_members_ok == 0) {
+        type_members_ok = set_int_enum_member(type_members, "DOUBLE",
+                                              AS_QUERY_ORDER_BY_DOUBLE);
+    }
+    if (type_members_ok == 0) {
+        type_members_ok = set_int_enum_member(type_members, "STRING",
+                                              AS_QUERY_ORDER_BY_STRING);
+    }
+    if (type_members_ok == 0) {
+        type_members_ok =
+            set_int_enum_member(type_members, "BYTES", AS_QUERY_ORDER_BY_BYTES);
+    }
+    if (type_members_ok == -1) {
+        Py_DECREF(type_members);
+        return -1;
+    }
+
+    PyObject *order_by_type = create_int_enum("QueryOrderByType", type_members);
+    Py_DECREF(type_members);
+    if (order_by_type == NULL) {
+        return -1;
+    }
+
+    int retval = PyModule_AddObject(module, "QueryOrderByType", order_by_type);
+    if (retval == -1) {
+        Py_DECREF(order_by_type);
+        return -1;
+    }
+
+    PyObject *direction_members = PyDict_New();
+    if (direction_members == NULL) {
+        return -1;
+    }
+
+    int direction_members_ok =
+        set_int_enum_member(direction_members, "ASCENDING", AS_ORDER_ASCENDING);
+    if (direction_members_ok == 0) {
+        direction_members_ok = set_int_enum_member(
+            direction_members, "DESCENDING", AS_ORDER_DESCENDING);
+    }
+    if (direction_members_ok == -1) {
+        Py_DECREF(direction_members);
+        return -1;
+    }
+
+    PyObject *query_order = create_int_enum("QueryOrder", direction_members);
+    Py_DECREF(direction_members);
+    if (query_order == NULL) {
+        return -1;
+    }
+
+    retval = PyModule_AddObject(module, "QueryOrder", query_order);
+    if (retval == -1) {
+        Py_DECREF(query_order);
+        return -1;
+    }
+
+    PyObject *flag_members = PyDict_New();
+    if (flag_members == NULL) {
+        return -1;
+    }
+
+    int flag_members_ok = set_int_enum_member(flag_members, "DEFAULT",
+                                              AS_QUERY_ORDER_BY_FLAGS_DEFAULT);
+    if (flag_members_ok == 0) {
+        flag_members_ok =
+            set_int_enum_member(flag_members, "CASE_INSENSITIVE",
+                                AS_QUERY_ORDER_BY_CASE_INSENSITIVE);
+    }
+    if (flag_members_ok == -1) {
+        Py_DECREF(flag_members);
+        return -1;
+    }
+
+    PyObject *order_by_flags =
+        create_int_enum("QueryOrderByFlags", flag_members);
+    Py_DECREF(flag_members);
+    if (order_by_flags == NULL) {
+        return -1;
+    }
+
+    retval = PyModule_AddObject(module, "QueryOrderByFlags", order_by_flags);
+    if (retval == -1) {
+        Py_DECREF(order_by_flags);
+        return -1;
+    }
+    return 0;
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     aerospike_client_language = "python";
@@ -1134,6 +1278,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         if (retval == -1) {
             goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
+    }
+
+    retval = add_query_order_enums(py_aerospike_module);
+    if (retval == -1) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     // Allows submodules to be imported using "import aerospike.<submodule-name>"
