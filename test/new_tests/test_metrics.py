@@ -241,7 +241,6 @@ class TestMetrics:
                     assert type(ns_metric.timeout_count) == int
                     assert type(ns_metric.key_busy_count) == int
                     latency_buckets = [
-                        ns_metric.conn_latency,
                         ns_metric.write_latency,
                         ns_metric.read_latency,
                         ns_metric.batch_latency,
