@@ -73,6 +73,8 @@ class NamespaceMetrics:
 
     Each command group has its own histogram (i.e list of latency buckets).
     Latency histogram counts are cumulative and not reset on each metrics snapshot interval.
+    Each histogram records one sample per successful sampled RPC, only while operational
+    metrics are enabled.
 
     Attributes:
         ns (str): namespace
@@ -81,7 +83,6 @@ class NamespaceMetrics:
         error_count (int): {}
         timeout_count (int): {}
         key_busy_count (int): {}
-        conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
         batch_latency (list[int])
@@ -188,6 +189,11 @@ class NamespaceSnapshot:
     default shape is ``<= 1 ms``, ``> 1 ms``, ``> 2 ms``, ``> 4 ms``, ``> 8 ms``, ``> 16 ms``,
     ``> 32 ms``.
 
+    The error, timeout, key busy, record too big, and device overload counters are counted once
+    when a sampled command fails with that outcome, not on each retry. They are not the
+    :class:`NodeStats` ``error_count``, ``timeout_count``, and ``key_busy_count`` totals, which
+    count each failed attempt.
+
     Attributes:
         name (str): Namespace name. Empty when the command had no namespace.
         errors (int): Command errors that are not counted in a more specific counter.
@@ -201,10 +207,13 @@ class NamespaceSnapshot:
         device_overload (int): Device overload errors. Not included in ``errors``.
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        latencies (dict[str, list[int]]): Per-attempt latency histograms keyed by ``conn``,
-            ``write``, ``read``, ``batch``, and ``query``. Same series as the learn-metrics
-            file. Filled when a file writer or metrics listener is installed. Command latency
-            is :attr:`MetricsSnapshot.command_latencies`.
+        latencies (dict[str, list[int]]): Latency histograms keyed by ``write``, ``read``,
+            ``batch``, and ``query``. One sample per successful RPC of a sampled command,
+            recorded only while operational metrics are enabled. A retry is a new RPC, so the
+            sample starts at the attempt that succeeded. A batch sub-batch re-sent to its node
+            is one RPC that includes the re-sends. Same series as the learn-metrics file.
+            Command latency is :attr:`MetricsSnapshot.command_latencies`, and connection
+            latency is :attr:`NodeSnapshot.conn_latency`.
     """
     pass
 
@@ -229,6 +238,9 @@ class NodeSnapshot:
             operational metrics are enabled.
         conn_auth_failures (int): Failed authentications. Zero unless operational
             metrics are enabled.
+        conn_latency (list[int]): Successful connection-open latency histogram for this node.
+            Recorded while operational metrics are enabled and not sampler-gated. The
+            learn-metrics file does not write this series.
         namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
             Empty unless operational metrics are enabled.
     """
@@ -241,8 +253,8 @@ class MetricsSnapshot:
     The object is a copy. It remains valid after ``export`` returns. Counters and histogram
     buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
 
-    Enabling metrics does not turn on operational or usage metrics. Set
-    :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
+    Enabling metrics does not turn on usage metrics. Set :attr:`MetricsPolicy.usage_enabled`
+    for those. See :attr:`MetricsPolicy.operational_enabled` for when operational metrics are on.
     When usage is on, public API calls increment ``api_blocking``, ``api_deferred``,
     and ``api_background``.
 
@@ -290,9 +302,9 @@ class MetricsSnapshot:
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         command_latencies (dict[str, list[int]]): Cluster-wide command latency histograms keyed
-            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
-            for total elapsed time, including retries. Empty unless operational metrics are
-            enabled. The learn-metrics file does not write this series.
+            by ``write``, ``read``, ``batch``, and ``query``. One sample per command for total
+            elapsed time, including retries. Recorded while operational metrics are enabled.
+            The learn-metrics file does not write this series.
     """
     pass
 
@@ -383,9 +395,11 @@ class MetricsPolicy:
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         operational_enabled (bool): Record command-path operational metrics: latency, namespace
-            errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
-            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
-            file still writes CPU, memory, and per-attempt namespace histograms when this is false.
+            errors and bytes, CPU, and memory. When false, commands are not timed. Connection pool
+            gauges are collected whenever metrics are enabled.
+            :meth:`~aerospike.Client.enable_metrics` turns this on when the built-in learn-metrics
+            file exporter or the deprecated ``metrics_listeners`` are used. With added exporters or
+            an empty ``report_dir``, this is used as set.
         usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
             Other feature usage names are not recorded. Off until explicitly enabled.
         sampler_range (int): Operational command-path sampler modulus. A command is recorded when
