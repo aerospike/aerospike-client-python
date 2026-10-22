@@ -152,7 +152,9 @@ AerospikeQuery_ValidateTopK(AerospikeQuery *self, as_error *err,
         return err->code;
     }
 
-    if (top_k < 1 || top_k > 1000) {
+    // top_k == 0 means k is unset. Like the C client, an order key without k is
+    // sent to the server, which rejects it.
+    if (top_k > 1000) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, TOP_K_RANGE_ERROR, top_k);
         return err->code;
     }

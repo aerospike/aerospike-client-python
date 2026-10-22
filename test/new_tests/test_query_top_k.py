@@ -89,13 +89,18 @@ class TestQueryTopKValidation:
         assert query.top_k == 10
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
-    @pytest.mark.parametrize("top_k", [0, 1001])
-    def test_top_k_out_of_range(self, query, api_method, args, top_k):
+    def test_top_k_out_of_range(self, query, api_method, args):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        query.top_k = top_k
+        query.top_k = 1001
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == f"topK must be in [1, 1000]; got {top_k}"
+        assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
+
+    def test_order_by_without_top_k_is_left_to_the_server(self, query):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert not excinfo.value.msg.startswith("topK must be in")
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_with_max_records(self, query, api_method, args):

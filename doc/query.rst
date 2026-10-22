@@ -117,10 +117,12 @@ Fields
         the order key set by :meth:`~aerospike.Query.order_by`.
 
         .. note::
-            Requires a server version with Top-K query support. A value outside ``[1, 1000]``
-            raises :exc:`~aerospike.exception.ParamError` when the query executes.
+            Requires a server version with Top-K query support. A value above ``1000``
+            raises :exc:`~aerospike.exception.ParamError` when the query executes. A query
+            with :meth:`~aerospike.Query.order_by` and no ``top_k`` is sent to the server,
+            which rejects it with :exc:`~aerospike.exception.ParamError`.
 
-        Default: ``0`` (Top-K is disabled; :meth:`~aerospike.Query.order_by` is ignored)
+        Default: ``0`` (not set)
 
 Methods
 =======
