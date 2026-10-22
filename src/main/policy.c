@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <Python.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
@@ -32,6 +33,7 @@
 #include <aerospike/as_cluster.h>
 
 #include "conversions.h"
+#include "metrics.h"
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
@@ -1493,10 +1495,52 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-int set_as_metrics_policy_using_pyobject(as_error *err,
-                                         PyObject *py_metrics_policy,
-                                         as_metrics_policy *metrics_policy)
+static int set_metrics_bool_field(as_error *err, PyObject *py_metrics_policy,
+                                  const char *name, bool *out)
 {
+    PyObject *py_value = PyObject_GetAttrString(py_metrics_policy, name);
+    if (!py_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               name);
+    }
+    if (!PyBool_Check(py_value)) {
+        Py_DECREF(py_value);
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               INVALID_ATTR_TYPE_ERROR_MSG, name, "bool");
+    }
+    *out = py_value == Py_True;
+    Py_DECREF(py_value);
+    return AEROSPIKE_OK;
+}
+
+static int set_metrics_uint32_field(as_error *err, PyObject *py_metrics_policy,
+                                    const char *name, uint32_t *out)
+{
+    PyObject *py_value = PyObject_GetAttrString(py_metrics_policy, name);
+    if (!py_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               name);
+    }
+    uint32_t value = convert_pyobject_to_uint32_t(py_value);
+    Py_DECREF(py_value);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               INVALID_ATTR_TYPE_ERROR_MSG, name,
+                               "unsigned 32-bit integer");
+    }
+    *out = value;
+    return AEROSPIKE_OK;
+}
+
+int as_metrics_policy_set_using_pyobject(as_error *err,
+                                         PyObject *py_metrics_policy,
+                                         as_metrics_policy *metrics_policy,
+                                         PyMetricsExporterList **exporters_out)
+{
+    if (exporters_out) {
+        *exporters_out = NULL;
+    }
+
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
         return as_error_update(
@@ -1601,6 +1645,80 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         *field_refs[i] = attr_value;
     }
 
+    const char *latency_unit_field_name = "latency_unit";
+    PyObject *py_latency_unit =
+        PyObject_GetAttrString(py_metrics_policy, latency_unit_field_name);
+    if (!py_latency_unit) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        latency_unit_field_name);
+        goto error;
+    }
+    uint8_t latency_unit = convert_pyobject_to_uint8_t(py_latency_unit);
+    Py_DECREF(py_latency_unit);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        latency_unit_field_name, "unsigned 8-bit integer");
+        goto error;
+    }
+    if (latency_unit > AS_METRICS_LATENCY_MICROSECONDS) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.latency_unit must be "
+                        "LATENCY_MILLISECONDS or LATENCY_MICROSECONDS");
+        goto error;
+    }
+    metrics_policy->latency_unit = (as_metrics_latency_unit)latency_unit;
+
+    if (set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
+                               &metrics_policy->operational_enabled) !=
+            AEROSPIKE_OK ||
+        set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
+                               &metrics_policy->usage_enabled) !=
+            AEROSPIKE_OK) {
+        goto error;
+    }
+
+    const char *export_interval_field_name = "export_interval";
+    PyObject *py_export_interval =
+        PyObject_GetAttrString(py_metrics_policy, export_interval_field_name);
+    if (!py_export_interval) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        export_interval_field_name);
+        goto error;
+    }
+    const char *export_interval = convert_pyobject_to_str(py_export_interval);
+    if (!export_interval) {
+        Py_DECREF(py_export_interval);
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        export_interval_field_name, "str");
+        goto error;
+    }
+    if (strlen(export_interval) >= sizeof(metrics_policy->export_interval)) {
+        Py_DECREF(py_export_interval);
+        as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "MetricsPolicy.export_interval must be less than 32 chars");
+        goto error;
+    }
+    strcpy(metrics_policy->export_interval, export_interval);
+    Py_DECREF(py_export_interval);
+
+    if (set_metrics_uint32_field(err, py_metrics_policy, "sampler_range",
+                                 &metrics_policy->sampler_range) !=
+            AEROSPIKE_OK ||
+        set_metrics_uint32_field(err, py_metrics_policy, "sampler_threshold",
+                                 &metrics_policy->sampler_threshold) !=
+            AEROSPIKE_OK) {
+        goto error;
+    }
+    if (metrics_policy->sampler_range < 1 ||
+        metrics_policy->sampler_threshold > metrics_policy->sampler_range) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.sampler_range must be at least 1 and "
+                        "sampler_threshold must be less than or equal to "
+                        "sampler_range");
+        goto error;
+    }
+
     const char *labels_attr_name = "labels";
     PyObject *py_labels =
         PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
@@ -1641,6 +1759,11 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         labels_attr_name, "dict[str, str]");
+        goto error;
+    }
+
+    if (py_metrics_exporters_from_pyobject(
+            err, py_metrics_policy, metrics_policy, exporters_out) != 0) {
         goto error;
     }
 

@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2013-2024 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,13 +18,24 @@
 
 :class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
-callbacks for reading data about the server and client.
+callbacks for reading data about the server and client. :class:`MetricsListeners` is deprecated.
+
+:class:`MetricsSnapshot`, :class:`NodeSnapshot`, and :class:`NamespaceSnapshot` are returned to metrics
+exporters. They are copies of one export and stay valid after ``export`` returns. This client does not
+run asynchronous commands, so snapshots do not include event-loop gauges.
 
 :class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
 a Python client API method.
 """
 
-from typing import Optional, Callable
+import warnings
+from typing import Optional, Callable, Protocol
+
+#: Millisecond latency histogram buckets. This is the default ``MetricsPolicy.latency_unit``.
+LATENCY_MILLISECONDS = 0
+
+#: Microsecond latency histogram buckets.
+LATENCY_MICROSECONDS = 1
 
 
 class ConnectionStats:
@@ -170,8 +181,148 @@ class ClusterStats:
     recover_queue_size: int
 
 
+class NamespaceSnapshot:
+    """Per-namespace counters and latency histograms copied into a metrics snapshot.
+
+    Histogram bucket counts are cumulative since metrics were enabled. Bucket order for the
+    default shape is ``<= 1 ms``, ``> 1 ms``, ``> 2 ms``, ``> 4 ms``, ``> 8 ms``, ``> 16 ms``,
+    ``> 32 ms``.
+
+    Attributes:
+        name (str): Namespace name. Empty when the command had no namespace.
+        errors (int): Command errors that are not counted in a more specific counter.
+            Timeouts, key busy, record too big, and device overload are not included.
+        client_timeouts (int): Client timeouts (connect, socket, or total). Not included
+            in ``errors`` or ``server_timeouts``.
+        server_timeouts (int): Server timeouts. Not included in ``errors`` or
+            ``client_timeouts``.
+        key_busy (int): Key busy errors.
+        record_too_big (int): Record too big errors. Not included in ``errors``.
+        device_overload (int): Device overload errors. Not included in ``errors``.
+        bytes_in (int): Bytes received from the server.
+        bytes_out (int): Bytes sent to the server.
+        latencies (dict[str, list[int]]): Per-attempt latency histograms keyed by ``conn``,
+            ``write``, ``read``, ``batch``, and ``query``. Same series as the learn-metrics
+            file. Filled when a file writer or metrics listener is installed. Command latency
+            is :attr:`MetricsSnapshot.command_latencies`.
+    """
+    pass
+
+
+class NodeSnapshot:
+    """Per-node metrics copied into a metrics snapshot.
+
+    This client keeps separate synchronous and asynchronous connection pools. Both are reported.
+    ``sync`` is the shared connection series.
+
+    Attributes:
+        name (str): Node name.
+        address (str): Node address, without the port.
+        port (int): Node service port.
+        sync (:class:`ConnectionStats`): Synchronous connection pool.
+        async_conns (:class:`ConnectionStats`): Asynchronous connection pool.
+            Named ``async_conns`` because ``async`` is a Python keyword.
+        conn_open_failures (int): Failed attempts to open a connection, including TLS
+            and authentication failures. Cumulative and not sampler-gated. Zero unless
+            operational metrics are enabled.
+        conn_tls_handshake_failures (int): Failed TLS handshakes. Zero unless
+            operational metrics are enabled.
+        conn_auth_failures (int): Failed authentications. Zero unless operational
+            metrics are enabled.
+        namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
+            Empty unless operational metrics are enabled.
+    """
+    pass
+
+
+class MetricsSnapshot:
+    """Point-in-time metrics snapshot passed to each exporter.
+
+    The object is a copy. It remains valid after ``export`` returns. Counters and histogram
+    buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
+
+    Enabling metrics does not turn on operational or usage metrics. Set
+    :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
+    When usage is on, public API calls increment ``api_blocking``, ``api_deferred``,
+    and ``api_background``.
+
+    Attributes:
+        timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
+        metrics_enabled (bool): True when this snapshot was collected with metrics on.
+        operational_metrics_enabled (bool): True when latency, error, byte, CPU, and memory
+            figures were collected.
+        usage_metrics_enabled (bool): True when feature.api usage counters were collected.
+        cluster_name (str): Cluster name. Empty when the cluster has no name.
+        client_type (str): Client language. ``python`` for this client.
+        client_version (str): Client version.
+        app_id (str): Application identifier.
+        labels (dict[str, str]): Static labels from the metrics policy.
+        recover_queue_size (int): Sync sockets currently in timeout recovery.
+        invalid_node_count (int): Add-node failures in the most recent cluster tend iteration.
+        validation_open_failures (int): Pre-node connect failures, including TLS and
+            authentication. Cumulative. Zero unless operational metrics are enabled.
+        validation_tls_handshake_failures (int): Pre-node TLS handshake failures. Also
+            included in ``validation_open_failures``. Zero unless operational metrics
+            are enabled.
+        validation_auth_failures (int): Pre-node authentication failures. Also included
+            in ``validation_open_failures``. Zero unless operational metrics are enabled.
+        delay_queue_timeout_count (int): Commands that timed out in the delay queue.
+        command_count (int): Commands issued. Cumulative.
+        retry_count (int): Command retries. Cumulative.
+        api_blocking (int): Public synchronous API calls. Cumulative. Increments only
+            while metrics and usage are enabled.
+        api_deferred (int): Public asynchronous API calls. Cumulative. This client does
+            not run asynchronous commands, so this stays at zero.
+        api_background (int): Public background scan and query API calls. Cumulative.
+            Increments only while metrics and usage are enabled.
+        cpu (int): Process CPU percent. Zero unless operational metrics are enabled.
+        mem (int): Process resident set size in bytes. Zero unless operational metrics
+            are enabled.
+        nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
+        nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes that left, one
+            entry per node name. Included in on-demand snapshots. Cleared after a successful
+            periodic export. A node that rejoins keeps its entry until that export.
+        nodes_departed_possibly_truncated (bool): True when ``nodes_departed`` has reached its
+            cap of 256 entries. Later departures may be missing until the next successful export.
+        latency_columns (int): Histogram width.
+        latency_shift (int): Histogram boundary spacing.
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
+        command_latencies (dict[str, list[int]]): Cluster-wide command latency histograms keyed
+            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
+            for total elapsed time, including retries. Empty unless operational metrics are
+            enabled. The learn-metrics file does not write this series.
+    """
+    pass
+
+
+class MetricsExporter(Protocol):
+    """Receives one metrics snapshot per export interval.
+
+    Any object with an ``export`` method can be registered. Subclassing this protocol is optional.
+    One exporter raising an exception does not skip the others. After repeated failures the client
+    suspends that exporter and retries it later.
+    """
+
+    def export(self, snapshot: MetricsSnapshot) -> None:
+        """Handle one snapshot. The snapshot may be retained after this method returns."""
+
+
+def _require_exporter(exporter) -> None:
+    export = getattr(exporter, "export", None)
+    if not callable(export):
+        raise TypeError(
+            "exporter must be an object with a callable export(snapshot) method"
+        )
+
+
 class MetricsListeners:
     """Metrics listener callbacks.
+
+    .. deprecated::
+        Prefer :meth:`MetricsPolicy.add_exporter`. ``MetricsListeners`` remains until the next
+        major release.
 
     All callbacks must be set.
 
@@ -188,6 +339,12 @@ class MetricsListeners:
             node_close_listener: Callable[[Node], None],
             disable_listener: Callable[[Cluster], None]
     ):
+        warnings.warn(
+            "MetricsListeners is deprecated and will be removed in the next major release. "
+            "Register a metrics exporter with MetricsPolicy.add_exporter().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.enable_listener = enable_listener
         self.snapshot_listener = snapshot_listener
         self.node_close_listener = node_close_listener
@@ -198,23 +355,45 @@ class MetricsPolicy:
     """Client periodic metrics configuration.
 
     Attributes:
-        metrics_listeners (Optional[:py:class:`MetricsListeners`]): Listeners that handles metrics notification events.
-            If set to :py:obj:`None`, the default listener implementation will be used, which writes the metrics
-            snapshot to a file which can later be read and forwarded to OpenTelemetry by a separate offline
-            application. Otherwise, use all listeners set in the class instance.
-
-            The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
-        report_dir (str): Directory path to write metrics log files for listeners that write logs.
+        metrics_listeners (Optional[:py:class:`MetricsListeners`]): Deprecated four-callback listener.
+            If set, those callbacks are used and ``report_dir`` does not also install the file exporter.
+            Prefer :meth:`add_exporter`.
+        exporters (list): Exporters that receive each metrics snapshot. Append with :meth:`add_exporter`.
+            The application owns the exporters. When this list is empty, listeners are not set, and
+            ``report_dir`` is non-empty, enabling metrics installs the built-in learn-metrics file exporter.
+        report_dir (str): Directory for the built-in learn-metrics file exporter.
+            A non-empty path installs that exporter when no exporter has been added and
+            ``metrics_listeners`` is not set. An empty string installs nothing. Collection can still run
+            with no exporter. The default ``"."`` writes log files in the current directory.
         report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
             When report_size_limit is reached or exceeded, the current metrics file is closed and a new
             metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
             size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
             :py:meth:`~aerospike.Client.close()` is called.
-        interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
-            is defined as ``"tend_interval"`` in the client config plus the time to tend all nodes.
+        interval (int): How often the metrics thread exports, measured in cluster tend intervals.
+            The thread sleeps ``interval * tend_interval`` milliseconds (default 30 * 1000).
+            Used only when ``export_interval`` is empty. Export does not run on the tend thread.
+        export_interval (str): How often the metrics thread exports, as a magnitude and unit.
+            Examples: ``"30s"``, ``"1500ms"``, ``"30m"``, ``"1h"``. A bare number is seconds.
+            An empty string uses ``interval``. When set, this overrides ``interval``.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
-            The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+            The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
+        latency_unit (int): Histogram bucket unit.
+            :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
+            :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
+        operational_enabled (bool): Record command-path operational metrics: latency, namespace
+            errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
+            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
+            file still writes CPU, memory, and per-attempt namespace histograms when this is false.
+        usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
+            Other feature usage names are not recorded. Off until explicitly enabled.
+        sampler_range (int): Operational command-path sampler modulus. A command is recorded when
+            operational metrics are enabled, ``sampler_threshold`` is greater than zero, and
+            ``draw % sampler_range < sampler_threshold``. Must be at least 1. Default ``1``.
+        sampler_threshold (int): Operational command-path sampler threshold, from 0 through
+            ``sampler_range``. ``0`` records nothing. The default range ``1`` and threshold ``1``
+            record every command. Range ``10`` and threshold ``1`` record about 10 percent.
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example:
@@ -236,11 +415,51 @@ class MetricsPolicy:
             latency_columns: int = 7,
             latency_shift: int = 1,
             labels: dict[str, str] = {},
+            exporters: Optional[list] = None,
+            latency_unit: int = LATENCY_MILLISECONDS,
+            operational_enabled: bool = False,
+            usage_enabled: bool = False,
+            export_interval: str = "",
+            sampler_range: int = 1,
+            sampler_threshold: int = 1,
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
         self.report_size_limit = report_size_limit
         self.interval = interval
+        self.export_interval = export_interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
+        self.latency_unit = latency_unit
+        self.operational_enabled = operational_enabled
+        self.usage_enabled = usage_enabled
+        self.sampler_range = sampler_range
+        self.sampler_threshold = sampler_threshold
         self.labels = labels
+        self.exporters = []
+        if exporters:
+            for exporter in exporters:
+                self.add_exporter(exporter)
+
+    def add_exporter(self, exporter) -> None:
+        """Append an exporter. Exporters are called in registration order with the same snapshot.
+
+        Enabling metrics does not take ownership of the exporter object. Keep it alive for as long
+        as metrics stay enabled. The client releases its reference after metrics are disabled.
+        """
+        _require_exporter(exporter)
+        self.exporters.append(exporter)
+
+    def set_sampler_probability(self, probability: float) -> None:
+        """Set the operational sampler to approximately ``probability``.
+
+        ``sampler_range`` becomes 1000000 and ``sampler_threshold`` becomes
+        ``round(probability * 1000000)``. ``probability`` must be from 0 through 1.
+        """
+        if isinstance(probability, bool) or not isinstance(probability, (int, float)):
+            raise TypeError("sampler probability must be a float from 0 through 1")
+        if probability != probability or probability < 0.0 or probability > 1.0:
+            raise ValueError("sampler probability must be from 0 through 1")
+        self.sampler_range = 1000000
+        scaled = probability * 1000000.0 + 0.5
+        self.sampler_threshold = int(scaled)
