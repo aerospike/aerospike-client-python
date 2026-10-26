@@ -19,7 +19,6 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
 
 #include "types.h"
@@ -73,18 +72,6 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
  */
 AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
                                            PyObject *kwds);
-
-/**
- * Request-time Top-K checks. No-op unless order_by or top_k is set.
- * partition_filter and partition_status may be NULL. partition_status is the
- * resume state converted from the policy's partition_filter, before it is
- * attached to partition_filter.
- */
-as_status
-AerospikeQuery_ValidateTopK(AerospikeQuery *self, as_error *err,
-                            bool is_background,
-                            const as_partition_filter *partition_filter,
-                            const as_partitions_status *partition_status);
 
 /**
  * Add a list of write operations to the query.

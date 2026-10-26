@@ -94,7 +94,7 @@ class TestQueryTopKValidation:
         query.top_k = 1001
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
+        assert excinfo.value.msg == "top_k must be in [1, 1000]; got 1001"
 
     @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
@@ -109,7 +109,7 @@ class TestQueryTopKValidation:
         query.max_records = 100
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
+        assert excinfo.value.msg == "order_by/top_k cannot be combined with max_records(100)"
 
     def test_top_k_on_background_query(self, query):
         query.add_ops([operations.write("bin", 1)])
@@ -117,10 +117,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.execute_background()
-        assert excinfo.value.msg == (
-            "orderBy/topK is only valid on foreground (SELECT-style) queries; "
-            "background (UPDATE-style) queries do not produce a result stream"
-        )
+        assert excinfo.value.msg == "order_by/top_k is only valid on foreground queries"
 
     def test_top_k_with_aggregate_udf(self, query):
         query.apply("stream_example", "count")
@@ -128,7 +125,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "orderBy is incompatible with aggregate UDFs; use the UDF's own reduce stage"
+        assert excinfo.value.msg == "order_by/top_k is incompatible with aggregate UDFs"
 
     @pytest.mark.parametrize(
         "partition_filter",
@@ -159,7 +156,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results({"partition_filter": partition_filter})
-        assert excinfo.value.msg == "Top-K can't resume a partition filter from an earlier query"
+        assert excinfo.value.msg == "order_by/top_k cannot resume an earlier query"
 
     def test_order_by_bin_not_in_select_projection(self, query):
         query.select("report", "location")
@@ -168,7 +165,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "orderBy bin 'occurred' is not in projection; add it to setOperations or remove projection"
+            "order_by bin 'occurred' is not in projection; add it to select or remove projection"
         )
 
     def test_order_by_bin_not_in_ops_projection(self, query):
@@ -178,7 +175,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "orderBy bin 'occurred' is not in projection; add it to setOperations or remove projection"
+            "order_by bin 'occurred' is not in projection; add it to ops or remove projection"
         )
 
     def test_order_by_bin_produced_by_more_than_one_op(self, query):
@@ -187,7 +184,9 @@ class TestQueryTopKValidation:
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "orderBy bin 'occurred' is produced by more than one operation"
+        assert excinfo.value.msg == (
+            "order_by bin 'occurred' is produced by 2 projection operations; it must be produced by one"
+        )
 
     def test_then_order_by_returns_query(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
@@ -226,7 +225,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "orderBy supports at most two keys"
+        assert excinfo.value.msg == "order_by/top_k allows at most two order keys"
 
     def test_order_by_replaces_both_keys(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
@@ -239,7 +238,7 @@ class TestQueryTopKValidation:
         query.max_records = 100
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
+        assert excinfo.value.msg == "order_by/top_k cannot be combined with max_records(100)"
 
     def test_then_order_by_before_order_by_sets_first_key(self, query):
         query.select("report")
@@ -248,7 +247,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "orderBy bin 'occurred' is not in projection; add it to setOperations or remove projection"
+            "order_by bin 'occurred' is not in projection; add it to select or remove projection"
         )
 
     def test_then_order_by_bin_not_in_projection(self, query):
@@ -258,7 +257,7 @@ class TestQueryTopKValidation:
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "orderBy bin 'ts' is not in projection; add it to setOperations or remove projection"
+        assert excinfo.value.msg == "order_by bin 'ts' is not in projection; add it to select or remove projection"
 
 
 class TestQueryTopKIntegration:

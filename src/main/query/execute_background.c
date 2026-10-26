@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2026 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,12 +65,6 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
                                  &write_policy_p,
                                  &self->client->as->config.policies.write,
                                  &exp_list_p, false) != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    as_status topk_status =
-        AerospikeQuery_ValidateTopK(self, &err, true, NULL, NULL);
-    if (topk_status != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
