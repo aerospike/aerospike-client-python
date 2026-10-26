@@ -96,11 +96,11 @@ class TestQueryTopKValidation:
             getattr(query, api_method)(*args)
         assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
 
+    @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        with pytest.raises(e.ParamError) as excinfo:
+        with pytest.raises(e.InvalidRequest):
             query.results()
-        assert not excinfo.value.msg.startswith("topK must be in")
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_with_max_records(self, query, api_method, args):

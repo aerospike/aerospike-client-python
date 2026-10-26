@@ -65,17 +65,14 @@ def aerospike_bin_op():
 
 
 # ---------------------------------------------------------------------------
-# Integration tests - require a running server with Vector Phase 1 milestone
-# 1 (vector particle type) and milestone 2 (order_by/top_k) support. Skips
-# (rather than hard version-gating, since there is no numbered server
-# release yet at the time of writing) if the server rejects order_by/top_k
-# as unsupported.
+# Integration tests - require server version 8.2.1 or later for vectors and
+# order_by/top_k.
 # ---------------------------------------------------------------------------
 
 
 class TestVectorExpressionsIntegration(object):
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, as_connection, skip_if_server_older_than_8_2_1):
         self.test_ns = "test"
         self.test_set = "test_vector_exp"
         self.test_keys = []
@@ -105,17 +102,10 @@ class TestVectorExpressionsIntegration(object):
         ).compile()
 
         # Project the distance as a named result bin via expression_read().
-        try:
-            _, _, res = self.as_connection.operate(
-                (self.test_ns, self.test_set, "self-match"),
-                [exp_ops.expression_read("dist", dist_expr)],
-            )
-        except aerospike.exception.InvalidRequest as ex:
-            # Older/stock servers without Vector Phase 1's expression-engine
-            # support (VECTOR-typed bin evaluation in rt_bin_translate)
-            # reject this with AEROSPIKE_ERR_REQUEST_INVALID instead of
-            # evaluating the expression.
-            pytest.skip(f"Server does not support vector-bin expressions: {ex}")
+        _, _, res = self.as_connection.operate(
+            (self.test_ns, self.test_set, "self-match"),
+            [exp_ops.expression_read("dist", dist_expr)],
+        )
         assert res["dist"] == pytest.approx(1.0, abs=1e-4)
 
     def test_knn_top_k_query_matches_bruteforce(self):
@@ -145,15 +135,7 @@ class TestVectorExpressionsIntegration(object):
         query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrder.ASCENDING)
         query.top_k = 5
 
-        try:
-            records = query.results()
-        except aerospike.exception.ParamError as ex:
-            error_text = str(ex).lower()
-            order_rejected = "order_by" in error_text or "orderby" in error_text
-            topk_rejected = "top_k" in error_text or "topk" in error_text or "top-k" in error_text
-            if order_rejected or topk_rejected:
-                pytest.skip(f"Server does not support order_by/top_k: {ex}")
-            raise
+        records = query.results()
 
         assert len(records) == 5
         actual_ids = [bins["id"] for _, _, bins in records]

@@ -147,16 +147,18 @@ class TestVectorUnit(object):
         v = Vector.of_float32([0.1, 0.2])
         assert isinstance(v, bytes)
 
+    def test_vector_bin_type_constant(self):
+        assert aerospike.AS_BYTES_VECTOR == 16
+
 
 # ---------------------------------------------------------------------------
-# Integration tests - require a running server with the Vector particle type
-# (Vector Phase 1 milestone 1).
+# Integration tests - require server version 8.2.1 or later for vectors.
 # ---------------------------------------------------------------------------
 
 
 class TestVectorIntegration(object):
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, as_connection, skip_if_server_older_than_8_2_1):
         self.test_ns = "test"
         self.test_set = "test_vector"
         self.test_keys = []
@@ -196,9 +198,6 @@ class TestVectorIntegration(object):
         assert result.dimensions == vector.dimensions
         assert list(result.value) == list(vector.value)
 
-    def test_vector_bin_type_constant(self):
-        assert aerospike.AS_BYTES_VECTOR == 16
-
     @pytest.mark.parametrize(
         "bin_value",
         [
@@ -211,5 +210,5 @@ class TestVectorIntegration(object):
     def test_vector_nested_in_collection_is_rejected(self, bin_value):
         key = (self.test_ns, self.test_set, "nested")
         self.test_keys.append(key)
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.put(key, {"vectors": bin_value})
