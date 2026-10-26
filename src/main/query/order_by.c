@@ -15,7 +15,6 @@
  ******************************************************************************/
 
 #include <Python.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -40,7 +39,7 @@ typedef void (*order_key_setter)(as_query *query, const char *bin_name,
                                  as_order direction,
                                  as_query_order_by_flags flags);
 
-static bool is_order_by_type(unsigned int type_value)
+static bool is_order_by_type(long long type_value)
 {
     if (type_value == AS_QUERY_ORDER_BY_INTEGER) {
         return true;
@@ -64,12 +63,12 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
                                      order_key_setter setter)
 {
     // type and direction are parsed as optional so that omitting them raises
-    // the ParamError messages from the Top-K API instead of a TypeError.
-    const unsigned int unset = UINT_MAX;
+    // the ParamError messages from the Top-K API instead of a TypeError. They
+    // are parsed as objects because the I format wraps out-of-range values.
     PyObject *py_bin = NULL;
-    unsigned int type = unset;
-    unsigned int direction = unset;
-    unsigned int flags = AS_QUERY_ORDER_BY_FLAGS_DEFAULT;
+    PyObject *py_type = NULL;
+    PyObject *py_direction = NULL;
+    int flags = AS_QUERY_ORDER_BY_FLAGS_DEFAULT;
 
     static char *kwlist[] = {"bin", "type", "direction", "flags", NULL};
 
@@ -81,8 +80,9 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_bin, &type,
-                                     &direction, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_bin,
+                                     &PyLong_Type, &py_type, &PyLong_Type,
+                                     &py_direction, &flags)) {
         return NULL;
     }
 
@@ -100,17 +100,32 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (type == unset) {
+    if (!py_type) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", TYPE_REQUIRED_ERROR);
         goto CLEANUP;
+    }
+
+    long long type = PyLong_AsLongLong(py_type);
+    if (type == -1 && PyErr_Occurred()) {
+        return NULL;
     }
 
     if (!is_order_by_type(type)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "orderBy type must be one of INTEGER, DOUBLE, STRING, "
-                        "BYTES; got %u",
+                        "BYTES; got %lld",
                         type);
         goto CLEANUP;
+    }
+
+    if (!py_direction) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", DIRECTION_ERROR);
+        goto CLEANUP;
+    }
+
+    long long direction = PyLong_AsLongLong(py_direction);
+    if (direction == -1 && PyErr_Occurred()) {
+        return NULL;
     }
 
     bool direction_ok =
@@ -141,12 +156,13 @@ CLEANUP:
 AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)
 {
-    return set_order_key(self, args, kwds, "U|III:order_by", as_query_order_by);
+    return set_order_key(self, args, kwds, "U|O!O!i:order_by",
+                         as_query_order_by);
 }
 
 AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
                                            PyObject *kwds)
 {
-    return set_order_key(self, args, kwds, "U|III:then_order_by",
+    return set_order_key(self, args, kwds, "U|O!O!i:then_order_by",
                          as_query_then_order_by);
 }

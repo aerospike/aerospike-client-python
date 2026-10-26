@@ -50,16 +50,23 @@ class TestQueryTopKValidation:
             "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"
         )
 
-    def test_order_by_invalid_type(self, query):
+    @pytest.mark.parametrize("bin_type", [9, -1, 2**32])
+    def test_order_by_invalid_type(self, query, bin_type):
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by(BIN, 9, aerospike.QueryOrder.ASCENDING)
-        assert excinfo.value.msg == "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"
+            query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
+        assert excinfo.value.msg == f"orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got {bin_type}"
+
+    def test_order_by_type_must_be_int(self, query):
+        with pytest.raises(TypeError, match=r"^order_by\(\) argument 2 must be int, not str$"):
+            query.order_by(BIN, "INTEGER", aerospike.QueryOrder.ASCENDING)
 
     @pytest.mark.parametrize(
         "kwargs",
         [
             {},
             {"direction": 2},
+            {"direction": -1},
+            {"direction": 2**32},
         ],
     )
     def test_order_by_missing_or_invalid_direction(self, query, kwargs):
@@ -79,6 +86,10 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE)
         assert excinfo.value.msg == "orderBy flags are only valid with type STRING"
+
+    def test_order_by_flags_out_of_range(self, query):
+        with pytest.raises(OverflowError):
+            query.order_by(BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, 2**32 + 1)
 
     def test_order_by_string_flags_accepted(self, query):
         returned = query.order_by(
