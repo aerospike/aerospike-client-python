@@ -188,3 +188,98 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == "orderBy bin 'occurred' is produced by more than one operation"
+
+    def test_then_order_by_returns_query(self, query):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        returned = query.then_order_by(
+            "name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE
+        )
+        assert returned is query
+
+    @pytest.mark.parametrize(
+        "args, expected_msg",
+        [
+            (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
+             "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
+            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
+            (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
+            (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
+              aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
+             "orderBy flags are only valid with type STRING"),
+        ],
+    )
+    def test_then_order_by_invalid_args(self, query, args, expected_msg):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        with pytest.raises(e.ParamError) as excinfo:
+            query.then_order_by(*args)
+        assert excinfo.value.msg == expected_msg
+
+    def test_then_order_by_missing_bin_names_method(self, query):
+        with pytest.raises(TypeError, match=r"^then_order_by\(\) missing required argument 'bin'"):
+            query.then_order_by()
+
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_then_order_by_third_key(self, query, api_method, args):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.then_order_by("name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args)
+        assert excinfo.value.msg == "orderBy supports at most two keys"
+
+    def test_order_by_replaces_both_keys(self, query):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.then_order_by("name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING)
+        query.order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.select("occurred")
+        query.top_k = 10
+        # The key count error is gone, and "ts" no longer has to be in the projection.
+        query.max_records = 100
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
+
+    def test_then_order_by_before_order_by_sets_first_key(self, query):
+        query.select("report")
+        query.then_order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.top_k = 20
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == (
+            "orderBy bin 'occurred' is not in projection; add it to setOperations or remove projection"
+        )
+
+    def test_then_order_by_bin_not_in_projection(self, query):
+        query.select(BIN)
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 20
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == "orderBy bin 'ts' is not in projection; add it to setOperations or remove projection"
+
+
+class TestQueryTopKIntegration:
+    SET_NAME = "demo-top-k"
+    # (score, ts) pairs. The two records with score 3 tie on the first key.
+    RECORDS = [(1, 50), (3, 20), (2, 40), (3, 10)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (score, ts) in zip(self.keys, self.RECORDS):
+            as_connection.put(key, {BIN: score, "ts": ts})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def test_then_order_by_breaks_ties(self):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 3
+        records = query.results()
+        ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
+        assert ordered == [(3, 10), (3, 20), (2, 40)]

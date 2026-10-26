@@ -52,6 +52,12 @@ static const char PROJECTION_MISSING_ERROR[] =
     "projection";
 static const char PROJECTION_DUPLICATE_ERROR[] =
     "orderBy bin '%s' is produced by more than one operation";
+static const char ORDER_KEY_COUNT_ERROR[] = "orderBy supports at most two keys";
+
+typedef void (*order_key_setter)(as_query *query, const char *bin_name,
+                                 as_query_order_by_type type,
+                                 as_order direction,
+                                 as_query_order_by_flags flags);
 
 static bool is_order_by_type(unsigned int type_value)
 {
@@ -86,10 +92,11 @@ static bool partition_status_has_resume(const as_partitions_status *parts)
     return false;
 }
 
-static as_status validate_order_by_projection(const as_query *query,
-                                              as_error *err)
+static as_status
+validate_order_key_projection(const as_query *query,
+                              const as_query_order_by_field *key, as_error *err)
 {
-    const char *bin_name = query->order_by.bin;
+    const char *bin_name = key->bin;
 
     if (as_operations_defined(query->ops)) {
         uint16_t matches = 0;
@@ -152,6 +159,12 @@ AerospikeQuery_ValidateTopK(AerospikeQuery *self, as_error *err,
         return err->code;
     }
 
+    // as_query_then_order_by() sets this instead of storing a third key.
+    if (self->query.order_by_overflow) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s", ORDER_KEY_COUNT_ERROR);
+        return err->code;
+    }
+
     // top_k == 0 means k is unset. Like the C client, an order key without k is
     // sent to the server, which rejects it.
     if (top_k > 1000) {
@@ -187,16 +200,25 @@ AerospikeQuery_ValidateTopK(AerospikeQuery *self, as_error *err,
     }
 
     as_status projection_status =
-        validate_order_by_projection(&self->query, err);
-    return projection_status;
+        validate_order_key_projection(&self->query, &self->query.order_by, err);
+    if (projection_status != AEROSPIKE_OK) {
+        return projection_status;
+    }
+
+    if (!self->query.then_order_by.defined) {
+        return AEROSPIKE_OK;
+    }
+
+    as_status then_projection_status = validate_order_key_projection(
+        &self->query, &self->query.then_order_by, err);
+    return then_projection_status;
 }
 
-/**
- * Set the ORDER BY clause for a Top-K query (`ORDER BY <bin> LIMIT k`).
- * Replaces any order key already set and leaves top_k unchanged.
- */
-AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
-                                       PyObject *kwds)
+// Shared by order_by() and then_order_by(). format is the
+// PyArg_ParseTupleAndKeywords format, which names the method in TypeErrors.
+static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
+                                     PyObject *kwds, const char *format,
+                                     order_key_setter setter)
 {
     // type and direction are parsed as optional so that omitting them raises
     // the ParamError messages from the Top-K API instead of a TypeError.
@@ -217,9 +239,8 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#|III:order_by", kwlist,
-                                     &bin_name, &bin_size, &type, &direction,
-                                     &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &bin_name,
+                                     &bin_size, &type, &direction, &flags)) {
         return NULL;
     }
 
@@ -256,8 +277,8 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    as_query_order_by(&self->query, bin_name, (as_query_order_by_type)type,
-                      (as_order)direction, (as_query_order_by_flags)flags);
+    setter(&self->query, bin_name, (as_query_order_by_type)type,
+           (as_order)direction, (as_query_order_by_flags)flags);
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
@@ -267,4 +288,18 @@ CLEANUP:
 
     Py_INCREF(self);
     return self;
+}
+
+AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
+                                       PyObject *kwds)
+{
+    return set_order_key(self, args, kwds, "s#|III:order_by",
+                         as_query_order_by);
+}
+
+AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
+                                           PyObject *kwds)
+{
+    return set_order_key(self, args, kwds, "s#|III:then_order_by",
+                         as_query_then_order_by);
 }

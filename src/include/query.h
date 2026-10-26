@@ -55,11 +55,24 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
  *
  *		query.order_by(bin, type, direction[, flags])
  *
- * Replaces any order key already set and keeps query.top_k. Must be paired
- * with setting query.top_k before the query is executed.
+ * Replaces both order keys already set, including one from then_order_by(),
+ * and keeps query.top_k. Must be paired with setting query.top_k before the
+ * query is executed.
  */
 AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds);
+
+/**
+ * Add a second order key that breaks ties on the first
+ * (`ORDER BY <bin>, <bin2> LIMIT k`).
+ *
+ *		query.then_order_by(bin, type, direction[, flags])
+ *
+ * Sets the first key if order_by() hasn't been called. A third key raises
+ * ParamError when the query executes.
+ */
+AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
+                                           PyObject *kwds);
 
 /**
  * Request-time Top-K checks. No-op unless order_by or top_k is set.
