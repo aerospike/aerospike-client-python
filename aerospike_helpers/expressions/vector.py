@@ -77,6 +77,8 @@ _METRIC_TO_OP = {
 class VectorDistance(_BaseExpr):
     """Create an expression that returns the distance between a stored vector
     bin and a query vector, as a float, using the given metric.
+
+    .. note:: Requires server version >= 8.2.1
     """
 
     _rt = None  # float result; the C extension infers no explicit result type here.

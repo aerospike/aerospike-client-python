@@ -117,10 +117,11 @@ Fields
         the order key set by :meth:`~aerospike.Query.order_by`.
 
         .. note::
-            Requires a server version with Top-K query support. A value above ``1000``
-            raises :exc:`~aerospike.exception.ParamError` when the query executes. A query
-            with :meth:`~aerospike.Query.order_by` and no ``top_k`` is sent to the server,
-            which rejects it with :exc:`~aerospike.exception.ParamError`.
+            Requires server version >= 8.2.1. A value above ``1000`` raises
+            :exc:`~aerospike.exception.ParamError` when the query executes. A query with
+            :meth:`~aerospike.Query.order_by` and no ``top_k`` is sent to the server, which
+            rejects it with :exc:`~aerospike.exception.InvalidRequest`. See the notes in
+            :meth:`~aerospike.Query.order_by` for the other checks.
 
         Default: ``0`` (not set)
 
@@ -297,10 +298,10 @@ Assume this boilerplate code is run before all examples below:
             raise ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
 
         .. note::
-            Requires a server version with Top-K query support on every node. ``top_k`` outside
-            ``[1, 1000]``, ``max_records``, an aggregate UDF, a background query, or a partition
-            filter resumed from an earlier query raises :exc:`~aerospike.exception.ParamError`
-            before the query is sent.
+            Requires server version >= 8.2.1 on every node. ``top_k`` above ``1000``,
+            ``max_records``, an aggregate UDF, a background query, or a partition filter resumed
+            from an earlier query raises :exc:`~aerospike.exception.ParamError` before the query
+            is sent. See :attr:`~aerospike.Query.top_k` for a query without ``top_k``.
 
         Example: vector similarity search - find the 2 records whose "embedding" :class:`~aerospike_helpers.Vector` \
         bin is closest (by squared Euclidean distance) to a query vector:

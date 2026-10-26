@@ -76,7 +76,9 @@ class Vector(bytes):
 
     A vector can only be stored as a top-level bin value. The server rejects a write
     that puts a vector in a list or map, at any depth, with
-    :exc:`~aerospike.exception.ParamError`.
+    :exc:`~aerospike.exception.InvalidRequest`.
+
+    .. note:: Requires server version >= 8.2.1
 
     Construct with one of the ``Vector.of_*()`` factories::
 
