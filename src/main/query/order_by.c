@@ -58,8 +58,8 @@ static bool is_order_by_type(long long type_value)
 
 // Shared by order_by() and then_order_by(). format is the
 // PyArg_ParseTupleAndKeywords format, which names the method in TypeErrors.
-static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
-                                     PyObject *kwds, const char *format,
+static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
+                                     PyObject *py_kwds, const char *format,
                                      order_key_setter setter)
 {
     // type and direction are parsed as optional so that omitting them raises
@@ -80,7 +80,7 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_bin,
+    if (!PyArg_ParseTupleAndKeywords(py_args, py_kwds, format, kwlist, &py_bin,
                                      &PyLong_Type, &py_type, &PyLong_Type,
                                      &py_direction, &flags)) {
         return NULL;
@@ -153,16 +153,16 @@ CLEANUP:
     return self;
 }
 
-AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
-                                       PyObject *kwds)
+AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *py_args,
+                                       PyObject *py_kwds)
 {
-    return set_order_key(self, args, kwds, "U|O!O!i:order_by",
+    return set_order_key(self, py_args, py_kwds, "U|O!O!i:order_by",
                          as_query_order_by);
 }
 
-AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
-                                           PyObject *kwds)
+AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self,
+                                           PyObject *py_args, PyObject *py_kwds)
 {
-    return set_order_key(self, args, kwds, "U|O!O!i:then_order_by",
+    return set_order_key(self, py_args, py_kwds, "U|O!O!i:then_order_by",
                          as_query_then_order_by);
 }

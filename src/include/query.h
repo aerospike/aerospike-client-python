@@ -58,8 +58,8 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
  * and keeps query.top_k. Must be paired with setting query.top_k before the
  * query is executed.
  */
-AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
-                                       PyObject *kwds);
+AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *py_args,
+                                       PyObject *py_kwds);
 
 /**
  * Add a second order key that breaks ties on the first
@@ -70,8 +70,9 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
  * Sets the first key if order_by() hasn't been called. A third key raises
  * ParamError when the query executes.
  */
-AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
-                                           PyObject *kwds);
+AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self,
+                                           PyObject *py_args,
+                                           PyObject *py_kwds);
 
 /**
  * Add a list of write operations to the query.

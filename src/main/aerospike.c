@@ -1059,144 +1059,150 @@ void aerospike_free(void *self)
     Py_XDECREF(py_global_hosts);
 }
 
-static int set_int_enum_member(PyObject *members, const char *name, long value)
+static int set_int_enum_member(PyObject *py_members, const char *name,
+                               long value)
 {
     PyObject *py_value = PyLong_FromLong(value);
     if (py_value == NULL) {
         return -1;
     }
 
-    int retval = PyDict_SetItemString(members, name, py_value);
+    int retval = PyDict_SetItemString(py_members, name, py_value);
     Py_DECREF(py_value);
     return retval;
 }
 
-static PyObject *create_int_enum(const char *enum_name, PyObject *members)
+static PyObject *create_int_enum(const char *enum_name, PyObject *py_members)
 {
-    PyObject *enum_module = PyImport_ImportModule("enum");
-    if (enum_module == NULL) {
+    PyObject *py_enum_module = PyImport_ImportModule("enum");
+    if (py_enum_module == NULL) {
         return NULL;
     }
 
-    PyObject *int_enum = PyObject_GetAttrString(enum_module, "IntEnum");
-    Py_DECREF(enum_module);
-    if (int_enum == NULL) {
+    PyObject *py_int_enum = PyObject_GetAttrString(py_enum_module, "IntEnum");
+    Py_DECREF(py_enum_module);
+    if (py_int_enum == NULL) {
         return NULL;
     }
 
-    PyObject *args = Py_BuildValue("(sO)", enum_name, members);
-    if (args == NULL) {
-        Py_DECREF(int_enum);
+    PyObject *py_args = Py_BuildValue("(sO)", enum_name, py_members);
+    if (py_args == NULL) {
+        Py_DECREF(py_int_enum);
         return NULL;
     }
 
-    PyObject *kwargs = Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
-    if (kwargs == NULL) {
-        Py_DECREF(args);
-        Py_DECREF(int_enum);
+    PyObject *py_kwargs =
+        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (py_kwargs == NULL) {
+        Py_DECREF(py_args);
+        Py_DECREF(py_int_enum);
         return NULL;
     }
 
-    PyObject *enum_cls = PyObject_Call(int_enum, args, kwargs);
-    Py_DECREF(kwargs);
-    Py_DECREF(args);
-    Py_DECREF(int_enum);
-    return enum_cls;
+    PyObject *py_enum_cls = PyObject_Call(py_int_enum, py_args, py_kwargs);
+    Py_DECREF(py_kwargs);
+    Py_DECREF(py_args);
+    Py_DECREF(py_int_enum);
+    return py_enum_cls;
 }
 
-static int add_query_order_enums(PyObject *module)
+static int add_query_order_enums(PyObject *py_module)
 {
-    PyObject *type_members = PyDict_New();
-    if (type_members == NULL) {
+    PyObject *py_type_members = PyDict_New();
+    if (py_type_members == NULL) {
         return -1;
     }
 
-    int type_members_ok =
-        set_int_enum_member(type_members, "INTEGER", AS_QUERY_ORDER_BY_INTEGER);
+    int type_members_ok = set_int_enum_member(py_type_members, "INTEGER",
+                                              AS_QUERY_ORDER_BY_INTEGER);
     if (type_members_ok == 0) {
-        type_members_ok = set_int_enum_member(type_members, "DOUBLE",
+        type_members_ok = set_int_enum_member(py_type_members, "DOUBLE",
                                               AS_QUERY_ORDER_BY_DOUBLE);
     }
     if (type_members_ok == 0) {
-        type_members_ok = set_int_enum_member(type_members, "STRING",
+        type_members_ok = set_int_enum_member(py_type_members, "STRING",
                                               AS_QUERY_ORDER_BY_STRING);
     }
     if (type_members_ok == 0) {
-        type_members_ok =
-            set_int_enum_member(type_members, "BYTES", AS_QUERY_ORDER_BY_BYTES);
+        type_members_ok = set_int_enum_member(py_type_members, "BYTES",
+                                              AS_QUERY_ORDER_BY_BYTES);
     }
     if (type_members_ok == -1) {
-        Py_DECREF(type_members);
+        Py_DECREF(py_type_members);
         return -1;
     }
 
-    PyObject *order_by_type = create_int_enum("QueryOrderByType", type_members);
-    Py_DECREF(type_members);
-    if (order_by_type == NULL) {
+    PyObject *py_order_by_type =
+        create_int_enum("QueryOrderByType", py_type_members);
+    Py_DECREF(py_type_members);
+    if (py_order_by_type == NULL) {
         return -1;
     }
 
-    int retval = PyModule_AddObject(module, "QueryOrderByType", order_by_type);
+    int retval =
+        PyModule_AddObject(py_module, "QueryOrderByType", py_order_by_type);
     if (retval == -1) {
-        Py_DECREF(order_by_type);
+        Py_DECREF(py_order_by_type);
         return -1;
     }
 
-    PyObject *direction_members = PyDict_New();
-    if (direction_members == NULL) {
+    PyObject *py_direction_members = PyDict_New();
+    if (py_direction_members == NULL) {
         return -1;
     }
 
-    int direction_members_ok =
-        set_int_enum_member(direction_members, "ASCENDING", AS_ORDER_ASCENDING);
+    int direction_members_ok = set_int_enum_member(
+        py_direction_members, "ASCENDING", AS_ORDER_ASCENDING);
     if (direction_members_ok == 0) {
         direction_members_ok = set_int_enum_member(
-            direction_members, "DESCENDING", AS_ORDER_DESCENDING);
+            py_direction_members, "DESCENDING", AS_ORDER_DESCENDING);
     }
     if (direction_members_ok == -1) {
-        Py_DECREF(direction_members);
+        Py_DECREF(py_direction_members);
         return -1;
     }
 
-    PyObject *query_order = create_int_enum("QueryOrder", direction_members);
-    Py_DECREF(direction_members);
-    if (query_order == NULL) {
+    PyObject *py_query_order =
+        create_int_enum("QueryOrder", py_direction_members);
+    Py_DECREF(py_direction_members);
+    if (py_query_order == NULL) {
         return -1;
     }
 
-    retval = PyModule_AddObject(module, "QueryOrder", query_order);
+    retval = PyModule_AddObject(py_module, "QueryOrder", py_query_order);
     if (retval == -1) {
-        Py_DECREF(query_order);
+        Py_DECREF(py_query_order);
         return -1;
     }
 
-    PyObject *flag_members = PyDict_New();
-    if (flag_members == NULL) {
+    PyObject *py_flag_members = PyDict_New();
+    if (py_flag_members == NULL) {
         return -1;
     }
 
-    int flag_members_ok = set_int_enum_member(flag_members, "DEFAULT",
+    int flag_members_ok = set_int_enum_member(py_flag_members, "DEFAULT",
                                               AS_QUERY_ORDER_BY_FLAGS_DEFAULT);
     if (flag_members_ok == 0) {
         flag_members_ok =
-            set_int_enum_member(flag_members, "CASE_INSENSITIVE",
+            set_int_enum_member(py_flag_members, "CASE_INSENSITIVE",
                                 AS_QUERY_ORDER_BY_CASE_INSENSITIVE);
     }
     if (flag_members_ok == -1) {
-        Py_DECREF(flag_members);
+        Py_DECREF(py_flag_members);
         return -1;
     }
 
-    PyObject *order_by_flags =
-        create_int_enum("QueryOrderByFlags", flag_members);
-    Py_DECREF(flag_members);
-    if (order_by_flags == NULL) {
+    PyObject *py_order_by_flags =
+        create_int_enum("QueryOrderByFlags", py_flag_members);
+    Py_DECREF(py_flag_members);
+    if (py_order_by_flags == NULL) {
         return -1;
     }
 
-    retval = PyModule_AddObject(module, "QueryOrderByFlags", order_by_flags);
+    retval =
+        PyModule_AddObject(py_module, "QueryOrderByFlags", py_order_by_flags);
     if (retval == -1) {
-        Py_DECREF(order_by_flags);
+        Py_DECREF(py_order_by_flags);
         return -1;
     }
     return 0;
