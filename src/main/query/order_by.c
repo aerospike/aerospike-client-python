@@ -15,7 +15,6 @@
  ******************************************************************************/
 
 #include <Python.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -24,6 +23,7 @@
 #include <aerospike/as_query.h>
 
 #include "exceptions.h"
+#include "pythoncapi_compat.h"
 #include "query.h"
 
 static const char BIN_NAME_ERROR[] =
@@ -87,15 +87,9 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         goto CLEANUP;
     }
 
-    long long type = PyLong_AsLongLong(py_type);
+    // The C client checks that type is valid when the query executes.
+    int type = PyLong_AsInt(py_type);
     if (type == -1 && PyErr_Occurred()) {
-        return NULL;
-    }
-
-    // The C client validates the type when the query executes, but casting to
-    // as_query_order_by_type would first truncate a wider value.
-    if (type < INT_MIN || type > INT_MAX) {
-        PyErr_SetString(PyExc_OverflowError, "orderBy type is out of range");
         return NULL;
     }
 

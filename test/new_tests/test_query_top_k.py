@@ -60,7 +60,7 @@ class TestQueryTopKValidation:
 
     @pytest.mark.parametrize("bin_type", [2**32 + 1, -(2**31) - 1])
     def test_order_by_type_out_of_range(self, query, bin_type):
-        with pytest.raises(OverflowError, match=r"^orderBy type is out of range$"):
+        with pytest.raises(OverflowError):
             query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
 
     def test_order_by_type_must_be_int(self, query):
