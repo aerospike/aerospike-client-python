@@ -1069,7 +1069,10 @@ static int set_int_enum_member(PyObject *py_members, const char *name,
 
     int retval = PyDict_SetItemString(py_members, name, py_value);
     Py_DECREF(py_value);
-    return retval;
+    if (retval == -1) {
+        return -1;
+    }
+    return 0;
 }
 
 static PyObject *create_int_enum(const char *enum_name, PyObject *py_members)
