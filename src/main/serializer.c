@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -477,26 +477,13 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
-    case AS_BYTES_HLL: {
-        // Convert bytes to Python bytes object
-        PyObject *py_bytes = PyBytes_FromStringAndSize(
-            (const char *)bytes->value, (Py_ssize_t)bytes->size);
-        if (py_bytes == NULL) {
-            as_error_update(
-                error_p, AEROSPIKE_ERR_CLIENT,
-                "Unable to convert C client's as_bytes to Python bytes");
-            goto CLEANUP;
-        }
-        PyObject *py_hll = create_class_instance_from_module(
-            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
-        Py_DECREF(py_bytes);
-        if (!py_hll) {
-            goto CLEANUP;
-        }
-        *retval = py_hll;
-        break;
-    }
+    case AS_BYTES_HLL:
     case AS_BYTES_VECTOR: {
+        const char *class_name = "HyperLogLog";
+        if (as_bytes_get_type(bytes) == AS_BYTES_VECTOR) {
+            class_name = "Vector";
+        }
+
         // Convert bytes to Python bytes object
         PyObject *py_bytes = PyBytes_FromStringAndSize(
             (const char *)bytes->value, (Py_ssize_t)bytes->size);
@@ -506,13 +493,13 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 "Unable to convert C client's as_bytes to Python bytes");
             goto CLEANUP;
         }
-        PyObject *py_vector = create_class_instance_from_module(
-            error_p, "aerospike_helpers", "Vector", py_bytes);
+        PyObject *py_instance = create_class_instance_from_module(
+            error_p, "aerospike_helpers", class_name, py_bytes);
         Py_DECREF(py_bytes);
-        if (!py_vector) {
+        if (!py_instance) {
             goto CLEANUP;
         }
-        *retval = py_vector;
+        *retval = py_instance;
         break;
     }
     default: {
