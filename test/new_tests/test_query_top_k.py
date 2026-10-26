@@ -34,6 +34,10 @@ class TestQueryTopKValidation:
             query.order_by(bin_name, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
         assert excinfo.value.msg == "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"
 
+    def test_order_by_bin_name_must_be_str(self, query):
+        with pytest.raises(TypeError, match=r"^order_by\(\) argument 1 must be str, not bytes$"):
+            query.order_by(b"score", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+
     def test_order_by_bin_name_counts_utf8_bytes(self, query):
         # 8 two-byte characters is 16 UTF-8 bytes.
         with pytest.raises(e.ParamError):

@@ -14,7 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -67,8 +66,7 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
     // type and direction are parsed as optional so that omitting them raises
     // the ParamError messages from the Top-K API instead of a TypeError.
     const unsigned int unset = UINT_MAX;
-    char *bin_name = NULL;
-    Py_ssize_t bin_size = 0;
+    PyObject *py_bin = NULL;
     unsigned int type = unset;
     unsigned int direction = unset;
     unsigned int flags = AS_QUERY_ORDER_BY_FLAGS_DEFAULT;
@@ -83,15 +81,21 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &bin_name,
-                                     &bin_size, &type, &direction, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, format, kwlist, &py_bin, &type,
+                                     &direction, &flags)) {
         return NULL;
     }
 
-    size_t bin_len = strlen(bin_name);
-    bool bin_ok = bin_len == (size_t)bin_size && bin_len >= 1 &&
-                  bin_len <= AS_BIN_NAME_MAX_LEN;
-    if (!bin_ok) {
+    Py_ssize_t bin_size = 0;
+    const char *bin_name = PyUnicode_AsUTF8AndSize(py_bin, &bin_size);
+    if (!bin_name) {
+        return NULL;
+    }
+
+    // The C setters copy only up to the first NUL.
+    bool has_nul = strlen(bin_name) != (size_t)bin_size;
+    bool size_ok = bin_size >= 1 && bin_size <= AS_BIN_NAME_MAX_LEN;
+    if (has_nul || !size_ok) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", BIN_NAME_ERROR);
         goto CLEANUP;
     }
@@ -137,13 +141,12 @@ CLEANUP:
 AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *args,
                                        PyObject *kwds)
 {
-    return set_order_key(self, args, kwds, "s#|III:order_by",
-                         as_query_order_by);
+    return set_order_key(self, args, kwds, "U|III:order_by", as_query_order_by);
 }
 
 AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self, PyObject *args,
                                            PyObject *kwds)
 {
-    return set_order_key(self, args, kwds, "s#|III:then_order_by",
+    return set_order_key(self, args, kwds, "U|III:then_order_by",
                          as_query_then_order_by);
 }
