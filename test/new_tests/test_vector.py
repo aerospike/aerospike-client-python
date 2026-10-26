@@ -90,6 +90,11 @@ class TestVectorUnit(object):
         v2 = Vector(bytes(v))
         assert bytes(v2) == bytes(v)
 
+    def test_raw_bytes_with_elements_raises(self):
+        v = Vector.of_float32([0.1, 0.2])
+        with pytest.raises(TypeError, match=r"^Vector\(\) takes no elements when given raw bytes$"):
+            Vector(bytes(v), [1.0])
+
     def test_unknown_element_type_raises(self):
         with pytest.raises(ValueError):
             Vector(0xFF, [1, 2, 3])

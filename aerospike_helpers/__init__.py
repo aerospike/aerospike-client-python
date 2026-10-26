@@ -148,8 +148,9 @@ class Vector(bytes):
         #       used by the C extension when deserializing a stored Vector bin
         #       (mirrors create_class_instance_from_module()'s single-positional-arg
         #       calling convention).
-        if elements is None and isinstance(element_type_or_bytes,
-                                            (bytes, bytearray)):
+        if isinstance(element_type_or_bytes, (bytes, bytearray)):
+            if elements is not None:
+                raise TypeError("Vector() takes no elements when given raw bytes")
             return cls.from_bytes(bytes(element_type_or_bytes))
 
         element_type = element_type_or_bytes
