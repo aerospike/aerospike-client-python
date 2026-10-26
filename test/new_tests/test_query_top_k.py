@@ -50,11 +50,18 @@ class TestQueryTopKValidation:
             "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"
         )
 
-    @pytest.mark.parametrize("bin_type", [9, -1, 2**32])
+    @pytest.mark.parametrize("bin_type", [0, 9, -1])
     def test_order_by_invalid_type(self, query, bin_type):
+        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == "order_by type must be one of INTEGER, DOUBLE, STRING, BYTES"
+
+    @pytest.mark.parametrize("bin_type", [2**32 + 1, -(2**31) - 1])
+    def test_order_by_type_out_of_range(self, query, bin_type):
+        with pytest.raises(OverflowError, match=r"^orderBy type is out of range$"):
             query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
-        assert excinfo.value.msg == f"orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got {bin_type}"
 
     def test_order_by_type_must_be_int(self, query):
         with pytest.raises(TypeError, match=r"^order_by\(\) argument 2 must be int, not str$"):
@@ -83,9 +90,19 @@ class TestQueryTopKValidation:
         ],
     )
     def test_order_by_flags_require_string(self, query, bin_type):
+        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE)
+        query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE)
-        assert excinfo.value.msg == "orderBy flags are only valid with type STRING"
+            query.results()
+        assert excinfo.value.msg == "order_by flag CASE_INSENSITIVE is only valid with type STRING"
+
+    @pytest.mark.parametrize("flags", [2, -1])
+    def test_order_by_unknown_flags(self, query, flags):
+        query.order_by(BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, flags)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == "order_by has unknown flag bits set"
 
     def test_order_by_flags_out_of_range(self, query):
         with pytest.raises(OverflowError):
@@ -215,17 +232,31 @@ class TestQueryTopKValidation:
         [
             (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
+            (("ts",), "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"),
             (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
-            (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
-              aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
-             "orderBy flags are only valid with type STRING"),
         ],
     )
     def test_then_order_by_invalid_args(self, query, args, expected_msg):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
         with pytest.raises(e.ParamError) as excinfo:
             query.then_order_by(*args)
+        assert excinfo.value.msg == expected_msg
+
+    @pytest.mark.parametrize(
+        "args, expected_msg",
+        [
+            (("ts", 9, aerospike.QueryOrder.ASCENDING), "order_by type must be one of INTEGER, DOUBLE, STRING, BYTES"),
+            (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
+              aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
+             "order_by flag CASE_INSENSITIVE is only valid with type STRING"),
+        ],
+    )
+    def test_then_order_by_invalid_key_at_execution(self, query, args, expected_msg):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by(*args)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
         assert excinfo.value.msg == expected_msg
 
     def test_then_order_by_missing_bin_names_method(self, query):

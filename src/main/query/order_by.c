@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <Python.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -31,30 +32,11 @@ static const char TYPE_REQUIRED_ERROR[] =
     "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); "
     "Aerospike has no schema";
 static const char DIRECTION_ERROR[] = "orderBy direction must be ASC or DESC";
-static const char FLAGS_ERROR[] =
-    "orderBy flags are only valid with type STRING";
 
 typedef void (*order_key_setter)(as_query *query, const char *bin_name,
                                  as_query_order_by_type type,
                                  as_order direction,
                                  as_query_order_by_flags flags);
-
-static bool is_order_by_type(long long type_value)
-{
-    if (type_value == AS_QUERY_ORDER_BY_INTEGER) {
-        return true;
-    }
-    if (type_value == AS_QUERY_ORDER_BY_DOUBLE) {
-        return true;
-    }
-    if (type_value == AS_QUERY_ORDER_BY_STRING) {
-        return true;
-    }
-    if (type_value == AS_QUERY_ORDER_BY_BYTES) {
-        return true;
-    }
-    return false;
-}
 
 // Shared by order_by() and then_order_by(). format is the
 // PyArg_ParseTupleAndKeywords format, which names the method in TypeErrors.
@@ -110,12 +92,11 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         return NULL;
     }
 
-    if (!is_order_by_type(type)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "orderBy type must be one of INTEGER, DOUBLE, STRING, "
-                        "BYTES; got %lld",
-                        type);
-        goto CLEANUP;
+    // The C client validates the type when the query executes, but casting to
+    // as_query_order_by_type would first truncate a wider value.
+    if (type < INT_MIN || type > INT_MAX) {
+        PyErr_SetString(PyExc_OverflowError, "orderBy type is out of range");
+        return NULL;
     }
 
     if (!py_direction) {
@@ -132,11 +113,6 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         direction == AS_ORDER_ASCENDING || direction == AS_ORDER_DESCENDING;
     if (!direction_ok) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", DIRECTION_ERROR);
-        goto CLEANUP;
-    }
-
-    if (flags != 0 && type != AS_QUERY_ORDER_BY_STRING) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", FLAGS_ERROR);
         goto CLEANUP;
     }
 

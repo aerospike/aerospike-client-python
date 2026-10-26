@@ -291,7 +291,9 @@ Assume this boilerplate code is run before all examples below:
             :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
-        :raises aerospike.exception.ParamError: the bin name, type, direction, or flags are not valid.
+        :raises aerospike.exception.ParamError: the bin name or direction is not valid, or ``type`` \
+            is missing. A ``type`` or ``flags`` value that is not valid raises this error when the \
+            query executes.
 
         .. note::
             A record whose order-by bin is missing, or holds a value of a different type than
@@ -386,9 +388,8 @@ Assume this boilerplate code is run before all examples below:
             :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
-        :raises aerospike.exception.ParamError: the bin name, type, direction, or flags are not valid. \
-            A query supports at most two order keys, so a third raises this error when the query \
-            executes.
+        :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. A query \
+            supports at most two order keys, so a third raises this error when the query executes.
 
         .. code-block:: python
 
