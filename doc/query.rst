@@ -291,9 +291,9 @@ Assume this boilerplate code is run before all examples below:
             :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
-        :raises aerospike.exception.ParamError: the bin name or direction is not valid, or ``type`` \
-            is missing. A ``type`` or ``flags`` value that is not valid raises this error when the \
-            query executes.
+        :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
+            name contains a NUL character. A bin name, ``type``, ``direction``, or ``flags`` value \
+            that is not valid raises this error when the query executes.
 
         .. note::
             A record whose order-by bin is missing, or holds a value of a different type than

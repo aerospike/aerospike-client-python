@@ -18,7 +18,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <aerospike/as_bin.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_query.h>
 
@@ -74,10 +73,10 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         return NULL;
     }
 
-    // The C setters copy only up to the first NUL.
+    // The C client checks the name's length when the query executes, but its
+    // setters copy only up to the first NUL.
     bool has_nul = strlen(bin_name) != (size_t)bin_size;
-    bool size_ok = bin_size >= 1 && bin_size <= AS_BIN_NAME_MAX_LEN;
-    if (has_nul || !size_ok) {
+    if (has_nul) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", BIN_NAME_ERROR);
         goto CLEANUP;
     }
@@ -87,7 +86,8 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         goto CLEANUP;
     }
 
-    // The C client checks that type is valid when the query executes.
+    // The C client checks that type and direction are valid when the query
+    // executes.
     int type = PyLong_AsInt(py_type);
     if (type == -1 && PyErr_Occurred()) {
         return NULL;
@@ -98,16 +98,9 @@ static AerospikeQuery *set_order_key(AerospikeQuery *self, PyObject *py_args,
         goto CLEANUP;
     }
 
-    long long direction = PyLong_AsLongLong(py_direction);
+    int direction = PyLong_AsInt(py_direction);
     if (direction == -1 && PyErr_Occurred()) {
         return NULL;
-    }
-
-    bool direction_ok =
-        direction == AS_ORDER_ASCENDING || direction == AS_ORDER_DESCENDING;
-    if (!direction_ok) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "%s", DIRECTION_ERROR);
-        goto CLEANUP;
     }
 
     setter(&self->query, bin_name, (as_query_order_by_type)type,

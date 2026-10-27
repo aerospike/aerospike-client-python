@@ -21,27 +21,23 @@ class TestQueryTopKValidation:
     def query(self):
         return self.as_connection.query("test", "demo")
 
-    @pytest.mark.parametrize(
-        "bin_name",
-        [
-            "",
-            "a" * 16,
-            "a\0b",
-        ],
-    )
-    def test_order_by_invalid_bin_name(self, query, bin_name):
+    def test_order_by_bin_name_with_nul(self, query):
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by(bin_name, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+            query.order_by("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        assert excinfo.value.msg == "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"
+
+    # 8 two-byte characters is 16 UTF-8 bytes.
+    @pytest.mark.parametrize("bin_name", ["", "a" * 16, "é" * 8])
+    def test_order_by_invalid_bin_name_length(self, query, bin_name):
+        query.order_by(bin_name, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
         assert excinfo.value.msg == "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"
 
     def test_order_by_bin_name_must_be_str(self, query):
         with pytest.raises(TypeError, match=r"^order_by\(\) argument 1 must be str, not bytes$"):
             query.order_by(b"score", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-
-    def test_order_by_bin_name_counts_utf8_bytes(self, query):
-        # 8 two-byte characters is 16 UTF-8 bytes.
-        with pytest.raises(e.ParamError):
-            query.order_by("é" * 8, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
 
     def test_order_by_missing_type(self, query):
         with pytest.raises(e.ParamError) as excinfo:
@@ -63,22 +59,26 @@ class TestQueryTopKValidation:
         with pytest.raises(OverflowError):
             query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
 
+    @pytest.mark.parametrize("direction", [2**32, -(2**31) - 1])
+    def test_order_by_direction_out_of_range(self, query, direction):
+        with pytest.raises(OverflowError):
+            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, direction)
+
     def test_order_by_type_must_be_int(self, query):
         with pytest.raises(TypeError, match=r"^order_by\(\) argument 2 must be int, not str$"):
             query.order_by(BIN, "INTEGER", aerospike.QueryOrder.ASCENDING)
 
-    @pytest.mark.parametrize(
-        "kwargs",
-        [
-            {},
-            {"direction": 2},
-            {"direction": -1},
-            {"direction": 2**32},
-        ],
-    )
-    def test_order_by_missing_or_invalid_direction(self, query, kwargs):
+    def test_order_by_missing_direction(self, query):
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, **kwargs)
+            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER)
+        assert excinfo.value.msg == "orderBy direction must be ASC or DESC"
+
+    @pytest.mark.parametrize("direction", [2, -1])
+    def test_order_by_invalid_direction(self, query, direction):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, direction)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
         assert excinfo.value.msg == "orderBy direction must be ASC or DESC"
 
     @pytest.mark.parametrize(
@@ -230,10 +230,10 @@ class TestQueryTopKValidation:
     @pytest.mark.parametrize(
         "args, expected_msg",
         [
-            (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
+            (("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
             (("ts",), "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"),
-            (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
+            (("ts", aerospike.QueryOrderByType.INTEGER), "orderBy direction must be ASC or DESC"),
         ],
     )
     def test_then_order_by_invalid_args(self, query, args, expected_msg):
@@ -245,7 +245,10 @@ class TestQueryTopKValidation:
     @pytest.mark.parametrize(
         "args, expected_msg",
         [
+            (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
+             "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
             (("ts", 9, aerospike.QueryOrder.ASCENDING), "order_by type must be one of INTEGER, DOUBLE, STRING, BYTES"),
+            (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
             (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
               aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
              "order_by flag CASE_INSENSITIVE is only valid with type STRING"),
