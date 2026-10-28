@@ -53,7 +53,7 @@ class TestVectorExpressionsUnit(object):
 
     def test_unknown_metric_raises_value_error(self):
         query_vector = Vector.of_float32([0.1, 0.2])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Unknown VectorDistanceMetric: 999$"):
             vector_exp.VectorDistance(999, query_vector, "embedding")
 
 

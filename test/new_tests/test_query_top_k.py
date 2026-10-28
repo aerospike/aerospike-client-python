@@ -46,22 +46,30 @@ class TestQueryTopKValidation:
             "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"
         )
 
-    @pytest.mark.parametrize("bin_type", [0, 9, -1])
-    def test_order_by_invalid_type(self, query, bin_type):
+    @pytest.mark.parametrize(
+        "bin_type, expected_msg",
+        [
+            # The C client treats a type of 0 as missing.
+            (0, "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"),
+            (9, "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
+            (-1, "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got -1"),
+        ],
+    )
+    def test_order_by_invalid_type(self, query, bin_type, expected_msg):
         query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by type must be one of INTEGER, DOUBLE, STRING, BYTES"
+        assert excinfo.value.msg == expected_msg
 
     @pytest.mark.parametrize("bin_type", [2**32 + 1, -(2**31) - 1])
     def test_order_by_type_out_of_range(self, query, bin_type):
-        with pytest.raises(OverflowError):
+        with pytest.raises(OverflowError, match=r"^Python int too large to convert to C int$"):
             query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
 
     @pytest.mark.parametrize("direction", [2**32, -(2**31) - 1])
     def test_order_by_direction_out_of_range(self, query, direction):
-        with pytest.raises(OverflowError):
+        with pytest.raises(OverflowError, match=r"^Python int too large to convert to C int$"):
             query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, direction)
 
     def test_order_by_type_must_be_int(self, query):
@@ -94,7 +102,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by flag CASE_INSENSITIVE is only valid with type STRING"
+        assert excinfo.value.msg == "orderBy flags are only valid with type STRING"
 
     @pytest.mark.parametrize("flags", [2, -1])
     def test_order_by_unknown_flags(self, query, flags):
@@ -102,10 +110,14 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by has unknown flag bits set"
+        assert excinfo.value.msg == "orderBy has unknown flag bits set"
 
     def test_order_by_flags_out_of_range(self, query):
-        with pytest.raises(OverflowError):
+        # On Windows, C long is 32 bits, so the value overflows long before it is checked against int.
+        with pytest.raises(
+            OverflowError,
+            match=r"^(signed integer is greater than maximum|Python int too large to convert to C long)$",
+        ):
             query.order_by(BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, 2**32 + 1)
 
     def test_order_by_string_flags_accepted(self, query):
@@ -126,7 +138,7 @@ class TestQueryTopKValidation:
         query.top_k = 1001
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "top_k must be in [1, 1000]; got 1001"
+        assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
 
     @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
@@ -141,7 +153,7 @@ class TestQueryTopKValidation:
         query.max_records = 100
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "order_by/top_k cannot be combined with max_records(100)"
+        assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
 
     def test_top_k_on_background_query(self, query):
         query.add_ops([operations.write("bin", 1)])
@@ -149,7 +161,10 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.execute_background()
-        assert excinfo.value.msg == "order_by/top_k is only valid on foreground queries"
+        assert excinfo.value.msg == (
+            "orderBy/topK is only valid on foreground (SELECT-style) queries; "
+            "background (UPDATE-style) queries do not produce a result stream"
+        )
 
     def test_top_k_with_aggregate_udf(self, query):
         query.apply("stream_example", "count")
@@ -157,7 +172,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by/top_k is incompatible with aggregate UDFs"
+        assert excinfo.value.msg == "orderBy is incompatible with aggregate UDFs; use the UDF's own reduce stage"
 
     @pytest.mark.parametrize(
         "partition_filter",
@@ -188,7 +203,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results({"partition_filter": partition_filter})
-        assert excinfo.value.msg == "order_by/top_k cannot resume an earlier query"
+        assert excinfo.value.msg == "Top-K can't resume a partition filter from an earlier query"
 
     def test_order_by_bin_not_in_select_projection(self, query):
         query.select("report", "location")
@@ -197,7 +212,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "order_by bin 'occurred' is not in projection; add it to select or remove projection"
+            "orderBy bin 'occurred' is not in projection; add it to the projection or remove the projection"
         )
 
     def test_order_by_bin_not_in_ops_projection(self, query):
@@ -207,7 +222,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "order_by bin 'occurred' is not in projection; add it to ops or remove projection"
+            "orderBy bin 'occurred' is not in projection; add it to the projection or remove the projection"
         )
 
     def test_order_by_bin_produced_by_more_than_one_op(self, query):
@@ -217,7 +232,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "order_by bin 'occurred' is produced by 2 projection operations; it must be produced by one"
+            "orderBy bin 'occurred' is produced by more than one operation"
         )
 
     def test_then_order_by_returns_query(self, query):
@@ -247,11 +262,11 @@ class TestQueryTopKValidation:
         [
             (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts", 9, aerospike.QueryOrder.ASCENDING), "order_by type must be one of INTEGER, DOUBLE, STRING, BYTES"),
+            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
             (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
             (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
               aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
-             "order_by flag CASE_INSENSITIVE is only valid with type STRING"),
+             "orderBy flags are only valid with type STRING"),
         ],
     )
     def test_then_order_by_invalid_key_at_execution(self, query, args, expected_msg):
@@ -274,7 +289,7 @@ class TestQueryTopKValidation:
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
-        assert excinfo.value.msg == "order_by/top_k allows at most two order keys"
+        assert excinfo.value.msg == "orderBy supports at most two keys"
 
     def test_order_by_replaces_both_keys(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
@@ -287,7 +302,7 @@ class TestQueryTopKValidation:
         query.max_records = 100
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by/top_k cannot be combined with max_records(100)"
+        assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
 
     def test_then_order_by_before_order_by_sets_first_key(self, query):
         query.select("report")
@@ -296,7 +311,7 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == (
-            "order_by bin 'occurred' is not in projection; add it to select or remove projection"
+            "orderBy bin 'occurred' is not in projection; add it to the projection or remove the projection"
         )
 
     def test_then_order_by_bin_not_in_projection(self, query):
@@ -306,7 +321,9 @@ class TestQueryTopKValidation:
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == "order_by bin 'ts' is not in projection; add it to select or remove projection"
+        assert excinfo.value.msg == (
+            "orderBy bin 'ts' is not in projection; add it to the projection or remove the projection"
+        )
 
 
 class TestQueryTopKIntegration:

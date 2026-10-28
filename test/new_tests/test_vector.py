@@ -96,50 +96,52 @@ class TestVectorUnit(object):
             Vector(bytes(v), [1.0])
 
     def test_unknown_element_type_raises(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Unknown Vector element_type: 255$"):
             Vector(0xFF, [1, 2, 3])
 
     def test_zero_dimensions_raises(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Vector dimensions must be in \[1, 65536\] for this element type; got 0$"):
             Vector.of_float32([])
 
     def test_too_many_dimensions_raises(self):
         max_dims = Vector._MAX_ELEMENTS_BYTES // 4  # FLOAT32 is 4 bytes/element
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=rf"^Vector dimensions must be in \[1, {max_dims}\] for this element type; got {max_dims + 1}$"):
             Vector.of_float32([0.0] * (max_dims + 1))
 
     @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
     def test_nan_inf_rejected_float32(self, bad):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float32([0.1, bad, 0.3])
 
     @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
     def test_nan_inf_rejected_float64(self, bad):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float64([0.1, bad])
 
     def test_from_bytes_too_short_header_raises(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Vector buffer too short: missing 6-byte header$"):
             Vector.from_bytes(b"\x01\x03\x04\x00")  # < 6 bytes
 
     def test_from_bytes_unknown_element_type_raises(self):
         raw = struct.pack("<BBI", Vector.VERSION, 0xFF, 1) + b"\x00\x00\x00\x00"
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Unknown Vector element_type in wire data: 255$"):
             Vector.from_bytes(raw)
 
     def test_from_bytes_unsupported_version_raises(self):
         raw = struct.pack("<BBI", Vector.VERSION + 1, Vector.ElementType.FLOAT32, 1) + b"\x00\x00\x00\x00"
-        with pytest.raises(ValueError, match="Unsupported Vector version"):
+        with pytest.raises(ValueError, match=rf"^Unsupported Vector version in wire data: {Vector.VERSION + 1}$"):
             Vector.from_bytes(raw)
 
     def test_from_bytes_zero_dimensions_raises(self):
         raw = struct.pack("<BBI", Vector.VERSION, Vector.ElementType.FLOAT32, 0)
-        with pytest.raises(ValueError, match="dimensions"):
+        with pytest.raises(
+            ValueError, match=r"^Vector dimensions in wire data must be in \[1, 65536\] for this element type; got 0$"
+        ):
             Vector.from_bytes(raw)
 
     def test_from_bytes_truncated_body_raises(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"^Vector buffer too short for declared dimensions: need 22, got 20$"):
             Vector.from_bytes(bytes(v)[:-2])  # chop off part of the last element
 
     def test_repr_is_not_indistinguishable_from_bytes(self):
