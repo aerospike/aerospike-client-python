@@ -55,12 +55,48 @@ class TestVectorUnit(object):
         assert v.dimensions == 2
         assert list(v.value) == pytest.approx([1.5, 2.5])
 
-    def test_of_float16_raw_bit_patterns(self):
+    def test_of_float16(self):
+        v = Vector.of_float16([1.0, 2.0, -0.5, 0.1])
+        assert v.element_type == Vector.ElementType.FLOAT16
+        assert v.dimensions == 4
+        assert list(v.value) == [0x3C00, 0x4000, 0xB800, 0x2E66]
+        assert v.float16_values() == [1.0, 2.0, -0.5, 0.0999755859375]
+
+    @pytest.mark.parametrize(
+        "value, bit_pattern",
+        [
+            # Halfway between 1.0 and the next binary16 value rounds to the even 1.0.
+            (1 + 2**-11, 0x3C00),
+            # Halfway between the next two binary16 values rounds up to the even one.
+            (1 + 3 * 2**-11, 0x3C02),
+            # Rounding straight from binary64 gives 0x3C01, but this narrows to the
+            # binary32 value 1 + 2**-11 first, which is a tie.
+            (1 + 2**-11 + 2**-40, 0x3C00),
+            (65504.0, 0x7BFF),
+            (65519.99, 0x7BFF),
+            (-65504.0, 0xFBFF),
+            (6e-8, 0x0001),
+        ],
+    )
+    def test_of_float16_rounds_through_float32(self, value, bit_pattern):
+        assert list(Vector.of_float16([value]).value) == [bit_pattern]
+
+    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf"), 65520.0, -65520.0, 1e300])
+    def test_nan_inf_rejected_float16(self, bad):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
+            Vector.of_float16([0.1, bad])
+
+    def test_of_float16_bits(self):
         # No value conversion is performed - raw bit patterns pass through unchanged.
-        raw = [0x3C00, 0x4000]  # fp16 bit patterns for 1.0, 2.0
-        v = Vector.of_float16(raw)
+        raw = [0x3C00, 0x4000]  # binary16 bit patterns for 1.0, 2.0
+        v = Vector.of_float16_bits(raw)
         assert v.element_type == Vector.ElementType.FLOAT16
         assert list(v.value) == raw
+        assert v.float16_values() == [1.0, 2.0]
+
+    def test_float16_values_requires_float16(self):
+        with pytest.raises(ValueError, match=r"^float16_values\(\) requires a FLOAT16 vector; got FLOAT32$"):
+            Vector.of_float32([0.1]).float16_values()
 
     def test_wire_format_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
@@ -192,7 +228,8 @@ class TestVectorIntegration(object):
             ("of_float32", [0.1, 0.2, 0.3, 0.4]),
             ("of_int32", [1, -2, 3, -4, 5]),
             ("of_float64", [1.5, -2.5, 3.5]),
-            ("of_float16", [0x3C00, 0x4000, 0xB800]),
+            ("of_float16", [1.0, 2.0, -0.5]),
+            ("of_float16_bits", [0x3C00, 0x4000, 0xB800]),
         ],
     )
     def test_put_get_round_trip_every_element_type(self, factory, values):

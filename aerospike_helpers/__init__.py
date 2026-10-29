@@ -60,6 +60,7 @@ class HyperLogLog(bytes):
         return self.__repr__()
 
 
+import math as _math
 import struct as _struct
 from array import array as _array
 from enum import IntEnum as _IntEnum
@@ -85,6 +86,11 @@ class Vector(bytes):
         from aerospike_helpers import Vector
 
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
+
+        # Python has no float16 type, so of_float16() rounds each value to binary16,
+        # and float16_values() reads the elements back as floats.
+        v16 = Vector.of_float16([0.1, 0.2])
+        v16.float16_values()  # [0.0999755859375, 0.199951171875]
 
     .. testcode::
 
@@ -123,7 +129,7 @@ class Vector(bytes):
         # No BIN/Hamming type - confirmed absent from the real C client.
 
     _STRUCT_FMT = {
-        ElementType.FLOAT16: "<H",  # raw fp16 bit pattern, no value conversion
+        ElementType.FLOAT16: "<H",  # raw binary16 bit pattern; of_float16() converts values
         ElementType.INT32: "<i",
         ElementType.FLOAT32: "<f",
         ElementType.FLOAT64: "<d",
@@ -131,6 +137,7 @@ class Vector(bytes):
     _HEADER_FMT = "<BBI"
     _HEADER_SIZE = 6
     _MAX_ELEMENTS_BYTES = 1 << 18  # AS_VECTOR_VALUE_MAX_ELEMENTS_BYTES
+    _NON_FINITE_ERROR = "Vector elements must be finite (NaN/Infinity not allowed)"
 
     # Declared here (rather than only assigned in __new__/from_bytes) so that
     # mypy/stubtest can see these instance attributes exist on the class.
@@ -172,9 +179,7 @@ class Vector(bytes):
         if element_type in (cls.ElementType.FLOAT32, cls.ElementType.FLOAT64):
             for e in elements:
                 if e != e or e in (float("inf"), float("-inf")):  # NaN/Inf check
-                    raise ValueError(
-                        "Vector elements must be finite (NaN/Infinity not allowed)"
-                    )
+                    raise ValueError(cls._NON_FINITE_ERROR)
 
         header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
                                dimensions)
@@ -185,11 +190,37 @@ class Vector(bytes):
         return self
 
     @classmethod
-    def of_float16(cls, raw_bit_patterns: _Iterable[int]) -> "Vector":
-        """Construct a FLOAT16 vector from raw fp16 bit patterns (no value
-        conversion is performed; each element must already be the encoded
-        16-bit IEEE-754-half bit pattern)."""
-        return cls(cls.ElementType.FLOAT16, raw_bit_patterns)
+    def of_float16(cls, values: _Iterable[float]) -> "Vector":
+        """Construct a FLOAT16 vector from float values.
+
+        Each value is narrowed to IEEE 754 binary32 and then rounded to binary16 with
+        round-ties-to-even. Narrowing to binary32 first matters: rounding a Python
+        :class:`float` (binary64) straight to binary16 can produce different bits.
+        Use :meth:`of_float16_bits` to pass binary16 bit patterns through unchanged.
+
+        :raises ValueError: a value is NaN or infinite, or its magnitude rounds to
+            infinity in binary16 (65520 or above).
+        """
+        float32_values = _array("f", values)
+        for value in float32_values:
+            if not _math.isfinite(value):
+                raise ValueError(cls._NON_FINITE_ERROR)
+
+        dimensions = len(float32_values)
+        try:
+            packed = _struct.pack(f"<{dimensions}e", *float32_values)
+        except OverflowError:
+            raise ValueError(cls._NON_FINITE_ERROR) from None
+
+        bit_patterns = _struct.unpack(f"<{dimensions}H", packed)
+        return cls.of_float16_bits(bit_patterns)
+
+    @classmethod
+    def of_float16_bits(cls, bit_patterns: _Iterable[int]) -> "Vector":
+        """Construct a FLOAT16 vector from raw IEEE 754 binary16 bit patterns, for
+        exact interchange. No value conversion is performed. Use :meth:`of_float16`
+        to construct one from float values."""
+        return cls(cls.ElementType.FLOAT16, bit_patterns)
 
     @classmethod
     def of_int32(cls, data: _Iterable[int]) -> "Vector":
@@ -213,7 +244,9 @@ class Vector(bytes):
 
     @property
     def value(self) -> _array:
-        """Decoded element array (typed, per element_type)."""
+        """Decoded element array (typed, per element_type). A FLOAT16 vector's
+        elements are its raw binary16 bit patterns; use :meth:`float16_values` to
+        read them as floats."""
         fmt = self._STRUCT_FMT[self._element_type]
         return _array(
             fmt[1],
@@ -223,6 +256,19 @@ class Vector(bytes):
 
     # Alias for readability.
     elements = value
+
+    def float16_values(self) -> list[float]:
+        """Read a FLOAT16 vector's elements as floats. Reverse of :meth:`of_float16`.
+        Every binary16 value is exactly representable as a :class:`float`.
+
+        :raises ValueError: the vector's element type is not FLOAT16.
+        """
+        if self._element_type != self.ElementType.FLOAT16:
+            raise ValueError(
+                f"float16_values() requires a FLOAT16 vector; got {self._element_type.name}")
+        values = _struct.unpack_from(f"<{self._dimensions}e", self,
+                                     offset=self._HEADER_SIZE)
+        return list(values)
 
     def element_bytes(self) -> bytes:
         """
