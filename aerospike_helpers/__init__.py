@@ -81,7 +81,8 @@ class Vector(bytes):
 
     .. note:: Requires server version >= 8.2.1
 
-    Construct with one of the ``Vector.of_*()`` factories::
+    Construct with one of the ``Vector.of_*()`` factories. ``Vector(raw)`` only decodes
+    the wire bytes, the same as :meth:`from_bytes`::
 
         from aerospike_helpers import Vector
 
@@ -139,32 +140,23 @@ class Vector(bytes):
     _MAX_ELEMENTS_BYTES = 1 << 18  # AS_VECTOR_VALUE_MAX_ELEMENTS_BYTES
     _NON_FINITE_ERROR = "Vector elements must be finite (NaN/Infinity not allowed)"
 
-    # Declared here (rather than only assigned in __new__/from_bytes) so that
+    # Declared here (rather than only assigned in _from_elements/from_bytes) so that
     # mypy/stubtest can see these instance attributes exist on the class.
     _element_type: ElementType
     _dimensions: int
 
-    def __new__(
-        cls,
-        element_type_or_bytes: ElementType | bytes | bytearray,
-        elements=None,
-    ) -> "Vector":
-        # Two calling conventions:
-        #   Vector(element_type: ElementType, elements: Sequence)  - normal construction
-        #   Vector(raw_bytes: bytes)                        - internal decode path,
-        #       used by the C extension when deserializing a stored Vector bin
-        #       (mirrors create_class_instance_from_module()'s single-positional-arg
-        #       calling convention).
-        if isinstance(element_type_or_bytes, (bytes, bytearray)):
-            if elements is not None:
-                raise TypeError("Vector() takes no elements when given raw bytes")
-            return cls.from_bytes(bytes(element_type_or_bytes))
+    def __new__(cls, raw: bytes | bytearray) -> "Vector":
+        # The C extension's decode path (create_class_instance_from_module()) and
+        # pickle/copy call the class with the raw wire bytes.
+        if not isinstance(raw, (bytes, bytearray)):
+            raise TypeError(
+                "Vector() takes the raw wire bytes; use a Vector.of_*() factory to "
+                "construct a vector from elements")
+        return cls.from_bytes(bytes(raw))
 
-        element_type = element_type_or_bytes
-        fmt = cls._STRUCT_FMT.get(element_type)
-        if fmt is None:
-            raise ValueError(f"Unknown Vector element_type: {element_type}")
-
+    @classmethod
+    def _from_elements(cls, element_type: ElementType, elements: _Iterable) -> "Vector":
+        fmt = cls._STRUCT_FMT[element_type]
         elements = list(elements)
         dimensions = len(elements)
         elem_size = _struct.calcsize(fmt)
@@ -184,8 +176,8 @@ class Vector(bytes):
         header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
                                dimensions)
         body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
-        self = super().__new__(cls, header + body)
-        self._element_type = cls.ElementType(element_type)
+        self = bytes.__new__(cls, header + body)
+        self._element_type = element_type
         self._dimensions = dimensions
         return self
 
@@ -220,19 +212,19 @@ class Vector(bytes):
         """Construct a FLOAT16 vector from raw IEEE 754 binary16 bit patterns, for
         exact interchange. No value conversion is performed. Use :meth:`of_float16`
         to construct one from float values."""
-        return cls(cls.ElementType.FLOAT16, bit_patterns)
+        return cls._from_elements(cls.ElementType.FLOAT16, bit_patterns)
 
     @classmethod
     def of_int32(cls, data: _Iterable[int]) -> "Vector":
-        return cls(cls.ElementType.INT32, data)
+        return cls._from_elements(cls.ElementType.INT32, data)
 
     @classmethod
     def of_float32(cls, data: _Iterable[float]) -> "Vector":
-        return cls(cls.ElementType.FLOAT32, data)
+        return cls._from_elements(cls.ElementType.FLOAT32, data)
 
     @classmethod
     def of_float64(cls, data: _Iterable[float]) -> "Vector":
-        return cls(cls.ElementType.FLOAT64, data)
+        return cls._from_elements(cls.ElementType.FLOAT64, data)
 
     @property
     def element_type(self) -> ElementType:

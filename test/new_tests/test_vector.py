@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pickle
 import struct
 from enum import IntEnum
 
@@ -126,14 +127,25 @@ class TestVectorUnit(object):
         v2 = Vector(bytes(v))
         assert bytes(v2) == bytes(v)
 
-    def test_raw_bytes_with_elements_raises(self):
+    def test_pickle_round_trip(self):
+        # pickle rebuilds a bytes subclass by calling the class with the raw bytes.
         v = Vector.of_float32([0.1, 0.2])
-        with pytest.raises(TypeError, match=r"^Vector\(\) takes no elements when given raw bytes$"):
-            Vector(bytes(v), [1.0])
+        v2 = pickle.loads(pickle.dumps(v))
+        assert bytes(v2) == bytes(v)
+        assert v2.element_type == v.element_type
+        assert v2.dimensions == v.dimensions
 
-    def test_unknown_element_type_raises(self):
-        with pytest.raises(ValueError, match=r"^Unknown Vector element_type: 255$"):
-            Vector(0xFF, [1, 2, 3])
+    def test_constructor_rejects_elements(self):
+        with pytest.raises(
+            TypeError,
+            match=r"^Vector\(\) takes the raw wire bytes; use a Vector\.of_\*\(\) factory to construct a vector "
+            r"from elements$",
+        ):
+            Vector([0.1, 0.2])
+
+    def test_constructor_rejects_element_type(self):
+        with pytest.raises(TypeError, match=r"takes 2 positional arguments but 3 were given$"):
+            Vector(Vector.ElementType.FLOAT32, [0.1, 0.2])
 
     def test_zero_dimensions_raises(self):
         with pytest.raises(ValueError, match=r"^Vector dimensions must be in \[1, 65536\] for this element type; got 0$"):
