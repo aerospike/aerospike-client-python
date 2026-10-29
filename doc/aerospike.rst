@@ -1933,11 +1933,13 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 
     .. attribute:: STRING
 
-        The bin holds a string value.
+        The bin holds a string value. Not supported yet: a Top-K query with this type raises
+        :exc:`~aerospike.exception.ParamError` when it executes.
 
     .. attribute:: BYTES
 
-        The bin holds a bytes value.
+        The bin holds a bytes value. Not supported yet: a Top-K query with this type raises
+        :exc:`~aerospike.exception.ParamError` when it executes.
 
 .. class:: QueryOrder
 
@@ -1954,7 +1956,9 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 .. class:: QueryOrderByFlags
 
     STRING collation flags for :meth:`~aerospike.Query.order_by`. Flags are rejected for every
-    type other than :attr:`QueryOrderByType.STRING`.
+    type other than :attr:`QueryOrderByType.STRING`, which is not supported yet, so a Top-K query
+    with any flag other than :attr:`DEFAULT` raises :exc:`~aerospike.exception.ParamError` when it
+    executes.
 
     .. attribute:: DEFAULT
 

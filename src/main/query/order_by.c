@@ -28,8 +28,8 @@
 static const char BIN_NAME_ERROR[] =
     "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL";
 static const char TYPE_REQUIRED_ERROR[] =
-    "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); "
-    "Aerospike has no schema";
+    "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no "
+    "schema";
 static const char DIRECTION_ERROR[] = "orderBy direction must be ASC or DESC";
 
 typedef void (*order_key_setter)(as_query *query, const char *bin_name,

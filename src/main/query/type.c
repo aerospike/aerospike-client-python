@@ -62,7 +62,8 @@ PyDoc_STRVAR(order_by_doc, "order_by(bin, type, direction[, flags])\n\
 Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
 Calling order_by() again replaces the order keys, including one from then_order_by(), \
 and keeps ``top_k``. \
-``type`` is an aerospike.QueryOrderByType value, ``direction`` is aerospike.QueryOrder.ASCENDING \
+``type`` is aerospike.QueryOrderByType.INTEGER or aerospike.QueryOrderByType.DOUBLE \
+(STRING and BYTES are not supported yet), ``direction`` is aerospike.QueryOrder.ASCENDING \
 or aerospike.QueryOrder.DESCENDING, and ``flags`` is an aerospike.QueryOrderByFlags value \
 (default aerospike.QueryOrderByFlags.DEFAULT, valid only for QueryOrderByType.STRING). \
 Must be paired with ``top_k`` in [1, 1000]. Invalid combinations raise \

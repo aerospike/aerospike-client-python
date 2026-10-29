@@ -43,16 +43,18 @@ class TestQueryTopKValidation:
         with pytest.raises(e.ParamError) as excinfo:
             query.order_by(BIN)
         assert excinfo.value.msg == (
-            "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"
+            "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"
         )
 
     @pytest.mark.parametrize(
         "bin_type, expected_msg",
         [
             # The C client treats a type of 0 as missing.
-            (0, "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"),
-            (9, "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
-            (-1, "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got -1"),
+            (0, "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"),
+            (9, "orderBy type must be INTEGER or DOUBLE; got 9"),
+            (-1, "orderBy type must be INTEGER or DOUBLE; got -1"),
+            (aerospike.QueryOrderByType.STRING, "orderBy types STRING and BYTES are not supported yet; use INTEGER or DOUBLE"),
+            (aerospike.QueryOrderByType.BYTES, "orderBy types STRING and BYTES are not supported yet; use INTEGER or DOUBLE"),
         ],
     )
     def test_order_by_invalid_type(self, query, bin_type, expected_msg):
@@ -89,28 +91,16 @@ class TestQueryTopKValidation:
             query.results()
         assert excinfo.value.msg == "orderBy direction must be ASC or DESC"
 
-    @pytest.mark.parametrize(
-        "bin_type",
-        [
-            aerospike.QueryOrderByType.INTEGER,
-            aerospike.QueryOrderByType.DOUBLE,
-            aerospike.QueryOrderByType.BYTES,
-        ],
-    )
-    def test_order_by_flags_require_string(self, query, bin_type):
-        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE)
+    # STRING is not supported yet, so the C client rejects every flag, including unknown flag bits, as
+    # requiring STRING.
+    @pytest.mark.parametrize("bin_type", [aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrderByType.DOUBLE])
+    @pytest.mark.parametrize("flags", [aerospike.QueryOrderByFlags.CASE_INSENSITIVE, 2, -1])
+    def test_order_by_flags_require_string(self, query, bin_type, flags):
+        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, flags)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
         assert excinfo.value.msg == "orderBy flags are only valid with type STRING"
-
-    @pytest.mark.parametrize("flags", [2, -1])
-    def test_order_by_unknown_flags(self, query, flags):
-        query.order_by(BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, flags)
-        query.top_k = 10
-        with pytest.raises(e.ParamError) as excinfo:
-            query.results()
-        assert excinfo.value.msg == "orderBy has unknown flag bits set"
 
     def test_order_by_flags_out_of_range(self, query):
         # On Windows, C long is 32 bits, so the value overflows long before it is checked against int.
@@ -247,7 +237,7 @@ class TestQueryTopKValidation:
         [
             (("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts",), "orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema"),
+            (("ts",), "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"),
             (("ts", aerospike.QueryOrderByType.INTEGER), "orderBy direction must be ASC or DESC"),
         ],
     )
@@ -262,7 +252,7 @@ class TestQueryTopKValidation:
         [
             (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 9"),
+            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be INTEGER or DOUBLE; got 9"),
             (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
             (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
               aerospike.QueryOrderByFlags.CASE_INSENSITIVE),

@@ -284,11 +284,13 @@ Assume this boilerplate code is run before all examples below:
             in :meth:`Query.add_ops`, such as a projected \
             :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
             If a projection is set, the bin must be one of the projected names.
-        :param type: an :class:`~aerospike.QueryOrderByType` value, for example \
-            :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result.
+        :param type: :attr:`aerospike.QueryOrderByType.INTEGER` or :attr:`aerospike.QueryOrderByType.DOUBLE`, \
+            for example :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result. \
+            :attr:`~aerospike.QueryOrderByType.STRING` and :attr:`~aerospike.QueryOrderByType.BYTES` \
+            are not supported yet.
         :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
+            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
@@ -382,10 +384,11 @@ Assume this boilerplate code is run before all examples below:
         :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
-        :param type: an :class:`~aerospike.QueryOrderByType` value.
+        :param type: :attr:`aerospike.QueryOrderByType.INTEGER` or :attr:`aerospike.QueryOrderByType.DOUBLE`. \
+            See :meth:`Query.order_by`.
         :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`. Defaults to \
+            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. A query \
