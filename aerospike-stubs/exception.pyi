@@ -94,6 +94,9 @@ class BinNameError(RecordError):
 class BinIncompatibleType(RecordError):
     pass
 
+class BinExistsError(RecordError):
+     pass
+
 class IndexError(ServerError):
     name: Union[str, None]
 

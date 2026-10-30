@@ -37,6 +37,8 @@ def assert_each_record_bins(records, check_func):
 
 @pytest.fixture(scope="class")
 def clean_test_demo_namespace(as_connection):
+    as_connection.truncate("test", None, 0)
+
     names = ["Alice", "Bob", "John", "Jane"]
     for i in range(100):
         key = "test", "demo", i

@@ -515,6 +515,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Traceback (most recent call last):
                 aerospike.exception.ParamError: "key_policy" is an invalid policy dictionary key
 
+            .. note::
+                **Known exception:** :meth:`~aerospike.Client.remove_bin` raises
+                :py:class:`~aerospike.exception.ClientError` instead of
+                :py:class:`~aerospike.exception.ParamError` for an invalid policy
+                dictionary key. This is scheduled to be fixed in the next major
+                client release; see :meth:`~aerospike.Client.remove_bin` for
+                details.
+
         * **hosts** (:class:`list`)
             A list identifying a node (or multiple nodes) in the cluster. Each entry may be
             either a tuple or a string.
@@ -583,7 +591,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch** (:class:`dict`)
                 Default parent batch policy used in batch read commands.
 
-                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+                This applies to these methods when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_read`
                     * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
@@ -592,7 +600,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_remove** (:class:`dict`)
                 Default delete policy used in batch remove commands.
 
-                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_remove`
                     * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
@@ -601,14 +609,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_apply** (:class:`dict`)
                 Default user defined function policy used in batch UDF apply commands.
 
-                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_apply`
                     * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
 
                 Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+                Default batch write policy when a command-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
 
                     * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
@@ -617,7 +625,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_parent_write** (:class:`dict`)
                 Default parent batch policy used in batch write commands.
 
-                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+                This policy applies to these when a command-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
@@ -635,7 +643,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
             * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
-                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -846,7 +854,13 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``0``
         * **max_conns_per_node** (:class:`int`)
-            Maximum number of pipeline connections allowed for each node
+            Maximum number of synchronous connections allowed per server node.  Synchronous commands
+            will go through retry logic and potentially fail with :py:exc:`~aerospike.exception.NoMoreConnectionsError`
+            if the maximum number of connections would be exceeded.
+
+            The number of connections used per node depends on how many concurrent threads issue
+            database commands plus sub-threads used for parallel multi-node commands (batch, scan,
+            and query). One connection will be used for each thread.
 
             Default: ``100``
         * **max_error_rate** (:class:`int`)
@@ -2052,6 +2066,15 @@ Set on :ref:`aerospike_base_policies` option ``error_detail_verbosity``.
 
     Request subcode and human-readable message from the server on error responses.
 
+.. data:: ERROR_DETAIL_EXP_TRACE
+
+    Request subcode and human-readable message from the server on error responses,
+    as well as expression trace diagnostics appended to :py:attr:`aerospike.exception.AerospikeError.msg` when present.
+
+    Expression trace text is best-effort diagnostic output. It may be truncated
+    to fit the maximum number of characters for :py:attr:`aerospike.exception.AerospikeError.msg`, may include operand
+    values, and is not a machine-readable API.
+
 .. _subcodes:
 
 Subcodes
@@ -2062,8 +2085,8 @@ Subcodes
     No dispatchable subcode. Used when the parent status alone fully identifies
     the condition. Reserved as 0 across all status families.
 
-Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Subcodes paired with :py:exc:`~aerospike.exception.InvalidRequest`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. data:: SUB_PARAM_TTL_INVALID
 
@@ -2094,6 +2117,41 @@ Subcodes paired with :py:exc:`~aerospike.exception.ParamError`
     Write would exceed the per-record bin-count limit.
 
     App use: prune least-valuable bins and retry.
+
+.. data:: SUB_PARAM_STRING_OP_PARAMS_INVALID
+
+    String modify op received invalid parameters (empty pad string, negative repeat count, negative pad target length,
+        etc.).
+
+    App use: validate pad/repeat arguments locally before sending.
+
+.. data:: SUB_PARAM_STRING_CTX_MALFORMED
+
+    String op ctx envelope is malformed.
+
+    App use: verify the client emits ``[0xFF, ctx_list, [sub_op, args...]]``.
+
+.. data:: SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS
+
+    String overwrite resolved index is outside the string bounds.
+
+    App use: double check the string length and recompute the index before retrying.
+
+.. data:: SUB_PARAM_STRING_REGEX_INVALID
+
+    String regex argument is invalid (non-ICU idiom or ICU compile failure at
+    parse).
+
+    The server deliberately uses the same subcode value for ICU compile failures and
+    guided non-ICU rejections.
+
+    App use: validate regex patterns against the ICU dialect before sending.
+
+.. data:: SUB_PARAM_STRING_UTF8_INVALID
+
+    Ill-formed UTF-8 in a string op argument.
+
+    App use: validate application-supplied strings before packing the request.
 
 Subcodes paired with :py:exc:`~aerospike.exception.ClusterError`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2262,6 +2320,30 @@ Subcodes paired with :py:exc:`~aerospike.exception.OpNotApplicable`
     Intersect inputs have mismatched minhash parameters.
 
     App use: harmonize sketches (fold/strip minhash) before retry.
+
+.. data:: SUB_OPNOT_STRING_CONVERSION_FAILED
+
+    String conversion failed.
+
+    App use: inspect source and requested destination encoding/type.
+
+.. data:: SUB_OPNOT_STRING_UTF8_INVALID
+
+    Source blob/string is not valid UTF-8.
+
+    App use: validate or transcode input before retry.
+
+.. data:: SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED
+
+    Regex pattern exceeded a server limit for an ``OP_NOT_APPLICABLE`` string operation.
+
+    App use: simplify the pattern or reduce input size before retry.
+
+.. data:: SUB_OPNOT_STRING_B64_INVALID
+
+    Base64 input is malformed for a string operation.
+
+    App use: validate or sanitize base64 input before retry.
 
 Subcodes paired with :py:exc:`~aerospike.exception.FilteredOut`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

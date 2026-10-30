@@ -1,9 +1,12 @@
-version: 1.0.0
+version: 1.1.0
 dynamic:
   metrics:
     enable: true
+  read:
+    error_detail_verbosity: 3
   write:
     send_key: true
+    error_detail_verbosity: 3
   batch_write:
     send_key: true
   batch_udf:
