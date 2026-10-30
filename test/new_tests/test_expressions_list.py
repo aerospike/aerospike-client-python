@@ -38,9 +38,12 @@ from aerospike_helpers.expressions import (
     ListSet,
     ListSize,
     ListSort,
+    ListJoin,
     Or,
     ResultType,
+    Val
 )
+from .conftest import expect_server_version_earlier_than_8_2_0_to_fail
 
 import aerospike
 from . import as_errors
@@ -137,6 +140,7 @@ class TestExpressions(TestBaseClass):
                 "balance": i * 10,
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
+                "empty_list": [],
                 "list_bin": [
                     None,
                     i,
@@ -155,7 +159,9 @@ class TestExpressions(TestBaseClass):
                     2,
                     6,
                 ],
+                "list_of_one_str": ["b"],
                 "slist_bin": ["b", "d", "f"],
+                "nested_strs": [["a", "c"]],
                 "llist_bin": [[1, 2], [1, 3], [1, 4]],
                 "mlist_bin": [
                     aerospike.KeyOrderedDict({1: 2}),
@@ -943,3 +949,39 @@ class TestExpressions(TestBaseClass):
         _, _, bins = self.as_connection.operate(key, ops)
 
         assert bins[bin_name] == expected
+
+    @pytest.mark.parametrize(
+        "bin_name, expected",
+        [
+            ("slist_bin", "bdf"),
+            # Edge cases
+            ("empty_list", ""),
+            ("list_of_one_str", "b"),
+        ]
+    )
+    @expect_server_version_earlier_than_8_2_0_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
+    def test_list_join(self, bin_name, expected):
+        expr = ListJoin(None, None, bin_name).compile()
+        ops = [
+            expr_ops.expression_read(bin_name, expr)
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(key, ops)
+
+            assert bins[bin_name] == expected
+
+    @expect_server_version_earlier_than_8_2_0_to_fail
+    @pytest.mark.usefixtures("expect_earlier_than_server_version_to_fail")
+    def test_list_join_separator_none_with_ctx(self):
+        ctx = [cdt_ctx.cdt_ctx_list_index(0)]
+        expr = ListJoin(ctx, None, "nested_strs").compile()
+        ops = [
+            expr_ops.expression_read("nested_strs", expr)
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(key, ops)
+
+            assert bins["nested_strs"] == "ac"

@@ -153,14 +153,14 @@ jobs:
 
     - name: 'Bare metal: set up python to install wheel'
       if: ${{ !inputs.run-tests-in-container }}
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: ${{ inputs.python-version }}
 
     - if: ${{ !inputs.run-tests-in-container }}
       name: 'Bare metal: install wheel and perform extra test setup steps'
       run: |
-        pip install "./$ARTIFACT_FILE_NAME"
+        python3 -m pip install "./$ARTIFACT_FILE_NAME"
 
         if [[ ${{ inputs.run-integration-tests }} == false ]]; then
           exit 0
@@ -226,7 +226,7 @@ jobs:
         if [[ ${{ inputs.validate-keys }} == false ]]; then
           crudini --existing=param --set config.conf input-validation validate_keys false
         fi
-        pip install -r requirements.txt
+        python3 -m pip install -r requirements.txt
 
         VALGRIND_ARGS=()
         if [[ ${{ inputs.run-with-valgrind }} == true ]]; then
@@ -300,7 +300,7 @@ jobs:
     - if: ${{ inputs.run-tests-in-container && contains(inputs.container-image-name, vars.JF_EXTERNAL_URL) }}
       name: Log into JFrog to pull custom manylinux image
       id: setup-jf
-      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      uses: step-security/setup-jfrog-cli@f67dd6dcfe5fab8d1ebd695c456631275009a39d # v5.2.0
       env:
         JF_URL: https://${{ vars.JF_EXTERNAL_URL }}
         JF_PROJECT: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
@@ -356,7 +356,11 @@ jobs:
         docker exec --workdir "/$REPO_DIR_NAME" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND "./$ARTIFACT_FILE_NAME"
         # shellcheck disable=SC2086
         docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m $PIP_INSTALL_COMMAND -r requirements.txt
-        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "new_tests/$TEST_FILE"
+
+        # eval: perform variable expansion before brace expansion
+        read -ra test_files < <(eval echo "new_tests/$TEST_FILE")
+
+        docker exec --workdir "/$REPO_DIR_NAME/test" "$LINUX_DISTRO_CONTAINER_NAME" "python${PYTHON_VERSION}" -m pytest "${test_files[@]}"
       shell: bash -ex {0}
       env:
         IS_DISTRO_CONTAINER_DNF_BASED: ${{ inputs.container-image-name == 'amazonlinux:2023' || contains(inputs.container-image-name, 'ubi') }}

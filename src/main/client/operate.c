@@ -37,6 +37,7 @@
 #include "hll_operations.h"
 #include "pythoncapi_compat.h"
 #include "expression_operations.h"
+#include "cdt_operation_utils.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -218,6 +219,7 @@ static inline bool use_operate_conversion_helper(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        op == OP_LIST_JOIN || op == OP_LIST_JOIN_SEPARATOR ||
         (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
         (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
          op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
@@ -228,7 +230,7 @@ static inline bool use_operate_conversion_helper(int op)
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_RSCAN;
+    int bit_end = OP_BIT_B64_ENCODE;
     return (op >= bit_start && op <= bit_end);
 }
 
@@ -309,7 +311,7 @@ bool opRequiresKey(int op)
 #define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
 
 #define DEPRECATION_MESSAGE_TEMPLATE                                           \
-    "%s is deprecated for strings in server 8.1.3 or higher."
+    "%s is deprecated for strings in server 8.2.0 or higher."
 
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
@@ -346,7 +348,6 @@ as_status add_op(AerospikeClient *self, as_error *err,
     PyObject *py_map_policy = NULL;
     PyObject *py_return_type = NULL;
     // For map_create operation
-    PyObject *py_map_order = NULL;
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;
@@ -419,7 +420,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else if (strcmp(name, "map_order") == 0) {
-                py_map_order = value;
+                continue;
             }
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
@@ -744,7 +745,15 @@ as_status add_op(AerospikeClient *self, as_error *err,
         as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
         break;
     case OP_MAP_CREATE:;
-        as_map_order order = (as_map_order)PyLong_AsLong(py_map_order);
+        int tmp_value;
+        if (get_enum_from_py_dict(err, py_operation_dict, "map_order",
+                                  &tmp_value, AS_MAP_UNORDERED,
+                                  AS_MAP_KEY_VALUE_ORDERED, false,
+                                  NULL) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        as_map_order order = (as_map_order)tmp_value;
+
         bool persist_index = PyObject_IsTrue(py_persist_index);
         as_operations_map_create_all(ops, bin, ctx_ref, order, persist_index);
         break;

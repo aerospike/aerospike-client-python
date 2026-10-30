@@ -51,8 +51,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
 static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
                                       as_bit_resize_flags *resize_flags);
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value);
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              uint32_t *byte_count);
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
@@ -177,13 +179,9 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
     case OP_BIT_INSERT:
     case OP_BIT_OR:
     case OP_BIT_XOR:
-        if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                    &value_byte_size) != AEROSPIKE_OK) {
-            goto exit;
-        }
-
-        if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict,
-                                   &uint8_array_value) != AEROSPIKE_OK) {
+        if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict,
+                                         &uint8_array_value,
+                                         &value_byte_size) != AEROSPIKE_OK) {
             goto exit;
         }
         break;
@@ -326,6 +324,44 @@ as_status add_new_bit_op(AerospikeClient *self, as_error *err,
             as_operations_bit_xor(ops, bin, NULL, &bit_policy, bit_offset,
                                   bit_size, value_byte_size, uint8_array_value);
         break;
+    case OP_BIT_B64_ENCODE: {
+        bool ctx_in_use = false;
+        as_cdt_ctx ctx;
+        if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+                        serializer_type) != AEROSPIKE_OK) {
+            goto exit;
+        }
+        as_cdt_ctx *ctx_ref = (ctx_in_use ? &ctx : NULL);
+
+        int byte_offset = 0;
+        if (get_int_from_py_dict(err, op_dict, "byte_offset", &byte_offset,
+                                 false, NULL) != AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        int byte_size = 0;
+        bool was_byte_size_found = false;
+        if (get_int_from_py_dict(err, op_dict, BYTE_SIZE_KEY, &byte_size, true,
+                                 &was_byte_size_found) != AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        bool invert_size = false;
+        if (get_bool_from_pyargs(err, "invert_size", op_dict, &invert_size) !=
+            AEROSPIKE_OK) {
+            goto exit;
+        }
+
+        if (was_byte_size_found) {
+            success = as_operations_bit_b64_encode_range(
+                ops, bin, ctx_ref, byte_offset, byte_size, invert_size);
+        }
+        else {
+            success = as_operations_bit_b64_encode_from(ops, bin, ctx_ref,
+                                                        byte_offset);
+        }
+        break;
+    }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Unknown operation");
@@ -343,16 +379,16 @@ exit:
 static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
                                       as_bit_resize_flags *resize_flags)
 {
-    int64_t flags64;
+    int tmp_value;
     bool found = false;
-    *resize_flags = AS_BIT_RESIZE_DEFAULT;
-
-    if (get_optional_int64_t(err, RESIZE_FLAGS_KEY, op_dict, &flags64,
-                             &found) != AEROSPIKE_OK) {
+    if (get_enum_from_py_dict(
+            err, op_dict, RESIZE_FLAGS_KEY, &tmp_value, AS_BIT_RESIZE_DEFAULT,
+            AS_BIT_RESIZE_SHRINK_ONLY * 2 - 1, true, &found) != AEROSPIKE_OK) {
         return err->code;
     }
+
     if (found) {
-        *resize_flags = (as_bit_resize_flags)flags64;
+        *resize_flags = (as_bit_resize_flags)tmp_value;
     }
 
     return AEROSPIKE_OK;
@@ -372,8 +408,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value)
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              uint32_t *byte_count)
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
@@ -381,8 +419,15 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
                                key)
     }
 
+    Py_ssize_t value_size = 0;
     if (PyBytes_Check(py_val)) {
         *value = (uint8_t *)PyBytes_AsString(py_val);
+        if (PyErr_Occurred()) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
+        }
+
+        value_size = PyBytes_Size(py_val);
         if (PyErr_Occurred()) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Failed to convert %s", key);
@@ -394,11 +439,24 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "Failed to convert %s", key);
         }
+
+        value_size = PyByteArray_Size(py_val);
+        if (value_size == -1 && PyErr_Occurred()) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to convert %s", key);
+        }
     }
     else {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be bytes or byte array", key);
     }
+
+    // This prevents unexpected truncating of the bytes
+    if (value_size > UINT32_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Bytes size must not be larger than UINT32_MAX");
+    }
+    *byte_count = (uint32_t)value_size;
 
     return AEROSPIKE_OK;
 }

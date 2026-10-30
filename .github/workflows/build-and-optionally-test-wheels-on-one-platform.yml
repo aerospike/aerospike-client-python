@@ -25,7 +25,7 @@ on:
       # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
       # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
       # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
+      # CI/CD stages (e.g stage, or master). We can also test debugging modes for all platforms that support them
       #
       # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
@@ -69,14 +69,14 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
-      # Used upstream by the dev workflow to disable integration testing for macos x86
+      # Used upstream by the stage workflow to disable integration testing for macos x86
       run-integration-tests-on-macos-x86:
         type: boolean
         required: false
         default: true
       publish-build-info:
         required: false
-        description: Only used upstream by dev workflow
+        description: Only used upstream by stage workflow
         default: false
         type: boolean
       # NOT used by workflow dispatch
@@ -124,8 +124,8 @@ jobs:
         echo "runner_os=${hashmap[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
 
         declare -A manylinux_digest
-        manylinux_digest[manylinux_x86_64]="6d32fb959e76ed2b2117b28d141b3a92aed81805fe23e357a9b247ea30b88ae5"
-        manylinux_digest[manylinux_aarch64]="3e814781f3025a4659eefdc2aa1dca593eb1d9e0d6c6e1d1f543d17429eb5bdb"
+        manylinux_digest[manylinux_x86_64]="ee086a7e0d988b829bebe6404125c682190ea336ab3aad17f0c90623b28e2708"
+        manylinux_digest[manylinux_aarch64]="183ccef2e4047f722b179d69dde14b99e05b7234724bf00aa31657ae695743f5"
         # This will not fail if map key is not found. Assuming only a blank string will be returned
         echo "manylinux_image_digest=${manylinux_digest[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
       # Bash >= 4 supports hashmaps
@@ -173,12 +173,12 @@ jobs:
     if: ${{ inputs.run_tests }}
     with:
       # Not the prettiest solution...
-      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '["self-hosted", "macOS", "ARM64"]' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
+      runner-os-json-string: ${{ inputs.platform-tag == 'macosx_arm64' && '{"group":"client_team_runners","labels":["self-hosted", "macOS", "ARM64"]}' || (inputs.platform-tag == 'win_amd64' && '["self-hosted", "Windows", "X64"]' || format('"{0}"', needs.get-build-runner-os.outputs.runner-os)) }}
       python-version: ${{ matrix.python-version }}
       use-sanitizer-wheel: ${{ contains(inputs.env-vars-for-building, 'SANITIZER') }}
       run-tests-in-container: ${{ contains(inputs.platform-tag, 'manylinux') }}
       # Only used if running tests in container
-      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}-docker-dev-local/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
+      container-image-name: ${{ vars.JF_EXTERNAL_URL }}/${{ vars.JFROG_REPO_FOR_CUSTOM_MANYLINUX_IMAGES }}/manylinux_2_28_${{ endsWith(inputs.platform-tag, 'x86_64') && 'x86_64' || 'aarch64' }}@sha256:${{ needs.get-build-runner-os.outputs.manylinux-image-digest }}
       server-tag: ${{ inputs.server-tag }}
       run-integration-tests: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.run-integration-tests-on-macos-x86 }}
       test-file: ${{ inputs.test-file }}

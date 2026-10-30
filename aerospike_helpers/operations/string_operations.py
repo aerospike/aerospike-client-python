@@ -21,7 +21,7 @@ Index orientation is left-to-right with Unicode codepoint addressing.
 Negative indexes count from the end of the string (-1 is the last
 codepoint). Out-of-bounds indexes are clamped by the server.
 
-String operations require server version 8.1.3 or later. When ctx is not
+String operations require server version 8.2.0 or later. When ctx is not
 :py:obj:`None` and not empty, the operation targets a string nested inside a list or
 map. The ctx-navigated leaf must already be an Aerospike string; operations
 on non-string leaves return :exc:`~aerospike.exception.BinIncompatibleType`.
@@ -126,6 +126,8 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     Create string ``find`` operation that returns the codepoint index of the first
     occurrence of needle, or ``-1`` if not found.
 
+    Matching is Unicode canonical, not byte-exact.
+
     Args:
 
         bin_name: name of string bin.
@@ -143,9 +145,11 @@ def find(bin_name: str, needle: str, occurrence: int = 1, ctx: TypeCTX = None):
     }
 
 
-def contains(bin_name: str, needle: int, ctx: TypeCTX = None):
+def contains(bin_name: str, needle: str, ctx: TypeCTX = None):
     """
     Create string ``contains`` operation that returns true if the bin contains needle.
+
+    Matching is Unicode canonical, not byte-exact.
 
     Args:
 
@@ -166,6 +170,9 @@ def starts_with(bin_name: str, prefix: str, ctx: TypeCTX = None):
     Create string ``starts_with`` operation that returns true if the bin begins with
     prefix.
 
+    Matching is Unicode canonical, not byte-exact: a prefix in a different
+    normalization form than the source still matches.
+
     Args:
 
         bin_name: name of string bin.
@@ -185,6 +192,9 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
     Create string ``ends_with`` operation that returns true if the bin ends with
     suffix.
 
+    Matching is Unicode canonical, not byte-exact: a suffix in a different
+    normalization form than the source still matches.
+
     Args:
 
         bin_name: name of string bin.
@@ -202,7 +212,8 @@ def ends_with(bin_name: str, suffix: str, ctx: TypeCTX = None):
 def to_integer(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_integer`` operation that parses the string as an unsigned 64-bit integer.
-    Raises :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as an integer.
+    Raises :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED`
+    if the bin cannot be parsed as an integer.
 
     Args:
 
@@ -219,7 +230,14 @@ def to_integer(bin_name: str, ctx: TypeCTX = None):
 def to_double(bin_name: str, ctx: TypeCTX = None):
     """
     Create string ``to_double`` operation that parses the string as a 64-bit float.
-    Returns :exc:`~aerospike.exception.ParamError` if the bin cannot be parsed as a double.
+
+
+    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_CONVERSION_FAILED`
+    if the bin cannot be parsed as a double.
+
+    :meth:`~aerospike_helpers.operations.string_operations.is_numeric` is not a reliable pre-flight for this op:
+    :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` requires a `.` followed by a digit, so `"5"` is false
+    under :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` even though it parses as a double.
 
     Args:
 
@@ -252,8 +270,13 @@ def byte_length(bin_name: str, ctx: TypeCTX = None):
 
 def is_numeric(bin_name: str, numeric_type: NumericType = NumericType.ANY, ctx: TypeCTX = None):
     """
-    Create string ``is_numeric`` operation that returns true if the bin contains a
-    valid integer or floating-point number.
+    Create string ``is_numeric`` operation that filters by ``numeric_type`` and returns true if a valid type, false
+    otherwise.
+
+    This is a spelling check, not "parses as a number of that type":
+    :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` requires a ``.`` followed by a digit, so
+    `"5"` is false under :py:attr:`~aerospike_helpers.string_helpers.NumericType.FLOAT` even though it parses as a
+    double.
 
     Args:
 
@@ -364,6 +387,9 @@ def base64_decode(bin_name: str, ctx: TypeCTX = None):
     Create string ``b64_decode`` operation that treats the bin as base64 text and
     returns the decoded bytes as a blob.
 
+    Returns :exc:`~aerospike.exception.OpNotApplicable` with :py:data:`~aerospike.SUB_OPNOT_STRING_B64_INVALID` if the
+    bin does not hold valid base64.
+
     Args:
 
         bin_name: name of string bin.
@@ -399,11 +425,12 @@ def regex_compare(bin_name: str, pattern: str, regex_flags: RegexFlags = RegexFl
 
 def to_string(bin_name: str):
     """
-    Create ``to_string`` operation that converts an integer, double, string, or blob
+    Create ``to_string`` operation that converts an integer, double, string, bool, or blob
     bin to its string representation.
 
     Raises :exc:`~aerospike.exception.BinIncompatibleType` for
-    any other bin type. This top-level operation does not accept ctx and does not
+    any other bin type. A blob bin whose bytes are not valid UTF-8 returns :exc:`~aerospike.exception.OpNotApplicable`
+    with :py:data:`aerospike.SUB_OPNOT_STRING_UTF8_INVALID`. This top-level operation does not accept ctx and does not
     send a msgpack payload.
 
     Args:
@@ -539,18 +566,25 @@ def concat(bin_name: str, value_list: list[str], policy: StringPolicy | None = N
     }
 
 
-def snip(bin_name: str, start: int, end: int, policy: StringPolicy | None = None, ctx: TypeCTX = None):
+def snip(bin_name: str, start: int, end: int | None = None, policy: StringPolicy | None = None, ctx: TypeCTX = None):
     """
     Create string ``snip`` operation that removes codepoints from start to end.
 
     If the bin doesn't exist, this operation will be a no-op.
 
+    .. note::
+
+        The server's snip argument list is positional — ``start``, ``end``, ``flags`` —
+        so this 1-arg form cannot carry policy flags without also supplying an
+        explicit end.
+
     Args:
 
         bin_name: name of string bin.
-        start: First codepoint to remove, inclusive.
-        end: One past the last codepoint to remove, exclusive.
-        policy: String policy.
+        start: First codepoint to remove, inclusive. Negative start counts from the end of the string.
+        end: One past the last codepoint to remove, exclusive. If :py:obj:`None`, remove from ``start`` to end of
+            string, truncating it.
+        policy: String policy. If end is :py:obj:`None`, ``policy`` is not sent.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {
@@ -568,6 +602,7 @@ def replace(bin_name: str, needle: str, replacement: str, policy: StringPolicy |
     Create string ``replace`` operation that replaces the first occurrence of needle
     with replacement.
 
+    Matching is Unicode canonical, not byte-exact.
     If the bin doesn't exist, this operation will be a no-op.
 
     Args:
@@ -593,6 +628,7 @@ def replace_all(bin_name: str, needle: str, replacement: str, policy: StringPoli
     Create string ``replace_all`` operation that replaces every occurrence of needle
     with replacement.
 
+    Needle matching is Unicode canonical, not byte-exact.
     If the bin doesn't exist, this operation will be a no-op.
 
     Args:
@@ -855,7 +891,6 @@ def regex_replace(
     """
     Create string ``regex_replace`` operation that replaces the first match of pattern
     with replacement. Pass :py:attr:`~aerospike_helpers.string_helpers.RegexFlags.GLOBAL` to replace every match.
-    This server operation accepts regex flags but not string policy flags.
 
     If the bin doesn't exist, this operation will be a no-op.
 
@@ -865,7 +900,8 @@ def regex_replace(
         pattern: the regex pattern to match against.
         replacement: the string to replace with.
         regex_flags: The regex flags to use.
-        policy: No-op.
+        policy: String policy. :py:attr:`~aerospike_helpers.string_helpers.WriteFlags.NO_FAIL` also suppresses a regex
+            compile failure.
         ctx: Optional path into a string nested inside a list or map.
     """
     return {

@@ -155,6 +155,13 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         else if (Py_None == py_set) {
             set = NULL;
         }
+        else {
+            as_error_init(&err);
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Set should be string, unicode or None");
+            raise_exception(&err);
+            return -1;
+        }
     }
 
     self->unicodeStrVector = NULL;

@@ -249,6 +249,21 @@ class TestExpressions(TestBaseClass):
         records = scan_obj.results({"expressions": expr.compile()})
         assert 5 == len(records)
 
+    # This makes sure that enough memory is allocated for each expression
+    @pytest.mark.parametrize(
+        "expr",
+        [
+            SinceUpdateTime(),
+            IsTombstone()
+        ]
+    )
+    def test_individual_metadata_exprs(self, expr):
+        ops = [
+            expressions.expression_read("bin", expr.compile())
+        ]
+        key = ("test", "demo", 0)
+        self.as_connection.operate(key, ops)
+
     @pytest.mark.parametrize(
         "bin, expected_bin_type",
         [

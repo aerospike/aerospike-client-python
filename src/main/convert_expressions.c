@@ -243,6 +243,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [META_SET_NAME] = EXP_SZ(as_exp_set_name()),
         [META_KEY_EXISTS] = EXP_SZ(as_exp_key_exist()),
         [META_MEMORY_SIZE] = EXP_SZ(as_exp_memory_size()),
+        [META_IS_TOMBSTONE] = EXP_SZ(as_exp_is_tombstone()),
+        [META_SINCE_UPDATE_TIME] = EXP_SZ(as_exp_since_update()),
         [META_RECORD_SIZE] = EXP_SZ(as_exp_record_size()),
         [REC_KEY] = EXP_SZ(
             as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
@@ -307,6 +309,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
             EXP_SZ(as_exp_list_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_JOIN] = EXP_SZ(as_exp_list_join(NULL, NIL)),
+        [OP_LIST_JOIN_SEPARATOR] =
+            EXP_SZ(as_exp_list_join_separator(NULL, "", NIL)),
         [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, NIL, NIL, NIL)),
         [OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, NIL, NIL)),
         [OP_MAP_INCREMENT] =
@@ -406,6 +411,9 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan(NIL, NIL, NIL, NIL)),
         [OP_BIT_GET_INT] = EXP_SZ(as_exp_bit_get_int(NIL, NIL, 0, NIL)),
+        [OP_BIT_B64_ENCODE] = EXP_SZ(as_exp_bit_b64_encode(NIL)),
+        [OP_BIT_B64_ENCODE_RANGE] =
+            EXP_SZ(as_exp_bit_b64_encode_range(NIL, NIL, true, NIL)),
         [OP_HLL_INIT] = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, NIL)),
         [OP_HLL_ADD] = EXP_SZ(as_exp_hll_add_mh(NULL, NIL, 0, 0, NIL)),
         [OP_HLL_GET_COUNT] = EXP_SZ(as_exp_hll_update(NULL, NIL, NIL)),
@@ -478,6 +486,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_STRING_OVERWRITE] =
             EXP_SZ(as_exp_string_overwrite(NULL, 0, "", NIL)),
         [OP_STRING_CONCAT] = EXP_SZ(as_exp_string_concat_list(NULL, NIL, NIL)),
+        [OP_STRING_SNIP_START] = EXP_SZ(as_exp_string_snip_start(NULL, 0, NIL)),
         [OP_STRING_SNIP] = EXP_SZ(as_exp_string_snip(NULL, 0, 0, NIL)),
         [OP_STRING_REPLACE] = EXP_SZ(as_exp_string_replace(NULL, "", "", NIL)),
         [OP_STRING_REPLACE_ALL] =
@@ -1056,15 +1065,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(1, as_exp_list_clear(temp_expr->ctx,
                                               NIL)); // -1 for bin
             break;
-        case OP_LIST_SORT:
-            if (get_int64_t(err, LIST_ORDER_KEY, temp_expr->pydict, &lval1) !=
-                AEROSPIKE_OK) {
+        case OP_LIST_SORT: {
+            int tmp_value;
+            if (get_enum_from_py_dict(err, temp_expr->pydict, LIST_ORDER_KEY,
+                                      &tmp_value, AS_LIST_UNORDERED,
+                                      AS_LIST_ORDERED, false,
+                                      NULL) != AEROSPIKE_OK) {
                 return err->code;
             }
 
-            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, lval1,
+            APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, tmp_value,
                                              NIL)); // -1 for bin
             break;
+        }
         case OP_LIST_REMOVE_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
@@ -1560,6 +1573,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_BIT_GET_INT:
             APPEND_ARRAY(4, as_exp_bit_get_int(NIL, NIL, 0, NIL));
             break;
+        case OP_BIT_B64_ENCODE:
+            APPEND_ARRAY(1, as_exp_bit_b64_encode(NIL));
+            break;
+        case OP_BIT_B64_ENCODE_RANGE: {
+            APPEND_ARRAY(4, as_exp_bit_b64_encode_range(NIL, NIL, false, NIL));
+            break;
+        }
         case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
             APPEND_ARRAY(
                 4,
@@ -1901,6 +1921,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_SPLIT:
             APPEND_ARRAY(1, as_exp_string_split(NIL));
             break;
+        case OP_LIST_JOIN:
+            APPEND_ARRAY(1, as_exp_list_join(temp_expr->ctx, NIL));
+            break;
+        case OP_LIST_JOIN_SEPARATOR:
         case OP_STRING_SPLIT_SEPARATOR: {
             char *separator = NULL;
             as_status status =
@@ -1910,7 +1934,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return status;
             }
 
-            APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            if (temp_expr->op == OP_LIST_JOIN_SEPARATOR) {
+                APPEND_ARRAY(1, as_exp_list_join_separator(temp_expr->ctx,
+                                                           separator, NIL));
+            }
+            else {
+                APPEND_ARRAY(1, as_exp_string_split_separator(separator, NIL));
+            }
             break;
         }
         case OP_STRING_B64_DECODE:
@@ -1941,6 +1971,15 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                     pattern, tmp_regex_flags, NIL));
             }
             else {
+                PyObject *py_str_policy = PyDict_GetItemString(
+                    temp_expr->pydict, _STR_EXP_POLICY_KEY);
+                as_string_policy policy;
+                status = as_string_policy_init_from_pyobject(err, &policy,
+                                                             py_str_policy);
+                if (status != AEROSPIKE_OK) {
+                    return status;
+                }
+
                 char *replacement = NULL;
                 status = get_str(err, _STR_EXP_REPLACEMENT_KEY,
                                  temp_expr->pydict, NULL, &replacement, false);
@@ -1948,9 +1987,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     return status;
                 }
 
-                APPEND_ARRAY(
-                    1, as_exp_string_regex_replace(NULL, pattern, replacement,
-                                                   tmp_regex_flags, NIL));
+                APPEND_ARRAY(1, as_exp_string_regex_replace(
+                                    &policy, pattern, replacement,
+                                    tmp_regex_flags, NIL));
             }
             break;
         }
@@ -1972,11 +2011,16 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
         case OP_STRING_PAD_END:
         case OP_STRING_REPEAT:
         case OP_STRING_APPEND:
-        case OP_STRING_PREPEND: {
+        case OP_STRING_PREPEND:
+        case OP_STRING_SNIP_START: {
             PyObject *py_str_policy =
                 PyDict_GetItemString(temp_expr->pydict, _STR_EXP_POLICY_KEY);
             as_string_policy policy;
-            as_string_policy_init_from_pyobject(err, &policy, py_str_policy);
+            as_status status = as_string_policy_init_from_pyobject(
+                err, &policy, py_str_policy);
+            if (status != AEROSPIKE_OK) {
+                return status;
+            }
 
             char *value = NULL;
             switch (temp_expr->op) {
@@ -1984,8 +2028,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             case OP_STRING_OVERWRITE:
             case OP_STRING_APPEND:
             case OP_STRING_PREPEND: {
-                as_status status = get_str(
-                    err, AS_PY_VAL_KEY, temp_expr->pydict, NULL, &value, false);
+                status = get_str(err, AS_PY_VAL_KEY, temp_expr->pydict, NULL,
+                                 &value, false);
                 if (status != AEROSPIKE_OK) {
                     return status;
                 }
@@ -2038,16 +2082,27 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             case OP_STRING_PREPEND:
                 APPEND_ARRAY(1, as_exp_string_prepend(&policy, value, NIL));
                 break;
+            case OP_STRING_SNIP_START:
             case OP_STRING_SNIP:
                 if (get_int64_t(err, _STR_EXP_START_KEY, temp_expr->pydict,
                                 &lval1)) {
                     return err->code;
                 }
-                if (get_int64_t(err, _STR_EXP_END_KEY, temp_expr->pydict,
-                                &lval2)) {
+
+                bool end_found = false;
+                if (get_optional_int64_t(err, _STR_EXP_END_KEY,
+                                         temp_expr->pydict, &lval2,
+                                         &end_found)) {
                     return err->code;
                 }
-                APPEND_ARRAY(1, as_exp_string_snip(&policy, lval1, lval2, NIL));
+                if (end_found) {
+                    APPEND_ARRAY(
+                        1, as_exp_string_snip(&policy, lval1, lval2, NIL));
+                }
+                else {
+                    APPEND_ARRAY(1,
+                                 as_exp_string_snip_start(&policy, lval1, NIL));
+                }
                 break;
             case OP_STRING_REPLACE:
             case OP_STRING_REPLACE_ALL: {

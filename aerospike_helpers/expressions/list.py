@@ -54,8 +54,8 @@ class ListAppend(_BaseExpr):
                 objects.
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             value (TypeValue): Value or value expression to append to list.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -94,8 +94,8 @@ class ListAppendItems(_BaseExpr):
                 objects.
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             value (TypeValue): List or list expression of items to be appended.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -139,8 +139,8 @@ class ListInsert(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             index (TypeIndex): Target index for insertion, integer or integer expression.
             value (TypeValue): Value or value expression to be inserted.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -183,8 +183,8 @@ class ListInsertItems(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             index (TypeIndex): Target index where item insertion will begin, integer or integer expression.
             values (TypeListValue): List or list expression of items to be inserted.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -227,8 +227,8 @@ class ListIncrement(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             index (TypeIndex): Index of value to increment.
             value (TypeValue): Value or value expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -278,8 +278,8 @@ class ListSet(_BaseExpr):
             policy (TypePolicy): Optional dictionary of :ref:`List policies <aerospike_list_policies>`.
             index (TypeIndex): index of value to set.
             value (TypeValue): value or value expression to set index in list to.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -318,8 +318,8 @@ class ListClear(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: List expression.
 
@@ -350,8 +350,8 @@ class ListSort(_BaseExpr):
                 objects.
             order (int): Optional flags modifying the behavior of list_sort. This should be constructed by bitwise
                 or'ing together values from :ref:`aerospike_list_sort_flag`.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: list expression.
 
@@ -379,8 +379,8 @@ class ListRemoveByValue(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             value (TypeValue): Value or value expression to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -412,8 +412,8 @@ class ListRemoveByValueList(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             values (TypeListValue): List of values or list expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -455,8 +455,8 @@ class ListRemoveByValueRange(_BaseExpr):
                 objects.
             begin (TypeValue): Begin value or value expression for range.
             end (TypeValue): End value or value expression for range.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -498,8 +498,8 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
                 objects.
             value (TypeValue): Start value or value expression.
             rank (TypeRank): Rank integer or integer expression.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -545,8 +545,8 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
             value (TypeValue): Start value or value expression.
             rank (TypeRank): Rank integer or integer expression.
             count (TypeCount): How many elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -579,8 +579,8 @@ class ListRemoveByIndex(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Index integer or integer expression of element to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: list expression.
 
@@ -608,8 +608,8 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -648,8 +648,8 @@ class ListRemoveByIndexRange(_BaseExpr):
                 objects.
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
             count (TypeCount): Integer or integer expression, how many elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -680,8 +680,8 @@ class ListRemoveByRank(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: list expression.
 
@@ -709,8 +709,8 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -751,8 +751,8 @@ class ListRemoveByRankRange(_BaseExpr):
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
             count (TypeCount): Count integer or integer expression of elements to remove.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
@@ -787,8 +787,8 @@ class ListSize(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: Integer expression.
 
@@ -827,8 +827,8 @@ class ListGetByValue(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`list_return_types` values.
             value (TypeValue): Value or value expression of element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -875,8 +875,8 @@ class ListGetByValueRange(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             value_begin (TypeValue): Value or value expression of first element to get.
             value_end (TypeValue): Value or value expression of ending element.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -920,8 +920,8 @@ class ListGetByValueList(_BaseExpr):
                 the operation.
                 This should be one of the :ref:`list_return_types` values.
             value (TypeListValue): List or list expression of values of elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -963,8 +963,8 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             value (TypeValue): Value or value expression to get items relative to.
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1035,8 +1035,8 @@ class ListGetByValueRelRankRange(_BaseExpr):
             value (TypeValue): Value or value expression to get items relative to.
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             count (TypeCount): Integer value or integer value expression, how many elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1084,8 +1084,8 @@ class ListGetByIndex(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values
             value_type (int): The value type that will be returned by this expression (ResultType).
             index (TypeIndex): Integer or integer expression of index to get element at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: Expression.
 
@@ -1125,8 +1125,8 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`list_return_types` values.
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1170,8 +1170,8 @@ class ListGetByIndexRange(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
             count (TypeCount): Integer or integer expression for count of elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1214,8 +1214,8 @@ class ListGetByRank(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             value_type (int): The value type that will be returned by this expression (ResultType).
             rank (TypeRank): Rank integer or integer expression of element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
 
         :return: Expression.
 
@@ -1248,8 +1248,8 @@ class ListGetByRankRangeToEnd(_BaseExpr):
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`list_return_types` values.
             rank (TypeRank): Rank integer or integer expression of first element to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1292,8 +1292,8 @@ class ListGetByRankRange(_BaseExpr):
                 This should be one of the :ref:`list_return_types` values.
             rank (TypeRank): Rank integer or integer expression of first element to get.
             count (TypeCount): Count integer or integer expression for how many elements to get.
-            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
-                :class:`~aerospike_helpers.expressions.base.ListBin`.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                :class:`~aerospike_helpers.expressions.base.MapBin` if the list is nested.
             inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
@@ -1309,6 +1309,45 @@ class ListGetByRankRange(_BaseExpr):
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
         if inverted:
             self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
+
+        if ctx is not None:
+            self._fixed[_Keys.CTX_KEY] = ctx
+
+
+class ListJoin(_BaseExpr):
+    """
+    Create expression that concatenates the string items of a list and
+    returns the results as a single string.
+
+    Every item must be a string. An empty list yields an empty string,
+    and a single-item list yields that item with no separator applied.
+    """
+
+    def __init__(
+        self, ctx: "TypeCTX",
+        separator: str | None,
+        bin: "TypeBinName",
+    ):
+        """Args:
+            ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+                objects.
+            separator (str | None): If set to a :class:`str`, this will be inserted between consecutive items.
+                If set to :py:obj:`None`, there will be no separator inserted between items.
+            bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.ListBin` or
+                an expression that returns a list value.
+
+        :return: Expression.
+        """
+        if separator:
+            self._op = aerospike._OP_LIST_JOIN_SEPARATOR
+        else:
+            self._op = aerospike._OP_LIST_JOIN
+
+        self._children = (bin if isinstance(bin, _BaseExpr) else ListBin(bin),)
+        if self._op == aerospike._OP_LIST_JOIN_SEPARATOR:
+            self._fixed = {aerospike._STR_EXP_SEPARATOR_KEY: separator}
+        else:
+            self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
