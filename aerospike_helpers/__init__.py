@@ -91,9 +91,9 @@ class Vector(bytes):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
 
         # Python has no float16 type, so of_float16() rounds each value to binary16,
-        # and float16_values() reads the elements back as floats.
+        # and value reads the elements back as floats.
         v16 = Vector.of_float16([0.1, 0.2])
-        v16.float16_values()  # [0.0999755859375, 0.199951171875]
+        list(v16.value)  # [0.0999755859375, 0.199951171875]
 
     .. testcode::
 
@@ -132,7 +132,7 @@ class Vector(bytes):
         # No BIN/Hamming type - confirmed absent from the real C client.
 
     _STRUCT_FMT = {
-        ElementType.FLOAT16: "<H",  # raw binary16 bit pattern; of_float16() converts values
+        ElementType.FLOAT16: "<H",  # raw binary16 bit pattern; of_float16() and value convert
         ElementType.INT32: "<i",
         ElementType.FLOAT32: "<f",
         ElementType.FLOAT64: "<d",
@@ -216,7 +216,8 @@ class Vector(bytes):
     def of_float16_bits(cls, bit_patterns: _Iterable[int]) -> "Vector":
         """Construct a FLOAT16 vector from raw IEEE 754 binary16 bit patterns, for
         exact interchange. No value conversion is performed. Use :meth:`of_float16`
-        to construct one from float values."""
+        to construct one from float values, and :meth:`float16_bits` to read the bit
+        patterns back."""
         return cls._from_elements(cls.ElementType.FLOAT16, bit_patterns)
 
     @classmethod
@@ -242,30 +243,33 @@ class Vector(bytes):
     @property
     def value(self) -> _array:
         """Decoded element array (typed, per element_type). A FLOAT16 vector's
-        elements are its raw binary16 bit patterns; use :meth:`float16_values` to
-        read them as floats."""
-        fmt = self._STRUCT_FMT[self._element_type]
-        return _array(
-            fmt[1],
-            _struct.unpack_from(f"<{self._dimensions}{fmt[1]}", self,
-                                 offset=self._HEADER_SIZE),
-        )
+        elements are returned as floats in an ``array('f')``, which holds every
+        binary16 value exactly; use :meth:`float16_bits` for the raw bit patterns."""
+        if self._element_type == self.ElementType.FLOAT16:
+            values = _struct.unpack_from(f"<{self._dimensions}e", self,
+                                         offset=self._HEADER_SIZE)
+            return _array("f", values)
+
+        typecode = self._STRUCT_FMT[self._element_type][1]
+        values = _struct.unpack_from(f"<{self._dimensions}{typecode}", self,
+                                     offset=self._HEADER_SIZE)
+        return _array(typecode, values)
 
     # Alias for readability.
     elements = value
 
-    def float16_values(self) -> list[float]:
-        """Read a FLOAT16 vector's elements as floats. Reverse of :meth:`of_float16`.
-        Every binary16 value is exactly representable as a :class:`float`.
+    def float16_bits(self) -> _array:
+        """Read a FLOAT16 vector's elements as raw IEEE 754 binary16 bit patterns,
+        in an ``array('H')``. Reverse of :meth:`of_float16_bits`.
 
         :raises ValueError: the vector's element type is not FLOAT16.
         """
         if self._element_type != self.ElementType.FLOAT16:
             raise ValueError(
-                f"float16_values() requires a FLOAT16 vector; got {self._element_type.name}")
-        values = _struct.unpack_from(f"<{self._dimensions}e", self,
-                                     offset=self._HEADER_SIZE)
-        return list(values)
+                f"float16_bits() requires a FLOAT16 vector; got {self._element_type.name}")
+        bit_patterns = _struct.unpack_from(f"<{self._dimensions}H", self,
+                                           offset=self._HEADER_SIZE)
+        return _array("H", bit_patterns)
 
     def element_bytes(self) -> bytes:
         """

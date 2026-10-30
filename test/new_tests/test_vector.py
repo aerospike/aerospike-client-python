@@ -60,8 +60,9 @@ class TestVectorUnit(object):
         v = Vector.of_float16([1.0, 2.0, -0.5, 0.1])
         assert v.element_type == Vector.ElementType.FLOAT16
         assert v.dimensions == 4
-        assert list(v.value) == [0x3C00, 0x4000, 0xB800, 0x2E66]
-        assert v.float16_values() == [1.0, 2.0, -0.5, 0.0999755859375]
+        assert v.value.typecode == "f"
+        assert list(v.value) == [1.0, 2.0, -0.5, 0.0999755859375]
+        assert list(v.float16_bits()) == [0x3C00, 0x4000, 0xB800, 0x2E66]
 
     @pytest.mark.parametrize(
         "value, bit_pattern",
@@ -80,7 +81,7 @@ class TestVectorUnit(object):
         ],
     )
     def test_of_float16_rounds_through_float32(self, value, bit_pattern):
-        assert list(Vector.of_float16([value]).value) == [bit_pattern]
+        assert list(Vector.of_float16([value]).float16_bits()) == [bit_pattern]
 
     @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf"), 65520.0, -65520.0, 1e300])
     def test_nan_inf_rejected_float16(self, bad):
@@ -92,12 +93,13 @@ class TestVectorUnit(object):
         raw = [0x3C00, 0x4000]  # binary16 bit patterns for 1.0, 2.0
         v = Vector.of_float16_bits(raw)
         assert v.element_type == Vector.ElementType.FLOAT16
-        assert list(v.value) == raw
-        assert v.float16_values() == [1.0, 2.0]
+        assert v.float16_bits().typecode == "H"
+        assert list(v.float16_bits()) == raw
+        assert list(v.value) == [1.0, 2.0]
 
-    def test_float16_values_requires_float16(self):
-        with pytest.raises(ValueError, match=r"^float16_values\(\) requires a FLOAT16 vector; got FLOAT32$"):
-            Vector.of_float32([0.1]).float16_values()
+    def test_float16_bits_requires_float16(self):
+        with pytest.raises(ValueError, match=r"^float16_bits\(\) requires a FLOAT16 vector; got FLOAT32$"):
+            Vector.of_float32([0.1]).float16_bits()
 
     def test_wire_format_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
