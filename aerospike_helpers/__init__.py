@@ -229,7 +229,7 @@ class Vector(bytes):
         return cls._from_elements(cls.ElementType.FLOAT32, data)
 
     @classmethod
-    def of_float64(cls, data: _Iterable[float]) -> "Vector":
+    def of_float64(cls, data: _Iterable[_SupportsFloat]) -> "Vector":
         return cls._from_elements(cls.ElementType.FLOAT64, data)
 
     @property
