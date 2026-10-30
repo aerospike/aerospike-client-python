@@ -118,3 +118,4 @@ IPv
 transcode
 pre
 arg
+NaN
