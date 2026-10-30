@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,25 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
+PyDoc_STRVAR(order_by_doc, "order_by(bin, type, direction[, flags])\n\
+\n\
+Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
+Calling order_by() again replaces the order keys, including one from then_order_by(), \
+and keeps ``top_k``. \
+``type`` is aerospike.QueryOrderByType.INTEGER or aerospike.QueryOrderByType.DOUBLE \
+(STRING and BYTES are not supported yet), ``direction`` is aerospike.QueryOrder.ASCENDING \
+or aerospike.QueryOrder.DESCENDING, and ``flags`` is an aerospike.QueryOrderByFlags value \
+(default aerospike.QueryOrderByFlags.DEFAULT, valid only for QueryOrderByType.STRING). \
+Must be paired with ``top_k`` in [1, 1000]. Invalid combinations raise \
+aerospike.exception.ParamError before the query is sent.");
+
+PyDoc_STRVAR(then_order_by_doc, "then_order_by(bin, type, direction[, flags])\n\
+\n\
+Add a second order key that breaks ties on the first \
+(``ORDER BY <bin>, <bin2> LIMIT k``). Takes the same arguments as order_by(). \
+Sets the first key if order_by() hasn't been called. A query supports at most two \
+order keys, so a third raises aerospike.exception.ParamError when the query executes.");
+
 PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
@@ -100,6 +119,12 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
     {"select", (PyCFunction)AerospikeQuery_Select, METH_VARARGS | METH_KEYWORDS,
      select_doc},
+
+    {"order_by", (PyCFunction)AerospikeQuery_OrderBy,
+     METH_VARARGS | METH_KEYWORDS, order_by_doc},
+
+    {"then_order_by", (PyCFunction)AerospikeQuery_ThenOrderBy,
+     METH_VARARGS | METH_KEYWORDS, then_order_by_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
     {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
@@ -148,6 +173,11 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 			   (defined as TTL_DONT_UPDATE), which means that the record \
 			   ttl will not change when the record is updated. \
 	 	Note that the TTL value will be employed ONLY on background query writes."},
+    {"top_k", T_UINT,
+     offsetof(AerospikeQuery, query) + offsetof(as_query, top_k), 0,
+     "Top-K limit for an ORDER BY <bin> LIMIT k query. Must be paired with "
+     "order_by(). Inclusive range [1, 1000]. Assigning top_k again replaces "
+     "the limit and keeps the order keys. Checked when the query executes."},
     {NULL} /* Sentinel */
 };
 

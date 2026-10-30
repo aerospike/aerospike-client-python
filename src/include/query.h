@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,31 @@ PyTypeObject *AerospikeQuery_Ready(void);
  */
 AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
                                       PyObject *kwds);
+
+/**
+ * Set the ORDER BY clause for a Top-K query (`ORDER BY <bin> LIMIT k`).
+ *
+ *		query.order_by(bin, type, direction[, flags])
+ *
+ * Replaces both order keys already set, including one from then_order_by(),
+ * and keeps query.top_k. Must be paired with setting query.top_k before the
+ * query is executed.
+ */
+AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *py_args,
+                                       PyObject *py_kwds);
+
+/**
+ * Add a second order key that breaks ties on the first
+ * (`ORDER BY <bin>, <bin2> LIMIT k`).
+ *
+ *		query.then_order_by(bin, type, direction[, flags])
+ *
+ * Sets the first key if order_by() hasn't been called. A third key raises
+ * ParamError when the query executes.
+ */
+AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self,
+                                           PyObject *py_args,
+                                           PyObject *py_kwds);
 
 /**
  * Add a list of write operations to the query.

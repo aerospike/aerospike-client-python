@@ -1696,6 +1696,10 @@ Bin Types
 
     (int): 12
 
+.. data:: AS_BYTES_VECTOR
+
+    (int): 16
+
 .. data:: AS_BYTES_BOOL
 
     (int): 17
@@ -1904,6 +1908,65 @@ Query Duration
 
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _query_order_by_constants:
+
+Query Order By / Top-K
+-----------------------
+
+Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` to run a Top-K
+(nearest-neighbor / vector similarity search) query.
+
+.. class:: QueryOrderByType
+
+    Order-key type for :meth:`~aerospike.Query.order_by`. Aerospike has no schema, so the
+    caller declares which comparator the server should use.
+
+    .. attribute:: INTEGER
+
+        The bin holds an integer value.
+
+    .. attribute:: DOUBLE
+
+        The bin holds a double (float) value. Use this when ordering by a projected
+        :class:`~aerospike_helpers.expressions.vector.VectorDistance` result bin.
+
+    .. attribute:: STRING
+
+        The bin holds a string value. Not supported yet: a Top-K query with this type raises
+        :exc:`~aerospike.exception.ParamError` when it executes.
+
+    .. attribute:: BYTES
+
+        The bin holds a bytes value. Not supported yet: a Top-K query with this type raises
+        :exc:`~aerospike.exception.ParamError` when it executes.
+
+.. class:: QueryOrder
+
+    Sort direction for :meth:`~aerospike.Query.order_by`.
+
+    .. attribute:: ASCENDING
+
+        Keep the records with the smallest order-key values, smallest first.
+
+    .. attribute:: DESCENDING
+
+        Keep the records with the largest order-key values, largest first.
+
+.. class:: QueryOrderByFlags
+
+    STRING collation flags for :meth:`~aerospike.Query.order_by`. Flags are rejected for every
+    type other than :attr:`QueryOrderByType.STRING`, which is not supported yet, so a Top-K query
+    with any flag other than :attr:`DEFAULT` raises :exc:`~aerospike.exception.ParamError` when it
+    executes.
+
+    .. attribute:: DEFAULT
+
+        Case and accents both count.
+
+    .. attribute:: CASE_INSENSITIVE
+
+        Accents count and case does not.
 
 .. _mrt_commit_status_constants:
 
