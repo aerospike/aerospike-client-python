@@ -65,6 +65,8 @@ import struct as _struct
 from array import array as _array
 from enum import IntEnum as _IntEnum
 from typing import Iterable as _Iterable
+from typing import SupportsFloat as _SupportsFloat
+from typing import cast as _cast
 
 
 class Vector(bytes):
@@ -182,7 +184,7 @@ class Vector(bytes):
         return self
 
     @classmethod
-    def of_float16(cls, values: _Iterable[float]) -> "Vector":
+    def of_float16(cls, values: _Iterable[_SupportsFloat]) -> "Vector":
         """Construct a FLOAT16 vector from float values.
 
         Each value is narrowed to IEEE 754 binary32 and then rounded to binary16 with
@@ -193,7 +195,10 @@ class Vector(bytes):
         :raises ValueError: a value is NaN or infinite, or its magnitude rounds to
             infinity in binary16 (65520 or above).
         """
-        float32_values = _array("f", values)
+        # array() converts each value with __float__, but its stub only accepts
+        # Iterable[float].
+        float_values = _cast(_Iterable[float], values)
+        float32_values = _array("f", float_values)
         for value in float32_values:
             if not _math.isfinite(value):
                 raise ValueError(cls._NON_FINITE_ERROR)
