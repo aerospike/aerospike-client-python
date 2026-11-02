@@ -1587,12 +1587,12 @@ static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
         }
 
         const char *orig = PyUnicode_AsUTF8(py_orig);
+        if (!orig) {
+            goto UTF8_ERROR;
+        }
         const char *alt = PyUnicode_AsUTF8(py_alt);
-        if (!orig || !alt) {
-            PyErr_Clear();
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "ip_map keys and values must be encodable as UTF-8");
+        if (!alt) {
+            goto UTF8_ERROR;
         }
 
         as_addr_map *entry = &conf->ip_map[conf->ip_map_size];
@@ -1601,6 +1601,11 @@ static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
         conf->ip_map_size++;
     }
     return AEROSPIKE_OK;
+
+UTF8_ERROR:
+    PyErr_Clear();
+    return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                           "ip_map keys and values must be encodable as UTF-8");
 }
 
 static void AerospikeClient_Type_Dealloc(PyObject *self)

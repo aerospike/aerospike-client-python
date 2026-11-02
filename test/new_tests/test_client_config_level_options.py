@@ -193,7 +193,8 @@ def test_ip_map_translates_seed_host():
         [("192.0.2.1", "192.0.2.2")],  # Not a dict
         {1: "192.0.2.2"},  # Non-str key
         {"192.0.2.1": 2},  # Non-str value
-        {"192.0.2.1": "\udc00"},  # Not encodable as UTF-8
+        {"\udc00": "192.0.2.2"},  # Key not encodable as UTF-8
+        {"192.0.2.1": "\udc00"},  # Value not encodable as UTF-8
     ],
 )
 def test_neg_setting_ip_map(ip_map):
