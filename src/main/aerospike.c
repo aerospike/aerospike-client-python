@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -813,15 +813,18 @@ static struct type_name_to_creation_method py_module_types[] = {
     const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
     PyObject *py_##array_name_prefix##_valid_keys = NULL;
 
-DEFINE_SET_OF_VALID_KEYS(
-    client_config, "lua", "config_provider", "tls", "hosts", "shm",
-    "serialization", "policies", "thread_pool_size", "max_threads",
-    "min_conns_per_node", "max_conns_per_node", "max_error_rate",
-    "error_rate_window", "connect_timeout", "use_shared_connection",
-    "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
-    "strict_types", "rack_aware", "rack_id", "rack_ids",
-    "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
-    "user", "password", "validate_keys", "app_id", "force_single_node", NULL)
+DEFINE_SET_OF_VALID_KEYS(client_config, "lua", "config_provider", "tls",
+                         "hosts", "shm", "serialization", "policies",
+                         "thread_pool_size", "max_threads",
+                         "min_conns_per_node", "max_conns_per_node",
+                         "max_error_rate", "error_rate_window",
+                         "connect_timeout", "use_shared_connection",
+                         "send_bool_as", "compression_threshold",
+                         "tend_interval", "cluster_name", "strict_types",
+                         "rack_aware", "rack_id", "rack_ids",
+                         "use_services_alternate", "ip_map", "max_socket_idle",
+                         "fail_if_not_connected", "user", "password",
+                         "validate_keys", "app_id", "force_single_node", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",

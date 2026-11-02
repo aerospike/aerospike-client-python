@@ -167,6 +167,42 @@ def test_setting_wrong_type_services_alternate():
         aerospike.client(config)
 
 
+@pytest.mark.parametrize("ip_map", [{}, {"192.0.2.1": "192.0.2.2"}])
+def test_setting_ip_map(ip_map):
+    config = copy.deepcopy(gconfig)
+    config["ip_map"] = ip_map
+    client = aerospike.client(config)
+    assert client.is_connected()
+    client.close()
+
+
+def test_ip_map_translates_seed_host():
+    config = copy.deepcopy(gconfig)
+    seed = config["hosts"][0]
+    unresolvable_seed = "ip-map-seed.invalid"
+    config["hosts"] = [(unresolvable_seed, *seed[1:])]
+    config["ip_map"] = {unresolvable_seed: seed[0]}
+    client = aerospike.client(config)
+    assert client.is_connected()
+    client.close()
+
+
+@pytest.mark.parametrize(
+    "ip_map",
+    [
+        [("192.0.2.1", "192.0.2.2")],  # Not a dict
+        {1: "192.0.2.2"},  # Non-str key
+        {"192.0.2.1": 2},  # Non-str value
+        {"192.0.2.1": "\udc00"},  # Not encodable as UTF-8
+    ],
+)
+def test_neg_setting_ip_map(ip_map):
+    config = copy.deepcopy(gconfig)
+    config["ip_map"] = ip_map
+    with pytest.raises(e.ParamError):
+        aerospike.client(config)
+
+
 def test_setting_rack_aware():
     config = copy.deepcopy(gconfig)
     config["rack_aware"] = True

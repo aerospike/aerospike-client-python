@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
+static as_status set_ip_map(as_error *err, as_config *conf,
+                            PyObject *py_ip_map);
 
 enum {
     INIT_SUCCESS,
@@ -1279,6 +1281,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
+    PyObject *py_ip_map = NULL;
+    retval = PyDict_GetItemStringRef(py_config, "ip_map", &py_ip_map);
+    if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    else if (retval == 1) {
+        as_status status = set_ip_map(&constructor_err, &config, py_ip_map);
+        Py_DECREF(py_ip_map);
+        if (status != AEROSPIKE_OK) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+    }
+
     PyObject *py_max_socket_idle = NULL;
     py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
     if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
@@ -1440,6 +1455,7 @@ CONSTRUCTOR_ERROR:
 RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    destroy_ip_map(&config);
     as_config_destroy(&config);
     return -1;
 }
@@ -1538,6 +1554,55 @@ static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
     return INIT_SUCCESS;
 }
 
+static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
+{
+    if (!PyDict_Check(py_ip_map)) {
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "ip_map must be a dict, but a %s was received instead",
+            Py_TYPE(py_ip_map)->tp_name);
+    }
+
+    Py_ssize_t size = PyDict_Size(py_ip_map);
+    if (size == 0) {
+        return AEROSPIKE_OK;
+    }
+
+    // Entries are counted in ip_map_size as they are filled in, so
+    // destroy_ip_map() can free a partially built map on error.
+    conf->ip_map = (as_addr_map *)malloc(sizeof(as_addr_map) * size);
+    if (!conf->ip_map) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to allocate memory for ip_map");
+    }
+    conf->ip_map_size = 0;
+
+    Py_ssize_t pos = 0;
+    PyObject *py_orig = NULL;
+    PyObject *py_alt = NULL;
+    while (PyDict_Next(py_ip_map, &pos, &py_orig, &py_alt)) {
+        if (!PyUnicode_Check(py_orig) || !PyUnicode_Check(py_alt)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "ip_map keys and values must be str");
+        }
+
+        const char *orig = PyUnicode_AsUTF8(py_orig);
+        const char *alt = PyUnicode_AsUTF8(py_alt);
+        if (!orig || !alt) {
+            PyErr_Clear();
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "ip_map keys and values must be encodable as UTF-8");
+        }
+
+        as_addr_map *entry = &conf->ip_map[conf->ip_map_size];
+        entry->orig = strdup(orig);
+        entry->alt = strdup(alt);
+        conf->ip_map_size++;
+    }
+    return AEROSPIKE_OK;
+}
+
 static void AerospikeClient_Type_Dealloc(PyObject *self)
 {
 
@@ -1551,6 +1616,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     // It is safe to destroy the aerospike structure
     if (client->as) {
         if (!client->has_connected) {
+            destroy_ip_map(&client->as->config);
             aerospike_destroy(client->as);
         }
         else {
@@ -1579,6 +1645,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
                 if (client->is_conn_16) {
                     aerospike_close(client->as, &err);
                 }
+                destroy_ip_map(&client->as->config);
                 aerospike_destroy(client->as);
             }
         }
