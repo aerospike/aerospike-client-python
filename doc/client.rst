@@ -1815,7 +1815,21 @@ Metrics
 
         Disable extended periodic cluster and node latency metrics.
 
+        Pauses ``export`` calls and closes the built-in metrics file. Exporters
+        registered with :meth:`~aerospike_helpers.metrics.MetricsPolicy.add_exporter`
+        stay registered and are not closed.
+
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: metrics_snapshot()
+
+        Return the latest :class:`~aerospike_helpers.metrics.MetricsSnapshot`
+        without exporting it.
+
+        Departed nodes are included and kept until a successful export drains
+        them. File-writer mode does not copy a snapshot.
+
+        :return: a :class:`~aerospike_helpers.metrics.MetricsSnapshot`
 
 Scan and Query Constructors
 ---------------------------

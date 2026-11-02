@@ -79,6 +79,8 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    // Exporter list and export thread. Not cleared by disable_metrics.
+    PyObject *metrics_session;
 } AerospikeClient;
 
 typedef struct {

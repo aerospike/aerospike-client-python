@@ -23,6 +23,7 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "global_hosts.h"
+#include "metrics.h"
 
 #define MAX_PORT_SIZE 6
 #define MAX_SHM_SIZE 19
@@ -55,6 +56,10 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
+
+    // Pause export before the C client closes the file writer. Exporters stay
+    // registered, and their close methods are not called.
+    AerospikeClient_StopMetricsExport(self);
 
     if (!self->is_conn_16) {
         goto CLEANUP;

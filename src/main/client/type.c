@@ -340,6 +340,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, NULL},
     {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
      METH_NOARGS, NULL},
+    {"metrics_snapshot", (PyCFunction)AerospikeClient_MetricsSnapshot,
+     METH_NOARGS,
+     "Return the latest metrics snapshot without exporting it.\n\
+\n\
+Departed nodes are included and kept until a successful export drains them.\n\
+File-writer mode does not copy a snapshot, so this is empty until exporters\n\
+or exporter='none' are enabled."},
 
     // ADMIN OPERATIONS
 
@@ -597,6 +604,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->has_connected = false;
     self->use_shared_connection = false;
     self->as = NULL;
+    self->metrics_session = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
     self->validate_keys = false;
 
@@ -1547,6 +1555,8 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     AerospikeGlobalHosts *global_host = NULL;
     AerospikeClient *client = (AerospikeClient *)self;
 
+    AerospikeClient_StopMetricsExport(client);
+
     // If the client has never connected
     // It is safe to destroy the aerospike structure
     if (client->as) {
@@ -1583,6 +1593,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
             }
         }
     }
+    Py_CLEAR(client->metrics_session);
     self->ob_type->tp_free((PyObject *)self);
 }
 

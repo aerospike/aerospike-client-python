@@ -171,7 +171,11 @@ class ClusterStats:
 
 
 class MetricsListeners:
-    """Metrics listener callbacks.
+    """Deprecated metrics listener callbacks.
+
+    Retained until a major release. New code registers an exporter with
+    :meth:`MetricsPolicy.add_exporter`. These callbacks still run on the tend
+    thread. ``export`` does not.
 
     All callbacks must be set.
 
@@ -212,10 +216,18 @@ class MetricsPolicy:
             :py:meth:`~aerospike.Client.close()` is called.
         interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
             is defined as ``"tend_interval"`` in the client config plus the time to tend all nodes.
+            This is not a number of seconds. Periodic exporter calls use :attr:`export_interval`.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
         labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
+        exporter (Optional[str]): ``"none"``, ``"file"``, or ``"custom"``.
+            Omitted, this keeps the built-in learn-metrics file writer when ``report_dir`` is set.
+            ``"file"`` installs that writer when ``report_dir`` is non-empty.
+            ``"custom"`` calls exporters registered with :meth:`add_exporter` and does not install the file writer.
+            ``"none"`` collects metrics and emits nothing.
+            Calling :meth:`add_exporter` without setting this selects ``"custom"``.
+        export_interval (float): Seconds between ``export`` calls. Default 30. Independent of :attr:`interval`.
 
             Example:
 
@@ -236,6 +248,8 @@ class MetricsPolicy:
             latency_columns: int = 7,
             latency_shift: int = 1,
             labels: dict[str, str] = {},
+            exporter: Optional[str] = None,
+            export_interval: float = 30,
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -244,3 +258,54 @@ class MetricsPolicy:
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
         self.labels = labels
+        self._exporter_list = []
+        if export_interval <= 0:
+            raise ValueError("export_interval must be positive")
+        self.export_interval = float(export_interval)
+        if exporter is None:
+            self.exporter = None
+        else:
+            from aerospike_helpers.metrics.export import MetricsExporterType
+            try:
+                self.exporter = MetricsExporterType(exporter)
+            except ValueError:
+                raise ValueError(
+                    "exporter must be one of: none, file, custom"
+                ) from None
+
+    def add_exporter(self, exporter) -> None:
+        """Register an exporter for ``exporter="custom"``.
+
+        The exporter implements ``export(snapshot)`` as a plain function, not
+        a coroutine. The same objects stay registered across
+        ``disable_metrics`` and are not closed by the client.
+
+        Example::
+
+            policy = MetricsPolicy(export_interval=30, exporter="custom")
+            policy.add_exporter(otel_exporter)
+            client.enable_metrics(policy)
+        """
+        from aerospike_helpers.metrics.export import check_exporter
+        check_exporter(exporter)
+        self._exporter_list.append(exporter)
+
+    @property
+    def exporters(self):
+        """Exporters registered with :meth:`add_exporter`, in registration order."""
+        return tuple(self._exporter_list)
+
+
+from aerospike_helpers.metrics.snapshot import (  # noqa: E402
+    CLIENT_TYPE,
+    ConnectionMetricsSnapshot,
+    LatencySnapshot,
+    MetricsSnapshot,
+    NamespaceMetricsSnapshot,
+    NodeMetricsSnapshot,
+    UsageMetricsSnapshot,
+)
+from aerospike_helpers.metrics.export import (  # noqa: E402
+    MetricsExporter,
+    MetricsExporterType,
+)

@@ -21,5 +21,10 @@
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds);
 PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args);
+PyObject *AerospikeClient_MetricsSnapshot(AerospikeClient *self);
+
+// Stop the export thread. Does not unregister exporters or call close on them.
+// The caller must hold the GIL. Safe when no session exists.
+void AerospikeClient_StopMetricsExport(AerospikeClient *self);
 
 PyObject *AerospikeClient_GetStats(AerospikeClient *self);
