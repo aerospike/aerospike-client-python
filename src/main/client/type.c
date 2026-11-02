@@ -1568,8 +1568,9 @@ static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
         return AEROSPIKE_OK;
     }
 
-    // Entries are counted in ip_map_size as they are filled in, so
-    // destroy_ip_map() can free a partially built map on error.
+    // This function is atomic: on failure, conf->ip_map is freed and reset, so
+    // the caller has nothing to clean up. Entries are counted in ip_map_size as
+    // they are filled in, so destroy_ip_map() can free a partially built map.
     conf->ip_map = (as_addr_map *)malloc(sizeof(as_addr_map) * size);
     if (!conf->ip_map) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -1577,13 +1578,15 @@ static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
     }
     conf->ip_map_size = 0;
 
+    as_status status = AEROSPIKE_OK;
     Py_ssize_t pos = 0;
     PyObject *py_orig = NULL;
     PyObject *py_alt = NULL;
     while (PyDict_Next(py_ip_map, &pos, &py_orig, &py_alt)) {
         if (!PyUnicode_Check(py_orig) || !PyUnicode_Check(py_alt)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "ip_map keys and values must be str");
+            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                     "ip_map keys and values must be str");
+            goto CLEANUP;
         }
 
         const char *orig = PyUnicode_AsUTF8(py_orig);
@@ -1598,14 +1601,26 @@ static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
         as_addr_map *entry = &conf->ip_map[conf->ip_map_size];
         entry->orig = strdup(orig);
         entry->alt = strdup(alt);
+        // Count the entry before checking so destroy_ip_map() frees whichever
+        // string was allocated (free(NULL) is a no-op)
         conf->ip_map_size++;
+        if (!entry->orig || !entry->alt) {
+            status = as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                     "Unable to allocate memory for ip_map");
+            goto CLEANUP;
+        }
     }
     return AEROSPIKE_OK;
 
 UTF8_ERROR:
     PyErr_Clear();
-    return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                           "ip_map keys and values must be encodable as UTF-8");
+    status =
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "ip_map keys and values must be encodable as UTF-8");
+
+CLEANUP:
+    destroy_ip_map(conf);
+    return status;
 }
 
 static void AerospikeClient_Type_Dealloc(PyObject *self)
