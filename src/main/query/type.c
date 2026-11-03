@@ -166,6 +166,8 @@ AerospikeQuery *AerospikeQuery_Type_New(PyTypeObject *type,
 
     Py_INCREF((PyObject *)py_client);
     self->client = py_client;
+    self->partitions_status_backup_buffer = NULL;
+    self->partitions_status_backup_buffer_capacity = 0;
     return self;
 }
 
@@ -232,6 +234,10 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
     }
 
     as_query_destroy(&self->query);
+
+    if (self->partitions_status_backup_buffer) {
+        as_partitions_status_release(self->partitions_status_backup_buffer);
+    }
 
     if (self->unicodeStrVector != NULL) {
         for (unsigned int i = 0; i < self->unicodeStrVector->size; ++i) {
