@@ -131,6 +131,34 @@ class TestQueryTopKValidation:
             getattr(query, api_method)(*args)
         assert excinfo.value.msg == "topK must be in [1, 1000]; got 1001"
 
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_top_k_zero(self, query, api_method, args):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 0
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args)
+        assert excinfo.value.msg == "topK must be in [1, 1000]; got 0"
+
+    def test_top_k_max_uint32_is_stored(self, query):
+        query.top_k = 2**32 - 1
+        assert query.top_k == 2**32 - 1
+
+    @pytest.mark.parametrize("top_k", [-1, 2**32, 2**64])
+    def test_top_k_outside_uint32(self, query, top_k):
+        with pytest.raises(OverflowError) as excinfo:
+            query.top_k = top_k
+        assert str(excinfo.value) == f"top_k must be in [0, 4294967295]; got {top_k}"
+        assert query.top_k == 0
+
+    @pytest.mark.parametrize("top_k", [1.5, "10", None])
+    def test_top_k_must_be_int(self, query, top_k):
+        with pytest.raises(TypeError, match=r"object cannot be interpreted as an integer$"):
+            query.top_k = top_k
+
+    def test_top_k_cannot_be_deleted(self, query):
+        with pytest.raises(AttributeError, match=r"^top_k can't be deleted$"):
+            del query.top_k
+
     @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
