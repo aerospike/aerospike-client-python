@@ -253,6 +253,7 @@ class TestMetrics:
                     assert type(ns_metric.timeout_count) == int
                     assert type(ns_metric.key_busy_count) == int
                     latency_buckets = [
+                        ns_metric.conn_latency,
                         ns_metric.write_latency,
                         ns_metric.read_latency,
                         ns_metric.batch_latency,
@@ -505,7 +506,7 @@ class TestMetrics:
         assert isinstance(snapshot.nodes, list)
         assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
         assert snapshot.nodes_departed_possibly_truncated is False
-        assert set(snapshot.command_latencies) == {"write", "read", "batch", "query"}
+        assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
         for buckets in snapshot.command_latencies.values():
             assert len(buckets) == 7
         assert isinstance(snapshot.app_id, str) and snapshot.app_id
@@ -516,14 +517,13 @@ class TestMetrics:
             assert isinstance(node.conn_open_failures, int)
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
-            assert isinstance(node.conn_latency, list)
             for namespace in node.namespaces:
                 assert isinstance(namespace, NamespaceSnapshot)
                 assert isinstance(namespace.client_timeouts, int)
                 assert isinstance(namespace.server_timeouts, int)
                 assert isinstance(namespace.record_too_big, int)
                 assert isinstance(namespace.device_overload, int)
-                assert set(namespace.latencies) == {"write", "read", "batch", "query"}
+                assert set(namespace.latencies) == {"conn", "write", "read", "batch", "query"}
                 for buckets in namespace.latencies.values():
                     assert isinstance(buckets, list)
 
@@ -589,12 +589,11 @@ class TestMetrics:
         assert snapshot.latency_unit == LATENCY_MICROSECONDS
         assert snapshot.nodes_departed == []
         assert snapshot.nodes_departed_possibly_truncated is False
-        assert set(snapshot.command_latencies) == {"write", "read", "batch", "query"}
+        assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
         for node in snapshot.nodes:
             assert isinstance(node.conn_open_failures, int)
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
-            assert len(node.conn_latency) == 7
 
     def test_empty_report_dir_skips_file_exporter(self):
         policy = MetricsPolicy(report_dir="", interval=1)

@@ -43,8 +43,8 @@ struct PyMetricsExporterList {
     uint32_t count;
 };
 
-static const char *LATENCY_NAMES[AS_LATENCY_TYPE_MAX] = {"write", "read",
-                                                         "batch", "query"};
+static const char *LATENCY_NAMES[AS_LATENCY_TYPE_MAX] = {
+    "conn", "write", "read", "batch", "query"};
 
 static bool client_metrics_enabled(AerospikeClient *self)
 {
@@ -220,9 +220,8 @@ static PyObject *py_namespace_snapshot(as_error *err,
         }
     }
 
-    // ns->latencies is the per-RPC series. Command latency is
-    // snapshot->command_latencies, and connection latency is
-    // node->conn_latency.
+    // ns->latencies is the per-attempt series. Command latency is
+    // snapshot->command_latencies.
     PyObject *py_latencies = py_latency_dict(err, ns->latencies);
     if (!py_latencies) {
         goto error;
@@ -306,18 +305,6 @@ static PyObject *py_node_list_from_snapshots(as_error *err,
             set_new_attr(err, py_node, "conn_auth_failures",
                          PyLong_FromUnsignedLong(node->conn_auth_failures)) !=
                 0) {
-            Py_DECREF(py_node);
-            Py_DECREF(py_list);
-            return NULL;
-        }
-
-        PyObject *py_conn_latency = py_bucket_list(err, &node->conn_latency);
-        if (!py_conn_latency) {
-            Py_DECREF(py_node);
-            Py_DECREF(py_list);
-            return NULL;
-        }
-        if (set_new_attr(err, py_node, "conn_latency", py_conn_latency) != 0) {
             Py_DECREF(py_node);
             Py_DECREF(py_list);
             return NULL;

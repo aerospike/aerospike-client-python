@@ -1813,11 +1813,10 @@ Metrics
         is non-empty, the built-in learn-metrics file exporter is installed. An empty
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir` installs nothing.
 
-        Operational metrics (latency, namespace errors and bytes, CPU, and memory) are turned
-        on when the built-in learn-metrics file exporter or the deprecated
-        :attr:`~aerospike_helpers.metrics.MetricsPolicy.metrics_listeners` are used. Otherwise
-        they follow :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled`.
-        Commands are not timed while operational metrics are off. Usage metrics stay off unless
+        Operational metrics (latency, namespace errors and bytes, CPU, and memory) stay off
+        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is true.
+        The learn-metrics file still writes CPU, memory, and per-attempt namespace histograms
+        when operational metrics are off. Usage metrics stay off unless
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled` is true. When usage is
         on, public API calls increment ``api_blocking``, ``api_deferred``, and ``api_background``.
         The operational sampler records every command unless
