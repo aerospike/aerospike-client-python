@@ -118,8 +118,10 @@ Fields
         :meth:`~aerospike.Query.then_order_by`.
 
         .. note::
-            Requires server version >= 8.2.1. A value above ``1000`` raises
-            :exc:`~aerospike.exception.ParamError` when the query executes. A query with
+            Requires server version >= 8.2.1. A value of ``0`` or above ``1000`` raises
+            :exc:`~aerospike.exception.ParamError` when the query executes. Assigning a value
+            outside ``[0, 4294967295]`` raises :exc:`OverflowError`, and assigning a value that
+            isn't an :class:`int` raises :exc:`TypeError`. A query with
             :meth:`~aerospike.Query.order_by` and no ``top_k`` is sent to the server, which
             rejects it with :exc:`~aerospike.exception.InvalidRequest`. See the notes in
             :meth:`~aerospike.Query.order_by` for the other checks.
@@ -307,7 +309,7 @@ Assume this boilerplate code is run before all examples below:
             ``total_timeout`` still bounds the query.
 
         .. note::
-            Requires server version >= 8.2.1 on every node. ``top_k`` above ``1000``,
+            Requires server version >= 8.2.1 on every node. ``top_k`` of ``0`` or above ``1000``,
             ``max_records``, ``nobins``, :meth:`Query.paginate`, an aggregate UDF, a background
             query, or a partition filter with a ``digest`` or ``partition_status`` raises
             :exc:`~aerospike.exception.ParamError` before the query is sent. See

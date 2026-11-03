@@ -270,3 +270,15 @@ class TestVectorIntegration(object):
         self.test_keys.append(key)
         with pytest.raises(e.InvalidRequest):
             self.as_connection.put(key, {"vectors": bin_value})
+
+    def test_invalid_vector_bytes_from_server_raise_client_error(self):
+        key = (self.test_ns, self.test_set, "invalid-from-udf")
+        self.test_keys.append(key)
+        self.as_connection.put(key, {"a": 1})
+        self.as_connection.udf_put("vector_udf.lua", 0)
+        try:
+            with pytest.raises(e.ClientError) as excinfo:
+                self.as_connection.apply(key, "vector_udf", "truncated_vector", [])
+        finally:
+            self.as_connection.udf_remove("vector_udf.lua")
+        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector buffer too short: missing 6-byte header"
