@@ -87,6 +87,7 @@ Content
     exception
     aerospike_helpers
     data_mapping
+    for-ai-agents
 
 Indices and tables
 ##################
