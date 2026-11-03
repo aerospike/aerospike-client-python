@@ -380,8 +380,7 @@ Assume this boilerplate code is run before all examples below:
         decides only where the first key ties. It takes the same arguments and follows the same
         rules as :meth:`Query.order_by`, including the ``NIL`` ranking described there.
 
-        Calling ``then_order_by()`` before :meth:`Query.order_by` sets the first key.
-        :meth:`Query.order_by` replaces both keys.
+        Call :meth:`Query.order_by` first. :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
         :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
@@ -391,8 +390,9 @@ Assume this boilerplate code is run before all examples below:
             :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
-        :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. A query \
-            supports at most two order keys, so a third raises this error when the query executes.
+        :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. Calling \
+            ``then_order_by()`` before :meth:`Query.order_by`, even if :meth:`Query.order_by` is \
+            called later, or adding a third order key, raises this error when the query executes.
 
         .. code-block:: python
 

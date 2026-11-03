@@ -67,8 +67,8 @@ AerospikeQuery *AerospikeQuery_OrderBy(AerospikeQuery *self, PyObject *py_args,
  *
  *		query.then_order_by(bin, type, direction[, flags])
  *
- * Sets the first key if order_by() hasn't been called. A third key raises
- * ParamError when the query executes.
+ * Calling it before order_by(), even if order_by() is called later, or adding
+ * a third key raises ParamError when the query executes.
  */
 AerospikeQuery *AerospikeQuery_ThenOrderBy(AerospikeQuery *self,
                                            PyObject *py_args,

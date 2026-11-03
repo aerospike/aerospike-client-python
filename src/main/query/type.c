@@ -73,8 +73,8 @@ PyDoc_STRVAR(then_order_by_doc, "then_order_by(bin, type, direction[, flags])\n\
 \n\
 Add a second order key that breaks ties on the first \
 (``ORDER BY <bin>, <bin2> LIMIT k``). Takes the same arguments as order_by(). \
-Sets the first key if order_by() hasn't been called. A query supports at most two \
-order keys, so a third raises aerospike.exception.ParamError when the query executes.");
+Calling it before order_by(), even if order_by() is called later, or adding a third \
+order key, raises aerospike.exception.ParamError when the query executes.");
 
 PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\

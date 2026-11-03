@@ -295,15 +295,17 @@ class TestQueryTopKValidation:
             query.results()
         assert excinfo.value.msg == "Top-K is incompatible with maxRecords"
 
-    def test_then_order_by_before_order_by_sets_first_key(self, query):
-        query.select("report")
+    @pytest.mark.parametrize("order_by_later", [False, True])
+    @pytest.mark.parametrize("top_k", [None, 20])
+    def test_then_order_by_before_order_by(self, query, order_by_later, top_k):
         query.then_order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.top_k = 20
+        if order_by_later:
+            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        if top_k is not None:
+            query.top_k = top_k
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
-        assert excinfo.value.msg == (
-            "orderBy bin 'occurred' is not in projection; add it to the projection or remove the projection"
-        )
+        assert excinfo.value.msg == "thenOrderBy can't be called before orderBy"
 
     def test_then_order_by_bin_not_in_projection(self, query):
         query.select(BIN)
