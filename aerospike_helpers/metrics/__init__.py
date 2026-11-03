@@ -81,7 +81,6 @@ class NamespaceMetrics:
         error_count (int): {}
         timeout_count (int): {}
         key_busy_count (int): {}
-        conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
         batch_latency (list[int])

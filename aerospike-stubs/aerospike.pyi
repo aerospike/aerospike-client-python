@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Any, Callable, Union, final, Literal, Optional, Final
 
 from aerospike_helpers.batch.records import BatchRecords
@@ -21,6 +22,7 @@ AS_BYTES_RUBY: Literal[10]
 AS_BYTES_STRING: Literal[3]
 AS_BYTES_TYPE_MAX: Literal[24]
 AS_BYTES_UNDEF: Literal[0]
+AS_BYTES_VECTOR: Literal[16]
 AUTH_EXTERNAL: Literal[1]
 AUTH_EXTERNAL_INSECURE: Literal[2]
 AUTH_INTERNAL: Literal[0]
@@ -295,6 +297,20 @@ QUERY_DURATION_LONG: Literal[0]
 QUERY_DURATION_SHORT: Literal[1]
 QUERY_DURATION_LONG_RELAX_AP: Literal[2]
 
+class QueryOrderByType(IntEnum):
+    INTEGER = 1
+    DOUBLE = 2
+    STRING = 3
+    BYTES = 4
+
+class QueryOrder(IntEnum):
+    ASCENDING = 0
+    DESCENDING = 1
+
+class QueryOrderByFlags(IntEnum):
+    DEFAULT = 0
+    CASE_INSENSITIVE = 1
+
 COMMIT_OK: Literal[0]
 COMMIT_ALREADY_COMMITTED: Literal[1]
 COMMIT_ROLL_FORWARD_ABANDONED: Literal[5]
@@ -515,6 +531,7 @@ class Query:
     max_records: int
     records_per_second: int
     ttl: int
+    top_k: int
     def __init__(self, *args, **kwargs) -> None: ...
     def add_ops(self, ops: list) -> None: ...
     def apply(self, module: str, function: str, arguments: list = ...) -> Any: ...
@@ -522,10 +539,24 @@ class Query:
     def foreach(self, callback: Callable, policy: dict = ..., options: dict = ...) -> None: ...
     def get_partitions_status(self) -> tuple: ...
     def is_done(self) -> bool: ...
+    def order_by(
+        self,
+        bin: str,
+        type: QueryOrderByType,
+        direction: QueryOrder,
+        flags: QueryOrderByFlags = ...,
+    ) -> Query: ...
     def paginate(self) -> None: ...
     def results(self, policy: dict = ..., options: dict = ...) -> list: ...
     # TODO: this isn't an infinite list of bins
     def select(self, *args, **kwargs) -> None: ...
+    def then_order_by(
+        self,
+        bin: str,
+        type: QueryOrderByType,
+        direction: QueryOrder,
+        flags: QueryOrderByFlags = ...,
+    ) -> Query: ...
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
     # We cannot use aerospike_helpers's TypeExpression type because mypy's stubtest will complain
     def where_with_expr(self, expr, predicate: tuple) -> Query: ...

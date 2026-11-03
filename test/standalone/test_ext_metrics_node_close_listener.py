@@ -26,7 +26,6 @@ def test_node_is_populated(node: Node):
     assert type(node.metrics) == NamespaceMetrics
     metrics = node.metrics
     latency_buckets = [
-        metrics.conn_latency,
         metrics.write_latency,
         metrics.read_latency,
         metrics.batch_latency,
