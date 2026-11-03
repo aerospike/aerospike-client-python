@@ -460,8 +460,8 @@ class MapRemoveByValueList(_BaseExpr):
 
 class MapRemoveByValueRange(_BaseExpr):
     """Create an expression that removes map items identified by value range
-    (begin inclusive, end exclusive). If begin is nil, the range is less than end.
-    If end is aerospike.CDTInfinite(), the range is greater than equal to begin.
+    (begin inclusive, end exclusive). If begin is :py:obj:`None`, the range is less than end.
+    If end is :py:obj:`None`, the range is greater than equal to begin.
     """
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
@@ -492,6 +492,9 @@ class MapRemoveByValueRange(_BaseExpr):
             # Remove list of items with values >= 3 and < 7 from map bin "b".
             expr = exp.MapRemoveByValueRange(None, 3, 7, exp.MapBin("b")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (
             begin,
             end,
@@ -878,8 +881,8 @@ class MapGetByKey(_BaseExpr):
 
 class MapGetByKeyRange(_BaseExpr):
     """Create an expression that selects map items identified by key range.
-    (begin inclusive, end exclusive). If begin is nil, the range is less than end.
-    If end is aerospike.CDTInfinite(), the range is greater than equal to begin.
+    (begin inclusive, end exclusive). If begin is :py:obj:`None`, the range is less than end.
+    If end is :py:obj:`None`, the range is greater than equal to begin.
     Expression returns selected data specified by return_type.
     """
 
@@ -914,6 +917,9 @@ class MapGetByKeyRange(_BaseExpr):
             # Get elements at keys "key3", "key4", "key5", "key6" in map bin "b".
             expr = exp.MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, "key3", "key7", exp.MapBin("b")).compile()
         """
+        if end is None:
+            end = aerospike.CDTInfinite()
+
         self._children = (
             begin,
             end,
