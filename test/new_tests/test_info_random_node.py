@@ -56,6 +56,7 @@ class TestInfoSingleNode(object):
 
         assert "demo" in response
 
+    @pytest.mark.removed_in_server_9
     def test_info_random_node_positive_for_sindex_creation(self):
         """
         Test creating an index through an info call.

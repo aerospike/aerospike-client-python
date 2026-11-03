@@ -71,6 +71,7 @@ class TestCompress:
         assert Counter([br.key[2] for br in records.batch_records]) == Counter([0, 1, 2, 3, 4, "float_value"])
         assert records.batch_records[5].record[2] == {"float_value": 4.3}
 
+    @pytest.mark.removed_in_server_9
     def test_operate_with_compress_policy(self):
         """
         Invoke operate() with compression policy.

@@ -6,6 +6,8 @@ import aerospike
 from aerospike import exception as e
 
 
+# client.prepend() sends the prepend operation Server 9.0 removes, for strings and blobs.
+@pytest.mark.removed_in_server_9
 class TestPrepend:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

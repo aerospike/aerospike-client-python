@@ -37,6 +37,8 @@ def setup(request, as_connection):
     request.addfinalizer(teardown)
 
 
+# Setup creates a bin with string append, which Server 9.0 removes.
+@pytest.mark.removed_in_server_9
 class TestScan(TestBaseClass):
     def test_scan_with_existent_ns_and_set(self):
 
