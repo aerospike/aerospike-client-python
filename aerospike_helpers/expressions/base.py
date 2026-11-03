@@ -501,61 +501,12 @@ class SetName(_BaseExpr):
         super().__init__()
 
 
-class DeviceSize(_BaseExpr):
-    """
-    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
-
-    Create an expression that returns record size on disk. If server storage-engine is
-    memory, then zero is returned. This expression usually evaluates quickly
-    because record meta data is cached in memory.
-
-    This expression should only be used for server versions less than 7.0. Use
-    :py:class:`RecordSize` for server version 7.0+.
-    """
-
-    _op = _ExprOp.META_DEVICE_SIZE
-    _rt = ResultType.INTEGER
-
-    def __init__(self):
-        """:return: (integer value): Uncompressed storage size of the record.
-
-        Example:
-
-        .. testcode::
-
-            # Record device size >= 100 KB.
-            expr = exp.GE(exp.DeviceSize(), 100 * 1024).compile()
-        """
-        super().__init__()
-
-
-class MemorySize(_BaseExpr):
-    """
-    .. deprecated:: 17.2.0 :py:class:`RecordSize` should be used instead.
-
-    Returns the records memory size in bytes as an integer when either the namespace
-    is configured data-in-memory true or storage-engine memory, otherwise returns 0.
-
-    Requires server version between 5.3 inclusive and 7.0 exclusive.
-    Use :py:class:`RecordSize` for server version 7.0+.
-    """
-
-    _op = _ExprOp.META_MEMORY_SIZE
-    _rt = ResultType.INTEGER
-
-    def __init__(self):
-        """:return: (integer value)
-        """
-        super().__init__()
-
-
 class RecordSize(_BaseExpr):
     """
     Create expression that returns the record size. This expression usually evaluates
     quickly because record meta data is cached in memory.
 
-    Requires server version 7.0+. This expression replaces :py:class:`DeviceSize()` and
-    :py:class:`MemorySize()`.
+    Requires server version 7.0+.
     """
     _op = _ExprOp.META_RECORD_SIZE
     _rt = ResultType.INTEGER

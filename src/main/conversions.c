@@ -766,9 +766,9 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-#define DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR                                 \
+#define INVALID_MAP_KEY_WITHOUT_WITHOUT_VALUE_REPR                             \
     "Attempted to store a map with an invalid map key type"
-#define DEPRECATION_MESSAGE_TEMPLATE                                           \
+#define INVALID_MAP_KEY_WITH_VALUE_REPR                                        \
     "Attempted to store a map with key %s, which is an invalid type"
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
@@ -814,41 +814,20 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                                      key->type == AS_BYTES;
         if (!is_map_key_valid_type) {
             char *key_repr = as_val_tostring(key);
-            int warning_failed = 0;
 
             if (!key_repr) {
-                warning_failed = PyErr_WarnEx(
-                    PyExc_DeprecationWarning,
-                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR, STACK_LEVEL);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_MAP_KEY_WITHOUT_WITHOUT_VALUE_REPR);
             }
             else {
-                warning_failed =
-                    PyErr_WarnFormat(PyExc_DeprecationWarning, STACK_LEVEL,
-                                     DEPRECATION_MESSAGE_TEMPLATE, key_repr);
-            }
-
-            if (warning_failed) {
-                // Warning could not be raised or was converted to an error.
-                if (!key_repr) {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    DEPRECATION_MESSAGE_WITHOUT_VALUE_REPR);
-                }
-                else {
-                    as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                    DEPRECATION_MESSAGE_TEMPLATE, key_repr);
-                }
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_MAP_KEY_WITH_VALUE_REPR, key_repr);
             }
 
             free(key_repr);
 
-            if (warning_failed) {
-                // Fail out
-                goto CLEANUP_KEY_AND_EXIT_LOOP;
-            }
-
-            // Warning raised. Skip this key
-            as_val_destroy(key);
-            continue;
+            // Fail out
+            goto CLEANUP_KEY_AND_EXIT_LOOP;
         }
 
         as_val_new_from_pyobject(self, err, py_val, &val, static_pool,
@@ -1566,6 +1545,8 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
     const char *name;
 
     as_record_init(rec, size);
+    // as_record_init defaults ttl to 0 (namespace default). Use the write policy ttl instead.
+    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 
     while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
         if (!PyUnicode_Check(py_bin_name)) {
@@ -1612,7 +1593,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         }
     }
 
-    check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err, self->validate_keys);
+    check_and_set_meta(py_meta, &rec->gen, err, self->validate_keys);
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
@@ -2451,9 +2432,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
  * Returns: error code.
  *******************************************************************************************************
  */
-as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
-                             uint16_t *gen_ref, as_error *err,
-                             bool validate_keys)
+as_status check_and_set_meta(PyObject *py_meta, uint16_t *gen_ref,
+                             as_error *err, bool validate_keys)
 {
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {
@@ -2472,39 +2452,7 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
         }
 
         PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-        uint32_t ttl = 0;
         uint16_t gen = 0;
-        if (py_ttl) {
-            int retval =
-                PyErr_WarnEx(PyExc_DeprecationWarning,
-                             META_TTL_DEPRECATION_MESSAGE, STACK_LEVEL);
-            if (retval == -1) {
-                // This handles the codepath where warnings are converted into errors from pytest/python cli
-                // TODO: this does NOT handle the codepath where the warning mechanism itself fails
-                return as_error_update(err, AEROSPIKE_ERR,
-                                       META_TTL_DEPRECATION_MESSAGE);
-            }
-
-            if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsLong(py_ttl);
-            }
-            else {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Ttl should be an int or long");
-            }
-
-            if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "integer value for ttl exceeds sys.maxsize");
-            }
-            *ttl_ref = ttl;
-        }
-        else {
-            // Metadata dict was present, but ttl field did not exist
-            *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
-        }
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
@@ -2527,10 +2475,6 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
     else if (py_meta && (py_meta != Py_None)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
-    }
-    else {
-        // Metadata dict was not set by user
-        *ttl_ref = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     return err->code;
 }
