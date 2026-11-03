@@ -30,14 +30,17 @@
 static PyObject *py_exc_module;
 
 #define SUBMODULE_NAME "exception"
+// TODO: define aerospike module name somewhere else
+#define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
 
 //  Used to create a Python Exception class
 struct exception_def {
     // When adding the exception to the module, we only need the class name
     // Example: AerospikeError
     const char *class_name;
-    // When creating an exception, we need to specify the module name + class name
-    // Example: exception.AerospikeError
+    // Name passed to PyErr_NewException. This sets __module__, which must be
+    // aerospike.exception so stubtest reports classes missing from exception.pyi.
+    // Example: aerospike.exception.AerospikeError
     const char *fully_qualified_class_name;
     // If NULL, there is no base class
     const char *base_class_name;
@@ -49,8 +52,8 @@ struct exception_def {
 
 // Used to create instances of the above struct
 #define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
-    {class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,     \
-     attrs}
+    {class_name, FULLY_QUALIFIED_MODULE_NAME "." class_name, base_class_name,  \
+     err_code, attrs}
 
 // Base exception names
 #define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
@@ -259,9 +262,6 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_QUERY_QUEUE_FULL, NULL),
     EXCEPTION_DEF("QueryTimeout", QUERY_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_QUERY_TIMEOUT, NULL)};
-
-// TODO: define aerospike module name somewhere else
-#define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
 
 // Returns NULL if an error occurred
 PyObject *AerospikeException_New(void)
