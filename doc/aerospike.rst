@@ -1938,8 +1938,8 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
 
     .. attribute:: BYTES
 
-        The bin holds a bytes value. Not supported yet: a Top-K query with this type raises
-        :exc:`~aerospike.exception.ParamError` when it executes.
+        The bin holds a bytes value. Values are compared byte by byte, and a value that is a
+        prefix of a longer one is the smaller of the two.
 
 .. class:: QueryOrder
 

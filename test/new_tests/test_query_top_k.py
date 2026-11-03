@@ -9,6 +9,7 @@ from aerospike_helpers.operations import operations
 # need Top-K support. A connected client is still required to build a Query.
 
 BIN = "score"
+TYPE_REQUIRED_MSG = "orderBy requires a type declaration (INTEGER, DOUBLE, or BYTES); Aerospike has no schema"
 
 
 def noop_callback(record):
@@ -42,19 +43,16 @@ class TestQueryTopKValidation:
     def test_order_by_missing_type(self, query):
         with pytest.raises(e.ParamError) as excinfo:
             query.order_by(BIN)
-        assert excinfo.value.msg == (
-            "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"
-        )
+        assert excinfo.value.msg == TYPE_REQUIRED_MSG
 
     @pytest.mark.parametrize(
         "bin_type, expected_msg",
         [
             # The C client treats a type of 0 as missing.
-            (0, "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"),
-            (9, "orderBy type must be INTEGER or DOUBLE; got 9"),
-            (-1, "orderBy type must be INTEGER or DOUBLE; got -1"),
-            (aerospike.QueryOrderByType.STRING, "orderBy types STRING and BYTES are not supported yet; use INTEGER or DOUBLE"),
-            (aerospike.QueryOrderByType.BYTES, "orderBy types STRING and BYTES are not supported yet; use INTEGER or DOUBLE"),
+            (0, TYPE_REQUIRED_MSG),
+            (9, "orderBy type must be INTEGER, DOUBLE, or BYTES; got 9"),
+            (-1, "orderBy type must be INTEGER, DOUBLE, or BYTES; got -1"),
+            (aerospike.QueryOrderByType.STRING, "orderBy type STRING is not supported yet; use INTEGER, DOUBLE, or BYTES"),
         ],
     )
     def test_order_by_invalid_type(self, query, bin_type, expected_msg):
@@ -93,7 +91,10 @@ class TestQueryTopKValidation:
 
     # STRING is not supported yet, so the C client rejects every flag, including unknown flag bits, as
     # requiring STRING.
-    @pytest.mark.parametrize("bin_type", [aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrderByType.DOUBLE])
+    @pytest.mark.parametrize(
+        "bin_type",
+        [aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrderByType.BYTES],
+    )
     @pytest.mark.parametrize("flags", [aerospike.QueryOrderByFlags.CASE_INSENSITIVE, 2, -1])
     def test_order_by_flags_require_string(self, query, bin_type, flags):
         query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, flags)
@@ -237,7 +238,7 @@ class TestQueryTopKValidation:
         [
             (("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts",), "orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema"),
+            (("ts",), TYPE_REQUIRED_MSG),
             (("ts", aerospike.QueryOrderByType.INTEGER), "orderBy direction must be ASC or DESC"),
         ],
     )
@@ -252,7 +253,7 @@ class TestQueryTopKValidation:
         [
             (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be INTEGER or DOUBLE; got 9"),
+            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be INTEGER, DOUBLE, or BYTES; got 9"),
             (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
             (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
               aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
@@ -338,3 +339,32 @@ class TestQueryTopKIntegration:
         records = query.results()
         ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
         assert ordered == [(3, 10), (3, 20), (2, 40)]
+
+
+class TestQueryTopKBytes:
+    SET_NAME = "demo-top-k-bytes"
+    # The integer is not a bytes value, so it sorts as NIL.
+    VALUES = [b"\x02", b"\x01\xff", b"\x01", b"\x00\x05", 7]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.VALUES))]
+        for key, value in zip(self.keys, self.VALUES):
+            as_connection.put(key, {BIN: value})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    @pytest.mark.parametrize(
+        "direction, expected",
+        [
+            (aerospike.QueryOrder.ASCENDING, [b"\x00\x05", b"\x01", b"\x01\xff", b"\x02", 7]),
+            (aerospike.QueryOrder.DESCENDING, [b"\x02", b"\x01\xff", b"\x01", b"\x00\x05", 7]),
+        ],
+    )
+    def test_order_by_bytes(self, direction, expected):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.top_k = len(self.VALUES)
+        records = query.results()
+        assert [bins[BIN] for _, _, bins in records] == expected

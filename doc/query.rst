@@ -284,10 +284,10 @@ Assume this boilerplate code is run before all examples below:
             in :meth:`Query.add_ops`, such as a projected \
             :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
             If a projection is set, the bin must be one of the projected names.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER` or :attr:`aerospike.QueryOrderByType.DOUBLE`, \
-            for example :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result. \
-            :attr:`~aerospike.QueryOrderByType.STRING` and :attr:`~aerospike.QueryOrderByType.BYTES` \
-            are not supported yet.
+        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
+            or :attr:`aerospike.QueryOrderByType.BYTES`, for example \
+            :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result. \
+            :attr:`~aerospike.QueryOrderByType.STRING` is not supported yet.
         :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
             :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
@@ -299,8 +299,8 @@ Assume this boilerplate code is run before all examples below:
 
         .. note::
             A record whose order-by bin is missing, or holds a value of a different type than
-            ``type``, still matches the filter and sorts as ``NIL``. In ``ASC`` those records sort
-            after every type-matching record. In ``DESC`` they sort before them. With a second key
+            ``type``, still matches the filter and sorts as ``NIL``. In both ``ASC`` and ``DESC``
+            those records sort after every type-matching record. With a second key
             from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
             ``NIL`` on the first key rank after every record that isn't, and among themselves by the
             second key. Over a large set, raise ``socket_timeout`` (or set it to 0);
@@ -384,8 +384,8 @@ Assume this boilerplate code is run before all examples below:
         :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER` or :attr:`aerospike.QueryOrderByType.DOUBLE`. \
-            See :meth:`Query.order_by`.
+        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
+            or :attr:`aerospike.QueryOrderByType.BYTES`. See :meth:`Query.order_by`.
         :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
             :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
