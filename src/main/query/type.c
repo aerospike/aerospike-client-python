@@ -173,11 +173,47 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 			   (defined as TTL_DONT_UPDATE), which means that the record \
 			   ttl will not change when the record is updated. \
 	 	Note that the TTL value will be employed ONLY on background query writes."},
-    {"top_k", T_UINT,
-     offsetof(AerospikeQuery, query) + offsetof(as_query, top_k), 0,
+    {NULL} /* Sentinel */
+};
+
+static PyObject *AerospikeQuery_Get_Top_K(AerospikeQuery *self, void *closure)
+{
+    return PyLong_FromUnsignedLong(self->query.top_k);
+}
+
+// as_query_top_k() marks k as set, so the C client rejects a k of 0 when the
+// query executes instead of sending an order key without k.
+static int AerospikeQuery_Set_Top_K(AerospikeQuery *self, PyObject *py_value,
+                                    void *closure)
+{
+    if (py_value == NULL) {
+        PyErr_SetString(PyExc_AttributeError, "top_k can't be deleted");
+        return -1;
+    }
+
+    int overflow = 0;
+    long long top_k = PyLong_AsLongLongAndOverflow(py_value, &overflow);
+    if (top_k == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    if (overflow != 0 || top_k < 0 || top_k > UINT32_MAX) {
+        PyErr_Format(PyExc_OverflowError, "top_k must be in [0, %u]; got %S",
+                     UINT32_MAX, py_value);
+        return -1;
+    }
+
+    as_query_top_k(&self->query, (uint32_t)top_k);
+    return 0;
+}
+
+static PyGetSetDef AerospikeQuery_Type_getset[] = {
+    {"top_k", (getter)AerospikeQuery_Get_Top_K,
+     (setter)AerospikeQuery_Set_Top_K,
      "Top-K limit for an ORDER BY <bin> LIMIT k query. Must be paired with "
      "order_by(). Inclusive range [1, 1000]. Assigning top_k again replaces "
-     "the limit and keeps the order keys. Checked when the query executes."},
+     "the limit and keeps the order keys. Checked when the query executes.",
+     NULL},
     {NULL} /* Sentinel */
 };
 
@@ -313,7 +349,7 @@ PyTypeObject AerospikeQuery_Type = {
     0,                                  // tp_iternext
     AerospikeQuery_Type_Methods,        // tp_methods
     AerospikeQuery_Type_custom_members, // tp_members
-    0,                                  // tp_getset
+    AerospikeQuery_Type_getset,         // tp_getset
     0,                                  // tp_base
     0,                                  // tp_dict
     0,                                  // tp_descr_get
