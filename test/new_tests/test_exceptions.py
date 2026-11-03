@@ -41,7 +41,6 @@ base_class_to_attrs = {
 }
 
 
-# TODO: add missing type stubs
 # TODO: make sure other places in the tests aren't doing the same thing as here.
 # We'll do this by cleaning up the test code. But it's nice to test the API in one place
 # TODO: add documentation for the tests in a README
@@ -158,6 +157,10 @@ def test_aerospike_exceptions(
 
     # Test directly inherited class
     assert expected_exc_base_class in excinfo.type.__bases__
+
+    # PyErr_NewException must set __module__ to aerospike.exception so stubtest
+    # treats these classes as originating from this module.
+    assert excinfo.type.__module__ == "aerospike.exception"
 
     for base_class in base_class_to_attrs:
         if issubclass(excinfo.type, base_class):
