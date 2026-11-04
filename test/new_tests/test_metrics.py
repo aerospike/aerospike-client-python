@@ -606,9 +606,13 @@ class TestMetrics:
             latency_unit=LATENCY_MICROSECONDS,
         )
         self.as_connection.enable_metrics(policy)
-        self.as_connection.put(("test", "metrics", "usage"), {"a": 1})
-        snapshot = self.as_connection.get_metrics_snapshot()
-        self.as_connection.disable_metrics()
+        key = ("test", "metrics", "usage")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
 
         assert snapshot.metrics_enabled is True
         assert snapshot.operational_metrics_enabled is True
