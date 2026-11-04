@@ -60,6 +60,7 @@ The following table shows which Python types map directly to Aerospike server ty
   :class:`bytes`                           `blob`_
   :class:`aerospike.GeoJSON`               `GeoJSON`_
   :class:`aerospike_helpers.HyperLogLog`   `HyperLogLog`_
+  :class:`aerospike_helpers.Vector`        vector
  ======================================== =========================
 
 For server 7.1 and higher, map keys can only be of type string, bytes, and integer.
@@ -70,7 +71,8 @@ For server 7.1 and higher, map keys can only be of type string, bytes, and integ
     However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
 
 It is possible to nest these data types. For example a list may contain a dictionary, or a dictionary may contain a list
-as a value.
+as a value. A :class:`~aerospike_helpers.Vector` is the exception: it can only be a top-level bin value (see
+:ref:`aerospike_helpers_vectors`).
 
 .. _integer: https://aerospike.com/docs/develop/data-types/scalar/#integer
 .. _string: https://aerospike.com/docs/develop/data-types/scalar/#string
