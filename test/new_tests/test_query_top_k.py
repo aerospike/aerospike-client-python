@@ -3,7 +3,8 @@ import pytest
 
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers.operations import operations
+from aerospike_helpers import Vector
+from aerospike_helpers.operations import hll_operations, operations
 
 # Every case here is rejected before the query is sent, so the server does not
 # need Top-K support. A connected client is still required to build a Query.
@@ -398,3 +399,49 @@ class TestQueryTopKBytes:
         query.top_k = len(self.VALUES)
         records = query.results()
         assert [bins[BIN] for _, _, bins in records] == expected
+
+
+class TestQueryTopKBytesWithVectorAndHll:
+    SET_NAME = "demo-top-k-bytes-mixed"
+    BLOBS = [b"\x02", b"\x01", b"\x00\x05"]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.BLOBS) + 3)]
+        for key, blob in zip(self.keys, self.BLOBS):
+            as_connection.put(key, {BIN: blob})
+        vector_key, hll_key, int_key = self.keys[len(self.BLOBS):]
+        as_connection.put(vector_key, {BIN: Vector.of_float32([0.5])})
+        as_connection.operate(hll_key, [hll_operations.hll_init(BIN, 4)])
+        as_connection.put(int_key, {BIN: 7})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    # Vector and HyperLogLog bins are blobs too, but only a plain blob is ranked by its
+    # bytes. The others sort as NIL, after every plain blob, in no particular order.
+    @pytest.mark.parametrize(
+        "direction, expected",
+        [
+            (aerospike.QueryOrder.ASCENDING, [b"\x00\x05", b"\x01", b"\x02"]),
+            (aerospike.QueryOrder.DESCENDING, [b"\x02", b"\x01", b"\x00\x05"]),
+        ],
+    )
+    def test_vector_and_hll_sort_as_nil(self, direction, expected):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.top_k = len(self.keys)
+        values = [bins[BIN] for _, _, bins in query.results()]
+
+        # Vector and HyperLogLog subclass bytes, so compare the types as well.
+        assert [type(value) for value in values[: len(expected)]] == [bytes] * len(expected)
+        assert values[: len(expected)] == expected
+        assert sorted(type(value).__name__ for value in values[len(expected):]) == ["HyperLogLog", "Vector", "int"]
+
+    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    def test_top_k_of_plain_blobs_skips_vector_and_hll(self, direction):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.top_k = len(self.BLOBS)
+        values = [bins[BIN] for _, _, bins in query.results()]
+        assert [type(value) for value in values] == [bytes] * len(self.BLOBS)
