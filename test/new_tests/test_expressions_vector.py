@@ -56,6 +56,11 @@ class TestVectorExpressionsUnit(object):
         with pytest.raises(ValueError, match=r"^Unknown VectorDistanceMetric: 999$"):
             vector_exp.VectorDistance(999, query_vector, "embedding")
 
+    @pytest.mark.parametrize("bad_query", [4, [0.1, 0.2], b"\x01\x03\x01\x00\x00\x00\x00\x00\x00\x00", None])
+    def test_non_vector_query_raises_type_error(self, bad_query):
+        with pytest.raises(TypeError, match=rf"^VectorDistance query must be a Vector; got {type(bad_query).__name__}$"):
+            vector_exp.VectorDistance(vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, bad_query, "embedding")
+
 
 def aerospike_bin_op():
     # _AS_EXP_CODE_BIN's Python-side op value, used by VectorBin/etc.

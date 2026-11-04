@@ -163,10 +163,72 @@ class TestVectorUnit(object):
         with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float32([0.1, bad, 0.3])
 
-    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf"), 10**400])
     def test_nan_inf_rejected_float64(self, bad):
         with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float64([0.1, bad])
+
+    @pytest.mark.parametrize("bad", [1e39, -1e39, 10**400])
+    def test_overflowing_float32_rejected(self, bad):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
+            Vector.of_float32([0.1, bad])
+
+    def test_overflowing_int_rejected_float16(self):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
+            Vector.of_float16([0.1, 10**400])
+
+    @pytest.mark.parametrize(
+        "factory, element_type",
+        [("of_float16", "FLOAT16"), ("of_float32", "FLOAT32"), ("of_float64", "FLOAT64")],
+    )
+    @pytest.mark.parametrize("bad", ["0.5", None, b"\x00", 1j])
+    def test_non_real_rejected(self, factory, element_type, bad):
+        with pytest.raises(
+            TypeError, match=rf"^Vector {element_type} elements must be real numbers; got {type(bad).__name__}$"
+        ):
+            getattr(Vector, factory)([0.1, bad])
+
+    def test_float_factories_accept_ints(self):
+        assert list(Vector.of_float32([1, 2]).value) == [1.0, 2.0]
+        assert list(Vector.of_float64([1, 2]).value) == [1.0, 2.0]
+        assert list(Vector.of_float16([1, 2]).value) == [1.0, 2.0]
+
+    @pytest.mark.parametrize("bad", [1.5, 1.0, "1", None])
+    def test_non_integer_rejected_int32(self, bad):
+        with pytest.raises(TypeError, match=rf"^Vector INT32 elements must be integers; got {type(bad).__name__}$"):
+            Vector.of_int32([1, bad])
+
+    @pytest.mark.parametrize("bad", [2**31, -(2**31) - 1, 2**64])
+    def test_out_of_range_rejected_int32(self, bad):
+        with pytest.raises(
+            ValueError, match=rf"^Vector INT32 elements must be in \[-2147483648, 2147483647\]; got {bad}$"
+        ):
+            Vector.of_int32([1, bad])
+
+    def test_int32_bounds_accepted(self):
+        assert list(Vector.of_int32([-(2**31), 2**31 - 1]).value) == [-(2**31), 2**31 - 1]
+
+    @pytest.mark.parametrize("bad", [1.0, "1"])
+    def test_non_integer_rejected_float16_bits(self, bad):
+        with pytest.raises(
+            TypeError, match=rf"^Vector FLOAT16 bit patterns must be integers; got {type(bad).__name__}$"
+        ):
+            Vector.of_float16_bits([0x3C00, bad])
+
+    @pytest.mark.parametrize("bad", [-1, 0x10000])
+    def test_out_of_range_rejected_float16_bits(self, bad):
+        with pytest.raises(ValueError, match=rf"^Vector FLOAT16 bit patterns must be in \[0, 65535\]; got {bad}$"):
+            Vector.of_float16_bits([0x3C00, bad])
+
+    # +infinity, -infinity, a quiet NaN, and a NaN with the sign bit set.
+    @pytest.mark.parametrize("bad", [0x7C00, 0xFC00, 0x7E00, 0xFE01])
+    def test_nan_inf_rejected_float16_bits(self, bad):
+        with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
+            Vector.of_float16_bits([0x3C00, bad])
+
+    def test_float16_bits_bounds_accepted(self):
+        # 0x7BFF is the largest finite binary16 value and 0xFBFF its negation.
+        assert list(Vector.of_float16_bits([0x0000, 0x7BFF, 0xFBFF]).float16_bits()) == [0x0000, 0x7BFF, 0xFBFF]
 
     def test_from_bytes_too_short_header_raises(self):
         with pytest.raises(ValueError, match=r"^Vector buffer too short: missing 6-byte header$"):
