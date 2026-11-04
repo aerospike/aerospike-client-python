@@ -68,6 +68,7 @@ from enum import IntEnum as _IntEnum
 from typing import Any as _Any
 from typing import Iterable as _Iterable
 from typing import SupportsFloat as _SupportsFloat
+from typing import cast as _cast
 
 
 class Vector(bytes):
@@ -214,16 +215,30 @@ class Vector(bytes):
                 f"type; got {dimensions}"
             )
 
-        checked_elements = [cls._checked_element(element_type, element) for element in elements]
+        # struct.pack() already rejects a value of the wrong type or out of range, so
+        # the slower per-element checks only run to explain why it failed.
+        try:
+            body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
+        except (_struct.error, OverflowError) as error:
+            for element in elements:
+                cls._checked_element(element_type, element)
+            # A FLOAT32 element whose magnitude rounds to infinity in binary32 passes
+            # _checked_element().
+            if isinstance(error, OverflowError):
+                raise ValueError(cls._NON_FINITE_ERROR) from None
+            raise
+
+        if element_type == cls.ElementType.FLOAT16:
+            float_values: _Iterable = _struct.unpack(f"<{dimensions}e", body)
+        elif element_type == cls.ElementType.INT32:
+            float_values = ()
+        else:
+            float_values = elements
+        if not all(map(_math.isfinite, float_values)):
+            raise ValueError(cls._NON_FINITE_ERROR)
 
         header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
                                dimensions)
-        try:
-            body = _struct.pack(f"<{dimensions}{fmt[1]}", *checked_elements)
-        except OverflowError:
-            # Only a FLOAT32 element whose magnitude rounds to infinity in binary32 gets
-            # past _checked_element() and overflows here.
-            raise ValueError(cls._NON_FINITE_ERROR) from None
         self = bytes.__new__(cls, header + body)
         self._element_type = element_type
         self._dimensions = dimensions
@@ -242,11 +257,20 @@ class Vector(bytes):
         :raises ValueError: a value is NaN or infinite, or its magnitude rounds to
             infinity in binary16 (65520 or above).
         """
-        float_values = [cls._checked_float(cls.ElementType.FLOAT16, value) for value in values]
-        float32_values = _array("f", float_values)
-        for value in float32_values:
-            if not _math.isfinite(value):
-                raise ValueError(cls._NON_FINITE_ERROR)
+        # array() converts each value with __float__, but its stub only accepts
+        # Iterable[float].
+        float_values = _cast(list[float], list(values))
+        # array() already rejects a value that isn't a real number, so the slower
+        # per-element checks only run to explain why it failed.
+        try:
+            float32_values = _array("f", float_values)
+        except (TypeError, OverflowError):
+            for value in float_values:
+                cls._checked_float(cls.ElementType.FLOAT16, value)
+            raise
+
+        if not all(map(_math.isfinite, float32_values)):
+            raise ValueError(cls._NON_FINITE_ERROR)
 
         dimensions = len(float32_values)
         try:
