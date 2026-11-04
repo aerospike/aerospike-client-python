@@ -253,6 +253,7 @@ class TestMetrics:
                     assert type(ns_metric.timeout_count) == int
                     assert type(ns_metric.key_busy_count) == int
                     latency_buckets = [
+                        ns_metric.conn_latency,
                         ns_metric.write_latency,
                         ns_metric.read_latency,
                         ns_metric.batch_latency,
@@ -285,6 +286,7 @@ class TestMetrics:
         ]
         assert sum(sum(ns_metric.write_latency) for ns_metric in ns_metrics) > 0
         for ns_metric in ns_metrics:
+            assert sum(ns_metric.conn_latency) == 0
             assert sum(ns_metric.read_latency) == 0
             assert sum(ns_metric.batch_latency) == 0
             assert sum(ns_metric.query_latency) == 0
