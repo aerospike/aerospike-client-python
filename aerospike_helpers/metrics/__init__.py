@@ -82,7 +82,7 @@ class NamespaceMetrics:
         timeout_count (int): {}
         key_busy_count (int): {}
         conn_latency (list[int]): Deprecated. Connection latency is no longer recorded per namespace,
-            so every bucket is 0.
+            so every bucket is 0. Connection latency is :attr:`NodeSnapshot.conn_latency`.
         write_latency (list[int])
         read_latency (list[int])
         batch_latency (list[int])
@@ -203,9 +203,10 @@ class NamespaceSnapshot:
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
         latencies (dict[str, list[int]]): Per-attempt latency histograms keyed by ``conn``,
-            ``write``, ``read``, ``batch``, and ``query``. Same series as the learn-metrics
-            file. Filled when a file writer or metrics listener is installed. Command latency
-            is :attr:`MetricsSnapshot.command_latencies`.
+            ``write``, ``read``, ``batch``, and ``query``. Filled when a file writer or metrics
+            listener is installed. Command latency is :attr:`MetricsSnapshot.command_latencies`.
+            The ``conn`` entry is deprecated and always zeros; connection latency is
+            :attr:`NodeSnapshot.conn_latency`.
     """
     pass
 
@@ -230,6 +231,9 @@ class NodeSnapshot:
             operational metrics are enabled.
         conn_auth_failures (int): Failed authentications. Zero unless operational
             metrics are enabled.
+        conn_latency (list[int]): Latency histogram of successful connection opens to this node.
+            Not sampler-gated. Empty unless operational metrics are enabled. The learn-metrics
+            file writes this series as the ``conn`` entry of each namespace on the node.
         namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
             Empty unless operational metrics are enabled.
     """
@@ -293,7 +297,8 @@ class MetricsSnapshot:
         command_latencies (dict[str, list[int]]): Cluster-wide command latency histograms keyed
             by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
             for total elapsed time, including retries. Empty unless operational metrics are
-            enabled. The learn-metrics file does not write this series.
+            enabled. The learn-metrics file does not write this series. The ``conn`` entry is
+            deprecated and always zeros; connection latency is :attr:`NodeSnapshot.conn_latency`.
     """
     pass
 

@@ -16,6 +16,7 @@ import pytest
 import shutil
 import glob
 import os
+import threading
 import time
 from typing import Optional
 import re
@@ -535,6 +536,7 @@ class TestMetrics:
         assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
         for buckets in snapshot.command_latencies.values():
             assert len(buckets) == 7
+        assert sum(snapshot.command_latencies["conn"]) == 0
         assert isinstance(snapshot.app_id, str) and snapshot.app_id
         for node in snapshot.nodes:
             assert isinstance(node, NodeSnapshot)
@@ -543,6 +545,7 @@ class TestMetrics:
             assert isinstance(node.conn_open_failures, int)
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
+            assert len(node.conn_latency) == 7
             for namespace in node.namespaces:
                 assert isinstance(namespace, NamespaceSnapshot)
                 assert isinstance(namespace.client_timeouts, int)
@@ -552,6 +555,7 @@ class TestMetrics:
                 assert set(namespace.latencies) == {"conn", "write", "read", "batch", "query"}
                 for buckets in namespace.latencies.values():
                     assert isinstance(buckets, list)
+                assert sum(namespace.latencies["conn"]) == 0
 
         assert glob.glob("./metrics-*.log") == []
 
@@ -620,6 +624,26 @@ class TestMetrics:
             assert isinstance(node.conn_open_failures, int)
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
+
+    def test_node_conn_latency_counts_connection_opens(self):
+        policy = MetricsPolicy(report_dir="", operational_enabled=True)
+        self.as_connection.enable_metrics(policy)
+        opened_before = {node.name: node.sync.opened for node in self.as_connection.get_metrics_snapshot().nodes}
+        keys = [("test", "metrics", f"conn-latency-{i}") for i in range(8)]
+        threads = [threading.Thread(target=self.as_connection.put, args=(key, {"a": 1})) for key in keys]
+        try:
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in keys:
+                self.as_connection.remove(key)
+
+        for node in snapshot.nodes:
+            assert sum(node.conn_latency) == node.sync.opened - opened_before[node.name]
 
     def test_empty_report_dir_skips_file_exporter(self):
         policy = MetricsPolicy(report_dir="", interval=1)

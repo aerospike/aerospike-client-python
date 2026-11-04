@@ -310,6 +310,13 @@ static PyObject *py_node_list_from_snapshots(as_error *err,
             return NULL;
         }
 
+        PyObject *py_conn_latency = py_bucket_list(err, &node->conn_latency);
+        if (set_new_attr(err, py_node, "conn_latency", py_conn_latency) != 0) {
+            Py_DECREF(py_node);
+            Py_DECREF(py_list);
+            return NULL;
+        }
+
         PyObject *py_namespaces = PyList_New(node->namespace_count);
         if (!py_namespaces) {
             Py_DECREF(py_node);
