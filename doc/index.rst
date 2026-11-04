@@ -22,6 +22,13 @@ that you do not need to define your bins in advance.
 Records are uniquely identified by their key, and record metadata is contained
 in an in-memory primary index.
 
+.. rubric:: Vector Similarity Search
+
+A bin can hold a :class:`~aerospike_helpers.Vector`, such as an embedding produced by a machine
+learning model. A Top-K query computes the distance between each record's vector and a query
+vector, and returns the *k* closest records. See :ref:`aerospike_helpers_vectors` for how to
+store vectors and search them. Requires server version >= 8.2.1.
+
 .. seealso::
     `Architecture Overview <https://aerospike.com/docs/database/learn/architecture/>`_
     and `Aerospike Data Model
@@ -48,6 +55,7 @@ Layout
         * Aerospike expressions
         * Batch commands
         * Complex data type context
+        * HyperLogLog and Vector data types
 
 The :class:`aerospike` module contains these classes:
 

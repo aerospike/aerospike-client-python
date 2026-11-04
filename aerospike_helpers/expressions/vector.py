@@ -44,6 +44,7 @@ if __doc__:
 from enum import IntEnum as _IntEnum
 from typing import Union
 
+from aerospike_helpers import Vector
 from aerospike_helpers.expressions.resources import _BaseExpr, _ExprOp
 from aerospike_helpers.expressions.base import VectorBin
 
@@ -60,6 +61,8 @@ class VectorDistanceMetric(_IntEnum):
     sort with :attr:`aerospike.QueryOrder.DESCENDING` (largest value is the best match).
     Picking the wrong :meth:`Query.order_by <aerospike.Query.order_by>`
     direction for a given metric silently returns the worst matches.
+
+    .. seealso:: :ref:`aerospike_helpers_vectors` for an overview of vector similarity search.
     """
 
     EUCLIDEAN_SQUARED = 0
@@ -86,7 +89,7 @@ class VectorDistance(_BaseExpr):
     def __init__(
         self,
         metric: VectorDistanceMetric,
-        query: "aerospike_helpers.Vector",  # noqa: F821
+        query: Vector,
         bin: "TypeBinName",
     ):
         """Args:
@@ -99,6 +102,9 @@ class VectorDistance(_BaseExpr):
                 expression, typically ``VectorBin(name)``.
 
         :return: (float value)
+
+        :raises TypeError: ``query`` is not a :class:`~aerospike_helpers.Vector`.
+        :raises ValueError: ``metric`` is not a :class:`VectorDistanceMetric`.
 
         Example:
 
@@ -126,6 +132,10 @@ class VectorDistance(_BaseExpr):
             self._op = _METRIC_TO_OP[metric]
         except KeyError:
             raise ValueError(f"Unknown VectorDistanceMetric: {metric}")
+
+        # bytes() would turn an int into that many zero bytes instead of failing.
+        if not isinstance(query, Vector):
+            raise TypeError(f"VectorDistance query must be a Vector; got {type(query).__name__}")
 
         self._children = (
             bytes(query),

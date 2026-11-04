@@ -61,12 +61,13 @@ class HyperLogLog(bytes):
 
 
 import math as _math
+import operator as _operator
 import struct as _struct
 from array import array as _array
 from enum import IntEnum as _IntEnum
+from typing import Any as _Any
 from typing import Iterable as _Iterable
 from typing import SupportsFloat as _SupportsFloat
-from typing import cast as _cast
 
 
 class Vector(bytes):
@@ -156,6 +157,49 @@ class Vector(bytes):
                 "construct a vector from elements")
         return cls.from_bytes(bytes(raw))
 
+    @staticmethod
+    def _checked_int(element: _Any, low: int, high: int, description: str) -> int:
+        try:
+            value = _operator.index(element)
+        except TypeError:
+            raise TypeError(
+                f"Vector {description} must be integers; got {type(element).__name__}") from None
+
+        if not (low <= value <= high):
+            raise ValueError(f"Vector {description} must be in [{low}, {high}]; got {value}")
+        return value
+
+    @classmethod
+    def _checked_float(cls, element_type: ElementType, element: object) -> float:
+        # float() would also parse a str, which struct.pack() and array() reject.
+        if not isinstance(element, _SupportsFloat):
+            raise TypeError(
+                f"Vector {element_type.name} elements must be real numbers; got "
+                f"{type(element).__name__}")
+
+        try:
+            value = float(element)
+        except OverflowError:
+            raise ValueError(cls._NON_FINITE_ERROR) from None
+
+        if not _math.isfinite(value):
+            raise ValueError(cls._NON_FINITE_ERROR)
+        return value
+
+    @classmethod
+    def _checked_element(cls, element_type: ElementType, element: object) -> int | float:
+        if element_type == cls.ElementType.INT32:
+            return cls._checked_int(element, -(2**31), 2**31 - 1, "INT32 elements")
+
+        if element_type == cls.ElementType.FLOAT16:
+            bit_pattern = cls._checked_int(element, 0, 0xFFFF, "FLOAT16 bit patterns")
+            # An all-ones exponent is infinity or NaN.
+            if (bit_pattern & 0x7C00) == 0x7C00:
+                raise ValueError(cls._NON_FINITE_ERROR)
+            return bit_pattern
+
+        return cls._checked_float(element_type, element)
+
     @classmethod
     def _from_elements(cls, element_type: ElementType, elements: _Iterable) -> "Vector":
         fmt = cls._STRUCT_FMT[element_type]
@@ -170,14 +214,16 @@ class Vector(bytes):
                 f"type; got {dimensions}"
             )
 
-        if element_type in (cls.ElementType.FLOAT32, cls.ElementType.FLOAT64):
-            for e in elements:
-                if e != e or e in (float("inf"), float("-inf")):  # NaN/Inf check
-                    raise ValueError(cls._NON_FINITE_ERROR)
+        checked_elements = [cls._checked_element(element_type, element) for element in elements]
 
         header = _struct.pack(cls._HEADER_FMT, cls.VERSION, element_type,
                                dimensions)
-        body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
+        try:
+            body = _struct.pack(f"<{dimensions}{fmt[1]}", *checked_elements)
+        except OverflowError:
+            # Only a FLOAT32 element whose magnitude rounds to infinity in binary32 gets
+            # past _checked_element() and overflows here.
+            raise ValueError(cls._NON_FINITE_ERROR) from None
         self = bytes.__new__(cls, header + body)
         self._element_type = element_type
         self._dimensions = dimensions
@@ -192,12 +238,11 @@ class Vector(bytes):
         :class:`float` (binary64) straight to binary16 can produce different bits.
         Use :meth:`of_float16_bits` to pass binary16 bit patterns through unchanged.
 
+        :raises TypeError: a value is not a real number.
         :raises ValueError: a value is NaN or infinite, or its magnitude rounds to
             infinity in binary16 (65520 or above).
         """
-        # array() converts each value with __float__, but its stub only accepts
-        # Iterable[float].
-        float_values = _cast(_Iterable[float], values)
+        float_values = [cls._checked_float(cls.ElementType.FLOAT16, value) for value in values]
         float32_values = _array("f", float_values)
         for value in float32_values:
             if not _math.isfinite(value):
@@ -217,19 +262,42 @@ class Vector(bytes):
         """Construct a FLOAT16 vector from raw IEEE 754 binary16 bit patterns, for
         exact interchange. No value conversion is performed. Use :meth:`of_float16`
         to construct one from float values, and :meth:`float16_bits` to read the bit
-        patterns back."""
+        patterns back.
+
+        :raises TypeError: a bit pattern is not an integer.
+        :raises ValueError: a bit pattern is outside [0, 65535], or encodes NaN or
+            infinity (all exponent bits set).
+        """
         return cls._from_elements(cls.ElementType.FLOAT16, bit_patterns)
 
     @classmethod
     def of_int32(cls, data: _Iterable[int]) -> "Vector":
+        """Construct an INT32 vector from integers.
+
+        :raises TypeError: a value is not an integer (for example ``1.5``).
+        :raises ValueError: a value is outside [-2147483648, 2147483647].
+        """
         return cls._from_elements(cls.ElementType.INT32, data)
 
     @classmethod
     def of_float32(cls, data: _Iterable[_SupportsFloat]) -> "Vector":
+        """Construct a FLOAT32 vector from float values. Each value is rounded to
+        IEEE 754 binary32.
+
+        :raises TypeError: a value is not a real number.
+        :raises ValueError: a value is NaN or infinite, or its magnitude rounds to
+            infinity in binary32 (for example ``1e39``).
+        """
         return cls._from_elements(cls.ElementType.FLOAT32, data)
 
     @classmethod
     def of_float64(cls, data: _Iterable[_SupportsFloat]) -> "Vector":
+        """Construct a FLOAT64 vector from float values.
+
+        :raises TypeError: a value is not a real number.
+        :raises ValueError: a value is NaN or infinite, or too large to convert to a
+            :class:`float`.
+        """
         return cls._from_elements(cls.ElementType.FLOAT64, data)
 
     @property
