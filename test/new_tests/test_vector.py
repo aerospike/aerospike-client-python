@@ -398,9 +398,15 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["SUCCESS"], vector)
 
-    def test_invalid_vector_bytes_from_server_raise_client_error(self, vector_udf):
+    @pytest.mark.parametrize("command", ["apply", "batch_apply", "batch_write"])
+    def test_invalid_vector_bytes_from_server_raise_client_error(self, vector_udf, command):
         key = self._key("invalid-from-udf")
         self.as_connection.put(key, {"a": 1})
         with pytest.raises(e.ClientError) as excinfo:
-            self.as_connection.apply(key, vector_udf, "truncated_vector", [])
+            if command == "apply":
+                self.as_connection.apply(key, vector_udf, "truncated_vector", [])
+            elif command == "batch_apply":
+                self.as_connection.batch_apply([key], vector_udf, "truncated_vector", [])
+            else:
+                self.as_connection.batch_write(br.BatchRecords([br.Apply(key, vector_udf, "truncated_vector", [])]))
         assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector buffer too short: missing 6-byte header"
