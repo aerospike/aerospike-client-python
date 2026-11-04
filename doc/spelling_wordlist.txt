@@ -92,6 +92,8 @@ yaml
 suberror
 hardcoded
 recurse
+headerless
+bitmask
 codepoint
 codepoints
 substring
@@ -116,3 +118,4 @@ IPv
 transcode
 pre
 arg
+NaN

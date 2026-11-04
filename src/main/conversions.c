@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1022,10 +1022,12 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         }
     }
 
-    // These fields must be ordered in the same way as the AS_LATENCY_TYPE_* macros
-    const char *latency_types[] = {"conn_latency", "write_latency",
-                                   "read_latency", "batch_latency",
-                                   "query_latency"};
+    const char *latency_types[AS_LATENCY_TYPE_MAX] = {
+        [AS_LATENCY_TYPE_CONN] = "conn_latency",
+        [AS_LATENCY_TYPE_WRITE] = "write_latency",
+        [AS_LATENCY_TYPE_READ] = "read_latency",
+        [AS_LATENCY_TYPE_BATCH] = "batch_latency",
+        [AS_LATENCY_TYPE_QUERY] = "query_latency"};
     for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
         PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
             error_p, latency_types[i], ns_metrics->latency[i]);
@@ -1465,6 +1467,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
                                              false)) {
             bytes->type = AS_BYTES_HLL;
+        }
+        else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector",
+                                                  false)) {
+            bytes->type = AS_BYTES_VECTOR;
         }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
