@@ -8,6 +8,8 @@ import pytest
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers import Vector
+from aerospike_helpers.batch import records as br
+from aerospike_helpers.operations import operations
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Covers Vector's construction-time
@@ -332,3 +334,66 @@ class TestVectorIntegration(object):
         self.test_keys.append(key)
         with pytest.raises(e.InvalidRequest):
             self.as_connection.put(key, {"vectors": bin_value})
+
+    def _key(self, name):
+        key = (self.test_ns, self.test_set, name)
+        self.test_keys.append(key)
+        return key
+
+    @staticmethod
+    def _assert_same_vector(result, expected):
+        assert isinstance(result, Vector)
+        assert bytes(result) == bytes(expected)
+
+    def test_operate_write_and_read(self):
+        key = self._key("operate")
+        vector = Vector.of_float32([0.1, 0.2, 0.3])
+        _, _, bins = self.as_connection.operate(
+            key, [operations.write("embedding", vector), operations.read("embedding")]
+        )
+        self._assert_same_vector(bins["embedding"], vector)
+
+    def test_batch_write_and_batch_read(self):
+        vectors = [Vector.of_float32([0.1, 0.2]), Vector.of_int32([3, -4]), Vector.of_float16([0.5, 1.5])]
+        keys = [self._key(f"batch-{i}") for i in range(len(vectors))]
+        writes = br.BatchRecords(
+            [br.Write(key, [operations.write("embedding", vector)]) for key, vector in zip(keys, vectors)]
+        )
+        written = self.as_connection.batch_write(writes)
+        assert [record.result for record in written.batch_records] == [0] * len(vectors)
+
+        read = self.as_connection.batch_read(keys, ["embedding"])
+        for record, vector in zip(read.batch_records, vectors):
+            assert record.result == 0
+            self._assert_same_vector(record.record[2]["embedding"], vector)
+
+    @pytest.fixture
+    def vector_udf(self):
+        self.as_connection.udf_put("vector_udf.lua", 0)
+        yield "vector_udf"
+        self.as_connection.udf_remove("vector_udf.lua")
+
+    def test_apply_returns_vector(self, vector_udf):
+        key = self._key("apply-read")
+        vector = Vector.of_float64([1.5, -2.5])
+        self.as_connection.put(key, {"embedding": vector})
+        result = self.as_connection.apply(key, vector_udf, "read_bin", ["embedding"])
+        self._assert_same_vector(result, vector)
+
+    def test_apply_writes_vector_argument(self, vector_udf):
+        key = self._key("apply-write")
+        vector = Vector.of_float32([0.25, 0.5])
+        self.as_connection.apply(key, vector_udf, "write_bin", ["embedding", vector])
+        _, _, bins = self.as_connection.get(key)
+        self._assert_same_vector(bins["embedding"], vector)
+
+    def test_batch_apply_returns_vectors(self, vector_udf):
+        vectors = [Vector.of_float32([0.1, 0.2]), Vector.of_float32([0.3, 0.4])]
+        keys = [self._key(f"batch-apply-{i}") for i in range(len(vectors))]
+        for key, vector in zip(keys, vectors):
+            self.as_connection.put(key, {"embedding": vector})
+
+        results = self.as_connection.batch_apply(keys, vector_udf, "read_bin", ["embedding"])
+        for record, vector in zip(results.batch_records, vectors):
+            assert record.result == 0
+            self._assert_same_vector(record.record[2]["SUCCESS"], vector)
