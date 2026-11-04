@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import math
+import random
+
 import pytest
 
 import aerospike
@@ -62,6 +65,18 @@ class TestVectorExpressionsUnit(object):
             vector_exp.VectorDistance(vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, bad_query, "embedding")
 
 
+def euclidean_squared(a, b):
+    return sum((x - y) ** 2 for x, y in zip(a, b))
+
+
+def dot_product(a, b):
+    return sum(x * y for x, y in zip(a, b))
+
+
+def cosine_similarity(a, b):
+    return dot_product(a, b) / math.sqrt(dot_product(a, a) * dot_product(b, b))
+
+
 def aerospike_bin_op():
     # _AS_EXP_CODE_BIN's Python-side op value, used by VectorBin/etc.
     from aerospike_helpers.expressions.resources import _ExprOp
@@ -113,40 +128,54 @@ class TestVectorExpressionsIntegration(object):
         )
         assert res["dist"] == pytest.approx(1.0, abs=1e-4)
 
-    def test_knn_top_k_query_matches_bruteforce(self):
-        import random
-
-        random.seed(1234)
-        truth = []
-        for i in range(20):
-            values = [random.uniform(-1, 1) for _ in range(4)]
-            truth.append((i, values))
-            self._put(i, Vector.of_float32(values))
-
-        query_values = [0.5, 0.5, 0.5, 0.5]
-        query_vector = Vector.of_float32(query_values)
-
-        def euclidean_sq(a, b):
-            return sum((x - y) ** 2 for x, y in zip(a, b))
-
-        expected_ids = [t[0] for t in sorted(truth, key=lambda t: euclidean_sq(t[1], query_values))[:5]]
-
+    @pytest.mark.parametrize(
+        "metric, expected",
+        [
+            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, 10.0),
+            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, 4.0),
+            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, 4 / 9),
+        ],
+    )
+    def test_vector_distance_matches_hand_computed_value(self, metric, expected):
+        # Both vectors have length 3: (1 - 2)^2 + (2 - 0)^2 + (2 - 1)^2 + (0 - 2)^2 = 10,
+        # 1*2 + 2*0 + 2*1 + 0*2 = 4, and 4 / (3 * 3) = 4/9.
+        key = self._put("hand-computed", Vector.of_float32([1, 2, 2, 0]))
         dist_expr = vector_exp.VectorDistance(
-            vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, exp.VectorBin("embedding")
+            metric, Vector.of_float32([2, 0, 1, 2]), exp.VectorBin("embedding")
         ).compile()
 
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
+        assert bins["dist"] == pytest.approx(expected, rel=1e-6)
+
+    @pytest.mark.parametrize(
+        "metric, distance, direction",
+        [
+            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.QueryOrder.ASCENDING),
+            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.QueryOrder.DESCENDING),
+            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.QueryOrder.DESCENDING),
+        ],
+    )
+    def test_knn_top_k_query_matches_bruteforce(self, metric, distance, direction):
+        random.seed(1234)
+        stored = {}
+        for i in range(20):
+            vector = Vector.of_float32([random.uniform(-1, 1) for _ in range(4)])
+            stored[i] = list(vector.value)
+            self._put(i, vector)
+
+        query_vector = Vector.of_float32([0.5, -0.25, 0.75, 0.1])
+        query_values = list(query_vector.value)
+        expected = sorted(
+            stored, key=lambda i: distance(stored[i], query_values), reverse=direction == aerospike.QueryOrder.DESCENDING
+        )[:5]
+
+        dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr)])
-        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrder.ASCENDING)
+        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, direction)
         query.top_k = 5
-
         records = query.results()
 
-        assert len(records) == 5
-        actual_ids = [bins["id"] for _, _, bins in records]
-        assert actual_ids == expected_ids
-
-        # Distances must come back sorted ascending (best match first) for
-        # EUCLIDEAN_SQUARED, per VectorDistanceMetric's documented sort order.
-        actual_dists = [bins["dist"] for _, _, bins in records]
-        assert actual_dists == sorted(actual_dists)
+        assert [bins["id"] for _, _, bins in records] == expected
+        for _, _, bins in records:
+            assert bins["dist"] == pytest.approx(distance(stored[bins["id"]], query_values), rel=1e-5, abs=1e-6)
