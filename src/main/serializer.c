@@ -393,9 +393,8 @@ CLEANUP:
     return error_p->code;
 }
 
-// Moves the pending Python exception into error_p, because
-// deserialize_based_on_as_bytes_type() clears the Python error state before
-// returning.
+// Moves the pending Python exception into error_p, so
+// deserialize_based_on_as_bytes_type() raises it as an Aerospike exception.
 static void update_error_from_raised_exception(as_error *error_p,
                                                const char *class_name)
 {
@@ -564,6 +563,7 @@ CLEANUP:
 
     if (error_p->code != AEROSPIKE_OK) {
         raise_exception(error_p);
+        return error_p->code;
     }
     // If one of the deserializers failed and the fallback to byte array conversion
     // was successful, we clear any error state left by Python
