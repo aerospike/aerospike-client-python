@@ -419,7 +419,8 @@ class TestQueryTopKBytesWithVectorAndHll:
             as_connection.remove(key)
 
     # Vector and HyperLogLog bins are blobs too, but only a plain blob is ranked by its
-    # bytes. The others sort as NIL, after every plain blob, in no particular order.
+    # bytes. The others sort as NIL, after every plain blob in either direction, and
+    # NIL ties are broken by ascending digest.
     @pytest.mark.parametrize(
         "direction, expected",
         [
@@ -431,12 +432,15 @@ class TestQueryTopKBytesWithVectorAndHll:
         query = self.as_connection.query("test", self.SET_NAME)
         query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
         query.top_k = len(self.keys)
-        values = [bins[BIN] for _, _, bins in query.results()]
+        records = query.results()
+        values = [bins[BIN] for _, _, bins in records]
 
         # Vector and HyperLogLog subclass bytes, so compare the types as well.
         assert [type(value) for value in values[: len(expected)]] == [bytes] * len(expected)
         assert values[: len(expected)] == expected
         assert sorted(type(value).__name__ for value in values[len(expected):]) == ["HyperLogLog", "Vector", "int"]
+        nil_digests = [key[3] for key, _, _ in records[len(expected):]]
+        assert nil_digests == sorted(nil_digests)
 
     @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
     def test_top_k_of_plain_blobs_skips_vector_and_hll(self, direction):
