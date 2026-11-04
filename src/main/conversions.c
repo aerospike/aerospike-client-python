@@ -1022,17 +1022,13 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         }
     }
 
-    // The deprecated AS_LATENCY_TYPE_CONN slot has no name, so it isn't set.
     const char *latency_types[AS_LATENCY_TYPE_MAX] = {
+        [AS_LATENCY_TYPE_CONN] = "conn_latency",
         [AS_LATENCY_TYPE_WRITE] = "write_latency",
         [AS_LATENCY_TYPE_READ] = "read_latency",
         [AS_LATENCY_TYPE_BATCH] = "batch_latency",
         [AS_LATENCY_TYPE_QUERY] = "query_latency"};
     for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
-        if (!latency_types[i]) {
-            continue;
-        }
-
         PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
             error_p, latency_types[i], ns_metrics->latency[i]);
         if (!py_buckets) {
