@@ -159,7 +159,7 @@ class Vector(bytes):
         return cls.from_bytes(bytes(raw))
 
     @staticmethod
-    def _checked_int(element: _Any, low: int, high: int, description: str) -> int:
+    def _check_int(element: _Any, low: int, high: int, description: str) -> int:
         try:
             value = _operator.index(element)
         except TypeError:
@@ -171,8 +171,9 @@ class Vector(bytes):
         return value
 
     @classmethod
-    def _checked_float(cls, element_type: ElementType, element: object) -> float:
-        # float() would also parse a str, which struct.pack() and array() reject.
+    def _check_float(cls, element_type: ElementType, element: object) -> None:
+        # struct.pack() and array() reject a str, but float() would parse it, so check
+        # the type to find the element they rejected.
         if not isinstance(element, _SupportsFloat):
             raise TypeError(
                 f"Vector {element_type.name} elements must be real numbers; got "
@@ -185,21 +186,21 @@ class Vector(bytes):
 
         if not _math.isfinite(value):
             raise ValueError(cls._NON_FINITE_ERROR)
-        return value
 
     @classmethod
-    def _checked_element(cls, element_type: ElementType, element: object) -> int | float:
+    def _check_element(cls, element_type: ElementType, element: object) -> None:
         if element_type == cls.ElementType.INT32:
-            return cls._checked_int(element, -(2**31), 2**31 - 1, "INT32 elements")
+            cls._check_int(element, -(2**31), 2**31 - 1, "INT32 elements")
+            return
 
         if element_type == cls.ElementType.FLOAT16:
-            bit_pattern = cls._checked_int(element, 0, 0xFFFF, "FLOAT16 bit patterns")
+            bit_pattern = cls._check_int(element, 0, 0xFFFF, "FLOAT16 bit patterns")
             # An all-ones exponent is infinity or NaN.
             if (bit_pattern & 0x7C00) == 0x7C00:
                 raise ValueError(cls._NON_FINITE_ERROR)
-            return bit_pattern
+            return
 
-        return cls._checked_float(element_type, element)
+        cls._check_float(element_type, element)
 
     @classmethod
     def _from_elements(cls, element_type: ElementType, elements: _Iterable) -> "Vector":
@@ -221,9 +222,9 @@ class Vector(bytes):
             body = _struct.pack(f"<{dimensions}{fmt[1]}", *elements)
         except (_struct.error, OverflowError) as error:
             for element in elements:
-                cls._checked_element(element_type, element)
+                cls._check_element(element_type, element)
             # A FLOAT32 element whose magnitude rounds to infinity in binary32 passes
-            # _checked_element().
+            # _check_element().
             if isinstance(error, OverflowError):
                 raise ValueError(cls._NON_FINITE_ERROR) from None
             raise
@@ -266,7 +267,7 @@ class Vector(bytes):
             float32_values = _array("f", float_values)
         except (TypeError, OverflowError):
             for value in float_values:
-                cls._checked_float(cls.ElementType.FLOAT16, value)
+                cls._check_float(cls.ElementType.FLOAT16, value)
             raise
 
         if not all(map(_math.isfinite, float32_values)):
