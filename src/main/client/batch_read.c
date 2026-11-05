@@ -18,6 +18,7 @@ typedef struct {
     PyObject *func_name;
     AerospikeClient *client;
     bool checking_if_records_exist;
+    // See LocalData.error in batch_apply.c.
     as_error error;
 } LocalData;
 

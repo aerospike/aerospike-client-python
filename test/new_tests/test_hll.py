@@ -510,6 +510,7 @@ class TestHLL(object):
         different_hll = HyperLogLog(b'asdff')
         assert different_hll != hll_from_eval
 
+    # See test_vector_conversion_failure_raises_client_error in test_vector.py.
     @pytest.mark.parametrize(
         "command",
         ["get", "operate", "batch_read", "batch_operate", "batch_write", "query", "query_foreach", "scan",

@@ -40,6 +40,7 @@ typedef struct {
     PyObject *batch_records_module;
     PyObject *func_name;
     AerospikeClient *client;
+    // See LocalData.error in batch_apply.c.
     as_error error;
 } LocalData;
 

@@ -23,3 +23,8 @@ function truncated_vector(rec)
   bytes.set_type(b, 16)
   return b
 end
+
+-- Stream UDF that maps each record to the bytes from truncated_vector().
+function truncated_vectors(stream)
+  return stream : map(truncated_vector)
+end

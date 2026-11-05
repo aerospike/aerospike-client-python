@@ -398,7 +398,9 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["SUCCESS"], vector)
 
-    @pytest.mark.parametrize("command", ["apply", "batch_apply", "batch_write"])
+    @pytest.mark.parametrize(
+        "command", ["apply", "batch_apply", "batch_write", "query_aggregate", "query_aggregate_foreach"]
+    )
     def test_invalid_vector_bytes_from_server_raise_client_error(self, vector_udf, command):
         key = self._key("invalid-from-udf")
         self.as_connection.put(key, {"a": 1})
@@ -407,6 +409,49 @@ class TestVectorIntegration(object):
                 self.as_connection.apply(key, vector_udf, "truncated_vector", [])
             elif command == "batch_apply":
                 self.as_connection.batch_apply([key], vector_udf, "truncated_vector", [])
-            else:
+            elif command == "batch_write":
                 self.as_connection.batch_write(br.BatchRecords([br.Apply(key, vector_udf, "truncated_vector", [])]))
+            else:
+                query = self.as_connection.query(self.test_ns, self.test_set)
+                query.apply(vector_udf, "truncated_vectors")
+                if command == "query_aggregate":
+                    query.results()
+                else:
+                    query.foreach(lambda _: None)
         assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector buffer too short: missing 6-byte header"
+
+    # The server validates stored vectors, so make the constructor fail instead.
+    # See test_hll_conversion_failure_raises_client_error in test_hll.py.
+    @pytest.mark.parametrize(
+        "command",
+        ["get", "operate", "batch_read", "batch_operate", "batch_write", "query", "query_foreach", "scan",
+         "scan_foreach"],
+    )
+    def test_vector_conversion_failure_raises_client_error(self, monkeypatch, command):
+        key = self._key("conversion-failure")
+        self.as_connection.put(key, {"embedding": Vector.of_float32([0.5, 1.5])})
+
+        def failing_new(cls, raw):
+            raise ValueError("Vector constructor failed")
+
+        monkeypatch.setattr(Vector, "__new__", failing_new)
+        with pytest.raises(e.ClientError) as excinfo:
+            if command == "get":
+                self.as_connection.get(key)
+            elif command == "operate":
+                self.as_connection.operate(key, [operations.read("embedding")])
+            elif command == "batch_read":
+                self.as_connection.batch_read([key])
+            elif command == "batch_operate":
+                self.as_connection.batch_operate([key], [operations.read("embedding")])
+            elif command == "batch_write":
+                self.as_connection.batch_write(br.BatchRecords([br.Read(key, [operations.read("embedding")])]))
+            elif command == "query":
+                self.as_connection.query(self.test_ns, self.test_set).results()
+            elif command == "query_foreach":
+                self.as_connection.query(self.test_ns, self.test_set).foreach(lambda _: None)
+            elif command == "scan":
+                self.as_connection.scan(self.test_ns, self.test_set).results()
+            else:
+                self.as_connection.scan(self.test_ns, self.test_set).foreach(lambda _: None)
+        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector constructor failed"
