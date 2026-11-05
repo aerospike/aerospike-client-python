@@ -211,7 +211,7 @@ class NamespaceSnapshot:
             in ``errors`` or ``server_timeouts``.
         server_timeouts (int): Server timeouts. Not included in ``errors`` or
             ``client_timeouts``.
-        key_busy (int): Key busy errors.
+        key_busy (int): Key busy errors. Not included in ``errors``.
         record_too_big (int): Record too big errors. Not included in ``errors``.
         device_overload (int): Device overload errors. Not included in ``errors``.
         bytes_in (int): Bytes received from the server.
