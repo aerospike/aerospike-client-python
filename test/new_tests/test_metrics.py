@@ -677,7 +677,7 @@ class TestMetrics:
                 self.as_connection.remove(key)
 
         write = snapshot.command_latencies["write"]
-        assert write.count >= 2
+        assert write.count == 2
         for latency in snapshot.command_latencies.values():
             self.assert_latency_summary(latency)
         namespace_writes = 0
@@ -687,7 +687,7 @@ class TestMetrics:
                 for latency in namespace.latencies.values():
                     self.assert_latency_summary(latency)
                 namespace_writes += namespace.latencies["write"].count
-        assert namespace_writes >= 2
+        assert namespace_writes == 2
 
     def test_enable_metrics_turns_operational_on_by_default(self):
         policy = MetricsPolicy(report_dir="")
