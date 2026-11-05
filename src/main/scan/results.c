@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,10 @@
 typedef struct {
     PyObject *py_results;
     AerospikeClient *client;
+    // The callback runs on a thread per node, so the first conversion error is
+    // kept under error_mutex.
+    as_error error;
+    pthread_mutex_t error_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -54,11 +58,18 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     val_to_pyobject(data->client, &err, val, &py_result);
-
-    if (py_result) {
-        PyList_Append(py_results, py_result);
-        Py_DECREF(py_result);
+    if (err.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->error_mutex);
+        if (data->error.code == AEROSPIKE_OK) {
+            as_error_copy(&data->error, &err);
+        }
+        pthread_mutex_unlock(&data->error_mutex);
+        PyGILState_Release(gstate);
+        return false;
     }
+
+    PyList_Append(py_results, py_result);
+    Py_DECREF(py_result);
 
     PyGILState_Release(gstate);
 
@@ -79,8 +90,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     as_policy_scan *scan_policy_p = NULL;
 
     char *nodename = NULL;
-    LocalData data;
-    data.client = self->client;
     static char *kwlist[] = {"policy", "nodename", NULL};
 
     // For converting expressions.
@@ -94,6 +103,11 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
                                     &py_policy, &py_nodename) == false) {
         return NULL;
     }
+
+    LocalData data;
+    data.client = self->client;
+    as_error_init(&data.error);
+    pthread_mutex_init(&data.error_mutex, NULL);
 
     as_error err;
     as_error_init(&err);
@@ -171,7 +185,12 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
+    if (data.error.code != AEROSPIKE_OK) {
+        as_error_copy(&err, &data.error);
+    }
+
 CLEANUP:
+    pthread_mutex_destroy(&data.error_mutex);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

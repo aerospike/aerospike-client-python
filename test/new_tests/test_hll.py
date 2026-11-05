@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 from aerospike import exception as e
-from aerospike_helpers.operations import hll_operations
+from aerospike_helpers.batch import records as batch_records
+from aerospike_helpers.operations import hll_operations, operations
 from aerospike_helpers import HyperLogLog
 from math import sqrt
 
@@ -508,3 +509,36 @@ class TestHLL(object):
         # Negative test for comparing HLL values
         different_hll = HyperLogLog(b'asdff')
         assert different_hll != hll_from_eval
+
+    @pytest.mark.parametrize(
+        "command",
+        ["get", "operate", "batch_read", "batch_operate", "batch_write", "query", "query_foreach", "scan",
+         "scan_foreach"],
+    )
+    def test_hll_conversion_failure_raises_client_error(self, monkeypatch, command):
+        def failing_new(cls, value):
+            raise ValueError("HyperLogLog constructor failed")
+
+        monkeypatch.setattr(HyperLogLog, "__new__", failing_new)
+        key = self.test_keys[0]
+        with pytest.raises(e.ClientError) as excinfo:
+            if command == "get":
+                self.as_connection.get(key)
+            elif command == "operate":
+                self.as_connection.operate(key, [operations.read("hll_bin")])
+            elif command == "batch_read":
+                self.as_connection.batch_read([key])
+            elif command == "batch_operate":
+                self.as_connection.batch_operate([key], [operations.read("hll_bin")])
+            elif command == "batch_write":
+                records = batch_records.BatchRecords([batch_records.Read(key, [operations.read("hll_bin")])])
+                self.as_connection.batch_write(records)
+            elif command == "query":
+                self.as_connection.query("test", "demo").results()
+            elif command == "query_foreach":
+                self.as_connection.query("test", "demo").foreach(lambda _: None)
+            elif command == "scan":
+                self.as_connection.scan("test", "demo").results()
+            else:
+                self.as_connection.scan("test", "demo").foreach(lambda _: None)
+        assert excinfo.value.msg == "Unable to deserialize bytes as HyperLogLog: HyperLogLog constructor failed"
