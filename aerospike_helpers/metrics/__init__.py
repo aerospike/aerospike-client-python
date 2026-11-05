@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2013-2024 Aerospike, Inc.
+# Copyright 2013-2026 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +70,8 @@ class NamespaceMetrics:
         error_count (int): {}
         timeout_count (int): {}
         key_busy_count (int): {}
-        conn_latency (list[int])
+        conn_latency (list[int]): Deprecated. Connection latency is no longer recorded per namespace,
+            so every bucket is 0.
         write_latency (list[int])
         read_latency (list[int])
         batch_latency (list[int])

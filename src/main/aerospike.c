@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -503,6 +503,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AS_BYTES_RUBY", .value.integer = AS_BYTES_RUBY},
     {"AS_BYTES_PHP", .value.integer = AS_BYTES_PHP},
     {"AS_BYTES_ERLANG", .value.integer = AS_BYTES_ERLANG},
+    {"AS_BYTES_VECTOR", .value.integer = AS_BYTES_VECTOR},
     {"AS_BYTES_BOOL", .value.integer = AS_BYTES_BOOL},
     {"AS_BYTES_HLL", .value.integer = AS_BYTES_HLL},
     {"AS_BYTES_MAP", .value.integer = AS_BYTES_MAP},
@@ -1058,6 +1059,136 @@ void aerospike_free(void *self)
     Py_XDECREF(py_global_hosts);
 }
 
+struct int_enum_member {
+    const char *name;
+    long value;
+};
+
+struct int_enum_def {
+    const char *name;
+    // Ends with a {NULL} member.
+    const struct int_enum_member *members;
+};
+
+static const struct int_enum_member query_order_by_type_members[] = {
+    {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
+    {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
+    {"STRING", AS_QUERY_ORDER_BY_STRING},
+    {"BYTES", AS_QUERY_ORDER_BY_BYTES},
+    {NULL}};
+
+static const struct int_enum_member query_order_members[] = {
+    {"ASCENDING", AS_ORDER_ASCENDING},
+    {"DESCENDING", AS_ORDER_DESCENDING},
+    {NULL}};
+
+static const struct int_enum_member query_order_by_flags_members[] = {
+    {"DEFAULT", AS_QUERY_ORDER_BY_FLAGS_DEFAULT},
+    {"CASE_INSENSITIVE", AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
+    {NULL}};
+
+static const struct int_enum_def query_order_enums[] = {
+    {"QueryOrderByType", query_order_by_type_members},
+    {"QueryOrder", query_order_members},
+    {"QueryOrderByFlags", query_order_by_flags_members},
+};
+
+static int set_int_enum_member(PyObject *py_members,
+                               const struct int_enum_member *member)
+{
+    PyObject *py_value = PyLong_FromLong(member->value);
+    if (py_value == NULL) {
+        return -1;
+    }
+
+    int retval = PyDict_SetItemString(py_members, member->name, py_value);
+    Py_DECREF(py_value);
+    if (retval == -1) {
+        return -1;
+    }
+    return 0;
+}
+
+static PyObject *create_int_enum_members(const struct int_enum_def *enum_def)
+{
+    PyObject *py_members = PyDict_New();
+    if (py_members == NULL) {
+        return NULL;
+    }
+
+    for (const struct int_enum_member *member = enum_def->members;
+         member->name != NULL; member++) {
+        int retval = set_int_enum_member(py_members, member);
+        if (retval == -1) {
+            Py_DECREF(py_members);
+            return NULL;
+        }
+    }
+    return py_members;
+}
+
+static PyObject *create_int_enum(const struct int_enum_def *enum_def)
+{
+    PyObject *py_members = create_int_enum_members(enum_def);
+    if (py_members == NULL) {
+        return NULL;
+    }
+
+    PyObject *py_enum_module = PyImport_ImportModule("enum");
+    if (py_enum_module == NULL) {
+        Py_DECREF(py_members);
+        return NULL;
+    }
+
+    PyObject *py_int_enum = PyObject_GetAttrString(py_enum_module, "IntEnum");
+    Py_DECREF(py_enum_module);
+    if (py_int_enum == NULL) {
+        Py_DECREF(py_members);
+        return NULL;
+    }
+
+    PyObject *py_args = Py_BuildValue("(sO)", enum_def->name, py_members);
+    Py_DECREF(py_members);
+    if (py_args == NULL) {
+        Py_DECREF(py_int_enum);
+        return NULL;
+    }
+
+    PyObject *py_kwargs =
+        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (py_kwargs == NULL) {
+        Py_DECREF(py_args);
+        Py_DECREF(py_int_enum);
+        return NULL;
+    }
+
+    PyObject *py_enum_cls = PyObject_Call(py_int_enum, py_args, py_kwargs);
+    Py_DECREF(py_kwargs);
+    Py_DECREF(py_args);
+    Py_DECREF(py_int_enum);
+    return py_enum_cls;
+}
+
+static int add_query_order_enums(PyObject *py_module)
+{
+    size_t enum_count =
+        sizeof(query_order_enums) / sizeof(query_order_enums[0]);
+    for (size_t i = 0; i < enum_count; i++) {
+        const struct int_enum_def *enum_def = &query_order_enums[i];
+        PyObject *py_enum_cls = create_int_enum(enum_def);
+        if (py_enum_cls == NULL) {
+            return -1;
+        }
+
+        int retval = PyModule_AddObject(py_module, enum_def->name, py_enum_cls);
+        if (retval == -1) {
+            Py_DECREF(py_enum_cls);
+            return -1;
+        }
+    }
+    return 0;
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     aerospike_client_language = "python";
@@ -1134,6 +1265,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         if (retval == -1) {
             goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
+    }
+
+    retval = add_query_order_enums(py_aerospike_module);
+    if (retval == -1) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     // Allows submodules to be imported using "import aerospike.<submodule-name>"

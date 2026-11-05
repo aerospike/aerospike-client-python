@@ -437,7 +437,7 @@ def test_setting_metrics_policy():
                 # Second line has data
                 f.readline()
                 data = f.readline()
-            regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
+            regex = re.search(pattern=r"write\[([0-9]|,)+\]", string=data)
             buckets = regex.group(0)
             # <bucket>,<bucket>,...
             bucket_count = len(buckets.split(','))

@@ -17,6 +17,7 @@ from aerospike_helpers.expressions.resources import ResultType  # noqa: F401
 from aerospike_helpers.expressions.base import *  # noqa: F401, F403
 from aerospike_helpers.expressions.bitwise import *  # noqa: F401, F403
 from aerospike_helpers.expressions.hll import *  # noqa: F401, F403
+from aerospike_helpers.expressions.vector import *  # noqa: F401, F403
 from aerospike_helpers.expressions.list import *  # noqa: F401, F403
 from aerospike_helpers.expressions.map import *  # noqa: F401, F403
 from aerospike_helpers.expressions.arithmetic import *  # noqa: F401, F403

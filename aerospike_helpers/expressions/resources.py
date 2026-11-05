@@ -64,6 +64,10 @@ class _ExprOp:  # TODO replace this with an enum
     MIN = 50
     MAX = 51
 
+    VECTOR_EUCLIDEAN_DIST = 52
+    VECTOR_DOT_PRODUCT = 53
+    VECTOR_COSINE_SIM = 54
+
     META_DIGEST_MOD = 64
     META_DEVICE_SIZE = 65
     META_LAST_UPDATE_TIME = 66
@@ -129,6 +133,7 @@ class ResultType:
     FLOAT = 7
     GEOJSON = 8
     HLL = 9
+    VECTOR = 10
 
 
 class _AtomExpr:

@@ -253,6 +253,32 @@ class TestMetrics:
                         for bucket in buckets:
                             assert type(bucket) == int
 
+    def test_latency_buckets_match_command_type(self):
+        self.metrics_log_folder = "./metrics-logs"
+        policy = MetricsPolicy(metrics_listeners=self.listeners, report_dir=self.metrics_log_folder)
+        self.as_connection.enable_metrics(policy=policy)
+        keys = [("test", "demo-metrics-latency", i) for i in range(10)]
+        try:
+            for key in keys:
+                self.as_connection.put(key, {"bin": 1})
+        finally:
+            self.as_connection.disable_metrics()
+            for key in keys:
+                self.as_connection.remove(key)
+
+        ns_metrics = [
+            ns_metric
+            for node in cluster_from_disable_listener.nodes
+            for ns_metric in node.metrics
+            if ns_metric.ns == "test"
+        ]
+        assert sum(sum(ns_metric.write_latency) for ns_metric in ns_metrics) > 0
+        for ns_metric in ns_metrics:
+            assert sum(ns_metric.conn_latency) == 0
+            assert sum(ns_metric.read_latency) == 0
+            assert sum(ns_metric.batch_latency) == 0
+            assert sum(ns_metric.query_latency) == 0
+
     # Unable to test the case where an exception value could not be retrieved
     # Having the callback raise an Exception without a value does not trigger this
     @pytest.mark.parametrize(
