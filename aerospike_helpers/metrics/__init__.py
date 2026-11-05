@@ -402,7 +402,11 @@ class MetricsPolicy:
             errors and bytes, CPU, and memory. :py:obj:`None` (default) turns them on when
             :meth:`~aerospike.Client.enable_metrics` is called with this policy, and leaves them off for the
             client config ``metrics`` policy, so dynamic configuration ``metrics.enabled`` alone does not
-            turn them on. Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
+            turn them on. The :meth:`~aerospike.Client.enable_metrics` default intentionally differs from
+            dynamic configuration, where ``metrics.extended.operational.enabled`` defaults to false, so
+            applications that already call it keep their latency and namespace metrics. When that key is set
+            in the dynamic configuration file, it overrides this attribute. See :ref:`aerospike.ConfigProvider`.
+            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
             file still writes CPU, memory, and per-attempt namespace histograms when this is false.
         usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
             Other feature usage names are not recorded. Off until explicitly enabled.
