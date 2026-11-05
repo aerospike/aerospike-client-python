@@ -1495,18 +1495,25 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
+// When allow_none is true, None leaves *out at the C client default.
 static int set_metrics_bool_field(as_error *err, PyObject *py_metrics_policy,
-                                  const char *name, bool *out)
+                                  const char *name, bool allow_none, bool *out)
 {
     PyObject *py_value = PyObject_GetAttrString(py_metrics_policy, name);
     if (!py_value) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
                                name);
     }
+    if (allow_none && py_value == Py_None) {
+        Py_DECREF(py_value);
+        return AEROSPIKE_OK;
+    }
     if (!PyBool_Check(py_value)) {
         Py_DECREF(py_value);
+        const char *expected_type = allow_none ? "bool or None" : "bool";
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               INVALID_ATTR_TYPE_ERROR_MSG, name, "bool");
+                               INVALID_ATTR_TYPE_ERROR_MSG, name,
+                               expected_type);
     }
     *out = py_value == Py_True;
     Py_DECREF(py_value);
@@ -1669,9 +1676,9 @@ int as_metrics_policy_set_using_pyobject(as_error *err,
     metrics_policy->latency_unit = (as_metrics_latency_unit)latency_unit;
 
     if (set_metrics_bool_field(err, py_metrics_policy, "operational_enabled",
-                               &metrics_policy->operational_enabled) !=
+                               true, &metrics_policy->operational_enabled) !=
             AEROSPIKE_OK ||
-        set_metrics_bool_field(err, py_metrics_policy, "usage_enabled",
+        set_metrics_bool_field(err, py_metrics_policy, "usage_enabled", false,
                                &metrics_policy->usage_enabled) !=
             AEROSPIKE_OK) {
         goto error;

@@ -20,9 +20,9 @@
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client. :class:`MetricsListeners` is deprecated.
 
-:class:`MetricsSnapshot`, :class:`NodeSnapshot`, and :class:`NamespaceSnapshot` are returned to metrics
-exporters. They are copies of one export and stay valid after ``export`` returns. This client does not
-run asynchronous commands, so snapshots do not include event-loop gauges.
+:class:`MetricsSnapshot`, :class:`NodeSnapshot`, :class:`NamespaceSnapshot`, and :class:`LatencySnapshot` are
+returned to metrics exporters. They are copies of one export and stay valid after ``export`` returns. This client
+does not run asynchronous commands, so snapshots do not include event-loop gauges or asynchronous connection pools.
 
 :class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
 a Python client API method.
@@ -119,7 +119,8 @@ class Cluster:
         cluster_name (Optional[str]): Expected cluster name for all nodes. May be :py:obj:`None`.
         app_id (str): Application identifier. Will be set to the client's username if not set to a string in the client
             config's ``app_id`` option. If the client does not have a username, this will be set to ``not-set``.
-        invalid_node_count (int): Count of add node failures in the most recent cluster tend iteration.
+        invalid_node_count (int): Count of peers that failed node validation. Cumulative since the cluster
+            was created.
         command_count (int): Command count. The value is cumulative and not reset per metrics interval.
         retry_count (int): Command retry count. There can be multiple retries for a single command.
             The value is cumulative and not reset per metrics interval.
@@ -182,12 +183,25 @@ class ClusterStats:
     recover_queue_size: int
 
 
+class LatencySnapshot:
+    """One latency histogram copied into a metrics snapshot.
+
+    Values are cumulative since metrics were enabled and use the histogram unit in
+    :attr:`MetricsSnapshot.latency_unit`. Bucket order for the default shape is ``<= 1 ms``,
+    ``> 1 ms``, ``> 2 ms``, ``> 4 ms``, ``> 8 ms``, ``> 16 ms``, ``> 32 ms``.
+
+    Attributes:
+        buckets (list[int]): Sample count in each bucket. Empty when the histogram was not collected.
+        sum (int): Sum of all recorded samples.
+        count (int): Number of recorded samples. Equal to the sum of ``buckets``.
+        min (int): Smallest recorded sample. Zero when ``count`` is zero.
+        max (int): Largest recorded sample. Zero when ``count`` is zero.
+    """
+    pass
+
+
 class NamespaceSnapshot:
     """Per-namespace counters and latency histograms copied into a metrics snapshot.
-
-    Histogram bucket counts are cumulative since metrics were enabled. Bucket order for the
-    default shape is ``<= 1 ms``, ``> 1 ms``, ``> 2 ms``, ``> 4 ms``, ``> 8 ms``, ``> 16 ms``,
-    ``> 32 ms``.
 
     Attributes:
         name (str): Namespace name. Empty when the command had no namespace.
@@ -202,7 +216,7 @@ class NamespaceSnapshot:
         device_overload (int): Device overload errors. Not included in ``errors``.
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        latencies (dict[str, list[int]]): Per-attempt latency histograms keyed by ``conn``,
+        latencies (dict[str, :class:`LatencySnapshot`]): Per-attempt latency histograms keyed by ``conn``,
             ``write``, ``read``, ``batch``, and ``query``. Filled when a file writer or metrics
             listener is installed. Command latency is :attr:`MetricsSnapshot.command_latencies`.
             The ``conn`` entry is deprecated and always zeros; connection latency is
@@ -214,16 +228,11 @@ class NamespaceSnapshot:
 class NodeSnapshot:
     """Per-node metrics copied into a metrics snapshot.
 
-    This client keeps separate synchronous and asynchronous connection pools. Both are reported.
-    ``sync`` is the shared connection series.
-
     Attributes:
         name (str): Node name.
         address (str): Node address, without the port.
         port (int): Node service port.
         sync (:class:`ConnectionStats`): Synchronous connection pool.
-        async_conns (:class:`ConnectionStats`): Asynchronous connection pool.
-            Named ``async_conns`` because ``async`` is a Python keyword.
         conn_open_failures (int): Failed attempts to open a connection, including TLS
             and authentication failures. Cumulative and not sampler-gated. Zero unless
             operational metrics are enabled.
@@ -231,7 +240,7 @@ class NodeSnapshot:
             operational metrics are enabled.
         conn_auth_failures (int): Failed authentications. Zero unless operational
             metrics are enabled.
-        conn_latency (list[int]): Latency histogram of successful connection opens to this node.
+        conn_latency (:class:`LatencySnapshot`): Latency histogram of successful connection opens to this node.
             Not sampler-gated. Empty unless operational metrics are enabled. The learn-metrics
             file writes this series as the ``conn`` entry of each namespace on the node.
         namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
@@ -246,10 +255,10 @@ class MetricsSnapshot:
     The object is a copy. It remains valid after ``export`` returns. Counters and histogram
     buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
 
-    Enabling metrics does not turn on operational or usage metrics. Set
-    :attr:`MetricsPolicy.operational_enabled` or :attr:`MetricsPolicy.usage_enabled`.
-    When usage is on, public API calls increment ``api_blocking``, ``api_deferred``,
-    and ``api_background``.
+    :meth:`~aerospike.Client.enable_metrics` turns on operational metrics unless
+    :attr:`MetricsPolicy.operational_enabled` is false. Usage metrics stay off unless
+    :attr:`MetricsPolicy.usage_enabled` is true. When usage is on, public API calls increment
+    ``api_blocking``, ``api_deferred``, and ``api_background``.
 
     Attributes:
         timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
@@ -263,7 +272,7 @@ class MetricsSnapshot:
         app_id (str): Application identifier.
         labels (dict[str, str]): Static labels from the metrics policy.
         recover_queue_size (int): Sync sockets currently in timeout recovery.
-        invalid_node_count (int): Add-node failures in the most recent cluster tend iteration.
+        invalid_node_count (int): Peers that failed node validation. Cumulative since the cluster was created.
         validation_open_failures (int): Pre-node connect failures, including TLS and
             authentication. Cumulative. Zero unless operational metrics are enabled.
         validation_tls_handshake_failures (int): Pre-node TLS handshake failures. Also
@@ -286,7 +295,8 @@ class MetricsSnapshot:
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
         nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes that left, one
             entry per node name. Included in on-demand snapshots. Cleared after a successful
-            periodic export. A node that rejoins keeps its entry until that export.
+            periodic export. A node that rejoins before that export leaves this list, and its entry in
+            ``nodes`` continues the counters and histograms from before it left.
         nodes_departed_possibly_truncated (bool): True when ``nodes_departed`` has reached its
             cap of 256 entries. Later departures may be missing until the next successful export.
         latency_columns (int): Histogram width.
@@ -294,7 +304,7 @@ class MetricsSnapshot:
         latency_unit (int): Histogram bucket unit.
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
-        command_latencies (dict[str, list[int]]): Cluster-wide command latency histograms keyed
+        command_latencies (dict[str, :class:`LatencySnapshot`]): Cluster-wide command latency histograms keyed
             by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
             for total elapsed time, including retries. Empty unless operational metrics are
             enabled. The learn-metrics file does not write this series. The ``conn`` entry is
@@ -307,8 +317,8 @@ class MetricsExporter(Protocol):
     """Receives one metrics snapshot per export interval.
 
     Any object with an ``export`` method can be registered. Subclassing this protocol is optional.
-    One exporter raising an exception does not skip the others. After repeated failures the client
-    suspends that exporter and retries it later.
+    One exporter raising an exception does not skip the others. After 3 consecutive failures the client
+    suspends that exporter and offers it a snapshot every 10th export interval until one export succeeds.
     """
 
     def export(self, snapshot: MetricsSnapshot) -> None:
@@ -388,9 +398,11 @@ class MetricsPolicy:
         latency_unit (int): Histogram bucket unit.
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
-        operational_enabled (bool): Record command-path operational metrics: latency, namespace
-            errors and bytes, CPU, and memory. Enabling metrics does not turn this on.
-            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
+        operational_enabled (Optional[bool]): Record command-path operational metrics: latency, namespace
+            errors and bytes, CPU, and memory. :py:obj:`None` (default) turns them on when
+            :meth:`~aerospike.Client.enable_metrics` is called with this policy, and leaves them off for the
+            client config ``metrics`` policy, so dynamic configuration ``metrics.enabled`` alone does not
+            turn them on. Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
             file still writes CPU, memory, and per-attempt namespace histograms when this is false.
         usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
             Other feature usage names are not recorded. Off until explicitly enabled.
@@ -423,7 +435,7 @@ class MetricsPolicy:
             labels: dict[str, str] = {},
             exporters: Optional[list] = None,
             latency_unit: int = LATENCY_MILLISECONDS,
-            operational_enabled: bool = False,
+            operational_enabled: Optional[bool] = None,
             usage_enabled: bool = False,
             export_interval: str = "",
             sampler_range: int = 1,
@@ -450,8 +462,10 @@ class MetricsPolicy:
     def add_exporter(self, exporter) -> None:
         """Append an exporter. Exporters are called in registration order with the same snapshot.
 
-        Enabling metrics does not take ownership of the exporter object. Keep it alive for as long
-        as metrics stay enabled. The client releases its reference after metrics are disabled.
+        Enabling metrics does not take ownership of the exporter object.
+        :meth:`~aerospike.Client.disable_metrics` stops calling the exporter. It does not close the
+        exporter or remove it from this policy. Pass this policy to :meth:`~aerospike.Client.enable_metrics`
+        to resume.
         """
         _require_exporter(exporter)
         self.exporters.append(exporter)

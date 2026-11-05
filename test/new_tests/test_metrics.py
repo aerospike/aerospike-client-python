@@ -9,6 +9,7 @@ from aerospike_helpers.metrics import (
     MetricsSnapshot,
     NodeSnapshot,
     NamespaceSnapshot,
+    LatencySnapshot,
     LATENCY_MILLISECONDS,
     LATENCY_MICROSECONDS,
 )
@@ -375,7 +376,7 @@ class TestMetrics:
             (
                 MetricsPolicy(operational_enabled=1),
                 "operational_enabled",
-                "bool"
+                "bool or None"
             ),
             (
                 MetricsPolicy(usage_enabled="yes"),
@@ -534,18 +535,20 @@ class TestMetrics:
         assert snapshot.nodes_departed == [] or isinstance(snapshot.nodes_departed, list)
         assert snapshot.nodes_departed_possibly_truncated is False
         assert set(snapshot.command_latencies) == {"conn", "write", "read", "batch", "query"}
-        for buckets in snapshot.command_latencies.values():
-            assert len(buckets) == 7
-        assert sum(snapshot.command_latencies["conn"]) == 0
+        for latency in snapshot.command_latencies.values():
+            assert isinstance(latency, LatencySnapshot)
+            assert len(latency.buckets) == 7
+        assert sum(snapshot.command_latencies["conn"].buckets) == 0
         assert isinstance(snapshot.app_id, str) and snapshot.app_id
         for node in snapshot.nodes:
             assert isinstance(node, NodeSnapshot)
             assert isinstance(node.sync, ConnectionStats)
-            assert isinstance(node.async_conns, ConnectionStats)
+            assert not hasattr(node, "async_conns")
             assert isinstance(node.conn_open_failures, int)
             assert isinstance(node.conn_tls_handshake_failures, int)
             assert isinstance(node.conn_auth_failures, int)
-            assert len(node.conn_latency) == 7
+            assert isinstance(node.conn_latency, LatencySnapshot)
+            assert len(node.conn_latency.buckets) == 7
             for namespace in node.namespaces:
                 assert isinstance(namespace, NamespaceSnapshot)
                 assert isinstance(namespace.client_timeouts, int)
@@ -553,9 +556,9 @@ class TestMetrics:
                 assert isinstance(namespace.record_too_big, int)
                 assert isinstance(namespace.device_overload, int)
                 assert set(namespace.latencies) == {"conn", "write", "read", "batch", "query"}
-                for buckets in namespace.latencies.values():
-                    assert isinstance(buckets, list)
-                assert sum(namespace.latencies["conn"]) == 0
+                for latency in namespace.latencies.values():
+                    assert isinstance(latency, LatencySnapshot)
+                assert sum(namespace.latencies["conn"].buckets) == 0
 
         assert glob.glob("./metrics-*.log") == []
 
@@ -647,7 +650,96 @@ class TestMetrics:
                 self.as_connection.remove(key)
 
         for node in snapshot.nodes:
-            assert sum(node.conn_latency) == node.sync.opened - opened_before[node.name]
+            assert node.conn_latency.count == node.sync.opened - opened_before[node.name]
+            assert sum(node.conn_latency.buckets) == node.conn_latency.count
+
+    @staticmethod
+    def assert_latency_summary(latency: LatencySnapshot):
+        assert latency.count == sum(latency.buckets)
+        if latency.count == 0:
+            assert latency.sum == latency.min == latency.max == 0
+            return
+        # Samples round up to at least one unit.
+        assert 1 <= latency.min <= latency.max
+        assert latency.count * latency.min <= latency.sum <= latency.count * latency.max
+
+    def test_latency_snapshot_summary(self):
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        keys = [("test", "metrics", f"summary-{i}") for i in range(2)]
+        try:
+            for key in keys:
+                self.as_connection.put(key, {"a": 1})
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+            for key in keys:
+                self.as_connection.remove(key)
+
+        write = snapshot.command_latencies["write"]
+        assert write.count >= 2
+        for latency in snapshot.command_latencies.values():
+            self.assert_latency_summary(latency)
+        namespace_writes = 0
+        for node in snapshot.nodes:
+            self.assert_latency_summary(node.conn_latency)
+            for namespace in node.namespaces:
+                for latency in namespace.latencies.values():
+                    self.assert_latency_summary(latency)
+                namespace_writes += namespace.latencies["write"].count
+        assert namespace_writes >= 2
+
+    def test_enable_metrics_turns_operational_on_by_default(self):
+        policy = MetricsPolicy(report_dir="")
+        assert policy.operational_enabled is None
+        self.as_connection.enable_metrics(policy)
+        try:
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+        assert snapshot.operational_metrics_enabled is True
+        assert snapshot.usage_metrics_enabled is False
+
+    def test_enable_metrics_operational_off(self):
+        policy = MetricsPolicy(report_dir="", operational_enabled=False)
+        self.as_connection.enable_metrics(policy)
+        try:
+            snapshot = self.as_connection.get_metrics_snapshot()
+        finally:
+            self.as_connection.disable_metrics()
+        assert snapshot.operational_metrics_enabled is False
+
+    def test_config_metrics_policy_leaves_operational_off_by_default(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"] = {"metrics": MetricsPolicy(report_dir="")}
+        client = aerospike.client(config)
+        try:
+            client.enable_metrics()
+            snapshot = client.get_metrics_snapshot()
+            client.disable_metrics()
+        finally:
+            client.close()
+        assert snapshot.metrics_enabled is True
+        assert snapshot.operational_metrics_enabled is False
+
+    def test_disable_metrics_keeps_exporter_registered(self):
+        calls = []
+
+        class RecordingExporter:
+            def export(self, snapshot):
+                calls.append(snapshot.metrics_enabled)
+
+        exporter = RecordingExporter()
+        policy = MetricsPolicy(report_dir="", interval=3600)
+        policy.add_exporter(exporter)
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+        assert policy.exporters == [exporter]
+        calls_after_disable = len(calls)
+
+        self.as_connection.enable_metrics(policy)
+        self.as_connection.disable_metrics()
+        assert len(calls) == calls_after_disable + 1
 
     def test_empty_report_dir_skips_file_exporter(self):
         policy = MetricsPolicy(report_dir="", interval=1)

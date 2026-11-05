@@ -1813,8 +1813,8 @@ Metrics
         is non-empty, the built-in learn-metrics file exporter is installed. An empty
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir` installs nothing.
 
-        Operational metrics (latency, namespace errors and bytes, CPU, and memory) stay off
-        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is true.
+        Operational metrics (latency, namespace errors and bytes, CPU, and memory) are turned on
+        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is false.
         The learn-metrics file still writes CPU, memory, and per-attempt namespace histograms
         when operational metrics are off. Usage metrics stay off unless
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled` is true. When usage is
@@ -1835,6 +1835,10 @@ Metrics
 
         Disable extended periodic cluster and node latency metrics.
 
+        Collection and periodic export stop. Exporters are not closed and stay registered on their
+        :class:`~aerospike_helpers.metrics.MetricsPolicy`. Pass that policy to :meth:`enable_metrics`
+        to resume.
+
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
     .. method:: get_metrics_snapshot()
@@ -1843,8 +1847,8 @@ Metrics
 
         This does not depend on the export timer and works when periodic export is off.
         Gauges are current. Counters stay at their last values. ``nodes_departed`` includes
-        nodes that left and have not yet been cleared by a successful periodic export.
-        The caller may keep the snapshot.
+        nodes that left and have not yet been cleared by a successful periodic export, unless
+        they rejoined. The caller may keep the snapshot.
 
         :return: an instance of :py:class:`~aerospike_helpers.metrics.MetricsSnapshot`
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.

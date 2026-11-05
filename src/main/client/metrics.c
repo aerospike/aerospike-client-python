@@ -162,6 +162,35 @@ static PyObject *py_bucket_list(as_error *err,
     return py_list;
 }
 
+static PyObject *py_latency_snapshot(as_error *err,
+                                     const as_metrics_latency_snapshot *latency)
+{
+    PyObject *py_latency = create_class_instance_from_module(
+        err, "aerospike_helpers.metrics", "LatencySnapshot", NULL);
+    if (!py_latency) {
+        return NULL;
+    }
+
+    PyObject *py_buckets = py_bucket_list(err, latency);
+    if (set_new_attr(err, py_latency, "buckets", py_buckets) != 0) {
+        Py_DECREF(py_latency);
+        return NULL;
+    }
+
+    const char *field_names[] = {"sum", "count", "min", "max"};
+    uint64_t values[] = {latency->sum, latency->count, latency->min,
+                         latency->max};
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        if (set_new_attr(err, py_latency, field_names[i],
+                         PyLong_FromUnsignedLongLong(values[i])) != 0) {
+            Py_DECREF(py_latency);
+            return NULL;
+        }
+    }
+    return py_latency;
+}
+
 static PyObject *py_latency_dict(as_error *err,
                                  const as_metrics_latency_snapshot *series)
 {
@@ -172,14 +201,14 @@ static PyObject *py_latency_dict(as_error *err,
         return NULL;
     }
     for (uint8_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
-        PyObject *py_buckets = py_bucket_list(err, &series[i]);
-        if (!py_buckets) {
+        PyObject *py_series = py_latency_snapshot(err, &series[i]);
+        if (!py_series) {
             Py_DECREF(py_latency);
             return NULL;
         }
         int result =
-            PyDict_SetItemString(py_latency, LATENCY_NAMES[i], py_buckets);
-        Py_DECREF(py_buckets);
+            PyDict_SetItemString(py_latency, LATENCY_NAMES[i], py_series);
+        Py_DECREF(py_series);
         if (result == -1) {
             PyErr_Clear();
             Py_DECREF(py_latency);
@@ -275,23 +304,9 @@ static PyObject *py_node_list_from_snapshots(as_error *err,
             return NULL;
         }
 
+        // This client does not run async commands, so node->async is not copied.
         PyObject *py_sync = py_conn_stats_from_snapshot(err, &node->sync);
-        PyObject *py_async = py_conn_stats_from_snapshot(err, &node->async);
-        if (!py_sync || !py_async) {
-            Py_XDECREF(py_sync);
-            Py_XDECREF(py_async);
-            Py_DECREF(py_node);
-            Py_DECREF(py_list);
-            return NULL;
-        }
-        // set_new_attr consumes the value reference, including on failure.
         if (set_new_attr(err, py_node, "sync", py_sync) != 0) {
-            Py_DECREF(py_async);
-            Py_DECREF(py_node);
-            Py_DECREF(py_list);
-            return NULL;
-        }
-        if (set_new_attr(err, py_node, "async_conns", py_async) != 0) {
             Py_DECREF(py_node);
             Py_DECREF(py_list);
             return NULL;
@@ -310,7 +325,8 @@ static PyObject *py_node_list_from_snapshots(as_error *err,
             return NULL;
         }
 
-        PyObject *py_conn_latency = py_bucket_list(err, &node->conn_latency);
+        PyObject *py_conn_latency =
+            py_latency_snapshot(err, &node->conn_latency);
         if (set_new_attr(err, py_node, "conn_latency", py_conn_latency) != 0) {
             Py_DECREF(py_node);
             Py_DECREF(py_list);

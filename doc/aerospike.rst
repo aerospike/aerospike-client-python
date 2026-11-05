@@ -646,7 +646,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override command-level metrics policies.
                 Exporters registered here are used when metrics are enabled from this policy.
                 A non-empty ``report_dir`` installs the learn-metrics file exporter when no exporter is registered.
-                Operational and usage metrics stay off unless the policy enables them.
+                Operational and usage metrics stay off unless the policy enables them. A
+                :py:obj:`None` :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled`
+                leaves operational metrics off here, so dynamic configuration ``metrics.enabled``
+                alone does not turn them on.
                 An empty ``export_interval`` uses ``interval``. The operational sampler
                 records every command unless ``sampler_range`` and ``sampler_threshold`` change it.
             * **total_timeout** (:class:`int`)
