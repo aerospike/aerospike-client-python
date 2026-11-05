@@ -37,6 +37,8 @@ typedef struct {
     PyObject *batch_records_module;
     PyObject *func_name;
     AerospikeClient *client;
+    // Needs no lock: the C client calls the batch callback once, from the
+    // calling thread, after every node's request has finished.
     as_error error;
 } LocalData;
 
