@@ -3002,6 +3002,9 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     PyObject *py_rec = NULL;
     if (!checking_if_records_exist) {
         record_to_pyobject(self, err, result_rec, bres->key, &py_rec);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
     }
     else {
         PyObject *py_result_key = NULL;
