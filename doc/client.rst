@@ -1814,9 +1814,10 @@ Metrics
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.report_dir` installs nothing.
 
         Operational metrics (latency, namespace errors and bytes, CPU, and memory) are turned on
-        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is false.
-        The learn-metrics file still writes CPU, memory, and per-attempt namespace histograms
-        when operational metrics are off. Usage metrics stay off unless
+        unless :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` is false. The
+        learn-metrics file exporter and deprecated listeners keep them on. See
+        :attr:`~aerospike_helpers.metrics.MetricsPolicy.operational_enabled` for how dynamic
+        configuration changes this. Usage metrics stay off unless
         :attr:`~aerospike_helpers.metrics.MetricsPolicy.usage_enabled` is true. When usage is
         on, public API calls increment ``api_blocking``, ``api_deferred``, and ``api_background``.
         The operational sampler records every command unless
@@ -1835,7 +1836,8 @@ Metrics
 
         Disable extended periodic cluster and node latency metrics.
 
-        Collection and periodic export stop. Exporters are not closed and stay registered on their
+        Each exporter receives a final snapshot, then collection and periodic export stop.
+        Exporters are not closed and stay registered on their
         :class:`~aerospike_helpers.metrics.MetricsPolicy`. Pass that policy to :meth:`enable_metrics`
         to resume.
 

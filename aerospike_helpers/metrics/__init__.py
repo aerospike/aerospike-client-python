@@ -203,22 +203,33 @@ class LatencySnapshot:
 class NamespaceSnapshot:
     """Per-namespace counters and latency histograms copied into a metrics snapshot.
 
+    Present only when operational metrics are enabled. These counters are the sampled terminal-failure
+    series: a failed user call is counted once. They are not ``error_count``, ``timeout_count``, or
+    ``key_busy_count`` in :class:`NodeStats` and :class:`NamespaceMetrics`, which count each failed attempt.
+
     Attributes:
-        name (str): Namespace name. Empty when the command had no namespace.
-        errors (int): Command errors that are not counted in a more specific counter.
-            Timeouts, key busy, record too big, and device overload are not included.
-        client_timeouts (int): Client timeouts (connect, socket, or total). Not included
-            in ``errors`` or ``server_timeouts``.
-        server_timeouts (int): Server timeouts. Not included in ``errors`` or
+        name (str): Namespace name. Empty for commands without a namespace, such as batch commands.
+        errors (int): Command errors since the node was initialized. Counted once when a sampled user call
+            fails, not on each retry. Timeouts, key busy, record too big, and device overload are not included.
+        client_timeouts (int): Client timeouts (connect, socket, or total) since the node was initialized.
+            Counted once when a sampled user call fails with a client timeout, not on each retry.
+            Not included in ``errors`` or ``server_timeouts``.
+        server_timeouts (int): Server timeouts since the node was initialized. Counted once when a sampled
+            user call fails with a server timeout, not on each retry. Not included in ``errors`` or
             ``client_timeouts``.
-        key_busy (int): Key busy errors. Not included in ``errors``.
-        record_too_big (int): Record too big errors. Not included in ``errors``.
-        device_overload (int): Device overload errors. Not included in ``errors``.
-        bytes_in (int): Bytes received from the server.
-        bytes_out (int): Bytes sent to the server.
-        latencies (dict[str, :class:`LatencySnapshot`]): Per-attempt latency histograms keyed by ``conn``,
-            ``write``, ``read``, ``batch``, and ``query``. Filled when a file writer or metrics
-            listener is installed. Command latency is :attr:`MetricsSnapshot.command_latencies`.
+        key_busy (int): Key busy errors since the node was initialized. Counted once when a sampled user
+            call fails with key busy. Not included in ``errors``.
+        record_too_big (int): Record too big errors since the node was initialized. Counted once when a
+            sampled user call fails with record too big. Not included in ``errors``.
+        device_overload (int): Device overload errors since the node was initialized. Counted once when a
+            sampled user call fails with device overload. Not included in ``errors``.
+        bytes_in (int): Bytes received from the server for this namespace by sampled commands, on each attempt.
+        bytes_out (int): Bytes sent to the server for this namespace by sampled commands, on each attempt.
+        latencies (dict[str, :class:`LatencySnapshot`]): Namespace latency histograms keyed by ``conn``,
+            ``write``, ``read``, ``batch``, and ``query``. Read, write, batch, and query record one sample
+            per successful RPC of a sampled command. A retry is a new RPC, so the sample starts at the
+            attempt that succeeded. A batch sub-batch re-sent to its node is one RPC that includes the
+            re-sends. Command latency is :attr:`MetricsSnapshot.command_latencies`.
             The ``conn`` entry is deprecated and always zeros; connection latency is
             :attr:`NodeSnapshot.conn_latency`.
     """
@@ -228,6 +239,9 @@ class NamespaceSnapshot:
 class NodeSnapshot:
     """Per-node metrics copied into a metrics snapshot.
 
+    :class:`NodeStats` ``error_count``, ``timeout_count``, and ``key_busy_count`` are not copied here.
+    The sampled terminal series is in :attr:`namespaces`. See :class:`NamespaceSnapshot`.
+
     Attributes:
         name (str): Node name.
         address (str): Node address, without the port.
@@ -236,12 +250,14 @@ class NodeSnapshot:
         conn_open_failures (int): Failed attempts to open a connection, including TLS
             and authentication failures. Cumulative and not sampler-gated. Zero unless
             operational metrics are enabled.
-        conn_tls_handshake_failures (int): Failed TLS handshakes. Zero unless
+        conn_tls_handshake_failures (int): Failed TLS handshakes. Also included in
+            ``conn_open_failures``. Cumulative and not sampler-gated. Zero unless
             operational metrics are enabled.
-        conn_auth_failures (int): Failed authentications. Zero unless operational
-            metrics are enabled.
+        conn_auth_failures (int): Failed authentications. Also included in
+            ``conn_open_failures``. Cumulative and not sampler-gated. Zero unless
+            operational metrics are enabled.
         conn_latency (:class:`LatencySnapshot`): Latency histogram of successful connection opens to this node.
-            Not sampler-gated. Empty unless operational metrics are enabled. The learn-metrics
+            Recorded when operational metrics are enabled. Not sampler-gated. The learn-metrics
             file writes this series as the ``conn`` entry of each namespace on the node.
         namespaces (list[:class:`NamespaceSnapshot`]): Namespace metrics on this node.
             Empty unless operational metrics are enabled.
@@ -253,36 +269,40 @@ class MetricsSnapshot:
     """Point-in-time metrics snapshot passed to each exporter.
 
     The object is a copy. It remains valid after ``export`` returns. Counters and histogram
-    buckets are cumulative since metrics were enabled. Gauges are the values at snapshot time.
+    buckets are cumulative. Gauges are the values at snapshot time.
 
-    :meth:`~aerospike.Client.enable_metrics` turns on operational metrics unless
-    :attr:`MetricsPolicy.operational_enabled` is false. Usage metrics stay off unless
-    :attr:`MetricsPolicy.usage_enabled` is true. When usage is on, public API calls increment
-    ``api_blocking``, ``api_deferred``, and ``api_background``.
+    Enabling metrics does not turn on usage metrics. Set :attr:`MetricsPolicy.usage_enabled` for
+    ``api_blocking``, ``api_deferred``, and ``api_background``. See
+    :attr:`MetricsPolicy.operational_enabled` for when operational metrics are on.
 
     Attributes:
         timestamp (str): Local time, ``YYYY-MM-DD HH:MM:SS``. Same clock as the learn-metrics log.
-        metrics_enabled (bool): True when this snapshot was collected with metrics on.
-        operational_metrics_enabled (bool): True when latency, error, byte, CPU, and memory
-            figures were collected.
-        usage_metrics_enabled (bool): True when feature.api usage counters were collected.
+        metrics_enabled (bool): True when periodic metrics were enabled while this snapshot was built.
+        operational_metrics_enabled (bool): True when latency, namespace error and byte counters, CPU,
+            and memory in this snapshot were collected.
+        usage_metrics_enabled (bool): True when feature.api usage counters in this snapshot were collected.
+            The learn-metrics file does not write them.
         cluster_name (str): Cluster name. Empty when the cluster has no name.
         client_type (str): Client language. ``python`` for this client.
         client_version (str): Client version.
-        app_id (str): Application identifier.
+        app_id (str): Application identifier. When the client config ``app_id`` is not set, this is the
+            client user name, or ``not-set`` without one.
         labels (dict[str, str]): Static labels from the metrics policy.
         recover_queue_size (int): Sync sockets currently in timeout recovery.
         invalid_node_count (int): Peers that failed node validation. Cumulative since the cluster was created.
         validation_open_failures (int): Pre-node connect failures, including TLS and
             authentication. Cumulative. Zero unless operational metrics are enabled.
         validation_tls_handshake_failures (int): Pre-node TLS handshake failures. Also
-            included in ``validation_open_failures``. Zero unless operational metrics
+            included in ``validation_open_failures``. Cumulative. Zero unless operational metrics
             are enabled.
         validation_auth_failures (int): Pre-node authentication failures. Also included
-            in ``validation_open_failures``. Zero unless operational metrics are enabled.
-        delay_queue_timeout_count (int): Commands that timed out in the delay queue.
-        command_count (int): Commands issued. Cumulative.
-        retry_count (int): Command retries. Cumulative.
+            in ``validation_open_failures``. Cumulative. Zero unless operational metrics are enabled.
+        delay_queue_timeout_count (int): Commands that timed out in the delay queue. Cumulative since
+            the cluster started.
+        command_count (int): User calls chosen by the operational sampler. Cumulative since the cluster
+            started. Increments only while operational metrics are enabled.
+        retry_count (int): Retries of sampled commands since the cluster started. There can be multiple
+            retries for one command. Increments only while operational metrics are enabled.
         api_blocking (int): Public synchronous API calls. Cumulative. Increments only
             while metrics and usage are enabled.
         api_deferred (int): Public asynchronous API calls. Cumulative. This client does
@@ -294,20 +314,23 @@ class MetricsSnapshot:
             are enabled.
         nodes (list[:class:`NodeSnapshot`]): Nodes still in the cluster.
         nodes_departed (list[:class:`NodeSnapshot`]): Final samples for nodes that left, one
-            entry per node name. Included in on-demand snapshots. Cleared after a successful
-            periodic export. A node that rejoins before that export leaves this list, and its entry in
-            ``nodes`` continues the counters and histograms from before it left.
+            entry per node name. Included in on-demand snapshots and kept when no exporter is installed.
+            Cleared only after a successful periodic export. A node that rejoins before that export leaves
+            this list, and its entry in ``nodes`` continues the counters and histograms from before it left.
         nodes_departed_possibly_truncated (bool): True when ``nodes_departed`` has reached its
-            cap of 256 entries. Later departures may be missing until the next successful export.
-        latency_columns (int): Histogram width.
-        latency_shift (int): Histogram boundary spacing.
-        latency_unit (int): Histogram bucket unit.
+            cap of 256 entries. Nodes that departed after that, before the next successful periodic
+            export, may be missing from the list.
+        latency_columns (int): Number of elapsed time range buckets in each latency histogram.
+        latency_shift (int): Power of 2 multiple between latency histogram buckets, starting at bucket 3.
+        latency_unit (int): Bucket unit for the latency histograms in this snapshot.
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
-        command_latencies (dict[str, :class:`LatencySnapshot`]): Cluster-wide command latency histograms keyed
-            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per command
-            for total elapsed time, including retries. Empty unless operational metrics are
-            enabled. The learn-metrics file does not write this series. The ``conn`` entry is
+        command_latencies (dict[str, :class:`LatencySnapshot`]): Command latency histograms keyed
+            by ``conn``, ``write``, ``read``, ``batch``, and ``query``. One sample per sampled command
+            for total elapsed time, including retries. A retry can move the command to another node, so
+            this series is cluster-wide. Recorded while operational metrics are enabled. An on-demand
+            snapshot after :meth:`~aerospike.Client.disable_metrics` still returns the last values.
+            The learn-metrics file does not write this series. The ``conn`` entry is
             deprecated and always zeros; connection latency is :attr:`NodeSnapshot.conn_latency`.
     """
     pass
@@ -377,10 +400,14 @@ class MetricsPolicy:
         exporters (list): Exporters that receive each metrics snapshot. Append with :meth:`add_exporter`.
             The application owns the exporters. When this list is empty, listeners are not set, and
             ``report_dir`` is non-empty, enabling metrics installs the built-in learn-metrics file exporter.
+            When dynamic configuration sets ``metrics.exporter``, ``custom`` calls these exporters, ``file``
+            uses the built-in file exporter instead, and ``none`` calls no exporter.
         report_dir (str): Directory for the built-in learn-metrics file exporter.
             A non-empty path installs that exporter when no exporter has been added and
             ``metrics_listeners`` is not set. An empty string installs nothing. Collection can still run
             with no exporter. The default ``"."`` writes log files in the current directory.
+            Dynamic configuration ``metrics.report_dir`` replaces this value. ``metrics.exporter: file``
+            with no ``metrics.report_dir`` installs the file exporter, using ``"."`` when this is empty.
         report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
             When report_size_limit is reached or exceeded, the current metrics file is closed and a new
             metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
@@ -388,10 +415,12 @@ class MetricsPolicy:
             :py:meth:`~aerospike.Client.close()` is called.
         interval (int): How often the metrics thread exports, measured in cluster tend intervals.
             The thread sleeps ``interval * tend_interval`` milliseconds (default 30 * 1000).
-            Used only when ``export_interval`` is empty. Export does not run on the tend thread.
+            Used only when ``export_interval`` is empty. Prefer ``export_interval``. Export does not run
+            on the tend thread.
         export_interval (str): How often the metrics thread exports, as a magnitude and unit.
             Examples: ``"30s"``, ``"1500ms"``, ``"30m"``, ``"1h"``. A bare number is seconds.
-            An empty string uses ``interval``. When set, this overrides ``interval``.
+            An empty string uses ``interval``. When set, this overrides ``interval``. Dynamic
+            configuration ``metrics.export_interval`` replaces this value, including an empty string.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds by default. The first 2 buckets are "<=1ms" and ">1ms".
@@ -399,15 +428,19 @@ class MetricsPolicy:
             :data:`~aerospike_helpers.metrics.LATENCY_MILLISECONDS` (default) or
             :data:`~aerospike_helpers.metrics.LATENCY_MICROSECONDS`.
         operational_enabled (Optional[bool]): Record command-path operational metrics: latency, namespace
-            errors and bytes, CPU, and memory. :py:obj:`None` (default) turns them on when
+            errors and bytes, CPU, and memory. When off, commands are not timed. :py:obj:`None` (default)
+            turns them on when
             :meth:`~aerospike.Client.enable_metrics` is called with this policy, and leaves them off for the
             client config ``metrics`` policy, so dynamic configuration ``metrics.enabled`` alone does not
             turn them on. The :meth:`~aerospike.Client.enable_metrics` default intentionally differs from
             dynamic configuration, where ``metrics.extended.operational.enabled`` defaults to false, so
             applications that already call it keep their latency and namespace metrics. When that key is set
             in the dynamic configuration file, it overrides this attribute. See :ref:`aerospike.ConfigProvider`.
-            Connection pool gauges are collected whenever metrics are enabled. The learn-metrics
-            file still writes CPU, memory, and per-attempt namespace histograms when this is false.
+            Otherwise, the legacy ``metrics.enable`` key turns them on, and ``metrics.enabled`` leaves this
+            attribute as set. When dynamic configuration does not enable metrics,
+            :meth:`~aerospike.Client.enable_metrics` turns them on if the built-in learn-metrics file exporter
+            or deprecated listeners are used, because both read these fields. Connection pool gauges are
+            collected whenever metrics are enabled.
         usage_enabled (bool): Record ``api_blocking``, ``api_deferred``, and ``api_background``.
             Other feature usage names are not recorded. Off until explicitly enabled.
         sampler_range (int): Operational command-path sampler modulus. A command is recorded when
