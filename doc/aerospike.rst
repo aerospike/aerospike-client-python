@@ -970,6 +970,16 @@ Only the `hosts` key is required; the rest of the keys are optional.
             - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
+        * **ip_map** (:class:`dict` [:class:`str`, :class:`str`])
+            IP translation table. Use this when clients in different networks need different server IP addresses \
+            to reach the same nodes, e.g. clients both inside and outside a local area network.
+
+            Each key is a seed host or a node address returned by the server, and its value is the address the \
+            client connects to instead. Addresses without an entry are used as is.
+
+            Example: ``{"10.0.0.1": "203.0.113.1", "10.0.0.2": "203.0.113.2"}``
+
+            Default: no translation.
         * **connect_timeout** (:class:`int`)
             Cluster tend info command timeout in milliseconds.
 

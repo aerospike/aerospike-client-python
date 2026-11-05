@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,4 +167,15 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
     else {
         ((AerospikeGlobalHosts *)py_persistent_item)->ref_cnt--;
     }
+}
+
+void destroy_ip_map(as_config *config)
+{
+    for (uint32_t i = 0; i < config->ip_map_size; i++) {
+        free(config->ip_map[i].orig);
+        free(config->ip_map[i].alt);
+    }
+    free(config->ip_map);
+    config->ip_map = NULL;
+    config->ip_map_size = 0;
 }
