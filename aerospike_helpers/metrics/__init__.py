@@ -76,8 +76,10 @@ class NamespaceMetrics:
 
     Attributes:
         ns (str): namespace
-        bytes_in (int): Bytes received from the server.
-        bytes_out (int): Bytes sent to the server.
+        bytes_in (int): Bytes received from the server by sampled commands. Added only when the command
+            succeeds. Same counter as :attr:`NamespaceSnapshot.bytes_in`.
+        bytes_out (int): Bytes sent to the server by sampled commands. Added only when the command
+            succeeds. Same counter as :attr:`NamespaceSnapshot.bytes_out`.
         error_count (int): {}
         timeout_count (int): {}
         key_busy_count (int): {}
@@ -203,28 +205,32 @@ class LatencySnapshot:
 class NamespaceSnapshot:
     """Per-namespace counters and latency histograms copied into a metrics snapshot.
 
-    Present only when operational metrics are enabled. These counters are the sampled terminal-failure
-    series: a failed user call is counted once. They are not ``error_count``, ``timeout_count``, or
-    ``key_busy_count`` in :class:`NodeStats` and :class:`NamespaceMetrics`, which count each failed attempt.
+    Present only when operational metrics are enabled. Each failed attempt of a sampled command increments
+    one of ``errors``, ``client_timeouts``, ``server_timeouts``, ``key_busy``, ``record_too_big``, or
+    ``device_overload``, including an attempt that a later retry recovers. These are not ``error_count``,
+    ``timeout_count``, or ``key_busy_count`` in :class:`NodeStats` and :class:`NamespaceMetrics`, which count
+    failed attempts of every command without the split.
 
     Attributes:
         name (str): Namespace name. Empty for commands without a namespace, such as batch commands.
-        errors (int): Command errors since the node was initialized. Counted once when a sampled user call
-            fails, not on each retry. Timeouts, key busy, record too big, and device overload are not included.
+        errors (int): Command errors since the node was initialized. Counted on each failed attempt of a
+            sampled command. Timeouts, key busy, record too big, and device overload are not included.
         client_timeouts (int): Client timeouts (connect, socket, or total) since the node was initialized.
-            Counted once when a sampled user call fails with a client timeout, not on each retry.
+            Counted on each client timeout attempt of a sampled command.
             Not included in ``errors`` or ``server_timeouts``.
-        server_timeouts (int): Server timeouts since the node was initialized. Counted once when a sampled
-            user call fails with a server timeout, not on each retry. Not included in ``errors`` or
-            ``client_timeouts``.
-        key_busy (int): Key busy errors since the node was initialized. Counted once when a sampled user
-            call fails with key busy. Not included in ``errors``.
-        record_too_big (int): Record too big errors since the node was initialized. Counted once when a
-            sampled user call fails with record too big. Not included in ``errors``.
-        device_overload (int): Device overload errors since the node was initialized. Counted once when a
-            sampled user call fails with device overload. Not included in ``errors``.
-        bytes_in (int): Bytes received from the server for this namespace by sampled commands, on each attempt.
-        bytes_out (int): Bytes sent to the server for this namespace by sampled commands, on each attempt.
+        server_timeouts (int): Server timeouts since the node was initialized. Counted on each server
+            timeout attempt of a sampled command. Not included in ``errors`` or ``client_timeouts``.
+        key_busy (int): Key busy errors since the node was initialized. Counted on each key busy attempt
+            of a sampled command. Not included in ``errors``.
+        record_too_big (int): Record too big errors since the node was initialized. Counted on each record
+            too big attempt of a sampled command. Not included in ``errors``.
+        device_overload (int): Device overload errors since the node was initialized. Counted on each
+            device overload attempt of a sampled command. Not included in ``errors``.
+        bytes_in (int): Bytes received from the server for this namespace by sampled commands. Added only
+            when the command or batch sub-batch succeeds, so a failed attempt adds no bytes. A query or scan
+            adds its bytes once when that node's request completes.
+        bytes_out (int): Bytes sent to the server for this namespace by sampled commands. Same rules as
+            ``bytes_in``.
         latencies (dict[str, :class:`LatencySnapshot`]): Namespace latency histograms keyed by ``conn``,
             ``write``, ``read``, ``batch``, and ``query``. Read, write, batch, and query record one sample
             per successful RPC of a sampled command. A retry is a new RPC, so the sample starts at the
@@ -240,7 +246,7 @@ class NodeSnapshot:
     """Per-node metrics copied into a metrics snapshot.
 
     :class:`NodeStats` ``error_count``, ``timeout_count``, and ``key_busy_count`` are not copied here.
-    The sampled terminal series is in :attr:`namespaces`. See :class:`NamespaceSnapshot`.
+    The sampled per-attempt split is in :attr:`namespaces`. See :class:`NamespaceSnapshot`.
 
     Attributes:
         name (str): Node name.

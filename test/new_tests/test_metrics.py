@@ -689,6 +689,41 @@ class TestMetrics:
                 namespace_writes += namespace.latencies["write"].count
         assert namespace_writes == 2
 
+    @staticmethod
+    def namespace_totals(snapshot):
+        totals = {"errors": 0, "bytes_in": 0, "bytes_out": 0}
+        for node in snapshot.nodes:
+            for namespace in node.namespaces:
+                if namespace.name != "test":
+                    continue
+                for field in totals:
+                    totals[field] += getattr(namespace, field)
+        return totals
+
+    def test_failed_attempt_adds_error_without_bytes(self):
+        policy = MetricsPolicy(report_dir="")
+        self.as_connection.enable_metrics(policy)
+        key = ("test", "metrics", "failed-attempt")
+        try:
+            self.as_connection.put(key, {"a": 1})
+            before = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+            # The record has a lower generation, so the server rejects this write.
+            with pytest.raises(e.RecordGenerationError):
+                self.as_connection.put(key, {"a": 2}, meta={"gen": 60000}, policy={"gen": aerospike.POLICY_GEN_EQ})
+            after_failure = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+            self.as_connection.put(key, {"a": 3})
+            after_success = self.namespace_totals(self.as_connection.get_metrics_snapshot())
+        finally:
+            self.as_connection.disable_metrics()
+            self.as_connection.remove(key)
+
+        assert after_failure["errors"] == before["errors"] + 1
+        assert after_failure["bytes_in"] == before["bytes_in"]
+        assert after_failure["bytes_out"] == before["bytes_out"]
+        assert after_success["errors"] == after_failure["errors"]
+        assert after_success["bytes_in"] > after_failure["bytes_in"]
+        assert after_success["bytes_out"] > after_failure["bytes_out"]
+
     def test_enable_metrics_turns_operational_on_by_default(self):
         policy = MetricsPolicy(report_dir="")
         assert policy.operational_enabled is None
