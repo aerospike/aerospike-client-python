@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 import pickle
 import struct
 from enum import IntEnum
@@ -9,7 +10,10 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers import Vector
 from aerospike_helpers.batch import records as br
-from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import list_operations, map_operations, operations
+
+from .as_status_codes import AerospikeStatus
+from .conftest import wait_for_job_completion
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Covers Vector's construction-time
@@ -332,8 +336,40 @@ class TestVectorIntegration(object):
     def test_vector_nested_in_collection_is_rejected(self, bin_value):
         key = (self.test_ns, self.test_set, "nested")
         self.test_keys.append(key)
+        self.as_connection.put(key, {"vectors": [1, 2]})
         with pytest.raises(e.InvalidRequest):
             self.as_connection.put(key, {"vectors": bin_value})
+        _, _, bins = self.as_connection.get(key)
+        assert bins == {"vectors": [1, 2]}
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            list_operations.list_append("l", Vector.of_float32([0.5])),
+            list_operations.list_append_items("l", [Vector.of_float32([0.5])]),
+            list_operations.list_insert("l", 0, Vector.of_float32([0.5])),
+            list_operations.list_set("l", 0, Vector.of_float32([0.5])),
+            map_operations.map_put("m", "b", Vector.of_float32([0.5])),
+            map_operations.map_put_items("m", {"b": Vector.of_float32([0.5])}),
+            map_operations.map_put("m", Vector.of_float32([0.5]), 1),
+        ],
+        ids=["list_append", "list_append_items", "list_insert", "list_set", "map_put", "map_put_items",
+             "map_put_vector_key"],
+    )
+    def test_vector_in_cdt_operation_is_rejected(self, op):
+        key = self._key("cdt-op")
+        self.as_connection.put(key, {"l": [1, 2], "m": {"a": 1}})
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.operate(key, [op])
+        _, _, bins = self.as_connection.get(key)
+        assert bins == {"l": [1, 2], "m": {"a": 1}}
+
+    # The C client only accepts plain blobs as map keys, so the map is rejected before it is sent.
+    def test_vector_as_map_key_is_rejected_by_the_client(self):
+        key = self._key("vector-map-key")
+        with pytest.raises(e.ClientError) as excinfo:
+            self.as_connection.put(key, {"m": {Vector.of_float32([0.5]): 1}})
+        assert excinfo.value.msg == "Failed to convert Python dictionary to a C client as_map."
 
     def _key(self, name):
         key = (self.test_ns, self.test_set, name)
@@ -366,6 +402,71 @@ class TestVectorIntegration(object):
         for record, vector in zip(read.batch_records, vectors):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["embedding"], vector)
+
+    def _write_mixed_batch(self, policy_batch=None):
+        keys = [self._key(f"batch-mixed-{i}") for i in range(3)]
+        original = Vector.of_float32([9.0, 8.0])
+        self.as_connection.put(keys[1], {"embedding": original})
+        good = Vector.of_float32([1.0, 2.0])
+        nan_vector = bytes.__new__(Vector, struct.pack("<BBI2f", 1, Vector.ElementType.FLOAT32, 2, 1.0, math.nan))
+        writes = br.BatchRecords(
+            [
+                br.Write(keys[0], [operations.write("embedding", good)]),
+                br.Write(keys[1], [operations.write("embedding", nan_vector)]),
+                br.Write(keys[2], [operations.write("embedding", good)]),
+            ]
+        )
+        written = self.as_connection.batch_write(writes, policy_batch=policy_batch)
+
+        assert written.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert [record.result for record in written.batch_records] == [
+            AerospikeStatus.AEROSPIKE_OK,
+            AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID,
+            AerospikeStatus.AEROSPIKE_OK,
+        ]
+        for key in (keys[0], keys[2]):
+            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], good)
+        self._assert_same_vector(self.as_connection.get(keys[1])[2]["embedding"], original)
+        return written.batch_records[1]
+
+    def test_batch_write_with_invalid_vector_writes_the_valid_records(self):
+        invalid = self._write_mixed_batch({"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE})
+        # The C client prefixes the server's detail with the node address.
+        assert invalid.message.endswith(" vector: elements must be finite (no NaN or infinity)")
+
+    @pytest.mark.xfail(
+        reason="The C client builds the default message from AEROSPIKE_OK instead of the record's result "
+        "(aerospike-client-c PR 304)",
+        strict=True,
+    )
+    def test_batch_write_invalid_vector_default_message_names_its_result(self):
+        invalid = self._write_mixed_batch()
+        assert invalid.message.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
+
+    def test_batch_operate_writes_vector(self):
+        keys = [self._key(f"batch-operate-{i}") for i in range(2)]
+        vector = Vector.of_float64([0.5, -0.5])
+        written = self.as_connection.batch_operate(keys, [operations.write("embedding", vector)])
+        assert [record.result for record in written.batch_records] == [0] * len(keys)
+        for key in keys:
+            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
+
+    @pytest.mark.parametrize("command, job_module", [("query", aerospike.JOB_QUERY), ("scan", aerospike.JOB_SCAN)])
+    def test_background_write_stores_vector(self, command, job_module):
+        set_name = f"test_vector_background_{command}"
+        keys = [(self.test_ns, set_name, i) for i in range(3)]
+        self.test_keys.extend(keys)
+        for key in keys:
+            self.as_connection.put(key, {"id": key[2]})
+
+        vector = Vector.of_float16([0.5, 1.5])
+        job = getattr(self.as_connection, command)(self.test_ns, set_name)
+        job.add_ops([operations.write("embedding", vector)])
+        job_id = job.execute_background()
+        wait_for_job_completion(self.as_connection, job_id, job_module=job_module)
+
+        for key in keys:
+            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
 
     @pytest.fixture
     def vector_udf(self):

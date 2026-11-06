@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import math
+
 import pytest
 
 import aerospike
@@ -370,6 +372,66 @@ class TestQueryTopKIntegration:
         records = query.results()
         ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
         assert ordered == [(3, 10), (3, 20), (2, 40)]
+
+
+class TestQueryTopKDouble:
+    SET_NAME = "demo-top-k-double"
+    # -0.0 and 0.0 compare equal, so the five zeros tie.
+    VALUES = [-math.inf, -1.0, 0.0, -0.0, 0.0, -0.0, 0.0, 1.0, math.inf, math.nan]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.VALUES))]
+        for key, value in zip(self.keys, self.VALUES):
+            as_connection.put(key, {BIN: value})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    # NaN ranks above every other value, and ties are broken by ascending digest in both directions.
+    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    def test_order_by_double(self, direction):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.DOUBLE, direction)
+        query.top_k = len(self.VALUES)
+        records = query.results()
+
+        ascending_ranks = [-math.inf, -1.0, 0.0, 1.0, math.inf]
+
+        def rank(value):
+            ascending_rank = len(ascending_ranks) if math.isnan(value) else ascending_ranks.index(value)
+            if direction == aerospike.QueryOrder.DESCENDING:
+                return len(ascending_ranks) - ascending_rank
+            return ascending_rank
+
+        returned = [(rank(bins[BIN]), key[3]) for key, _, bins in records]
+        assert [r for r, _ in returned] == sorted(rank(value) for value in self.VALUES)
+        assert returned == sorted(returned)
+
+
+class TestQueryTopKVersionGate:
+    SET_NAME = "demo-top-k-gate"
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_8_2_1_or_later):
+        self.keys = [("test", self.SET_NAME, i) for i in range(3)]
+        for key in self.keys:
+            as_connection.put(key, {BIN: key[2]})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_top_k_on_server_older_than_8_2_1(self, api_method, args):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.top_k = 2
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args)
+        assert excinfo.value.msg == "orderBy/topK is not supported by all nodes in the cluster"
+
+        records = self.as_connection.query("test", self.SET_NAME).results()
+        assert sorted(bins[BIN] for _, _, bins in records) == [0, 1, 2]
 
 
 class TestQueryTopKBytes:

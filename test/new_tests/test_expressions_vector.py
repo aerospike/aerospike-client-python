@@ -147,6 +147,47 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == pytest.approx(expected, rel=1e-6)
 
+    def _distance_precision_tolerance(self):
+        # Since server 8.2.1, a distance comes back at the precision of the server's accumulator.
+        service_config = self.as_connection.info_random_node("get-config:context=service")
+        if "vector-distance-precision=double" in service_config.split(";"):
+            return 1e-12
+        return 1e-6
+
+    @pytest.mark.parametrize(
+        "metric, expected",
+        [
+            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, 27.0),
+            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, 32.0),
+            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, 32 / math.sqrt(14 * 77)),
+        ],
+    )
+    def test_vector_distance_reference_values(self, metric, expected):
+        key = self._put("reference", Vector.of_float32([1, 2, 3]))
+        dist = vector_exp.VectorDistance(metric, Vector.of_float32([4, 5, 6]), exp.VectorBin("embedding"))
+        rel = self._distance_precision_tolerance()
+
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist.compile())])
+        assert bins["dist"] == pytest.approx(expected, rel=rel)
+
+        margin = expected * rel * 2
+        in_range = exp.And(exp.GE(dist, expected - margin), exp.LE(dist, expected + margin)).compile()
+        _, _, bins = self.as_connection.get(key, policy={"expressions": in_range})
+        assert bins["embedding"] == Vector.of_float32([1, 2, 3])
+
+        above = exp.GT(dist, expected + margin).compile()
+        with pytest.raises(aerospike.exception.FilteredOut):
+            self.as_connection.get(key, policy={"expressions": above})
+
+    @pytest.mark.parametrize("stored, query", [([0, 0, 0], [4, 5, 6]), ([1, 2, 3], [0, 0, 0])])
+    def test_cosine_similarity_with_zero_vector_is_zero(self, stored, query):
+        key = self._put("zero", Vector.of_float32(stored))
+        dist_expr = vector_exp.VectorDistance(
+            vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, Vector.of_float32(query), exp.VectorBin("embedding")
+        ).compile()
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
+        assert bins["dist"] == 0.0
+
     @pytest.mark.parametrize(
         "metric, distance, direction",
         [
@@ -179,3 +220,58 @@ class TestVectorExpressionsIntegration(object):
         assert [bins["id"] for _, _, bins in records] == expected
         for _, _, bins in records:
             assert bins["dist"] == pytest.approx(distance(stored[bins["id"]], query_values), rel=1e-5, abs=1e-6)
+
+    def _top_k_distances(self, metric, query_vector, direction, flags=aerospike.EXP_READ_DEFAULT):
+        dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
+        query = self.as_connection.query(self.test_ns, self.test_set)
+        query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr, flags)])
+        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, direction)
+        query.top_k = len(self.test_keys)
+        return [(bins["id"], bins["dist"]) for _, _, bins in query.results()]
+
+    # The far record's squared distance overflows a double, so it is +Inf: last ascending and first
+    # descending.
+    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    def test_top_k_ranks_overflowing_squared_distance_as_infinity(self, direction):
+        stored = {0: [0.0, 0.0], 1: [1.0, 2.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
+        for i, values in stored.items():
+            self._put(i, Vector.of_float64(values))
+        query_values = [0.5, 0.5]
+
+        def squared_distance(values):
+            return sum((x - y) * (x - y) for x, y in zip(values, query_values))
+
+        descending = direction == aerospike.QueryOrder.DESCENDING
+        expected = sorted(stored, key=lambda i: squared_distance(stored[i]), reverse=descending)
+        assert expected[0 if descending else -1] == 3
+
+        results = self._top_k_distances(
+            vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, Vector.of_float64(query_values), direction
+        )
+        assert [i for i, _ in results] == expected
+        assert dict(results)[3] == math.inf
+
+    # The huge record's dot product with the query overflows a double, so its distance is unknown: a
+    # single-record read fails, and a query leaves the record out, or returns it with None and ranks it
+    # last in either direction under EXP_READ_EVAL_NO_FAIL.
+    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    def test_top_k_with_overflowing_dot_product(self, direction):
+        stored = {0: [1.0, 1.0], 1: [2.0, -1.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
+        for i, values in stored.items():
+            self._put(i, Vector.of_float64(values))
+        query_vector = Vector.of_float64([1e200, 1e200])
+        metric = vector_exp.VectorDistanceMetric.DOT_PRODUCT
+
+        dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
+        with pytest.raises(aerospike.exception.OpNotApplicable):
+            self.as_connection.operate((self.test_ns, self.test_set, 3), [exp_ops.expression_read("dist", dist_expr)])
+
+        descending = direction == aerospike.QueryOrder.DESCENDING
+        finite = sorted([0, 1, 2], key=lambda i: dot_product(stored[i], [1e200, 1e200]), reverse=descending)
+
+        results = self._top_k_distances(metric, query_vector, direction)
+        assert [i for i, _ in results] == finite
+
+        results = self._top_k_distances(metric, query_vector, direction, aerospike.EXP_READ_EVAL_NO_FAIL)
+        assert results[:-1] == [(i, pytest.approx(dot_product(stored[i], [1e200, 1e200]))) for i in finite]
+        assert results[-1] == (3, None)
