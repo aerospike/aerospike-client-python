@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1060,6 +1060,10 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
     if (py_list && PyList_Check(py_list)) {
+        Py_ssize_t ops_count = PyList_Size(py_list);
+        if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
         py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                    py_meta, py_policy);
     }
@@ -1283,6 +1287,10 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
     }
 
     if (py_list && PyList_Check(py_list)) {
+        Py_ssize_t ops_count = PyList_Size(py_list);
+        if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
         py_result = AerospikeClient_OperateOrdered_Invoke(
             self, &err, &key, py_list, py_meta, py_policy);
     }
