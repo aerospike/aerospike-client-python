@@ -3230,3 +3230,13 @@ error:
     Py_XDECREF(py_cluster_stats);
     return NULL;
 }
+
+as_status validate_operations_count(as_error *err, Py_ssize_t ops_count)
+{
+    if (ops_count > UINT16_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Too many operations: %zd; the maximum is %u",
+                               ops_count, UINT16_MAX);
+    }
+    return AEROSPIKE_OK;
+}
