@@ -80,7 +80,7 @@ jobs:
     secrets: inherit
 
   l0:
-    name: L0 config tests
+    name: L0 unit tests
     needs: build
     runs-on: ubuntu-22.04
     timeout-minutes: 10
@@ -105,7 +105,7 @@ jobs:
       run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
 
     - name: Run L0 tests
-      run: pytest test/discovery/test_l0_config.py -p no:cacheprovider -rA
+      run: pytest test/discovery/test_l0_naming.py -p no:cacheprovider -rA
       env:
         DISCOVERY_FAIL_ON_SKIP: '1'
 

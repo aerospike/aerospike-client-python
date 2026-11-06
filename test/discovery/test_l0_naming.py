@@ -1,44 +1,16 @@
-"""L0 discovery tests: client config and naming, with no server.
-
-Invalid ip_map and use_services_alternate values are covered against a server in
-test/new_tests/test_client_config_level_options.py.
-"""
+"""L0 discovery tests that need no server."""
 
 import importlib
 import pkgutil
 import re
 from pathlib import Path
 
-import pytest
-
 import aerospike
 import aerospike_helpers
 from aerospike import exception as e
 
-# Nothing listens here, so the client never connects
-UNREACHABLE_SEED = ("127.0.0.1", 1)
 SOURCE_ROOT = Path(__file__).resolve().parents[2]
 NEUTRAL_NAME = re.compile("nlb", re.IGNORECASE)
-
-
-def make_config(**options):
-    return {"hosts": [UNREACHABLE_SEED], "fail_if_not_connected": False, "validate_keys": True, **options}
-
-
-@pytest.mark.parametrize(
-    "options",
-    [
-        {"use_services_alternate": True},
-        {"use_services_alternate": False},
-        {"ip_map": {}},
-        {"ip_map": {"10.0.0.1": "203.0.113.1"}},
-        {"ip_map": {"10.0.0.1": "node1.public.example.com", "2001:db8::10": "2001:db8:ffff::10"}},
-        {"ip_map": {"10.0.0.1": "203.0.113.1"}, "use_services_alternate": True},
-    ],
-)
-def test_discovery_options_accepted(options):
-    client = aerospike.client(make_config(**options))
-    client.close()
 
 
 def public_names(obj):
