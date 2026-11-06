@@ -1,7 +1,7 @@
 # Declared L1 results for the Python client, read by run_conformance.py and the
 # collect-conformance-report action: a fixture file, then each case that is not an implicit
-# pass. A case the fixture blocks is implicitly blocked and is not listed.
-# Keep the reasons in step with UNSUPPORTED in run_conformance.py
+# pass. A case the fixture blocks is implicitly blocked and is not listed. run_conformance.py
+# copies the reason of each unsupported case into the report.
 discovery/merge/merge-policy.yaml:
   merge-is-default:
     result: unsupported
