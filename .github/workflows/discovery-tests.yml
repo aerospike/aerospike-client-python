@@ -4,6 +4,7 @@ name: Discovery tests
 # The C client has no pluggable discovery yet, so L1 records every fixture case as unsupported,
 # and L2 and L3 run only the pass-through tests that use_services_alternate supports today.
 # The skipped-layers job reports every layer and profile that does not run yet, and why.
+# L5 runs by hand on AWS through test/discovery/l5_driver.py; the pass-through-ports L2 jobs smoke-test that driver.
 
 permissions:
   contents: read
@@ -236,7 +237,7 @@ jobs:
         docker run "${run_args[@]}" "python:${PYTHON_VERSION}-slim-bookworm" bash -c '
           set -e
           python3 -m pip install "$1"/*.whl -r test/discovery/requirements.txt
-          pytest test/discovery/test_l2_pass_through.py -p no:cacheprovider -rA
+          pytest test/discovery/test_l2_pass_through.py test/discovery/test_l2_l5_driver.py -p no:cacheprovider -rA
         ' bash "$WHEEL_DIR"
 
     - name: Show the node server log
