@@ -822,7 +822,8 @@ DEFINE_SET_OF_VALID_KEYS(
     "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
     "strict_types", "rack_aware", "rack_id", "rack_ids",
     "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
-    "user", "password", "validate_keys", "app_id", "force_single_node", NULL)
+    "user", "password", "validate_keys", "app_id", "force_single_node",
+    "ip_map", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",

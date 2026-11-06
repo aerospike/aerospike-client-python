@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,7 @@ int AerospikeClientConnect(AerospikeClient *self)
                 // Other clients may share its aerospike* pointer
                 // So it is not safe to destroy it
                 if (!self->has_connected) {
+                    destroy_ip_map(&self->as->config);
                     aerospike_destroy(self->as);
                 }
                 self->as = as;
