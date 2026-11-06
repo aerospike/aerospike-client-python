@@ -972,6 +972,15 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Each key is a seed host or a node address returned by the server, and its value is the address the \
             client connects to instead. Addresses without an entry are used as is.
 
+            .. note::
+
+                - Only the host is replaced. The port stays the same.
+                - Keys must match exactly what the server reports. For example, an IPv6 address written differently,
+                  or a hostname where the server reports an IP address, will not match and is used as is.
+                - If ``use_shared_connection`` is ``True``, clients are shared by hosts, port, and user only.
+                  ``ip_map`` is not part of that comparison, so a second client with the same hosts but a different
+                  ``ip_map`` silently uses the first client's map.
+
             Example: ``{"10.0.0.1": "203.0.113.1", "10.0.0.2": "203.0.113.2"}``
 
             Default: no translation.
