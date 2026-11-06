@@ -69,4 +69,5 @@ filterwarnings = [
     "ignore:.*aerospike_helpers\\.operations\\.bitwise_operations\\.bit_insert.*value_byte_size.*:DeprecationWarning",
     "ignore:.*aerospike_helpers\\.operations\\.bitwise_operations\\.bit_or.*value_byte_size.*:DeprecationWarning",
     "ignore:.*aerospike_helpers\\.operations\\.bitwise_operations\\.bit_xor.*value_byte_size.*:DeprecationWarning",
+    "ignore:MetricsListeners is deprecated:DeprecationWarning",
 ]
