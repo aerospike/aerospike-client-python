@@ -3,8 +3,9 @@
 Every Kubernetes node carries the same endpoint hostname as its configured alternate access
 address, so the operator advertises that hostname with each pod's own Service NodePort as the
 alternate access port. The client seeds through the ingress port of the first pod, reads the
-alternate list with use_services_alternate and no ip_map, and must reach every pod at the address
-it advertises.
+alternate list with use_services_alternate and no ip_map, and must hold every pod at the address
+it advertises. That includes the seeded pod: the seed address is not in its alternate list, so the
+client moves to the advertised address.
 """
 
 import os
@@ -72,7 +73,6 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
 
         infos = {}
         advertised = {}
-        seeded = []
         for name, entry in held.items():
             info = di.node_info(client, name)
             infos[name] = info
@@ -82,27 +82,10 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
             host, port = di.split_endpoint(alternates[0])
             assert host == endpoint, f"{name} advertises {alternates[0]}"
             advertised[name] = port
-
             assert entry["address"] in endpoint_addresses, f"{entry} is not at {endpoint} {endpoint_addresses}"
-            if entry["port"] == seed_port:
-                seeded.append(name)
-            else:
-                assert entry["port"] == port, f"{entry} is not at its advertised port {port}"
+            assert entry["port"] == port, f"{entry} is not at its advertised port {port}"
 
         assert sorted(advertised.values()) == sorted(node_ports), f"Advertised {advertised}, NodePorts {node_ports}"
-        assert len(seeded) <= 1, f"Nodes held at the seed: {seeded}"
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L3-K-10", infos)
     finally:
         client.close()
-
-    # The node the client seeded is held at the seed, so reach it again at its advertised address
-    for name in seeded:
-        port = advertised[name]
-        client = connect(endpoint, port)
-        try:
-            held = client_nodes(client)
-            print(f"L3-ADVERTISED node={name} seed={endpoint}:{port} client={held.get(name)}")
-            assert name in held, f"{name} is not reachable at {endpoint}:{port}"
-            assert held[name]["port"] == port
-        finally:
-            client.close()
