@@ -3,120 +3,336 @@
 # pass. A case the fixture blocks is implicitly blocked and is not listed.
 # Keep the reasons in step with UNSUPPORTED in run_conformance.py
 discovery/merge/merge-policy.yaml:
-  merge-is-default: { result: unsupported, reason: "no seed provider merge in the C client" }
-  merge-static-then-discovered: { result: unsupported, reason: "no seed provider merge in the C client" }
-  merge-empty-result-leaves-static: { result: unsupported, reason: "no seed provider merge in the C client" }
-  merge-duplicates-keep-first: { result: unsupported, reason: "no seed provider merge in the C client" }
-  merge-same-host-other-port-kept: { result: unsupported, reason: "no seed provider merge in the C client" }
-  replace-drops-static-after-init: { result: unsupported, reason: "no seed provider merge in the C client" }
-  replace-empty-refresh-keeps-previous: { result: unsupported, reason: "no seed provider merge in the C client" }
-  replace-empty-at-init-keeps-static: { result: unsupported, reason: "no seed provider merge in the C client" }
-  replace-duplicates-keep-first: { result: unsupported, reason: "no seed provider merge in the C client" }
-  discovery-only-uses-discovered: { result: unsupported, reason: "no seed provider merge in the C client" }
-  discovery-only-empty-at-init-falls-back: { result: unsupported, reason: "no seed provider merge in the C client" }
-  discovery-only-empty-refresh-falls-back: { result: unsupported, reason: "no seed provider merge in the C client" }
-  discovery-only-duplicates-keep-first: { result: unsupported, reason: "no seed provider merge in the C client" }
+  merge-is-default:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  merge-static-then-discovered:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  merge-empty-result-leaves-static:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  merge-duplicates-keep-first:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  merge-same-host-other-port-kept:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  replace-drops-static-after-init:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  replace-empty-refresh-keeps-previous:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  replace-empty-at-init-keeps-static:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  replace-duplicates-keep-first:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  discovery-only-uses-discovered:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  discovery-only-empty-at-init-falls-back:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  discovery-only-empty-refresh-falls-back:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
+  discovery-only-duplicates-keep-first:
+    result: unsupported
+    reason: "no seed provider merge in the C client"
 discovery/providers/aws-tags.yaml:
-  tagged-running-instances: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  tag-value-must-match: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  pagination-follows-next-token: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  added-instance-reaches-seeds: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  public-ip-address-field: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  no-instance-matches: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  unauthorized-keeps-previous-seeds: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
-  unanswered-times-out-keeps-previous-seeds: { result: unsupported, reason: "no AWS tags seed provider in the C client" }
+  tagged-running-instances:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  tag-value-must-match:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  pagination-follows-next-token:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  added-instance-reaches-seeds:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  public-ip-address-field:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  no-instance-matches:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  unauthorized-keeps-previous-seeds:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
+  unanswered-times-out-keeps-previous-seeds:
+    result: unsupported
+    reason: "no AWS tags seed provider in the C client"
 discovery/providers/dns.yaml:
-  a-records: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  aaaa-records: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  a-and-aaaa-records: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  duplicate-addresses-once: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  srv-targets-resolved-to-addresses: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  srv-target-with-only-aaaa: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  srv-unresolved-target-dropped: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  record-change-reaches-seeds: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  some-names-resolve: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  nxdomain-keeps-previous-seeds: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  servfail-keeps-previous-seeds: { result: unsupported, reason: "no DNS seed provider in the C client" }
-  unanswered-keeps-previous-seeds: { result: unsupported, reason: "no DNS seed provider in the C client" }
+  a-records:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  aaaa-records:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  a-and-aaaa-records:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  duplicate-addresses-once:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  srv-targets-resolved-to-addresses:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  srv-target-with-only-aaaa:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  srv-unresolved-target-dropped:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  record-change-reaches-seeds:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  some-names-resolve:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  nxdomain-keeps-previous-seeds:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  servfail-keeps-previous-seeds:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
+  unanswered-keeps-previous-seeds:
+    result: unsupported
+    reason: "no DNS seed provider in the C client"
 discovery/translate/collision.yaml:
-  static-map-two-hosts-one-target: { result: unsupported, reason: "no address translation entry point to detect a collision with" }
-  port-map-two-keys-one-value: { result: unsupported, reason: "no address translation entry point to detect a collision with" }
-  pass-through-same-advertised-endpoint: { result: unsupported, reason: "no address translation entry point to detect a collision with" }
-  shared-host-distinct-ports: { result: unsupported, reason: "no address translation entry point to detect a collision with" }
-  three-peers-one-endpoint: { result: unsupported, reason: "no address translation entry point to detect a collision with" }
+  static-map-two-hosts-one-target:
+    result: unsupported
+    reason: "no address translation entry point to detect a collision with"
+  port-map-two-keys-one-value:
+    result: unsupported
+    reason: "no address translation entry point to detect a collision with"
+  pass-through-same-advertised-endpoint:
+    result: unsupported
+    reason: "no address translation entry point to detect a collision with"
+  shared-host-distinct-ports:
+    result: unsupported
+    reason: "no address translation entry point to detect a collision with"
+  three-peers-one-endpoint:
+    result: unsupported
+    reason: "no address translation entry point to detect a collision with"
 discovery/translate/legacy-ip-map.yaml:
-  no-map-configured: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  no-map-configured-null-tls-name: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-host-replaced-port-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-host-null-tls-name: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-host-tls-name-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  unmapped-host-passes-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  empty-map-passes-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  host-port-key-does-not-match: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-literal-mapped: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  alternate-source-list-mapped: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
+  no-map-configured:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  no-map-configured-null-tls-name:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-host-replaced-port-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-host-null-tls-name:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-host-tls-name-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  unmapped-host-passes-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  empty-map-passes-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  host-port-key-does-not-match:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-literal-mapped:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  alternate-source-list-mapped:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
 discovery/translate/on-miss.yaml:
-  no-translator-default-pass-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-default-pass-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-default-pass-through-null-tls-name: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-explicit-pass-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-strict-hit-translates: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-strict-miss-fails: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  static-map-strict-empty-map-fails: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  port-map-default-pass-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  port-map-strict-miss-fails: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
+  no-translator-default-pass-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-default-pass-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-default-pass-through-null-tls-name:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-explicit-pass-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-strict-hit-translates:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-strict-miss-fails:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  static-map-strict-empty-map-fails:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  port-map-default-pass-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  port-map-strict-miss-fails:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
 discovery/translate/pass-through.yaml:
-  ipv4-standard-unchanged: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  alternate-shared-host-per-node-port: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  alternate-host-per-node-default-port: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  tls-name-differs-from-host-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  null-tls-name-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-literal-unchanged: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  strict-never-misses: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
+  ipv4-standard-unchanged:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  alternate-shared-host-per-node-port:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  alternate-host-per-node-default-port:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  tls-name-differs-from-host-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  null-tls-name-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-literal-unchanged:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  strict-never-misses:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
 discovery/translate/port-map.yaml:
-  host-port-key-hit: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  host-port-key-null-tls-name: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  host-port-key-other-port-misses: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  node-name-key-hit: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  node-name-key-any-advertised-address: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  node-name-key-misses-other-node: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-host-port-key-hit: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  standard-map-alternate-endpoint-first-node: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  standard-map-alternate-endpoint-second-node: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  standard-map-alternate-endpoint-strict: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
+  host-port-key-hit:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  host-port-key-null-tls-name:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  host-port-key-other-port-misses:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  node-name-key-hit:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  node-name-key-any-advertised-address:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  node-name-key-misses-other-node:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-host-port-key-hit:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  standard-map-alternate-endpoint-first-node:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  standard-map-alternate-endpoint-second-node:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  standard-map-alternate-endpoint-strict:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
 discovery/translate/static-map.yaml:
-  mapped-host-replaced-port-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-host-tls-port-kept: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-host-null-tls-name: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-to-hostname: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  mapped-from-hostname: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  unmapped-host-passes-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  empty-map-passes-through: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  host-port-key-does-not-match: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-literal-mapped: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-literal-mapped-to-ipv4: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  ipv6-literal-unmapped: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
-  alternate-source-list-mapped: { result: unsupported, reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend" }
+  mapped-host-replaced-port-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-host-tls-port-kept:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-host-null-tls-name:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-to-hostname:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  mapped-from-hostname:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  unmapped-host-passes-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  empty-map-passes-through:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  host-port-key-does-not-match:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-literal-mapped:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-literal-mapped-to-ipv4:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  ipv6-literal-unmapped:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
+  alternate-source-list-mapped:
+    result: unsupported
+    reason: "no address translation entry point: ip_map is applied inside the C client's cluster tend"
 tls/name-matching.yaml:
-  dns-id-equals-dns-name: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  dns-id-differs-only-in-case: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  dns-id-with-non-matching-cn: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ipv4-id-equals-ip-address: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ipv6-id-equals-ip-address: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ipv6-id-differently-spelled: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  dns-id-only-ip-addresses: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  dns-id-resolving-to-ip-address: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  wildcard-matches-one-label: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  wildcard-matches-case-insensitively: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  wildcard-does-not-match-parent: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  wildcard-does-not-match-two-labels: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  partial-label-wildcard-rejected: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  multiple-wildcards-rejected: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  inner-label-wildcard-rejected: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ip-id-against-wildcard: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  cn-only-no-san: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  cn-differs-only-in-case-no-san: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  cn-equal-dns-name-differs: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ip-id-only-as-dns-name: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ci-server-certificate-shape: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
-  ci-server-certificate-shape-fixed: { result: unsupported, reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake" }
+  dns-id-equals-dns-name:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  dns-id-differs-only-in-case:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  dns-id-with-non-matching-cn:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ipv4-id-equals-ip-address:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ipv6-id-equals-ip-address:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ipv6-id-differently-spelled:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  dns-id-only-ip-addresses:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  dns-id-resolving-to-ip-address:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  wildcard-matches-one-label:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  wildcard-matches-case-insensitively:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  wildcard-does-not-match-parent:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  wildcard-does-not-match-two-labels:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  partial-label-wildcard-rejected:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  multiple-wildcards-rejected:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  inner-label-wildcard-rejected:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ip-id-against-wildcard:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  cn-only-no-san:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  cn-differs-only-in-case-no-san:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  cn-equal-dns-name-differs:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ip-id-only-as-dns-name:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ci-server-certificate-shape:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
+  ci-server-certificate-shape-fixed:
+    result: unsupported
+    reason: "no TLS name matching entry point: the C client matches names only inside a TLS handshake"
