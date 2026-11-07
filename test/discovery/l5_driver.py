@@ -6,7 +6,6 @@ lines while it answers the commands it reads from stdin. It measures and reports
 The client exposes neither its partition map nor a node's active flag, so snapshots leave out
 unowned, owners and longestUnownedMs, a node is usable once the client holds it, and every node the
 client holds is reported active: the C client deactivates a node in the same tend that drops it.
---shape port-map exits 3, for the reason in PORT_MAP_UNSUPPORTED.
 """
 
 import argparse
@@ -33,7 +32,7 @@ WATCH_BOUND_MS = 60000
 QUIT_MS = 30000
 KEY_SEARCH_LIMIT = 1000000
 LOG_LEVELS = {aerospike.LOG_LEVEL_ERROR: "ERROR", aerospike.LOG_LEVEL_WARN: "WARN"}
-PORT_MAP_UNSUPPORTED = "--shape port-map: the client has no translator that maps a node to a host and port"
+ON_MISS = {"strict": "strict", "pass-through": "pass_through"}
 
 START_NS = time.monotonic_ns()
 
@@ -153,10 +152,24 @@ def command_policy(options):
     return {"socket_timeout": options.timeout, "total_timeout": options.timeout, "max_retries": 0}
 
 
+def endpoint(host, port):
+    if ":" in host:
+        return f"[{host}]:{port}"
+    return f"{host}:{port}"
+
+
+def translation_config(options):
+    translation = {"provider": options.shape, "on_miss": ON_MISS[options.on_miss]}
+    if options.port_map is not None:
+        translation["port_map"] = {node: endpoint(host, port) for node, (host, port) in options.port_map.items()}
+    return translation
+
+
 def client_config(options):
     config = {
         "hosts": [options.seed],
-        "use_services_alternate": True,
+        "use_services_alternate": options.shape == "pass-through",
+        "translation": translation_config(options),
         "tend_interval": options.tend_interval,
         "connect_timeout": options.timeout,
         "policies": {"read": command_policy(options), "write": command_policy(options)},
@@ -597,8 +610,6 @@ def main(argv):
     aerospike.set_log_handler(log)
     aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
 
-    if options.shape == "port-map":
-        return client_not_created(out, PORT_MAP_UNSUPPORTED)
     config = client_config(options)
     try:
         client = aerospike.client(config)

@@ -3,8 +3,8 @@
 In pass-through-names each node advertises its own alternate-access-address hostname with its own
 Toxiproxy listener port. In pass-through-ports every node advertises one hostname with its own
 listener port. Every hostname resolves to the Toxiproxy container, and the client has no route to
-the node addresses. The client reads the alternate list with use_services_alternate and no
-ip_map, so it uses every address as advertised.
+the node addresses. The client reads the alternate list with use_services_alternate and the strict
+pass-through translator, so it uses every address as advertised.
 """
 
 import json
@@ -75,6 +75,7 @@ def connect(node):
     config = {
         "hosts": [seed(node)],
         "use_services_alternate": True,
+        "translation": {"provider": "pass-through", "on_miss": "strict"},
         "tend_interval": TEND_INTERVAL_MS,
         "connect_timeout": 1000,
     }

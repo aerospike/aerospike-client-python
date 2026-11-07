@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,6 +119,12 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_TXN_ALREADY_COMMITTED, NULL),
     EXCEPTION_DEF("TransactionAlreadyAborted", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_TXN_ALREADY_ABORTED, NULL),
+    EXCEPTION_DEF("TranslationMiss", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_ERR_TRANSLATION_MISS, NULL),
+    EXCEPTION_DEF("TranslationCollision", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_ERR_TRANSLATION_COLLISION, NULL),
+    EXCEPTION_DEF("SeedDiscoveryFailed", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_ERR_SEED_DISCOVERY_FAILED, NULL),
 
     // Server errors
     EXCEPTION_DEF("InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
