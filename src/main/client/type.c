@@ -1281,8 +1281,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
     else if (retval == 1) {
         as_status status =
-            addr_map_from_pydict(&constructor_err, py_ip_map, "ip_map",
-                                 &config.ip_map, &config.ip_map_size);
+            as_addr_map_new_from_pydict(&constructor_err, py_ip_map, "ip_map",
+                                        &config.ip_map, &config.ip_map_size);
         Py_DECREF(py_ip_map);
         if (status != AEROSPIKE_OK) {
             goto RAISE_EXCEPTION_WITH_AS_ERROR;

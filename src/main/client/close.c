@@ -162,7 +162,7 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 
 void destroy_ip_map(as_config *config)
 {
-    addr_map_destroy(config->ip_map, config->ip_map_size);
+    as_addr_map_destroy(config->ip_map, config->ip_map_size);
     config->ip_map = NULL;
     config->ip_map_size = 0;
 }

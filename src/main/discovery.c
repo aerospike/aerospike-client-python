@@ -358,9 +358,9 @@ ERROR:
  * Address maps
  ******************************************************************************/
 
-as_status addr_map_from_pydict(as_error *err, PyObject *py_map,
-                               const char *option_name, as_addr_map **entries,
-                               uint32_t *size)
+as_status as_addr_map_new_from_pydict(as_error *err, PyObject *py_map,
+                                      const char *option_name,
+                                      as_addr_map **entries, uint32_t *size)
 {
     if (!PyDict_Check(py_map)) {
         return as_error_update(
@@ -382,7 +382,7 @@ as_status addr_map_from_pydict(as_error *err, PyObject *py_map,
                                "Unable to allocate memory for %s", option_name);
     }
 
-    // Entries are counted as they are filled in, so addr_map_destroy() can
+    // Entries are counted as they are filled in, so as_addr_map_destroy() can
     // free a partially built map
     uint32_t count = 0;
     as_status status = AEROSPIKE_OK;
@@ -409,7 +409,7 @@ as_status addr_map_from_pydict(as_error *err, PyObject *py_map,
         as_addr_map *entry = &map[count];
         entry->orig = strdup(orig);
         entry->alt = strdup(alt);
-        // Count the entry before checking so addr_map_destroy() frees
+        // Count the entry before checking so as_addr_map_destroy() frees
         // whichever string was allocated (free(NULL) is a no-op)
         count++;
         if (!entry->orig || !entry->alt) {
@@ -430,11 +430,11 @@ UTF8_ERROR:
                              option_name);
 
 CLEANUP:
-    addr_map_destroy(map, count);
+    as_addr_map_destroy(map, count);
     return status;
 }
 
-void addr_map_destroy(as_addr_map *entries, uint32_t size)
+void as_addr_map_destroy(as_addr_map *entries, uint32_t size)
 {
     for (uint32_t i = 0; i < size; i++) {
         free(entries[i].orig);
@@ -932,21 +932,21 @@ static as_status register_translator(as_error *err, as_config *config,
         if (!py_static_map) {
             return AEROSPIKE_OK;
         }
-        return addr_map_from_pydict(err, py_static_map,
-                                    "translation.static_map", &config->ip_map,
-                                    &config->ip_map_size);
+        return as_addr_map_new_from_pydict(
+            err, py_static_map, "translation.static_map", &config->ip_map,
+            &config->ip_map_size);
     }
 
     as_addr_map *entries = NULL;
     uint32_t size = 0;
     if (py_port_map &&
-        addr_map_from_pydict(err, py_port_map, "translation.port_map", &entries,
-                             &size) != AEROSPIKE_OK) {
+        as_addr_map_new_from_pydict(err, py_port_map, "translation.port_map",
+                                    &entries, &size) != AEROSPIKE_OK) {
         return err->code;
     }
     as_status status =
         as_config_set_port_map_translator(config, entries, size, err);
-    addr_map_destroy(entries, size);
+    as_addr_map_destroy(entries, size);
     return status;
 }
 

@@ -25,11 +25,11 @@
 // Copy a dict of str to str into a new as_addr_map array. option_name names
 // the dict in error messages. On failure nothing is allocated and the outputs
 // are left unchanged.
-as_status addr_map_from_pydict(as_error *err, PyObject *py_map,
-                               const char *option_name, as_addr_map **entries,
-                               uint32_t *size);
+as_status as_addr_map_new_from_pydict(as_error *err, PyObject *py_map,
+                                      const char *option_name,
+                                      as_addr_map **entries, uint32_t *size);
 
-void addr_map_destroy(as_addr_map *entries, uint32_t size);
+void as_addr_map_destroy(as_addr_map *entries, uint32_t size);
 
 // Set config->discovery from the client config's "discovery" dict and
 // register its seed provider.
