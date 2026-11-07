@@ -527,6 +527,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             A list identifying a node (or multiple nodes) in the cluster. Each entry may be
             either a tuple or a string.
 
+            May be empty or omitted when a seed provider is set in **discovery**.
+
             The tuple is in this format: ``(address, port, [tls-name])``
 
             * address: :class:`str`
@@ -740,6 +742,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
+
+            Cannot be ``True`` when **discovery** sets a seed provider or **translation** sets a ``provider``
+            other than ``"static-map"``.
 
             Default: ``False``
         * **tls** (:class:`dict`)
@@ -983,7 +988,13 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Example: ``{"10.0.0.1": "203.0.113.1", "10.0.0.2": "203.0.113.2"}``
 
+            ``ip_map`` is the map of the ``"static-map"`` translator; see **translation**.
+
             Default: no translation.
+        * **discovery** (:class:`dict`)
+            Where the client gets its seed hosts. See :ref:`aerospike_discovery`.
+        * **translation** (:class:`dict`)
+            How the client translates the node addresses reported by the server. See :ref:`aerospike_discovery`.
         * **connect_timeout** (:class:`int`)
             Cluster tend info command timeout in milliseconds.
 
@@ -1000,6 +1011,133 @@ Only the `hosts` key is required; the rest of the keys are optional.
             database command.
 
             Default: ``False``
+
+.. _aerospike_discovery:
+
+Seed Discovery and Address Translation
+--------------------------------------
+
+The **discovery** dict of the client config controls where the client gets its seed hosts, and the
+**translation** dict controls how it translates the node addresses reported by the server. Unset and
+:py:obj:`None` values use the defaults.
+
+**discovery** keys:
+
+* **provider** (:class:`str` or :class:`~aerospike_helpers.discovery.SeedCandidateProvider`)
+    Source of the seed hosts:
+
+    * ``"static"``: the **hosts** of the client config.
+    * ``"dns"``: resolve DNS names on every refresh; see **dns**.
+    * A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` instance.
+
+    Default: ``"static"``
+* **merge_policy** (:class:`str`)
+    How the **hosts** and the discovered hosts are combined. Duplicate hosts are removed, keeping the
+    first one.
+
+    * ``"merge"``: **hosts** first, then the discovered hosts.
+    * ``"replace"``: like ``"merge"`` when the client connects. After that, each successful refresh
+      replaces the seeds, and an empty result keeps the previous seeds.
+    * ``"discovery_only"``: only the discovered hosts. **hosts** is used only when discovery returns
+      no host.
+
+    Default: ``"merge"``
+* **execution_mode** (:class:`str`)
+    Where the provider is refreshed:
+
+    * ``"thread"``: on a background thread started by the client.
+    * ``"tend"``: on the cluster tend thread, every **refresh_interval_ms**. A refresh that takes longer
+      than **tend_refresh_deadline_ms** is discarded, and after 3 such refreshes in a row the provider is
+      no longer refreshed. A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` cannot be used
+      in this mode.
+
+    Default: ``"thread"``
+* **refresh_interval_ms** (:class:`int`)
+    How often the seeds are refreshed, in milliseconds, if the provider needs periodic refresh. Must be at
+    least the **tend_interval** of the client config.
+
+    Default: ``30000``
+* **refresh_timeout_ms** (:class:`int`)
+    With ``"thread"``, in milliseconds, how long connecting waits for the first refresh before using **hosts**,
+    and how long :meth:`Client.close` waits for a refresh in progress. A refresh that takes longer is logged as
+    a warning.
+
+    Default: ``10000``
+* **tend_refresh_deadline_ms** (:class:`int`)
+    With ``"tend"``, the most time one refresh can take, in milliseconds. Must be at most half of the
+    **tend_interval** of the client config.
+
+    Default: ``100``
+* **dns** (:class:`dict`)
+    Settings of the ``"dns"`` provider:
+
+    * **names** (:class:`list` [:class:`str`]): the DNS names to resolve. Required.
+    * **record_type** (:class:`str`): ``"a"`` to resolve A and AAAA records, or ``"srv"`` to resolve SRV
+      records, which include the port. Case-insensitive. Default: ``"a"``
+    * **port** (:class:`int`): the port of the hosts resolved from A and AAAA records. Default: ``3000``
+    * **tls_name** (:class:`str`): the TLS name of every resolved host. Default: no TLS name.
+    * **timeout_ms** (:class:`int`): the most time one refresh can take, in milliseconds. Must be at most
+      **refresh_timeout_ms** with ``"thread"``, or **tend_refresh_deadline_ms** with ``"tend"``.
+      Default: ``80``
+    * **servers** (:class:`list` [:class:`str`]): the DNS servers, as ``"ip"`` or ``"ip:port"``
+      (``"[ipv6]:port"`` for IPv6). Default: the system's DNS servers.
+
+If a refresh fails, the client keeps its previous seeds. If connecting finds no seed host,
+:exc:`~aerospike.exception.SeedDiscoveryFailed` is raised.
+
+A :class:`~aerospike_helpers.discovery.SeedCandidateProvider` is called on the client's background thread,
+so a slow refresh does not delay cluster tending, and holds the GIL while it runs Python code. Its
+:meth:`~aerospike_helpers.discovery.SeedCandidateProvider.close` method is called when the client object is
+destroyed, not by :meth:`Client.close`, so the client can connect again.
+
+**translation** keys:
+
+* **provider** (:class:`str`)
+    The address translator:
+
+    * ``"static-map"``: replace the host of an address with its entry in **static_map** or **ip_map**.
+    * ``"port-map"``: replace an address with its entry in **port_map**.
+    * ``"pass-through"``: use every address as is. No address is a miss.
+
+    Default: ``"static-map"``
+* **on_miss** (:class:`str`)
+    What to do with an address that the translator has no entry for:
+
+    * ``"pass_through"``: use the address as is.
+    * ``"strict"``: don't connect to the node, and log a warning that names the node, its address and the
+      translator.
+
+    Default: ``"pass_through"``
+* **static_map** (:class:`dict` [:class:`str`, :class:`str`])
+    The map of the ``"static-map"`` translator, in the same format as **ip_map**. Set only one of
+    **static_map** and **ip_map**.
+* **port_map** (:class:`dict` [:class:`str`, :class:`str`])
+    The map of the ``"port-map"`` translator. Each key is either an address reported by the server as
+    ``"host:port"``, or a node name. Each value is the ``"host:port"`` to connect to. IPv6 hosts must be in
+    brackets, e.g. ``"[2001:db8::1]:3000"``. An address is looked up first, then the node name.
+
+    Example: ``{"10.0.0.1:3000": "203.0.113.1:4000", "BB9020011AC4202": "203.0.113.2:4000"}``
+
+.. code-block:: python
+
+    import aerospike
+    from aerospike_helpers.discovery import SeedCandidateProvider
+
+    class MySeeds(SeedCandidateProvider):
+        def refresh_seed_candidates(self, context):
+            return [("10.0.0.1", 3000), ("10.0.0.2", 3000)]
+
+        def needs_periodic_refresh(self):
+            return True
+
+    config = {
+        "discovery": {"provider": MySeeds(), "merge_policy": "discovery_only"},
+        "translation": {
+            "provider": "port-map",
+            "port_map": {"10.0.0.1:3000": "203.0.113.1:4000", "10.0.0.2:3000": "203.0.113.2:4000"},
+        },
+    }
+    client = aerospike.client(config)
 
 Constants
 =========
