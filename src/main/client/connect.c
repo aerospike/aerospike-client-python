@@ -45,11 +45,8 @@ int AerospikeClientConnect(AerospikeClient *self)
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
 
-    if (!self || !self->as ||
-        ((!self->as->config.hosts || !self->as->config.hosts->size) &&
-         !self->as->config.discovery.provider_registered)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Invalid aerospike object or hosts not configured");
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
