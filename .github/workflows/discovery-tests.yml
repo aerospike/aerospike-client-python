@@ -1,8 +1,7 @@
 name: Discovery tests
 
 # Pluggable discovery test layers L0 to L3, from the client libraries testing strategy.
-# The C client has no pluggable discovery yet, so L1 records every fixture case as unsupported,
-# and L2 and L3 run only the pass-through tests that use_services_alternate supports today.
+# L1 runs the translate, merge and dns fixture cases through the C client's conformance entry points.
 # The skipped-layers job reports every layer and profile that does not run yet, and why.
 # L5 runs by hand on AWS through test/discovery/l5_driver.py; the pass-through-ports L2 jobs smoke-test that driver.
 
@@ -49,15 +48,14 @@ jobs:
       env:
         HAS_FEATURES: ${{ secrets.FEATURES_CONTENT != '' }}
       run: |
-        translation='needs port-map translation, which the C client does not have yet: the nodes advertise only private addresses, and ip_map keeps the port while every listener shares the proxy address'
         not_ported='not ported to the Python client yet'
-        layers=$(jq -cn --arg translation "$translation" --arg not_ported "$not_ported" '[
-          {layer: "L0", tests: "U-1 to U-5, U-7 to U-10, U-13 and U-15 (translator, provider and on_miss contracts)", reason: "the C client has no pluggable discovery yet"},
+        layers=$(jq -cn --arg not_ported "$not_ported" '[
+          {layer: "L0", tests: "U-1, U-2, U-4, U-5, U-8, U-10, U-13 and U-15", reason: $not_ported},
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
-          {layer: "L2 CE", tests: "default, reachable, port-map-range, low-mtu, port-range and idle-reset profiles", reason: $translation},
-          {layer: "L2 CE", tests: "unresolved-access profile", reason: "its server startup check runs no client, and its port-map check needs translation, which the C client does not have yet"},
-          {layer: "L2 CE", tests: "N-16 with on_miss strict, and N-18 collisions", reason: "needs translation providers and on_miss, which the C client does not have yet"},
-          {layer: "L2 EE", tests: "default and cn-only profiles", reason: $translation},
+          {layer: "L2 CE", tests: "port-map-range, low-mtu, port-range and idle-reset profiles", reason: $not_ported},
+          {layer: "L2 CE", tests: "unresolved-access profile", reason: "its server startup check runs no client, and its port-map check is not ported to the Python client yet"},
+          {layer: "L2 CE", tests: "N-18 collisions", reason: $not_ported},
+          {layer: "L2 EE", tests: "default and cn-only profiles", reason: $not_ported},
           {layer: "TLS certificate matching", tests: "certificate name matching against Enterprise servers", reason: $not_ported},
           {layer: "L3", tests: "scale up and down, NodePort stability, and TLS name tests", reason: $not_ported}
         ]')
@@ -106,12 +104,13 @@ jobs:
       run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
 
     - name: Run L0 tests
-      run: pytest test/discovery/test_l0_naming.py -p no:cacheprovider -rA
+      run: pytest test/discovery/test_l0_naming.py test/discovery/test_l0_discovery.py -p no:cacheprovider -rA
       env:
         DISCOVERY_FAIL_ON_SKIP: '1'
 
   l1:
     name: L1 conformance
+    needs: build
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     env:
@@ -138,8 +137,14 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install runner dependencies
-      run: python3 -m pip install -r test/discovery/requirements.txt
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    # The runner calls the C client's conformance entry points in the installed extension
+    - name: Install client and runner dependencies
+      run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
 
     - name: Run conformance fixtures
       run: >
@@ -171,6 +176,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+        - profile: default
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
+        - profile: reachable
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
         - profile: pass-through-names
           server-container-repo: database-docker-virtual/aerospike-server
           server-tag: 8.1.2.1
@@ -237,7 +250,7 @@ jobs:
         docker run "${run_args[@]}" "python:${PYTHON_VERSION}-slim-bookworm" bash -c '
           set -e
           python3 -m pip install "$1"/*.whl -r test/discovery/requirements.txt
-          pytest test/discovery/test_l2_pass_through.py test/discovery/test_l2_l5_driver.py -p no:cacheprovider -rA
+          pytest test/discovery/test_l2_*.py -p no:cacheprovider -rA
         ' bash "$WHEEL_DIR"
 
     - name: Show the node server log
