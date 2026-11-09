@@ -38,12 +38,6 @@
 
 enum seed_provider_kind { SEED_PROVIDER_STATIC, SEED_PROVIDER_DNS };
 
-enum translator_kind {
-    TRANSLATOR_STATIC_MAP,
-    TRANSLATOR_PORT_MAP,
-    TRANSLATOR_PASS_THROUGH
-};
-
 struct option_value {
     const char *name;
     int value;
@@ -84,9 +78,9 @@ static const struct option_values dns_record_types = {
 static const struct option_values translators = {
     "\"static-map\", \"port-map\" or \"pass-through\"",
     false,
-    {{"static-map", TRANSLATOR_STATIC_MAP},
-     {"port-map", TRANSLATOR_PORT_MAP},
-     {"pass-through", TRANSLATOR_PASS_THROUGH},
+    {{"static-map", AS_TRANSLATOR_STATIC_MAP},
+     {"port-map", AS_TRANSLATOR_PORT_MAP},
+     {"pass-through", AS_TRANSLATOR_PASS_THROUGH},
      {NULL, 0}}};
 
 static const struct option_values miss_policies = {
@@ -870,22 +864,23 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
 }
 
 static as_status register_translator(as_error *err, as_config *config,
-                                     int translator, PyObject *py_static_map,
+                                     as_translator_kind translator,
+                                     PyObject *py_static_map,
                                      PyObject *py_port_map)
 {
-    if (py_static_map && translator != TRANSLATOR_STATIC_MAP) {
+    if (py_static_map && translator != AS_TRANSLATOR_STATIC_MAP) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "translation.static_map needs translation.provider \"static-map\"");
     }
-    if (py_port_map && translator != TRANSLATOR_PORT_MAP) {
+    if (py_port_map && translator != AS_TRANSLATOR_PORT_MAP) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "translation.port_map needs translation.provider \"port-map\"");
     }
     // ip_map is the static-map translator's map
     if (config->ip_map &&
-        (translator != TRANSLATOR_STATIC_MAP || py_static_map)) {
+        (translator != AS_TRANSLATOR_STATIC_MAP || py_static_map)) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "ip_map is the map of translation.provider \"static-map\". Set "
@@ -893,10 +888,10 @@ static as_status register_translator(as_error *err, as_config *config,
             "translation.provider");
     }
 
-    if (translator == TRANSLATOR_PASS_THROUGH) {
+    if (translator == AS_TRANSLATOR_PASS_THROUGH) {
         return as_config_set_pass_through_translator(config, err);
     }
-    if (translator == TRANSLATOR_STATIC_MAP) {
+    if (translator == AS_TRANSLATOR_STATIC_MAP) {
         if (!py_static_map) {
             return AEROSPIKE_OK;
         }
@@ -939,7 +934,7 @@ as_status as_translation_config_init_from_pyobject(as_error *err,
     }
     config->translation.on_miss = (as_translation_miss_policy)on_miss;
 
-    int translator = TRANSLATOR_STATIC_MAP;
+    int translator = AS_TRANSLATOR_STATIC_MAP;
     if (get_enum_option(err, py_translation, "provider", "translation.provider",
                         &translators, &translator) != AEROSPIKE_OK) {
         return err->code;
@@ -957,8 +952,9 @@ as_status as_translation_config_init_from_pyobject(as_error *err,
         return err->code;
     }
 
-    as_status status = register_translator(err, config, translator,
-                                           py_static_map, py_port_map);
+    as_status status =
+        register_translator(err, config, (as_translator_kind)translator,
+                            py_static_map, py_port_map);
     Py_XDECREF(py_static_map);
     Py_XDECREF(py_port_map);
     return status;
