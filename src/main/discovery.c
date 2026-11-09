@@ -32,7 +32,7 @@
 #include "pythoncapi_compat.h"
 #include "types.h"
 
-#define HELPERS_MODULE "aerospike_helpers.discovery"
+#define HELPERS_DISCOVERY_MODULE "aerospike_helpers.discovery"
 #define PROVIDER_CLASS "SeedCandidateProvider"
 #define CONTEXT_CLASS "SeedCandidateContext"
 #define REFRESH_METHOD "refresh_seed_candidates"
@@ -469,7 +469,7 @@ create_py_seed_candidate_context(as_error *err,
         PyTuple_SET_ITEM(py_seeds, i, py_host);
     }
 
-    PyObject *py_module = PyImport_ImportModule(HELPERS_MODULE);
+    PyObject *py_module = PyImport_ImportModule(HELPERS_DISCOVERY_MODULE);
     if (!py_module) {
         goto ERROR;
     }
@@ -656,18 +656,19 @@ static void release_python_seed_provider(void *udata)
 static as_status register_python_seed_provider(as_error *err, as_config *config,
                                                PyObject *py_provider)
 {
-    PyObject *py_module = PyImport_ImportModule(HELPERS_MODULE);
+    PyObject *py_module = PyImport_ImportModule(HELPERS_DISCOVERY_MODULE);
     if (!py_module) {
-        return error_from_raised_exception(err, AEROSPIKE_ERR_CLIENT,
-                                           "Unable to import " HELPERS_MODULE);
+        return error_from_raised_exception(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Unable to import " HELPERS_DISCOVERY_MODULE);
     }
     PyObject *py_provider_class =
         PyObject_GetAttrString(py_module, PROVIDER_CLASS);
     Py_DECREF(py_module);
     if (!py_provider_class) {
-        return error_from_raised_exception(err, AEROSPIKE_ERR_CLIENT,
-                                           "Unable to get " HELPERS_MODULE
-                                           "." PROVIDER_CLASS);
+        return error_from_raised_exception(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Unable to get " HELPERS_DISCOVERY_MODULE "." PROVIDER_CLASS);
     }
     int is_provider = PyObject_IsInstance(py_provider, py_provider_class);
     Py_DECREF(py_provider_class);
@@ -680,7 +681,7 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
         join_named_enum_names(&seed_providers, names);
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "discovery.provider must be one of %s or "
-                               "an " HELPERS_MODULE "." PROVIDER_CLASS
+                               "an " HELPERS_DISCOVERY_MODULE "." PROVIDER_CLASS
                                " instance, but a %s was received instead",
                                names, Py_TYPE(py_provider)->tp_name);
     }
