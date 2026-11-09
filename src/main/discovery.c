@@ -222,55 +222,58 @@ static as_status get_enum_option(as_error *err, PyObject *py_dict,
     return status;
 }
 
-// Get a list of str option. On success *py_list holds a new reference that
-// keeps the strings in *items alive, and *items must be freed.
-static as_status get_str_list_option(as_error *err, PyObject *py_dict,
-                                     const char *key, const char *option_name,
-                                     PyObject **py_list, const char ***items,
-                                     uint32_t *size)
+// Get a list of str option. Return NULL if it is not set or on error (with err
+// set). Otherwise *py_list holds a new reference that keeps the returned
+// strings alive, and the returned array must be freed.
+static const char **get_str_list_option(as_error *err, PyObject *py_dict,
+                                        const char *key,
+                                        const char *option_name,
+                                        PyObject **py_list, uint32_t *size)
 {
-    int retval = get_option(err, py_dict, key, option_name, py_list);
+    PyObject *py_value = NULL;
+    int retval = get_option(err, py_dict, key, option_name, &py_value);
     if (retval != 1) {
-        return err->code;
+        return NULL;
     }
 
-    if (!PyList_Check(*py_list)) {
+    if (!PyList_Check(py_value)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "%s must be a list, but a %s was received instead",
-                        option_name, Py_TYPE(*py_list)->tp_name);
+                        option_name, Py_TYPE(py_value)->tp_name);
         goto ERROR;
     }
 
-    Py_ssize_t list_size = PyList_GET_SIZE(*py_list);
+    Py_ssize_t list_size = PyList_GET_SIZE(py_value);
     if (list_size > UINT32_MAX) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s has too many items",
                         option_name);
         goto ERROR;
     }
 
-    *items = (const char **)malloc(sizeof(const char *) * (list_size + 1));
-    if (!*items) {
+    const char **items =
+        (const char **)malloc(sizeof(const char *) * (list_size + 1));
+    if (!items) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to allocate memory for %s", option_name);
         goto ERROR;
     }
 
     for (Py_ssize_t i = 0; i < list_size; i++) {
-        PyObject *py_item = PyList_GET_ITEM(*py_list, i);
-        (*items)[i] = convert_pyobject_to_str(py_item);
-        if (!(*items)[i]) {
+        PyObject *py_item = PyList_GET_ITEM(py_value, i);
+        items[i] = convert_pyobject_to_str(py_item);
+        if (!items[i]) {
             error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
-            free(*items);
-            *items = NULL;
+            free(items);
             goto ERROR;
         }
     }
+    *py_list = py_value;
     *size = (uint32_t)list_size;
-    return AEROSPIKE_OK;
+    return items;
 
 ERROR:
-    Py_CLEAR(*py_list);
-    return err->code;
+    Py_DECREF(py_value);
+    return NULL;
 }
 
 /*******************************************************************************
@@ -660,15 +663,15 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         return err->code;
     }
 
-    PyObject *py_names = NULL;
-    const char **names = NULL;
     PyObject *py_servers = NULL;
     const char **servers = NULL;
     PyObject *py_tls_name = NULL;
 
-    if (get_str_list_option(err, py_dns, "names", "discovery.dns.names",
-                            &py_names, &names,
-                            &dns.names_size) != AEROSPIKE_OK) {
+    PyObject *py_names = NULL;
+    const char **names =
+        get_str_list_option(err, py_dns, "names", "discovery.dns.names",
+                            &py_names, &dns.names_size);
+    if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     dns.names = names;
@@ -713,9 +716,10 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         goto CLEANUP;
     }
 
-    if (get_str_list_option(err, py_dns, "servers", "discovery.dns.servers",
-                            &py_servers, &servers,
-                            &dns.servers_size) != AEROSPIKE_OK) {
+    servers =
+        get_str_list_option(err, py_dns, "servers", "discovery.dns.servers",
+                            &py_servers, &dns.servers_size);
+    if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     dns.servers = servers;
