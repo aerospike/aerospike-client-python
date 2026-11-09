@@ -144,25 +144,6 @@ static int get_option(as_error *err, PyObject *py_dict, const char *key,
     return retval;
 }
 
-static const char *str_from_pyobject(as_error *err, PyObject *py_value,
-                                     const char *option_name)
-{
-    if (!PyUnicode_Check(py_value)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "%s must be a str, but a %s was received instead",
-                        option_name, Py_TYPE(py_value)->tp_name);
-        return NULL;
-    }
-
-    const char *value = PyUnicode_AsUTF8(py_value);
-    if (!value) {
-        PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "%s must be encodable as UTF-8", option_name);
-    }
-    return value;
-}
-
 static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
                                     const char *option_name,
                                     const struct option_values *values,
@@ -276,8 +257,9 @@ static as_status get_str_list_option(as_error *err, PyObject *py_dict,
 
     for (Py_ssize_t i = 0; i < list_size; i++) {
         PyObject *py_item = PyList_GET_ITEM(*py_list, i);
-        (*items)[i] = str_from_pyobject(err, py_item, option_name);
+        (*items)[i] = convert_pyobject_to_str(py_item);
         if (!(*items)[i]) {
+            error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
             free(*items);
             *items = NULL;
             goto ERROR;
@@ -718,10 +700,11 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         goto CLEANUP;
     }
     if (py_tls_name) {
-        dns.tls_name =
-            str_from_pyobject(err, py_tls_name, "discovery.dns.tls_name");
+        dns.tls_name = convert_pyobject_to_str(py_tls_name);
     }
     if (py_tls_name && !dns.tls_name) {
+        error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
+                                    "discovery.dns.tls_name");
         goto CLEANUP;
     }
 
