@@ -381,6 +381,42 @@ void remove_exception(as_error *err)
     }
 }
 
+as_status error_from_raised_exception(as_error *err, as_status code,
+                                      const char *prefix)
+{
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    PyObject *py_exc = PyErr_GetRaisedException();
+#else
+    PyObject *py_exc_type = NULL;
+    PyObject *py_exc = NULL;
+    PyObject *py_exc_traceback = NULL;
+    PyErr_Fetch(&py_exc_type, &py_exc, &py_exc_traceback);
+    PyErr_NormalizeException(&py_exc_type, &py_exc, &py_exc_traceback);
+    Py_XDECREF(py_exc_type);
+    Py_XDECREF(py_exc_traceback);
+#endif
+
+    const char *type_name = "unknown error";
+    const char *message = NULL;
+    PyObject *py_message = NULL;
+    if (py_exc) {
+        type_name = Py_TYPE(py_exc)->tp_name;
+        py_message = PyObject_Str(py_exc);
+    }
+    if (py_message) {
+        message = PyUnicode_AsUTF8(py_message);
+    }
+    if (!message) {
+        PyErr_Clear();
+        message = "";
+    }
+
+    as_error_update(err, code, "%s: %s: %s", prefix, type_name, message);
+    Py_XDECREF(py_message);
+    Py_XDECREF(py_exc);
+    return err->code;
+}
+
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {

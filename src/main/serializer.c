@@ -393,44 +393,6 @@ CLEANUP:
     return error_p->code;
 }
 
-// Moves the pending Python exception into error_p, so
-// deserialize_based_on_as_bytes_type() raises it as an Aerospike exception.
-static void update_error_from_raised_exception(as_error *error_p,
-                                               const char *class_name)
-{
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
-    PyObject *py_exc = PyErr_GetRaisedException();
-#else
-    PyObject *py_exc_type = NULL;
-    PyObject *py_exc = NULL;
-    PyObject *py_exc_traceback = NULL;
-    PyErr_Fetch(&py_exc_type, &py_exc, &py_exc_traceback);
-    PyErr_NormalizeException(&py_exc_type, &py_exc, &py_exc_traceback);
-    Py_XDECREF(py_exc_type);
-    Py_XDECREF(py_exc_traceback);
-#endif
-
-    const char *exc_msg = NULL;
-    PyObject *py_exc_str = NULL;
-    if (py_exc) {
-        py_exc_str = PyObject_Str(py_exc);
-    }
-    if (py_exc_str) {
-        exc_msg = PyUnicode_AsUTF8(py_exc_str);
-    }
-    if (!exc_msg) {
-        PyErr_Clear();
-        exc_msg = "unknown error";
-    }
-
-    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                    "Unable to deserialize bytes as %s: %s", class_name,
-                    exc_msg);
-
-    Py_XDECREF(py_exc_str);
-    Py_XDECREF(py_exc);
-}
-
 /*
  *******************************************************************************************************
  * Checks as_bytes->type.
@@ -536,7 +498,11 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         Py_DECREF(py_bytes);
         if (!py_instance) {
             if (error_p->code == AEROSPIKE_OK) {
-                update_error_from_raised_exception(error_p, class_name);
+                char prefix[64];
+                snprintf(prefix, sizeof(prefix),
+                         "Unable to deserialize bytes as %s", class_name);
+                error_from_raised_exception(error_p, AEROSPIKE_ERR_CLIENT,
+                                            prefix);
             }
             goto CLEANUP;
         }

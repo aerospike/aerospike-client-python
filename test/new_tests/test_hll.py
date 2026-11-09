@@ -542,4 +542,4 @@ class TestHLL(object):
                 self.as_connection.scan("test", "demo").results()
             else:
                 self.as_connection.scan("test", "demo").foreach(lambda _: None)
-        assert excinfo.value.msg == "Unable to deserialize bytes as HyperLogLog: HyperLogLog constructor failed"
+        assert excinfo.value.msg == "Unable to deserialize bytes as HyperLogLog: ValueError: HyperLogLog constructor failed"
