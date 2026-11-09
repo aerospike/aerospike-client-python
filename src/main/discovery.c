@@ -91,6 +91,10 @@ static const struct named_enum miss_policies = {
  * Option parsing
  ******************************************************************************/
 
+// In these helpers, option_name is the full name of the option, such as
+// "discovery.dns.port", and is only used in error messages. The same applies to
+// as_addr_map_new_from_pyobject() (see discovery.h).
+
 static as_status check_dict(as_error *err, PyObject *py_value,
                             const char *option_name)
 {
