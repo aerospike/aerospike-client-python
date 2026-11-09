@@ -128,8 +128,9 @@ static as_status check_dict_keys(as_error *err, PyObject *py_dict,
 
 // Return 1 with a new reference in *py_value if key is set and not None,
 // 0 if it is not, or -1 with err set
-static int get_option(as_error *err, PyObject *py_dict, const char *key,
-                      const char *option_name, PyObject **py_value)
+static int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict,
+                                     const char *key, const char *option_name,
+                                     PyObject **py_value)
 {
     int retval = PyDict_GetItemStringRef(py_dict, key, py_value);
     if (retval == -1) {
@@ -186,12 +187,14 @@ static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
     return err->code;
 }
 
-static as_status get_uint32_option(as_error *err, PyObject *py_dict,
-                                   const char *key, const char *option_name,
-                                   uint32_t *value)
+static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
+                                         const char *key,
+                                         const char *option_name,
+                                         uint32_t *value)
 {
     PyObject *py_value = NULL;
-    int retval = get_option(err, py_dict, key, option_name, &py_value);
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
     if (retval != 1) {
         return err->code;
     }
@@ -206,12 +209,15 @@ static as_status get_uint32_option(as_error *err, PyObject *py_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_enum_option(as_error *err, PyObject *py_dict,
-                                 const char *key, const char *option_name,
-                                 const struct option_values *values, int *value)
+static as_status get_str_enum_from_py_dict(as_error *err, PyObject *py_dict,
+                                           const char *key,
+                                           const char *option_name,
+                                           const struct option_values *values,
+                                           int *value)
 {
     PyObject *py_value = NULL;
-    int retval = get_option(err, py_dict, key, option_name, &py_value);
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
     if (retval != 1) {
         return err->code;
     }
@@ -227,12 +233,13 @@ static as_status get_enum_option(as_error *err, PyObject *py_dict,
 // new reference that keeps the buffers alive, and the returned array must be
 // freed.
 static const char **
-get_borrowed_str_list_option(as_error *err, PyObject *py_dict, const char *key,
-                             const char *option_name, PyObject **py_list,
-                             uint32_t *size)
+get_borrowed_str_list_from_py_dict(as_error *err, PyObject *py_dict,
+                                   const char *key, const char *option_name,
+                                   PyObject **py_list, uint32_t *size)
 {
     PyObject *py_value = NULL;
-    int retval = get_option(err, py_dict, key, option_name, &py_value);
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_value);
     if (retval != 1) {
         return NULL;
     }
@@ -669,7 +676,7 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     PyObject *py_tls_name = NULL;
 
     PyObject *py_names = NULL;
-    const char **names = get_borrowed_str_list_option(
+    const char **names = get_borrowed_str_list_from_py_dict(
         err, py_dns, "names", "discovery.dns.names", &py_names,
         &dns.names_size);
     if (err->code != AEROSPIKE_OK) {
@@ -678,14 +685,16 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     dns.names = names;
 
     int record_type = dns.record_type;
-    if (get_enum_option(err, py_dns, "record_type", "discovery.dns.record_type",
-                        &dns_record_types, &record_type) != AEROSPIKE_OK) {
+    if (get_str_enum_from_py_dict(
+            err, py_dns, "record_type", "discovery.dns.record_type",
+            &dns_record_types, &record_type) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     dns.record_type = (as_dns_record_type)record_type;
 
     PyObject *py_port = NULL;
-    if (get_option(err, py_dns, "port", "discovery.dns.port", &py_port) == -1) {
+    if (get_pyobject_from_py_dict(err, py_dns, "port", "discovery.dns.port",
+                                  &py_port) == -1) {
         goto CLEANUP;
     }
     if (py_port) {
@@ -699,8 +708,9 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         dns.port = port;
     }
 
-    if (get_option(err, py_dns, "tls_name", "discovery.dns.tls_name",
-                   &py_tls_name) == -1) {
+    if (get_pyobject_from_py_dict(err, py_dns, "tls_name",
+                                  "discovery.dns.tls_name",
+                                  &py_tls_name) == -1) {
         goto CLEANUP;
     }
     if (py_tls_name) {
@@ -712,14 +722,15 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         goto CLEANUP;
     }
 
-    if (get_uint32_option(err, py_dns, "timeout_ms", "discovery.dns.timeout_ms",
-                          &dns.timeout_ms) != AEROSPIKE_OK) {
+    if (get_uint32_from_py_dict(err, py_dns, "timeout_ms",
+                                "discovery.dns.timeout_ms",
+                                &dns.timeout_ms) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
-    servers = get_borrowed_str_list_option(err, py_dns, "servers",
-                                           "discovery.dns.servers", &py_servers,
-                                           &dns.servers_size);
+    servers = get_borrowed_str_list_from_py_dict(
+        err, py_dns, "servers", "discovery.dns.servers", &py_servers,
+        &dns.servers_size);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -788,45 +799,48 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
     as_discovery_config *discovery = &config->discovery;
 
     int merge_policy = discovery->merge_policy;
-    if (get_enum_option(err, py_discovery, "merge_policy",
-                        "discovery.merge_policy", &merge_policies,
-                        &merge_policy) != AEROSPIKE_OK) {
+    if (get_str_enum_from_py_dict(err, py_discovery, "merge_policy",
+                                  "discovery.merge_policy", &merge_policies,
+                                  &merge_policy) != AEROSPIKE_OK) {
         return err->code;
     }
     discovery->merge_policy = (as_seed_merge_policy)merge_policy;
 
     int execution_mode = discovery->execution_mode;
-    if (get_enum_option(err, py_discovery, "execution_mode",
-                        "discovery.execution_mode", &execution_modes,
-                        &execution_mode) != AEROSPIKE_OK) {
+    if (get_str_enum_from_py_dict(err, py_discovery, "execution_mode",
+                                  "discovery.execution_mode", &execution_modes,
+                                  &execution_mode) != AEROSPIKE_OK) {
         return err->code;
     }
     discovery->execution_mode = (as_discovery_execution_mode)execution_mode;
 
-    if (get_uint32_option(err, py_discovery, "refresh_interval_ms",
-                          "discovery.refresh_interval_ms",
-                          &discovery->refresh_interval_ms) != AEROSPIKE_OK) {
+    if (get_uint32_from_py_dict(err, py_discovery, "refresh_interval_ms",
+                                "discovery.refresh_interval_ms",
+                                &discovery->refresh_interval_ms) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
-    if (get_uint32_option(err, py_discovery, "refresh_timeout_ms",
-                          "discovery.refresh_timeout_ms",
-                          &discovery->refresh_timeout_ms) != AEROSPIKE_OK) {
+    if (get_uint32_from_py_dict(err, py_discovery, "refresh_timeout_ms",
+                                "discovery.refresh_timeout_ms",
+                                &discovery->refresh_timeout_ms) !=
+        AEROSPIKE_OK) {
         return err->code;
     }
-    if (get_uint32_option(err, py_discovery, "tend_refresh_deadline_ms",
-                          "discovery.tend_refresh_deadline_ms",
-                          &discovery->tend_refresh_deadline_ms) !=
+    if (get_uint32_from_py_dict(err, py_discovery, "tend_refresh_deadline_ms",
+                                "discovery.tend_refresh_deadline_ms",
+                                &discovery->tend_refresh_deadline_ms) !=
         AEROSPIKE_OK) {
         return err->code;
     }
 
     PyObject *py_provider = NULL;
-    if (get_option(err, py_discovery, "provider", "discovery.provider",
-                   &py_provider) == -1) {
+    if (get_pyobject_from_py_dict(err, py_discovery, "provider",
+                                  "discovery.provider", &py_provider) == -1) {
         return err->code;
     }
     PyObject *py_dns = NULL;
-    if (get_option(err, py_discovery, "dns", "discovery.dns", &py_dns) == -1) {
+    if (get_pyobject_from_py_dict(err, py_discovery, "dns", "discovery.dns",
+                                  &py_dns) == -1) {
         Py_XDECREF(py_provider);
         return err->code;
     }
@@ -903,26 +917,29 @@ as_status as_translation_config_init_from_pyobject(as_error *err,
     }
 
     int on_miss = config->translation.on_miss;
-    if (get_enum_option(err, py_translation, "on_miss", "translation.on_miss",
-                        &miss_policies, &on_miss) != AEROSPIKE_OK) {
+    if (get_str_enum_from_py_dict(err, py_translation, "on_miss",
+                                  "translation.on_miss", &miss_policies,
+                                  &on_miss) != AEROSPIKE_OK) {
         return err->code;
     }
     config->translation.on_miss = (as_translation_miss_policy)on_miss;
 
     int translator = AS_TRANSLATOR_STATIC_MAP;
-    if (get_enum_option(err, py_translation, "provider", "translation.provider",
-                        &translators, &translator) != AEROSPIKE_OK) {
+    if (get_str_enum_from_py_dict(err, py_translation, "provider",
+                                  "translation.provider", &translators,
+                                  &translator) != AEROSPIKE_OK) {
         return err->code;
     }
 
     PyObject *py_static_map = NULL;
-    if (get_option(err, py_translation, "static_map", "translation.static_map",
-                   &py_static_map) == -1) {
+    if (get_pyobject_from_py_dict(err, py_translation, "static_map",
+                                  "translation.static_map",
+                                  &py_static_map) == -1) {
         return err->code;
     }
     PyObject *py_port_map = NULL;
-    if (get_option(err, py_translation, "port_map", "translation.port_map",
-                   &py_port_map) == -1) {
+    if (get_pyobject_from_py_dict(err, py_translation, "port_map",
+                                  "translation.port_map", &py_port_map) == -1) {
         Py_XDECREF(py_static_map);
         return err->code;
     }
