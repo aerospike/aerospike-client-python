@@ -358,9 +358,9 @@ ERROR:
  * Address maps
  ******************************************************************************/
 
-as_status as_addr_map_new_from_pydict(as_error *err, PyObject *py_map,
-                                      const char *option_name,
-                                      as_addr_map **entries, uint32_t *size)
+as_status as_addr_map_new_from_pyobject(as_error *err, PyObject *py_map,
+                                        const char *option_name,
+                                        as_addr_map **entries, uint32_t *size)
 {
     if (!PyDict_Check(py_map)) {
         return as_error_update(
@@ -511,8 +511,9 @@ static as_status host_error(as_error *err, Py_ssize_t index)
                            index);
 }
 
-static as_status append_seed_candidates(as_error *err, PyObject *py_hosts,
-                                        as_seed_candidates *candidates)
+static as_status
+as_seed_candidates_init_from_pyobject(as_error *err, PyObject *py_hosts,
+                                      as_seed_candidates *candidates)
 {
     if (!PyList_Check(py_hosts)) {
         return as_error_update(err, AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
@@ -587,7 +588,8 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
                                            REFRESH_METHOD "() raised");
     }
 
-    as_status status = append_seed_candidates(err, py_hosts, candidates);
+    as_status status =
+        as_seed_candidates_init_from_pyobject(err, py_hosts, candidates);
     Py_DECREF(py_hosts);
     return status;
 }
@@ -836,8 +838,10 @@ static as_status register_seed_provider(as_error *err, as_config *config,
     return AEROSPIKE_OK;
 }
 
-as_status set_discovery_config(as_error *err, as_config *config,
-                               PyObject *py_discovery, bool validate_keys)
+as_status as_discovery_config_init_from_pyobject(as_error *err,
+                                                 as_config *config,
+                                                 PyObject *py_discovery,
+                                                 bool validate_keys)
 {
     if (check_dict(err, py_discovery, "discovery") != AEROSPIKE_OK) {
         return err->code;
@@ -932,7 +936,7 @@ static as_status register_translator(as_error *err, as_config *config,
         if (!py_static_map) {
             return AEROSPIKE_OK;
         }
-        return as_addr_map_new_from_pydict(
+        return as_addr_map_new_from_pyobject(
             err, py_static_map, "translation.static_map", &config->ip_map,
             &config->ip_map_size);
     }
@@ -940,8 +944,8 @@ static as_status register_translator(as_error *err, as_config *config,
     as_addr_map *entries = NULL;
     uint32_t size = 0;
     if (py_port_map &&
-        as_addr_map_new_from_pydict(err, py_port_map, "translation.port_map",
-                                    &entries, &size) != AEROSPIKE_OK) {
+        as_addr_map_new_from_pyobject(err, py_port_map, "translation.port_map",
+                                      &entries, &size) != AEROSPIKE_OK) {
         return err->code;
     }
     as_status status =
@@ -950,8 +954,10 @@ static as_status register_translator(as_error *err, as_config *config,
     return status;
 }
 
-as_status set_translation_config(as_error *err, as_config *config,
-                                 PyObject *py_translation, bool validate_keys)
+as_status as_translation_config_init_from_pyobject(as_error *err,
+                                                   as_config *config,
+                                                   PyObject *py_translation,
+                                                   bool validate_keys)
 {
     if (check_dict(err, py_translation, "translation") != AEROSPIKE_OK) {
         return err->code;

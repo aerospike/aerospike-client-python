@@ -25,18 +25,22 @@
 // Copy a dict of str to str into a new as_addr_map array. option_name names
 // the dict in error messages. On failure nothing is allocated and the outputs
 // are left unchanged.
-as_status as_addr_map_new_from_pydict(as_error *err, PyObject *py_map,
-                                      const char *option_name,
-                                      as_addr_map **entries, uint32_t *size);
+as_status as_addr_map_new_from_pyobject(as_error *err, PyObject *py_map,
+                                        const char *option_name,
+                                        as_addr_map **entries, uint32_t *size);
 
 void as_addr_map_destroy(as_addr_map *entries, uint32_t size);
 
 // Set config->discovery from the client config's "discovery" dict and
 // register its seed provider.
-as_status set_discovery_config(as_error *err, as_config *config,
-                               PyObject *py_discovery, bool validate_keys);
+as_status as_discovery_config_init_from_pyobject(as_error *err,
+                                                 as_config *config,
+                                                 PyObject *py_discovery,
+                                                 bool validate_keys);
 
 // Set config->translation from the client config's "translation" dict and
 // register its address translator. Must run after ip_map is set.
-as_status set_translation_config(as_error *err, as_config *config,
-                                 PyObject *py_translation, bool validate_keys);
+as_status as_translation_config_init_from_pyobject(as_error *err,
+                                                   as_config *config,
+                                                   PyObject *py_translation,
+                                                   bool validate_keys);
