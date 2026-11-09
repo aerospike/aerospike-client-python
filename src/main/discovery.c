@@ -46,13 +46,14 @@ struct option_value {
 
 // The values a string option accepts, ending with a NULL name
 struct option_values {
-    const char *description;
     bool ignore_case;
     struct option_value values[4];
 };
 
+// Large enough for the quoted, comma-separated names of any option_values
+#define OPTION_NAMES_SIZE 128
+
 static const struct option_values merge_policies = {
-    "\"merge\", \"replace\" or \"discovery_only\"",
     false,
     {{"merge", AS_SEED_MERGE},
      {"replace", AS_SEED_REPLACE},
@@ -60,24 +61,19 @@ static const struct option_values merge_policies = {
      {NULL, 0}}};
 
 static const struct option_values execution_modes = {
-    "\"thread\" or \"tend\"",
     false,
     {{"thread", AS_DISCOVERY_EXECUTION_THREAD},
      {"tend", AS_DISCOVERY_EXECUTION_TEND},
      {NULL, 0}}};
 
 static const struct option_values seed_providers = {
-    "\"static\", \"dns\" or an " HELPERS_MODULE "." PROVIDER_CLASS " instance",
     false,
     {{"static", SEED_PROVIDER_STATIC}, {"dns", SEED_PROVIDER_DNS}, {NULL, 0}}};
 
 static const struct option_values dns_record_types = {
-    "\"a\" or \"srv\"",
-    true,
-    {{"a", AS_DNS_RECORD_A}, {"srv", AS_DNS_RECORD_SRV}, {NULL, 0}}};
+    true, {{"a", AS_DNS_RECORD_A}, {"srv", AS_DNS_RECORD_SRV}, {NULL, 0}}};
 
 static const struct option_values translators = {
-    "\"static-map\", \"port-map\" or \"pass-through\"",
     false,
     {{"static-map", AS_TRANSLATOR_STATIC_MAP},
      {"port-map", AS_TRANSLATOR_PORT_MAP},
@@ -85,7 +81,6 @@ static const struct option_values translators = {
      {NULL, 0}}};
 
 static const struct option_values miss_policies = {
-    "\"pass_through\" or \"strict\"",
     false,
     {{"pass_through", AS_TRANSLATION_PASS_THROUGH},
      {"strict", AS_TRANSLATION_STRICT},
@@ -145,6 +140,22 @@ static int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict,
     return retval;
 }
 
+// Write the names of values to names as "\"a\", \"b\""
+static void join_option_names(const struct option_values *values, char *names)
+{
+    names[0] = '\0';
+    size_t length = 0;
+    for (const struct option_value *entry = values->values;
+         entry->name && length < OPTION_NAMES_SIZE; entry++) {
+        const char *separator = ", ";
+        if (entry == values->values) {
+            separator = "";
+        }
+        length += snprintf(names + length, OPTION_NAMES_SIZE - length,
+                           "%s\"%s\"", separator, entry->name);
+    }
+}
+
 static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
                                     const char *option_name,
                                     const struct option_values *values,
@@ -181,8 +192,10 @@ static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
         PyErr_Clear();
         repr = Py_TYPE(py_value)->tp_name;
     }
-    as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be %s, not %s",
-                    option_name, values->description, repr);
+    char names[OPTION_NAMES_SIZE];
+    join_option_names(values, names);
+    as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be one of %s, not %s",
+                    option_name, names, repr);
     Py_XDECREF(py_repr);
     return err->code;
 }
@@ -616,10 +629,13 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
                                            "discovery.provider");
     }
     if (is_provider == 0) {
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "discovery.provider must be %s, but a %s was received instead",
-            seed_providers.description, Py_TYPE(py_provider)->tp_name);
+        char names[OPTION_NAMES_SIZE];
+        join_option_names(&seed_providers, names);
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "discovery.provider must be one of %s or "
+                               "an " HELPERS_MODULE "." PROVIDER_CLASS
+                               " instance, but a %s was received instead",
+                               names, Py_TYPE(py_provider)->tp_name);
     }
 
     PyObject *py_periodic =
