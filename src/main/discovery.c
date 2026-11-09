@@ -26,6 +26,7 @@
 #include <aerospike/as_host.h>
 #include <aerospike/as_vector.h>
 
+#include "conversions.h"
 #include "discovery.h"
 #include "exceptions.h"
 #include "pythoncapi_compat.h"
@@ -162,32 +163,6 @@ static const char *str_from_pyobject(as_error *err, PyObject *py_value,
     return value;
 }
 
-static as_status uint32_from_pyobject(as_error *err, PyObject *py_value,
-                                      const char *option_name, uint32_t min,
-                                      uint32_t max, uint32_t *value)
-{
-    if (!PyLong_Check(py_value) || PyBool_Check(py_value)) {
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "%s must be an int, but a %s was received instead", option_name,
-            Py_TYPE(py_value)->tp_name);
-    }
-
-    unsigned long long number = PyLong_AsUnsignedLongLong(py_value);
-    if (number == (unsigned long long)-1 && PyErr_Occurred()) {
-        // A negative or too large value
-        PyErr_Clear();
-        number = (unsigned long long)max + 1;
-    }
-    if (number < min || number > max) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s must be between %u and %u", option_name, min,
-                               max);
-    }
-    *value = (uint32_t)number;
-    return AEROSPIKE_OK;
-}
-
 static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
                                     const char *option_name,
                                     const struct option_values *values,
@@ -232,7 +207,7 @@ static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
 
 static as_status get_uint32_option(as_error *err, PyObject *py_dict,
                                    const char *key, const char *option_name,
-                                   uint32_t min, uint32_t max, uint32_t *value)
+                                   uint32_t *value)
 {
     PyObject *py_value = NULL;
     int retval = get_option(err, py_dict, key, option_name, &py_value);
@@ -240,10 +215,14 @@ static as_status get_uint32_option(as_error *err, PyObject *py_dict,
         return err->code;
     }
 
-    as_status status =
-        uint32_from_pyobject(err, py_value, option_name, min, max, value);
+    uint32_t number = convert_pyobject_to_uint32_t(py_value);
     Py_DECREF(py_value);
-    return status;
+    if (PyErr_Occurred()) {
+        return error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
+                                           option_name);
+    }
+    *value = number;
+    return AEROSPIKE_OK;
 }
 
 static as_status get_enum_option(as_error *err, PyObject *py_dict,
@@ -719,12 +698,20 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     }
     dns.record_type = (as_dns_record_type)record_type;
 
-    uint32_t port = dns.port;
-    if (get_uint32_option(err, py_dns, "port", "discovery.dns.port", 1,
-                          UINT16_MAX, &port) != AEROSPIKE_OK) {
+    PyObject *py_port = NULL;
+    if (get_option(err, py_dns, "port", "discovery.dns.port", &py_port) == -1) {
         goto CLEANUP;
     }
-    dns.port = (uint16_t)port;
+    if (py_port) {
+        uint16_t port = convert_pyobject_to_uint16_t(py_port);
+        Py_DECREF(py_port);
+        if (PyErr_Occurred()) {
+            error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
+                                        "discovery.dns.port");
+            goto CLEANUP;
+        }
+        dns.port = port;
+    }
 
     if (get_option(err, py_dns, "tls_name", "discovery.dns.tls_name",
                    &py_tls_name) == -1) {
@@ -739,7 +726,7 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     }
 
     if (get_uint32_option(err, py_dns, "timeout_ms", "discovery.dns.timeout_ms",
-                          0, UINT32_MAX, &dns.timeout_ms) != AEROSPIKE_OK) {
+                          &dns.timeout_ms) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -829,17 +816,17 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
     discovery->execution_mode = (as_discovery_execution_mode)execution_mode;
 
     if (get_uint32_option(err, py_discovery, "refresh_interval_ms",
-                          "discovery.refresh_interval_ms", 0, UINT32_MAX,
+                          "discovery.refresh_interval_ms",
                           &discovery->refresh_interval_ms) != AEROSPIKE_OK) {
         return err->code;
     }
     if (get_uint32_option(err, py_discovery, "refresh_timeout_ms",
-                          "discovery.refresh_timeout_ms", 0, UINT32_MAX,
+                          "discovery.refresh_timeout_ms",
                           &discovery->refresh_timeout_ms) != AEROSPIKE_OK) {
         return err->code;
     }
     if (get_uint32_option(err, py_discovery, "tend_refresh_deadline_ms",
-                          "discovery.tend_refresh_deadline_ms", 0, UINT32_MAX,
+                          "discovery.tend_refresh_deadline_ms",
                           &discovery->tend_refresh_deadline_ms) !=
         AEROSPIKE_OK) {
         return err->code;
