@@ -541,10 +541,10 @@ static as_status as_seed_candidates_init_from_pyobject(
             }
             if (!Py_IsNone(py_tls_name)) {
                 tls_name = PyUnicode_AsUTF8(py_tls_name);
-            }
-            if (!Py_IsNone(py_tls_name) && !tls_name) {
-                PyErr_Clear();
-                return host_error(err, i);
+                if (!tls_name) {
+                    PyErr_Clear();
+                    return host_error(err, i);
+                }
             }
         }
 
