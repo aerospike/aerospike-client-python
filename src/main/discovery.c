@@ -156,10 +156,10 @@ static void join_option_names(const struct option_values *values, char *names)
     }
 }
 
-static as_status enum_from_pyobject(as_error *err, PyObject *py_value,
-                                    const char *option_name,
-                                    const struct option_values *values,
-                                    int *value)
+static as_status pyobject_to_int_enum(as_error *err, PyObject *py_value,
+                                      const char *option_name,
+                                      const struct option_values *values,
+                                      int *value)
 {
     if (PyUnicode_Check(py_value)) {
         const char *name = PyUnicode_AsUTF8(py_value);
@@ -236,7 +236,7 @@ static as_status get_str_enum_from_py_dict(as_error *err, PyObject *py_dict,
     }
 
     as_status status =
-        enum_from_pyobject(err, py_value, option_name, values, value);
+        pyobject_to_int_enum(err, py_value, option_name, values, value);
     Py_DECREF(py_value);
     return status;
 }
@@ -782,8 +782,8 @@ static as_status register_seed_provider(as_error *err, as_config *config,
 
     int provider = SEED_PROVIDER_STATIC;
     if (py_provider &&
-        enum_from_pyobject(err, py_provider, "discovery.provider",
-                           &seed_providers, &provider) != AEROSPIKE_OK) {
+        pyobject_to_int_enum(err, py_provider, "discovery.provider",
+                             &seed_providers, &provider) != AEROSPIKE_OK) {
         return err->code;
     }
 
