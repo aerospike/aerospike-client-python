@@ -222,13 +222,14 @@ static as_status get_enum_option(as_error *err, PyObject *py_dict,
     return status;
 }
 
-// Get a list of str option. Return NULL if it is not set or on error (with err
-// set). Otherwise *py_list holds a new reference that keeps the returned
-// strings alive, and the returned array must be freed.
-static const char **get_str_list_option(as_error *err, PyObject *py_dict,
-                                        const char *key,
-                                        const char *option_name,
-                                        PyObject **py_list, uint32_t *size)
+// Get a list of str option as the UTF-8 buffers of its Python strings. Return
+// NULL if it is not set or on error (with err set). Otherwise *py_list holds a
+// new reference that keeps the buffers alive, and the returned array must be
+// freed.
+static const char **
+get_borrowed_str_list_option(as_error *err, PyObject *py_dict, const char *key,
+                             const char *option_name, PyObject **py_list,
+                             uint32_t *size)
 {
     PyObject *py_value = NULL;
     int retval = get_option(err, py_dict, key, option_name, &py_value);
@@ -668,9 +669,9 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     PyObject *py_tls_name = NULL;
 
     PyObject *py_names = NULL;
-    const char **names =
-        get_str_list_option(err, py_dns, "names", "discovery.dns.names",
-                            &py_names, &dns.names_size);
+    const char **names = get_borrowed_str_list_option(
+        err, py_dns, "names", "discovery.dns.names", &py_names,
+        &dns.names_size);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -716,9 +717,9 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         goto CLEANUP;
     }
 
-    servers =
-        get_str_list_option(err, py_dns, "servers", "discovery.dns.servers",
-                            &py_servers, &dns.servers_size);
+    servers = get_borrowed_str_list_option(err, py_dns, "servers",
+                                           "discovery.dns.servers", &py_servers,
+                                           &dns.servers_size);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
