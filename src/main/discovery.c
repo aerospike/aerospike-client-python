@@ -306,11 +306,8 @@ as_status as_addr_map_new_from_pyobject(as_error *err, PyObject *py_map,
                                         const char *option_name,
                                         as_addr_map **entries, uint32_t *size)
 {
-    if (!PyDict_Check(py_map)) {
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "%s must be a dict, but a %s was received instead", option_name,
-            Py_TYPE(py_map)->tp_name);
+    if (check_dict(err, py_map, option_name) != AEROSPIKE_OK) {
+        return err->code;
     }
 
     Py_ssize_t map_size = PyDict_Size(py_map);
