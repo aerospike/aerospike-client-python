@@ -446,8 +446,8 @@ static PyObject *create_py_tuple_from_as_host(const as_host *host)
 }
 
 static PyObject *
-create_py_seed_candidate_context_from_as_seed_candidate_context(
-    as_error *err, const as_seed_candidate_context *context)
+create_py_seed_candidate_context(as_error *err,
+                                 const as_seed_candidate_context *context)
 {
     const as_vector *seeds = context->configured_seeds;
     uint32_t seeds_size = 0;
@@ -564,9 +564,7 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
                           const as_seed_candidate_context *context,
                           as_seed_candidates *candidates)
 {
-    PyObject *py_context =
-        create_py_seed_candidate_context_from_as_seed_candidate_context(
-            err, context);
+    PyObject *py_context = create_py_seed_candidate_context(err, context);
     if (!py_context) {
         return err->code;
     }
