@@ -536,10 +536,10 @@ static as_status as_seed_candidates_init_from_pyobject(
         const char *tls_name = NULL;
         if (tuple_size == 3) {
             PyObject *py_tls_name = PyTuple_GET_ITEM(py_host, 2);
-            if (!Py_IsNone(py_tls_name) && !PyUnicode_Check(py_tls_name)) {
-                return host_error(err, i);
-            }
             if (!Py_IsNone(py_tls_name)) {
+                if (!PyUnicode_Check(py_tls_name)) {
+                    return host_error(err, i);
+                }
                 tls_name = PyUnicode_AsUTF8(py_tls_name);
                 if (!tls_name) {
                     PyErr_Clear();
