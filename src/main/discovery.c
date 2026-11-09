@@ -245,14 +245,10 @@ static as_status get_named_enum_value_from_py_dict(
     return status;
 }
 
-// Get a list of str option as the UTF-8 buffers of its Python strings. Return
-// NULL if it is not set or on error (with err set). Otherwise *py_list holds a
-// new reference that keeps the buffers alive, and the returned array must be
-// freed.
-static const char **
-get_borrowed_str_list_from_py_dict(as_error *err, PyObject *py_dict,
-                                   const char *key, const char *option_name,
-                                   PyObject **py_list, uint32_t *size)
+// Copy a str option. Return NULL if it is not set or on error (with err set).
+// Otherwise the returned string must be freed.
+static char *get_str_from_py_dict(as_error *err, PyObject *py_dict,
+                                  const char *key, const char *option_name)
 {
     PyObject *py_value = NULL;
     int retval =
@@ -261,45 +257,94 @@ get_borrowed_str_list_from_py_dict(as_error *err, PyObject *py_dict,
         return NULL;
     }
 
-    if (!PyList_Check(py_value)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "%s must be a list, but a %s was received instead",
-                        option_name, Py_TYPE(py_value)->tp_name);
-        goto ERROR;
+    char *value = NULL;
+    const char *str = convert_pyobject_to_str(py_value);
+    if (!str) {
+        error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
+        goto CLEANUP;
+    }
+    value = strdup(str);
+    if (!value) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to allocate memory for %s", option_name);
     }
 
-    Py_ssize_t list_size = PyList_GET_SIZE(py_value);
+CLEANUP:
+    Py_DECREF(py_value);
+    return value;
+}
+
+static void free_str_list(char **items, uint32_t size)
+{
+    if (!items) {
+        return;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        free(items[i]);
+    }
+    free(items);
+}
+
+// Copy a list of str option. Return NULL if it is not set or on error (with err
+// set). Otherwise free the returned array with free_str_list().
+static char **get_str_list_from_py_dict(as_error *err, PyObject *py_dict,
+                                        const char *key,
+                                        const char *option_name, uint32_t *size)
+{
+    PyObject *py_list = NULL;
+    int retval =
+        get_pyobject_from_py_dict(err, py_dict, key, option_name, &py_list);
+    if (retval != 1) {
+        return NULL;
+    }
+
+    char **items = NULL;
+    if (!PyList_Check(py_list)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "%s must be a list, but a %s was received instead",
+                        option_name, Py_TYPE(py_list)->tp_name);
+        goto CLEANUP;
+    }
+
+    Py_ssize_t list_size = PyList_GET_SIZE(py_list);
     if (list_size > UINT32_MAX) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s has too many items",
                         option_name);
-        goto ERROR;
+        goto CLEANUP;
     }
 
-    // +1 so an empty list never calls malloc(0), which may return NULL
-    const char **items =
-        (const char **)malloc(sizeof(const char *) * (list_size + 1));
+    // +1 so an empty list never calls calloc(0), which may return NULL
+    items = (char **)calloc(list_size + 1, sizeof(char *));
     if (!items) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to allocate memory for %s", option_name);
-        goto ERROR;
+        goto CLEANUP;
     }
 
     for (Py_ssize_t i = 0; i < list_size; i++) {
-        PyObject *py_item = PyList_GET_ITEM(py_value, i);
-        items[i] = convert_pyobject_to_str(py_item);
-        if (!items[i]) {
+        PyObject *py_item = PyList_GET_ITEM(py_list, i);
+        const char *item = convert_pyobject_to_str(py_item);
+        if (!item) {
             error_from_raised_exception(err, AEROSPIKE_ERR_PARAM, option_name);
-            free(items);
-            goto ERROR;
+            break;
+        }
+        items[i] = strdup(item);
+        if (!items[i]) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to allocate memory for %s", option_name);
+            break;
         }
     }
-    *py_list = py_value;
+    if (err->code != AEROSPIKE_OK) {
+        free_str_list(items, (uint32_t)list_size);
+        items = NULL;
+        goto CLEANUP;
+    }
     *size = (uint32_t)list_size;
-    return items;
 
-ERROR:
-    Py_DECREF(py_value);
-    return NULL;
+CLEANUP:
+    Py_DECREF(py_list);
+    return items;
 }
 
 /*******************************************************************************
@@ -689,18 +734,15 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         return err->code;
     }
 
-    PyObject *py_servers = NULL;
-    const char **servers = NULL;
-    PyObject *py_tls_name = NULL;
+    char *tls_name = NULL;
+    char **servers = NULL;
 
-    PyObject *py_names = NULL;
-    const char **names = get_borrowed_str_list_from_py_dict(
-        err, py_dns, "names", "discovery.dns.names", &py_names,
-        &dns.names_size);
+    char **names = get_str_list_from_py_dict(
+        err, py_dns, "names", "discovery.dns.names", &dns.names_size);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    dns.names = names;
+    dns.names = (const char **)names;
 
     int record_type = dns.record_type;
     if (get_named_enum_value_from_py_dict(
@@ -726,19 +768,12 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         dns.port = port;
     }
 
-    if (get_pyobject_from_py_dict(err, py_dns, "tls_name",
-                                  "discovery.dns.tls_name",
-                                  &py_tls_name) == -1) {
+    tls_name =
+        get_str_from_py_dict(err, py_dns, "tls_name", "discovery.dns.tls_name");
+    if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    if (py_tls_name) {
-        dns.tls_name = convert_pyobject_to_str(py_tls_name);
-    }
-    if (py_tls_name && !dns.tls_name) {
-        error_from_raised_exception(err, AEROSPIKE_ERR_PARAM,
-                                    "discovery.dns.tls_name");
-        goto CLEANUP;
-    }
+    dns.tls_name = tls_name;
 
     if (get_uint32_from_py_dict(err, py_dns, "timeout_ms",
                                 "discovery.dns.timeout_ms",
@@ -746,22 +781,19 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
         goto CLEANUP;
     }
 
-    servers = get_borrowed_str_list_from_py_dict(
-        err, py_dns, "servers", "discovery.dns.servers", &py_servers,
-        &dns.servers_size);
+    servers = get_str_list_from_py_dict(
+        err, py_dns, "servers", "discovery.dns.servers", &dns.servers_size);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    dns.servers = servers;
+    dns.servers = (const char **)servers;
 
     as_config_set_dns_seed_provider(config, &dns, err);
 
 CLEANUP:
-    free(names);
-    Py_XDECREF(py_names);
-    free(servers);
-    Py_XDECREF(py_servers);
-    Py_XDECREF(py_tls_name);
+    free_str_list(names, dns.names_size);
+    free(tls_name);
+    free_str_list(servers, dns.servers_size);
     return err->code;
 }
 
