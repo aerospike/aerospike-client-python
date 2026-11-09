@@ -156,10 +156,10 @@ static void join_option_names(const struct option_values *values, char *names)
     }
 }
 
-static as_status pyobject_to_int_enum(as_error *err, PyObject *py_value,
-                                      const char *option_name,
-                                      const struct option_values *values,
-                                      int *value)
+static as_status pyobject_to_named_enum(as_error *err, PyObject *py_value,
+                                        const char *option_name,
+                                        const struct option_values *values,
+                                        int *value)
 {
     if (PyUnicode_Check(py_value)) {
         const char *name = PyUnicode_AsUTF8(py_value);
@@ -222,11 +222,11 @@ static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_str_enum_from_py_dict(as_error *err, PyObject *py_dict,
-                                           const char *key,
-                                           const char *option_name,
-                                           const struct option_values *values,
-                                           int *value)
+static as_status get_named_enum_from_py_dict(as_error *err, PyObject *py_dict,
+                                             const char *key,
+                                             const char *option_name,
+                                             const struct option_values *values,
+                                             int *value)
 {
     PyObject *py_value = NULL;
     int retval =
@@ -236,7 +236,7 @@ static as_status get_str_enum_from_py_dict(as_error *err, PyObject *py_dict,
     }
 
     as_status status =
-        pyobject_to_int_enum(err, py_value, option_name, values, value);
+        pyobject_to_named_enum(err, py_value, option_name, values, value);
     Py_DECREF(py_value);
     return status;
 }
@@ -701,7 +701,7 @@ static as_status register_dns_seed_provider(as_error *err, as_config *config,
     dns.names = names;
 
     int record_type = dns.record_type;
-    if (get_str_enum_from_py_dict(
+    if (get_named_enum_from_py_dict(
             err, py_dns, "record_type", "discovery.dns.record_type",
             &dns_record_types, &record_type) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -782,8 +782,8 @@ static as_status register_seed_provider(as_error *err, as_config *config,
 
     int provider = SEED_PROVIDER_STATIC;
     if (py_provider &&
-        pyobject_to_int_enum(err, py_provider, "discovery.provider",
-                             &seed_providers, &provider) != AEROSPIKE_OK) {
+        pyobject_to_named_enum(err, py_provider, "discovery.provider",
+                               &seed_providers, &provider) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -815,17 +815,17 @@ as_status as_discovery_config_init_from_pyobject(as_error *err,
     as_discovery_config *discovery = &config->discovery;
 
     int merge_policy = discovery->merge_policy;
-    if (get_str_enum_from_py_dict(err, py_discovery, "merge_policy",
-                                  "discovery.merge_policy", &merge_policies,
-                                  &merge_policy) != AEROSPIKE_OK) {
+    if (get_named_enum_from_py_dict(err, py_discovery, "merge_policy",
+                                    "discovery.merge_policy", &merge_policies,
+                                    &merge_policy) != AEROSPIKE_OK) {
         return err->code;
     }
     discovery->merge_policy = (as_seed_merge_policy)merge_policy;
 
     int execution_mode = discovery->execution_mode;
-    if (get_str_enum_from_py_dict(err, py_discovery, "execution_mode",
-                                  "discovery.execution_mode", &execution_modes,
-                                  &execution_mode) != AEROSPIKE_OK) {
+    if (get_named_enum_from_py_dict(
+            err, py_discovery, "execution_mode", "discovery.execution_mode",
+            &execution_modes, &execution_mode) != AEROSPIKE_OK) {
         return err->code;
     }
     discovery->execution_mode = (as_discovery_execution_mode)execution_mode;
@@ -933,17 +933,17 @@ as_status as_translation_config_init_from_pyobject(as_error *err,
     }
 
     int on_miss = config->translation.on_miss;
-    if (get_str_enum_from_py_dict(err, py_translation, "on_miss",
-                                  "translation.on_miss", &miss_policies,
-                                  &on_miss) != AEROSPIKE_OK) {
+    if (get_named_enum_from_py_dict(err, py_translation, "on_miss",
+                                    "translation.on_miss", &miss_policies,
+                                    &on_miss) != AEROSPIKE_OK) {
         return err->code;
     }
     config->translation.on_miss = (as_translation_miss_policy)on_miss;
 
     int translator = AS_TRANSLATOR_STATIC_MAP;
-    if (get_str_enum_from_py_dict(err, py_translation, "provider",
-                                  "translation.provider", &translators,
-                                  &translator) != AEROSPIKE_OK) {
+    if (get_named_enum_from_py_dict(err, py_translation, "provider",
+                                    "translation.provider", &translators,
+                                    &translator) != AEROSPIKE_OK) {
         return err->code;
     }
 
