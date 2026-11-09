@@ -275,6 +275,7 @@ get_borrowed_str_list_from_py_dict(as_error *err, PyObject *py_dict,
         goto ERROR;
     }
 
+    // +1 so an empty list never calls malloc(0), which may return NULL
     const char **items =
         (const char **)malloc(sizeof(const char *) * (list_size + 1));
     if (!items) {
