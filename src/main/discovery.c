@@ -501,9 +501,8 @@ static as_status host_error(as_error *err, Py_ssize_t index)
                            index);
 }
 
-static as_status
-as_seed_candidates_init_from_pyobject(as_error *err, PyObject *py_hosts,
-                                      as_seed_candidates *candidates)
+static as_status as_seed_candidates_init_from_pyobject(
+    as_error *err, as_seed_candidates *candidates, PyObject *py_hosts)
 {
     if (!PyList_Check(py_hosts)) {
         return as_error_update(err, AEROSPIKE_ERR_SEED_DISCOVERY_FAILED,
@@ -579,7 +578,7 @@ call_python_seed_provider(as_error *err, PyObject *py_provider,
     }
 
     as_status status =
-        as_seed_candidates_init_from_pyobject(err, py_hosts, candidates);
+        as_seed_candidates_init_from_pyobject(err, candidates, py_hosts);
     Py_DECREF(py_hosts);
     return status;
 }
