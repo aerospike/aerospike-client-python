@@ -39,48 +39,49 @@
 
 enum seed_provider_kind { SEED_PROVIDER_STATIC, SEED_PROVIDER_DNS };
 
-struct option_value {
+struct named_enum_value {
     const char *name;
     int value;
 };
 
-// The values a string option accepts, ending with a NULL name
-struct option_values {
+// Maps the names a string option accepts to C enum values. values ends with a
+// NULL name.
+struct named_enum {
     bool ignore_case;
-    struct option_value values[4];
+    struct named_enum_value values[4];
 };
 
-// Large enough for the quoted, comma-separated names of any option_values
-#define OPTION_NAMES_SIZE 128
+// Large enough for the quoted, comma-separated names of any named_enum
+#define NAMED_ENUM_NAMES_SIZE 128
 
-static const struct option_values merge_policies = {
+static const struct named_enum merge_policies = {
     false,
     {{"merge", AS_SEED_MERGE},
      {"replace", AS_SEED_REPLACE},
      {"discovery_only", AS_SEED_DISCOVERY_ONLY},
      {NULL, 0}}};
 
-static const struct option_values execution_modes = {
+static const struct named_enum execution_modes = {
     false,
     {{"thread", AS_DISCOVERY_EXECUTION_THREAD},
      {"tend", AS_DISCOVERY_EXECUTION_TEND},
      {NULL, 0}}};
 
-static const struct option_values seed_providers = {
+static const struct named_enum seed_providers = {
     false,
     {{"static", SEED_PROVIDER_STATIC}, {"dns", SEED_PROVIDER_DNS}, {NULL, 0}}};
 
-static const struct option_values dns_record_types = {
+static const struct named_enum dns_record_types = {
     true, {{"a", AS_DNS_RECORD_A}, {"srv", AS_DNS_RECORD_SRV}, {NULL, 0}}};
 
-static const struct option_values translators = {
+static const struct named_enum translators = {
     false,
     {{"static-map", AS_TRANSLATOR_STATIC_MAP},
      {"port-map", AS_TRANSLATOR_PORT_MAP},
      {"pass-through", AS_TRANSLATOR_PASS_THROUGH},
      {NULL, 0}}};
 
-static const struct option_values miss_policies = {
+static const struct named_enum miss_policies = {
     false,
     {{"pass_through", AS_TRANSLATION_PASS_THROUGH},
      {"strict", AS_TRANSLATION_STRICT},
@@ -140,25 +141,26 @@ static int get_pyobject_from_py_dict(as_error *err, PyObject *py_dict,
     return retval;
 }
 
-// Write the names of values to names as "\"a\", \"b\""
-static void join_option_names(const struct option_values *values, char *names)
+// Write the names of named_enum to names as "\"a\", \"b\""
+static void join_named_enum_names(const struct named_enum *named_enum,
+                                  char *names)
 {
     names[0] = '\0';
     size_t length = 0;
-    for (const struct option_value *entry = values->values;
-         entry->name && length < OPTION_NAMES_SIZE; entry++) {
+    for (const struct named_enum_value *entry = named_enum->values;
+         entry->name && length < NAMED_ENUM_NAMES_SIZE; entry++) {
         const char *separator = ", ";
-        if (entry == values->values) {
+        if (entry == named_enum->values) {
             separator = "";
         }
-        length += snprintf(names + length, OPTION_NAMES_SIZE - length,
+        length += snprintf(names + length, NAMED_ENUM_NAMES_SIZE - length,
                            "%s\"%s\"", separator, entry->name);
     }
 }
 
 static as_status pyobject_to_named_enum(as_error *err, PyObject *py_value,
                                         const char *option_name,
-                                        const struct option_values *values,
+                                        const struct named_enum *named_enum,
                                         int *value)
 {
     if (PyUnicode_Check(py_value)) {
@@ -167,10 +169,10 @@ static as_status pyobject_to_named_enum(as_error *err, PyObject *py_value,
             PyErr_Clear();
         }
 
-        for (const struct option_value *entry = values->values;
+        for (const struct named_enum_value *entry = named_enum->values;
              name && entry->name; entry++) {
             int compared;
-            if (values->ignore_case) {
+            if (named_enum->ignore_case) {
                 compared = PyOS_stricmp(name, entry->name);
             }
             else {
@@ -192,8 +194,8 @@ static as_status pyobject_to_named_enum(as_error *err, PyObject *py_value,
         PyErr_Clear();
         repr = Py_TYPE(py_value)->tp_name;
     }
-    char names[OPTION_NAMES_SIZE];
-    join_option_names(values, names);
+    char names[NAMED_ENUM_NAMES_SIZE];
+    join_named_enum_names(named_enum, names);
     as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be one of %s, not %s",
                     option_name, names, repr);
     Py_XDECREF(py_repr);
@@ -222,11 +224,10 @@ static as_status get_uint32_from_py_dict(as_error *err, PyObject *py_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_named_enum_from_py_dict(as_error *err, PyObject *py_dict,
-                                             const char *key,
-                                             const char *option_name,
-                                             const struct option_values *values,
-                                             int *value)
+static as_status
+get_named_enum_from_py_dict(as_error *err, PyObject *py_dict, const char *key,
+                            const char *option_name,
+                            const struct named_enum *named_enum, int *value)
 {
     PyObject *py_value = NULL;
     int retval =
@@ -236,7 +237,7 @@ static as_status get_named_enum_from_py_dict(as_error *err, PyObject *py_dict,
     }
 
     as_status status =
-        pyobject_to_named_enum(err, py_value, option_name, values, value);
+        pyobject_to_named_enum(err, py_value, option_name, named_enum, value);
     Py_DECREF(py_value);
     return status;
 }
@@ -629,8 +630,8 @@ static as_status register_python_seed_provider(as_error *err, as_config *config,
                                            "discovery.provider");
     }
     if (is_provider == 0) {
-        char names[OPTION_NAMES_SIZE];
-        join_option_names(&seed_providers, names);
+        char names[NAMED_ENUM_NAMES_SIZE];
+        join_named_enum_names(&seed_providers, names);
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "discovery.provider must be one of %s or "
                                "an " HELPERS_MODULE "." PROVIDER_CLASS
