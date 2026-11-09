@@ -803,29 +803,25 @@ static as_status register_seed_provider(as_error *err, as_config *config,
                                         PyObject *py_provider, PyObject *py_dns,
                                         bool validate_keys)
 {
-    if (py_provider && !PyUnicode_Check(py_provider)) {
-        if (py_dns) {
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "discovery.dns needs discovery.provider \"dns\"");
-        }
-        return register_python_seed_provider(err, config, py_provider);
-    }
-
+    bool is_python_provider = py_provider && !PyUnicode_Check(py_provider);
     int provider = SEED_PROVIDER_STATIC;
-    if (py_provider && pyobject_to_named_enum_value(
-                           err, py_provider, "discovery.provider",
-                           &seed_providers, &provider) != AEROSPIKE_OK) {
+    if (py_provider && !is_python_provider &&
+        pyobject_to_named_enum_value(err, py_provider, "discovery.provider",
+                                     &seed_providers,
+                                     &provider) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (provider == SEED_PROVIDER_DNS) {
-        return register_dns_seed_provider(err, config, py_dns, validate_keys);
-    }
-    if (py_dns) {
+    if (py_dns && provider != SEED_PROVIDER_DNS) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "discovery.dns needs discovery.provider \"dns\"");
+    }
+    if (is_python_provider) {
+        return register_python_seed_provider(err, config, py_provider);
+    }
+    if (provider == SEED_PROVIDER_DNS) {
+        return register_dns_seed_provider(err, config, py_dns, validate_keys);
     }
     return AEROSPIKE_OK;
 }

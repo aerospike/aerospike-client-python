@@ -255,6 +255,8 @@ def test_hosts_needed_without_provider():
         ({"discovery": {"refresh_timeout_ms": 2**32}}, "discovery.refresh_timeout_ms: ValueError"),
         ({"discovery": {"tend_refresh_deadline_ms": "100"}}, "discovery.tend_refresh_deadline_ms: TypeError"),
         ({"discovery": {"dns": {"names": ["a.test"]}}}, 'discovery.dns needs discovery.provider "dns"'),
+        ({"discovery": {"provider": Seeds([]), "dns": {"names": ["a.test"]}}},
+         'discovery.dns needs discovery.provider "dns"'),
         ({"discovery": {"provider": "dns", "dns": {"names": "a.test"}}}, "discovery.dns.names must be a list"),
         ({"discovery": {"provider": "dns", "dns": {"names": [5]}}}, "discovery.dns.names: TypeError"),
         ({"discovery": {"provider": "dns", "dns": {"names": ["a.test"], "tls_name": 5}}},
