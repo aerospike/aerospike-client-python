@@ -630,12 +630,8 @@ static void close_python_seed_provider(PyObject *py_provider)
 #endif
 }
 
-static int close_python_seed_provider_pending(void *udata)
-{
-    close_python_seed_provider((PyObject *)udata);
-    return 0;
-}
-
+// Runs on the thread destroying the client, which holds the GIL, or on the
+// discovery thread once a refresh that outlived the client returns
 static void release_python_seed_provider(void *udata)
 {
     if (PyGILState_Check()) {
@@ -643,13 +639,15 @@ static void release_python_seed_provider(void *udata)
         return;
     }
 
-    // The C client releases a provider whose refresh was still running on its
-    // discovery thread, where this must not wait for the GIL. Python closes
-    // the provider later instead, or never if it is finalizing or its pending
-    // call queue is full.
-    if (!Py_IsFinalizing()) {
-        (void)Py_AddPendingCall(close_python_seed_provider_pending, udata);
+    // PyGILState_Ensure() never returns once Python is finalizing, so the
+    // provider is not closed then
+    if (Py_IsFinalizing()) {
+        return;
     }
+
+    PyGILState_STATE gil_state = PyGILState_Ensure();
+    close_python_seed_provider((PyObject *)udata);
+    PyGILState_Release(gil_state);
 }
 
 static as_status register_python_seed_provider(as_error *err, as_config *config,

@@ -9,6 +9,7 @@ import gc
 import os
 import subprocess
 import sys
+import threading
 import time
 
 import pytest
@@ -177,6 +178,35 @@ def test_provider_closed_when_client_destroyed():
     del client
     gc.collect()
     assert seeds.closed == 1
+
+
+class BlockedSeeds(SeedCandidateProvider):
+    """Blocks every refresh until released."""
+
+    def __init__(self):
+        self.released = threading.Event()
+        self.closed = threading.Event()
+
+    def refresh_seed_candidates(self, context):
+        self.released.wait()
+        return [UNREACHABLE]
+
+    def needs_periodic_refresh(self):
+        return True
+
+    def close(self):
+        self.closed.set()
+
+
+# A refresh still running when the client is destroyed closes the provider when it returns, even
+# while the main thread waits outside Python code and so runs no pending calls
+def test_provider_closed_after_refresh_outlives_client():
+    seeds = BlockedSeeds()
+    raises(e.SeedDiscoveryFailed, {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
+    gc.collect()
+    assert not seeds.closed.is_set()
+    seeds.released.set()
+    assert seeds.closed.wait(2), "The provider was not closed when its refresh returned"
 
 
 def test_provider_rejected_in_tend_mode():
