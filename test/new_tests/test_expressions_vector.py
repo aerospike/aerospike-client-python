@@ -148,12 +148,22 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == pytest.approx(expected, rel=1e-6)
 
-    def _distance_precision_tolerance(self) -> float:
-        # Since server 8.2.1, a distance comes back at the precision of the server's accumulator.
+    def _set_vector_distance_precision(self, precision: str) -> None:
+        responses = self.as_connection.info_all(f"set-config:context=service;vector-distance-precision={precision}")
+        for error, response in responses.values():
+            assert error is None
+            assert response.strip() == "ok"
+
+    # Since server 8.2.1, a distance comes back at the precision of the server's accumulator. The setting is
+    # dynamic, so each value is set on every node for the test and the original is restored afterwards.
+    @pytest.fixture(params=["float", "double"])
+    def vector_distance_precision(self, request) -> str:
         service_config = self.as_connection.info_random_node("get-config:context=service")
-        if "vector-distance-precision=double" in service_config.split(";"):
-            return 1e-12
-        return 1e-6
+        prefix = "vector-distance-precision="
+        original = next(item[len(prefix):] for item in service_config.split(";") if item.startswith(prefix))
+        self._set_vector_distance_precision(request.param)
+        yield request.param
+        self._set_vector_distance_precision(original)
 
     @pytest.mark.parametrize(
         "metric, expected",
@@ -163,10 +173,10 @@ class TestVectorExpressionsIntegration(object):
             (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, 32 / math.sqrt(14 * 77)),
         ],
     )
-    def test_vector_distance_reference_values(self, metric, expected):
+    def test_vector_distance_reference_values(self, vector_distance_precision, metric, expected):
         key = self._put("reference", Vector.of_float32([1, 2, 3]))
         dist = vector_exp.VectorDistance(metric, Vector.of_float32([4, 5, 6]), exp.VectorBin("embedding"))
-        rel = self._distance_precision_tolerance()
+        rel = 1e-12 if vector_distance_precision == "double" else 1e-6
 
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist.compile())])
         assert bins["dist"] == pytest.approx(expected, rel=rel)
@@ -188,6 +198,14 @@ class TestVectorExpressionsIntegration(object):
         ).compile()
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == 0.0
+
+    def test_expression_read_of_vector_bin_returns_vector(self):
+        vector = Vector.of_float32([0.25, -0.5, 1.0])
+        key = self._put("vector-bin", vector)
+        vector_bin = exp.VectorBin("embedding").compile()
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("copy", vector_bin)])
+        assert isinstance(bins["copy"], Vector)
+        assert bytes(bins["copy"]) == bytes(vector)
 
     @pytest.mark.parametrize(
         "metric, distance, direction",

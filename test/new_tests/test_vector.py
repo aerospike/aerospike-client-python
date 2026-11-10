@@ -404,6 +404,43 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["embedding"], vector)
 
+    @pytest.mark.parametrize("command", ["select", "batch_operate", "query", "query_foreach", "scan", "scan_foreach"])
+    def test_read_path_returns_vector(self, command):
+        set_name = "test_vector_read_paths"
+        key = (self.test_ns, set_name, "read-path")
+        self.test_keys.append(key)
+        vector = Vector.of_int32([7, -8, 9])
+        self.as_connection.put(key, {"embedding": vector})
+
+        if command == "select":
+            records = [self.as_connection.select(key, ["embedding"])]
+        elif command == "batch_operate":
+            batch = self.as_connection.batch_operate([key], [operations.read("embedding")])
+            records = [batch_record.record for batch_record in batch.batch_records]
+        elif command in ("query", "scan"):
+            command_method = getattr(self.as_connection, command)
+            records = command_method(self.test_ns, set_name).results()
+        else:
+            command_method = getattr(self.as_connection, command.removesuffix("_foreach"))
+            records = []
+            command_method(self.test_ns, set_name).foreach(records.append)
+
+        assert len(records) == 1
+        self._assert_same_vector(records[0][2]["embedding"], vector)
+
+    @pytest.mark.parametrize(
+        "command, value",
+        [("append", "x"), ("append", b"\x00"), ("prepend", "x"), ("prepend", b"\x00"), ("increment", 1)],
+    )
+    def test_modifying_vector_bin_raises_bin_incompatible_type(self, command, value):
+        key = self._key("modify")
+        vector = Vector.of_float32([0.5, 1.5])
+        self.as_connection.put(key, {"embedding": vector})
+        command_method = getattr(self.as_connection, command)
+        with pytest.raises(e.BinIncompatibleType):
+            command_method(key, "embedding", value)
+        self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
+
     # bytes.__new__() skips the client's checks, so these show that the client sends a malformed vector
     # unchanged and surfaces the server's error detail. aerospike-tests-python's VW corpus covers the
     # server's validation itself.
@@ -419,8 +456,13 @@ class TestVectorIntegration(object):
                 "vector: value size 17 does not match 18 (3 dimensions of 4 bytes, little-endian)",
             ),
             (b"", "vector: value size 0 smaller than 6-byte header"),
+            (
+                struct.pack("<BBI2f", 2, Vector.ElementType.FLOAT32, 2, 1.0, 2.0),
+                "vector: unsupported format version 2 (expected 1)",
+            ),
+            (struct.pack("<BBI2f", 1, 5, 2, 1.0, 2.0), "vector: invalid element type 5"),
         ],
-        ids=["nan-element", "one-byte-short", "empty"],
+        ids=["nan-element", "one-byte-short", "empty", "version-2", "unknown-element-type"],
     )
     def test_server_rejects_malformed_vector_with_error_detail(self, raw, expected_detail):
         key = self._key("malformed")

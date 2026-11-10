@@ -388,12 +388,14 @@ class TestQueryTopKDouble:
         for key in self.keys:
             as_connection.remove(key)
 
-    # NaN ranks above every other value, and ties are broken by ascending digest in both directions.
+    # NaN ranks above every other value, and ties are broken by ascending digest in both directions, so a
+    # top_k that cuts through the tied zeros keeps the ones with the smallest digests.
+    @pytest.mark.parametrize("top_k", [len(VALUES), 4])
     @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
-    def test_order_by_double(self, direction):
+    def test_order_by_double(self, direction, top_k):
         query = self.as_connection.query("test", self.SET_NAME)
         query.order_by(BIN, aerospike.QueryOrderByType.DOUBLE, direction)
-        query.top_k = len(self.VALUES)
+        query.top_k = top_k
         records = query.results()
 
         ascending_ranks = [-math.inf, -1.0, 0.0, 1.0, math.inf]
@@ -404,9 +406,100 @@ class TestQueryTopKDouble:
                 return len(ascending_ranks) - ascending_rank
             return ascending_rank
 
+        ranked = [(rank(value), aerospike.calc_digest(*key)) for key, value in zip(self.keys, self.VALUES)]
+        expected = sorted(ranked)[:top_k]
         returned = [(rank(bins[BIN]), key[3]) for key, _, bins in records]
-        assert [r for r, _ in returned] == sorted(rank(value) for value in self.VALUES)
-        assert returned == sorted(returned)
+        assert returned == expected
+
+
+class TestQueryTopKTwoKeys:
+    SET_NAME = "demo-top-k-two-keys"
+    # (n, m) pairs: n takes 10 values, each held by 10 records with distinct m, written out of order.
+    RECORDS = [(i // 10, (i * 7) % 10) for i in range(100)]
+    # n descending, then m ascending, with top_k = 15.
+    EXPECTED = [(9, m) for m in range(10)] + [(8, m) for m in range(5)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (n, m) in zip(self.keys, self.RECORDS):
+            as_connection.put(key, {"n": n, "m": m})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _query(self) -> aerospike.Query:
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by("n", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("m", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 15
+        return query
+
+    def test_then_order_by_over_100_records(self):
+        records = self._query().results()
+        assert [(bins["n"], bins["m"]) for _, _, bins in records] == self.EXPECTED
+
+    def test_foreach_returns_records_in_rank_order(self):
+        ordered = []
+        self._query().foreach(lambda record: ordered.append((record[2]["n"], record[2]["m"])))
+        assert ordered == self.EXPECTED
+
+    def test_foreach_callback_returning_false_stops_the_query(self):
+        records = []
+
+        def stop_after_first(record: tuple) -> bool:
+            records.append(record)
+            return False
+
+        self._query().foreach(stop_after_first)
+        assert len(records) == 1
+
+
+class TestQueryTopKInteger:
+    SET_NAME = "demo-top-k-integer"
+    # (n, m) pairs. The string n and the missing n aren't integers, so they sort as NIL, after every integer.
+    RECORDS = [(5, 3), (1, 6), (4, 0), (2, 5), (3, 1), ("x", 4), (None, 2)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (n, m) in zip(self.keys, self.RECORDS):
+            bins = {"m": m}
+            if n is not None:
+                bins["n"] = n
+            as_connection.put(key, bins)
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _results(self, direction: aerospike.QueryOrder, then_order_by_m: bool) -> list:
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by("n", aerospike.QueryOrderByType.INTEGER, direction)
+        if then_order_by_m:
+            query.then_order_by("m", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = len(self.RECORDS)
+        return query.results()
+
+    # NIL ties are broken by ascending digest.
+    @pytest.mark.parametrize(
+        "direction, expected",
+        [(aerospike.QueryOrder.ASCENDING, [1, 2, 3, 4, 5]), (aerospike.QueryOrder.DESCENDING, [5, 4, 3, 2, 1])],
+    )
+    def test_order_by_integer_ranks_other_values_last(self, direction, expected):
+        records = self._results(direction, then_order_by_m=False)
+        assert [bins["n"] for _, _, bins in records[: len(expected)]] == expected
+        others = records[len(expected):]
+        assert sorted(bins["m"] for _, _, bins in others) == [2, 4]
+        nil_digests = [key[3] for key, _, _ in others]
+        assert nil_digests == sorted(nil_digests)
+
+    @pytest.mark.parametrize(
+        "direction, expected",
+        [(aerospike.QueryOrder.ASCENDING, [1, 2, 3, 4, 5]), (aerospike.QueryOrder.DESCENDING, [5, 4, 3, 2, 1])],
+    )
+    def test_then_order_by_ranks_records_without_integer_by_second_key(self, direction, expected):
+        records = self._results(direction, then_order_by_m=True)
+        assert [bins.get("n") for _, _, bins in records] == expected + [None, "x"]
 
 
 class TestQueryTopKVersionGate:
