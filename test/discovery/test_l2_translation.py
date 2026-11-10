@@ -67,22 +67,6 @@ def nodes():
     return found
 
 
-@pytest.fixture
-def warnings():
-    """Collect the client's warning and error log messages."""
-    messages = []
-
-    def log(level, function, path, line, message):
-        messages.append(message)
-        print(f"CLIENT-LOG {level} {message}")
-
-    aerospike.set_log_handler(log)
-    aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
-    yield messages
-    aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
-    aerospike.set_log_handler()
-
-
 def port_map_by_endpoint(nodes):
     return {advertised: node.listener for node in nodes for advertised in node.advertised}
 

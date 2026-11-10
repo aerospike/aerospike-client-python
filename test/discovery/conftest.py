@@ -2,6 +2,24 @@ import os
 
 import pytest
 
+import aerospike
+
+
+@pytest.fixture
+def warnings():
+    """Collect the client's warning and error log messages."""
+    messages = []
+
+    def log(level, function, path, line, message):
+        messages.append(message)
+        print(f"CLIENT-LOG {level} {message}")
+
+    aerospike.set_log_handler(log)
+    aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+    yield messages
+    aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+    aerospike.set_log_handler()
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "l2(*profiles): needs the L2 topology built with one of these profiles")

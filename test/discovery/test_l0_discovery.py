@@ -112,17 +112,23 @@ def test_u1_provider_context(cluster_name):
     assert seeds.contexts == [expected]
 
 
+# The C client's warning when the first tend cannot reach the configured seed. The provider never
+# returns that host, so the warning shows the configured seeds are in use.
+SEED_CONNECT_WARNING = f"Failed to connect to seed {UNREACHABLE[0]} {UNREACHABLE[1]}."
+
+
 # A provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client on its
 # configured seeds, and no Python exception reaches the caller
 @pytest.mark.parametrize("seeds_args", [{"hosts": []}, {"error": RuntimeError("no seeds today")}])
-def test_u1_failed_refresh_keeps_configured_seeds(seeds_args):
+def test_u1_failed_refresh_keeps_configured_seeds(seeds_args, warnings):
     seeds = Seeds(**seeds_args)
     client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds}})
     client.close()
     assert len(seeds.contexts) == 1
+    assert any(message.startswith(SEED_CONNECT_WARNING) for message in warnings), warnings
 
 
-def test_u1_blocked_refresh_keeps_configured_seeds():
+def test_u1_blocked_refresh_keeps_configured_seeds(warnings):
     seeds = BlockedSeeds()
     start = time.monotonic()
     client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
@@ -130,6 +136,9 @@ def test_u1_blocked_refresh_keeps_configured_seeds():
     seeds.released.set()
     client.close()
     assert elapsed < 1, f"Client construction waited {elapsed:.1f} s for a blocked refresh"
+    timed_out = "Seed provider BlockedSeeds failed: AEROSPIKE_ERR_TIMEOUT Initial refresh did not complete"
+    assert any(message.startswith(timed_out) for message in warnings), warnings
+    assert any(message.startswith(SEED_CONNECT_WARNING) for message in warnings), warnings
 
 
 def test_u1_periodic_refresh_continues_after_errors():
