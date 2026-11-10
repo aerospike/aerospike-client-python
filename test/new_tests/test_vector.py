@@ -325,6 +325,90 @@ class TestVectorIntegration(object):
         assert result.dimensions == vector.dimensions
         assert list(result.value) == list(vector.value)
 
+    def _key(self, name):
+        key = (self.test_ns, self.test_set, name)
+        self.test_keys.append(key)
+        return key
+
+    @staticmethod
+    def _assert_same_vector(result, expected):
+        assert isinstance(result, Vector)
+        assert bytes(result) == bytes(expected)
+
+    def test_operate_write_and_read(self):
+        key = self._key("operate")
+        vector = Vector.of_float32([0.1, 0.2, 0.3])
+        _, _, bins = self.as_connection.operate(
+            key, [operations.write("embedding", vector), operations.read("embedding")]
+        )
+        self._assert_same_vector(bins["embedding"], vector)
+
+    def test_batch_write_and_batch_read(self):
+        vectors = [Vector.of_float32([0.1, 0.2]), Vector.of_int32([3, -4]), Vector.of_float16([0.5, 1.5])]
+        keys = [self._key(f"batch-{i}") for i in range(len(vectors))]
+        writes = br.BatchRecords(
+            [br.Write(key, [operations.write("embedding", vector)]) for key, vector in zip(keys, vectors)]
+        )
+        written = self.as_connection.batch_write(writes)
+        assert [record.result for record in written.batch_records] == [0] * len(vectors)
+
+        read = self.as_connection.batch_read(keys, ["embedding"])
+        for record, vector in zip(read.batch_records, vectors):
+            assert record.result == 0
+            self._assert_same_vector(record.record[2]["embedding"], vector)
+
+    # CLIENT-5845 test plan: PB-04
+    def test_batch_operate_writes_vector(self):
+        keys = [self._key(f"batch-operate-{i}") for i in range(2)]
+        vector = Vector.of_float64([0.5, -0.5])
+        written = self.as_connection.batch_operate(keys, [operations.write("embedding", vector)])
+        assert [record.result for record in written.batch_records] == [0] * len(keys)
+        for key in keys:
+            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
+
+    # CLIENT-5845 test plan: PB-04
+    @pytest.mark.parametrize("command, job_module", [("query", aerospike.JOB_QUERY), ("scan", aerospike.JOB_SCAN)])
+    def test_background_write_stores_vector(self, command, job_module):
+        set_name = f"test_vector_background_{command}"
+        keys = [(self.test_ns, set_name, i) for i in range(3)]
+        self.test_keys.extend(keys)
+        for key in keys:
+            self.as_connection.put(key, {"id": key[2]})
+
+        vector = Vector.of_float16([0.5, 1.5])
+        job = getattr(self.as_connection, command)(self.test_ns, set_name)
+        job.add_ops([operations.write("embedding", vector)])
+        job_id = job.execute_background()
+        wait_for_job_completion(self.as_connection, job_id, job_module=job_module)
+
+        for key in keys:
+            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
+
+    # CLIENT-5845 test plan: PB-05
+    @pytest.mark.parametrize("command", ["select", "batch_operate", "query", "query_foreach", "scan", "scan_foreach"])
+    def test_read_path_returns_vector(self, command):
+        set_name = "test_vector_read_paths"
+        key = (self.test_ns, set_name, "read-path")
+        self.test_keys.append(key)
+        vector = Vector.of_int32([7, -8, 9])
+        self.as_connection.put(key, {"embedding": vector})
+
+        if command == "select":
+            records = [self.as_connection.select(key, ["embedding"])]
+        elif command == "batch_operate":
+            batch = self.as_connection.batch_operate([key], [operations.read("embedding")])
+            records = [batch_record.record for batch_record in batch.batch_records]
+        elif command in ("query", "scan"):
+            command_method = getattr(self.as_connection, command)
+            records = command_method(self.test_ns, set_name).results()
+        else:
+            command_method = getattr(self.as_connection, command.removesuffix("_foreach"))
+            records = []
+            command_method(self.test_ns, set_name).foreach(records.append)
+
+        assert len(records) == 1
+        self._assert_same_vector(records[0][2]["embedding"], vector)
+
     # CLIENT-5845 test plan: PB-06
     @pytest.mark.parametrize(
         "bin_value",
@@ -374,63 +458,6 @@ class TestVectorIntegration(object):
         with pytest.raises(e.ClientError) as excinfo:
             self.as_connection.put(key, {"m": {Vector.of_float32([0.5]): 1}})
         assert excinfo.value.msg == "Failed to convert Python dictionary to a C client as_map."
-
-    def _key(self, name):
-        key = (self.test_ns, self.test_set, name)
-        self.test_keys.append(key)
-        return key
-
-    @staticmethod
-    def _assert_same_vector(result, expected):
-        assert isinstance(result, Vector)
-        assert bytes(result) == bytes(expected)
-
-    def test_operate_write_and_read(self):
-        key = self._key("operate")
-        vector = Vector.of_float32([0.1, 0.2, 0.3])
-        _, _, bins = self.as_connection.operate(
-            key, [operations.write("embedding", vector), operations.read("embedding")]
-        )
-        self._assert_same_vector(bins["embedding"], vector)
-
-    def test_batch_write_and_batch_read(self):
-        vectors = [Vector.of_float32([0.1, 0.2]), Vector.of_int32([3, -4]), Vector.of_float16([0.5, 1.5])]
-        keys = [self._key(f"batch-{i}") for i in range(len(vectors))]
-        writes = br.BatchRecords(
-            [br.Write(key, [operations.write("embedding", vector)]) for key, vector in zip(keys, vectors)]
-        )
-        written = self.as_connection.batch_write(writes)
-        assert [record.result for record in written.batch_records] == [0] * len(vectors)
-
-        read = self.as_connection.batch_read(keys, ["embedding"])
-        for record, vector in zip(read.batch_records, vectors):
-            assert record.result == 0
-            self._assert_same_vector(record.record[2]["embedding"], vector)
-
-    # CLIENT-5845 test plan: PB-05
-    @pytest.mark.parametrize("command", ["select", "batch_operate", "query", "query_foreach", "scan", "scan_foreach"])
-    def test_read_path_returns_vector(self, command):
-        set_name = "test_vector_read_paths"
-        key = (self.test_ns, set_name, "read-path")
-        self.test_keys.append(key)
-        vector = Vector.of_int32([7, -8, 9])
-        self.as_connection.put(key, {"embedding": vector})
-
-        if command == "select":
-            records = [self.as_connection.select(key, ["embedding"])]
-        elif command == "batch_operate":
-            batch = self.as_connection.batch_operate([key], [operations.read("embedding")])
-            records = [batch_record.record for batch_record in batch.batch_records]
-        elif command in ("query", "scan"):
-            command_method = getattr(self.as_connection, command)
-            records = command_method(self.test_ns, set_name).results()
-        else:
-            command_method = getattr(self.as_connection, command.removesuffix("_foreach"))
-            records = []
-            command_method(self.test_ns, set_name).foreach(records.append)
-
-        assert len(records) == 1
-        self._assert_same_vector(records[0][2]["embedding"], vector)
 
     # CLIENT-5845 test plan: PB-07
     @pytest.mark.parametrize(
@@ -523,33 +550,6 @@ class TestVectorIntegration(object):
     def test_batch_write_invalid_vector_default_message_names_its_result(self):
         invalid = self._write_mixed_batch()
         assert invalid.message.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
-
-    # CLIENT-5845 test plan: PB-04
-    def test_batch_operate_writes_vector(self):
-        keys = [self._key(f"batch-operate-{i}") for i in range(2)]
-        vector = Vector.of_float64([0.5, -0.5])
-        written = self.as_connection.batch_operate(keys, [operations.write("embedding", vector)])
-        assert [record.result for record in written.batch_records] == [0] * len(keys)
-        for key in keys:
-            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
-
-    # CLIENT-5845 test plan: PB-04
-    @pytest.mark.parametrize("command, job_module", [("query", aerospike.JOB_QUERY), ("scan", aerospike.JOB_SCAN)])
-    def test_background_write_stores_vector(self, command, job_module):
-        set_name = f"test_vector_background_{command}"
-        keys = [(self.test_ns, set_name, i) for i in range(3)]
-        self.test_keys.extend(keys)
-        for key in keys:
-            self.as_connection.put(key, {"id": key[2]})
-
-        vector = Vector.of_float16([0.5, 1.5])
-        job = getattr(self.as_connection, command)(self.test_ns, set_name)
-        job.add_ops([operations.write("embedding", vector)])
-        job_id = job.execute_background()
-        wait_for_job_completion(self.as_connection, job_id, job_module=job_module)
-
-        for key in keys:
-            self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
 
     @pytest.fixture
     def vector_udf(self):

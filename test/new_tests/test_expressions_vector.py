@@ -201,15 +201,6 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == 0.0
 
-    # CLIENT-5845 test plan: PE-07
-    def test_expression_read_of_vector_bin_returns_vector(self):
-        vector = Vector.of_float32([0.25, -0.5, 1.0])
-        key = self._put("vector-bin", vector)
-        vector_bin = exp.VectorBin("embedding").compile()
-        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("copy", vector_bin)])
-        assert isinstance(bins["copy"], Vector)
-        assert bytes(bins["copy"]) == bytes(vector)
-
     @pytest.mark.parametrize(
         "metric, distance, direction",
         [
@@ -280,7 +271,7 @@ class TestVectorExpressionsIntegration(object):
         assert [i for i, _ in results] == expected
         assert dict(results)[3] == math.inf
 
-    # CLIENT-5845 test plan: PE-03, PE-05
+    # CLIENT-5845 test plan: PE-05, PE-03
     # The huge record's dot product with the query overflows a double, so its distance is unknown: a
     # single-record read fails, and a query leaves the record out, or returns it with None and ranks it
     # last in either direction under EXP_READ_EVAL_NO_FAIL.
@@ -305,3 +296,12 @@ class TestVectorExpressionsIntegration(object):
         results = self._top_k_distances(metric, query_vector, direction, aerospike.EXP_READ_EVAL_NO_FAIL)
         assert results[:-1] == [(i, pytest.approx(dot_product(stored[i], [1e200, 1e200]))) for i in finite]
         assert results[-1] == (3, None)
+
+    # CLIENT-5845 test plan: PE-07
+    def test_expression_read_of_vector_bin_returns_vector(self):
+        vector = Vector.of_float32([0.25, -0.5, 1.0])
+        key = self._put("vector-bin", vector)
+        vector_bin = exp.VectorBin("embedding").compile()
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("copy", vector_bin)])
+        assert isinstance(bins["copy"], Vector)
+        assert bytes(bins["copy"]) == bytes(vector)

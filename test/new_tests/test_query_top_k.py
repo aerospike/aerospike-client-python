@@ -350,30 +350,6 @@ class TestQueryTopKValidation:
         )
 
 
-class TestQueryTopKIntegration:
-    SET_NAME = "demo-top-k"
-    # (score, ts) pairs. The two records with score 3 tie on the first key.
-    RECORDS = [(1, 50), (3, 20), (2, 40), (3, 10)]
-
-    @pytest.fixture(autouse=True)
-    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
-        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
-        for key, (score, ts) in zip(self.keys, self.RECORDS):
-            as_connection.put(key, {BIN: score, "ts": ts})
-        yield
-        for key in self.keys:
-            as_connection.remove(key)
-
-    def test_then_order_by_breaks_ties(self):
-        query = self.as_connection.query("test", self.SET_NAME)
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        query.top_k = 3
-        records = query.results()
-        ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
-        assert ordered == [(3, 10), (3, 20), (2, 40)]
-
-
 class TestQueryTopKDouble:
     SET_NAME = "demo-top-k-double"
     # -0.0 and 0.0 compare equal, so the five zeros tie.
@@ -411,6 +387,30 @@ class TestQueryTopKDouble:
         expected = sorted(ranked)[:top_k]
         returned = [(rank(bins[BIN]), key[3]) for key, _, bins in records]
         assert returned == expected
+
+
+class TestQueryTopKIntegration:
+    SET_NAME = "demo-top-k"
+    # (score, ts) pairs. The two records with score 3 tie on the first key.
+    RECORDS = [(1, 50), (3, 20), (2, 40), (3, 10)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (score, ts) in zip(self.keys, self.RECORDS):
+            as_connection.put(key, {BIN: score, "ts": ts})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def test_then_order_by_breaks_ties(self):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 3
+        records = query.results()
+        ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
+        assert ordered == [(3, 10), (3, 20), (2, 40)]
 
 
 class TestQueryTopKTwoKeys:
