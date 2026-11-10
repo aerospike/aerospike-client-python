@@ -53,15 +53,17 @@ jobs:
           {layer: "L0", tests: "U-2, U-8, U-10, U-13 and U-15 translator contracts", reason: "the translators are C client built-ins, so the C client suite owns them"},
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
           {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
-          {layer: "L2 CE", tests: "port-map-range, low-mtu, port-range and idle-reset profiles", reason: $not_ported},
+          {layer: "L2", tests: "N-13 map refresh", reason: "deferred: TranslationMapProvider is not in this release"},
+          {layer: "L2 CE", tests: "low-mtu, port-range and idle-reset profiles", reason: $not_ported},
           {layer: "L2 CE", tests: "unresolved-access profile", reason: "its server startup check runs no client, and its port-map check is not ported to the Python client yet"},
-          {layer: "L2 CE", tests: "N-18 collisions", reason: $not_ported},
-          {layer: "L2 EE", tests: "default and cn-only profiles", reason: $not_ported},
           {layer: "TLS certificate matching", tests: "certificate name matching against Enterprise servers", reason: $not_ported},
           {layer: "L3", tests: "scale up and down, NodePort stability, and TLS name tests", reason: $not_ported}
         ]')
         if [[ "$HAS_FEATURES" != true ]]; then
-          layers=$(jq -c '. + [{layer: "L3", tests: "K-10 shared endpoint", reason: "the FEATURES_CONTENT secret is absent"}]' <<< "$layers")
+          layers=$(jq -c '. + [
+            {layer: "L2 EE", tests: "N-6 and N-17 TLS through the proxy", reason: "the FEATURES_CONTENT secret is absent"},
+            {layer: "L3", tests: "K-10 shared endpoint", reason: "the FEATURES_CONTENT secret is absent"}
+          ]' <<< "$layers")
         fi
         echo "has-features=$HAS_FEATURES" >> "$GITHUB_OUTPUT"
         echo "layers=$layers" >> "$GITHUB_OUTPUT"
@@ -135,6 +137,10 @@ jobs:
           server-container-repo: database-docker-virtual/aerospike-server
           server-tag: 8.1.2.1
           unresolvable-hostnames: false
+        - profile: port-map-range
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
         # Released servers resolve their access addresses at startup; this dev build advertises them verbatim.
         # Move to a release tag once one carries the fix.
         - profile: pass-through-ports
@@ -167,6 +173,40 @@ jobs:
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
         unresolvable-hostnames: ${{ matrix.unresolvable-hostnames }}
 
+    # N-4 seeds the client from an SRV record for the endpoint per listener
+    - name: Build DNS zone
+      id: zone
+      if: ${{ matrix.profile == 'default' }}
+      env:
+        CLIENT_NETWORK: ${{ steps.l2.outputs.client-network }}
+        ENV_FILE: ${{ steps.l2.outputs.env-file }}
+      run: |
+        setting() { sed -n "s/^$1=//p" "$ENV_FILE"; }
+        host=$(setting DISCOVERY_ENDPOINT_HOSTNAME)
+        proxy=$(setting TOXIPROXY_HOST)
+        proxy_ip=$(docker inspect -f "{{(index .NetworkSettings.Networks \"$CLIENT_NETWORK\").IPAddress}}" "$proxy")
+        IFS=',' read -r -a ports <<< "$(setting DISCOVERY_ENDPOINT_PORTS)"
+        {
+          echo "zone-name=$host"
+          echo "zone-content<<EOF"
+          echo "\$ORIGIN $host."
+          echo "@ 3600 IN SOA ns.$host. admin.$host. 1 60 60 60 1"
+          echo "@ 1 IN A $proxy_ip"
+          for port in "${ports[@]}"; do
+            echo "_aerospike._tcp 1 IN SRV 10 10 $port $host."
+          done
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Set up DNS server
+      id: dns
+      if: ${{ matrix.profile == 'default' }}
+      uses: aerospike/shared-workflows/.github/actions/setup-dns-server@308f37e0cd5c7a6386a99ea7afc379d5a4ea9256 # v5.1.0
+      with:
+        network-name: ${{ steps.l2.outputs.client-network }}
+        zone-name: ${{ steps.zone.outputs.zone-name }}
+        zone-content: ${{ steps.zone.outputs.zone-content }}
+
     # The client runs in a container on the client network, which has no route to the node addresses.
     # The workspace is mounted at the same path, so the tests see the node server's control directory.
     - name: Run L2 tests
@@ -174,11 +214,13 @@ jobs:
         CLIENT_NETWORK: ${{ steps.l2.outputs.client-network }}
         ENV_FILE: ${{ steps.l2.outputs.env-file }}
         CLIENT_HOSTS: ${{ steps.l2.outputs.client-hosts }}
+        DISCOVERY_DNS_SERVER: ${{ steps.dns.outputs.server-address }}
       run: |
         run_args=(
           --rm
           --network "$CLIENT_NETWORK"
           --env-file "$ENV_FILE"
+          -e DISCOVERY_DNS_SERVER
           -e DISCOVERY_FAIL_ON_SKIP=1
           -e PYTHONDONTWRITEBYTECODE=1
           -e PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -201,6 +243,77 @@ jobs:
       env:
         LOG_FILE: ${{ steps.l2.outputs.node-server-log }}
       run: cat "$LOG_FILE"
+
+  l2-ee:
+    name: L2 discovery (ee, ${{ matrix.profile }})
+    needs: [skipped-layers, build]
+    if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    # N-17 fails until the C client drops its deprecated CN fallback in the next major release
+    continue-on-error: ${{ matrix.profile == 'cn-only' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [default, cn-only]
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    - name: Set up L2 topology
+      id: l2
+      uses: aerospike/aerospike-client-conformance/.github/actions/discovery-l2-topology@e50811162061a83ba716f0cd9cbffbf8ca91c218 # main
+      with:
+        profile: ${{ matrix.profile }}
+        subset: ee
+        server-edition: enterprise
+        server-container-repo: database-docker-virtual/aerospike-server-enterprise
+        server-tag: 8.1.2.1
+        enable-tls: 'true'
+        tls-listen-port-base: '43331'
+        features-content: ${{ secrets.FEATURES_CONTENT }}
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+
+    # As in the l2 job, with the topology's CA certificate mounted for the client
+    - name: Run L2 tests
+      env:
+        CLIENT_NETWORK: ${{ steps.l2.outputs.client-network }}
+        ENV_FILE: ${{ steps.l2.outputs.env-file }}
+        CLIENT_HOSTS: ${{ steps.l2.outputs.client-hosts }}
+        TLS_CERT_DIR: ${{ steps.l2.outputs.tls-cert-dir }}
+      run: |
+        run_args=(
+          --rm
+          --network "$CLIENT_NETWORK"
+          --env-file "$ENV_FILE"
+          -e AEROSPIKE_CA_CERT=/aerospike-tls/ca.crt
+          -e DISCOVERY_FAIL_ON_SKIP=1
+          -e PYTHONDONTWRITEBYTECODE=1
+          -e PIP_DISABLE_PIP_VERSION_CHECK=1
+          -e PIP_ROOT_USER_ACTION=ignore
+          -v "$TLS_CERT_DIR:/aerospike-tls:ro"
+          -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE"
+          -w "$GITHUB_WORKSPACE"
+        )
+        IFS=',' read -r -a client_hosts <<< "$CLIENT_HOSTS"
+        for host in "${client_hosts[@]}"; do
+          run_args+=(--add-host "$host")
+        done
+        docker run "${run_args[@]}" "python:${PYTHON_VERSION}-slim-bookworm" bash -c '
+          set -e
+          python3 -m pip install "$1"/*.whl -r test/discovery/requirements.txt
+          pytest test/discovery/test_l2_*.py -p no:cacheprovider -rA
+        ' bash "$WHEEL_DIR"
 
   l3:
     name: L3 discovery (k8s)

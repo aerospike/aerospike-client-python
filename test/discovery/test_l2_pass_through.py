@@ -7,14 +7,8 @@ the node addresses. The client reads the alternate list with use_services_altern
 pass-through translator, so it uses every address as advertised.
 """
 
-import json
 import os
-import socket
-import time
-import urllib.request
-import uuid
 from dataclasses import dataclass
-from pathlib import Path
 
 import pytest
 
@@ -25,8 +19,7 @@ NAMESPACE = "test"
 SET_NAME = "l2-pass-through"
 TEND_INTERVAL_MS = 250
 JOIN_TIMEOUT_SEC = 30
-CONTROL_TIMEOUT_SEC = 60
-POLL_INTERVAL_SEC = 0.005
+COLLISION_RETRIES = 3
 
 
 @dataclass
@@ -82,30 +75,8 @@ def connect(node):
     return aerospike.client(config)
 
 
-def client_nodes(client):
-    return {entry["node_name"]: entry for entry in client.get_node_names()}
-
-
 def wait_for_nodes(client, names):
-    expected = sorted(names)
-
-    def joined():
-        held = client_nodes(client)
-        return sorted(held) == expected
-
-    complete = di.wait_for(joined, JOIN_TIMEOUT_SEC)
-    held = client_nodes(client)
-    assert complete, f"Client nodes {sorted(held)}, expected {expected}"
-    # The client exposes no partition map, so give it the tends that fetch every node's partitions
-    time.sleep(4 * TEND_INTERVAL_MS / 1000)
-
-
-def assert_at_advertised_address(entry, advertised):
-    host, port = di.split_endpoint(advertised)
-    resolved = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
-    addresses = {info[4][0] for info in resolved}
-    assert entry["address"] in addresses | {host}, f"{entry} is not at {host} {sorted(addresses)}"
-    assert entry["port"] == port, f"{entry} is not at port {port}"
+    di.wait_for_nodes(client, names, JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
 
 
 def assert_routes_to_owners(row, nodes):
@@ -115,10 +86,10 @@ def assert_routes_to_owners(row, nodes):
     client = connect(nodes[0])
     try:
         wait_for_nodes(client, [node.name for node in nodes])
-        held = client_nodes(client)
+        held = di.client_nodes(client)
         for node in nodes:
             print(f"L2-{row}-NODE {node.name} client={held[node.name]} alternate={node.alternate}")
-            assert_at_advertised_address(held[node.name], node.alternate)
+            di.assert_at(held[node.name], node.alternate)
         infos = {node.name: node.info for node in nodes}
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, f"L2-{row}", infos)
     finally:
@@ -139,76 +110,17 @@ def test_n16_shared_name_routes_to_every_owner(nodes):
     assert_routes_to_owners("N-16", nodes)
 
 
-def toxiproxy(method, path, body=None):
-    data = None
-    if body is not None:
-        data = json.dumps(body).encode()
-    url = os.environ["TOXIPROXY_URL"] + path
-    request = urllib.request.Request(url, data=data, method=method, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=10) as response:
-        text = response.read().decode()
-    if text:
-        return json.loads(text)
-    return None
-
-
 def next_listener_port():
-    proxies = toxiproxy("GET", "/proxies")
-    ports = {parse_port(proxy["listen"]) for proxy in proxies.values()}
+    ports = di.listener_ports()
     return max(ports) + 1
-
-
-def control(command):
-    """Send a request to the discovery node server and return its acknowledgement."""
-    directory = Path(os.environ["DISCOVERY_CONTROL_DIR"])
-    request_id = uuid.uuid4().hex
-    tmp = directory / f"{request_id}.tmp"
-    ack = directory / f"{request_id}.ack"
-    tmp.write_text(command + "\n")
-    tmp.rename(directory / f"{request_id}.request")
-    answered = di.wait_for(ack.exists, CONTROL_TIMEOUT_SEC)
-    assert answered, f"No acknowledgement for '{command}' in {directory}"
-
-    reply = {}
-    for line in ack.read_text().splitlines():
-        key, separator, value = line.partition("=")
-        if separator:
-            reply[key] = value
-    ack.unlink()
-    print(f"L2-CONTROL {command} {reply}")
-    assert "error" not in reply, f"'{command}' failed: {reply['error']}"
-    return reply
-
-
-def wait_cluster_stable(nodes):
-    command = f"cluster-stable:size={len(nodes)};ignore-migrations=false"
-
-    def stable():
-        keys = {node.info(command) for node in nodes}
-        return len(keys) == 1 and not keys.pop().startswith("ERROR")
-
-    settled = di.wait_for(stable, CONTROL_TIMEOUT_SEC)
-    assert settled, f"Cluster not stable at size {len(nodes)}"
-
-
-@pytest.fixture
-def added_nodes(nodes):
-    """Collect the containers a test starts, and remove them and their listeners afterwards."""
-    containers = []
-    yield containers
-    for container in containers:
-        toxiproxy("DELETE", f"/proxies/{container}")
-        control(f"stop {container}")
-    if containers:
-        wait_cluster_stable(nodes)
 
 
 def add_listener(container, port, like):
     """Add a Toxiproxy listener on port for container, forwarding to the port the like proxy uses."""
-    upstream = toxiproxy("GET", f"/proxies/{like}")["upstream"]
+    upstream = di.toxiproxy("GET", f"/proxies/{like}")["upstream"]
     upstream_port = parse_port(upstream)
     body = {"name": container, "listen": f"0.0.0.0:{port}", "upstream": f"{container}:{upstream_port}", "enabled": True}
-    toxiproxy("POST", "/proxies", body)
+    di.toxiproxy("POST", "/proxies", body)
 
 
 # N-16 scale-out and NFR-1: a node started mid-test that advertises the same hostname with its own
@@ -223,34 +135,55 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, add
         wait_for_nodes(client, names)
         generation = observer.info("peers-generation")
         port = next_listener_port()
-        container = control(f"start alternate-port={port}")["container"]
+        container = di.control(f"start alternate-port={port}")["container"]
         added_nodes.append(container)
         add_listener(container, port, observer.proxy)
         current = observer.info("peers-generation")
         assert current == generation, f"peers-generation moved to {current} before {container} had a listener"
 
-        bump_ns = None
-        active_ns = None
-        joined = None
-        deadline = time.monotonic() + CONTROL_TIMEOUT_SEC
-        while (bump_ns is None or active_ns is None) and time.monotonic() < deadline:
-            now = time.monotonic_ns()
-            if bump_ns is None and observer.info("peers-generation") != generation:
-                bump_ns = now
-            if active_ns is None:
-                held = client_nodes(client)
-                new = [entry for name, entry in held.items() if name not in names]
-                if new:
-                    active_ns = now
-                    joined = new[0]
-            time.sleep(POLL_INTERVAL_SEC)
-
-        assert bump_ns is not None, f"peers-generation stayed at {generation}"
-        assert joined is not None, f"{container} never joined the client"
-        bump_to_active_ms = (active_ns - bump_ns) / 1e6
+        joined, bump_to_active_ms = di.wait_joined(client, observer.info, generation, names, di.CONTROL_TIMEOUT_SEC)
         budget_ms = 2 * TEND_INTERVAL_MS
         print(f"L2-N16-TIMING node={joined} container={container} bumpToActiveMs={bump_to_active_ms:.1f}")
-        assert_at_advertised_address(joined, f"{hostname}:{port}")
+        di.assert_at(joined, f"{hostname}:{port}")
         assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
+    finally:
+        client.close()
+
+
+# N-18 on pass-through: two nodes started mid-test advertise the same hostname and port. Seeded through
+# a node that does not collide, neither becomes a node, the collision is logged on every tend naming
+# both nodes, the address and the translator, and the other nodes keep serving the keys they are
+# master of. Only one of the two gets the shared port's listener, once both are in the cluster.
+@pytest.mark.l2("pass-through-ports")
+def test_n18_pass_through_colliding_nodes_create_no_node(nodes, added_nodes, warnings):
+    observer = nodes[0]
+    names = [node.name for node in nodes]
+    hostname = seed(observer)[0]
+    port = next_listener_port()
+    endpoint = f"{hostname}:{port}"
+    for _ in range(2):
+        container = di.control(f"start alternate-port={port}")["container"]
+        added_nodes.append(container)
+    di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 2)
+    add_listener(added_nodes[0], port, observer.proxy)
+    colliding = di.peer_names(observer.info("peers-clear-alt"), endpoint)
+    print(f"L2-N18-ADVERTISED endpoint={endpoint} nodes={colliding}")
+    assert len(colliding) == 2, f"Nodes advertising {endpoint}: {colliding}"
+
+    client = connect(observer)
+    try:
+        wait_for_nodes(client, names)
+
+        def logged():
+            return all(len(di.collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
+
+        retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
+        assert sorted(di.client_nodes(client)) == sorted(names)
+        assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
+        message = di.collisions(warnings, colliding[0])[0]
+        print(f"L2-N18-LOG {message}")
+        assert message in di.collision_messages("pass-through", endpoint, colliding)
+        infos = {node.name: node.info for node in nodes}
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N18-pass-through", infos)
     finally:
         client.close()

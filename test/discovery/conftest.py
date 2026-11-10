@@ -3,6 +3,7 @@ import os
 import pytest
 
 import aerospike
+import discovery_info as di
 
 
 @pytest.fixture
@@ -21,19 +22,38 @@ def warnings():
     aerospike.set_log_handler()
 
 
+@pytest.fixture
+def added_nodes(nodes):
+    """Collect the containers a test starts through the node server, and remove them and the
+    listeners named after them afterwards."""
+    containers = []
+    yield containers
+    if not containers:
+        return
+    proxies = di.toxiproxy("GET", "/proxies")
+    for container in containers:
+        if container in proxies:
+            di.toxiproxy("DELETE", f"/proxies/{container}")
+        di.control(f"stop {container}")
+    di.wait_cluster_stable([node.info for node in nodes], len(nodes))
+
+
 def pytest_configure(config):
-    config.addinivalue_line("markers", "l2(*profiles): needs the L2 topology built with one of these profiles")
+    config.addinivalue_line(
+        "markers", "l2(*profiles, subset='ce'): needs the L2 topology built with one of these profiles and this subset"
+    )
     config.addinivalue_line("markers", "l3: needs the kind and AKO cluster")
 
 
 def pytest_collection_modifyitems(config, items):
     profile = os.environ.get("L2_PROFILE")
+    subset = os.environ.get("DISCOVERY_SUBSET")
     has_l3 = bool(os.environ.get("DISCOVERY_SERVICE_NODE_PORTS"))
     deselected = []
     selected = []
     for item in items:
         l2 = item.get_closest_marker("l2")
-        if l2 and profile and profile not in l2.args:
+        if l2 and profile and (profile not in l2.args or l2.kwargs.get("subset", "ce") != subset):
             deselected.append(item)
             continue
         if l2 and not profile:

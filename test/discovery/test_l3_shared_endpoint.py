@@ -39,10 +39,6 @@ def connect(host, port):
     return aerospike.client(config)
 
 
-def client_nodes(client):
-    return {entry["node_name"]: entry for entry in client.get_node_names()}
-
-
 def addresses(host):
     resolved = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
     return {info[4][0] for info in resolved}
@@ -62,11 +58,11 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
     try:
 
         def joined():
-            held = client_nodes(client)
+            held = di.client_nodes(client)
             return len(held) == len(node_ports)
 
         complete = di.wait_for(joined, JOIN_TIMEOUT_SEC)
-        held = client_nodes(client)
+        held = di.client_nodes(client)
         assert complete, f"Client holds {sorted(held)}, expected {len(node_ports)} nodes"
         # The client exposes no partition map, so give it the tends that fetch every node's partitions
         time.sleep(4 * TEND_INTERVAL_MS / 1000)
