@@ -21,6 +21,7 @@ from typing import Optional
 import aerospike
 import discovery_info as di
 
+NAMESPACE = "test"
 TEND_INTERVAL_MS = 250
 KUBECTL_TIMEOUT_SEC = 120
 SCALE_TIMEOUT_SEC = 900
@@ -241,6 +242,16 @@ def wait_for_size(client: aerospike.Client, size: int, tend_interval_ms: int = T
 def infos(client: aerospike.Client) -> dict:
     """Return an info function for each node the client holds, by node name."""
     return {name: di.node_info(client, name) for name in di.client_nodes(client)}
+
+
+def assert_served(client: aerospike.Client, set_name: str, size: int, row: str,
+                  tend_interval_ms: int = TEND_INTERVAL_MS) -> None:
+    """Wait until the nodes the client holds report a stable cluster of size nodes, give the client
+    the tends that fetch their partitions, and assert every node serves the keys it is master of."""
+    node_infos = infos(client)
+    di.wait_cluster_stable(list(node_infos.values()), size)
+    time.sleep(4 * tend_interval_ms / 1000)
+    di.assert_served_by_owners(client, NAMESPACE, set_name, row, node_infos)
 
 
 def has_address(access: str, ip: str) -> bool:

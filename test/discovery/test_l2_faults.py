@@ -46,7 +46,9 @@ F3_POLICY = {"socket_timeout": 2000, "total_timeout": 4000}
 F4_TOXIC = "f4-hold"
 F4_THREADS = 4
 F4_KEY_COUNT = 20
-F4_POLICY = {"socket_timeout": 500, "total_timeout": 1500, "max_retries": 2}
+# A timeout counts toward max_error_rate only when the client closes the connection, and a nonzero
+# timeout_delay hands the connection to recovery instead
+F4_POLICY = {"socket_timeout": 500, "total_timeout": 1500, "max_retries": 2, "timeout_delay": 0}
 F4_BOUND_MS = F4_POLICY["total_timeout"] + F4_POLICY["socket_timeout"]
 # The client resets both to their defaults when max_error_rate / error_rate_window is below 1
 F4_MAX_ERROR_RATE = 4

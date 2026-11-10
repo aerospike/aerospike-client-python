@@ -14,7 +14,6 @@ import aerospike
 import discovery_info as di
 import l3_cluster as l3
 
-NAMESPACE = "test"
 SET_NAME = "l3-tls-name"
 MIN_PODS = 2
 
@@ -78,12 +77,10 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
     client = l3.connect((endpoint, seed_port, tls_name), tls=tls)
     try:
         held = l3.wait_for_size(client, len(pods))
-        infos = {}
         matched = set()
         advertised_peers = set()
         for name, entry in held.items():
             info = di.node_info(client, name)
-            infos[name] = info
             access = info("service-tls-std")
             pod = l3.pod_of(pods, access)
             assert pod is not None, f"{name} TLS access {access} is no pod IP in {pods}"
@@ -103,7 +100,7 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
                 advertised_peers.add(peer)
         assert matched == set(expected)
         assert advertised_peers == set(held), "Nodes advertised as peers"
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L3-K-6", infos)
+        l3.assert_served(client, SET_NAME, len(pods), "L3-K-6")
     finally:
         client.close()
     assert di.legacy_matches(warnings) == []

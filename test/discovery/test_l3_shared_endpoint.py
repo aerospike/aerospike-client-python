@@ -13,7 +13,6 @@ import pytest
 import discovery_info as di
 import l3_cluster as l3
 
-NAMESPACE = "test"
 SET_NAME = "l3-shared-endpoint"
 
 
@@ -30,12 +29,9 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
     client = l3.connect(l3.seed())
     try:
         held = l3.wait_for_size(client, len(node_ports))
-        infos = {}
         advertised = {}
         for name, entry in held.items():
-            info = di.node_info(client, name)
-            infos[name] = info
-            alternates = di.endpoints(info("service-clear-alt"))
+            alternates = di.endpoints(di.node_info(client, name)("service-clear-alt"))
             print(f"L3-NODE {name} client={entry} alternate={alternates}")
             assert len(alternates) == 1, f"{name} advertises {alternates}"
             host, advertised[name] = di.split_endpoint(alternates[0])
@@ -43,6 +39,6 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
             di.assert_at(entry, alternates[0])
 
         assert sorted(advertised.values()) == sorted(node_ports), f"Advertised {advertised}, NodePorts {node_ports}"
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L3-K-10", infos)
+        l3.assert_served(client, SET_NAME, len(node_ports), "L3-K-10")
     finally:
         client.close()

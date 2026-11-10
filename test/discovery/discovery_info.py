@@ -273,7 +273,10 @@ def wait_cluster_stable(infos, size):
     command = f"cluster-stable:size={size};ignore-migrations=false"
 
     def stable():
-        keys = {info(command) for info in infos}
+        try:
+            keys = {info(command) for info in infos}
+        except aerospike.exception.ClusterChangeError:
+            return False
         return len(keys) == 1 and not keys.pop().startswith("ERROR")
 
     settled = wait_for(stable, CONTROL_TIMEOUT_SEC)

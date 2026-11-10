@@ -89,12 +89,6 @@ def client_errors(client: aerospike.Client) -> int:
     return sum(node.error_count + node.timeout_count for node in client.get_stats().nodes)
 
 
-def assert_served(client: aerospike.Client, size: int, row: str) -> None:
-    infos = l3.infos(client)
-    di.wait_cluster_stable(list(infos.values()), size)
-    di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row, infos)
-
-
 # K-2: one client seeded once holds the pod the operator adds within two tend intervals of the
 # later of the peers-generation bump that announces it and the pod turning Ready, since its Service
 # NodePort only routes to a Ready pod. The client holds it at the endpoint hostname and the new
@@ -106,7 +100,9 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster):
     port = cluster.service_port()
     before = {pod.name for pod in cluster.pods()}
 
-    client = l3.connect(l3.seed(), tend_interval=SCALE_UP_TEND_INTERVAL_MS)
+    # A tend whose connection to the new node is dropped before its NodePort routes waits out
+    # connect_timeout, so K-2 keeps the 1000 ms default
+    client = l3.connect(l3.seed(), tend_interval=SCALE_UP_TEND_INTERVAL_MS, connect_timeout=1000)
     try:
         existing = l3.wait_for_size(client, size, SCALE_UP_TEND_INTERVAL_MS)
         observer = di.node_info(client, sorted(existing)[0])
@@ -159,7 +155,7 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster):
 
         held = l3.wait_for_size(client, size + 1, SCALE_UP_TEND_INTERVAL_MS)
         assert set(existing) <= set(held), f"Client holds {sorted(held)}, held {sorted(existing)} before"
-        assert_served(client, size + 1, "L3-K-2")
+        l3.assert_served(client, SET_NAME, size + 1, "L3-K-2", SCALE_UP_TEND_INTERVAL_MS)
     finally:
         client.close()
 
@@ -232,7 +228,7 @@ def test_k3_scale_down_removes_node_without_retry_storm(cluster):
             assert load.successes() > succeeded, f"No command succeeded after {victim} left"
         finally:
             assert load.stop(l3.ROUTING_TIMEOUT_SEC * 1000), "Load threads blocked"
-        assert_served(client, size - 1, "L3-K-3")
+        l3.assert_served(client, SET_NAME, size - 1, "L3-K-3")
     finally:
         client.close()
 
@@ -258,7 +254,7 @@ def assert_pinned_seed(cluster: l3.Cluster, step: str, service: str, port: int, 
             assert advertised == f"{l3.endpoint()}:{node_port}", f"{name} ({pod.name}) advertised alternate address"
             assert node_port != pinned, f"{pod.name} advertises the pinned NodePort of {service}"
             assert entry["port"] == node_port
-        assert_served(client, size, f"L3-K-9-{step}")
+        l3.assert_served(client, SET_NAME, size, f"L3-K-9-{step}")
     finally:
         client.close()
 
