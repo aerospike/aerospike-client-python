@@ -78,8 +78,8 @@ def thread_count():
     return len(reply.stdout.strip().splitlines()) - 1
 
 
-def threads_added(config):
-    """Return how many threads a client created from config runs."""
+def client_threads(config):
+    """Return how many threads a client created from config adds."""
     before = thread_count()
     client = aerospike.client(config)
     try:
@@ -241,9 +241,9 @@ def test_u1_provider_closed_after_refresh_outlives_client():
 # U-3: the default config is the static provider and the static-map translator, which run no
 # thread. A periodic provider adds exactly one, which shows the count would see a discovery thread.
 def test_u3_default_construction_adds_no_thread():
-    default = threads_added(OFFLINE)
-    static = threads_added({**OFFLINE, "discovery": {"provider": "static"}, "translation": {"provider": "static-map"}})
-    provider = threads_added({**OFFLINE, "discovery": {"provider": Seeds([UNREACHABLE], periodic=True)}})
+    default = client_threads(OFFLINE)
+    static = client_threads({**OFFLINE, "discovery": {"provider": "static"}, "translation": {"provider": "static-map"}})
+    provider = client_threads({**OFFLINE, "discovery": {"provider": Seeds([UNREACHABLE], periodic=True)}})
     print(f"U-3 threads default={default} static={static} provider={provider}")
     assert static == default
     assert provider == default + 1
