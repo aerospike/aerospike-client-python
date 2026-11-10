@@ -91,7 +91,8 @@ def threads_added(config):
         gc.collect()
 
 
-def raises(exception, config):
+def client_raises(exception, config):
+    """Assert that creating a client from config raises exception, and return its message."""
     with pytest.raises(exception) as error:
         aerospike.client(config)
     return error.value.msg
@@ -155,7 +156,7 @@ def test_u1_periodic_refresh_continues_after_errors():
 
 def test_u1_provider_error_without_seeds():
     seeds = Seeds(error=RuntimeError("no seeds today"))
-    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
+    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
     assert message.startswith("Seed provider Seeds failed and no seed host is left")
     assert "RuntimeError: no seeds today" in message
     gc.collect()
@@ -164,7 +165,7 @@ def test_u1_provider_error_without_seeds():
 
 @pytest.mark.parametrize("hosts", [[("127.0.0.1", 0)], [("127.0.0.1",)], [["127.0.0.1", 3000]], ("127.0.0.1", 3000)])
 def test_u1_provider_invalid_hosts(hosts):
-    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
+    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
     assert "refresh_seed_candidates()" in message
 
 
@@ -178,7 +179,7 @@ def test_u1_provider_invalid_hosts(hosts):
 )
 def test_u1_needs_periodic_refresh_must_return_a_bool(seeds_args, message):
     seeds = Seeds([UNREACHABLE], **seeds_args)
-    assert raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds}}) == message
+    assert client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds}}) == message
     gc.collect()
     assert seeds.contexts == []
     assert seeds.closed == 0
@@ -187,7 +188,7 @@ def test_u1_needs_periodic_refresh_must_return_a_bool(seeds_args, message):
 def test_u1_provider_rejected_in_tend_mode():
     seeds = Seeds([UNREACHABLE])
     references = sys.getrefcount(seeds)
-    message = raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds, "execution_mode": "tend"}})
+    message = client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds, "execution_mode": "tend"}})
     gc.collect()
     assert message == "Binding seed provider requires thread execution mode"
     assert seeds.contexts == []
@@ -214,7 +215,8 @@ def test_u1_provider_closed_when_client_destroyed():
 # while the main thread waits outside Python code and so runs no pending calls
 def test_u1_provider_closed_after_refresh_outlives_client():
     seeds = BlockedSeeds()
-    raises(e.SeedDiscoveryFailed, {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
+    config = {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}}
+    client_raises(e.SeedDiscoveryFailed, config)
     gc.collect()
     assert not seeds.closed.is_set()
     seeds.released.set()
@@ -268,8 +270,8 @@ LEGACY_IP_MAP = {"10.0.0.1": "203.0.113.1", "2001:db8::1": "2001:db8:ffff::1", "
 # static-map translator itself.
 @pytest.mark.parametrize("ip_map", [{"10.0.0.1": 1}, {1: "10.0.0.1"}, ["10.0.0.1"], {"\ud800": "10.0.0.1"}])
 def test_u7_ip_map_and_static_map_reject_the_same_input(ip_map):
-    legacy = raises(e.ParamError, {**OFFLINE, "ip_map": ip_map})
-    static_map = raises(e.ParamError, {**OFFLINE, "translation": {"static_map": ip_map}})
+    legacy = client_raises(e.ParamError, {**OFFLINE, "ip_map": ip_map})
+    static_map = client_raises(e.ParamError, {**OFFLINE, "translation": {"static_map": ip_map}})
     assert static_map == legacy.replace("ip_map", "translation.static_map")
 
 
@@ -289,8 +291,8 @@ def test_discovery_exception_codes():
 
 
 def test_hosts_needed_without_provider():
-    assert raises(e.ParamError, {"hosts": []}) == "Hosts must not be empty"
-    assert raises(e.ParamError, {"discovery": {"provider": "static"}}) == "Hosts must be a list"
+    assert client_raises(e.ParamError, {"hosts": []}) == "Hosts must not be empty"
+    assert client_raises(e.ParamError, {"discovery": {"provider": "static"}}) == "Hosts must be a list"
 
 
 @pytest.mark.parametrize(
@@ -332,5 +334,5 @@ def test_hosts_needed_without_provider():
     ],
 )
 def test_invalid_config(config, message):
-    actual = raises(e.ParamError, {**OFFLINE, "validate_keys": True, **config})
+    actual = client_raises(e.ParamError, {**OFFLINE, "validate_keys": True, **config})
     assert message in actual
