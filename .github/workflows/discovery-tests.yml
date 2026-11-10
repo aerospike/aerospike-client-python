@@ -54,10 +54,11 @@ jobs:
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
           {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
           {layer: "L2", tests: "N-13 map refresh", reason: "deferred: TranslationMapProvider is not in this release"},
-          {layer: "L2 CE", tests: "low-mtu, port-range and idle-reset profiles", reason: $not_ported},
-          {layer: "L2 CE", tests: "unresolved-access profile", reason: "its server startup check runs no client, and its port-map check is not ported to the Python client yet"},
+          {layer: "L2 CE", tests: "unresolved-access profile", reason: "it checks how the server starts and runs no client"},
+          {layer: "L2b", tests: "M-1 to M-4 and M-6 to M-12 thread-model harness", reason: "the discovery scheduler is a C client built-in, so the C client suite owns them"},
+          {layer: "L2c", tests: "F-1 idle-reset, F-2 low-mtu and F-3 port-range profiles, and F-4 silent drop", reason: $not_ported},
           {layer: "TLS certificate matching", tests: "certificate name matching against Enterprise servers", reason: $not_ported},
-          {layer: "L3", tests: "scale up and down, NodePort stability, and TLS name tests", reason: $not_ported}
+          {layer: "L3", tests: "K-2 and K-3 scale up and down, K-9 NodePort stability, and K-6 TLS name", reason: $not_ported}
         ]')
         if [[ "$HAS_FEATURES" != true ]]; then
           layers=$(jq -c '. + [
