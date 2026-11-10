@@ -8,65 +8,28 @@ it advertises. That includes the seeded pod: the seed address is not in its alte
 client moves to the advertised address.
 """
 
-import os
-import socket
-import time
-
 import pytest
 
-import aerospike
 import discovery_info as di
+import l3_cluster as l3
 
 NAMESPACE = "test"
 SET_NAME = "l3-shared-endpoint"
-TEND_INTERVAL_MS = 250
-JOIN_TIMEOUT_SEC = 120
-
-
-def ports(name):
-    return [int(port) for port in os.environ[name].split(",") if port]
-
-
-def connect(host, port):
-    config = {
-        "hosts": [(host, port)],
-        "user": "admin",
-        "password": os.environ["AEROSPIKE_ADMIN_PASSWORD"],
-        "use_services_alternate": True,
-        "tend_interval": TEND_INTERVAL_MS,
-        "connect_timeout": 5000,
-    }
-    return aerospike.client(config)
-
-
-def addresses(host):
-    resolved = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
-    return {info[4][0] for info in resolved}
 
 
 # K-10, T3 variant: one hostname with a port per pod, rendered by the operator
 @pytest.mark.l3
 def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_partition():
-    endpoint = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
-    node_ports = ports("DISCOVERY_SERVICE_NODE_PORTS")
-    seed_port = ports("DISCOVERY_INGRESS_PORTS")[0]
-    endpoint_addresses = addresses(endpoint)
+    cluster = l3.Cluster()
+    endpoint = l3.endpoint()
+    port = cluster.service_port()
+    node_ports = [cluster.node_port(pod.name, port) for pod in cluster.pods()]
     assert len(node_ports) >= 2, f"Service NodePorts {node_ports}: K-10 needs at least two pods"
     assert len(set(node_ports)) == len(node_ports), f"Service NodePorts {node_ports} are not distinct"
 
-    client = connect(endpoint, seed_port)
+    client = l3.connect(l3.seed())
     try:
-
-        def joined():
-            held = di.client_nodes(client)
-            return len(held) == len(node_ports)
-
-        complete = di.wait_for(joined, JOIN_TIMEOUT_SEC)
-        held = di.client_nodes(client)
-        assert complete, f"Client holds {sorted(held)}, expected {len(node_ports)} nodes"
-        # The client exposes no partition map, so give it the tends that fetch every node's partitions
-        time.sleep(4 * TEND_INTERVAL_MS / 1000)
-
+        held = l3.wait_for_size(client, len(node_ports))
         infos = {}
         advertised = {}
         for name, entry in held.items():
@@ -75,11 +38,9 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
             alternates = di.endpoints(info("service-clear-alt"))
             print(f"L3-NODE {name} client={entry} alternate={alternates}")
             assert len(alternates) == 1, f"{name} advertises {alternates}"
-            host, port = di.split_endpoint(alternates[0])
+            host, advertised[name] = di.split_endpoint(alternates[0])
             assert host == endpoint, f"{name} advertises {alternates[0]}"
-            advertised[name] = port
-            assert entry["address"] in endpoint_addresses, f"{entry} is not at {endpoint} {endpoint_addresses}"
-            assert entry["port"] == port, f"{entry} is not at its advertised port {port}"
+            di.assert_at(entry, alternates[0])
 
         assert sorted(advertised.values()) == sorted(node_ports), f"Advertised {advertised}, NodePorts {node_ports}"
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L3-K-10", infos)

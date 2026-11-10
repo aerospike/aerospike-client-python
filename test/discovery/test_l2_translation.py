@@ -15,7 +15,6 @@ import os
 import socket
 import threading
 import time
-from dataclasses import dataclass
 
 import pytest
 
@@ -37,41 +36,9 @@ RESEED_REFRESH_INTERVAL_MS = 600000
 SINGLE_TRY = {"max_retries": 0, "total_timeout": 1000}
 
 
-@dataclass
-class Node:
-    name: str
-    proxy: str
-    port: int
-    advertised: list
-
-    @property
-    def listener(self):
-        return f"{os.environ['DISCOVERY_ENDPOINT_HOSTNAME']}:{self.port}"
-
-    def info(self, command):
-        reply = di.request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
-        return reply[command]
-
-
 @pytest.fixture(scope="module")
 def nodes():
-    """Query every listener for its node's name and the endpoints it advertises in the standard list."""
-    host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
-    proxies = {}
-    for entry in os.environ["DISCOVERY_PROXY_MAP"].split(","):
-        proxy, _, port = entry.rpartition(":")
-        proxies[int(port)] = proxy
-
-    found = []
-    for port in os.environ["DISCOVERY_ENDPOINT_PORTS"].split(","):
-        port = int(port)
-        info = di.request(host, port, "node", "service-clear-std")
-        advertised = di.endpoints(info["service-clear-std"])
-        assert advertised, f"{info['node']} on listener {port} advertises no clear address"
-        node = Node(info["node"], proxies[port], port, advertised)
-        print(f"L2-NODE {node}")
-        found.append(node)
-    return found
+    return di.standard_nodes()
 
 
 @pytest.fixture
@@ -81,10 +48,6 @@ def disabled_listeners():
     yield proxies
     for proxy in proxies:
         di.set_listener(proxy, True)
-
-
-def port_map_by_endpoint(nodes):
-    return {advertised: node.listener for node in nodes for advertised in node.advertised}
 
 
 def port_map_by_node_name(nodes):
@@ -173,7 +136,7 @@ def test_n1_without_translator_fails_on_peers(nodes):
 # distinct node rather than one seed-only node
 @pytest.mark.l2("default")
 def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes):
-    assert_port_map_joins("N-2-endpoint", nodes, port_map_by_endpoint(nodes))
+    assert_port_map_joins("N-2-endpoint", nodes, di.port_map_by_endpoint(nodes))
 
 
 # N-2: port-map keyed by node name
@@ -188,7 +151,7 @@ def test_n2_port_map_by_node_name_joins_all_nodes(nodes):
 def test_n4_dns_provider_seeds_through_endpoint(nodes):
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     dns = {"names": [f"_aerospike._tcp.{host}"], "record_type": "srv", "servers": [os.environ["DISCOVERY_DNS_SERVER"]]}
-    translation = {"provider": "port-map", "port_map": port_map_by_endpoint(nodes)}
+    translation = {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)}
     client = connect(None, translation, {"provider": "dns", "dns": dns})
     try:
         wait_for_nodes(client, [node.name for node in nodes])
@@ -196,14 +159,6 @@ def test_n4_dns_provider_seeds_through_endpoint(nodes):
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N4", infos)
     finally:
         client.close()
-
-
-def writes(client, key):
-    try:
-        client.put(key, {"v": 1}, policy=SINGLE_TRY)
-    except aerospike.exception.AerospikeError:
-        return False
-    return True
 
 
 # N-7: with one node's listener disabled, the keys it is master of fail and the other nodes keep
@@ -214,7 +169,7 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(nodes, disabled_list
     others = nodes[:-1]
     names = [node.name for node in nodes]
     victim_partitions = di.master_partitions(victim.info, NAMESPACE)
-    client = connect(nodes[0], {"provider": "port-map", "port_map": port_map_by_endpoint(nodes)})
+    client = connect(nodes[0], {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)})
     try:
         wait_for_nodes(client, names)
         victim_keys = []
@@ -225,16 +180,16 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(nodes, disabled_list
         assert victim_keys, f"No key has its master on {victim.name}"
 
         disable_listeners([victim], disabled_listeners)
-        failing = di.wait_for(lambda: not writes(client, victim_keys[0]), JOIN_TIMEOUT_SEC)
+        failing = di.wait_for(lambda: not di.writes(client, victim_keys[0], SINGLE_TRY), JOIN_TIMEOUT_SEC)
         assert failing, f"Writes to {victim.name} still succeed with its listener disabled"
-        failed = [key for key in victim_keys if not writes(client, key)]
+        failed = [key for key in victim_keys if not di.writes(client, key, SINGLE_TRY)]
         print(f"L2-N7-DEGRADED victim={victim.name} nodes={sorted(di.client_nodes(client))} failed={len(failed)}")
         assert len(failed) == len(victim_keys)
         infos = {node.name: node.info for node in others}
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N7-degraded", infos)
 
         enable_listeners(disabled_listeners)
-        recovered = di.wait_for(lambda: all(writes(client, key) for key in victim_keys), JOIN_TIMEOUT_SEC)
+        recovered = di.wait_for(lambda: all(di.writes(client, key, SINGLE_TRY) for key in victim_keys), JOIN_TIMEOUT_SEC)
         assert recovered, f"Writes to {victim.name} did not recover"
         wait_for_nodes(client, names)
         infos = {node.name: node.info for node in nodes}
@@ -264,7 +219,7 @@ def test_n8_strict_miss_creates_no_node(nodes, warnings):
     mapped = nodes[:-1]
     mapped_names = sorted(node.name for node in mapped)
 
-    client = connect(nodes[0], {"provider": "port-map", "port_map": port_map_by_endpoint(mapped), "on_miss": "strict"})
+    client = connect(nodes[0], {"provider": "port-map", "port_map": di.port_map_by_endpoint(mapped), "on_miss": "strict"})
     try:
         wait_for_nodes(client, mapped_names)
         retried = di.wait_for(lambda: len(misses(warnings, victim.name)) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
@@ -292,7 +247,7 @@ def test_n10_unmapped_peer_passes_through_unchanged(nodes, warnings):
     assert reachable is not nodes[0], f"Reachable node {reachable} must not be the first listener"
     mapped = [node for node in nodes if node is not reachable]
     advertised = reachable.advertised[0]
-    port_map = port_map_by_endpoint(mapped)
+    port_map = di.port_map_by_endpoint(mapped)
     assert advertised not in port_map
     print(f"L2-N10-ADVERTISED node={reachable.name} container={container} advertised={reachable.advertised}")
 
@@ -385,7 +340,7 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(nod
         assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
 
         port = di.split_endpoint(listener)[1]
-        added = Node(joined["node_name"], reply["container"], port, [f"{address}:{service_port(nodes)}"])
+        added = di.Node(joined["node_name"], reply["container"], port, [f"{address}:{service_port(nodes)}"])
         grown = nodes + [added]
         di.wait_cluster_stable([node.info for node in grown], len(grown))
         wait_for_nodes(client, [node.name for node in grown])
@@ -471,7 +426,7 @@ def test_n14_use_services_alternate_without_alternate_fails_init(nodes):
 def test_n18_port_map_colliding_nodes_create_no_node(nodes, warnings):
     assert len(nodes) >= 3, f"N-18 needs a seed and two colliding peers: {nodes}"
     seed, a, b = nodes[:3]
-    port_map = port_map_by_endpoint(nodes)
+    port_map = di.port_map_by_endpoint(nodes)
     for advertised in b.advertised:
         port_map[advertised] = a.listener
 

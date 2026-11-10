@@ -5,8 +5,9 @@ hold, so they send info requests over a raw socket. The L3 cluster has security 
 tests go through the client's info_single_node() instead. Both pass a function that takes one
 info command and returns its value.
 
-The L2 tests also change the topology mid-test: they enable and disable Toxiproxy listeners, and
-ask the discovery node server to start and stop nodes.
+The L2 tests also change the topology mid-test: they enable and disable Toxiproxy listeners, add
+toxics to them, and ask the discovery node server to start and stop nodes. Load runs commands on
+threads and records each outcome, for tests that assert how commands fail under a fault.
 """
 
 import base64
@@ -15,10 +16,14 @@ import os
 import re
 import socket
 import struct
+import threading
 import time
 import urllib.request
 import uuid
+from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable, Optional
 
 import aerospike
 
@@ -32,13 +37,18 @@ PEER = re.compile(r"\[([0-9A-Fa-f]+),([^,\[\]]*),\[((?:[^\[\]]|\[[^\]]*\])*)\]\]
 
 def request(host, port, *commands, timeout=2.0):
     """Send info commands to host:port and return a dict of command to value."""
+    with socket.create_connection((host, port), timeout=timeout) as sock:
+        return send_info(sock, *commands)
+
+
+def send_info(sock: socket.socket, *commands: str) -> dict[str, str]:
+    """Send info commands on a connected socket and return a dict of command to value."""
     body = "".join(command + "\n" for command in commands).encode()
     header = struct.pack(">Q", (INFO_VERSION << 56) | (INFO_TYPE << 48) | len(body))
-    with socket.create_connection((host, port), timeout=timeout) as sock:
-        sock.sendall(header + body)
-        reply_header = read_exactly(sock, 8)
-        size = struct.unpack(">Q", reply_header)[0] & 0xFFFFFFFFFFFF
-        reply = read_exactly(sock, size).decode()
+    sock.sendall(header + body)
+    reply_header = read_exactly(sock, 8)
+    size = struct.unpack(">Q", reply_header)[0] & 0xFFFFFFFFFFFF
+    reply = read_exactly(sock, size).decode()
 
     values = {}
     for line in reply.split("\n"):
@@ -97,6 +107,49 @@ def peers(reply):
             endpoints.append(address)
         found.append((name, tls_name, endpoints))
     return found
+
+
+@dataclass
+class Node:
+    """A node reached through its own Toxiproxy listener, with the endpoints it advertises in the
+    standard list."""
+
+    name: str
+    proxy: str
+    port: int
+    advertised: list[str]
+
+    @property
+    def listener(self) -> str:
+        return f"{os.environ['DISCOVERY_ENDPOINT_HOSTNAME']}:{self.port}"
+
+    def info(self, command: str) -> str:
+        reply = request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
+        return reply[command]
+
+
+def standard_nodes() -> list[Node]:
+    """Query every listener for its node's name and the endpoints it advertises in the standard list."""
+    host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
+    proxies = {}
+    for entry in os.environ["DISCOVERY_PROXY_MAP"].split(","):
+        proxy, _, port = entry.rpartition(":")
+        proxies[int(port)] = proxy
+
+    found = []
+    for port in os.environ["DISCOVERY_ENDPOINT_PORTS"].split(","):
+        port = int(port)
+        info = request(host, port, "node", "service-clear-std")
+        advertised = endpoints(info["service-clear-std"])
+        assert advertised, f"{info['node']} on listener {port} advertises no clear address"
+        node = Node(info["node"], proxies[port], port, advertised)
+        print(f"L2-NODE {node}")
+        found.append(node)
+    return found
+
+
+def port_map_by_endpoint(nodes: list[Node]) -> dict[str, str]:
+    return {advertised: node.listener for node in nodes for advertised in node.advertised}
 
 
 def peer_names(reply, endpoint):
@@ -180,6 +233,16 @@ def listener_ports():
 def set_listener(proxy, enabled):
     """Enable or disable a Toxiproxy listener. Disabling it also closes its connections."""
     toxiproxy("POST", f"/proxies/{proxy}", {"enabled": enabled})
+
+
+def add_toxic(proxy: str, name: str, toxic_type: str, toxicity: float, attributes: dict) -> None:
+    """Add a toxic to the upstream of a Toxiproxy listener, the direction from the client to the node."""
+    toxic = {"name": name, "type": toxic_type, "stream": "upstream", "toxicity": toxicity, "attributes": attributes}
+    toxiproxy("POST", f"/proxies/{proxy}/toxics", toxic)
+
+
+def remove_toxic(proxy: str, name: str) -> None:
+    toxiproxy("DELETE", f"/proxies/{proxy}/toxics/{name}")
 
 
 def control(command):
@@ -286,6 +349,12 @@ def assert_served_by_owners(client, namespace, set_name, row, infos, key_count=3
         assert proxied == 0, f"{name} proxied {proxied} commands"
 
 
+def legacy_matches(messages: list[str]) -> list[str]:
+    """Return the C client's warnings for a TLS certificate it accepted only through its deprecated
+    legacy name check."""
+    return [message for message in messages if "only through the legacy name check" in message]
+
+
 def collisions(messages, name):
     """Return the translation collision messages that name a node."""
     return [message for message in messages if "translated nodes" in message and name in message]
@@ -326,6 +395,89 @@ def assert_keys_on_masters_work(client, namespace, set_name, row, infos, key_cou
     print(f"{row}-KEYS nodes={sorted(infos)} keysOnTheirMasters={served} keysElsewhere={elsewhere}")
     assert served > 0, f"No key has its master on {sorted(infos)}"
     assert elsewhere > 0, f"Every key has its master on {sorted(infos)}"
+
+
+def writes(client: aerospike.Client, key: tuple, policy: dict) -> bool:
+    """Return whether a write of key succeeds."""
+    try:
+        client.put(key, {"v": 1}, policy=policy)
+    except aerospike.exception.AerospikeError:
+        return False
+    return True
+
+
+def node_stats(client: aerospike.Client) -> dict:
+    """Return the client's per-node statistics, each a NodeStats, by node name."""
+    return {node.name: node for node in client.get_stats().nodes}
+
+
+@dataclass
+class Outcome:
+    """One command a Load ran: when it started, on time.monotonic(), how long it took, and the
+    exception it raised, if any."""
+
+    start: float
+    elapsed_ms: float
+    error: Optional[Exception]
+
+    @property
+    def kind(self) -> str:
+        if self.error is None:
+            return "ok"
+        code = getattr(self.error, "code", None)
+        return f"{type(self.error).__name__}({code})"
+
+
+def kinds(outcomes: list[Outcome]) -> dict[str, int]:
+    return dict(Counter(outcome.kind for outcome in outcomes))
+
+
+class Load:
+    """Run command(thread, iteration) on each of threads threads until stopped, and record the
+    outcome of every call. The client releases the GIL while a command waits on the network."""
+
+    def __init__(self, threads: int, command: Callable[[int, int], None]):
+        self.outcomes: list[Outcome] = []
+        self._lock = threading.Lock()
+        self._stopped = threading.Event()
+        self._threads = []
+        for index in range(threads):
+            thread = threading.Thread(target=self._run, args=(index, command), daemon=True)
+            self._threads.append(thread)
+        for thread in self._threads:
+            thread.start()
+
+    def _run(self, index: int, command: Callable[[int, int], None]) -> None:
+        iteration = 0
+        while not self._stopped.is_set():
+            start = time.monotonic()
+            error = None
+            try:
+                command(index, iteration)
+            except Exception as raised:
+                error = raised
+            outcome = Outcome(start, (time.monotonic() - start) * 1000, error)
+            with self._lock:
+                self.outcomes.append(outcome)
+            iteration += 1
+
+    def snapshot(self) -> list[Outcome]:
+        with self._lock:
+            return list(self.outcomes)
+
+    def successes(self) -> int:
+        return sum(1 for outcome in self.snapshot() if outcome.error is None)
+
+    def errors(self) -> list[Outcome]:
+        return [outcome for outcome in self.snapshot() if outcome.error is not None]
+
+    def stop(self, timeout_ms: float) -> bool:
+        """Stop the threads and return whether every one returned within timeout_ms."""
+        self._stopped.set()
+        deadline = time.monotonic() + timeout_ms / 1000
+        for thread in self._threads:
+            thread.join(max(0.0, deadline - time.monotonic()))
+        return not any(thread.is_alive() for thread in self._threads)
 
 
 def wait_for(condition, timeout, interval=0.25):

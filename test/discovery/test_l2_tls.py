@@ -81,10 +81,6 @@ def connect(nodes, seed, tls_name):
     return aerospike.client(config)
 
 
-def legacy_matches(messages):
-    return [message for message in messages if "only through the legacy name check" in message]
-
-
 # N-6: TLS through the proxy. Seeded through the first node's TLS listener with its tls-name, every
 # node joins at its TLS listener and serves the keys it is master of. The handshake validates the
 # certificate against the node's tls-name, not the endpoint hostname, through its SAN, with no
@@ -106,7 +102,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N6", infos)
     finally:
         client.close()
-    assert legacy_matches(warnings) == []
+    assert di.legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         connect(nodes, first, host)
@@ -128,8 +124,8 @@ def test_n17_cn_only_certificate_is_rejected(nodes, warnings):
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = connect(nodes, first, first.tls_name)
-        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={legacy_matches(warnings)}")
+        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={di.legacy_matches(warnings)}")
         client.close()
-        assert legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"
+        assert di.legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"
     print(f"L2-N17-ERROR {raised.value}")
     assert f"TLS name '{first.tls_name}' mismatch" in warnings

@@ -42,13 +42,14 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "l2(*profiles, subset='ce'): needs the L2 topology built with one of these profiles and this subset"
     )
-    config.addinivalue_line("markers", "l3: needs the kind and AKO cluster")
+    config.addinivalue_line("markers", "l3(tls=False): needs the kind and AKO cluster, serving TLS or not")
 
 
 def pytest_collection_modifyitems(config, items):
     profile = os.environ.get("L2_PROFILE")
     subset = os.environ.get("DISCOVERY_SUBSET")
-    has_l3 = bool(os.environ.get("DISCOVERY_SERVICE_NODE_PORTS"))
+    has_l3 = bool(os.environ.get("DISCOVERY_KUBECONFIG"))
+    l3_tls = bool(os.environ.get("DISCOVERY_TLS_CA_FILE"))
     deselected = []
     selected = []
     for item in items:
@@ -58,8 +59,12 @@ def pytest_collection_modifyitems(config, items):
             continue
         if l2 and not profile:
             item.add_marker(pytest.mark.skip(reason=f"needs the L2 topology with profile {' or '.join(l2.args)}"))
-        if item.get_closest_marker("l3") and not has_l3:
-            item.add_marker(pytest.mark.skip(reason="needs the kind and AKO cluster (DISCOVERY_SERVICE_NODE_PORTS)"))
+        l3 = item.get_closest_marker("l3")
+        if l3 and has_l3 and l3.kwargs.get("tls", False) != l3_tls:
+            deselected.append(item)
+            continue
+        if l3 and not has_l3:
+            item.add_marker(pytest.mark.skip(reason="needs the kind and AKO cluster (DISCOVERY_KUBECONFIG)"))
         selected.append(item)
     if deselected:
         config.hook.pytest_deselected(items=deselected)

@@ -48,22 +48,19 @@ jobs:
       env:
         HAS_FEATURES: ${{ secrets.FEATURES_CONTENT != '' }}
       run: |
-        not_ported='not ported to the Python client yet'
-        layers=$(jq -cn --arg not_ported "$not_ported" '[
+        layers=$(jq -cn '[
           {layer: "L0", tests: "U-2, U-8, U-10, U-13 and U-15 translator contracts", reason: "the translators are C client built-ins, so the C client suite owns them"},
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
           {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
           {layer: "L2", tests: "N-13 map refresh", reason: "deferred: TranslationMapProvider is not in this release"},
           {layer: "L2 CE", tests: "unresolved-access profile", reason: "it checks how the server starts and runs no client"},
           {layer: "L2b", tests: "M-1 to M-4 and M-6 to M-12 thread-model harness", reason: "the discovery scheduler is a C client built-in, so the C client suite owns them"},
-          {layer: "L2c", tests: "F-1 idle-reset, F-2 low-mtu and F-3 port-range profiles, and F-4 silent drop", reason: $not_ported},
-          {layer: "TLS certificate matching", tests: "certificate name matching against Enterprise servers", reason: $not_ported},
-          {layer: "L3", tests: "K-2 and K-3 scale up and down, K-9 NodePort stability, and K-6 TLS name", reason: $not_ported}
+          {layer: "TLS certificate matching", tests: "certificate name matching rules", reason: "TLS name matching is a C client built-in, so the C client suite owns it; N-6, N-17 and K-6 cover the handshake through the Python client"}
         ]')
         if [[ "$HAS_FEATURES" != true ]]; then
           layers=$(jq -c '. + [
             {layer: "L2 EE", tests: "N-6 and N-17 TLS through the proxy", reason: "the FEATURES_CONTENT secret is absent"},
-            {layer: "L3", tests: "K-10 shared endpoint", reason: "the FEATURES_CONTENT secret is absent"}
+            {layer: "L3", tests: "K-2, K-3, K-6, K-9 and K-10", reason: "the FEATURES_CONTENT secret is absent"}
           ]' <<< "$layers")
         fi
         echo "has-features=$HAS_FEATURES" >> "$GITHUB_OUTPUT"
@@ -139,6 +136,18 @@ jobs:
           server-tag: 8.1.2.1
           unresolvable-hostnames: false
         - profile: port-map-range
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
+        - profile: idle-reset
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
+        - profile: low-mtu
+          server-container-repo: database-docker-virtual/aerospike-server
+          server-tag: 8.1.2.1
+          unresolvable-hostnames: false
+        - profile: port-range
           server-container-repo: database-docker-virtual/aerospike-server
           server-tag: 8.1.2.1
           unresolvable-hostnames: false
@@ -319,7 +328,8 @@ jobs:
     needs: [skipped-layers, build]
     if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    # K-2, K-3 and K-9 wait for the operator to scale the cluster several times
+    timeout-minutes: 45
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -352,7 +362,58 @@ jobs:
       env:
         DISCOVERY_ENDPOINT_HOSTNAME: ${{ steps.kind-ako.outputs.endpoint-hostname }}
         DISCOVERY_INGRESS_PORTS: ${{ steps.kind-ako.outputs.ingress-ports }}
-        DISCOVERY_SERVICE_NODE_PORTS: ${{ steps.kind-ako.outputs.service-node-ports }}
+        DISCOVERY_KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
         AEROSPIKE_ADMIN_PASSWORD: ${{ steps.kind-ako.outputs.admin-password }}
         DISCOVERY_FAIL_ON_SKIP: '1'
-      run: pytest test/discovery/test_l3_shared_endpoint.py -p no:cacheprovider -rA
+      run: pytest test/discovery/test_l3_*.py -p no:cacheprovider -rA
+
+  l3-tls:
+    name: L3 discovery (k8s, TLS)
+    needs: [skipped-layers, build]
+    if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ vars.GH_ARTIFACT_NAME_PREFIX_FOR_BUILDS }}-${{ env.PYTHON_VERSION }}-${{ env.PLATFORM_TAG }}
+        path: ${{ env.WHEEL_DIR }}
+
+    - name: Install client and test dependencies
+      run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
+
+    # K-6 needs at least two pods
+    - name: Set up kind and AKO
+      id: kind-ako
+      uses: aerospike/shared-workflows/.github/actions/setup-kind-ako@308f37e0cd5c7a6386a99ea7afc379d5a4ea9256 # v5.1.0
+      with:
+        features-content: ${{ secrets.FEATURES_CONTENT }}
+        cluster-size: 2
+
+    - name: Serve TLS on the AerospikeCluster
+      id: tls
+      env:
+        KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
+      run: bash .github/discovery/enable-l3-tls.sh
+
+    - name: Run L3 TLS tests
+      env:
+        DISCOVERY_ENDPOINT_HOSTNAME: ${{ steps.kind-ako.outputs.endpoint-hostname }}
+        DISCOVERY_INGRESS_PORTS: ${{ steps.kind-ako.outputs.ingress-ports }}
+        DISCOVERY_KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
+        DISCOVERY_TLS_CA_FILE: ${{ steps.tls.outputs.ca-file }}
+        DISCOVERY_TLS_NAME: ${{ steps.tls.outputs.tls-name }}
+        AEROSPIKE_ADMIN_PASSWORD: ${{ steps.kind-ako.outputs.admin-password }}
+        DISCOVERY_FAIL_ON_SKIP: '1'
+      run: pytest test/discovery/test_l3_*.py -p no:cacheprovider -rA
