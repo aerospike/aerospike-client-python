@@ -94,20 +94,17 @@ def raises(exception, config):
 
 # U-1: the SeedCandidateProvider contract through the binding
 
-def test_u1_provider_supplies_every_seed():
-    seeds = Seeds([UNREACHABLE])
-    client = aerospike.client({**OFFLINE, "hosts": [], "cluster_name": "c1", "discovery": {"provider": seeds}})
-    client.close()
-    assert seeds.contexts == [SeedCandidateContext(cluster_name="c1", configured_seeds=(), tend_iteration=0)]
-
-
-def test_u1_provider_context_has_configured_seeds():
+@pytest.mark.parametrize("cluster_name", [None, "c1"])
+def test_u1_provider_context(cluster_name):
     seeds = Seeds([])
     hosts = [UNREACHABLE, ("127.0.0.2", 2, "tls-name")]
-    client = aerospike.client({**OFFLINE, "hosts": hosts, "discovery": {"provider": seeds}})
+    config = {**OFFLINE, "hosts": hosts, "discovery": {"provider": seeds}}
+    if cluster_name:
+        config["cluster_name"] = cluster_name
+    client = aerospike.client(config)
     client.close()
-    assert seeds.contexts[0].configured_seeds == tuple(hosts)
-    assert seeds.contexts[0].cluster_name is None
+    expected = SeedCandidateContext(cluster_name=cluster_name, configured_seeds=tuple(hosts), tend_iteration=0)
+    assert seeds.contexts == [expected]
 
 
 # A provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client on its
