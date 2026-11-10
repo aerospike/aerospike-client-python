@@ -31,15 +31,15 @@
 #include "client.h"
 #include "policy.h"
 #include "conversions.h"
+#include "discovery.h"
 #include "exceptions.h"
+#include "metrics.h"
 #include "tls_config.h"
 #include "policy_config.h"
 #include "metrics.h"
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
-static as_status set_ip_map(as_error *err, as_config *conf,
-                            PyObject *py_ip_map);
 
 enum {
     INIT_SUCCESS,
@@ -342,6 +342,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, NULL},
     {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
      METH_NOARGS, NULL},
+    {"get_metrics_snapshot", (PyCFunction)AerospikeClient_GetMetricsSnapshot,
+     METH_NOARGS, NULL},
 
     // ADMIN OPERATIONS
 
@@ -583,8 +585,6 @@ internal_error:
     return -1;
 }
 
-#define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
-
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -754,10 +754,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_hosts = PyDict_GetItemString(py_config, "hosts");
     if (py_hosts && PyList_Check(py_hosts)) {
         int size = (int)PyList_Size(py_hosts);
-        if (!size) {
-            error_code = INIT_EMPTY_HOSTS_ERR;
-            goto CONSTRUCTOR_ERROR;
-        }
         for (int i = 0; i < size; i++) {
             char *addr = NULL;
             char *tls_name = NULL;
@@ -828,7 +824,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             }
         }
     }
-    else {
+    else if (py_hosts) {
         error_code = INIT_HOST_TYPE_ERR;
         goto CONSTRUCTOR_ERROR;
     }
@@ -1104,7 +1100,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
                                                   "metrics", "MetricsPolicy",
                                                   false) == false) {
-            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // as_metrics_policy_set_using_pyobject also checks the type of the pyobject
             // But we want to set a different error message here
             as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
@@ -1115,12 +1111,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
-            int retval = set_as_metrics_policy_using_pyobject(
+            PyMetricsExporterList *config_exporters = NULL;
+            int retval = as_metrics_policy_set_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics));
+                &(config.policies.metrics), &config_exporters);
             if (retval != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
+            self->config_metrics_exporters = config_exporters;
         }
 
         PyObject *py_login_timeout =
@@ -1287,11 +1285,66 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
     else if (retval == 1) {
-        as_status status = set_ip_map(&constructor_err, &config, py_ip_map);
+        as_status status =
+            as_addr_map_new_from_pyobject(&constructor_err, py_ip_map, "ip_map",
+                                          &config.ip_map, &config.ip_map_size);
         Py_DECREF(py_ip_map);
         if (status != AEROSPIKE_OK) {
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
+    }
+
+    PyObject *py_discovery = NULL;
+    retval = PyDict_GetItemStringRef(py_config, "discovery", &py_discovery);
+    if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    else if (retval == 1) {
+        as_status status = as_discovery_config_init_from_pyobject(
+            &constructor_err, &config, py_discovery, validate_keys);
+        Py_DECREF(py_discovery);
+        if (status != AEROSPIKE_OK) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+    }
+
+    // Must run after ip_map is set
+    PyObject *py_translation = NULL;
+    retval = PyDict_GetItemStringRef(py_config, "translation", &py_translation);
+    if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    else if (retval == 1) {
+        as_status status = as_translation_config_init_from_pyobject(
+            &constructor_err, &config, py_translation, validate_keys);
+        Py_DECREF(py_translation);
+        if (status != AEROSPIKE_OK) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+    }
+
+    // A seed provider can supply every seed
+    bool has_hosts = config.hosts && config.hosts->size > 0;
+    if (!has_hosts && !config.discovery.provider_registered) {
+        if (py_hosts) {
+            error_code = INIT_EMPTY_HOSTS_ERR;
+        }
+        else {
+            error_code = INIT_HOST_TYPE_ERR;
+        }
+        goto CONSTRUCTOR_ERROR;
+    }
+
+    // Shared connections are looked up by their configured seeds, so a client
+    // could share a cluster that discovers or translates addresses differently
+    if (self->use_shared_connection &&
+        (config.discovery.provider_registered ||
+         config.translation.provider_registered)) {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "use_shared_connection cannot be used with a "
+                        "discovery.provider or translation.provider other than "
+                        "\"static\" or \"static-map\"");
+        goto RAISE_EXCEPTION_WITH_AS_ERROR;
     }
 
     PyObject *py_max_socket_idle = NULL;
@@ -1554,75 +1607,6 @@ static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
     return INIT_SUCCESS;
 }
 
-static as_status set_ip_map(as_error *err, as_config *conf, PyObject *py_ip_map)
-{
-    if (!PyDict_Check(py_ip_map)) {
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "ip_map must be a dict, but a %s was received instead",
-            Py_TYPE(py_ip_map)->tp_name);
-    }
-
-    Py_ssize_t size = PyDict_Size(py_ip_map);
-    if (size == 0) {
-        return AEROSPIKE_OK;
-    }
-
-    // This function is atomic: on failure, conf->ip_map is freed and reset, so
-    // the caller has nothing to clean up. Entries are counted in ip_map_size as
-    // they are filled in, so destroy_ip_map() can free a partially built map.
-    conf->ip_map = (as_addr_map *)malloc(sizeof(as_addr_map) * size);
-    if (!conf->ip_map) {
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Unable to allocate memory for ip_map");
-    }
-    conf->ip_map_size = 0;
-
-    as_status status = AEROSPIKE_OK;
-    Py_ssize_t pos = 0;
-    PyObject *py_orig = NULL;
-    PyObject *py_alt = NULL;
-    while (PyDict_Next(py_ip_map, &pos, &py_orig, &py_alt)) {
-        if (!PyUnicode_Check(py_orig) || !PyUnicode_Check(py_alt)) {
-            status = as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                     "ip_map keys and values must be str");
-            goto CLEANUP;
-        }
-
-        const char *orig = PyUnicode_AsUTF8(py_orig);
-        if (!orig) {
-            goto UTF8_ERROR;
-        }
-        const char *alt = PyUnicode_AsUTF8(py_alt);
-        if (!alt) {
-            goto UTF8_ERROR;
-        }
-
-        as_addr_map *entry = &conf->ip_map[conf->ip_map_size];
-        entry->orig = strdup(orig);
-        entry->alt = strdup(alt);
-        // Count the entry before checking so destroy_ip_map() frees whichever
-        // string was allocated (free(NULL) is a no-op)
-        conf->ip_map_size++;
-        if (!entry->orig || !entry->alt) {
-            status = as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                     "Unable to allocate memory for ip_map");
-            goto CLEANUP;
-        }
-    }
-    return AEROSPIKE_OK;
-
-UTF8_ERROR:
-    PyErr_Clear();
-    status =
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "ip_map keys and values must be encodable as UTF-8");
-
-CLEANUP:
-    destroy_ip_map(conf);
-    return status;
-}
-
 static void AerospikeClient_Type_Dealloc(PyObject *self)
 {
 
@@ -1631,6 +1615,24 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
     PyObject *py_persistent_item = NULL;
     AerospikeGlobalHosts *global_host = NULL;
     AerospikeClient *client = (AerospikeClient *)self;
+    bool keep_metrics_exporters = false;
+
+    // A shared cluster that outlives this client still calls registered exporters.
+    if (client->use_shared_connection && client->is_conn_16 && client->as) {
+        alias_to_search = return_search_string(client->as);
+        py_persistent_item =
+            PyDict_GetItemString(py_global_hosts, alias_to_search);
+        if (py_persistent_item) {
+            global_host = (AerospikeGlobalHosts *)py_persistent_item;
+            if (client->as == global_host->as && global_host->ref_cnt > 1) {
+                keep_metrics_exporters = true;
+            }
+        }
+        PyMem_Free(alias_to_search);
+        alias_to_search = NULL;
+        py_persistent_item = NULL;
+        global_host = NULL;
+    }
 
     // If the client has never connected
     // It is safe to destroy the aerospike structure
@@ -1663,12 +1665,18 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
             }
             else {
                 if (client->is_conn_16) {
+                    // A seed provider refresh may be waiting for the GIL
+                    Py_BEGIN_ALLOW_THREADS
                     aerospike_close(client->as, &err);
+                    Py_END_ALLOW_THREADS
                 }
                 destroy_ip_map(&client->as->config);
                 aerospike_destroy(client->as);
             }
         }
+    }
+    if (!keep_metrics_exporters) {
+        aerospike_client_release_all_metrics_exporters(client);
     }
     self->ob_type->tp_free((PyObject *)self);
 }

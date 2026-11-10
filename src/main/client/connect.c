@@ -45,17 +45,14 @@ int AerospikeClientConnect(AerospikeClient *self)
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
 
-    if (!self || !self->as || !self->as->config.hosts ||
-        !self->as->config.hosts->size) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Invalid aerospike object or hosts not configured");
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
     }
 
-    alias_to_search = return_search_string(self->as);
-    free_alias_to_search = true;
-
     if (self->use_shared_connection) {
+        alias_to_search = return_search_string(self->as);
+        free_alias_to_search = true;
         PyObject *py_persistent_item =
             PyDict_GetItemString(py_global_hosts, alias_to_search);
         if (py_persistent_item) {

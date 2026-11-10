@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,8 @@ typedef struct {
     int size;
 } UnicodePyObjects;
 
+typedef struct PyMetricsExporterList PyMetricsExporterList;
+
 typedef struct {
     PyObject_HEAD aerospike *as;
     int is_conn_16;
@@ -79,6 +81,16 @@ typedef struct {
     bool use_shared_connection;
     uint8_t send_bool_as;
     bool validate_keys;
+    /*
+     * Exporters registered on the client config metrics policy. Owned here for
+     * the life of this client. The C config holds the same pointers.
+     */
+    PyMetricsExporterList *config_metrics_exporters;
+    /*
+     * Exporters passed to enable_metrics(). Replaced on the next enable and
+     * released after metrics are disabled. Not used for the config policy.
+     */
+    PyMetricsExporterList *active_metrics_exporters;
 } AerospikeClient;
 
 typedef struct {
@@ -125,6 +137,9 @@ extern PyObject *py_client_config_shm_valid_keys;
 extern PyObject *py_client_config_lua_valid_keys;
 extern PyObject *py_client_config_policies_valid_keys;
 extern PyObject *py_client_config_tls_valid_keys;
+extern PyObject *py_client_config_discovery_valid_keys;
+extern PyObject *py_client_config_discovery_dns_valid_keys;
+extern PyObject *py_client_config_translation_valid_keys;
 extern PyObject *py_apply_policy_valid_keys;
 extern PyObject *py_admin_policy_valid_keys;
 extern PyObject *py_info_policy_valid_keys;
@@ -148,6 +163,8 @@ extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
 extern PyObject *py_record_metadata_valid_keys;
+
+#define CLIENT_CONFIG_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "client config"
 
 #define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
 #define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"

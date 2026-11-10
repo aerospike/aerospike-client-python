@@ -1,0 +1,6 @@
+# Manifest for the l5-aws harness in aerospike-client-conformance (l5-aws/README.md there).
+# Each command runs with bash on the runner (Amazon Linux 2023) from the repository root.
+# The harness clones the repository without its submodules, so L5_BUILD checks out the C client.
+L5_SETUP='sudo dnf install -y -q gcc make autoconf automake libtool git openssl-devel libyaml-devel zlib-devel python3.12 python3.12-devel python3.12-pip'
+L5_BUILD='git submodule update --init --recursive && python3.12 -m venv .l5-venv && .l5-venv/bin/pip install -q build && .l5-venv/bin/python -m build --wheel && .l5-venv/bin/pip install -q dist/aerospike-*.whl'
+L5_DRIVER='.l5-venv/bin/python test/discovery/l5_driver.py'
