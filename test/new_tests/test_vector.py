@@ -404,6 +404,36 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["embedding"], vector)
 
+    # bytes.__new__() skips the client's checks, so these show that the client sends a malformed vector
+    # unchanged and surfaces the server's error detail. aerospike-tests-python's VW corpus covers the
+    # server's validation itself.
+    @pytest.mark.parametrize(
+        "raw, expected_detail",
+        [
+            (
+                struct.pack("<BBI2f", 1, Vector.ElementType.FLOAT32, 2, 1.0, math.nan),
+                "vector: elements must be finite (no NaN or infinity)",
+            ),
+            (
+                bytes(Vector.of_float32([1, 2, 3]))[:-1],
+                "vector: value size 17 does not match 18 (3 dimensions of 4 bytes, little-endian)",
+            ),
+            (b"", "vector: value size 0 smaller than 6-byte header"),
+        ],
+        ids=["nan-element", "one-byte-short", "empty"],
+    )
+    def test_server_rejects_malformed_vector_with_error_detail(self, raw, expected_detail):
+        key = self._key("malformed")
+        original = Vector.of_float32([9.0, 8.0])
+        self.as_connection.put(key, {"embedding": original})
+
+        policy = {"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE}
+        with pytest.raises(e.InvalidRequest) as excinfo:
+            self.as_connection.put(key, {"embedding": bytes.__new__(Vector, raw)}, policy=policy)
+        # The C client prefixes the server's detail with the node address.
+        assert excinfo.value.msg.endswith(f" {expected_detail}")
+        self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], original)
+
     def _write_mixed_batch(self, policy_batch: Optional[dict] = None) -> br.BatchRecord:
         keys = [self._key(f"batch-mixed-{i}") for i in range(3)]
         original = Vector.of_float32([9.0, 8.0])
