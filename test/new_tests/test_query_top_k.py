@@ -364,7 +364,7 @@ class TestQueryTopKDouble:
         for key in self.keys:
             as_connection.remove(key)
 
-    # CLIENT-5845 test plan: PQ-02, PM-01, PM-03
+    # CLIENT-5845 test plan: PQ-02, PM-03
     # NaN ranks above every other value, and ties are broken by ascending digest in both directions, so a
     # top_k that cuts through the tied zeros keeps the ones with the smallest digests.
     @pytest.mark.parametrize("top_k", [len(VALUES), 4])
@@ -436,7 +436,7 @@ class TestQueryTopKTwoKeys:
         query.top_k = 15
         return query
 
-    # CLIENT-5845 test plan: PQ-03, PM-01
+    # CLIENT-5845 test plan: PQ-03
     def test_then_order_by_over_100_records(self):
         records = self._query().results()
         assert [(bins["n"], bins["m"]) for _, _, bins in records] == self.EXPECTED
