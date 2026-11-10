@@ -165,6 +165,7 @@ class TestVectorExpressionsIntegration(object):
         yield request.param
         self._set_vector_distance_precision(original)
 
+    # CLIENT-5845 test plan: PE-01
     @pytest.mark.parametrize(
         "metric, expected",
         [
@@ -190,6 +191,7 @@ class TestVectorExpressionsIntegration(object):
         with pytest.raises(aerospike.exception.FilteredOut):
             self.as_connection.get(key, policy={"expressions": above})
 
+    # CLIENT-5845 test plan: PE-01
     @pytest.mark.parametrize("stored, query", [([0, 0, 0], [4, 5, 6]), ([1, 2, 3], [0, 0, 0])])
     def test_cosine_similarity_with_zero_vector_is_zero(self, stored, query):
         key = self._put("zero", Vector.of_float32(stored))
@@ -199,6 +201,7 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == 0.0
 
+    # CLIENT-5845 test plan: PE-07
     def test_expression_read_of_vector_bin_returns_vector(self):
         vector = Vector.of_float32([0.25, -0.5, 1.0])
         key = self._put("vector-bin", vector)
@@ -254,6 +257,7 @@ class TestVectorExpressionsIntegration(object):
         query.top_k = len(self.test_keys)
         return [(bins["id"], bins["dist"]) for _, _, bins in query.results()]
 
+    # CLIENT-5845 test plan: PE-05
     # The far record's squared distance overflows a double, so it is +Inf: last ascending and first
     # descending.
     @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
@@ -276,6 +280,7 @@ class TestVectorExpressionsIntegration(object):
         assert [i for i, _ in results] == expected
         assert dict(results)[3] == math.inf
 
+    # CLIENT-5845 test plan: PE-03, PE-05
     # The huge record's dot product with the query overflows a double, so its distance is unknown: a
     # single-record read fails, and a query leaves the record out, or returns it with None and ranks it
     # last in either direction under EXP_READ_EVAL_NO_FAIL.

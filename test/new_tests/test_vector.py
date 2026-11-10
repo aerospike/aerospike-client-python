@@ -325,6 +325,7 @@ class TestVectorIntegration(object):
         assert result.dimensions == vector.dimensions
         assert list(result.value) == list(vector.value)
 
+    # CLIENT-5845 test plan: PB-06
     @pytest.mark.parametrize(
         "bin_value",
         [
@@ -343,6 +344,7 @@ class TestVectorIntegration(object):
         _, _, bins = self.as_connection.get(key)
         assert bins == {"vectors": [1, 2]}
 
+    # CLIENT-5845 test plan: PB-06
     @pytest.mark.parametrize(
         "op",
         [
@@ -365,6 +367,7 @@ class TestVectorIntegration(object):
         _, _, bins = self.as_connection.get(key)
         assert bins == {"l": [1, 2], "m": {"a": 1}}
 
+    # CLIENT-5845 test plan: PB-06
     # The C client only accepts plain blobs as map keys, so the map is rejected before it is sent.
     def test_vector_as_map_key_is_rejected_by_the_client(self):
         key = self._key("vector-map-key")
@@ -404,6 +407,7 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["embedding"], vector)
 
+    # CLIENT-5845 test plan: PB-05
     @pytest.mark.parametrize("command", ["select", "batch_operate", "query", "query_foreach", "scan", "scan_foreach"])
     def test_read_path_returns_vector(self, command):
         set_name = "test_vector_read_paths"
@@ -428,6 +432,7 @@ class TestVectorIntegration(object):
         assert len(records) == 1
         self._assert_same_vector(records[0][2]["embedding"], vector)
 
+    # CLIENT-5845 test plan: PB-07
     @pytest.mark.parametrize(
         "command, value",
         [("append", "x"), ("append", b"\x00"), ("prepend", "x"), ("prepend", b"\x00"), ("increment", 1)],
@@ -441,6 +446,7 @@ class TestVectorIntegration(object):
             command_method(key, "embedding", value)
         self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
 
+    # CLIENT-5845 test plan: PB-08
     # bytes.__new__() skips the client's checks, so these show that the client sends a malformed vector
     # unchanged and surfaces the server's error detail. aerospike-tests-python's VW corpus covers the
     # server's validation itself.
@@ -502,11 +508,13 @@ class TestVectorIntegration(object):
         self._assert_same_vector(self.as_connection.get(keys[1])[2]["embedding"], original)
         return written.batch_records[1]
 
+    # CLIENT-5845 test plan: PB-09
     def test_batch_write_with_invalid_vector_writes_the_valid_records(self):
         invalid = self._write_mixed_batch({"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE})
         # The C client prefixes the server's detail with the node address.
         assert invalid.message.endswith(" vector: elements must be finite (no NaN or infinity)")
 
+    # CLIENT-5845 test plan: PB-09
     @pytest.mark.xfail(
         reason="The C client builds the default message from AEROSPIKE_OK instead of the record's result "
         "(aerospike-client-c PR 304)",
@@ -516,6 +524,7 @@ class TestVectorIntegration(object):
         invalid = self._write_mixed_batch()
         assert invalid.message.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
 
+    # CLIENT-5845 test plan: PB-04
     def test_batch_operate_writes_vector(self):
         keys = [self._key(f"batch-operate-{i}") for i in range(2)]
         vector = Vector.of_float64([0.5, -0.5])
@@ -524,6 +533,7 @@ class TestVectorIntegration(object):
         for key in keys:
             self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)
 
+    # CLIENT-5845 test plan: PB-04
     @pytest.mark.parametrize("command, job_module", [("query", aerospike.JOB_QUERY), ("scan", aerospike.JOB_SCAN)])
     def test_background_write_stores_vector(self, command, job_module):
         set_name = f"test_vector_background_{command}"

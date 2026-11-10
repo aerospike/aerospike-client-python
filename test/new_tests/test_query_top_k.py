@@ -388,6 +388,7 @@ class TestQueryTopKDouble:
         for key in self.keys:
             as_connection.remove(key)
 
+    # CLIENT-5845 test plan: PQ-02, PM-01, PM-03
     # NaN ranks above every other value, and ties are broken by ascending digest in both directions, so a
     # top_k that cuts through the tied zeros keeps the ones with the smallest digests.
     @pytest.mark.parametrize("top_k", [len(VALUES), 4])
@@ -435,15 +436,18 @@ class TestQueryTopKTwoKeys:
         query.top_k = 15
         return query
 
+    # CLIENT-5845 test plan: PQ-03, PM-01
     def test_then_order_by_over_100_records(self):
         records = self._query().results()
         assert [(bins["n"], bins["m"]) for _, _, bins in records] == self.EXPECTED
 
+    # CLIENT-5845 test plan: PQ-09
     def test_foreach_returns_records_in_rank_order(self):
         ordered = []
         self._query().foreach(lambda record: ordered.append((record[2]["n"], record[2]["m"])))
         assert ordered == self.EXPECTED
 
+    # CLIENT-5845 test plan: PQ-09
     def test_foreach_callback_returning_false_stops_the_query(self):
         records = []
 
@@ -480,6 +484,7 @@ class TestQueryTopKInteger:
         query.top_k = len(self.RECORDS)
         return query.results()
 
+    # CLIENT-5845 test plan: PQ-05
     # NIL ties are broken by ascending digest.
     @pytest.mark.parametrize(
         "direction, expected",
@@ -493,6 +498,7 @@ class TestQueryTopKInteger:
         nil_digests = [key[3] for key, _, _ in others]
         assert nil_digests == sorted(nil_digests)
 
+    # CLIENT-5845 test plan: PQ-05
     @pytest.mark.parametrize(
         "direction, expected",
         [(aerospike.QueryOrder.ASCENDING, [1, 2, 3, 4, 5]), (aerospike.QueryOrder.DESCENDING, [5, 4, 3, 2, 1])],
@@ -514,6 +520,7 @@ class TestQueryTopKVersionGate:
         for key in self.keys:
             as_connection.remove(key)
 
+    # CLIENT-5845 test plan: PQ-15
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_on_server_older_than_8_2_1(self, api_method, args):
         query = self.as_connection.query("test", self.SET_NAME)
