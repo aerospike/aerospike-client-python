@@ -163,10 +163,25 @@ def test_u1_provider_error_without_seeds():
     assert seeds.closed == 1
 
 
-@pytest.mark.parametrize("hosts", [[("127.0.0.1", 0)], [("127.0.0.1",)], [["127.0.0.1", 3000]], ("127.0.0.1", 3000)])
-def test_u1_provider_invalid_hosts(hosts):
+INVALID_HOST = (
+    "refresh_seed_candidates() returned an invalid host at index {}. Each host must be an (address, port) or "
+    "(address, port, tls_name) tuple with a str address, an int port from 1 to 65535 and a str or None tls_name"
+)
+
+
+@pytest.mark.parametrize(
+    "hosts, reason",
+    [
+        ([("127.0.0.1", 0)], INVALID_HOST.format(0)),
+        ([("127.0.0.1",)], INVALID_HOST.format(0)),
+        ([["127.0.0.1", 3000]], INVALID_HOST.format(0)),
+        ([UNREACHABLE, ("127.0.0.1", "3000")], INVALID_HOST.format(1)),
+        (("127.0.0.1", 3000), "refresh_seed_candidates() must return a list, but a tuple was returned"),
+    ],
+)
+def test_u1_provider_invalid_hosts(hosts, reason):
     message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
-    assert "refresh_seed_candidates()" in message
+    assert message == f"Seed provider Seeds failed and no seed host is left: {reason}"
 
 
 @pytest.mark.parametrize(
