@@ -1,8 +1,8 @@
 name: Discovery tests
 
 # Pluggable discovery test layers L0 to L3, from the client libraries testing strategy.
-# The C client has no pluggable discovery yet, so L1 records every fixture case as unsupported,
-# and L2 and L3 run only the pass-through tests that use_services_alternate supports today.
+# L1 does not run: its shared fixtures test discovery and translation, which are C client built-ins, so the C client runs them.
+# The C client has no pluggable discovery yet, so L2 and L3 run only the pass-through tests that use_services_alternate supports today.
 # The skipped-layers job reports every layer and profile that does not run yet, and why.
 
 permissions:
@@ -53,6 +53,7 @@ jobs:
         layers=$(jq -cn --arg translation "$translation" --arg not_ported "$not_ported" '[
           {layer: "L0", tests: "U-1 to U-5, U-7 to U-10, U-13 and U-15 (translator, provider and on_miss contracts)", reason: "the C client has no pluggable discovery yet"},
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
+          {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
           {layer: "L2 CE", tests: "default, reachable, port-map-range, low-mtu, port-range and idle-reset profiles", reason: $translation},
           {layer: "L2 CE", tests: "unresolved-access profile", reason: "its server startup check runs no client, and its port-map check needs translation, which the C client does not have yet"},
           {layer: "L2 CE", tests: "N-16 with on_miss strict, and N-18 collisions", reason: "needs translation providers and on_miss, which the C client does not have yet"},
@@ -108,57 +109,6 @@ jobs:
       run: pytest test/discovery/test_l0_naming.py -p no:cacheprovider -rA
       env:
         DISCOVERY_FAIL_ON_SKIP: '1'
-
-  l1:
-    name: L1 conformance
-    runs-on: ubuntu-22.04
-    timeout-minutes: 10
-    env:
-      FIXTURES_DIR: conformance
-      DECLARATIONS_DIR: test/discovery/conformance
-      REPORT_DIR: conformance-report
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-      with:
-        egress-policy: audit
-
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-    # Keep in step with the collect-conformance-report pin below, so the gate reads the fixture set the runner ran
-    - name: Checkout conformance fixtures
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        repository: aerospike/aerospike-client-conformance
-        ref: e50811162061a83ba716f0cd9cbffbf8ca91c218
-        path: ${{ env.FIXTURES_DIR }}
-
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install runner dependencies
-      run: python3 -m pip install -r test/discovery/requirements.txt
-
-    - name: Run conformance fixtures
-      run: >
-        python3 "$DECLARATIONS_DIR/run_conformance.py" "$FIXTURES_DIR" "$DECLARATIONS_DIR/python-declared.yaml"
-        "$REPORT_DIR/conformance-report.json"
-
-    - name: Upload conformance report
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: conformance-report-python
-        path: ${{ env.REPORT_DIR }}/conformance-report.json
-
-    - name: Collect conformance report
-      if: ${{ !cancelled() }}
-      uses: aerospike/aerospike-client-conformance/.github/actions/collect-conformance-report@e50811162061a83ba716f0cd9cbffbf8ca91c218 # main
-      with:
-        reports-directory: ${{ env.REPORT_DIR }}
-        fixtures-directory: ${{ github.workspace }}/${{ env.FIXTURES_DIR }}
-        declarations-directory: ${{ env.DECLARATIONS_DIR }}
 
   l2:
     name: >-
