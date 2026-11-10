@@ -250,8 +250,6 @@ jobs:
     if: ${{ needs.skipped-layers.outputs.has-features == 'true' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 20
-    # N-17 fails until the C client drops its deprecated CN fallback in the next major release
-    continue-on-error: ${{ matrix.profile == 'cn-only' }}
     strategy:
       fail-fast: false
       matrix:

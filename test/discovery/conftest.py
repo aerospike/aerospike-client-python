@@ -70,7 +70,8 @@ def pytest_collection_modifyitems(config, items):
 def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
-    if report.skipped and os.environ.get("DISCOVERY_FAIL_ON_SKIP") == "1":
+    # pytest reports an expected failure as skipped, with wasxfail set
+    if report.skipped and not hasattr(report, "wasxfail") and os.environ.get("DISCOVERY_FAIL_ON_SKIP") == "1":
         reason = report.longrepr[2] if isinstance(report.longrepr, tuple) else str(report.longrepr)
         report.outcome = "failed"
         report.longrepr = f"Skipped with DISCOVERY_FAIL_ON_SKIP=1: {reason}"

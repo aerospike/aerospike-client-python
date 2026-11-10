@@ -116,13 +116,20 @@ def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
 
 # N-17: a certificate that carries the tls-name only as its CN is rejected. The C client still
 # accepts it through its deprecated legacy name check, which PRD FR-45 keeps until the next major
-# release, so this fails until then.
+# release. Until then, the expected failure is the accepted handshake with the deprecation warning
+# logged; any other failure, or an unexpected pass, fails the test.
 @pytest.mark.l2("cn-only", subset="ee")
+@pytest.mark.xfail(
+    strict=True,
+    raises=pytest.fail.Exception,
+    reason="The C client accepts a CN-only certificate through its deprecated legacy name check until the next major release",
+)
 def test_n17_cn_only_certificate_is_rejected(nodes, warnings):
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = connect(nodes, first, first.tls_name)
         print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={legacy_matches(warnings)}")
         client.close()
+        assert legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"
     print(f"L2-N17-ERROR {raised.value}")
     assert f"TLS name '{first.tls_name}' mismatch" in warnings
