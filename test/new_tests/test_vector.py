@@ -542,11 +542,6 @@ class TestVectorIntegration(object):
         assert invalid.message.endswith(" vector: elements must be finite (no NaN or infinity)")
 
     # CLIENT-5845 test plan: PB-09
-    @pytest.mark.xfail(
-        reason="The C client builds the default message from AEROSPIKE_OK instead of the record's result "
-        "(aerospike-client-c PR 304)",
-        strict=True,
-    )
     def test_batch_write_invalid_vector_default_message_names_its_result(self):
         invalid = self._write_mixed_batch()
         assert invalid.message.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
