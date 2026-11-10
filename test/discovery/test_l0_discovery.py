@@ -1,7 +1,8 @@
 """L0 discovery tests of the seed provider and address translation settings. They need no server.
 
 A client whose seeds are unreachable is created with fail_if_not_connected false, so it starts its
-threads without a cluster.
+threads without a cluster. Tests are in the order of their IDs in the testing strategy; tests
+without an ID are last.
 """
 
 import gc
@@ -46,6 +47,24 @@ class Seeds(SeedCandidateProvider):
         self.closed += 1
 
 
+class BlockedSeeds(SeedCandidateProvider):
+    """Blocks every refresh until released."""
+
+    def __init__(self):
+        self.released = threading.Event()
+        self.closed = threading.Event()
+
+    def refresh_seed_candidates(self, context):
+        self.released.wait()
+        return [UNREACHABLE]
+
+    def needs_periodic_refresh(self):
+        return True
+
+    def close(self):
+        self.closed.set()
+
+
 def thread_count():
     """Return the number of OS threads in this process, including the C client's."""
     if os.path.isdir("/proc/self/task"):
@@ -73,50 +92,16 @@ def raises(exception, config):
     return error.value.msg
 
 
-# U-3: the default config is the static provider and the static-map translator, which run no
-# thread. A periodic provider adds exactly one, which shows the count would see a discovery thread.
-def test_u3_default_construction_adds_no_thread():
-    default = threads_added(OFFLINE)
-    static = threads_added({**OFFLINE, "discovery": {"provider": "static"}, "translation": {"provider": "static-map"}})
-    provider = threads_added({**OFFLINE, "discovery": {"provider": Seeds([UNREACHABLE], periodic=True)}})
-    print(f"U-3 threads default={default} static={static} provider={provider}")
-    assert static == default
-    assert provider == default + 1
+# U-1: the SeedCandidateProvider contract through the binding
 
-
-LEGACY_IP_MAP = {"10.0.0.1": "203.0.113.1", "2001:db8::1": "2001:db8:ffff::1", "node.local": "203.0.113.3"}
-
-
-# U-7: ip_map and translation.static_map accept and reject the same dicts. The C client tests the
-# static-map translator itself.
-@pytest.mark.parametrize("ip_map", [{"10.0.0.1": 1}, {1: "10.0.0.1"}, ["10.0.0.1"], {"\ud800": "10.0.0.1"}])
-def test_u7_ip_map_and_static_map_reject_the_same_input(ip_map):
-    legacy = raises(e.ParamError, {**OFFLINE, "ip_map": ip_map})
-    static_map = raises(e.ParamError, {**OFFLINE, "translation": {"static_map": ip_map}})
-    assert static_map == legacy.replace("ip_map", "translation.static_map")
-
-
-def test_u7_ip_map_and_static_map_accept_the_same_input():
-    for config in ({"ip_map": LEGACY_IP_MAP}, {"translation": {"static_map": LEGACY_IP_MAP}}):
-        client = aerospike.client({**OFFLINE, **config})
-        client.close()
-
-
-def test_discovery_exception_codes():
-    assert issubclass(e.TranslationMiss, e.ClientError)
-    assert issubclass(e.TranslationCollision, e.ClientError)
-    assert issubclass(e.SeedDiscoveryFailed, e.ClientError)
-    assert (e.TranslationMiss.code, e.TranslationCollision.code, e.SeedDiscoveryFailed.code) == (-25, -26, -27)
-
-
-def test_provider_supplies_every_seed():
+def test_u1_provider_supplies_every_seed():
     seeds = Seeds([UNREACHABLE])
     client = aerospike.client({**OFFLINE, "hosts": [], "cluster_name": "c1", "discovery": {"provider": seeds}})
     client.close()
     assert seeds.contexts == [SeedCandidateContext("c1", (), 0)]
 
 
-def test_provider_context_has_configured_seeds():
+def test_u1_provider_context_has_configured_seeds():
     seeds = Seeds([])
     hosts = [UNREACHABLE, ("127.0.0.2", 2, "tls-name")]
     client = aerospike.client({**OFFLINE, "hosts": hosts, "discovery": {"provider": seeds}})
@@ -125,63 +110,8 @@ def test_provider_context_has_configured_seeds():
     assert seeds.contexts[0].cluster_name is None
 
 
-# The registration outlives Client.close() so the client can connect again, and close() runs once
-# when the client object is destroyed
-def test_provider_closed_when_client_destroyed():
-    seeds = Seeds([UNREACHABLE])
-    client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": seeds}})
-    client.close()
-    client.connect()
-    client.close()
-    assert len(seeds.contexts) == 2
-    assert seeds.closed == 0
-    del client
-    gc.collect()
-    assert seeds.closed == 1
-
-
-class BlockedSeeds(SeedCandidateProvider):
-    """Blocks every refresh until released."""
-
-    def __init__(self):
-        self.released = threading.Event()
-        self.closed = threading.Event()
-
-    def refresh_seed_candidates(self, context):
-        self.released.wait()
-        return [UNREACHABLE]
-
-    def needs_periodic_refresh(self):
-        return True
-
-    def close(self):
-        self.closed.set()
-
-
-# A refresh still running when the client is destroyed closes the provider when it returns, even
-# while the main thread waits outside Python code and so runs no pending calls
-def test_provider_closed_after_refresh_outlives_client():
-    seeds = BlockedSeeds()
-    raises(e.SeedDiscoveryFailed, {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
-    gc.collect()
-    assert not seeds.closed.is_set()
-    seeds.released.set()
-    assert seeds.closed.wait(2), "The provider was not closed when its refresh returned"
-
-
-def test_provider_rejected_in_tend_mode():
-    seeds = Seeds([UNREACHABLE])
-    references = sys.getrefcount(seeds)
-    message = raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds, "execution_mode": "tend"}})
-    gc.collect()
-    assert message == "Binding seed provider requires thread execution mode"
-    assert seeds.contexts == []
-    assert seeds.closed == 0
-    assert sys.getrefcount(seeds) == references
-
-
-# U-1: a provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client
-# on its configured seeds, and no Python exception reaches the caller
+# A provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client on its
+# configured seeds, and no Python exception reaches the caller
 @pytest.mark.parametrize("hosts", [[], RuntimeError("no seeds today")])
 def test_u1_failed_refresh_keeps_configured_seeds(hosts):
     seeds = Seeds(hosts)
@@ -212,6 +142,21 @@ def test_u1_periodic_refresh_continues_after_errors():
     assert len(seeds.contexts) >= 3
 
 
+def test_u1_provider_error_without_seeds():
+    seeds = Seeds(RuntimeError("no seeds today"))
+    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
+    assert message.startswith("Seed provider Seeds failed and no seed host is left")
+    assert "RuntimeError: no seeds today" in message
+    gc.collect()
+    assert seeds.closed == 1
+
+
+@pytest.mark.parametrize("hosts", [[("127.0.0.1", 0)], [("127.0.0.1",)], [["127.0.0.1", 3000]], ("127.0.0.1", 3000)])
+def test_u1_provider_invalid_hosts(hosts):
+    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
+    assert "refresh_seed_candidates()" in message
+
+
 @pytest.mark.parametrize(
     "periodic, message",
     [
@@ -227,19 +172,108 @@ def test_u1_needs_periodic_refresh_must_return_a_bool(periodic, message):
     assert seeds.closed == 0
 
 
-def test_provider_error_without_seeds():
-    seeds = Seeds(RuntimeError("no seeds today"))
-    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
-    assert message.startswith("Seed provider Seeds failed and no seed host is left")
-    assert "RuntimeError: no seeds today" in message
+def test_u1_provider_rejected_in_tend_mode():
+    seeds = Seeds([UNREACHABLE])
+    references = sys.getrefcount(seeds)
+    message = raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds, "execution_mode": "tend"}})
+    gc.collect()
+    assert message == "Binding seed provider requires thread execution mode"
+    assert seeds.contexts == []
+    assert seeds.closed == 0
+    assert sys.getrefcount(seeds) == references
+
+
+# The registration outlives Client.close() so the client can connect again, and close() runs once
+# when the client object is destroyed
+def test_u1_provider_closed_when_client_destroyed():
+    seeds = Seeds([UNREACHABLE])
+    client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": seeds}})
+    client.close()
+    client.connect()
+    client.close()
+    assert len(seeds.contexts) == 2
+    assert seeds.closed == 0
+    del client
     gc.collect()
     assert seeds.closed == 1
 
 
-@pytest.mark.parametrize("hosts", [[("127.0.0.1", 0)], [("127.0.0.1",)], [["127.0.0.1", 3000]], ("127.0.0.1", 3000)])
-def test_provider_invalid_hosts(hosts):
-    message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
-    assert "refresh_seed_candidates()" in message
+# A refresh still running when the client is destroyed closes the provider when it returns, even
+# while the main thread waits outside Python code and so runs no pending calls
+def test_u1_provider_closed_after_refresh_outlives_client():
+    seeds = BlockedSeeds()
+    raises(e.SeedDiscoveryFailed, {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
+    gc.collect()
+    assert not seeds.closed.is_set()
+    seeds.released.set()
+    assert seeds.closed.wait(2), "The provider was not closed when its refresh returned"
+
+
+# U-3: the default config is the static provider and the static-map translator, which run no
+# thread. A periodic provider adds exactly one, which shows the count would see a discovery thread.
+def test_u3_default_construction_adds_no_thread():
+    default = threads_added(OFFLINE)
+    static = threads_added({**OFFLINE, "discovery": {"provider": "static"}, "translation": {"provider": "static-map"}})
+    provider = threads_added({**OFFLINE, "discovery": {"provider": Seeds([UNREACHABLE], periodic=True)}})
+    print(f"U-3 threads default={default} static={static} provider={provider}")
+    assert static == default
+    assert provider == default + 1
+
+
+# U-4: the binding accepts the dns provider's config. The C client tests resolution.
+def test_u4_dns_provider_config_accepted():
+    dns = {"names": ["seeds.test"], "record_type": "SRV", "port": 3100, "tls_name": "db", "timeout_ms": 50,
+           "servers": ["127.0.0.1:1"]}
+    client = aerospike.client({**OFFLINE, "validate_keys": True, "discovery": {"provider": "dns", "dns": dns}})
+    client.close()
+
+
+@pytest.mark.parametrize("record_type", ["a", "A", "srv", "SRV"])
+def test_u4_dns_record_type_accepts_either_case(record_type):
+    dns = {"names": ["seeds.test"], "record_type": record_type, "servers": ["127.0.0.1:1"]}
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": "dns", "dns": dns}})
+    client.close()
+
+
+# U-5 and every other option that takes a name: each documented name is accepted
+@pytest.mark.parametrize(
+    "config",
+    [{"discovery": {"merge_policy": name}} for name in ("merge", "replace", "discovery_only")]
+    + [{"discovery": {"execution_mode": name}} for name in ("thread", "tend")]
+    + [{"discovery": {"provider": "static"}}]
+    + [{"translation": {"provider": name}} for name in ("static-map", "port-map", "pass-through")]
+    + [{"translation": {"on_miss": name}} for name in ("pass_through", "strict")],
+)
+def test_u5_named_options_accepted(config):
+    client = aerospike.client({**OFFLINE, "validate_keys": True, **config})
+    client.close()
+
+
+LEGACY_IP_MAP = {"10.0.0.1": "203.0.113.1", "2001:db8::1": "2001:db8:ffff::1", "node.local": "203.0.113.3"}
+
+
+# U-7: ip_map and translation.static_map accept and reject the same dicts. The C client tests the
+# static-map translator itself.
+@pytest.mark.parametrize("ip_map", [{"10.0.0.1": 1}, {1: "10.0.0.1"}, ["10.0.0.1"], {"\ud800": "10.0.0.1"}])
+def test_u7_ip_map_and_static_map_reject_the_same_input(ip_map):
+    legacy = raises(e.ParamError, {**OFFLINE, "ip_map": ip_map})
+    static_map = raises(e.ParamError, {**OFFLINE, "translation": {"static_map": ip_map}})
+    assert static_map == legacy.replace("ip_map", "translation.static_map")
+
+
+def test_u7_ip_map_and_static_map_accept_the_same_input():
+    for config in ({"ip_map": LEGACY_IP_MAP}, {"translation": {"static_map": LEGACY_IP_MAP}}):
+        client = aerospike.client({**OFFLINE, **config})
+        client.close()
+
+
+# Tests without an ID: exception classes and config validation
+
+def test_discovery_exception_codes():
+    assert issubclass(e.TranslationMiss, e.ClientError)
+    assert issubclass(e.TranslationCollision, e.ClientError)
+    assert issubclass(e.SeedDiscoveryFailed, e.ClientError)
+    assert (e.TranslationMiss.code, e.TranslationCollision.code, e.SeedDiscoveryFailed.code) == (-25, -26, -27)
 
 
 def test_hosts_needed_without_provider():
@@ -288,31 +322,3 @@ def test_hosts_needed_without_provider():
 def test_invalid_config(config, message):
     actual = raises(e.ParamError, {**OFFLINE, "validate_keys": True, **config})
     assert message in actual
-
-
-# U-5 and every other option that takes a name: each documented name is accepted
-@pytest.mark.parametrize(
-    "config",
-    [{"discovery": {"merge_policy": name}} for name in ("merge", "replace", "discovery_only")]
-    + [{"discovery": {"execution_mode": name}} for name in ("thread", "tend")]
-    + [{"discovery": {"provider": "static"}}]
-    + [{"translation": {"provider": name}} for name in ("static-map", "port-map", "pass-through")]
-    + [{"translation": {"on_miss": name}} for name in ("pass_through", "strict")],
-)
-def test_u5_named_options_accepted(config):
-    client = aerospike.client({**OFFLINE, "validate_keys": True, **config})
-    client.close()
-
-
-@pytest.mark.parametrize("record_type", ["a", "A", "srv", "SRV"])
-def test_dns_record_type_accepts_either_case(record_type):
-    dns = {"names": ["seeds.test"], "record_type": record_type, "servers": ["127.0.0.1:1"]}
-    client = aerospike.client({**OFFLINE, "discovery": {"provider": "dns", "dns": dns}})
-    client.close()
-
-
-def test_dns_provider_config_accepted():
-    dns = {"names": ["seeds.test"], "record_type": "SRV", "port": 3100, "tls_name": "db", "timeout_ms": 50,
-           "servers": ["127.0.0.1:1"]}
-    client = aerospike.client({**OFFLINE, "validate_keys": True, "discovery": {"provider": "dns", "dns": dns}})
-    client.close()
