@@ -969,6 +969,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
             - Peers addresses: ``peers-clear-alt``
             - Peers TLS addresses: ``peers-tls-alt``
 
+            If true, a node without an ``alternate-access-address`` is not added to the cluster. A seed node \
+            without one raises :exc:`~aerospike.exception.InvalidNodeError`, and a peer without one is logged \
+            as an error.
+
             Default: ``False``
         * **ip_map** (:class:`dict` [:class:`str`, :class:`str`])
             IP translation table. Use this when clients in different networks need different server IP addresses \

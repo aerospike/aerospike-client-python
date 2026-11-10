@@ -122,7 +122,6 @@ def test_neg_setting_rack_ids(rack_ids):
 @pytest.mark.parametrize(
     "setting",
     [
-        "use_services_alternate",
         "force_single_node",
         "fail_if_not_connected"
      ]
@@ -132,6 +131,16 @@ def test_bool_settings(setting):
     config[setting] = True
     client = aerospike.client(config)
     assert client is not None
+
+
+def test_use_services_alternate_without_alternate_access_address():
+    """
+    The test server has no alternate-access-address
+    """
+    config = copy.deepcopy(gconfig)
+    config["use_services_alternate"] = True
+    with pytest.raises(e.InvalidNodeError, match="has no alternate-access-address and use_services_alternate is true"):
+        aerospike.client(config)
 
 
 def test_setting_rack_aware_non_bool():
