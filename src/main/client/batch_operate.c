@@ -396,6 +396,11 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
+    Py_ssize_t ops_count = PyList_Size(py_ops);
+    if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+        goto error;
+    }
+
     // required arg so don't need to check for NULL
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,

@@ -287,6 +287,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         if (py_ops_list != NULL && py_ops_list != Py_None) {
             py_ops_size = PyList_Size(py_ops_list);
         }
+        if (validate_operations_count(err, py_ops_size) != AEROSPIKE_OK) {
+            goto CLEANUP_ON_ERROR;
+        }
 
         long operation = 0;
         long return_type = -1;
