@@ -98,7 +98,7 @@ def test_u1_provider_supplies_every_seed():
     seeds = Seeds([UNREACHABLE])
     client = aerospike.client({**OFFLINE, "hosts": [], "cluster_name": "c1", "discovery": {"provider": seeds}})
     client.close()
-    assert seeds.contexts == [SeedCandidateContext("c1", (), 0)]
+    assert seeds.contexts == [SeedCandidateContext(cluster_name="c1", configured_seeds=(), tend_iteration=0)]
 
 
 def test_u1_provider_context_has_configured_seeds():
