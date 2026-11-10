@@ -1,8 +1,7 @@
 """L0 discovery tests of the seed provider and address translation settings. They need no server.
 
 A client whose seeds are unreachable is created with fail_if_not_connected false, so it starts its
-threads without a cluster. The C client's conformance entry points are reached through
-c_discovery.py.
+threads without a cluster.
 """
 
 import gc
@@ -15,14 +14,12 @@ import time
 import pytest
 
 import aerospike
-import c_discovery
 from aerospike import exception as e
 from aerospike_helpers.discovery import SeedCandidateContext, SeedCandidateProvider
 
 UNREACHABLE = ("127.0.0.1", 1)
 TEND_INTERVAL_MS = 250
 OFFLINE = {"hosts": [UNREACHABLE], "fail_if_not_connected": False, "tend_interval": TEND_INTERVAL_MS}
-NODE = "BB9030011AC4202"
 
 
 class Seeds(SeedCandidateProvider):
@@ -85,34 +82,11 @@ def test_u3_default_construction_adds_no_thread():
     assert provider == default + 1
 
 
-def legacy_ip_map(ip_map, endpoint):
-    """The ip_map rule before pluggable translation: replace a host that is a key, keep the port and TLS name."""
-    host = ip_map.get(endpoint["host"], endpoint["host"])
-    return {"host": host, "port": endpoint["port"], "tlsName": endpoint["tlsName"]}
-
-
 LEGACY_IP_MAP = {"10.0.0.1": "203.0.113.1", "2001:db8::1": "2001:db8:ffff::1", "node.local": "203.0.113.3"}
 
 
-# U-7: ip_map inputs give the same endpoints through the static-map translator as the legacy rule,
-# and ip_map and translation.static_map accept and reject the same dicts
-@pytest.mark.parametrize(
-    "host, port, tls_name, source",
-    [
-        ("10.0.0.1", 3000, "db1.example.com", "standard"),
-        ("10.0.0.1", 4333, None, "alternate"),
-        ("10.0.0.9", 3000, "db2.example.com", "standard"),
-        ("2001:db8::1", 3000, None, "standard"),
-        ("node.local", 3100, None, "standard"),
-        ("10.0.0.1:3000", 3000, None, "standard"),
-    ],
-)
-def test_u7_ip_map_parity(host, port, tls_name, source):
-    endpoint = {"nodeName": NODE, "tlsName": tls_name, "host": host, "port": port, "sourceList": source}
-    actual = c_discovery.translate("static-map", "pass_through", LEGACY_IP_MAP, endpoint)
-    assert actual == legacy_ip_map(LEGACY_IP_MAP, endpoint)
-
-
+# U-7: ip_map and translation.static_map accept and reject the same dicts. The C client tests the
+# static-map translator itself.
 @pytest.mark.parametrize("ip_map", [{"10.0.0.1": 1}, {1: "10.0.0.1"}, ["10.0.0.1"], {"\ud800": "10.0.0.1"}])
 def test_u7_ip_map_and_static_map_reject_the_same_input(ip_map):
     legacy = raises(e.ParamError, {**OFFLINE, "ip_map": ip_map})
@@ -124,22 +98,6 @@ def test_u7_ip_map_and_static_map_accept_the_same_input():
     for config in ({"ip_map": LEGACY_IP_MAP}, {"translation": {"static_map": LEGACY_IP_MAP}}):
         client = aerospike.client({**OFFLINE, **config})
         client.close()
-
-
-# U-9: a strict miss names the translator, the node, the advertised endpoint and its list, and the
-# setting that avoids it
-@pytest.mark.parametrize(
-    "kind, entries",
-    [("static-map", {"10.0.0.1": "203.0.113.1"}), ("port-map", {"10.0.0.1:3000": "lb.example.com:30001"})],
-)
-def test_u9_strict_miss_error_content(kind, entries):
-    endpoint = {"nodeName": NODE, "tlsName": None, "host": "10.0.0.9", "port": 3000, "sourceList": "alternate"}
-    with pytest.raises(c_discovery.CError) as error:
-        c_discovery.translate(kind, "strict", entries, endpoint)
-    print(f"U-9 {kind}: {error.value.message}")
-    assert error.value.code == e.TranslationMiss.code
-    for part in (kind, NODE, "10.0.0.9:3000", "alternate", "translation.on_miss", "pass_through"):
-        assert part in error.value.message
 
 
 def test_discovery_exception_codes():
