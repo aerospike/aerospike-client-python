@@ -50,7 +50,7 @@ jobs:
       run: |
         not_ported='not ported to the Python client yet'
         layers=$(jq -cn --arg not_ported "$not_ported" '[
-          {layer: "L0", tests: "U-1, U-2, U-4, U-5, U-8, U-10, U-13 and U-15", reason: $not_ported},
+          {layer: "L0", tests: "U-2, U-8, U-10, U-13 and U-15 translator contracts", reason: "the translators are C client built-ins, so the C client suite owns them"},
           {layer: "L0", tests: "U-12 idle-reaping default", reason: "max_socket_idle defaults to the C client constant, so the C client suite owns it"},
           {layer: "L1", tests: "shared conformance fixtures", reason: "discovery and translation are C client built-ins, so the C client runs the fixtures (testing strategy TG-4)"},
           {layer: "L2 CE", tests: "port-map-range, low-mtu, port-range and idle-reset profiles", reason: $not_ported},
