@@ -23,7 +23,7 @@ OFFLINE = {"hosts": [UNREACHABLE], "fail_if_not_connected": False, "tend_interva
 
 
 class Seeds(SeedCandidateProvider):
-    """Returns hosts, or raises it when it is an exception, and records every call."""
+    """Returns hosts and periodic, or raises them when they are exceptions, and records every refresh."""
 
     def __init__(self, hosts, periodic=False):
         self.hosts = hosts
@@ -38,6 +38,8 @@ class Seeds(SeedCandidateProvider):
         return self.hosts
 
     def needs_periodic_refresh(self):
+        if isinstance(self.periodic, Exception):
+            raise self.periodic
         return self.periodic
 
     def close(self):
@@ -178,6 +180,53 @@ def test_provider_rejected_in_tend_mode():
     assert sys.getrefcount(seeds) == references
 
 
+# U-1: a provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client
+# on its configured seeds, and no Python exception reaches the caller
+@pytest.mark.parametrize("hosts", [[], RuntimeError("no seeds today")])
+def test_u1_failed_refresh_keeps_configured_seeds(hosts):
+    seeds = Seeds(hosts)
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds}})
+    client.close()
+    assert len(seeds.contexts) == 1
+
+
+def test_u1_blocked_refresh_keeps_configured_seeds():
+    seeds = BlockedSeeds()
+    start = time.monotonic()
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
+    elapsed = time.monotonic() - start
+    seeds.released.set()
+    client.close()
+    assert elapsed < 1, f"Client construction waited {elapsed:.1f} s for a blocked refresh"
+
+
+def test_u1_periodic_refresh_continues_after_errors():
+    seeds = Seeds(RuntimeError("no seeds today"), periodic=True)
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds, "refresh_interval_ms": TEND_INTERVAL_MS}})
+    try:
+        deadline = time.monotonic() + 10 * TEND_INTERVAL_MS / 1000
+        while len(seeds.contexts) < 3 and time.monotonic() < deadline:
+            time.sleep(0.05)
+    finally:
+        client.close()
+    assert len(seeds.contexts) >= 3
+
+
+@pytest.mark.parametrize(
+    "periodic, message",
+    [
+        (RuntimeError("unsure"), "discovery.provider.needs_periodic_refresh() raised: RuntimeError: unsure"),
+        (1, "discovery.provider.needs_periodic_refresh() must return a bool"),
+    ],
+)
+def test_u1_needs_periodic_refresh_must_return_a_bool(periodic, message):
+    seeds = Seeds([UNREACHABLE], periodic=periodic)
+    assert raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds}}) == message
+    gc.collect()
+    assert seeds.contexts == []
+    assert seeds.closed == 0
+
+
 def test_provider_error_without_seeds():
     seeds = Seeds(RuntimeError("no seeds today"))
     message = raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
@@ -239,6 +288,27 @@ def test_hosts_needed_without_provider():
 def test_invalid_config(config, message):
     actual = raises(e.ParamError, {**OFFLINE, "validate_keys": True, **config})
     assert message in actual
+
+
+# U-5 and every other option that takes a name: each documented name is accepted
+@pytest.mark.parametrize(
+    "config",
+    [{"discovery": {"merge_policy": name}} for name in ("merge", "replace", "discovery_only")]
+    + [{"discovery": {"execution_mode": name}} for name in ("thread", "tend")]
+    + [{"discovery": {"provider": "static"}}]
+    + [{"translation": {"provider": name}} for name in ("static-map", "port-map", "pass-through")]
+    + [{"translation": {"on_miss": name}} for name in ("pass_through", "strict")],
+)
+def test_u5_named_options_accepted(config):
+    client = aerospike.client({**OFFLINE, "validate_keys": True, **config})
+    client.close()
+
+
+@pytest.mark.parametrize("record_type", ["a", "A", "srv", "SRV"])
+def test_dns_record_type_accepts_either_case(record_type):
+    dns = {"names": ["seeds.test"], "record_type": record_type, "servers": ["127.0.0.1:1"]}
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": "dns", "dns": dns}})
+    client.close()
 
 
 def test_dns_provider_config_accepted():
