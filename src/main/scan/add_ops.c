@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,6 +76,9 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 
     if (PyList_Check(py_ops)) {
         Py_ssize_t size = PyList_Size(py_ops);
+        if (validate_operations_count(&err, size) != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
         self->scan.ops = as_operations_new((uint16_t)size);
 
         for (int i = 0; i < size; i++) {
