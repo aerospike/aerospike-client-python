@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,3 +24,7 @@ void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name);
 void remove_exception(as_error *err);
+
+// Move the raised Python exception into err as "<prefix>: <type>: <message>"
+as_status error_from_raised_exception(as_error *err, as_status code,
+                                      const char *prefix);
