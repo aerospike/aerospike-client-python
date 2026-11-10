@@ -170,7 +170,7 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist.compile())])
         assert bins["dist"] == pytest.approx(expected, rel=rel)
 
-        margin = expected * rel * 2
+        margin = expected * rel
         in_range = exp.And(exp.GE(dist, expected - margin), exp.LE(dist, expected + margin)).compile()
         _, _, bins = self.as_connection.get(key, policy={"expressions": in_range})
         assert bins["embedding"] == Vector.of_float32([1, 2, 3])
