@@ -38,32 +38,34 @@ BAD_SIZE = "size"
 NON_FINITE = "non_finite"
 
 
-def max_dimensions(element_type):
+def max_dimensions(element_type: Vector.ElementType) -> int:
     return MAX_ELEMENT_BYTES // ELEMENT_SIZE[element_type]
 
 
-def header(element_type, dimensions, version=VERSION):
+# element_type is an int so that invalid element type codes can be encoded.
+def header(element_type: int, dimensions: int, version: int = VERSION) -> bytes:
     return struct.pack("<BBI", version, element_type, dimensions)
 
 
-def pack_elements(element_type, values):
+def pack_elements(element_type: Vector.ElementType, values: list[float]) -> bytes:
     return struct.pack(f"<{len(values)}{ELEMENT_FORMAT[element_type]}", *values)
 
 
-def encode(element_type, values):
+def encode(element_type: Vector.ElementType, values: list[float]) -> bytes:
     return header(element_type, len(values)) + pack_elements(element_type, values)
 
 
-def sample_values(element_type, dimensions):
+def sample_values(element_type: Vector.ElementType, dimensions: int) -> list[float]:
     if element_type == INT32:
         return [(i * 7) % 2001 - 1000 for i in range(dimensions)]
     return [((i * 7) % 41 - 20) / 2 for i in range(dimensions)]
 
 
-def build_corpus():
+# Returns pytest.param() values, each of (raw, check).
+def build_corpus() -> list:
     corpus = []
 
-    def add(name, raw, check):
+    def add(name: str, raw: bytes, check: str) -> None:
         corpus.append(pytest.param(raw, check, id=name))
 
     for et in ELEMENT_TYPES:
@@ -116,7 +118,7 @@ def build_corpus():
     return corpus
 
 
-def expected_message(raw, check):
+def expected_message(raw: bytes, check: str) -> str:
     """The error detail the server sets for each check, from particle_vector.c."""
     if check == SHORT:
         return f"vector: value size {len(raw)} smaller than {HEADER_SIZE}-byte header"

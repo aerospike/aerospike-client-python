@@ -398,7 +398,7 @@ class TestQueryTopKDouble:
 
         ascending_ranks = [-math.inf, -1.0, 0.0, 1.0, math.inf]
 
-        def rank(value):
+        def rank(value: float) -> int:
             ascending_rank = len(ascending_ranks) if math.isnan(value) else ascending_ranks.index(value)
             if direction == aerospike.QueryOrder.DESCENDING:
                 return len(ascending_ranks) - ascending_rank

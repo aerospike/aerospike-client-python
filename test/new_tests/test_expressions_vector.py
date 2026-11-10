@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import math
 import random
+from typing import Optional
 
 import pytest
 
@@ -147,7 +148,7 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == pytest.approx(expected, rel=1e-6)
 
-    def _distance_precision_tolerance(self):
+    def _distance_precision_tolerance(self) -> float:
         # Since server 8.2.1, a distance comes back at the precision of the server's accumulator.
         service_config = self.as_connection.info_random_node("get-config:context=service")
         if "vector-distance-precision=double" in service_config.split(";"):
@@ -221,7 +222,13 @@ class TestVectorExpressionsIntegration(object):
         for _, _, bins in records:
             assert bins["dist"] == pytest.approx(distance(stored[bins["id"]], query_values), rel=1e-5, abs=1e-6)
 
-    def _top_k_distances(self, metric, query_vector, direction, flags=aerospike.EXP_READ_DEFAULT):
+    def _top_k_distances(
+        self,
+        metric: vector_exp.VectorDistanceMetric,
+        query_vector: Vector,
+        direction: aerospike.QueryOrder,
+        flags: int = aerospike.EXP_READ_DEFAULT,
+    ) -> list[tuple[int, Optional[float]]]:
         dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr, flags)])
@@ -238,7 +245,7 @@ class TestVectorExpressionsIntegration(object):
             self._put(i, Vector.of_float64(values))
         query_values = [0.5, 0.5]
 
-        def squared_distance(values):
+        def squared_distance(values: list[float]) -> float:
             return sum((x - y) * (x - y) for x, y in zip(values, query_values))
 
         descending = direction == aerospike.QueryOrder.DESCENDING

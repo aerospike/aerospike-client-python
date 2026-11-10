@@ -3,6 +3,7 @@ import math
 import pickle
 import struct
 from enum import IntEnum
+from typing import Optional
 
 import pytest
 
@@ -403,7 +404,7 @@ class TestVectorIntegration(object):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["embedding"], vector)
 
-    def _write_mixed_batch(self, policy_batch=None):
+    def _write_mixed_batch(self, policy_batch: Optional[dict] = None) -> br.BatchRecord:
         keys = [self._key(f"batch-mixed-{i}") for i in range(3)]
         original = Vector.of_float32([9.0, 8.0])
         self.as_connection.put(keys[1], {"embedding": original})
