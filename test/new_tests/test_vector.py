@@ -25,15 +25,15 @@ class TestVectorUnit(object):
         assert vector.element_type is Vector.ElementType.FLOAT32
 
     def test_query_order_constants_are_int_enums(self):
-        assert issubclass(aerospike.BinDataType, IntEnum)
-        assert issubclass(aerospike.Order, IntEnum)
+        assert issubclass(aerospike.Query.BinDataType, IntEnum)
+        assert issubclass(aerospike.Query.Order, IntEnum)
         assert issubclass(aerospike.QueryOrderByFlags, IntEnum)
-        assert aerospike.BinDataType.INTEGER == 1
-        assert aerospike.BinDataType.DOUBLE == 2
-        assert aerospike.BinDataType.STRING == 3
-        assert aerospike.BinDataType.BYTES == 4
-        assert aerospike.Order.ASC == 0
-        assert aerospike.Order.DESC == 1
+        assert aerospike.Query.BinDataType.INTEGER == 1
+        assert aerospike.Query.BinDataType.DOUBLE == 2
+        assert aerospike.Query.BinDataType.STRING == 3
+        assert aerospike.Query.BinDataType.BYTES == 4
+        assert aerospike.Query.Order.ASC == 0
+        assert aerospike.Query.Order.DESC == 1
         assert aerospike.QueryOrderByFlags.DEFAULT == 0
         assert aerospike.QueryOrderByFlags.CASE_INSENSITIVE == 1
         assert not hasattr(aerospike, "QUERY_ORDER_BY_DOUBLE")
@@ -41,6 +41,13 @@ class TestVectorUnit(object):
         assert not hasattr(aerospike, "QUERY_ORDER_BY_CASE_INSENSITIVE")
         assert not hasattr(aerospike, "QueryOrderByType")
         assert not hasattr(aerospike, "QueryOrder")
+        assert not hasattr(aerospike, "BinDataType")
+        assert not hasattr(aerospike, "Order")
+
+    def test_query_order_constants_pickle_by_query_path(self):
+        assert aerospike.Query.Order.__qualname__ == "Query.Order"
+        pickled = pickle.dumps(aerospike.Query.BinDataType.DOUBLE)
+        assert pickle.loads(pickled) is aerospike.Query.BinDataType.DOUBLE
 
     def test_of_float32(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])

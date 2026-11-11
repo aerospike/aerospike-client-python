@@ -56,9 +56,9 @@ class VectorDistanceMetric(_IntEnum):
     Distance metrics usable with :class:`VectorDistance`. Matches the C
     client's ``as_vector_distance_metric`` exactly.
 
-    ``EUCLIDEAN_SQUARED`` sorts with :attr:`aerospike.Order.ASC` (smallest
+    ``EUCLIDEAN_SQUARED`` sorts with :attr:`aerospike.Query.Order.ASC` (smallest
     distance is the closest match); ``DOT_PRODUCT`` and ``COSINE_SIMILARITY``
-    sort with :attr:`aerospike.Order.DESC` (largest value is the best match).
+    sort with :attr:`aerospike.Query.Order.DESC` (largest value is the best match).
     Picking the wrong :meth:`Query.order_by <aerospike.Query.order_by>`
     direction for a given metric silently returns the worst matches.
 

@@ -1067,6 +1067,8 @@ struct int_enum_member {
 
 struct int_enum_def {
     const char *name;
+    // The path from the module to the class, so the class can be pickled.
+    const char *qualname;
     // Ends with a {NULL} member.
     const struct int_enum_member *members;
 };
@@ -1086,10 +1088,13 @@ static const struct int_enum_member query_order_by_flags_members[] = {
     {"CASE_INSENSITIVE", AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
     {NULL}};
 
-static const struct int_enum_def query_order_enums[] = {
-    {"BinDataType", bin_data_type_members},
-    {"Order", order_members},
-    {"QueryOrderByFlags", query_order_by_flags_members},
+static const struct int_enum_def query_enums[] = {
+    {"BinDataType", "Query.BinDataType", bin_data_type_members},
+    {"Order", "Query.Order", order_members},
+};
+
+static const struct int_enum_def module_enums[] = {
+    {"QueryOrderByFlags", "QueryOrderByFlags", query_order_by_flags_members},
 };
 
 static int set_int_enum_member(PyObject *py_members,
@@ -1154,7 +1159,8 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
     }
 
     PyObject *py_kwargs =
-        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+        Py_BuildValue("{s:s,s:s}", "module", AEROSPIKE_MODULE_NAME, "qualname",
+                      enum_def->qualname);
     if (py_kwargs == NULL) {
         Py_DECREF(py_args);
         Py_DECREF(py_int_enum);
@@ -1168,20 +1174,20 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
     return py_enum_cls;
 }
 
-static int add_query_order_enums(PyObject *py_module)
+static int add_int_enums(PyObject *py_dict,
+                         const struct int_enum_def *enum_defs,
+                         size_t enum_count)
 {
-    size_t enum_count =
-        sizeof(query_order_enums) / sizeof(query_order_enums[0]);
     for (size_t i = 0; i < enum_count; i++) {
-        const struct int_enum_def *enum_def = &query_order_enums[i];
+        const struct int_enum_def *enum_def = &enum_defs[i];
         PyObject *py_enum_cls = create_int_enum(enum_def);
         if (py_enum_cls == NULL) {
             return -1;
         }
 
-        int retval = PyModule_AddObject(py_module, enum_def->name, py_enum_cls);
+        int retval = PyDict_SetItemString(py_dict, enum_def->name, py_enum_cls);
+        Py_DECREF(py_enum_cls);
         if (retval == -1) {
-            Py_DECREF(py_enum_cls);
             return -1;
         }
     }
@@ -1266,10 +1272,19 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
-    retval = add_query_order_enums(py_aerospike_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_aerospike_module);
+    retval = add_int_enums(py_module_dict, module_enums,
+                           sizeof(module_enums) / sizeof(module_enums[0]));
     if (retval == -1) {
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
+
+    retval = add_int_enums(AerospikeQuery_Type.tp_dict, query_enums,
+                           sizeof(query_enums) / sizeof(query_enums[0]));
+    if (retval == -1) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+    }
+    PyType_Modified(&AerospikeQuery_Type);
 
     // Allows submodules to be imported using "import aerospike.<submodule-name>"
     // https://github.com/python/cpython/issues/87533#issuecomment-2373119452

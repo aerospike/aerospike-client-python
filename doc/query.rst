@@ -286,13 +286,13 @@ Assume this boilerplate code is run before all examples below:
             in :meth:`Query.add_ops`, such as a projected \
             :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
             If a projection is set, the bin must be one of the projected names.
-        :param type: :attr:`aerospike.BinDataType.INTEGER`, :attr:`aerospike.BinDataType.DOUBLE`, \
-            or :attr:`aerospike.BinDataType.BYTES`, for example \
-            :attr:`aerospike.BinDataType.DOUBLE` for a distance expression's float result. \
-            :attr:`~aerospike.BinDataType.STRING` is not supported yet.
-        :param direction: :attr:`aerospike.Order.ASC` or :attr:`aerospike.Order.DESC`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`, for example \
+            :attr:`aerospike.Query.BinDataType.DOUBLE` for a distance expression's float result. \
+            :attr:`~aerospike.Query.BinDataType.STRING` is not supported yet.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.BinDataType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
@@ -355,8 +355,8 @@ Assume this boilerplate code is run before all examples below:
             # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
             query.order_by(
                 "dist",
-                aerospike.BinDataType.DOUBLE,
-                aerospike.Order.ASC,
+                aerospike.Query.BinDataType.DOUBLE,
+                aerospike.Query.Order.ASC,
             )
             query.top_k = 2
 
@@ -385,11 +385,11 @@ Assume this boilerplate code is run before all examples below:
         Call :meth:`Query.order_by` first. :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
-        :param type: :attr:`aerospike.BinDataType.INTEGER`, :attr:`aerospike.BinDataType.DOUBLE`, \
-            or :attr:`aerospike.BinDataType.BYTES`. See :meth:`Query.order_by`.
-        :param direction: :attr:`aerospike.Order.ASC` or :attr:`aerospike.Order.DESC`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`. See :meth:`Query.order_by`.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.BinDataType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. Calling \
@@ -399,9 +399,9 @@ Assume this boilerplate code is run before all examples below:
         .. code-block:: python
 
             query = client.query("test", "demo")
-            query.order_by("score", aerospike.BinDataType.INTEGER, aerospike.Order.DESC)
+            query.order_by("score", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
             # Among records with the same score, return the earliest first.
-            query.then_order_by("ts", aerospike.BinDataType.INTEGER, aerospike.Order.ASC)
+            query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
             query.top_k = 10
             records = query.results()
 

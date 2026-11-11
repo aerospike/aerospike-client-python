@@ -70,8 +70,8 @@ class VectorTopKQuery(Example):
         ])
         query.order_by(
             self.DISTANCE_BIN_NAME,
-            aerospike.BinDataType.DOUBLE,
-            aerospike.Order.ASC,
+            aerospike.Query.BinDataType.DOUBLE,
+            aerospike.Query.Order.ASC,
         )
         query.top_k = self.TOP_K
 
