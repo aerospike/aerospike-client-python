@@ -233,10 +233,10 @@ class TestVectorExpressionsIntegration(object):
         assert bins == {"dist": None}
 
         ascending = sorted(stored, key=lambda i: euclidean_squared(stored[i], query_values))
-        results = self._top_k_distances(metric, query_vector, aerospike.QueryOrder.ASCENDING)
+        results = self._top_k_distances(metric, query_vector, aerospike.Query.Order.ASC)
         assert [i for i, _ in results] == ascending
         results = self._top_k_distances(
-            metric, query_vector, aerospike.QueryOrder.ASCENDING, aerospike.EXP_READ_EVAL_NO_FAIL
+            metric, query_vector, aerospike.Query.Order.ASC, aerospike.EXP_READ_EVAL_NO_FAIL
         )
         assert [i for i, _ in results] == ascending + [3]
         assert results[-1] == (3, None)
@@ -266,9 +266,9 @@ class TestVectorExpressionsIntegration(object):
     @pytest.mark.parametrize(
         "metric, distance, direction",
         [
-            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.QueryOrder.ASCENDING),
-            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.QueryOrder.DESCENDING),
-            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.QueryOrder.DESCENDING),
+            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.Query.Order.ASC),
+            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.Query.Order.DESC),
+            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.Query.Order.DESC),
         ],
     )
     def test_knn_top_k_query_matches_bruteforce(self, metric, distance, direction):
@@ -282,13 +282,13 @@ class TestVectorExpressionsIntegration(object):
         query_vector = Vector.of_float32([0.5, -0.25, 0.75, 0.1])
         query_values = list(query_vector.value)
         expected = sorted(
-            stored, key=lambda i: distance(stored[i], query_values), reverse=direction == aerospike.QueryOrder.DESCENDING
+            stored, key=lambda i: distance(stored[i], query_values), reverse=direction == aerospike.Query.Order.DESC
         )[:5]
 
         dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr)])
-        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, direction)
+        query.order_by("dist", aerospike.Query.BinDataType.DOUBLE, direction)
         query.top_k = 5
         records = query.results()
 
@@ -300,13 +300,13 @@ class TestVectorExpressionsIntegration(object):
         self,
         metric: vector_exp.VectorDistanceMetric,
         query_vector: Vector,
-        direction: aerospike.QueryOrder,
+        direction: aerospike.Query.Order,
         flags: int = aerospike.EXP_READ_DEFAULT,
     ) -> list[tuple[int, Optional[float]]]:
         dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr, flags)])
-        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, direction)
+        query.order_by("dist", aerospike.Query.BinDataType.DOUBLE, direction)
         query.top_k = len(self.test_keys)
         return [(bins["id"], bins["dist"]) for _, _, bins in query.results()]
 
@@ -314,7 +314,7 @@ class TestVectorExpressionsIntegration(object):
     # The far record's squared distance overflows a double, so it is +Inf: last ascending and first
     # descending. The server sums FLOAT64 elements in a double under either vector-distance-precision, so
     # this test and the next don't set it.
-    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    @pytest.mark.parametrize("direction", [aerospike.Query.Order.ASC, aerospike.Query.Order.DESC])
     def test_top_k_ranks_overflowing_squared_distance_as_infinity(self, direction):
         stored = {0: [0.0, 0.0], 1: [1.0, 2.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
         for i, values in stored.items():
@@ -324,7 +324,7 @@ class TestVectorExpressionsIntegration(object):
         def squared_distance(values: list[float]) -> float:
             return sum((x - y) * (x - y) for x, y in zip(values, query_values))
 
-        descending = direction == aerospike.QueryOrder.DESCENDING
+        descending = direction == aerospike.Query.Order.DESC
         expected = sorted(stored, key=lambda i: squared_distance(stored[i]), reverse=descending)
         assert expected[0 if descending else -1] == 3
 
@@ -338,7 +338,7 @@ class TestVectorExpressionsIntegration(object):
     # The huge record's dot product with the query overflows a double, so its distance is unknown: a
     # single-record read fails, and a query leaves the record out, or returns it with None and ranks it
     # last in either direction under EXP_READ_EVAL_NO_FAIL.
-    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    @pytest.mark.parametrize("direction", [aerospike.Query.Order.ASC, aerospike.Query.Order.DESC])
     def test_top_k_with_overflowing_dot_product(self, direction):
         stored = {0: [1.0, 1.0], 1: [2.0, -1.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
         for i, values in stored.items():
@@ -350,7 +350,7 @@ class TestVectorExpressionsIntegration(object):
         with pytest.raises(aerospike.exception.OpNotApplicable):
             self.as_connection.operate((self.test_ns, self.test_set, 3), [exp_ops.expression_read("dist", dist_expr)])
 
-        descending = direction == aerospike.QueryOrder.DESCENDING
+        descending = direction == aerospike.Query.Order.DESC
         finite = sorted([0, 1, 2], key=lambda i: dot_product(stored[i], [1e200, 1e200]), reverse=descending)
 
         results = self._top_k_distances(metric, query_vector, direction)
@@ -369,7 +369,7 @@ class TestVectorExpressionsIntegration(object):
             self._put(i, vector)
 
         query = self.as_connection.query(self.test_ns, self.test_set)
-        query.order_by("id", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by("id", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.top_k = 3
         records = query.results()
 

@@ -286,13 +286,13 @@ Assume this boilerplate code is run before all examples below:
             in :meth:`Query.add_ops`, such as a projected \
             :class:`~aerospike_helpers.expressions.vector.VectorDistance`. \
             If a projection is set, the bin must be one of the projected names.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
-            or :attr:`aerospike.QueryOrderByType.BYTES`, for example \
-            :attr:`aerospike.QueryOrderByType.DOUBLE` for a distance expression's float result. \
-            :attr:`~aerospike.QueryOrderByType.STRING` is not supported yet.
-        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`, for example \
+            :attr:`aerospike.Query.BinDataType.DOUBLE` for a distance expression's float result. \
+            :attr:`~aerospike.Query.BinDataType.STRING` is not supported yet.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
@@ -355,7 +355,7 @@ Assume this boilerplate code is run before all examples below:
             query.add_ops([ops.read("embedding"), exp_ops.expression_read("dist", dist_expr)])
 
             # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
-            query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrder.ASCENDING)
+            query.order_by("dist", aerospike.Query.BinDataType.DOUBLE, aerospike.Query.Order.ASC)
             query.top_k = 2
 
             # Rank only the records that pass the filter. The "hats" record is closer but is left out.
@@ -385,11 +385,11 @@ Assume this boilerplate code is run before all examples below:
         Call :meth:`Query.order_by` first. :meth:`Query.order_by` replaces both keys.
 
         :param str bin: the name of the bin to break ties on. See :meth:`Query.order_by`.
-        :param type: :attr:`aerospike.QueryOrderByType.INTEGER`, :attr:`aerospike.QueryOrderByType.DOUBLE`, \
-            or :attr:`aerospike.QueryOrderByType.BYTES`. See :meth:`Query.order_by`.
-        :param direction: :attr:`aerospike.QueryOrder.ASCENDING` or :attr:`aerospike.QueryOrder.DESCENDING`.
+        :param type: :attr:`aerospike.Query.BinDataType.INTEGER`, :attr:`aerospike.Query.BinDataType.DOUBLE`, \
+            or :attr:`aerospike.Query.BinDataType.BYTES`. See :meth:`Query.order_by`.
+        :param direction: :attr:`aerospike.Query.Order.ASC` or :attr:`aerospike.Query.Order.DESC`.
         :param flags: an :class:`~aerospike.QueryOrderByFlags` value. Valid only with \
-            :attr:`aerospike.QueryOrderByType.STRING`, which is not supported yet. Defaults to \
+            :attr:`aerospike.Query.BinDataType.STRING`, which is not supported yet. Defaults to \
             :attr:`aerospike.QueryOrderByFlags.DEFAULT`.
         :return: ``self``, so calls can be chained.
         :raises aerospike.exception.ParamError: the same cases as :meth:`Query.order_by`. Calling \
@@ -399,9 +399,9 @@ Assume this boilerplate code is run before all examples below:
         .. code-block:: python
 
             query = client.query("test", "demo")
-            query.order_by("score", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+            query.order_by("score", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
             # Among records with the same score, return the earliest first.
-            query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+            query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
             query.top_k = 10
             records = query.results()
 

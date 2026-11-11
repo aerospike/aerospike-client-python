@@ -44,20 +44,30 @@ class TestVectorUnit(object):
         assert vector.element_type is Vector.ElementType.FLOAT32
 
     def test_query_order_constants_are_int_enums(self):
-        assert issubclass(aerospike.QueryOrderByType, IntEnum)
-        assert issubclass(aerospike.QueryOrder, IntEnum)
+        assert issubclass(aerospike.Query.BinDataType, IntEnum)
+        assert issubclass(aerospike.Query.Order, IntEnum)
         assert issubclass(aerospike.QueryOrderByFlags, IntEnum)
-        assert aerospike.QueryOrderByType.INTEGER == 1
-        assert aerospike.QueryOrderByType.DOUBLE == 2
-        assert aerospike.QueryOrderByType.STRING == 3
-        assert aerospike.QueryOrderByType.BYTES == 4
-        assert aerospike.QueryOrder.ASCENDING == 0
-        assert aerospike.QueryOrder.DESCENDING == 1
+        assert aerospike.Query.BinDataType.INTEGER == 1
+        assert aerospike.Query.BinDataType.DOUBLE == 2
+        assert aerospike.Query.BinDataType.STRING == 3
+        assert aerospike.Query.BinDataType.BYTES == 4
+        assert aerospike.Query.Order.ASC == 0
+        assert aerospike.Query.Order.DESC == 1
         assert aerospike.QueryOrderByFlags.DEFAULT == 0
         assert aerospike.QueryOrderByFlags.CASE_INSENSITIVE == 1
         assert not hasattr(aerospike, "QUERY_ORDER_BY_DOUBLE")
         assert not hasattr(aerospike, "QUERY_ORDER_ASCENDING")
         assert not hasattr(aerospike, "QUERY_ORDER_BY_CASE_INSENSITIVE")
+        assert not hasattr(aerospike, "QueryOrderByType")
+        assert not hasattr(aerospike, "QueryOrder")
+        assert not hasattr(aerospike, "BinDataType")
+        assert not hasattr(aerospike, "Order")
+
+    def test_query_order_constants_pickle_by_query_path(self):
+        assert aerospike.Query.Order.__module__ == "aerospike"
+        assert aerospike.Query.Order.__qualname__ == "Query.Order"
+        pickled = pickle.dumps(aerospike.Query.BinDataType.DOUBLE)
+        assert pickle.loads(pickled) is aerospike.Query.BinDataType.DOUBLE
 
     def test_of_float32(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
@@ -740,15 +750,6 @@ class TestVectorIntegration(object):
         finally:
             aerospike.unset_serializers()
         self._assert_same_vector(bins["embedding"], vector)
-
-    # CLIENT-5845 test plan: PC-08
-    def test_vector_record_key_is_a_bytes_key(self):
-        vector = Vector.of_float32([0.5, 1.5])
-        vector_key = self._key(vector)
-        self.as_connection.put(vector_key, {"a": 1})
-        bytes_key, _, bins = self.as_connection.get((self.test_ns, self.test_set, bytes(vector)))
-        assert bins == {"a": 1}
-        assert self.as_connection.get(vector_key)[0][3] == bytes_key[3]
 
     @pytest.mark.parametrize(
         "command", ["apply", "batch_apply", "batch_write", "query_aggregate", "query_aggregate_foreach"]
