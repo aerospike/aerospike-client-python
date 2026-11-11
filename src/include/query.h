@@ -28,8 +28,6 @@
  * FUNCTIONS
  ******************************************************************************/
 
-extern PyTypeObject AerospikeQuery_Type;
-
 PyTypeObject *AerospikeQuery_Ready(void);
 
 /*******************************************************************************

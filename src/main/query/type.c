@@ -28,6 +28,7 @@
 #include "query.h"
 #include "conversions.h"
 #include "exceptions.h"
+#include "int_enum.h"
 
 /*******************************************************************************
  * PYTHON DOC METHODS
@@ -363,12 +364,41 @@ PyTypeObject AerospikeQuery_Type = {
     0                                   // tp_bases
 };
 
+static const struct int_enum_member bin_data_type_members[] = {
+    {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
+    {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
+    {"STRING", AS_QUERY_ORDER_BY_STRING},
+    {"BYTES", AS_QUERY_ORDER_BY_BYTES},
+    {NULL}};
+
+static const struct int_enum_member order_members[] = {
+    {"ASC", AS_ORDER_ASCENDING}, {"DESC", AS_ORDER_DESCENDING}, {NULL}};
+
+static const struct int_enum_def query_enums[] = {
+    {"BinDataType", "Query.BinDataType", bin_data_type_members},
+    {"Order", "Query.Order", order_members},
+};
+
 /*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
 PyTypeObject *AerospikeQuery_Ready()
 {
+    // PyType_Ready() keeps the attributes already in tp_dict.
+    PyObject *py_type_dict = PyDict_New();
+    if (py_type_dict == NULL) {
+        return NULL;
+    }
+
+    int retval = add_int_enums(py_type_dict, query_enums,
+                               sizeof(query_enums) / sizeof(query_enums[0]));
+    if (retval == -1) {
+        Py_DECREF(py_type_dict);
+        return NULL;
+    }
+    AerospikeQuery_Type.tp_dict = py_type_dict;
+
     return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
                                                    : NULL;
 }
