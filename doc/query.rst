@@ -305,8 +305,9 @@ Assume this boilerplate code is run before all examples below:
             those records sort after every type-matching record. With a second key
             from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
             ``NIL`` on the first key rank after every record that isn't, and among themselves by the
-            second key. Over a large set, raise ``socket_timeout`` (or set it to 0);
-            ``total_timeout`` still bounds the query.
+            second key. Records that tie on every key rank by digest, ascending. For a ``DOUBLE``
+            key, NaN ranks above every other value, and -0.0 equals 0.0. Over a large set, raise
+            ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
 
         .. note::
             If an operation from :meth:`Query.add_ops` fails on a record, for example a list operation on a
@@ -315,62 +316,55 @@ Assume this boilerplate code is run before all examples below:
             operations returns no records and no error.
 
         .. note::
-            Requires server version >= 8.2.1 on every node. ``top_k`` of ``0`` or above ``1000``,
-            ``max_records``, ``nobins``, :meth:`Query.paginate`, an aggregate UDF, a background
-            query, or a partition filter with a ``digest`` or ``partition_status`` raises
-            :exc:`~aerospike.exception.ParamError` before the query is sent. See
-            :attr:`~aerospike.Query.top_k` for a query without ``top_k``.
+            Requires server version >= 8.2.1 on every node. A cluster with an older node,
+            ``top_k`` of ``0`` or above ``1000``, an order key that isn't projected or that more
+            than one operation produces, ``max_records``, ``nobins``, :meth:`Query.paginate`, an
+            aggregate UDF, a background query, or a partition filter with a ``digest`` or
+            ``partition_status`` raises :exc:`~aerospike.exception.ParamError` before the query is
+            sent. See :attr:`~aerospike.Query.top_k` for a query without ``top_k``. A node that is at
+            its Top-K memory limit refuses a new Top-K query with
+            :exc:`~aerospike.exception.ForbiddenError`; retry it later.
 
-        Example: vector similarity search - find the 2 records whose "embedding" :class:`~aerospike_helpers.Vector` \
-        bin is closest (by squared Euclidean distance) to a query vector:
+        Example: hybrid vector similarity search - among the records whose "category" bin is "shoes", find
+        the 2 whose "embedding" :class:`~aerospike_helpers.Vector` bin is closest (by squared Euclidean
+        distance) to a query vector:
 
         .. code-block:: python
 
             import aerospike
             from aerospike_helpers import Vector
-            from aerospike_helpers.expressions import VectorBin
+            from aerospike_helpers import expressions as exp
             from aerospike_helpers.expressions.vector import VectorDistance, VectorDistanceMetric
             from aerospike_helpers.operations import expression_operations as exp_ops
             from aerospike_helpers.operations import operations as ops
 
             client = aerospike.client({"hosts": [("127.0.0.1", 3000)]})
 
-            # Insert some records, each with an "embedding" Vector bin.
-            vectors = [
-                [0.10, 0.20, 0.30, 0.40],
-                [0.90, 0.80, 0.70, 0.60],
-                [0.15, 0.22, 0.31, 0.42],
-            ]
-            for i, values in enumerate(vectors):
-                client.put(("test", "demo", i), {"embedding": Vector.of_float32(values)})
+            # Insert some records, each with an "embedding" Vector bin and a "category" bin.
+            vectors = [[0.10, 0.20, 0.30, 0.40], [0.90, 0.80, 0.70, 0.60], [0.15, 0.22, 0.31, 0.42]]
+            categories = ["shoes", "shoes", "hats"]
+            for i, (values, category) in enumerate(zip(vectors, categories)):
+                client.put(("test", "demo", i), {"embedding": Vector.of_float32(values), "category": category})
 
-            # The vector we want to find the nearest neighbors of.
+            # Project the distance between "embedding" and the query vector into a "dist" result bin.
             query_vector = Vector.of_float32([0.10, 0.20, 0.30, 0.40])
-
-            # Project the distance between "embedding" and query_vector into a "dist" result bin.
             dist_expr = VectorDistance(
-                VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, VectorBin("embedding")
+                VectorDistanceMetric.EUCLIDEAN_SQUARED, query_vector, exp.VectorBin("embedding")
             ).compile()
-
             query = client.query("test", "demo")
-            query.add_ops([
-                ops.read("embedding"),
-                exp_ops.expression_read("dist", dist_expr),
-            ])
+            query.add_ops([ops.read("embedding"), exp_ops.expression_read("dist", dist_expr)])
 
             # EUCLIDEAN_SQUARED sorts ascending: smallest distance is the closest match.
-            query.order_by(
-                "dist",
-                aerospike.Query.BinDataType.DOUBLE,
-                aerospike.Query.Order.ASC,
-            )
+            query.order_by("dist", aerospike.Query.BinDataType.DOUBLE, aerospike.Query.Order.ASC)
             query.top_k = 2
 
-            records = query.results()
+            # Rank only the records that pass the filter. The "hats" record is closer but is left out.
+            only_shoes = exp.Eq(exp.StrBin("category"), "shoes").compile()
+            records = query.results({"expressions": only_shoes})
             for _, _, bins in records:
                 print(round(bins["dist"], 4), list(bins["embedding"].value))
             # 0.0 [0.10000000149011612, 0.20000000298023224, 0.30000001192092896, 0.4000000059604645]
-            # 0.0034 [0.15000000596046448, 0.2199999988079071, 0.3100000023841858, 0.41999998688697815]
+            # 1.2 [0.8999999761581421, 0.800000011920929, 0.699999988079071, 0.6000000238418579]
 
             # Cleanup and close the connection to the Aerospike cluster.
             for i in range(len(vectors)):
