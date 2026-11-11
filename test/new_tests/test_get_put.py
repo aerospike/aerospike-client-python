@@ -74,9 +74,8 @@ class TestGetPut:
         [
             (b"\x01\x00\x02", b"\x01\x00\x03"),
             ("a\x00b", "a\x00c"),
-            (Vector.of_float32([0.5, 1.5]), Vector.of_float32([2.5, 3.5])),
         ],
-        ids=["bytes", "str", "Vector"],
+        ids=["bytes", "str"],
     )
     def test_pos_keys_that_differ_after_a_zero_byte(
         self, first_key: Union[bytes, str], second_key: Union[bytes, str]
@@ -98,6 +97,11 @@ class TestGetPut:
 
         returned_keys = {bins["i"]: to_bytes(key[2]) for key, _, bins in records}
         assert returned_keys == {0: to_bytes(first_key), 1: to_bytes(second_key)}
+
+    def test_neg_vector_key(self):
+        key = ("test", "demo", Vector.of_float32([0.5, 1.5]))
+        with pytest.raises(e.ParamError, match="Invalid key type: Vector"):
+            self.as_connection.put(key, {"i": 1})
 
     def test_pos_get_initkey_with_digest(self, put_data):
         """

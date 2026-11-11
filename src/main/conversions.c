@@ -1743,6 +1743,11 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
                 returnResult = as_key_init_raw(key, ns, set, byte_array, sz);
             }
         }
+        else if (is_pyobj_correct_as_helpers_type(py_key, NULL, "Vector",
+                                                  false)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Invalid key type: Vector");
+        }
         else if (PyBytes_Check(py_key)) {
             Py_ssize_t key_size = PyBytes_Size(py_key);
             const char *key_buffer = PyBytes_AsString(py_key);
