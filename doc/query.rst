@@ -315,13 +315,14 @@ Assume this boilerplate code is run before all examples below:
             operations returns no records and no error.
 
         .. note::
-            Requires server version >= 8.2.1 on every node. A cluster with an older node,
-            ``top_k`` of ``0`` or above ``1000``, an order key that isn't projected or that more
-            than one operation produces, ``max_records``, ``nobins``, :meth:`Query.paginate`, an
-            aggregate UDF, a background query, or a partition filter with a ``digest`` or
-            ``partition_status`` raises :exc:`~aerospike.exception.ParamError` before the query is
-            sent. See :attr:`~aerospike.Query.top_k` for a query without ``top_k``. A node that is at
-            its Top-K memory limit refuses a new Top-K query with
+            Requires server version >= 8.2.1 on every node. ``top_k`` of ``0`` or above ``1000``,
+            ``max_records``, ``nobins``, :meth:`Query.paginate`, an aggregate UDF, a background
+            query, or a partition filter with a ``digest`` or ``partition_status`` raises
+            :exc:`~aerospike.exception.ParamError` before the query is sent. See
+            :attr:`~aerospike.Query.top_k` for a query without ``top_k``. A cluster with an older
+            node, or an order key that isn't projected or that more than one operation produces,
+            also raises :exc:`~aerospike.exception.ParamError` before the query is sent. A node
+            that is at its Top-K memory limit refuses a new Top-K query with
             :exc:`~aerospike.exception.ForbiddenError`; retry it later.
 
         Example: hybrid vector similarity search - among the records whose "category" bin is "shoes", find
