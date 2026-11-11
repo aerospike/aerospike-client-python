@@ -25,13 +25,13 @@ struct int_enum_member {
 
 struct int_enum_def {
     const char *name;
-    // The path from the module to the class, so the class can be pickled.
-    const char *qualname;
     // Ends with a {NULL} member.
     const struct int_enum_member *members;
 };
 
 // Creates an enum.IntEnum class for each definition and adds it to py_dict
-// under its name. Returns -1 with a Python exception set on failure.
-int add_int_enums(PyObject *py_dict, const struct int_enum_def *enum_defs,
-                  size_t enum_count);
+// under its name. owner_name is the name of the class whose dict py_dict is,
+// or NULL for the module's dict; it is needed to pickle the enum members.
+// Returns -1 with a Python exception set on failure.
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs, size_t enum_count);

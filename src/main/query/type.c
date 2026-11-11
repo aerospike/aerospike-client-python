@@ -375,8 +375,8 @@ static const struct int_enum_member order_members[] = {
     {"ASC", AS_ORDER_ASCENDING}, {"DESC", AS_ORDER_DESCENDING}, {NULL}};
 
 static const struct int_enum_def query_enums[] = {
-    {"BinDataType", "Query.BinDataType", bin_data_type_members},
-    {"Order", "Query.Order", order_members},
+    {"BinDataType", bin_data_type_members},
+    {"Order", order_members},
 };
 
 /*******************************************************************************
@@ -391,7 +391,7 @@ PyTypeObject *AerospikeQuery_Ready()
         return NULL;
     }
 
-    int retval = add_int_enums(py_type_dict, query_enums,
+    int retval = add_int_enums(py_type_dict, "Query", query_enums,
                                sizeof(query_enums) / sizeof(query_enums[0]));
     if (retval == -1) {
         Py_DECREF(py_type_dict);

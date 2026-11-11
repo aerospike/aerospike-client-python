@@ -1067,7 +1067,7 @@ static const struct int_enum_member query_order_by_flags_members[] = {
     {NULL}};
 
 static const struct int_enum_def module_enums[] = {
-    {"QueryOrderByFlags", "QueryOrderByFlags", query_order_by_flags_members},
+    {"QueryOrderByFlags", query_order_by_flags_members},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -1149,7 +1149,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
 
     PyObject *py_module_dict = PyModule_GetDict(py_aerospike_module);
-    retval = add_int_enums(py_module_dict, module_enums,
+    retval = add_int_enums(py_module_dict, NULL, module_enums,
                            sizeof(module_enums) / sizeof(module_enums[0]));
     if (retval == -1) {
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;

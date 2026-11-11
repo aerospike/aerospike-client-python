@@ -53,7 +53,33 @@ static PyObject *create_int_enum_members(const struct int_enum_def *enum_def)
     return py_members;
 }
 
-static PyObject *create_int_enum(const struct int_enum_def *enum_def)
+static PyObject *create_int_enum_kwargs(const char *owner_name,
+                                        const char *enum_name)
+{
+    PyObject *py_kwargs =
+        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (py_kwargs == NULL || owner_name == NULL) {
+        return py_kwargs;
+    }
+
+    PyObject *py_qualname =
+        PyUnicode_FromFormat("%s.%s", owner_name, enum_name);
+    if (py_qualname == NULL) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+
+    int retval = PyDict_SetItemString(py_kwargs, "qualname", py_qualname);
+    Py_DECREF(py_qualname);
+    if (retval == -1) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+    return py_kwargs;
+}
+
+static PyObject *create_int_enum(const char *owner_name,
+                                 const struct int_enum_def *enum_def)
 {
     PyObject *py_members = create_int_enum_members(enum_def);
     if (py_members == NULL) {
@@ -80,9 +106,7 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
         return NULL;
     }
 
-    PyObject *py_kwargs =
-        Py_BuildValue("{s:s,s:s}", "module", AEROSPIKE_MODULE_NAME, "qualname",
-                      enum_def->qualname);
+    PyObject *py_kwargs = create_int_enum_kwargs(owner_name, enum_def->name);
     if (py_kwargs == NULL) {
         Py_DECREF(py_args);
         Py_DECREF(py_int_enum);
@@ -96,12 +120,12 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
     return py_enum_cls;
 }
 
-int add_int_enums(PyObject *py_dict, const struct int_enum_def *enum_defs,
-                  size_t enum_count)
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs, size_t enum_count)
 {
     for (size_t i = 0; i < enum_count; i++) {
         const struct int_enum_def *enum_def = &enum_defs[i];
-        PyObject *py_enum_cls = create_int_enum(enum_def);
+        PyObject *py_enum_cls = create_int_enum(owner_name, enum_def);
         if (py_enum_cls == NULL) {
             return -1;
         }
