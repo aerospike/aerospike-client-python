@@ -379,7 +379,8 @@ class TestVectorIntegration(object):
         job = getattr(self.as_connection, command)(self.test_ns, set_name)
         job.add_ops([operations.write("embedding", vector)])
         job_id = job.execute_background()
-        wait_for_job_completion(self.as_connection, job_id, job_module=job_module)
+        wait_for_job_completion(self.as_connection, job_id, job_module=job_module, time_limit_secs=30)
+        assert self.as_connection.job_info(job_id, job_module)["status"] == aerospike.JOB_STATUS_COMPLETED
 
         for key in keys:
             self._assert_same_vector(self.as_connection.get(key)[2]["embedding"], vector)

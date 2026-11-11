@@ -168,8 +168,14 @@ class TestVectorExpressionsIntegration(object):
     def vector_distance_precision(self, request) -> str:
         service_config = self.as_connection.info_random_node("get-config:context=service")
         prefix = "vector-distance-precision="
-        original = next(item[len(prefix):] for item in service_config.split(";") if item.startswith(prefix))
-        self._set_vector_distance_precision(request.param)
+        settings = [item[len(prefix):] for item in service_config.strip().split(";") if item.startswith(prefix)]
+        if not settings:
+            pytest.fail("vector-distance-precision not in service config")
+        original = settings[0]
+        try:
+            self._set_vector_distance_precision(request.param)
+        except aerospike.exception.RoleViolation:
+            pytest.skip("set-config of vector-distance-precision needs the sys-admin privilege")
         yield request.param
         self._set_vector_distance_precision(original)
 
@@ -267,7 +273,8 @@ class TestVectorExpressionsIntegration(object):
 
     # CLIENT-5845 test plan: PE-05
     # The far record's squared distance overflows a double, so it is +Inf: last ascending and first
-    # descending.
+    # descending. The server sums FLOAT64 elements in a double under either vector-distance-precision, so
+    # this test and the next don't set it.
     @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
     def test_top_k_ranks_overflowing_squared_distance_as_infinity(self, direction):
         stored = {0: [0.0, 0.0], 1: [1.0, 2.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
