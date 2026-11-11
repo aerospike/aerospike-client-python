@@ -1936,7 +1936,7 @@ Query Order By / Top-K
 Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` to run a Top-K
 (nearest-neighbor / vector similarity search) query.
 
-.. class:: QueryOrderByType
+.. class:: BinDataType
 
     Order-key type for :meth:`~aerospike.Query.order_by`. Aerospike has no schema, so the
     caller declares which comparator the server should use.
@@ -1960,22 +1960,22 @@ Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` t
         The bin holds a bytes value. Values are compared byte by byte, and a value that is a
         prefix of a longer one is the smaller of the two.
 
-.. class:: QueryOrder
+.. class:: Order
 
     Sort direction for :meth:`~aerospike.Query.order_by`.
 
-    .. attribute:: ASCENDING
+    .. attribute:: ASC
 
         Keep the records with the smallest order-key values, smallest first.
 
-    .. attribute:: DESCENDING
+    .. attribute:: DESC
 
         Keep the records with the largest order-key values, largest first.
 
 .. class:: QueryOrderByFlags
 
     STRING collation flags for :meth:`~aerospike.Query.order_by`. Flags are rejected for every
-    type other than :attr:`QueryOrderByType.STRING`, which is not supported yet, so a Top-K query
+    type other than :attr:`BinDataType.STRING`, which is not supported yet, so a Top-K query
     with any flag other than :attr:`DEFAULT` raises :exc:`~aerospike.exception.ParamError` when it
     executes.
 

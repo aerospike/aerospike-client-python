@@ -150,9 +150,9 @@ class TestVectorExpressionsIntegration(object):
     @pytest.mark.parametrize(
         "metric, distance, direction",
         [
-            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.QueryOrder.ASCENDING),
-            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.QueryOrder.DESCENDING),
-            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.QueryOrder.DESCENDING),
+            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, euclidean_squared, aerospike.Order.ASC),
+            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, dot_product, aerospike.Order.DESC),
+            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, cosine_similarity, aerospike.Order.DESC),
         ],
     )
     def test_knn_top_k_query_matches_bruteforce(self, metric, distance, direction):
@@ -166,13 +166,13 @@ class TestVectorExpressionsIntegration(object):
         query_vector = Vector.of_float32([0.5, -0.25, 0.75, 0.1])
         query_values = list(query_vector.value)
         expected = sorted(
-            stored, key=lambda i: distance(stored[i], query_values), reverse=direction == aerospike.QueryOrder.DESCENDING
+            stored, key=lambda i: distance(stored[i], query_values), reverse=direction == aerospike.Order.DESC
         )[:5]
 
         dist_expr = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding")).compile()
         query = self.as_connection.query(self.test_ns, self.test_set)
         query.add_ops([base_ops.read("id"), exp_ops.expression_read("dist", dist_expr)])
-        query.order_by("dist", aerospike.QueryOrderByType.DOUBLE, direction)
+        query.order_by("dist", aerospike.BinDataType.DOUBLE, direction)
         query.top_k = 5
         records = query.results()
 

@@ -1071,17 +1071,15 @@ struct int_enum_def {
     const struct int_enum_member *members;
 };
 
-static const struct int_enum_member query_order_by_type_members[] = {
+static const struct int_enum_member bin_data_type_members[] = {
     {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
     {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
     {"STRING", AS_QUERY_ORDER_BY_STRING},
     {"BYTES", AS_QUERY_ORDER_BY_BYTES},
     {NULL}};
 
-static const struct int_enum_member query_order_members[] = {
-    {"ASCENDING", AS_ORDER_ASCENDING},
-    {"DESCENDING", AS_ORDER_DESCENDING},
-    {NULL}};
+static const struct int_enum_member order_members[] = {
+    {"ASC", AS_ORDER_ASCENDING}, {"DESC", AS_ORDER_DESCENDING}, {NULL}};
 
 static const struct int_enum_member query_order_by_flags_members[] = {
     {"DEFAULT", AS_QUERY_ORDER_BY_FLAGS_DEFAULT},
@@ -1089,8 +1087,8 @@ static const struct int_enum_member query_order_by_flags_members[] = {
     {NULL}};
 
 static const struct int_enum_def query_order_enums[] = {
-    {"QueryOrderByType", query_order_by_type_members},
-    {"QueryOrder", query_order_members},
+    {"BinDataType", bin_data_type_members},
+    {"Order", order_members},
     {"QueryOrderByFlags", query_order_by_flags_members},
 };
 
