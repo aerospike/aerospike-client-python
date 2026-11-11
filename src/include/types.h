@@ -177,8 +177,9 @@ struct int_enum_def {
 };
 
 // Defined in aerospike.c. Creates an enum.IntEnum class for each definition and
-// adds it to py_dict under its name. owner_name is the name of the class whose
-// dict py_dict is, or NULL for the module's dict; it is needed to pickle the
-// enum members. Returns -1 with a Python exception set on failure.
+// adds it to py_dict under its name. enum_defs ends with a {NULL} definition.
+// owner_name is the name of the class whose dict py_dict is, or NULL for the
+// module's dict; it is needed to pickle the enum members. Returns -1 with a
+// Python exception set on failure.
 int add_int_enums(PyObject *py_dict, const char *owner_name,
-                  const struct int_enum_def *enum_defs, size_t enum_count);
+                  const struct int_enum_def *enum_defs);
