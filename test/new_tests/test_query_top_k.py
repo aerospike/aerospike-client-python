@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -8,7 +9,7 @@ import aerospike_helpers.expressions as exp
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import Vector
-from aerospike_helpers.operations import hll_operations, operations
+from aerospike_helpers.operations import hll_operations, list_operations, operations
 
 from .index_helpers import ensure_dropped_index, wait_for_index
 
@@ -166,11 +167,43 @@ class TestQueryTopKValidation:
         with pytest.raises(AttributeError, match=r"^top_k can't be deleted$"):
             del query.top_k
 
+    # CLIENT-5845 test plan: PQ-13
     @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
         query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
         with pytest.raises(e.InvalidRequest):
             query.results()
+        with pytest.raises(e.InvalidRequest) as excinfo:
+            query.results({"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE})
+        # The C client prefixes the server's detail with the node address.
+        assert excinfo.value.msg.endswith(" top-k needs both order-by and top-k fields")
+
+    # CLIENT-5845 test plan: PQ-10
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_top_k_without_order_by(self, query, api_method, args):
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args)
+        assert excinfo.value.msg == "topK requires orderBy to be set"
+
+    # CLIENT-5845 test plan: PQ-10
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_top_k_with_nobins(self, query, api_method, args):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 10
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args, options={"nobins": True})
+        assert excinfo.value.msg == "orderBy/topK cannot be combined with a metadata-only (no-bins) query"
+
+    # CLIENT-5845 test plan: PQ-10
+    @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
+    def test_top_k_with_paginate(self, query, api_method, args):
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.top_k = 10
+        query.paginate()
+        with pytest.raises(e.ParamError) as excinfo:
+            getattr(query, api_method)(*args)
+        assert excinfo.value.msg == "orderBy/topK does not support pagination in this client version"
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_with_max_records(self, query, api_method, args):
@@ -462,6 +495,89 @@ class TestQueryTopKTwoKeys:
         self._query().foreach(stop_after_first)
         assert len(records) == 1
 
+    # CLIENT-5845 test plan: PQ-14
+    # The order_by() notes advise raising socket_timeout, or setting it to 0, while total_timeout still bounds
+    # the query.
+    @pytest.mark.parametrize(
+        "policy",
+        [{"expected_duration": aerospike.QUERY_DURATION_SHORT}, {"socket_timeout": 0, "total_timeout": 10000}],
+        ids=["short-query", "no-socket-timeout"],
+    )
+    def test_top_k_with_query_policy(self, policy):
+        records = self._query().results(policy)
+        assert [(bins["n"], bins["m"]) for _, _, bins in records] == self.EXPECTED
+
+    # CLIENT-5845 test plan: PM-06
+    def test_top_k_queries_from_concurrent_threads(self):
+        def run(api_method: str) -> list[tuple[int, int]]:
+            query = self._query()
+            if api_method == "results":
+                records = query.results()
+            else:
+                records = []
+                query.foreach(records.append)
+            return [(bins["n"], bins["m"]) for _, _, bins in records]
+
+        api_methods = ["results", "foreach"] * 8
+        with ThreadPoolExecutor(max_workers=len(api_methods)) as pool:
+            futures = [pool.submit(run, api_method) for api_method in api_methods]
+            outcomes = [future.result(timeout=60) for future in futures]
+        assert outcomes == [self.EXPECTED] * len(api_methods)
+
+
+class TestQueryTopKOrderByAgain:
+    SET_NAME = "demo-top-k-order-by-again"
+    # (score, ts, price): price ties on 10 and 20, so a second key on ts reorders them.
+    RECORDS = [(5, 3, 20), (1, 7, 10), (4, 1, 10), (2, 5, 30), (3, 2, 20), (6, 4, 10)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (score, ts, price) in zip(self.keys, self.RECORDS):
+            as_connection.put(key, {BIN: score, "ts": ts, "price": price})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _query(self) -> aerospike.Query:
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.top_k = 4
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by("price", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        return query
+
+    # Returns the scores, which are distinct, in the expected rank order.
+    def _ranked_scores(self, then_by_ts: bool) -> list[int]:
+        def rank(i: int) -> tuple:
+            _, ts, price = self.RECORDS[i]
+            if then_by_ts:
+                return price, ts
+            return price, aerospike.calc_digest(*self.keys[i])
+
+        return [self.RECORDS[i][0] for i in sorted(range(len(self.RECORDS)), key=rank)]
+
+    # CLIENT-5845 test plan: PQ-04
+    # Ties on price alone are broken by ascending digest.
+    def test_order_by_again_ranks_by_the_new_key_alone(self):
+        records = self._query().results()
+        assert [bins[BIN] for _, _, bins in records] == self._ranked_scores(then_by_ts=False)[:4]
+
+    # CLIENT-5845 test plan: PQ-04
+    def test_then_order_by_after_order_by_again(self):
+        query = self._query()
+        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        records = query.results()
+        assert [bins[BIN] for _, _, bins in records] == self._ranked_scores(then_by_ts=True)[:4]
+
+    # CLIENT-5845 test plan: PQ-04
+    def test_top_k_assigned_again_uses_the_last_value(self):
+        query = self._query()
+        query.top_k = 2
+        query.top_k = 5
+        records = query.results()
+        assert [bins[BIN] for _, _, bins in records] == self._ranked_scores(then_by_ts=False)[:5]
+
 
 class TestQueryTopKInteger:
     SET_NAME = "demo-top-k-integer"
@@ -574,6 +690,53 @@ class TestQueryTopKVersionGate:
 
         records = self.as_connection.query("test", self.SET_NAME).results()
         assert sorted(bins[BIN] for _, _, bins in records) == [0, 1, 2]
+
+
+class TestQueryTopKServerLimits:
+    SET_NAME = "demo-top-k-limits"
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        self.keys = [("test", self.SET_NAME, i) for i in range(4)]
+        for key in self.keys[:3]:
+            as_connection.put(key, {BIN: key[2], "l": [1, 2]})
+        # This record would rank first, but "l" isn't a list, so list_size() fails on it.
+        as_connection.put(self.keys[3], {BIN: 99, "l": 5})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _query(self, ops: list) -> aerospike.Query:
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.add_ops([operations.read(BIN)] + ops)
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.top_k = len(self.keys)
+        return query
+
+    # CLIENT-5845 test plan: PQ-20
+    # The server leaves out a record whose projection fails, and the query still succeeds.
+    def test_record_with_failed_projection_is_left_out(self):
+        records = self._query([list_operations.list_size("l")]).results()
+        assert [bins[BIN] for _, _, bins in records] == [2, 1, 0]
+
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.add_ops([operations.read(BIN), list_operations.list_size("l")])
+        assert sorted(bins[BIN] for _, _, bins in query.results()) == [0, 1, 2]
+
+    # CLIENT-5845 test plan: PQ-21
+    # The server accepts at most 32,768 operations in a Top-K query and returns nothing above that.
+    @pytest.mark.parametrize("op_count, expected", [(32768, [99, 2, 1, 0]), (32769, []), (65535, [])])
+    def test_top_k_with_many_operations(self, op_count, expected):
+        ops = [operations.read(f"x{i}") for i in range(op_count - 1)]
+        records = self._query(ops).results()
+        assert [bins[BIN] for _, _, bins in records] == expected
+
+    # CLIENT-5845 test plan: PQ-21
+    def test_top_k_with_too_many_operations(self):
+        ops = [operations.read(f"x{i}") for i in range(65535)]
+        with pytest.raises(e.ParamError) as excinfo:
+            self._query(ops).results()
+        assert excinfo.value.msg == "Too many operations: 65536; the maximum is 65535"
 
 
 class TestQueryTopKBytes:

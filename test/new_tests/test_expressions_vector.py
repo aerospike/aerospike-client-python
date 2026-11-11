@@ -208,6 +208,45 @@ class TestVectorExpressionsIntegration(object):
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == 0.0
 
+    # CLIENT-5845 test plan: PE-03
+    # Record 3 has no distance to the 2-dimension FLOAT32 query vector, so it is treated like the unknown
+    # distance in test_top_k_with_overflowing_dot_product.
+    @pytest.mark.parametrize(
+        "mismatched",
+        [Vector.of_float32([1, 2, 3]), Vector.of_int32([1, 2]), 7],
+        ids=["dimension-count", "element-type", "not-a-vector"],
+    )
+    def test_vector_distance_with_mismatched_bin(self, mismatched):
+        stored = {0: [1.0, 1.0], 1: [2.0, -1.0], 2: [-3.0, 0.5]}
+        for i, values in stored.items():
+            self._put(i, Vector.of_float32(values))
+        mismatched_key = self._put(3, mismatched)
+        query_values = [0.5, 0.5]
+        query_vector = Vector.of_float32(query_values)
+        metric = vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED
+        dist = vector_exp.VectorDistance(metric, query_vector, exp.VectorBin("embedding"))
+
+        with pytest.raises(aerospike.exception.OpNotApplicable):
+            self.as_connection.operate(mismatched_key, [exp_ops.expression_read("dist", dist.compile())])
+        no_fail_read = exp_ops.expression_read("dist", dist.compile(), aerospike.EXP_READ_EVAL_NO_FAIL)
+        _, _, bins = self.as_connection.operate(mismatched_key, [no_fail_read])
+        assert bins == {"dist": None}
+
+        ascending = sorted(stored, key=lambda i: euclidean_squared(stored[i], query_values))
+        results = self._top_k_distances(metric, query_vector, aerospike.QueryOrder.ASCENDING)
+        assert [i for i, _ in results] == ascending
+        results = self._top_k_distances(
+            metric, query_vector, aerospike.QueryOrder.ASCENDING, aerospike.EXP_READ_EVAL_NO_FAIL
+        )
+        assert [i for i, _ in results] == ascending + [3]
+        assert results[-1] == (3, None)
+
+        within_reach = exp.GE(dist, 0.0).compile()
+        with pytest.raises(aerospike.exception.FilteredOut):
+            self.as_connection.get(mismatched_key, policy={"expressions": within_reach})
+        _, _, bins = self.as_connection.get((self.test_ns, self.test_set, 0), policy={"expressions": within_reach})
+        assert bins["id"] == 0
+
     # CLIENT-5845 test plan: PE-04
     # VectorDistance encodes the query vector into the expression, so each element type's encoding is
     # checked against a stored vector of the same type. The tolerance is loose because precision is the
