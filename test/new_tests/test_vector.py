@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import copy
 import math
 import pickle
 import struct
+import sys
 from enum import IntEnum
 from typing import Optional
 
@@ -20,6 +22,15 @@ from .conftest import wait_for_job_completion
 # Unit tests - no server required. Covers Vector's construction-time
 # validation (dimension bounds, NaN/Inf, malformed from_bytes() input).
 # ---------------------------------------------------------------------------
+
+# Each factory's largest dimension count: 256 KiB of elements.
+MAX_DIMENSIONS = [
+    ("of_float16", 131072),
+    ("of_float16_bits", 131072),
+    ("of_int32", 65536),
+    ("of_float32", 65536),
+    ("of_float64", 32768),
+]
 
 
 class TestVectorUnit(object):
@@ -108,6 +119,33 @@ class TestVectorUnit(object):
         with pytest.raises(ValueError, match=r"^float16_bits\(\) requires a FLOAT16 vector; got FLOAT32$"):
             Vector.of_float32([0.1]).float16_bits()
 
+    @staticmethod
+    def _finite_float16_array(np):
+        every_float16 = np.arange(0x10000, dtype=np.uint16).view(np.float16)
+        return every_float16[np.isfinite(every_float16)]
+
+    # CLIENT-5845 test plan: PV-03
+    # NumPy and PyTorch aren't test dependencies, so these run only where they are installed.
+    def test_numpy_arrays_round_trip_bit_for_bit(self):
+        np = pytest.importorskip("numpy")
+        source = self._finite_float16_array(np)
+        vector = Vector.of_float16(source)
+        assert vector.element_bytes() == source.tobytes()
+        assert np.array_equal(np.frombuffer(vector.float16_bits(), dtype=np.uint16), source.view(np.uint16))
+        restored = np.array(vector.value, dtype=np.float32).astype(np.float16)
+        assert np.array_equal(restored.view(np.uint16), source.view(np.uint16))
+
+        for factory, dtype in (("of_float32", np.float32), ("of_float64", np.float64)):
+            array = np.array([-0.0, 0.1, -2.5, 1e-30], dtype=dtype)
+            assert getattr(Vector, factory)(array).element_bytes() == array.astype(f"<{array.dtype.char}").tobytes()
+
+    # CLIENT-5845 test plan: PV-03
+    def test_torch_float16_tensor_round_trips_bit_for_bit(self):
+        np = pytest.importorskip("numpy")
+        torch = pytest.importorskip("torch")
+        source = self._finite_float16_array(np)
+        assert Vector.of_float16(torch.from_numpy(source)).element_bytes() == source.tobytes()
+
     def test_wire_format_header(self):
         v = Vector.of_float32([0.1, 0.2, 0.3, 0.4])
         # 6-byte header: version(1) + element_type(1) + dimensions(4)
@@ -136,14 +174,6 @@ class TestVectorUnit(object):
         v2 = Vector(bytes(v))
         assert bytes(v2) == bytes(v)
 
-    def test_pickle_round_trip(self):
-        # pickle rebuilds a bytes subclass by calling the class with the raw bytes.
-        v = Vector.of_float32([0.1, 0.2])
-        v2 = pickle.loads(pickle.dumps(v))
-        assert bytes(v2) == bytes(v)
-        assert v2.element_type == v.element_type
-        assert v2.dimensions == v.dimensions
-
     def test_constructor_rejects_elements(self):
         with pytest.raises(
             TypeError,
@@ -156,14 +186,21 @@ class TestVectorUnit(object):
         with pytest.raises(TypeError, match=r"takes 2 positional arguments but 3 were given$"):
             Vector(Vector.ElementType.FLOAT32, [0.1, 0.2])
 
-    def test_zero_dimensions_raises(self):
-        with pytest.raises(ValueError, match=r"^Vector dimensions must be in \[1, 65536\] for this element type; got 0$"):
-            Vector.of_float32([])
+    # CLIENT-5845 test plan: PV-04
+    @pytest.mark.parametrize("factory, max_dims", MAX_DIMENSIONS)
+    def test_dimension_bounds_accepted(self, factory, max_dims):
+        for dimensions in (1, max_dims):
+            assert getattr(Vector, factory)([0] * dimensions).dimensions == dimensions
 
-    def test_too_many_dimensions_raises(self):
-        max_dims = Vector._MAX_ELEMENTS_BYTES // 4  # FLOAT32 is 4 bytes/element
-        with pytest.raises(ValueError, match=rf"^Vector dimensions must be in \[1, {max_dims}\] for this element type; got {max_dims + 1}$"):
-            Vector.of_float32([0.0] * (max_dims + 1))
+    # CLIENT-5845 test plan: PV-04
+    @pytest.mark.parametrize("factory, max_dims", MAX_DIMENSIONS)
+    def test_dimensions_out_of_bounds_raise(self, factory, max_dims):
+        for dimensions in (0, max_dims + 1):
+            with pytest.raises(
+                ValueError,
+                match=rf"^Vector dimensions must be in \[1, {max_dims}\] for this element type; got {dimensions}$",
+            ):
+                getattr(Vector, factory)([0] * dimensions)
 
     @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
     def test_nan_inf_rejected_float32(self, bad):
@@ -174,6 +211,19 @@ class TestVectorUnit(object):
     def test_nan_inf_rejected_float64(self, bad):
         with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float64([0.1, bad])
+
+    # CLIENT-5845 test plan: PV-05
+    # -0.0, the smallest subnormal and the largest finite value of each type.
+    @pytest.mark.parametrize(
+        "factory, fmt, values",
+        [
+            ("of_float16", "<3e", [-0.0, 2**-24, 65504.0]),
+            ("of_float32", "<3f", [-0.0, 2**-149, 3.4028234663852886e38]),
+            ("of_float64", "<3d", [-0.0, 5e-324, sys.float_info.max]),
+        ],
+    )
+    def test_finite_boundary_values_stored_verbatim(self, factory, fmt, values):
+        assert getattr(Vector, factory)(values).element_bytes() == struct.pack(fmt, *values)
 
     @pytest.mark.parametrize("bad", [1e39, -1e39, 10**400])
     def test_overflowing_float32_rejected(self, bad):
@@ -200,11 +250,13 @@ class TestVectorUnit(object):
         assert list(Vector.of_float64([1, 2]).value) == [1.0, 2.0]
         assert list(Vector.of_float16([1, 2]).value) == [1.0, 2.0]
 
+    # CLIENT-5845 test plan: PV-06
     @pytest.mark.parametrize("bad", [1.5, 1.0, "1", None])
     def test_non_integer_rejected_int32(self, bad):
         with pytest.raises(TypeError, match=rf"^Vector INT32 elements must be integers; got {type(bad).__name__}$"):
             Vector.of_int32([1, bad])
 
+    # CLIENT-5845 test plan: PV-06
     @pytest.mark.parametrize("bad", [2**31, -(2**31) - 1, 2**64])
     def test_out_of_range_rejected_int32(self, bad):
         with pytest.raises(
@@ -212,9 +264,11 @@ class TestVectorUnit(object):
         ):
             Vector.of_int32([1, bad])
 
+    # CLIENT-5845 test plan: PV-06
     def test_int32_bounds_accepted(self):
         assert list(Vector.of_int32([-(2**31), 2**31 - 1]).value) == [-(2**31), 2**31 - 1]
 
+    # CLIENT-5845 test plan: PV-06
     @pytest.mark.parametrize("bad", [1.0, "1"])
     def test_non_integer_rejected_float16_bits(self, bad):
         with pytest.raises(
@@ -222,6 +276,7 @@ class TestVectorUnit(object):
         ):
             Vector.of_float16_bits([0x3C00, bad])
 
+    # CLIENT-5845 test plan: PV-06
     @pytest.mark.parametrize("bad", [-1, 0x10000])
     def test_out_of_range_rejected_float16_bits(self, bad):
         with pytest.raises(ValueError, match=rf"^Vector FLOAT16 bit patterns must be in \[0, 65535\]; got {bad}$"):
@@ -263,12 +318,29 @@ class TestVectorUnit(object):
         with pytest.raises(ValueError, match=r"^Vector buffer too short for declared dimensions: need 22, got 20$"):
             Vector.from_bytes(bytes(v)[:-2])  # chop off part of the last element
 
+    # CLIENT-5845 test plan: PV-09
+    # pickle and copy rebuild a bytes subclass by calling the class with the raw bytes.
+    @pytest.mark.parametrize(
+        "round_trip",
+        [lambda v: pickle.loads(pickle.dumps(v)), copy.copy, copy.deepcopy],
+        ids=["pickle", "copy", "deepcopy"],
+    )
+    def test_pickle_and_copy_round_trip(self, round_trip):
+        v = Vector.of_float32([0.1, 0.2])
+        v2 = round_trip(v)
+        assert type(v2) is Vector
+        assert bytes(v2) == bytes(v)
+        assert v2.element_type == v.element_type
+        assert v2.dimensions == v.dimensions
+
+    # CLIENT-5845 test plan: PV-09
     def test_repr_is_not_indistinguishable_from_bytes(self):
         v = Vector.of_float32([0.1, 0.2])
         assert repr(v) != bytes(v).__repr__()
         assert "Vector(" in repr(v)
         assert repr(v) == str(v)
 
+    # CLIENT-5845 test plan: PV-09
     def test_is_bytes_subclass(self):
         v = Vector.of_float32([0.1, 0.2])
         assert isinstance(v, bytes)
