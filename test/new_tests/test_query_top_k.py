@@ -4,9 +4,13 @@ import math
 import pytest
 
 import aerospike
+import aerospike_helpers.expressions as exp
 from aerospike import exception as e
+from aerospike import predicates as p
 from aerospike_helpers import Vector
 from aerospike_helpers.operations import hll_operations, operations
+
+from .index_helpers import ensure_dropped_index, wait_for_index
 
 # Every case here is rejected before the query is sent, so the server does not
 # need Top-K support. A connected client is still required to build a Query.
@@ -506,6 +510,44 @@ class TestQueryTopKInteger:
     def test_then_order_by_ranks_records_without_integer_by_second_key(self, direction, expected):
         records = self._results(direction, then_order_by_m=True)
         assert [bins.get("n") for _, _, bins in records] == expected + [None, "x"]
+
+
+class TestQueryTopKSecondaryIndex:
+    SET_NAME = "demo-top-k-sindex"
+    INDEX_NAME = "demo_top_k_sindex_group"
+    # (group, flag, score) for 30 records, with distinct scores in each group.
+    RECORDS = [(i % 3, i % 2, (i * 7) % 30) for i in range(30)]
+
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        as_connection.index_single_value_create("test", self.SET_NAME, "group", aerospike.INDEX_INTEGER, self.INDEX_NAME)
+        wait_for_index(as_connection, "test", self.INDEX_NAME)
+        self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
+        for key, (group, flag, score) in zip(self.keys, self.RECORDS):
+            as_connection.put(key, {"group": group, "flag": flag, BIN: score})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+        ensure_dropped_index(as_connection, "test", self.INDEX_NAME)
+
+    # CLIENT-5845 test plan: PQ-07
+    # where() makes this a secondary-index query, which carries the Top-K fields in a different request from
+    # the partition queries in the other tests.
+    @pytest.mark.parametrize("api_method", ["results", "foreach"])
+    def test_top_k_with_secondary_index_and_filter_expression(self, api_method):
+        query = self.as_connection.query("test", self.SET_NAME)
+        query.where(p.equals("group", 1))
+        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.top_k = 3
+        policy = {"expressions": exp.Eq(exp.IntBin("flag"), 0).compile()}
+        if api_method == "results":
+            records = query.results(policy)
+        else:
+            records = []
+            query.foreach(records.append, policy)
+
+        matching = [score for group, flag, score in self.RECORDS if group == 1 and flag == 0]
+        assert [bins[BIN] for _, _, bins in records] == sorted(matching, reverse=True)[:3]
 
 
 class TestQueryTopKVersionGate:

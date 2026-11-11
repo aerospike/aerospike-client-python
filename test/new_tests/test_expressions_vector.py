@@ -78,6 +78,14 @@ def cosine_similarity(a, b):
     return dot_product(a, b) / math.sqrt(dot_product(a, a) * dot_product(b, b))
 
 
+# The distances between [1, 2, 3] and [4, 5, 6].
+REFERENCE_DISTANCES = [
+    (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, 27.0),
+    (vector_exp.VectorDistanceMetric.DOT_PRODUCT, 32.0),
+    (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, 32 / math.sqrt(14 * 77)),
+]
+
+
 def aerospike_bin_op():
     # _AS_EXP_CODE_BIN's Python-side op value, used by VectorBin/etc.
     from aerospike_helpers.expressions.resources import _ExprOp
@@ -166,14 +174,7 @@ class TestVectorExpressionsIntegration(object):
         self._set_vector_distance_precision(original)
 
     # CLIENT-5845 test plan: PE-01
-    @pytest.mark.parametrize(
-        "metric, expected",
-        [
-            (vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, 27.0),
-            (vector_exp.VectorDistanceMetric.DOT_PRODUCT, 32.0),
-            (vector_exp.VectorDistanceMetric.COSINE_SIMILARITY, 32 / math.sqrt(14 * 77)),
-        ],
-    )
+    @pytest.mark.parametrize("metric, expected", REFERENCE_DISTANCES)
     def test_vector_distance_reference_values(self, vector_distance_precision, metric, expected):
         key = self._put("reference", Vector.of_float32([1, 2, 3]))
         dist = vector_exp.VectorDistance(metric, Vector.of_float32([4, 5, 6]), exp.VectorBin("embedding"))
@@ -200,6 +201,22 @@ class TestVectorExpressionsIntegration(object):
         ).compile()
         _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
         assert bins["dist"] == 0.0
+
+    # CLIENT-5845 test plan: PE-04
+    # VectorDistance encodes the query vector into the expression, so each element type's encoding is
+    # checked against a stored vector of the same type. The tolerance is loose because precision is the
+    # server's (PE-01).
+    @pytest.mark.parametrize(
+        "of_vector",
+        [Vector.of_float16, Vector.of_int32, Vector.of_float32, Vector.of_float64],
+        ids=["float16", "int32", "float32", "float64"],
+    )
+    @pytest.mark.parametrize("metric, expected", REFERENCE_DISTANCES)
+    def test_vector_distance_for_each_element_type(self, of_vector, metric, expected):
+        key = self._put("element-type", of_vector([1, 2, 3]))
+        dist_expr = vector_exp.VectorDistance(metric, of_vector([4, 5, 6]), exp.VectorBin("embedding")).compile()
+        _, _, bins = self.as_connection.operate(key, [exp_ops.expression_read("dist", dist_expr)])
+        assert bins["dist"] == pytest.approx(expected, rel=1e-3)
 
     @pytest.mark.parametrize(
         "metric, distance, direction",
@@ -296,6 +313,23 @@ class TestVectorExpressionsIntegration(object):
         results = self._top_k_distances(metric, query_vector, direction, aerospike.EXP_READ_EVAL_NO_FAIL)
         assert results[:-1] == [(i, pytest.approx(dot_product(stored[i], [1e200, 1e200]))) for i in finite]
         assert results[-1] == (3, None)
+
+    # CLIENT-5845 test plan: PE-06
+    # With no select() or ops, a Top-K query returns every bin, so the vector bins come back through the
+    # client's merge.
+    def test_top_k_without_projection_returns_vector_bins(self):
+        stored = {i: Vector.of_float32([i, -i, 0.5]) for i in range(6)}
+        for i, vector in stored.items():
+            self._put(i, vector)
+
+        query = self.as_connection.query(self.test_ns, self.test_set)
+        query.order_by("id", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.top_k = 3
+        records = query.results()
+
+        assert [bins for _, _, bins in records] == [{"id": i, "embedding": stored[i]} for i in (5, 4, 3)]
+        for _, _, bins in records:
+            assert isinstance(bins["embedding"], Vector)
 
     # CLIENT-5845 test plan: PE-07
     def test_expression_read_of_vector_bin_returns_vector(self):
