@@ -280,6 +280,15 @@ Assume this boilerplate code is run before all examples below:
         :class:`~aerospike_helpers.expressions.vector.VectorDistance`, then order by that projected
         distance to retrieve the *k* nearest (or farthest, depending on the metric) records.
 
+        A record whose order-by bin is missing, or holds a value of a different type than
+        ``type``, still matches the filter and sorts as ``NIL``. In both ``ASC`` and ``DESC``
+        those records sort after every type-matching record. With a second key
+        from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
+        ``NIL`` on the first key rank after every record that isn't, and among themselves by the
+        second key. Records that tie on every key rank by digest, ascending. For a ``DOUBLE``
+        key, NaN ranks above every other value, and -0.0 equals 0.0. Over a large set, raise
+        ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
+
         :param str bin: the name of the bin to order by, 1-15 UTF-8 bytes. This can be a stored bin, \
             or the name of a result bin produced by \
             :meth:`~aerospike_helpers.operations.expression_operations.expression_read` \
@@ -298,16 +307,6 @@ Assume this boilerplate code is run before all examples below:
         :raises aerospike.exception.ParamError: ``type`` or ``direction`` is missing, or the bin \
             name contains a NUL character. A bin name, ``type``, ``direction``, or ``flags`` value \
             that is not valid raises this error when the query executes.
-
-        .. note::
-            A record whose order-by bin is missing, or holds a value of a different type than
-            ``type``, still matches the filter and sorts as ``NIL``. In both ``ASC`` and ``DESC``
-            those records sort after every type-matching record. With a second key
-            from :meth:`Query.then_order_by`, this applies to each key on its own: records that are
-            ``NIL`` on the first key rank after every record that isn't, and among themselves by the
-            second key. Records that tie on every key rank by digest, ascending. For a ``DOUBLE``
-            key, NaN ranks above every other value, and -0.0 equals 0.0. Over a large set, raise
-            ``socket_timeout`` (or set it to 0); ``total_timeout`` still bounds the query.
 
         .. note::
             If an operation from :meth:`Query.add_ops` fails on a record, for example a list operation on a
