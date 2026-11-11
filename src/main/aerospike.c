@@ -1267,6 +1267,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
 
     PyObject *py_module_dict = PyModule_GetDict(py_aerospike_module);
+    if (py_module_dict == NULL) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+    }
+
     retval = add_int_enums(py_module_dict, NULL, query_order_enums);
     if (retval == -1) {
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
