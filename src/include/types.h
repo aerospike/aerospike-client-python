@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,3 +164,21 @@ extern PyObject *py_record_metadata_valid_keys;
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                            PyObject *py_set_of_valid_keys,
                                            const char *adjective);
+
+struct int_enum_member {
+    const char *name;
+    long value;
+};
+
+struct int_enum_def {
+    const char *name;
+    // Ends with a {NULL} member.
+    const struct int_enum_member *members;
+};
+
+// Defined in aerospike.c. Creates an enum.IntEnum class for each definition and
+// adds it to py_dict under its name. owner_name is the name of the class whose
+// dict py_dict is, or NULL for the module's dict; it is needed to pickle the
+// enum members. Returns -1 with a Python exception set on failure.
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs, size_t enum_count);

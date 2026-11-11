@@ -28,7 +28,6 @@
 #include "query.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include "int_enum.h"
 
 /*******************************************************************************
  * PYTHON DOC METHODS
