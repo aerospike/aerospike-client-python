@@ -11,12 +11,15 @@ import pytest
 
 import aerospike
 from aerospike import exception as e
-from aerospike_helpers import Vector
+from aerospike_helpers import Vector, cdt_ctx
 from aerospike_helpers.batch import records as br
-from aerospike_helpers.operations import list_operations, map_operations, operations
+from aerospike_helpers.expressions import VectorBin
+from aerospike_helpers.expressions import vector as vector_exp
+from aerospike_helpers.operations import expression_operations, list_operations, map_operations, operations
 
 from .as_status_codes import AerospikeStatus
 from .conftest import wait_for_job_completion
+from .test_base_class import TestBaseClass
 
 # ---------------------------------------------------------------------------
 # Unit tests - no server required. Covers Vector's construction-time
@@ -353,6 +356,25 @@ class TestVectorUnit(object):
 # Integration tests - require server version 8.2.1 or later for vectors.
 # ---------------------------------------------------------------------------
 
+EVERY_ELEMENT_TYPE = [
+    ("of_float32", [0.1, 0.2, 0.3, 0.4]),
+    ("of_int32", [1, -2, 3, -4, 5]),
+    ("of_float64", [1.5, -2.5, 3.5]),
+    ("of_float16", [1.0, 2.0, -0.5]),
+    ("of_float16_bits", [0x3C00, 0x4000, 0xB800]),
+]
+
+# A FLOAT32 vector with a NaN element, which the client rejects, for sending through bytes.__new__().
+NAN_FLOAT32_VECTOR = struct.pack("<BBI2f", 1, Vector.ElementType.FLOAT32, 2, 1.0, math.nan)
+
+
+def tombstone_count(client: aerospike.Client) -> int:
+    count = 0
+    for _, response in client.info_all("namespace/test").values():
+        stats = dict(item.split("=", 1) for item in response.strip().split(";"))
+        count += int(stats["tombstones"])
+    return count
+
 
 class TestVectorIntegration(object):
     @pytest.fixture(autouse=True)
@@ -377,16 +399,7 @@ class TestVectorIntegration(object):
         _, _, bins = self.as_connection.get(key)
         return bins["embedding"]
 
-    @pytest.mark.parametrize(
-        "factory,values",
-        [
-            ("of_float32", [0.1, 0.2, 0.3, 0.4]),
-            ("of_int32", [1, -2, 3, -4, 5]),
-            ("of_float64", [1.5, -2.5, 3.5]),
-            ("of_float16", [1.0, 2.0, -0.5]),
-            ("of_float16_bits", [0x3C00, 0x4000, 0xB800]),
-        ],
-    )
+    @pytest.mark.parametrize("factory,values", EVERY_ELEMENT_TYPE)
     def test_put_get_round_trip_every_element_type(self, factory, values):
         vector = getattr(Vector, factory)(values)
         result = self._put_get(f"rt-{factory}", vector)
@@ -396,6 +409,15 @@ class TestVectorIntegration(object):
         assert result.element_type == vector.element_type
         assert result.dimensions == vector.dimensions
         assert list(result.value) == list(vector.value)
+
+    # CLIENT-5845 test plan: PB-03
+    @pytest.mark.parametrize("factory, max_dims", MAX_DIMENSIONS)
+    def test_put_get_max_dimensions(self, factory, max_dims):
+        vector = getattr(Vector, factory)([i % 100 for i in range(max_dims)])
+        result = self._put_get(f"max-{factory}", vector)
+        assert isinstance(result, Vector)
+        assert result.dimensions == max_dims
+        assert bytes(result) == bytes(vector)
 
     def _key(self, name):
         key = (self.test_ns, self.test_set, name)
@@ -512,17 +534,19 @@ class TestVectorIntegration(object):
             map_operations.map_put("m", "b", Vector.of_float32([0.5])),
             map_operations.map_put_items("m", {"b": Vector.of_float32([0.5])}),
             map_operations.map_put("m", Vector.of_float32([0.5]), 1),
+            list_operations.list_append("l", Vector.of_float32([0.5]), ctx=[cdt_ctx.cdt_ctx_list_index(0)]),
+            map_operations.map_put("m", "c", Vector.of_float32([0.5]), ctx=[cdt_ctx.cdt_ctx_map_key("a")]),
         ],
         ids=["list_append", "list_append_items", "list_insert", "list_set", "map_put", "map_put_items",
-             "map_put_vector_key"],
+             "map_put_vector_key", "list_append_ctx", "map_put_ctx"],
     )
     def test_vector_in_cdt_operation_is_rejected(self, op):
         key = self._key("cdt-op")
-        self.as_connection.put(key, {"l": [1, 2], "m": {"a": 1}})
+        bins = {"l": [[1], 2], "m": {"a": {"b": 1}}}
+        self.as_connection.put(key, bins)
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(key, [op])
-        _, _, bins = self.as_connection.get(key)
-        assert bins == {"l": [1, 2], "m": {"a": 1}}
+        assert self.as_connection.get(key)[2] == bins
 
     # CLIENT-5845 test plan: PB-06
     # The C client only accepts plain blobs as map keys, so the map is rejected before it is sent.
@@ -553,10 +577,7 @@ class TestVectorIntegration(object):
     @pytest.mark.parametrize(
         "raw, expected_detail",
         [
-            (
-                struct.pack("<BBI2f", 1, Vector.ElementType.FLOAT32, 2, 1.0, math.nan),
-                "vector: elements must be finite (no NaN or infinity)",
-            ),
+            (NAN_FLOAT32_VECTOR, "vector: elements must be finite (no NaN or infinity)"),
             (
                 bytes(Vector.of_float32([1, 2, 3]))[:-1],
                 "vector: value size 17 does not match 18 (3 dimensions of 4 bytes, little-endian)",
@@ -587,7 +608,7 @@ class TestVectorIntegration(object):
         original = Vector.of_float32([9.0, 8.0])
         self.as_connection.put(keys[1], {"embedding": original})
         good = Vector.of_float32([1.0, 2.0])
-        nan_vector = bytes.__new__(Vector, struct.pack("<BBI2f", 1, Vector.ElementType.FLOAT32, 2, 1.0, math.nan))
+        nan_vector = bytes.__new__(Vector, NAN_FLOAT32_VECTOR)
         writes = br.BatchRecords(
             [
                 br.Write(keys[0], [operations.write("embedding", good)]),
@@ -619,25 +640,54 @@ class TestVectorIntegration(object):
         invalid = self._write_mixed_batch()
         assert invalid.message.endswith(" AEROSPIKE_ERR_REQUEST_INVALID")
 
+    # CLIENT-5845 test plan: PB-10
+    # Each replica keeps its own tombstone, so the count rises by the effective replication factor.
+    @pytest.mark.parametrize("command", ["write_none", "remove"])
+    def test_durable_delete_leaves_tombstone(self, command):
+        if not TestBaseClass.enterprise_in_use():
+            pytest.skip("Durable deletes need an Enterprise server")
+        key = self._key(f"durable-delete-{command}")
+        self.as_connection.put(key, {"embedding": Vector.of_float32([0.5, 1.5])})
+        stats = self.as_connection.info_random_node("namespace/test").strip().split(";")
+        replicas = int(dict(item.split("=", 1) for item in stats)["effective_replication_factor"])
+        before = tombstone_count(self.as_connection)
+
+        policy = {"durable_delete": True}
+        if command == "write_none":
+            self.as_connection.operate(key, [operations.write("embedding", None)], policy=policy)
+        else:
+            self.as_connection.remove(key, policy=policy)
+
+        with pytest.raises(e.RecordNotFound):
+            self.as_connection.get(key)
+        assert tombstone_count(self.as_connection) - before == replicas
+
     @pytest.fixture
     def vector_udf(self):
         self.as_connection.udf_put("vector_udf.lua", 0)
         yield "vector_udf"
         self.as_connection.udf_remove("vector_udf.lua")
 
-    def test_apply_returns_vector(self, vector_udf):
+    # CLIENT-5845 test plan: PC-05
+    @pytest.mark.parametrize("factory, values", EVERY_ELEMENT_TYPE)
+    def test_apply_returns_vector(self, vector_udf, factory, values):
         key = self._key("apply-read")
-        vector = Vector.of_float64([1.5, -2.5])
+        vector = getattr(Vector, factory)(values)
         self.as_connection.put(key, {"embedding": vector})
         result = self.as_connection.apply(key, vector_udf, "read_bin", ["embedding"])
         self._assert_same_vector(result, vector)
+        assert result.element_type == vector.element_type
 
-    def test_apply_writes_vector_argument(self, vector_udf):
+    # CLIENT-5845 test plan: PC-05, PC-06
+    @pytest.mark.parametrize("factory, values", EVERY_ELEMENT_TYPE)
+    def test_apply_writes_vector_argument(self, vector_udf, factory, values):
         key = self._key("apply-write")
-        vector = Vector.of_float32([0.25, 0.5])
+        vector = getattr(Vector, factory)(values)
+        assert self.as_connection.apply(key, vector_udf, "bytes_type", [vector]) == aerospike.AS_BYTES_VECTOR
         self.as_connection.apply(key, vector_udf, "write_bin", ["embedding", vector])
         _, _, bins = self.as_connection.get(key)
         self._assert_same_vector(bins["embedding"], vector)
+        assert bins["embedding"].element_type == vector.element_type
 
     def test_batch_apply_returns_vectors(self, vector_udf):
         vectors = [Vector.of_float32([0.1, 0.2]), Vector.of_float32([0.3, 0.4])]
@@ -649,6 +699,56 @@ class TestVectorIntegration(object):
         for record, vector in zip(results.batch_records, vectors):
             assert record.result == 0
             self._assert_same_vector(record.record[2]["SUCCESS"], vector)
+
+    def _aggregate(self, udf_module: str, function: str, vector: Vector) -> list:
+        set_name = "test_vector_stream"
+        key = (self.test_ns, set_name, function)
+        self.test_keys.append(key)
+        self.as_connection.put(key, {"embedding": vector})
+        query = self.as_connection.query(self.test_ns, set_name)
+        query.apply(udf_module, function)
+        return query.results()
+
+    # CLIENT-5845 test plan: PC-06
+    @pytest.mark.parametrize("function", ["vector_map", "vector_reduce", "vector_aggregate"])
+    def test_stream_udf_returns_vector(self, vector_udf, function):
+        vector = Vector.of_float16([0.5, 1.5])
+        results = self._aggregate(vector_udf, function, vector)
+        if function == "vector_aggregate":
+            assert len(results) == 1
+            results = results[0]
+        assert len(results) == 1
+        self._assert_same_vector(results[0], vector)
+
+    # CLIENT-5845 test plan: PC-06
+    def test_client_side_stream_stage_sees_vector_type(self, vector_udf):
+        vector = Vector.of_int32([7, -8])
+        results = self._aggregate(vector_udf, "vector_client_map", vector)
+        assert len(results) == 1
+        assert results[0]["type"] == aerospike.AS_BYTES_VECTOR
+        self._assert_same_vector(results[0]["value"], vector)
+
+    # CLIENT-5845 test plan: PC-08
+    def test_user_serializer_does_not_intercept_vector(self):
+        key = self._key("serializer")
+        vector = Vector.of_float32([0.5, 1.5])
+        aerospike.set_serializer(lambda value: b"serialized")
+        aerospike.set_deserializer(lambda raw: "deserialized")
+        try:
+            self.as_connection.put(key, {"embedding": vector}, serializer=aerospike.SERIALIZER_USER)
+            _, _, bins = self.as_connection.get(key)
+        finally:
+            aerospike.unset_serializers()
+        self._assert_same_vector(bins["embedding"], vector)
+
+    # CLIENT-5845 test plan: PC-08
+    def test_vector_record_key_is_a_bytes_key(self):
+        vector = Vector.of_float32([0.5, 1.5])
+        vector_key = self._key(vector)
+        self.as_connection.put(vector_key, {"a": 1})
+        bytes_key, _, bins = self.as_connection.get((self.test_ns, self.test_set, bytes(vector)))
+        assert bins == {"a": 1}
+        assert self.as_connection.get(vector_key)[0][3] == bytes_key[3]
 
     @pytest.mark.parametrize(
         "command", ["apply", "batch_apply", "batch_write", "query_aggregate", "query_aggregate_foreach"]
@@ -707,3 +807,90 @@ class TestVectorIntegration(object):
             else:
                 self.as_connection.scan(self.test_ns, self.test_set).foreach(lambda _: None)
         assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector constructor failed"
+
+
+class TestVectorOlderServer(object):
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_8_2_1_or_later):
+        self.keys = []
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _put_get(self, name: str, vector: Vector) -> Vector:
+        key = ("test", "test_vector_older_server", name)
+        self.keys.append(key)
+        self.as_connection.put(key, {"embedding": vector})
+        return self.as_connection.get(key)[2]["embedding"]
+
+    # CLIENT-5845 test plan: PC-03
+    @pytest.mark.parametrize("factory, values", EVERY_ELEMENT_TYPE)
+    def test_vector_stored_as_blob(self, factory, values):
+        vector = getattr(Vector, factory)(values)
+        result = self._put_get(factory, vector)
+        assert isinstance(result, Vector)
+        assert bytes(result) == bytes(vector)
+
+    # CLIENT-5845 test plan: PC-03
+    # Before 8.2.1, a vector is a blob subtype, so the server doesn't validate it.
+    def test_vector_not_validated(self):
+        nan_vector = bytes.__new__(Vector, NAN_FLOAT32_VECTOR)
+        result = self._put_get("nan", nan_vector)
+        assert isinstance(result, Vector)
+        assert bytes(result) == NAN_FLOAT32_VECTOR
+
+
+class TestVectorTransaction(object):
+    @pytest.fixture(autouse=True)
+    def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        if not TestBaseClass.strong_consistency_enabled:
+            pytest.skip("Transactions need a strong consistency namespace")
+        self.keys = [("test", "test_vector_txn", i) for i in range(2)]
+        self.original = Vector.of_float32([9.0, 8.0])
+        for key in self.keys:
+            as_connection.put(key, {"embedding": self.original})
+        yield
+        for key in self.keys:
+            as_connection.remove(key)
+
+    def _stored(self) -> list[bytes]:
+        return [bytes(self.as_connection.get(key)[2]["embedding"]) for key in self.keys]
+
+    # CLIENT-5845 test plan: PC-10
+    def test_vector_writes_visible_on_commit(self):
+        vector = Vector.of_float32([1.0, 2.0])
+        txn = aerospike.Transaction()
+        policy = {"txn": txn}
+        for key in self.keys:
+            self.as_connection.put(key, {"embedding": vector}, policy=policy)
+        dist = vector_exp.VectorDistance(
+            vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED, vector, VectorBin("embedding")
+        ).compile()
+        _, _, bins = self.as_connection.operate(
+            self.keys[0], [expression_operations.expression_read("dist", dist)], policy=policy
+        )
+        assert bins["dist"] == 0.0
+        assert self._stored() == [bytes(self.original)] * len(self.keys)
+
+        assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
+        assert self._stored() == [bytes(vector)] * len(self.keys)
+
+    # CLIENT-5845 test plan: PC-10
+    def test_vector_writes_undone_on_abort(self):
+        txn = aerospike.Transaction()
+        for key in self.keys:
+            self.as_connection.put(key, {"embedding": Vector.of_float32([1.0, 2.0])}, policy={"txn": txn})
+        assert self.as_connection.abort(transaction=txn) == aerospike.ABORT_OK
+        assert self._stored() == [bytes(self.original)] * len(self.keys)
+
+    # CLIENT-5845 test plan: PC-10
+    def test_invalid_vector_does_not_break_the_transaction(self):
+        vector = Vector.of_float32([1.0, 2.0])
+        txn = aerospike.Transaction()
+        self.as_connection.put(self.keys[0], {"embedding": vector}, policy={"txn": txn})
+        with pytest.raises(e.InvalidRequest):
+            self.as_connection.put(
+                self.keys[1], {"embedding": bytes.__new__(Vector, NAN_FLOAT32_VECTOR)}, policy={"txn": txn}
+            )
+        assert self.as_connection.commit(transaction=txn) == aerospike.COMMIT_OK
+        assert self._stored() == [bytes(vector), bytes(self.original)]
