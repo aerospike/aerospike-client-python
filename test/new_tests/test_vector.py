@@ -45,6 +45,7 @@ class TestVectorUnit(object):
         assert not hasattr(aerospike, "Order")
 
     def test_query_order_constants_pickle_by_query_path(self):
+        assert aerospike.Query.Order.__module__ == "aerospike"
         assert aerospike.Query.Order.__qualname__ == "Query.Order"
         pickled = pickle.dumps(aerospike.Query.BinDataType.DOUBLE)
         assert pickle.loads(pickled) is aerospike.Query.BinDataType.DOUBLE
