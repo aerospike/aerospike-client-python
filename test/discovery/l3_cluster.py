@@ -5,7 +5,7 @@ builds, given as environment variables:
 - DISCOVERY_ENDPOINT_HOSTNAME: the endpoint hostname, which resolves on the runner to the kind node
 - DISCOVERY_INGRESS_PORTS: the ingress-nginx tcp-services ports, the first one reaching pod 0
 - AEROSPIKE_ADMIN_PASSWORD: the admin password, since the cluster has security enabled
-- DISCOVERY_TLS_CA_FILE and DISCOVERY_TLS_NAME: set once enable-l3-tls.sh serves TLS on the cluster
+- DISCOVERY_TLS_CA_FILE and DISCOVERY_TLS_NAME: set when setup-kind-ako serves TLS, with enable-tls
 
 The AerospikeCluster, its pods and their Services are read from the API server through kubectl.
 """

@@ -394,26 +394,22 @@ jobs:
       run: python3 -m pip install "$WHEEL_DIR"/*.whl -r test/discovery/requirements.txt
 
     # K-6 needs at least two pods
+    # enable-tls is in aerospike/shared-workflows#405; move to the release that carries it
     - name: Set up kind and AKO
       id: kind-ako
-      uses: aerospike/shared-workflows/.github/actions/setup-kind-ako@308f37e0cd5c7a6386a99ea7afc379d5a4ea9256 # v5.1.0
+      uses: aerospike/shared-workflows/.github/actions/setup-kind-ako@d787123ff883f38a73dfad9534176e969c827b03 # jnguyen/setup-kind-ako-tls
       with:
         features-content: ${{ secrets.FEATURES_CONTENT }}
         cluster-size: 2
-
-    - name: Serve TLS on the AerospikeCluster
-      id: tls
-      env:
-        KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
-      run: bash .github/discovery/enable-l3-tls.sh
+        enable-tls: true
 
     - name: Run L3 TLS tests
       env:
         DISCOVERY_ENDPOINT_HOSTNAME: ${{ steps.kind-ako.outputs.endpoint-hostname }}
         DISCOVERY_INGRESS_PORTS: ${{ steps.kind-ako.outputs.ingress-ports }}
         DISCOVERY_KUBECONFIG: ${{ steps.kind-ako.outputs.kubeconfig }}
-        DISCOVERY_TLS_CA_FILE: ${{ steps.tls.outputs.ca-file }}
-        DISCOVERY_TLS_NAME: ${{ steps.tls.outputs.tls-name }}
+        DISCOVERY_TLS_CA_FILE: ${{ steps.kind-ako.outputs.tls-ca-file }}
+        DISCOVERY_TLS_NAME: ${{ steps.kind-ako.outputs.tls-name }}
         AEROSPIKE_ADMIN_PASSWORD: ${{ steps.kind-ako.outputs.admin-password }}
         DISCOVERY_FAIL_ON_SKIP: '1'
       run: pytest test/discovery/test_l3_*.py -p no:cacheprovider -rA

@@ -1,8 +1,7 @@
 """L3 discovery test of TLS against an Aerospike cluster on the Aerospike Kubernetes Operator, where
-every pod mounts one shared certificate secret, set up by .github/discovery/enable-l3-tls.sh after
-the setup-kind-ako action. The certificate names the cluster tls-name, not the endpoint hostname
-the client dials, so the client must validate each node against the tls-name the cluster
-advertises.
+every pod mounts one shared certificate secret, set up by the setup-kind-ako action with enable-tls.
+The certificate names the cluster tls-name, not the endpoint hostname the client dials, so the
+client must validate each node against the tls-name the cluster advertises.
 """
 
 import os
