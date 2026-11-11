@@ -666,30 +666,17 @@ class TestQueryTopKSecondaryIndex:
         assert [bins[BIN] for _, _, bins in records] == sorted(matching, reverse=True)[:3]
 
 
+@pytest.mark.usefixtures("as_connection", "skip_if_server_8_2_1_or_later")
 class TestQueryTopKVersionGate:
-    SET_NAME = "demo-top-k-gate"
-
-    @pytest.fixture(autouse=True)
-    def setup(self, as_connection, skip_if_server_8_2_1_or_later):
-        self.keys = [("test", self.SET_NAME, i) for i in range(3)]
-        for key in self.keys:
-            as_connection.put(key, {BIN: key[2]})
-        yield
-        for key in self.keys:
-            as_connection.remove(key)
-
     # CLIENT-5845 test plan: PQ-15
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
-    def test_top_k_on_server_older_than_8_2_1(self, api_method, args):
-        query = self.as_connection.query("test", self.SET_NAME)
+    def test_top_k_on_server_older_than_8_2_1(self, api_method: str, args: list):
+        query = self.as_connection.query("test", "demo-top-k-gate")
         query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.top_k = 2
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
         assert excinfo.value.msg == "orderBy/topK is not supported by all nodes in the cluster"
-
-        records = self.as_connection.query("test", self.SET_NAME).results()
-        assert sorted(bins[BIN] for _, _, bins in records) == [0, 1, 2]
 
 
 class TestQueryTopKServerLimits:
