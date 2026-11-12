@@ -311,8 +311,9 @@ Assume this boilerplate code is run before all examples below:
         .. note::
             If an operation from :meth:`Query.add_ops` fails on a record, for example a list operation on a
             bin that isn't a list, the server leaves the record out and the query still succeeds, so a record
-            that would rank first can be missing from the results. A Top-K query with more than 32,768
-            operations returns no records and no error.
+            that would rank first can be missing from the results. A Top-K query with 32,769 to 65,535
+            operations returns no records and no error, since the server leaves out every record. More
+            than 65,535 operations raises :exc:`~aerospike.exception.ParamError` when the query executes.
 
         .. note::
             Requires server version >= 8.2.1 on every node. ``top_k`` of ``0`` or above ``1000``,
