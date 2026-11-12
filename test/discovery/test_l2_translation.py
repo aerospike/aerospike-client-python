@@ -195,7 +195,9 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N7-degraded", infos=infos)
 
         enable_toxiproxy_listeners(disabled_toxiproxy_listeners)
-        recovered = di.wait_for(lambda: all(di.writes(client, key, SINGLE_TRY) for key in victim_keys), JOIN_TIMEOUT_SEC)
+        recovered = di.wait_for(
+            lambda: all(di.writes(client, key, SINGLE_TRY) for key in victim_keys), JOIN_TIMEOUT_SEC
+        )
         assert recovered, f"Writes to {victim.name} did not recover"
         wait_for_nodes(client, names)
         infos = {node.name: node.info for node in nodes}
@@ -409,7 +411,8 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
         assert reseeded, "The client did not re-seed"
         budget_ms = 2 * TEND_INTERVAL_MS + CONNECT_TIMEOUT_MS
         refreshes = [t for t in seeds.times if t >= disabled]
-        print(f"L2-N12-RESEED enableToFirstNodeMs={reseed_ms:.0f} budgetMs={budget_ms} refreshesInOutage={len(refreshes)}")
+        print(f"L2-N12-RESEED enableToFirstNodeMs={reseed_ms:.0f} budgetMs={budget_ms} "
+              f"refreshesInOutage={len(refreshes)}")
         assert len(refreshes) == 1
         assert reseed_ms <= budget_ms, f"Re-seeded {reseed_ms:.0f} ms after the listeners were enabled"
 

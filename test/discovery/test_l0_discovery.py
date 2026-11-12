@@ -350,8 +350,8 @@ def test_hosts_needed_without_provider() -> None:
         ({"translation": {"provider": "port-map"}, "ip_map": {"a": "b"}}, "Set either ip_map or"),
         ({"translation": {"provider": "port-map", "port_map": {"10.0.0.1:3000": "nope"}}}, "port-map"),
         ({"use_shared_connection": True, "translation": {"provider": "pass-through"}}, "use_shared_connection"),
-        ({"use_shared_connection": True, "discovery": {"provider": "dns", "dns": {"names": ["a.test"],
-                                                                                   "servers": ["127.0.0.1"]}}},
+        ({"use_shared_connection": True,
+          "discovery": {"provider": "dns", "dns": {"names": ["a.test"], "servers": ["127.0.0.1"]}}},
          "use_shared_connection"),
     ],
 )

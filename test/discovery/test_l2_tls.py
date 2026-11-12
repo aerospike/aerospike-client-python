@@ -119,7 +119,10 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
 @pytest.mark.xfail(
     strict=True,
     raises=pytest.fail.Exception,
-    reason="The C client accepts a CN-only certificate through its deprecated legacy name check until the next major release",
+    reason=(
+        "The C client accepts a CN-only certificate through its deprecated legacy name check until the next "
+        "major release"
+    ),
 )
 def test_n17_cn_only_certificate_is_rejected(nodes: list[Node], warnings: list[str]) -> None:
     first = nodes[0]

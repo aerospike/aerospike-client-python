@@ -79,7 +79,8 @@ class Cluster:
         self.namespace, self.name = found[0].split(" ")
 
     def get(self, jsonpath: str) -> str:
-        return kubectl("-n", self.namespace, "get", "aerospikecluster", self.name, "-o", f"jsonpath={{{jsonpath}}}").strip()
+        reply = kubectl("-n", self.namespace, "get", "aerospikecluster", self.name, "-o", f"jsonpath={{{jsonpath}}}")
+        return reply.strip()
 
     def size(self) -> int:
         return int(self.get(".spec.size"))
@@ -141,7 +142,8 @@ class Cluster:
         """Create a NodePort Service that sends port on node_port to one pod."""
         kubectl("-n", self.namespace, "create", "service", "nodeport", service, f"--tcp={port}:{port}",
                 f"--node-port={node_port}")
-        kubectl("-n", self.namespace, "set", "selector", "service", service, f"statefulset.kubernetes.io/pod-name={pod}")
+        kubectl("-n", self.namespace, "set", "selector", "service", service,
+                f"statefulset.kubernetes.io/pod-name={pod}")
 
     def delete_service(self, service: str) -> None:
         kubectl("-n", self.namespace, "delete", "service", service, "--ignore-not-found", "--wait=true")

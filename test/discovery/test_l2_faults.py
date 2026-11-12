@@ -69,7 +69,9 @@ def toxics() -> Iterator[list[tuple[str, str]]]:
         di.remove_toxic(proxy, name)
 
 
-def add_toxic(toxics: list[tuple[str, str]], proxy: str, name: str, toxic_type: str, toxicity: float, attributes: dict) -> None:
+def add_toxic(
+    toxics: list[tuple[str, str]], proxy: str, name: str, toxic_type: str, toxicity: float, attributes: dict
+) -> None:
     di.add_toxic(proxy, name, toxic_type, toxicity, attributes)
     toxics.append((proxy, name))
 
@@ -334,7 +336,9 @@ def test_f3_source_port_exhaustion_surfaces_error_and_recovers(nodes: list[di.No
         max_elapsed_ms = max((error.elapsed_ms for error in errors), default=0)
         error_delta = sum(end[name].error_count - start[name].error_count for name in end if name in start)
         timeouts = count(errors, aerospike.exception.TimeoutError)
-        not_client_errors = [error.kind for error in errors if not isinstance(error.error, aerospike.exception.AerospikeError)]
+        not_client_errors = [
+            error.kind for error in errors if not isinstance(error.error, aerospike.exception.AerospikeError)
+        ]
         print(f"L2-F3-LOAD commands={len(load.snapshot())} successes={load.successes()} errors={di.kinds(errors)} "
               f"firstErrorMs={first_error_ms:.0f} maxErrorElapsedMs={max_elapsed_ms:.0f} boundMs={bound_ms} "
               f"threadsReturned={finished} clientErrorDelta={error_delta}")

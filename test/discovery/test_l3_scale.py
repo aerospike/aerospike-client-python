@@ -150,7 +150,8 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         assert alternate == f"{l3.endpoint()}:{node_port}", f"{added['node_name']} ({pod.name}) alternate"
         assert added["port"] == node_port
         assert elapsed_ms <= budget_ms, (
-            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name} Ready, budget {budget_ms} ms"
+            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name} Ready, "
+            f"budget {budget_ms} ms"
         )
 
         held = l3.wait_for_size(client, size + 1, SCALE_UP_TEND_INTERVAL_MS)
