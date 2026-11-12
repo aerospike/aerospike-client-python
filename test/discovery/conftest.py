@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Iterator
 
 import pytest
@@ -14,7 +15,7 @@ def warnings() -> Iterator[list[str]]:
 
     def log(level: int, function: str, path: str, line: int, message: str) -> None:
         messages.append(message)
-        print(f"CLIENT-LOG {level} {message}")
+        print(f"CLIENT-LOG {time.monotonic():.3f} {level} {message}")
 
     aerospike.set_log_handler(log)
     aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)

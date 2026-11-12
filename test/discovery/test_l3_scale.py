@@ -109,7 +109,7 @@ def client_errors(client: aerospike.Client) -> int:
 # Service NodePort. The client holds it at the endpoint hostname and the new pod's own Service
 # NodePort, without being rebuilt or reseeded, and keeps the nodes it held.
 @pytest.mark.l3
-def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Cluster) -> None:
+def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Cluster, warnings: list[str]) -> None:
     size = max(1, cluster.size() - 1)
     cluster.scale(size)
     port = cluster.service_port()
@@ -162,7 +162,8 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
               f"bumpToReadyMs={bump_to_ready_ms:.0f} readyToAnsweredMs={ready_to_answered_ms:.0f} "
               f"answeredToActiveMs={elapsed_ms:.0f} "
               f"bumpToActiveMs={(active - bump) * 1000:.0f} tendInterval={SCALE_UP_TEND_INTERVAL_MS} "
-              f"budgetMs={budget_ms}")
+              f"budgetMs={budget_ms} bumpAt={bump:.3f} readyAt={watch.ready_at:.3f} "
+              f"answeredAt={watch.answered_at:.3f} activeAt={active:.3f}")
         assert node_port > 0, f"{pod.name} has no Service NodePort for {port}"
         assert l3.has_address(access, pod.ip), f"{added['node_name']} access {access} is not {pod}"
         assert alternate == f"{l3.endpoint()}:{node_port}", f"{added['node_name']} ({pod.name}) alternate"
