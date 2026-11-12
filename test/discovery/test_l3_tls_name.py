@@ -33,12 +33,13 @@ def assert_certificate(cluster: l3.Cluster, tls_name: str, endpoint: str) -> Non
     cert_file = cluster.get(f".spec.aerospikeConfig.network.tls[?(@.name==\"{tls_name}\")]['cert-file']")
     directory, _, file_name = cert_file.rpartition("/")
     assert directory, f"cert-file {cert_file}"
-    secret = cluster.get(f".spec.storage.volumes[?(@.aerospike.path==\"{directory}\")].source.secret.secretName")
-    assert secret, f"No secret volume at {directory}"
+    source = cluster.get(f".spec.storage.volumes[?(@.aerospike.path==\"{directory}\")].source.secret.secretName")
+    assert source, f"No secret volume at {directory}"
 
-    sans = subject_alternative_names(cluster.secret_data(secret, file_name))
+    pem = cluster.mounted_certificate(source, file_name)
+    sans = subject_alternative_names(pem)
     dns_names = [san.partition(":")[2] for san in sans if san.startswith("DNS:")]
-    print(f"L3-TLS-CERT secret={cluster.namespace}/{secret} key={file_name} sans={sans} dnsNames={dns_names} "
+    print(f"L3-TLS-CERT secret={cluster.namespace}/{source} key={file_name} sans={sans} dnsNames={dns_names} "
           f"endpoint={endpoint}")
     assert dns_names == [tls_name], "dNSName SANs"
     for san in sans:

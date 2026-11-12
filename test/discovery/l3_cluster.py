@@ -162,9 +162,10 @@ class Cluster:
         assert match, f"No NodePort range in: {error}"
         return int(match.group(1)), int(match.group(2))
 
-    def secret_data(self, secret: str, key: str) -> bytes:
+    def mounted_certificate(self, source: str, key: str) -> bytes:
+        """Return the PEM certificate stored under key in the Kubernetes Secret named source."""
         escaped = key.replace(".", "\\.")
-        value = kubectl("-n", self.namespace, "get", "secret", secret, "-o", f"jsonpath={{.data.{escaped}}}").strip()
+        value = kubectl("-n", self.namespace, "get", "secret", source, "-o", f"jsonpath={{.data.{escaped}}}").strip()
         return base64.b64decode(value)
 
     def resize(self, size: int) -> None:
