@@ -102,8 +102,8 @@ def owners(nodes: list[di.ToxiproxyNode]) -> dict[int, str]:
     """Return the name of each partition's master, read from the nodes."""
     found = {}
     for node in nodes:
-        for pid in di.master_partitions(node.info, NAMESPACE):
-            found[pid] = node.name
+        for partition_id in di.master_partitions(node.info, NAMESPACE):
+            found[partition_id] = node.name
     return found
 
 

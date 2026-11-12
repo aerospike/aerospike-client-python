@@ -325,7 +325,11 @@ def master_partitions(info: Callable[[str], str], namespace: str) -> set[int]:
         # regime,n_replicas,master bitmap,replica bitmaps...
         master_bitmap = fields.split(",")[2]
         bitmap = base64.b64decode(master_bitmap)
-        return {pid for pid in range(PARTITIONS) if bitmap[pid >> 3] & (0x80 >> (pid & 7))}
+        masters = set()
+        for partition_id in range(PARTITIONS):
+            if bitmap[partition_id >> 3] & (0x80 >> (partition_id & 7)):
+                masters.add(partition_id)
+        return masters
     raise AssertionError(f"No replicas entry for namespace {namespace}")
 
 
@@ -344,9 +348,9 @@ def assert_served_by_owners(
     """
     owners = {}
     for name, info in infos.items():
-        for pid in master_partitions(info, namespace):
-            assert pid not in owners, f"Partition {pid} has masters {owners[pid]} and {name}"
-            owners[pid] = name
+        for partition_id in master_partitions(info, namespace):
+            assert partition_id not in owners, f"Partition {partition_id} has masters {owners[partition_id]} and {name}"
+            owners[partition_id] = name
     assert len(owners) == PARTITIONS, f"{PARTITIONS - len(owners)} partitions have no master"
 
     stat_names = (
@@ -362,12 +366,12 @@ def assert_served_by_owners(
 
     for i in range(key_count):
         user_key = f"{row}-{i}"
-        pid = client.get_key_partition_id(namespace, set_name, user_key)
+        partition_id = client.get_key_partition_id(namespace, set_name, user_key)
         key = (namespace, set_name, user_key)
         client.put(key, {"v": i})
         _, _, bins = client.get(key, policy=read_policy)
         assert bins == {"v": i}
-        served[owners[pid]] += 1
+        served[owners[partition_id]] += 1
 
     for name, info in infos.items():
         after = namespace_stats(info, namespace, stat_names)
@@ -413,16 +417,16 @@ def assert_keys_on_masters_work(
     to its info function, and assert that some keys have their master on another node."""
     owners = {}
     for name, info in infos.items():
-        for pid in master_partitions(info, namespace):
-            owners[pid] = name
+        for partition_id in master_partitions(info, namespace):
+            owners[partition_id] = name
 
     read_policy = {"replica": aerospike.POLICY_REPLICA_MASTER}
     served = 0
     elsewhere = 0
     for i in range(key_count):
         user_key = f"{row}-{i}"
-        pid = client.get_key_partition_id(namespace, set_name, user_key)
-        if pid not in owners:
+        partition_id = client.get_key_partition_id(namespace, set_name, user_key)
+        if partition_id not in owners:
             elsewhere += 1
             continue
         key = (namespace, set_name, user_key)
