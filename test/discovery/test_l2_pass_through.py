@@ -138,7 +138,7 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
         wait_for_nodes(client, names)
         generation = observer.info("peers-generation")
         port = next_listener_port()
-        container = di.control(f"start alternate-port={port}")["container"]
+        container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
         add_listener(container, port, like=observer.proxy)
         current = observer.info("peers-generation")
@@ -167,7 +167,7 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
     port = next_listener_port()
     endpoint = f"{hostname}:{port}"
     for _ in range(2):
-        container = di.control(f"start alternate-port={port}")["container"]
+        container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
     di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 2)
     add_listener(added_nodes[0], port, like=observer.proxy)

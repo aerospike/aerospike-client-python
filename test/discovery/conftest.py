@@ -35,7 +35,7 @@ def added_nodes(nodes: list[di.Node]) -> Iterator[list[str]]:
     for container in containers:
         if container in proxies:
             di.toxiproxy("DELETE", f"/proxies/{container}")
-        di.control(f"stop {container}")
+        di.stop_node(container)
     di.wait_cluster_stable([node.info for node in nodes], len(nodes))
 
 

@@ -254,7 +254,18 @@ def remove_toxic(proxy: str, name: str) -> None:
     toxiproxy("DELETE", f"/proxies/{proxy}/toxics/{name}")
 
 
-def control(command: str) -> dict[str, str]:
+def start_node(option: str) -> dict[str, str]:
+    """Ask the discovery node server to start a node with option, such as address=<ip> or
+    alternate-port=<port>, and return its acknowledgement, which names the container."""
+    return node_server(f"start {option}")
+
+
+def stop_node(container: str) -> None:
+    """Ask the discovery node server to stop a node it started."""
+    node_server(f"stop {container}")
+
+
+def node_server(command: str) -> dict[str, str]:
     """Send a request to the discovery node server and return its acknowledgement."""
     directory = Path(os.environ["DISCOVERY_CONTROL_DIR"])
     request_id = uuid.uuid4().hex

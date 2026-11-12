@@ -338,7 +338,7 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
 
         address, octet = free_address(nodes)
         generation = observer.info("peers-generation")
-        reply = di.control(f"start address={address}")
+        reply = di.start_node(f"address={address}")
         added_nodes.append(reply["container"])
         assert reply["address"] == address
 
@@ -476,7 +476,7 @@ def test_n19_node_outside_range_decided_by_on_miss(
     prefix, _, last = address_range()
     address = f"{prefix}.{last + 1}"
     advertised = f"{address}:{service_port(nodes)}"
-    reply = di.control(f"start address={address}")
+    reply = di.start_node(f"address={address}")
     added_nodes.append(reply["container"])
     di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 1)
     outside = di.peer_names(observer.info("peers-clear-std"), advertised)
