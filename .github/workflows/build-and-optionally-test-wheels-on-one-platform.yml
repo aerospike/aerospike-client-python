@@ -125,7 +125,7 @@ jobs:
 
         declare -A manylinux_digest
         # Built from quay.io/pypa/manylinux_2_28:2026.04.25-0, which has no cp315.
-        # Rebuild with update-manylinux-openssl-image.yml (base 2026.09.26-1) and replace these digests
+        # Rebuild with update-manylinux-openssl-image.yml (base 2026.11.07-1) and replace these digests
         # before Linux 3.15 wheels can be built.
         manylinux_digest[manylinux_x86_64]="ee086a7e0d988b829bebe6404125c682190ea336ab3aad17f0c90623b28e2708"
         manylinux_digest[manylinux_aarch64]="183ccef2e4047f722b179d69dde14b99e05b7234724bf00aa31657ae695743f5"
