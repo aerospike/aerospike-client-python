@@ -5,9 +5,9 @@ client must validate each node against the tls-name the cluster advertises.
 """
 
 import os
-import subprocess
 
 import pytest
+from cryptography import x509
 
 import aerospike
 import discovery_info as di
@@ -15,16 +15,6 @@ import l3_cluster as l3
 
 SET_NAME = "l3-tls-name"
 MIN_PODS = 2
-
-
-def subject_alternative_names(pem: bytes) -> list[str]:
-    """Return a certificate's SANs as openssl prints them, such as DNS:name or IP Address:ip."""
-    result = subprocess.run(
-        ["openssl", "x509", "-noout", "-ext", "subjectAltName"], input=pem, capture_output=True, check=True
-    )
-    # The first line is the extension's name
-    entries = result.stdout.decode().splitlines()[1:]
-    return [san.strip() for line in entries for san in line.split(",") if san.strip()]
 
 
 def assert_certificate(cluster: l3.Cluster, tls_name: str, endpoint: str) -> None:
@@ -37,13 +27,14 @@ def assert_certificate(cluster: l3.Cluster, tls_name: str, endpoint: str) -> Non
     assert source, f"No secret volume at {directory}"
 
     pem = cluster.mounted_certificate(source, file_name)
-    sans = subject_alternative_names(pem)
-    dns_names = [san.partition(":")[2] for san in sans if san.startswith("DNS:")]
-    print(f"L3-TLS-CERT secret={cluster.namespace}/{source} key={file_name} sans={sans} dnsNames={dns_names} "
-          f"endpoint={endpoint}")
+    certificate = x509.load_pem_x509_certificate(pem)
+    sans = certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+    dns_names = sans.get_values_for_type(x509.DNSName)
+    print(f"L3-TLS-CERT secret={cluster.namespace}/{source} key={file_name} sans={list(sans)} "
+          f"dnsNames={dns_names} endpoint={endpoint}")
     assert dns_names == [tls_name], "dNSName SANs"
     for san in sans:
-        assert san.partition(":")[2].lower() != endpoint.lower(), f"SAN {san} names the endpoint {endpoint}"
+        assert str(san.value).lower() != endpoint.lower(), f"SAN {san} names the endpoint {endpoint}"
 
 
 # K-6: every pod advertises the cluster tls-name for each of its peers and the endpoint hostname
