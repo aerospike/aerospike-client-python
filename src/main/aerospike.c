@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -503,6 +503,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AS_BYTES_RUBY", .value.integer = AS_BYTES_RUBY},
     {"AS_BYTES_PHP", .value.integer = AS_BYTES_PHP},
     {"AS_BYTES_ERLANG", .value.integer = AS_BYTES_ERLANG},
+    {"AS_BYTES_VECTOR", .value.integer = AS_BYTES_VECTOR},
     {"AS_BYTES_BOOL", .value.integer = AS_BYTES_BOOL},
     {"AS_BYTES_HLL", .value.integer = AS_BYTES_HLL},
     {"AS_BYTES_MAP", .value.integer = AS_BYTES_MAP},
@@ -821,7 +822,8 @@ DEFINE_SET_OF_VALID_KEYS(
     "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
     "strict_types", "rack_aware", "rack_id", "rack_ids",
     "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
-    "user", "password", "validate_keys", "app_id", "force_single_node", NULL)
+    "user", "password", "validate_keys", "app_id", "force_single_node",
+    "ip_map", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",
@@ -1058,6 +1060,134 @@ void aerospike_free(void *self)
     Py_XDECREF(py_global_hosts);
 }
 
+static const struct int_enum_member query_order_by_flags_members[] = {
+    {"DEFAULT", AS_QUERY_ORDER_BY_FLAGS_DEFAULT},
+    {"CASE_INSENSITIVE", AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
+    {NULL}};
+
+static const struct int_enum_def query_order_enums[] = {
+    {"QueryOrderByFlags", query_order_by_flags_members}, {NULL}};
+
+static int set_int_enum_member(PyObject *py_members,
+                               const struct int_enum_member *member)
+{
+    PyObject *py_value = PyLong_FromLong(member->value);
+    if (py_value == NULL) {
+        return -1;
+    }
+
+    int retval = PyDict_SetItemString(py_members, member->name, py_value);
+    Py_DECREF(py_value);
+    if (retval == -1) {
+        return -1;
+    }
+    return 0;
+}
+
+static PyObject *create_int_enum_members(const struct int_enum_def *enum_def)
+{
+    PyObject *py_members = PyDict_New();
+    if (py_members == NULL) {
+        return NULL;
+    }
+
+    for (const struct int_enum_member *member = enum_def->members;
+         member->name != NULL; member++) {
+        int retval = set_int_enum_member(py_members, member);
+        if (retval == -1) {
+            Py_DECREF(py_members);
+            return NULL;
+        }
+    }
+    return py_members;
+}
+
+static PyObject *create_int_enum_kwargs(const char *owner_name,
+                                        const char *enum_name)
+{
+    PyObject *py_kwargs =
+        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (py_kwargs == NULL || owner_name == NULL) {
+        return py_kwargs;
+    }
+
+    PyObject *py_qualname =
+        PyUnicode_FromFormat("%s.%s", owner_name, enum_name);
+    if (py_qualname == NULL) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+
+    int retval = PyDict_SetItemString(py_kwargs, "qualname", py_qualname);
+    Py_DECREF(py_qualname);
+    if (retval == -1) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+    return py_kwargs;
+}
+
+static PyObject *create_int_enum(const char *owner_name,
+                                 const struct int_enum_def *enum_def)
+{
+    PyObject *py_members = create_int_enum_members(enum_def);
+    if (py_members == NULL) {
+        return NULL;
+    }
+
+    PyObject *py_enum_module = PyImport_ImportModule("enum");
+    if (py_enum_module == NULL) {
+        Py_DECREF(py_members);
+        return NULL;
+    }
+
+    PyObject *py_int_enum = PyObject_GetAttrString(py_enum_module, "IntEnum");
+    Py_DECREF(py_enum_module);
+    if (py_int_enum == NULL) {
+        Py_DECREF(py_members);
+        return NULL;
+    }
+
+    PyObject *py_args = Py_BuildValue("(sO)", enum_def->name, py_members);
+    Py_DECREF(py_members);
+    if (py_args == NULL) {
+        Py_DECREF(py_int_enum);
+        return NULL;
+    }
+
+    PyObject *py_kwargs = create_int_enum_kwargs(owner_name, enum_def->name);
+    if (py_kwargs == NULL) {
+        Py_DECREF(py_args);
+        Py_DECREF(py_int_enum);
+        return NULL;
+    }
+
+    PyObject *py_enum_cls = PyObject_Call(py_int_enum, py_args, py_kwargs);
+    Py_DECREF(py_kwargs);
+    Py_DECREF(py_args);
+    Py_DECREF(py_int_enum);
+    return py_enum_cls;
+}
+
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs)
+{
+    for (const struct int_enum_def *enum_def = enum_defs;
+         enum_def->name != NULL; enum_def++) {
+        PyObject *py_enum_cls = create_int_enum(owner_name, enum_def);
+        if (py_enum_cls == NULL) {
+            return -1;
+        }
+
+        int retval = PyDict_SetItemString(py_dict, enum_def->name, py_enum_cls);
+        Py_DECREF(py_enum_cls);
+        if (retval == -1) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     aerospike_client_language = "python";
@@ -1134,6 +1264,16 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         if (retval == -1) {
             goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
+    }
+
+    PyObject *py_module_dict = PyModule_GetDict(py_aerospike_module);
+    if (py_module_dict == NULL) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+    }
+
+    retval = add_int_enums(py_module_dict, NULL, query_order_enums);
+    if (retval == -1) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     // Allows submodules to be imported using "import aerospike.<submodule-name>"

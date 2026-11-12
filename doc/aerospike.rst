@@ -965,6 +965,25 @@ Only the `hosts` key is required; the rest of the keys are optional.
             - Peers TLS addresses: ``peers-tls-alt``
 
             Default: ``False``
+        * **ip_map** (:class:`dict` [:class:`str`, :class:`str`])
+            IP translation table. Use this when clients in different networks need different server IP addresses \
+            to reach the same nodes, e.g. clients both inside and outside a local area network.
+
+            Each key is a seed host or a node address returned by the server, and its value is the address the \
+            client connects to instead. Addresses without an entry are used as is.
+
+            .. note::
+
+                - Only the host is replaced. The port stays the same.
+                - Keys must match exactly what the server reports. For example, an IPv6 address written differently,
+                  or a hostname where the server reports an IP address, will not match and is used as is.
+                - If ``use_shared_connection`` is ``True``, clients are shared by hosts, port, and user only.
+                  ``ip_map`` is not part of that comparison, so a second client with the same hosts but a different
+                  ``ip_map`` silently uses the first client's map.
+
+            Example: ``{"10.0.0.1": "203.0.113.1", "10.0.0.2": "203.0.113.2"}``
+
+            Default: no translation.
         * **connect_timeout** (:class:`int`)
             Cluster tend info command timeout in milliseconds.
 
@@ -1696,6 +1715,10 @@ Bin Types
 
     (int): 12
 
+.. data:: AS_BYTES_VECTOR
+
+    (int): 16
+
 .. data:: AS_BYTES_BOOL
 
     (int): 17
@@ -1904,6 +1927,65 @@ Query Duration
 
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _query_order_by_constants:
+
+Query Order By / Top-K
+-----------------------
+
+Used with :meth:`~aerospike.Query.order_by` and :attr:`~aerospike.Query.top_k` to run a Top-K
+(nearest-neighbor / vector similarity search) query.
+
+.. class:: Query.BinDataType
+
+    Order-key type for :meth:`~aerospike.Query.order_by`. Aerospike has no schema, so the
+    caller declares which comparator the server should use.
+
+    .. attribute:: INTEGER
+
+        The bin holds an integer value.
+
+    .. attribute:: DOUBLE
+
+        The bin holds a double (float) value. Use this when ordering by a projected
+        :class:`~aerospike_helpers.expressions.vector.VectorDistance` result bin.
+
+    .. attribute:: STRING
+
+        The bin holds a string value. Not supported yet: a Top-K query with this type raises
+        :exc:`~aerospike.exception.ParamError` when it executes.
+
+    .. attribute:: BYTES
+
+        The bin holds a bytes value. Values are compared byte by byte, and a value that is a
+        prefix of a longer one is the smaller of the two.
+
+.. class:: Query.Order
+
+    Sort direction for :meth:`~aerospike.Query.order_by`.
+
+    .. attribute:: ASC
+
+        Keep the records with the smallest order-key values, smallest first.
+
+    .. attribute:: DESC
+
+        Keep the records with the largest order-key values, largest first.
+
+.. class:: QueryOrderByFlags
+
+    STRING collation flags for :meth:`~aerospike.Query.order_by`. Flags are rejected for every
+    type other than :attr:`Query.BinDataType.STRING`, which is not supported yet, so a Top-K query
+    with any flag other than :attr:`DEFAULT` raises :exc:`~aerospike.exception.ParamError` when it
+    executes.
+
+    .. attribute:: DEFAULT
+
+        Case and accents both count.
+
+    .. attribute:: CASE_INSENSITIVE
+
+        Accents count and case does not.
 
 .. _mrt_commit_status_constants:
 

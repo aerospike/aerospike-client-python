@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -393,6 +393,44 @@ CLEANUP:
     return error_p->code;
 }
 
+// Moves the pending Python exception into error_p, so
+// deserialize_based_on_as_bytes_type() raises it as an Aerospike exception.
+static void update_error_from_raised_exception(as_error *error_p,
+                                               const char *class_name)
+{
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    PyObject *py_exc = PyErr_GetRaisedException();
+#else
+    PyObject *py_exc_type = NULL;
+    PyObject *py_exc = NULL;
+    PyObject *py_exc_traceback = NULL;
+    PyErr_Fetch(&py_exc_type, &py_exc, &py_exc_traceback);
+    PyErr_NormalizeException(&py_exc_type, &py_exc, &py_exc_traceback);
+    Py_XDECREF(py_exc_type);
+    Py_XDECREF(py_exc_traceback);
+#endif
+
+    const char *exc_msg = NULL;
+    PyObject *py_exc_str = NULL;
+    if (py_exc) {
+        py_exc_str = PyObject_Str(py_exc);
+    }
+    if (py_exc_str) {
+        exc_msg = PyUnicode_AsUTF8(py_exc_str);
+    }
+    if (!exc_msg) {
+        PyErr_Clear();
+        exc_msg = "unknown error";
+    }
+
+    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                    "Unable to deserialize bytes as %s: %s", class_name,
+                    exc_msg);
+
+    Py_XDECREF(py_exc_str);
+    Py_XDECREF(py_exc);
+}
+
 /*
  *******************************************************************************************************
  * Checks as_bytes->type.
@@ -477,7 +515,13 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
-    case AS_BYTES_HLL: {
+    case AS_BYTES_HLL:
+    case AS_BYTES_VECTOR: {
+        const char *class_name = "HyperLogLog";
+        if (as_bytes_get_type(bytes) == AS_BYTES_VECTOR) {
+            class_name = "Vector";
+        }
+
         // Convert bytes to Python bytes object
         PyObject *py_bytes = PyBytes_FromStringAndSize(
             (const char *)bytes->value, (Py_ssize_t)bytes->size);
@@ -487,13 +531,16 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 "Unable to convert C client's as_bytes to Python bytes");
             goto CLEANUP;
         }
-        PyObject *py_hll = create_class_instance_from_module(
-            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
+        PyObject *py_instance = create_class_instance_from_module(
+            error_p, "aerospike_helpers", class_name, py_bytes);
         Py_DECREF(py_bytes);
-        if (!py_hll) {
+        if (!py_instance) {
+            if (error_p->code == AEROSPIKE_OK) {
+                update_error_from_raised_exception(error_p, class_name);
+            }
             goto CLEANUP;
         }
-        *retval = py_hll;
+        *retval = py_instance;
         break;
     }
     default: {
@@ -516,6 +563,7 @@ CLEANUP:
 
     if (error_p->code != AEROSPIKE_OK) {
         raise_exception(error_p);
+        return error_p->code;
     }
     // If one of the deserializers failed and the fallback to byte array conversion
     // was successful, we clear any error state left by Python
