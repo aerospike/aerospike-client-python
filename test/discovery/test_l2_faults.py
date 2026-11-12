@@ -57,7 +57,7 @@ F4_ERROR_RATE_WINDOW = 4
 
 @pytest.fixture(scope="module")
 def nodes() -> list[di.Node]:
-    return di.standard_nodes()
+    return di.listener_nodes("service-clear-std")
 
 
 @pytest.fixture

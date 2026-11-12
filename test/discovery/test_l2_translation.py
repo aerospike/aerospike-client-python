@@ -39,7 +39,7 @@ SINGLE_TRY = {"max_retries": 0, "total_timeout": 1000}
 
 @pytest.fixture(scope="module")
 def nodes() -> list[di.Node]:
-    return di.standard_nodes()
+    return di.listener_nodes("service-clear-std")
 
 
 @pytest.fixture

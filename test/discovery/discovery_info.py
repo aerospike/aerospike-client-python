@@ -114,7 +114,7 @@ def peers(reply: str) -> list[tuple[str, str, list[str]]]:
 @dataclass
 class Node:
     """A node reached through its own Toxiproxy listener, with the endpoints it advertises in the
-    standard list."""
+    service list it was queried with."""
 
     name: str
     proxy: str
@@ -130,8 +130,9 @@ class Node:
         return reply[command]
 
 
-def standard_nodes() -> list[Node]:
-    """Query every listener for its node's name and the endpoints it advertises in the standard list."""
+def listener_nodes(service: str) -> list[Node]:
+    """Query every listener for its node's name and the endpoints it advertises in service, such as
+    service-clear-std or service-clear-alt."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     proxies = {}
     for entry in os.environ["DISCOVERY_PROXY_MAP"].split(","):
@@ -141,9 +142,9 @@ def standard_nodes() -> list[Node]:
     found = []
     for port in os.environ["DISCOVERY_ENDPOINT_PORTS"].split(","):
         port = int(port)
-        info = request(host, port, "node", "service-clear-std")
-        advertised = endpoints(info["service-clear-std"])
-        assert advertised, f"{info['node']} on listener {port} advertises no clear address"
+        info = request(host, port, "node", service)
+        advertised = endpoints(info[service])
+        assert advertised, f"{info['node']} on listener {port} advertises nothing in {service}"
         node = Node(info["node"], proxies[port], port, advertised)
         print(f"L2-NODE {node}")
         found.append(node)
