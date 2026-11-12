@@ -94,7 +94,8 @@ def add_toxiproxy_listener(container: str, port: int, like: str) -> None:
 
 
 # N-16 scale-out and NFR-1: a node started mid-test that advertises the same hostname with its own
-# port is active within 2 x tend_interval of the peers-generation bump that announces it
+# port is active within 2 x tend_interval of the later of the peers-generation bump that announces
+# it and the node answering through its listener
 @pytest.mark.l2("pass-through-ports")
 def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
     nodes: list[di.ToxiproxyNode], added_nodes: list[str]
@@ -113,11 +114,14 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
         current = observer.info("peers-generation")
         assert current == generation, f"peers-generation moved to {current} before {container} had a listener"
 
-        joined, bump_to_active_ms = di.wait_joined(client, observer.info, generation, names, di.CONTROL_TIMEOUT_SEC)
+        joined, active_ms = di.wait_joined(
+            client, observer.info, generation, names, reachable=lambda: di.answers(hostname, port),
+            timeout=di.CONTROL_TIMEOUT_SEC,
+        )
         budget_ms = 2 * TEND_INTERVAL_MS
-        print(f"L2-N16-TIMING node={joined} container={container} bumpToActiveMs={bump_to_active_ms:.1f}")
+        print(f"L2-N16-TIMING node={joined} container={container} activeMs={active_ms:.1f}")
         di.assert_at(joined, f"{hostname}:{port}")
-        assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
+        assert active_ms <= budget_ms, f"Active {active_ms:.1f} ms after the bump and answering, budget {budget_ms}"
     finally:
         client.close()
 

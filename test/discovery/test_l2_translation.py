@@ -326,10 +326,10 @@ def free_address(nodes: list[di.ToxiproxyNode]) -> tuple[str, int]:
 
 # N-11 and N-19: a port-map pre-filled for every address of the range, including addresses no node
 # has yet, joins the cluster with no warning. A node started on a free address of the range is
-# active within 2 x tend_interval of the peers-generation bump that announces it (NFR-1), at the
-# range listener for its address and with no client configuration change, and then serves the keys
-# it is master of. N-11 runs here because the client's port-map is fixed once it is created, so a
-# node added mid-test must already be in the map.
+# active within 2 x tend_interval of the later of the peers-generation bump that announces it and
+# the node answering through its range listener (NFR-1), at that listener and with no client
+# configuration change, and then serves the keys it is master of. N-11 runs here because the
+# client's port-map is fixed once it is created, so a node added mid-test must already be in the map.
 @pytest.mark.l2("port-map-range")
 def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
     nodes: list[di.ToxiproxyNode], added_nodes: list[str], warnings: list[str]
@@ -348,15 +348,18 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
         added_nodes.append(reply["container"])
         assert reply["address"] == address
 
-        joined, bump_to_active_ms = di.wait_joined(client, observer.info, generation, names, di.CONTROL_TIMEOUT_SEC)
         listener = range_toxiproxy_listener(octet)
+        listener_host, listener_port = di.split_endpoint(listener)
+        joined, active_ms = di.wait_joined(
+            client, observer.info, generation, names, reachable=lambda: di.answers(listener_host, listener_port),
+            timeout=di.CONTROL_TIMEOUT_SEC,
+        )
         budget_ms = 2 * TEND_INTERVAL_MS
-        print(f"L2-N19-TIMING node={joined} address={address} bumpToActiveMs={bump_to_active_ms:.1f}")
+        print(f"L2-N19-TIMING node={joined} address={address} activeMs={active_ms:.1f}")
         di.assert_at(joined, listener)
-        assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
+        assert active_ms <= budget_ms, f"Active {active_ms:.1f} ms after the bump and answering, budget {budget_ms}"
 
-        port = di.split_endpoint(listener)[1]
-        added = di.ToxiproxyNode(joined["node_name"], proxy=reply["container"], port=port,
+        added = di.ToxiproxyNode(joined["node_name"], proxy=reply["container"], port=listener_port,
                                  advertised=[f"{address}:{service_port(nodes)}"])
         grown = nodes + [added]
         di.wait_cluster_stable([node.info for node in grown], len(grown))

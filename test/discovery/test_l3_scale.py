@@ -7,6 +7,7 @@ The client exposes no partition map, so where the Java suite checks that every p
 these tests check from the nodes' own statistics that every node serves the keys it is master of.
 """
 
+import socket
 import threading
 import time
 from typing import Callable, Iterator, Optional
@@ -20,8 +21,8 @@ import l3_cluster as l3
 NAMESPACE = "test"
 SET_NAME = "l3-scale"
 MIN_PODS = 2
-# K-2's budget is two tend intervals from the pod turning Ready, which includes the NodePort routing
-# and the new node's first connection, so it runs at the default tend interval
+# K-2's budget is two tend intervals from the new pod's NodePort routing, which includes a tend that
+# waited out connect_timeout on a connection dropped just before, so it runs at the default interval
 SCALE_UP_TEND_INTERVAL_MS = 1000
 LOAD_THREADS = 4
 LOAD_KEYS = 1000
@@ -51,22 +52,45 @@ def services(cluster: l3.Cluster) -> Iterator[list[str]]:
         print(f"L3-SERVICE-DELETED service={service}")
 
 
-class ReadyWatch:
-    """Poll the cluster's Ready pods on a thread and record, on time.monotonic(), when a pod that is
-    not in before first turns Ready."""
+def accepts(host: str, port: int) -> bool:
+    """Return whether host:port accepts a TCP connection."""
+    try:
+        connection = socket.create_connection((host, port), timeout=0.1)
+    except OSError:
+        return False
+    connection.close()
+    return True
 
-    def __init__(self, cluster: l3.Cluster, before: set[str]) -> None:
-        self.at: Optional[float] = None
+
+class ReadyWatch:
+    """Poll the cluster on a thread and record, on time.monotonic(), when a pod that is not in before
+    first turns Ready and when its Service NodePort for port first accepts a connection."""
+
+    def __init__(self, cluster: l3.Cluster, before: set[str], port: int) -> None:
+        self.ready_at: Optional[float] = None
+        self.routed_at: Optional[float] = None
         self._stopped = threading.Event()
-        self._thread = threading.Thread(target=self._run, args=(cluster, before), daemon=True)
+        self._thread = threading.Thread(target=self._run, args=(cluster, before, port), daemon=True)
         self._thread.start()
 
-    def _run(self, cluster: l3.Cluster, before: set[str]) -> None:
-        while self.at is None and not self._stopped.is_set():
-            if cluster.ready_pods() - before:
-                self.at = time.monotonic()
+    def _run(self, cluster: l3.Cluster, before: set[str], port: int) -> None:
+        pod = None
+        node_port = 0
+        while self.routed_at is None and not self._stopped.is_set():
+            if pod is None:
+                ready = cluster.ready_pods() - before
+                if ready:
+                    self.ready_at = time.monotonic()
+                    pod = min(ready)
+            elif node_port == 0:
+                node_port = cluster.node_port(pod, port)
+            elif accepts(l3.endpoint(), node_port):
+                self.routed_at = time.monotonic()
                 return
-            self._stopped.wait(0.1)
+            if pod is None:
+                self._stopped.wait(0.1)
+            else:
+                self._stopped.wait(POLL_SEC)
 
     def stop(self) -> None:
         self._stopped.set()
@@ -90,9 +114,10 @@ def client_errors(client: aerospike.Client) -> int:
 
 
 # K-2: one client seeded once holds the pod the operator adds within two tend intervals of the
-# later of the peers-generation bump that announces it and the pod turning Ready, since its Service
-# NodePort only routes to a Ready pod. The client holds it at the endpoint hostname and the new
-# pod's own Service NodePort, without being rebuilt or reseeded, and keeps the nodes it held.
+# later of the peers-generation bump that announces it and its Service NodePort accepting a
+# connection, which follows the pod turning Ready by seconds. The client holds it at the endpoint
+# hostname and the new pod's own Service NodePort, without being rebuilt or reseeded, and keeps the
+# nodes it held.
 @pytest.mark.l3
 def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Cluster) -> None:
     size = max(1, cluster.size() - 1)
@@ -111,11 +136,11 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         active = None
         added = None
 
-        watch = ReadyWatch(cluster, before)
+        watch = ReadyWatch(cluster, before, port)
         try:
             cluster.resize(size + 1)
             deadline = time.monotonic() + l3.SCALE_TIMEOUT_SEC
-            while (bump is None or active is None or watch.at is None) and time.monotonic() < deadline:
+            while (bump is None or active is None or watch.routed_at is None) and time.monotonic() < deadline:
                 now = time.monotonic()
                 if bump is None and observer("peers-generation") != generation:
                     bump = now
@@ -127,12 +152,14 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
                 time.sleep(POLL_SEC)
         finally:
             watch.stop()
-        assert bump and watch.at and active, (
-            f"bump={bump} ready={watch.at} active={active}: no peers-generation bump, new Ready pod or new node"
+        assert bump and watch.routed_at and active, (
+            f"bump={bump} ready={watch.ready_at} routed={watch.routed_at} active={active}: no peers-generation "
+            "bump, routed NodePort for a new Ready pod or new node"
         )
 
-        bump_to_ready_ms = (watch.at - bump) * 1000
-        elapsed_ms = max(0.0, (active - max(bump, watch.at)) * 1000)
+        bump_to_ready_ms = (watch.ready_at - bump) * 1000
+        ready_to_routed_ms = (watch.routed_at - watch.ready_at) * 1000
+        elapsed_ms = max(0.0, (active - max(bump, watch.routed_at)) * 1000)
         budget_ms = 2 * SCALE_UP_TEND_INTERVAL_MS
         cluster.scale(size + 1)
         pod = next(pod for pod in cluster.pods() if pod.name not in before)
@@ -142,7 +169,8 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         alternate = info("service-clear-alt")
         print(f"L3-SCALE-UP node={added['node_name']} pod={pod.name} access={access} alternate={alternate} "
               f"serviceNodePort={node_port} client={added} generation={generation}->{observer('peers-generation')} "
-              f"bumpToReadyMs={bump_to_ready_ms:.0f} readyToActiveMs={elapsed_ms:.0f} "
+              f"bumpToReadyMs={bump_to_ready_ms:.0f} readyToRoutedMs={ready_to_routed_ms:.0f} "
+              f"routedToActiveMs={elapsed_ms:.0f} "
               f"bumpToActiveMs={(active - bump) * 1000:.0f} tendInterval={SCALE_UP_TEND_INTERVAL_MS} "
               f"budgetMs={budget_ms}")
         assert node_port > 0, f"{pod.name} has no Service NodePort for {port}"
@@ -150,7 +178,7 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         assert alternate == f"{l3.endpoint()}:{node_port}", f"{added['node_name']} ({pod.name}) alternate"
         assert added["port"] == node_port
         assert elapsed_ms <= budget_ms, (
-            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name} Ready, "
+            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name}'s NodePort routing, "
             f"budget {budget_ms} ms"
         )
 

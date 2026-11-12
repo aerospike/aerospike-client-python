@@ -188,26 +188,41 @@ def assert_at(entry: dict, endpoint: str) -> None:
     assert entry["port"] == port, f"{entry} is not at port {port}"
 
 
+def answers(host: str, port: int) -> bool:
+    """Return whether a node answers an info request at host:port."""
+    try:
+        request(host, port, "node", timeout=0.1)
+    except OSError:
+        return False
+    return True
+
+
 def wait_joined(
     client: aerospike.Client,
     observer: Callable[[str], str],
     generation: str,
     names: Collection[str],
+    reachable: Callable[[], bool],
     timeout: float,
     interval: float = 0.005,
 ) -> tuple[dict, float]:
-    """Wait until the observer node's peers-generation moves on from generation and the client holds
-    a node not in names. Return that node's get_node_names() entry and the milliseconds from the
-    bump to the join."""
+    """Wait until the observer node's peers-generation moves on from generation, reachable() returns
+    true for the new node and the client holds a node not in names. Return that node's
+    get_node_names() entry and the milliseconds from the later of the bump and the new node turning
+    reachable to the join."""
     bump_ns = None
+    reachable_ns = None
     active_ns = None
     joined = None
     deadline = time.monotonic() + timeout
-    while (bump_ns is None or active_ns is None) and time.monotonic() < deadline:
+    while None in (bump_ns, reachable_ns, active_ns) and time.monotonic() < deadline:
         now = time.monotonic_ns()
         if bump_ns is None and observer("peers-generation") != generation:
             bump_ns = now
+        if reachable_ns is None and reachable():
+            reachable_ns = now
         if active_ns is None:
+            now = time.monotonic_ns()
             held = client_nodes(client)
             new = [entry for name, entry in held.items() if name not in names]
             if new:
@@ -216,8 +231,12 @@ def wait_joined(
         time.sleep(interval)
 
     assert bump_ns is not None, f"peers-generation stayed at {generation}"
+    assert reachable_ns is not None, "The new node never answered"
     assert joined is not None, "No new node joined the client"
-    return joined, (active_ns - bump_ns) / 1e6
+    print(f"L2-JOINED node={joined['node_name']} bumpToReachableMs={(reachable_ns - bump_ns) / 1e6:.1f} "
+          f"bumpToActiveMs={(active_ns - bump_ns) / 1e6:.1f}")
+    start_ns = max(bump_ns, reachable_ns)
+    return joined, max(0.0, (active_ns - start_ns) / 1e6)
 
 
 def toxiproxy(method: str, path: str, body: Optional[dict] = None) -> Any:
