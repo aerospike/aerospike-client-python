@@ -233,13 +233,13 @@ def toxiproxy(method: str, path: str, body: Optional[dict] = None) -> Any:
     return None
 
 
-def listener_ports() -> set[int]:
+def toxiproxy_listener_ports() -> set[int]:
     """Return the port of every Toxiproxy listener."""
     proxies = toxiproxy("GET", "/proxies")
     return {split_endpoint(proxy["listen"])[1] for proxy in proxies.values()}
 
 
-def set_listener(proxy: str, enabled: bool) -> None:
+def set_toxiproxy_listener(proxy: str, enabled: bool) -> None:
     """Enable or disable a Toxiproxy listener. Disabling it also closes its connections."""
     toxiproxy("POST", f"/proxies/{proxy}", {"enabled": enabled})
 

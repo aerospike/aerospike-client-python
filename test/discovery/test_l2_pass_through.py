@@ -111,12 +111,12 @@ def test_n16_shared_name_routes_to_every_owner(nodes: list[Node]) -> None:
     assert_routes_to_owners("N-16", nodes)
 
 
-def next_listener_port() -> int:
-    ports = di.listener_ports()
+def next_toxiproxy_listener_port() -> int:
+    ports = di.toxiproxy_listener_ports()
     return max(ports) + 1
 
 
-def add_listener(container: str, port: int, like: str) -> None:
+def add_toxiproxy_listener(container: str, port: int, like: str) -> None:
     """Add a Toxiproxy listener on port for container, forwarding to the port the like proxy uses."""
     upstream = di.toxiproxy("GET", f"/proxies/{like}")["upstream"]
     upstream_port = parse_port(upstream)
@@ -137,10 +137,10 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
     try:
         wait_for_nodes(client, names)
         generation = observer.info("peers-generation")
-        port = next_listener_port()
+        port = next_toxiproxy_listener_port()
         container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
-        add_listener(container, port, like=observer.proxy)
+        add_toxiproxy_listener(container, port, like=observer.proxy)
         current = observer.info("peers-generation")
         assert current == generation, f"peers-generation moved to {current} before {container} had a listener"
 
@@ -164,13 +164,13 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
     observer = nodes[0]
     names = [node.name for node in nodes]
     hostname = seed(observer)[0]
-    port = next_listener_port()
+    port = next_toxiproxy_listener_port()
     endpoint = f"{hostname}:{port}"
     for _ in range(2):
         container = di.start_node(f"alternate-port={port}")["container"]
         added_nodes.append(container)
     di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 2)
-    add_listener(added_nodes[0], port, like=observer.proxy)
+    add_toxiproxy_listener(added_nodes[0], port, like=observer.proxy)
     colliding = di.peer_names(observer.info("peers-clear-alt"), endpoint)
     print(f"L2-N18-ADVERTISED endpoint={endpoint} nodes={colliding}")
     assert len(colliding) == 2, f"Nodes advertising {endpoint}: {colliding}"

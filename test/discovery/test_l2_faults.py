@@ -188,8 +188,8 @@ def test_f1_idle_reset_absorbed_by_pool(nodes: list[di.Node], toxics: list[tuple
             assert pooled >= len(nodes), "No idle pooled connection to reset"
 
             for node in nodes:
-                di.set_listener(node.proxy, enabled=False)
-                di.set_listener(node.proxy, enabled=True)
+                di.set_toxiproxy_listener(node.proxy, enabled=False)
+                di.set_toxiproxy_listener(node.proxy, enabled=True)
 
             for node, sock in zip(nodes, probes):
                 result = probe_result(sock)

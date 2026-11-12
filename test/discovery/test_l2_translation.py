@@ -43,12 +43,12 @@ def nodes() -> list[di.Node]:
 
 
 @pytest.fixture
-def disabled_listeners() -> Iterator[list[str]]:
+def disabled_toxiproxy_listeners() -> Iterator[list[str]]:
     """Collect the Toxiproxy listeners a test disables, and enable them again afterwards."""
     proxies = []
     yield proxies
     for proxy in proxies:
-        di.set_listener(proxy, enabled=True)
+        di.set_toxiproxy_listener(proxy, enabled=True)
 
 
 def port_map_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
@@ -85,16 +85,16 @@ def wait_for_no_nodes(client: aerospike.Client) -> None:
     assert dropped, f"Client kept nodes {sorted(di.client_nodes(client))} with every listener disabled"
 
 
-def disable_listeners(nodes: list[di.Node], disabled_listeners: list[str]) -> None:
+def disable_toxiproxy_listeners(nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]) -> None:
     for node in nodes:
-        disabled_listeners.append(node.proxy)
-        di.set_listener(node.proxy, enabled=False)
+        disabled_toxiproxy_listeners.append(node.proxy)
+        di.set_toxiproxy_listener(node.proxy, enabled=False)
 
 
-def enable_listeners(disabled_listeners: list[str]) -> None:
-    for proxy in disabled_listeners:
-        di.set_listener(proxy, enabled=True)
-    disabled_listeners.clear()
+def enable_toxiproxy_listeners(disabled_toxiproxy_listeners: list[str]) -> None:
+    for proxy in disabled_toxiproxy_listeners:
+        di.set_toxiproxy_listener(proxy, enabled=True)
+    disabled_toxiproxy_listeners.clear()
 
 
 def assert_port_map_joins(row: str, nodes: list[di.Node], port_map: dict[str, str]) -> None:
@@ -168,7 +168,7 @@ def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
 # serving theirs. Once the listener is enabled again the node serves its keys again.
 @pytest.mark.l2("default")
 def test_n7_node_removed_from_endpoint_degrades_and_returns(
-    nodes: list[di.Node], disabled_listeners: list[str]
+    nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]
 ) -> None:
     victim = nodes[-1]
     others = nodes[:-1]
@@ -184,7 +184,7 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
                 victim_keys.append(key)
         assert victim_keys, f"No key has its master on {victim.name}"
 
-        disable_listeners([victim], disabled_listeners)
+        disable_toxiproxy_listeners([victim], disabled_toxiproxy_listeners)
         failing = di.wait_for(lambda: not di.writes(client, victim_keys[0], SINGLE_TRY), JOIN_TIMEOUT_SEC)
         assert failing, f"Writes to {victim.name} still succeed with its listener disabled"
         failed = [key for key in victim_keys if not di.writes(client, key, SINGLE_TRY)]
@@ -193,7 +193,7 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
         infos = {node.name: node.info for node in others}
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N7-degraded", infos=infos)
 
-        enable_listeners(disabled_listeners)
+        enable_toxiproxy_listeners(disabled_toxiproxy_listeners)
         recovered = di.wait_for(lambda: all(di.writes(client, key, SINGLE_TRY) for key in victim_keys), JOIN_TIMEOUT_SEC)
         assert recovered, f"Writes to {victim.name} did not recover"
         wait_for_nodes(client, names)
@@ -281,7 +281,7 @@ def address_range() -> tuple[str, int, int]:
     return prefix, int(first_octet), int(last_octet)
 
 
-def range_listener(octet: int) -> str:
+def range_toxiproxy_listener(octet: int) -> str:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     port_base = int(os.environ["DISCOVERY_PORT_MAP_PORT_BASE"])
     return f"{host}:{port_base + octet}"
@@ -296,10 +296,10 @@ def range_port_map(nodes: list[di.Node]) -> dict[str, str]:
     that the listeners exist and the nodes are in the range."""
     prefix, first, last = address_range()
     port = service_port(nodes)
-    listeners = di.listener_ports()
+    listeners = di.toxiproxy_listener_ports()
     port_map = {}
     for octet in range(first, last + 1):
-        listener = range_listener(octet)
+        listener = range_toxiproxy_listener(octet)
         assert di.split_endpoint(listener)[1] in listeners, f"No listener {listener} for {prefix}.{octet}"
         port_map[f"{prefix}.{octet}:{port}"] = listener
     for node in nodes:
@@ -343,7 +343,7 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
         assert reply["address"] == address
 
         joined, bump_to_active_ms = di.wait_joined(client, observer.info, generation, names, di.CONTROL_TIMEOUT_SEC)
-        listener = range_listener(octet)
+        listener = range_toxiproxy_listener(octet)
         budget_ms = 2 * TEND_INTERVAL_MS
         print(f"L2-N19-TIMING node={joined} address={address} bumpToActiveMs={bump_to_active_ms:.1f}")
         di.assert_at(joined, listener)
@@ -382,7 +382,7 @@ class Seeds(SeedCandidateProvider):
 # its seed provider. Once the listeners are enabled again it re-seeds from the seeds it holds within
 # 2 x tend_interval plus the connect timeout, without waiting for refresh_interval_ms.
 @pytest.mark.l2("default")
-def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_listeners: list[str]) -> None:
+def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]) -> None:
     names = [node.name for node in nodes]
     seeds = Seeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {"provider": seeds, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
@@ -396,13 +396,13 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_listener
         assert len(seeds.times) == 1, f"Refreshed at {seeds.times}"
 
         disabled = time.monotonic()
-        disable_listeners(nodes, disabled_listeners)
+        disable_toxiproxy_listeners(nodes, disabled_toxiproxy_listeners)
         wait_for_no_nodes(client)
         urgent = di.wait_for(lambda: len(seeds.times) >= 2, JOIN_TIMEOUT_SEC)
         assert urgent, "No urgent refresh while the client had no nodes"
 
         enabled = time.monotonic()
-        enable_listeners(disabled_listeners)
+        enable_toxiproxy_listeners(disabled_toxiproxy_listeners)
         reseeded = di.wait_for(client.get_node_names, JOIN_TIMEOUT_SEC, interval=0.01)
         reseed_ms = (time.monotonic() - enabled) * 1000
         assert reseeded, "The client did not re-seed"
