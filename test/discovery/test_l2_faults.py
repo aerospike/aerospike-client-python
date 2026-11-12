@@ -83,7 +83,7 @@ def connect(nodes: list[di.Node], **options: Any) -> aerospike.Client:
     """Seed through the first node's listener with port-map by endpoint and wait for every node."""
     config = {
         "hosts": [(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port)],
-        "translation": {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)},
+        "translation": {"provider": "port-map", "port_map": di.port_map_keyed_by_advertised(nodes)},
         "tend_interval": TEND_INTERVAL_MS,
         **options,
     }

@@ -150,7 +150,7 @@ def standard_nodes() -> list[Node]:
     return found
 
 
-def port_map_by_endpoint(nodes: list[Node]) -> dict[str, str]:
+def port_map_keyed_by_advertised(nodes: list[Node]) -> dict[str, str]:
     return {advertised: node.listener for node in nodes for advertised in node.advertised}
 
 

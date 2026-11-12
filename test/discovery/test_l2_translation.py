@@ -51,7 +51,7 @@ def disabled_toxiproxy_listeners() -> Iterator[list[str]]:
         di.set_toxiproxy_listener(proxy, enabled=True)
 
 
-def port_map_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
+def port_map_keyed_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
     return {node.name: node.listener for node in nodes}
 
 
@@ -139,13 +139,13 @@ def test_n1_without_translator_fails_on_peers(nodes: list[di.Node]) -> None:
 # distinct node rather than one seed-only node
 @pytest.mark.l2("default")
 def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes: list[di.Node]) -> None:
-    assert_port_map_joins(row="N-2-endpoint", nodes=nodes, port_map=di.port_map_by_endpoint(nodes))
+    assert_port_map_joins(row="N-2-endpoint", nodes=nodes, port_map=di.port_map_keyed_by_advertised(nodes))
 
 
 # N-2: port-map keyed by node name
 @pytest.mark.l2("default")
 def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.Node]) -> None:
-    assert_port_map_joins(row="N-2-node-name", nodes=nodes, port_map=port_map_by_node_name(nodes))
+    assert_port_map_joins(row="N-2-node-name", nodes=nodes, port_map=port_map_keyed_by_node_name(nodes))
 
 
 # N-4: the dns provider seeds the client from the endpoint's SRV records, one per listener, served by
@@ -154,7 +154,7 @@ def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.Node]) -> None:
 def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     dns = {"names": [f"_aerospike._tcp.{host}"], "record_type": "srv", "servers": [os.environ["DISCOVERY_DNS_SERVER"]]}
-    translation = {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)}
+    translation = {"provider": "port-map", "port_map": di.port_map_keyed_by_advertised(nodes)}
     client = connect(seed=None, translation=translation, discovery={"provider": "dns", "dns": dns})
     try:
         wait_for_nodes(client, [node.name for node in nodes])
@@ -174,7 +174,8 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
     others = nodes[:-1]
     names = [node.name for node in nodes]
     victim_partitions = di.master_partitions(victim.info, NAMESPACE)
-    client = connect(seed=nodes[0], translation={"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)})
+    translation = {"provider": "port-map", "port_map": di.port_map_keyed_by_advertised(nodes)}
+    client = connect(seed=nodes[0], translation=translation)
     try:
         wait_for_nodes(client, names)
         victim_keys = []
@@ -226,7 +227,7 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
 
     client = connect(
         seed=nodes[0],
-        translation={"provider": "port-map", "port_map": di.port_map_by_endpoint(mapped), "on_miss": "strict"},
+        translation={"provider": "port-map", "port_map": di.port_map_keyed_by_advertised(mapped), "on_miss": "strict"},
     )
     try:
         wait_for_nodes(client, mapped_names)
@@ -255,7 +256,7 @@ def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.Node], warnin
     assert reachable is not nodes[0], f"Reachable node {reachable} must not be the first listener"
     mapped = [node for node in nodes if node is not reachable]
     advertised = reachable.advertised[0]
-    port_map = di.port_map_by_endpoint(mapped)
+    port_map = di.port_map_keyed_by_advertised(mapped)
     assert advertised not in port_map
     print(f"L2-N10-ADVERTISED node={reachable.name} container={container} advertised={reachable.advertised}")
 
@@ -388,7 +389,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
     discovery = {"provider": seeds, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
     client = connect(
         seed=None,
-        translation={"provider": "port-map", "port_map": port_map_by_node_name(nodes)},
+        translation={"provider": "port-map", "port_map": port_map_keyed_by_node_name(nodes)},
         discovery=discovery,
     )
     try:
@@ -441,7 +442,7 @@ def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.
 def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warnings: list[str]) -> None:
     assert len(nodes) >= 3, f"N-18 needs a seed and two colliding peers: {nodes}"
     seed, a, b = nodes[:3]
-    port_map = di.port_map_by_endpoint(nodes)
+    port_map = di.port_map_keyed_by_advertised(nodes)
     for advertised in b.advertised:
         port_map[advertised] = a.listener
 
@@ -543,7 +544,7 @@ def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeeds, aeros
     }
     client = connect(
         seed=None,
-        translation={"provider": "port-map", "port_map": port_map_by_node_name(nodes)},
+        translation={"provider": "port-map", "port_map": port_map_keyed_by_node_name(nodes)},
         discovery=discovery,
     )
     return seeds, client
