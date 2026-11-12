@@ -107,12 +107,15 @@ def owners(nodes: list[di.ToxiproxyNode]) -> dict[int, str]:
     return found
 
 
-def keys_on(client: aerospike.Client, masters: dict[int, str], name: str, prefix: str, count: int) -> list[tuple]:
+def keys_on(
+    client: aerospike.Client, master_by_partition_id: dict[int, str], name: str, prefix: str, count: int
+) -> list[tuple]:
     """Return count keys whose partition's master is the named node."""
     keys = []
     for i in range(KEY_SEARCH_LIMIT):
         key = (NAMESPACE, SET_NAME, f"{prefix}-{i}")
-        if masters.get(client.get_key_partition_id(*key)) == name:
+        partition_id = client.get_key_partition_id(*key)
+        if master_by_partition_id.get(partition_id) == name:
             keys.append(key)
             if len(keys) == count:
                 return keys
@@ -263,14 +266,14 @@ def test_f2_large_record_over_low_mtu_never_hangs(nodes: list[di.ToxiproxyNode])
     print(f"L2-F2-MTU eth0={mtu} network={os.environ['DISCOVERY_CLIENT_NETWORK_MTU']}")
     assert mtu == int(os.environ["DISCOVERY_CLIENT_NETWORK_MTU"])
     bound_ms = F2_POLICY["total_timeout"] + F2_POLICY["socket_timeout"]
-    masters = owners(nodes)
+    master_by_partition_id = owners(nodes)
     generator = random.Random(mtu)
 
     client = connect(nodes)
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
     try:
         for node in nodes:
-            key = keys_on(client, masters, node.name, prefix="f2", count=1)[0]
+            key = keys_on(client, master_by_partition_id, node.name, prefix="f2", count=1)[0]
             for size in F2_RECORD_SIZES:
                 value = generator.randbytes(size)
 
@@ -383,10 +386,10 @@ def drop_victim(nodes: list[di.ToxiproxyNode], toxics: list[tuple[str, str]], ch
     run check(client, victim, load, injected), then remove the toxic and assert the node serves
     again and every node serves the keys it is master of."""
     victim = nodes[-1]
-    masters = owners(nodes)
+    master_by_partition_id = owners(nodes)
     client = connect(nodes, **options)
     try:
-        keys = keys_on(client, masters, victim.name, prefix="f4", count=F4_KEY_COUNT)
+        keys = keys_on(client, master_by_partition_id, victim.name, prefix="f4", count=F4_KEY_COUNT)
 
         def put(thread: int, iteration: int) -> None:
             key = keys[(thread + iteration * F4_THREADS) % len(keys)]
