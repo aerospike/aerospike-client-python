@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -573,6 +573,13 @@ char *return_search_string(aerospike *as);
  */
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
                             PyObject *py_persistent_item, bool do_destroy);
+/**
+ * Free the ip_map allocated by the client constructor.
+ * as_config_destroy() does not free ip_map, so this must be called before every
+ * aerospike_destroy() and as_config_destroy() on a config built by the
+ * constructor.
+ */
+void destroy_ip_map(as_config *config);
 /**
  * Check type for 'operate' operation
  */

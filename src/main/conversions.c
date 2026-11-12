@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1022,10 +1022,12 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         }
     }
 
-    // These fields must be ordered in the same way as the AS_LATENCY_TYPE_* macros
-    const char *latency_types[] = {"conn_latency", "write_latency",
-                                   "read_latency", "batch_latency",
-                                   "query_latency"};
+    const char *latency_types[AS_LATENCY_TYPE_MAX] = {
+        [AS_LATENCY_TYPE_CONN] = "conn_latency",
+        [AS_LATENCY_TYPE_WRITE] = "write_latency",
+        [AS_LATENCY_TYPE_READ] = "read_latency",
+        [AS_LATENCY_TYPE_BATCH] = "batch_latency",
+        [AS_LATENCY_TYPE_QUERY] = "query_latency"};
     for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
         PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
             error_p, latency_types[i], ns_metrics->latency[i]);
@@ -1466,6 +1468,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                              false)) {
             bytes->type = AS_BYTES_HLL;
         }
+        else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector",
+                                                  false)) {
+            bytes->type = AS_BYTES_VECTOR;
+        }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
@@ -1621,6 +1627,19 @@ CLEANUP:
     return err->code;
 }
 
+// Copies all of the buffer's bytes, so a key isn't cut at a zero byte. The key
+// stays a string key so that a key without a zero byte keeps its digest.
+static as_key *init_key_with_string(as_key *key, const char *ns,
+                                    const char *set, const char *buffer,
+                                    Py_ssize_t size)
+{
+    char *value = malloc(size + 1);
+    memcpy(value, buffer, size);
+    value[size] = '\0';
+    as_string_init_wlen((as_string *)&key->value, value, size, true);
+    return as_key_init_value(key, ns, set, &key->value);
+}
+
 as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 {
     as_error_reset(err);
@@ -1692,13 +1711,15 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     if (py_key && py_key != Py_None) {
         // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
-            PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
-            char *k = PyBytes_AsString(py_ustr);
-            // free flag has to be true. Because, we are creating a new memory
-            // for a primary key string using strdup()
-            // This memory is destroyed when we call as_key_destroy()
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
-            Py_DECREF(py_ustr);
+            Py_ssize_t key_size = 0;
+            const char *key_buffer = PyUnicode_AsUTF8AndSize(py_key, &key_size);
+            if (!key_buffer) {
+                PyErr_Clear();
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "key is not encodable as UTF-8");
+            }
+            returnResult =
+                init_key_with_string(key, ns, set, key_buffer, key_size);
         }
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
@@ -1722,9 +1743,16 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
                 returnResult = as_key_init_raw(key, ns, set, byte_array, sz);
             }
         }
+        else if (is_pyobj_correct_as_helpers_type(py_key, NULL, "Vector",
+                                                  false)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Invalid key type: Vector");
+        }
         else if (PyBytes_Check(py_key)) {
-            char *k = PyBytes_AsString(py_key);
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
+            Py_ssize_t key_size = PyBytes_Size(py_key);
+            const char *key_buffer = PyBytes_AsString(py_key);
+            returnResult =
+                init_key_with_string(key, ns, set, key_buffer, key_size);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
@@ -2117,14 +2145,12 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
         }
         case AS_STRING: {
             as_string *sval = as_string_fromval(val);
-            py_key = PyUnicode_FromString(as_string_get(sval));
+            char *key_value = as_string_get(sval);
+            size_t key_size = as_string_len(sval);
+            py_key = PyUnicode_DecodeUTF8(key_value, key_size, NULL);
             if (!py_key) {
-                py_key = PyUnicode_DecodeUTF8(as_string_get(sval),
-                                              as_string_len(sval), NULL);
                 PyErr_Clear();
-            }
-            if (!py_key) {
-                py_key = PyBytes_FromString(as_string_get(sval));
+                py_key = PyBytes_FromStringAndSize(key_value, key_size);
             }
             if (!py_key) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -2996,6 +3022,9 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     PyObject *py_rec = NULL;
     if (!checking_if_records_exist) {
         record_to_pyobject(self, err, result_rec, bres->key, &py_rec);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
     }
     else {
         PyObject *py_result_key = NULL;
@@ -3220,4 +3249,14 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
 error:
     Py_XDECREF(py_cluster_stats);
     return NULL;
+}
+
+as_status validate_operations_count(as_error *err, Py_ssize_t ops_count)
+{
+    if (ops_count > UINT16_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Too many operations: %zd; the maximum is %u",
+                               ops_count, UINT16_MAX);
+    }
+    return AEROSPIKE_OK;
 }

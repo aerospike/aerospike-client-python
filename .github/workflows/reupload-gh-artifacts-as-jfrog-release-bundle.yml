@@ -67,7 +67,7 @@ jobs:
     needs: [
       reupload-artifacts-as-one-artifact-in-github
     ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@df68d17cd7b577287b56cbbca5621a5cea0bf803
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@49381314f7afd64afb580b77bab8ac263040c27e
     with:
       jf-project: ${{ vars.JFROG_PROJECT_FOR_CLIENT_TEAM }}
       jf-build-name: ${{ vars.JFROG_BUILD_NAME }}
@@ -76,7 +76,7 @@ jobs:
       jf-build-id: ${{ inputs.jfrog_build_id }}
       jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
       version: ${{ inputs.next_release_version }}
-      gh-workflows-ref: df68d17cd7b577287b56cbbca5621a5cea0bf803
+      gh-workflows-ref: 49381314f7afd64afb580b77bab8ac263040c27e
       dry-run: false
     permissions:
       contents: read

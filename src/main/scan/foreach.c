@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <Python.h>
+#include <pthread.h>
 #include <stdbool.h>
 
 #include <aerospike/aerospike_scan.h>
@@ -34,6 +35,10 @@ typedef struct {
     PyObject *callback;
     AerospikeClient *client;
     int partition_scan;
+    // The callback runs on a thread per node, so the first conversion error is
+    // kept under conversion_error_mutex.
+    as_error conversion_error;
+    pthread_mutex_t conversion_error_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -68,11 +73,16 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
-    val_to_pyobject(data->client, err, val, &py_result);
-
-    if (!py_result) {
+    as_error conversion_err;
+    val_to_pyobject(data->client, &conversion_err, val, &py_result);
+    if (conversion_err.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->conversion_error_mutex);
+        if (data->conversion_error.code == AEROSPIKE_OK) {
+            as_error_copy(&data->conversion_error, &conversion_err);
+        }
+        pthread_mutex_unlock(&data->conversion_error_mutex);
         PyGILState_Release(gstate);
-        return true;
+        return false;
     }
 
     if (data->partition_scan) {
@@ -156,6 +166,8 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     data.callback = py_callback;
     data.client = self->client;
     data.partition_scan = 0;
+    as_error_init(&data.conversion_error);
+    pthread_mutex_init(&data.conversion_error_mutex, NULL);
 
     as_error_init(&data.error);
 
@@ -237,11 +249,12 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     // We are done using multiple threads
     Py_END_ALLOW_THREADS
 
-    if (data.error.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+    if (data.conversion_error.code != AEROSPIKE_OK) {
+        as_error_copy(&data.error, &data.conversion_error);
     }
 
 CLEANUP:
+    pthread_mutex_destroy(&data.conversion_error_mutex);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

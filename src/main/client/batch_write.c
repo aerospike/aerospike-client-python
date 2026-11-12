@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -287,6 +287,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         if (py_ops_list != NULL && py_ops_list != Py_None) {
             py_ops_size = PyList_Size(py_ops_list);
         }
+        if (validate_operations_count(err, py_ops_size) != AEROSPIKE_OK) {
+            goto CLEANUP_ON_ERROR;
+        }
 
         long operation = 0;
         long return_type = -1;
@@ -512,7 +515,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         set_error_details_in_py_batch_record(
             err, py_batch_record, batch_record->subcode, batch_record->message);
         if (err->code != AEROSPIKE_OK) {
-            goto CLEANUP_ON_ERROR;
+            goto CLEANUP3;
         }
 
         if (*result_code == AEROSPIKE_OK) {
@@ -526,6 +529,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
             if (result_rec) {
                 record_to_pyobject(self, err, result_rec, requested_key, &rec);
+                if (err->code != AEROSPIKE_OK) {
+                    goto CLEANUP3;
+                }
                 PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
                                        rec);
                 Py_DECREF(rec);

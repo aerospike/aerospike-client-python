@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,25 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
+PyDoc_STRVAR(order_by_doc, "order_by(bin, type, direction[, flags])\n\
+\n\
+Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
+Calling order_by() again replaces the order keys, including one from then_order_by(), \
+and keeps ``top_k``. \
+``type`` is aerospike.Query.BinDataType.INTEGER, aerospike.Query.BinDataType.DOUBLE, or \
+aerospike.Query.BinDataType.BYTES (STRING is not supported yet), ``direction`` is aerospike.Query.Order.ASC \
+or aerospike.Query.Order.DESC, and ``flags`` is an aerospike.QueryOrderByFlags value \
+(default aerospike.QueryOrderByFlags.DEFAULT, valid only for Query.BinDataType.STRING). \
+Must be paired with ``top_k`` in [1, 1000]. Invalid combinations raise \
+aerospike.exception.ParamError before the query is sent.");
+
+PyDoc_STRVAR(then_order_by_doc, "then_order_by(bin, type, direction[, flags])\n\
+\n\
+Add a second order key that breaks ties on the first \
+(``ORDER BY <bin>, <bin2> LIMIT k``). Takes the same arguments as order_by(). \
+Calling it before order_by(), even if order_by() is called later, or adding a third \
+order key, raises aerospike.exception.ParamError when the query executes.");
+
 PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
@@ -100,6 +119,12 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
     {"select", (PyCFunction)AerospikeQuery_Select, METH_VARARGS | METH_KEYWORDS,
      select_doc},
+
+    {"order_by", (PyCFunction)AerospikeQuery_OrderBy,
+     METH_VARARGS | METH_KEYWORDS, order_by_doc},
+
+    {"then_order_by", (PyCFunction)AerospikeQuery_ThenOrderBy,
+     METH_VARARGS | METH_KEYWORDS, then_order_by_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
     {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
@@ -148,6 +173,47 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 			   (defined as TTL_DONT_UPDATE), which means that the record \
 			   ttl will not change when the record is updated. \
 	 	Note that the TTL value will be employed ONLY on background query writes."},
+    {NULL} /* Sentinel */
+};
+
+static PyObject *AerospikeQuery_Get_Top_K(AerospikeQuery *self, void *closure)
+{
+    return PyLong_FromUnsignedLong(self->query.top_k);
+}
+
+// as_query_top_k() marks k as set, so the C client rejects a k of 0 when the
+// query executes instead of sending an order key without k.
+static int AerospikeQuery_Set_Top_K(AerospikeQuery *self, PyObject *py_value,
+                                    void *closure)
+{
+    if (py_value == NULL) {
+        PyErr_SetString(PyExc_AttributeError, "top_k can't be deleted");
+        return -1;
+    }
+
+    int overflow = 0;
+    long long top_k = PyLong_AsLongLongAndOverflow(py_value, &overflow);
+    if (top_k == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    if (overflow != 0 || top_k < 0 || top_k > UINT32_MAX) {
+        PyErr_Format(PyExc_OverflowError, "top_k must be in [0, %u]; got %S",
+                     UINT32_MAX, py_value);
+        return -1;
+    }
+
+    as_query_top_k(&self->query, (uint32_t)top_k);
+    return 0;
+}
+
+static PyGetSetDef AerospikeQuery_Type_getset[] = {
+    {"top_k", (getter)AerospikeQuery_Get_Top_K,
+     (setter)AerospikeQuery_Set_Top_K,
+     "Top-K limit for an ORDER BY <bin> LIMIT k query. Must be paired with "
+     "order_by(). Inclusive range [1, 1000]. Assigning top_k again replaces "
+     "the limit and keeps the order keys. Checked when the query executes.",
+     NULL},
     {NULL} /* Sentinel */
 };
 
@@ -283,7 +349,7 @@ PyTypeObject AerospikeQuery_Type = {
     0,                                  // tp_iternext
     AerospikeQuery_Type_Methods,        // tp_methods
     AerospikeQuery_Type_custom_members, // tp_members
-    0,                                  // tp_getset
+    AerospikeQuery_Type_getset,         // tp_getset
     0,                                  // tp_base
     0,                                  // tp_dict
     0,                                  // tp_descr_get
@@ -297,12 +363,38 @@ PyTypeObject AerospikeQuery_Type = {
     0                                   // tp_bases
 };
 
+static const struct int_enum_member bin_data_type_members[] = {
+    {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
+    {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
+    {"STRING", AS_QUERY_ORDER_BY_STRING},
+    {"BYTES", AS_QUERY_ORDER_BY_BYTES},
+    {NULL}};
+
+static const struct int_enum_member order_members[] = {
+    {"ASC", AS_ORDER_ASCENDING}, {"DESC", AS_ORDER_DESCENDING}, {NULL}};
+
+static const struct int_enum_def query_enums[] = {
+    {"BinDataType", bin_data_type_members}, {"Order", order_members}, {NULL}};
+
 /*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
 PyTypeObject *AerospikeQuery_Ready()
 {
+    // PyType_Ready() keeps the attributes already in tp_dict.
+    PyObject *py_type_dict = PyDict_New();
+    if (py_type_dict == NULL) {
+        return NULL;
+    }
+
+    int retval = add_int_enums(py_type_dict, "Query", query_enums);
+    if (retval == -1) {
+        Py_DECREF(py_type_dict);
+        return NULL;
+    }
+    AerospikeQuery_Type.tp_dict = py_type_dict;
+
     return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
                                                    : NULL;
 }
