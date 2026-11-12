@@ -553,7 +553,7 @@ def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeedProvider
     return provider, client
 
 
-def assert_commands_work(client: aerospike.Client, row: str, seconds: int) -> int:
+def put_and_get_for(client: aerospike.Client, row: str, seconds: int) -> int:
     deadline = time.monotonic() + seconds
     i = 0
     while time.monotonic() < deadline:
@@ -574,7 +574,7 @@ def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: 
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         assert di.wait_for(provider.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
-        commands = assert_commands_work(client, row="M-5", seconds=BLOCK_SEC)
+        commands = put_and_get_for(client, row="M-5", seconds=BLOCK_SEC)
         assert sorted(di.client_nodes(client)) == sorted(node.name for node in nodes)
         provider.release.set()
         assert di.wait_for(lambda: len(provider.contexts) >= 3, JOIN_TIMEOUT_SEC), "No refresh after the release"
