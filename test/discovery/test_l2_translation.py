@@ -364,7 +364,7 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
         client.close()
 
 
-class Seeds(SeedCandidateProvider):
+class SeedProvider(SeedCandidateProvider):
     """Returns the seed listener on every refresh, and records each refresh's context and time."""
 
     def __init__(self, seed: SeedHost) -> None:
@@ -387,8 +387,8 @@ class Seeds(SeedCandidateProvider):
 @pytest.mark.l2("default")
 def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]) -> None:
     names = [node.name for node in nodes]
-    seeds = Seeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
-    discovery = {"provider": seeds, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
+    provider = SeedProvider((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
+    discovery = {"provider": provider, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
     client = connect(
         seed=None,
         translation={"provider": "port-map", "port_map": port_map_keyed_by_node_name(nodes)},
@@ -396,12 +396,12 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
     )
     try:
         wait_for_nodes(client, names)
-        assert len(seeds.times) == 1, f"Refreshed at {seeds.times}"
+        assert len(provider.times) == 1, f"Refreshed at {provider.times}"
 
         disabled = time.monotonic()
         disable_toxiproxy_listeners(nodes, disabled_toxiproxy_listeners)
         wait_for_no_nodes(client)
-        urgent = di.wait_for(lambda: len(seeds.times) >= 2, JOIN_TIMEOUT_SEC)
+        urgent = di.wait_for(lambda: len(provider.times) >= 2, JOIN_TIMEOUT_SEC)
         assert urgent, "No urgent refresh while the client had no nodes"
 
         enabled = time.monotonic()
@@ -410,7 +410,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
         reseed_ms = (time.monotonic() - enabled) * 1000
         assert reseeded, "The client did not re-seed"
         budget_ms = 2 * TEND_INTERVAL_MS + CONNECT_TIMEOUT_MS
-        refreshes = [t for t in seeds.times if t >= disabled]
+        refreshes = [t for t in provider.times if t >= disabled]
         print(f"L2-N12-RESEED enableToFirstNodeMs={reseed_ms:.0f} budgetMs={budget_ms} "
               f"refreshesInOutage={len(refreshes)}")
         assert len(refreshes) == 1
@@ -518,7 +518,7 @@ def test_n19_node_outside_range_decided_by_on_miss(
         client.close()
 
 
-class BlockingSeeds(Seeds):
+class BlockingSeedProvider(SeedProvider):
     """Blocks the second refresh until released."""
 
     def __init__(self, seed: SeedHost) -> None:
@@ -528,20 +528,20 @@ class BlockingSeeds(Seeds):
         self.closed = threading.Event()
 
     def refresh_seed_candidates(self, context: SeedCandidateContext) -> list[SeedHost]:
-        seeds = super().refresh_seed_candidates(context)
+        candidates = super().refresh_seed_candidates(context)
         if len(self.contexts) == 2:
             self.blocked.set()
             self.release.wait(5 * BLOCK_SEC)
-        return seeds
+        return candidates
 
     def close(self) -> None:
         self.closed.set()
 
 
-def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeeds, aerospike.Client]:
-    seeds = BlockingSeeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
+def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeedProvider, aerospike.Client]:
+    provider = BlockingSeedProvider((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {
-        "provider": seeds,
+        "provider": provider,
         "refresh_interval_ms": TEND_INTERVAL_MS,
         "refresh_timeout_ms": REFRESH_TIMEOUT_MS,
     }
@@ -550,7 +550,7 @@ def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeeds, aeros
         translation={"provider": "port-map", "port_map": port_map_keyed_by_node_name(nodes)},
         discovery=discovery,
     )
-    return seeds, client
+    return provider, client
 
 
 def assert_commands_work(client: aerospike.Client, row: str, seconds: int) -> int:
@@ -570,21 +570,21 @@ def assert_commands_work(client: aerospike.Client, row: str, seconds: int) -> in
 # working while it blocks, and the next refresh sees every tend that ran meanwhile.
 @pytest.mark.l2("default")
 def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: list[str]) -> None:
-    seeds, client = blocking_provider_client(nodes)
+    provider, client = blocking_provider_client(nodes)
     try:
         wait_for_nodes(client, [node.name for node in nodes])
-        assert di.wait_for(seeds.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
+        assert di.wait_for(provider.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
         commands = assert_commands_work(client, row="M-5", seconds=BLOCK_SEC)
         assert sorted(di.client_nodes(client)) == sorted(node.name for node in nodes)
-        seeds.release.set()
-        assert di.wait_for(lambda: len(seeds.contexts) >= 3, JOIN_TIMEOUT_SEC), "No refresh after the release"
-        blocked = seeds.contexts[1].tend_iteration
-        after = seeds.contexts[2].tend_iteration
+        provider.release.set()
+        assert di.wait_for(lambda: len(provider.contexts) >= 3, JOIN_TIMEOUT_SEC), "No refresh after the release"
+        blocked = provider.contexts[1].tend_iteration
+        after = provider.contexts[2].tend_iteration
         print(f"L2-M5 commands={commands} blockedIteration={blocked} nextIteration={after}")
         assert after - blocked >= BLOCK_SEC * 1000 // TEND_INTERVAL_MS // 2
         assert any("exceeding refresh_timeout_ms" in message for message in warnings)
     finally:
-        seeds.release.set()
+        provider.release.set()
         client.close()
 
 
@@ -592,9 +592,9 @@ def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: 
 # the refresh returns
 @pytest.mark.l2("default")
 def test_m5_close_during_blocked_refresh_returns(nodes: list[di.Node], warnings: list[str]) -> None:
-    seeds, client = blocking_provider_client(nodes)
+    provider, client = blocking_provider_client(nodes)
     try:
-        assert di.wait_for(seeds.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
+        assert di.wait_for(provider.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
         begin = time.monotonic()
         client.close()
         elapsed_ms = (time.monotonic() - begin) * 1000
@@ -602,7 +602,7 @@ def test_m5_close_during_blocked_refresh_returns(nodes: list[di.Node], warnings:
         assert elapsed_ms < REFRESH_TIMEOUT_MS + 2000
         assert any("did not return in time" in message for message in warnings)
     finally:
-        seeds.release.set()
+        provider.release.set()
     del client
     # The discovery thread calls close() once the blocked refresh returns
-    assert di.wait_for(seeds.closed.is_set, JOIN_TIMEOUT_SEC, interval=0.05), "The provider was never closed"
+    assert di.wait_for(provider.closed.is_set, JOIN_TIMEOUT_SEC, interval=0.05), "The provider was never closed"
