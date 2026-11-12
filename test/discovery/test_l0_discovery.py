@@ -24,7 +24,7 @@ TEND_INTERVAL_MS = 250
 OFFLINE = {"hosts": [UNREACHABLE], "fail_if_not_connected": False, "tend_interval": TEND_INTERVAL_MS}
 
 
-class Seeds(SeedCandidateProvider):
+class SeedProvider(SeedCandidateProvider):
     """Returns hosts and periodic, or raises error and periodic_error instead when they are set, and
     records every refresh."""
 
@@ -59,7 +59,7 @@ class Seeds(SeedCandidateProvider):
         self.closed += 1
 
 
-class BlockedSeeds(SeedCandidateProvider):
+class BlockedSeedProvider(SeedCandidateProvider):
     """Blocks every refresh until released."""
 
     def __init__(self) -> None:
@@ -109,15 +109,15 @@ def client_raises(exception: type[e.AerospikeError], config: dict[str, Any]) -> 
 
 @pytest.mark.parametrize("cluster_name", [None, "c1"])
 def test_u1_provider_context(cluster_name: Optional[str]) -> None:
-    seeds = Seeds()
+    provider = SeedProvider()
     hosts = [UNREACHABLE, ("127.0.0.2", 2, "tls-name")]
-    config = {**OFFLINE, "hosts": hosts, "discovery": {"provider": seeds}}
+    config = {**OFFLINE, "hosts": hosts, "discovery": {"provider": provider}}
     if cluster_name:
         config["cluster_name"] = cluster_name
     client = aerospike.client(config)
     client.close()
     expected = SeedCandidateContext(cluster_name=cluster_name, configured_seeds=tuple(hosts), tend_iteration=0)
-    assert seeds.contexts == [expected]
+    assert provider.contexts == [expected]
 
 
 # The C client's warning when the first tend cannot reach the configured seed. The provider never
@@ -127,47 +127,47 @@ SEED_CONNECT_WARNING = f"Failed to connect to seed {UNREACHABLE[0]} {UNREACHABLE
 
 # A provider that returns no hosts, raises or blocks past refresh_timeout_ms leaves the client on its
 # configured seeds, and no Python exception reaches the caller
-@pytest.mark.parametrize("seeds_args", [{"hosts": []}, {"error": RuntimeError("no seeds today")}])
-def test_u1_failed_refresh_keeps_configured_seeds(seeds_args: dict[str, Any], warnings: list[str]) -> None:
-    seeds = Seeds(**seeds_args)
-    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds}})
+@pytest.mark.parametrize("provider_args", [{"hosts": []}, {"error": RuntimeError("no seeds today")}])
+def test_u1_failed_refresh_keeps_configured_seeds(provider_args: dict[str, Any], warnings: list[str]) -> None:
+    provider = SeedProvider(**provider_args)
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": provider}})
     client.close()
-    assert len(seeds.contexts) == 1
+    assert len(provider.contexts) == 1
     assert any(message.startswith(SEED_CONNECT_WARNING) for message in warnings), warnings
 
 
 def test_u1_blocked_refresh_keeps_configured_seeds(warnings: list[str]) -> None:
-    seeds = BlockedSeeds()
+    provider = BlockedSeedProvider()
     start = time.monotonic()
-    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds, "refresh_timeout_ms": 100}})
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": provider, "refresh_timeout_ms": 100}})
     elapsed = time.monotonic() - start
-    seeds.released.set()
+    provider.released.set()
     client.close()
     assert elapsed < 1, f"Client construction waited {elapsed:.1f} s for a blocked refresh"
-    timed_out = "Seed provider BlockedSeeds failed: AEROSPIKE_ERR_TIMEOUT Initial refresh did not complete"
+    timed_out = "Seed provider BlockedSeedProvider failed: AEROSPIKE_ERR_TIMEOUT Initial refresh did not complete"
     assert any(message.startswith(timed_out) for message in warnings), warnings
     assert any(message.startswith(SEED_CONNECT_WARNING) for message in warnings), warnings
 
 
 def test_u1_periodic_refresh_continues_after_errors() -> None:
-    seeds = Seeds(periodic=True, error=RuntimeError("no seeds today"))
-    client = aerospike.client({**OFFLINE, "discovery": {"provider": seeds, "refresh_interval_ms": TEND_INTERVAL_MS}})
+    provider = SeedProvider(periodic=True, error=RuntimeError("no seeds today"))
+    client = aerospike.client({**OFFLINE, "discovery": {"provider": provider, "refresh_interval_ms": TEND_INTERVAL_MS}})
     try:
         deadline = time.monotonic() + 10 * TEND_INTERVAL_MS / 1000
-        while len(seeds.contexts) < 3 and time.monotonic() < deadline:
+        while len(provider.contexts) < 3 and time.monotonic() < deadline:
             time.sleep(0.05)
     finally:
         client.close()
-    assert len(seeds.contexts) >= 3
+    assert len(provider.contexts) >= 3
 
 
 def test_u1_provider_error_without_seeds() -> None:
-    seeds = Seeds(error=RuntimeError("no seeds today"))
-    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": seeds}})
-    assert message.startswith("Seed provider Seeds failed and no seed host is left")
+    provider = SeedProvider(error=RuntimeError("no seeds today"))
+    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": provider}})
+    assert message.startswith("Seed provider SeedProvider failed and no seed host is left")
     assert "RuntimeError: no seeds today" in message
     gc.collect()
-    assert seeds.closed == 1
+    assert provider.closed == 1
 
 
 INVALID_HOST = (
@@ -187,62 +187,62 @@ INVALID_HOST = (
     ],
 )
 def test_u1_provider_invalid_hosts(hosts: Any, reason: str) -> None:
-    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": Seeds(hosts)}})
-    assert message == f"Seed provider Seeds failed and no seed host is left: {reason}"
+    message = client_raises(e.SeedDiscoveryFailed, {"hosts": [], "discovery": {"provider": SeedProvider(hosts)}})
+    assert message == f"Seed provider SeedProvider failed and no seed host is left: {reason}"
 
 
 @pytest.mark.parametrize(
-    "seeds_args, message",
+    "provider_args, message",
     [
         ({"periodic_error": RuntimeError("unsure")},
          "discovery.provider.needs_periodic_refresh() raised: RuntimeError: unsure"),
         ({"periodic": 1}, "discovery.provider.needs_periodic_refresh() must return a bool"),
     ],
 )
-def test_u1_needs_periodic_refresh_must_return_a_bool(seeds_args: dict[str, Any], message: str) -> None:
-    seeds = Seeds([UNREACHABLE], **seeds_args)
-    assert client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds}}) == message
+def test_u1_needs_periodic_refresh_must_return_a_bool(provider_args: dict[str, Any], message: str) -> None:
+    provider = SeedProvider([UNREACHABLE], **provider_args)
+    assert client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": provider}}) == message
     gc.collect()
-    assert seeds.contexts == []
-    assert seeds.closed == 0
+    assert provider.contexts == []
+    assert provider.closed == 0
 
 
 def test_u1_provider_rejected_in_tend_mode() -> None:
-    seeds = Seeds([UNREACHABLE])
-    references = sys.getrefcount(seeds)
-    message = client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": seeds, "execution_mode": "tend"}})
+    provider = SeedProvider([UNREACHABLE])
+    references = sys.getrefcount(provider)
+    message = client_raises(e.ParamError, {**OFFLINE, "discovery": {"provider": provider, "execution_mode": "tend"}})
     gc.collect()
     assert message == "Binding seed provider requires thread execution mode"
-    assert seeds.contexts == []
-    assert seeds.closed == 0
-    assert sys.getrefcount(seeds) == references
+    assert provider.contexts == []
+    assert provider.closed == 0
+    assert sys.getrefcount(provider) == references
 
 
 # The registration outlives Client.close() so the client can connect again, and close() runs once
 # when the client object is destroyed
 def test_u1_provider_closed_when_client_destroyed() -> None:
-    seeds = Seeds([UNREACHABLE])
-    client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": seeds}})
+    provider = SeedProvider([UNREACHABLE])
+    client = aerospike.client({**OFFLINE, "hosts": [], "discovery": {"provider": provider}})
     client.close()
     client.connect()
     client.close()
-    assert len(seeds.contexts) == 2
-    assert seeds.closed == 0
+    assert len(provider.contexts) == 2
+    assert provider.closed == 0
     del client
     gc.collect()
-    assert seeds.closed == 1
+    assert provider.closed == 1
 
 
 # A refresh still running when the client is destroyed closes the provider when it returns, even
 # while the main thread waits outside Python code and so runs no pending calls
 def test_u1_provider_closed_after_refresh_outlives_client() -> None:
-    seeds = BlockedSeeds()
-    config = {**OFFLINE, "hosts": [], "discovery": {"provider": seeds, "refresh_timeout_ms": 100}}
+    provider = BlockedSeedProvider()
+    config = {**OFFLINE, "hosts": [], "discovery": {"provider": provider, "refresh_timeout_ms": 100}}
     client_raises(e.SeedDiscoveryFailed, config)
     gc.collect()
-    assert not seeds.closed.is_set()
-    seeds.released.set()
-    assert seeds.closed.wait(2), "The provider was not closed when its refresh returned"
+    assert not provider.closed.is_set()
+    provider.released.set()
+    assert provider.closed.wait(2), "The provider was not closed when its refresh returned"
 
 
 # U-3: the default config is the static provider and the static-map translator, which run no
@@ -250,7 +250,7 @@ def test_u1_provider_closed_after_refresh_outlives_client() -> None:
 def test_u3_default_construction_adds_no_thread() -> None:
     default = client_threads(OFFLINE)
     static = client_threads({**OFFLINE, "discovery": {"provider": "static"}, "translation": {"provider": "static-map"}})
-    provider = client_threads({**OFFLINE, "discovery": {"provider": Seeds([UNREACHABLE], periodic=True)}})
+    provider = client_threads({**OFFLINE, "discovery": {"provider": SeedProvider([UNREACHABLE], periodic=True)}})
     print(f"U-3 threads default={default} static={static} provider={provider}")
     assert static == default
     assert provider == default + 1
@@ -258,7 +258,7 @@ def test_u3_default_construction_adds_no_thread() -> None:
 
 # U-4: the binding accepts the dns provider's config. The C client tests resolution.
 def test_u4_dns_provider_config_accepted() -> None:
-    dns = {"names": ["seeds.test"], "record_type": "SRV", "port": 3100, "tls_name": "db", "timeout_ms": 50,
+    dns = {"names": ["provider.test"], "record_type": "SRV", "port": 3100, "tls_name": "db", "timeout_ms": 50,
            "servers": ["127.0.0.1:1"]}
     client = aerospike.client({**OFFLINE, "validate_keys": True, "discovery": {"provider": "dns", "dns": dns}})
     client.close()
@@ -266,7 +266,7 @@ def test_u4_dns_provider_config_accepted() -> None:
 
 @pytest.mark.parametrize("record_type", ["a", "A", "srv", "SRV"])
 def test_u4_dns_record_type_accepts_either_case(record_type: str) -> None:
-    dns = {"names": ["seeds.test"], "record_type": record_type, "servers": ["127.0.0.1:1"]}
+    dns = {"names": ["provider.test"], "record_type": record_type, "servers": ["127.0.0.1:1"]}
     client = aerospike.client({**OFFLINE, "discovery": {"provider": "dns", "dns": dns}})
     client.close()
 
@@ -332,7 +332,7 @@ def test_hosts_needed_without_provider() -> None:
         ({"discovery": {"refresh_timeout_ms": 2**32}}, "discovery.refresh_timeout_ms: ValueError"),
         ({"discovery": {"tend_refresh_deadline_ms": "100"}}, "discovery.tend_refresh_deadline_ms: TypeError"),
         ({"discovery": {"dns": {"names": ["a.test"]}}}, 'discovery.dns needs discovery.provider "dns"'),
-        ({"discovery": {"provider": Seeds(), "dns": {"names": ["a.test"]}}},
+        ({"discovery": {"provider": SeedProvider(), "dns": {"names": ["a.test"]}}},
          'discovery.dns needs discovery.provider "dns"'),
         ({"discovery": {"provider": "dns", "dns": {"names": "a.test"}}}, "discovery.dns.names must be a list"),
         ({"discovery": {"provider": "dns", "dns": {"names": [5]}}}, "discovery.dns.names: TypeError"),
