@@ -529,7 +529,7 @@ class Driver:
         """Record whether the node answers an info request for its name within REACH_TIMEOUT_MS."""
         name = node[0]
         try:
-            reply = self.client.info_single_node("node", name, {"timeout": REACH_TIMEOUT_MS})
+            reply = self.client.info_single_node("node", name, policy={"timeout": REACH_TIMEOUT_MS})
             value = reply.partition("\t")[2].strip()
             answered = value == name
         except e.AerospikeError:

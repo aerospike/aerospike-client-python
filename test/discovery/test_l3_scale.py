@@ -155,7 +155,7 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
 
         held = l3.wait_for_size(client, size + 1, SCALE_UP_TEND_INTERVAL_MS)
         assert set(existing) <= set(held), f"Client holds {sorted(held)}, held {sorted(existing)} before"
-        l3.assert_served(client, SET_NAME, size + 1, "L3-K-2", SCALE_UP_TEND_INTERVAL_MS)
+        l3.assert_served(client, SET_NAME, size=size + 1, row="L3-K-2", tend_interval_ms=SCALE_UP_TEND_INTERVAL_MS)
     finally:
         client.close()
 
@@ -228,7 +228,7 @@ def test_k3_scale_down_removes_node_without_retry_storm(cluster: l3.Cluster) -> 
             assert load.successes() > succeeded, f"No command succeeded after {victim} left"
         finally:
             assert load.stop(l3.ROUTING_TIMEOUT_SEC * 1000), "Load threads blocked"
-        l3.assert_served(client, SET_NAME, size - 1, "L3-K-3")
+        l3.assert_served(client, SET_NAME, size=size - 1, row="L3-K-3")
     finally:
         client.close()
 
@@ -254,7 +254,7 @@ def assert_pinned_seed(cluster: l3.Cluster, step: str, service: str, port: int, 
             assert advertised == f"{l3.endpoint()}:{node_port}", f"{name} ({pod.name}) advertised alternate address"
             assert node_port != pinned, f"{pod.name} advertises the pinned NodePort of {service}"
             assert entry["port"] == node_port
-        l3.assert_served(client, SET_NAME, size, f"L3-K-9-{step}")
+        l3.assert_served(client, SET_NAME, size, row=f"L3-K-9-{step}")
     finally:
         client.close()
 
@@ -285,11 +285,11 @@ def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(
     assert pinned, f"No free NodePort in {low}-{high}"
     service = f"{cluster.name}-pinned-seed"
     services.append(service)
-    cluster.create_pod_node_port_service(service, first.name, port, pinned)
+    cluster.create_pod_node_port_service(service, pod=first.name, port=port, node_port=pinned)
     print(f"L3-PINNED service={service} pod={first.name} nodePort={pinned} range={low}-{high} "
           f"allocated={len(allocated)}")
     assert cluster.node_port(service, port) == pinned
-    assert_pinned_seed(cluster, "created", service, port, pinned, size)
+    assert_pinned_seed(cluster, step="created", service=service, port=port, pinned=pinned, size=size)
 
     pod_uid = cluster.uid("pod", first.name)
     service_uid = cluster.uid("service", first.name)
@@ -310,7 +310,7 @@ def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(
     assert cluster.uid("service", first.name) == service_uid, f"{first.name} Service UID"
     assert cluster.node_port(first.name, port) == node_port, f"{first.name} Service NodePort"
     assert cluster.node_port(service, port) == pinned
-    assert_pinned_seed(cluster, "rescheduled", service, port, pinned, size)
+    assert_pinned_seed(cluster, step="rescheduled", service=service, port=port, pinned=pinned, size=size)
 
     last = highest_ordinal(cluster.pods())
     last_uid = cluster.uid("service", last.name)
@@ -320,7 +320,7 @@ def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(
     # Holding the old NodePort keeps the allocator from handing it back to the recreated Service
     held = f"{cluster.name}-held-node-port"
     services.append(held)
-    cluster.create_pod_node_port_service(held, last.name, port, last_node_port)
+    cluster.create_pod_node_port_service(held, pod=last.name, port=port, node_port=last_node_port)
     cluster.scale(size)
     recreated_uid = cluster.uid("service", last.name)
     recreated_node_port = cluster.node_port(last.name, port)
@@ -331,4 +331,4 @@ def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(
     assert recreated_node_port > 0, f"{last.name} has no Service NodePort for {port}"
     assert recreated_node_port != last_node_port, f"{last.name} Service got its old NodePort back"
     assert cluster.node_port(service, port) == pinned
-    assert_pinned_seed(cluster, "recreated", service, port, pinned, size)
+    assert_pinned_seed(cluster, step="recreated", service=service, port=port, pinned=pinned, size=size)

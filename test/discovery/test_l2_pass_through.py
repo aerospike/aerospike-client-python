@@ -140,7 +140,7 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
         port = next_listener_port()
         container = di.control(f"start alternate-port={port}")["container"]
         added_nodes.append(container)
-        add_listener(container, port, observer.proxy)
+        add_listener(container, port, like=observer.proxy)
         current = observer.info("peers-generation")
         assert current == generation, f"peers-generation moved to {current} before {container} had a listener"
 
@@ -170,7 +170,7 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
         container = di.control(f"start alternate-port={port}")["container"]
         added_nodes.append(container)
     di.wait_cluster_stable([node.info for node in nodes], len(nodes) + 2)
-    add_listener(added_nodes[0], port, observer.proxy)
+    add_listener(added_nodes[0], port, like=observer.proxy)
     colliding = di.peer_names(observer.info("peers-clear-alt"), endpoint)
     print(f"L2-N18-ADVERTISED endpoint={endpoint} nodes={colliding}")
     assert len(colliding) == 2, f"Nodes advertising {endpoint}: {colliding}"
@@ -187,8 +187,8 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
         assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
         message = di.collisions(warnings, colliding[0])[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.collision_messages("pass-through", endpoint, colliding)
+        assert message in di.collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
         infos = {node.name: node.info for node in nodes}
-        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N18-pass-through", infos)
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-pass-through", infos=infos)
     finally:
         client.close()

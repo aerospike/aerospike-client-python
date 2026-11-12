@@ -69,7 +69,7 @@ def toxics() -> Iterator[list[tuple[str, str]]]:
         di.remove_toxic(proxy, name)
 
 
-def add_toxic(toxics: list, proxy: str, name: str, toxic_type: str, toxicity: float, attributes: dict) -> None:
+def add_toxic(toxics: list[tuple[str, str]], proxy: str, name: str, toxic_type: str, toxicity: float, attributes: dict) -> None:
     di.add_toxic(proxy, name, toxic_type, toxicity, attributes)
     toxics.append((proxy, name))
 
@@ -164,7 +164,7 @@ def probe_result(sock: socket.socket) -> str:
 def test_f1_idle_reset_absorbed_by_pool(nodes: list[di.Node], toxics: list[tuple[str, str]]) -> None:
     assert os.environ["DISCOVERY_IDLE_RESET"] == "1"
     for node in nodes:
-        add_toxic(toxics, node.proxy, "f1-rst", "reset_peer", 0.0, {"timeout": 0})
+        add_toxic(toxics, node.proxy, name="f1-rst", toxic_type="reset_peer", toxicity=0.0, attributes={"timeout": 0})
 
     client = connect(nodes)
     try:
@@ -188,8 +188,8 @@ def test_f1_idle_reset_absorbed_by_pool(nodes: list[di.Node], toxics: list[tuple
             assert pooled >= len(nodes), "No idle pooled connection to reset"
 
             for node in nodes:
-                di.set_listener(node.proxy, False)
-                di.set_listener(node.proxy, True)
+                di.set_listener(node.proxy, enabled=False)
+                di.set_listener(node.proxy, enabled=True)
 
             for node, sock in zip(nodes, probes):
                 result = probe_result(sock)
@@ -268,7 +268,7 @@ def test_f2_large_record_over_low_mtu_never_hangs(nodes: list[di.Node]) -> None:
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
     try:
         for node in nodes:
-            key = keys_on(client, masters, node.name, "f2", 1)[0]
+            key = keys_on(client, masters, node.name, prefix="f2", count=1)[0]
             for size in F2_RECORD_SIZES:
                 value = generator.randbytes(size)
 
@@ -382,7 +382,7 @@ def drop_victim(nodes: list[di.Node], toxics: list[tuple[str, str]], check: Call
     masters = owners(nodes)
     client = connect(nodes, **options)
     try:
-        keys = keys_on(client, masters, victim.name, "f4", F4_KEY_COUNT)
+        keys = keys_on(client, masters, victim.name, prefix="f4", count=F4_KEY_COUNT)
 
         def put(thread: int, iteration: int) -> None:
             key = keys[(thread + iteration * F4_THREADS) % len(keys)]
@@ -393,7 +393,7 @@ def drop_victim(nodes: list[di.Node], toxics: list[tuple[str, str]], check: Call
             started = di.wait_for(lambda: load.successes() >= F4_THREADS, WAIT_SEC, interval=POLL_SEC)
             assert started, f"No command succeeded before the drop: {di.kinds(load.errors())}"
             injected = time.monotonic()
-            add_toxic(toxics, victim.proxy, F4_TOXIC, "timeout", 1.0, {"timeout": 0})
+            add_toxic(toxics, victim.proxy, F4_TOXIC, toxic_type="timeout", toxicity=1.0, attributes={"timeout": 0})
             check(client, victim, load, injected)
         finally:
             load.stop(F4_BOUND_MS)
@@ -409,7 +409,7 @@ def drop_victim(nodes: list[di.Node], toxics: list[tuple[str, str]], check: Call
         print(f"L2-F4-RECOVERED back={bool(back)} ms={back_ms:.0f} nodes={sorted(di.client_nodes(client))}")
         assert back, f"F-4: {victim.name} did not serve again after the toxic was removed"
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-F4", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-F4", infos=infos)
     finally:
         client.close()
 

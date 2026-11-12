@@ -62,7 +62,8 @@ def nodes() -> list[Node]:
         tls_advertised = di.endpoints(reply["service-tls-std"])
         assert tls_advertised, f"{name} advertises no TLS address"
         assert tls_names.get(name), f"No peer lists a tls-name for {name}: {tls_names}"
-        node = Node(name, ports[proxy], ports[proxy + TLS_PROXY_SUFFIX], tls_advertised, tls_names[name])
+        node = Node(name, port=ports[proxy], tls_port=ports[proxy + TLS_PROXY_SUFFIX], tls_advertised=tls_advertised,
+                    tls_name=tls_names[name])
         print(f"L2-NODE {node}")
         found.append(node)
     return found
@@ -99,13 +100,13 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
             print(f"L2-N6-NODE {node.name} client={held[node.name]} tlsName={node.tls_name}")
             di.assert_at(held[node.name], f"{host}:{node.tls_port}")
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N6", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N6", infos=infos)
     finally:
         client.close()
     assert di.legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        connect(nodes, first, host)
+        connect(nodes, first, tls_name=host)
     print(f"L2-N6-ERROR {raised.value}")
     assert f"TLS name '{host}' mismatch" in warnings
 

@@ -48,7 +48,7 @@ def send_info(sock: socket.socket, *commands: str) -> dict[str, str]:
     body = "".join(command + "\n" for command in commands).encode()
     header = struct.pack(">Q", (INFO_VERSION << 56) | (INFO_TYPE << 48) | len(body))
     sock.sendall(header + body)
-    reply_header = read_exactly(sock, 8)
+    reply_header = read_exactly(sock, size=8)
     size = struct.unpack(">Q", reply_header)[0] & 0xFFFFFFFFFFFF
     reply = read_exactly(sock, size).decode()
 
@@ -482,7 +482,7 @@ class Load:
                 command(index, iteration)
             except Exception as raised:
                 error = raised
-            outcome = Outcome(start, (time.monotonic() - start) * 1000, error)
+            outcome = Outcome(start, elapsed_ms=(time.monotonic() - start) * 1000, error=error)
             with self._lock:
                 self.outcomes.append(outcome)
             iteration += 1

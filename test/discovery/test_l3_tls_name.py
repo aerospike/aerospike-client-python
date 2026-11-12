@@ -99,7 +99,7 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
                 advertised_peers.add(peer)
         assert matched == set(expected)
         assert advertised_peers == set(held), "Nodes advertised as peers"
-        l3.assert_served(client, SET_NAME, len(pods), "L3-K-6")
+        l3.assert_served(client, SET_NAME, size=len(pods), row="L3-K-6")
     finally:
         client.close()
     assert di.legacy_matches(warnings) == []

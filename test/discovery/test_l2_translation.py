@@ -48,7 +48,7 @@ def disabled_listeners() -> Iterator[list[str]]:
     proxies = []
     yield proxies
     for proxy in proxies:
-        di.set_listener(proxy, True)
+        di.set_listener(proxy, enabled=True)
 
 
 def port_map_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
@@ -88,12 +88,12 @@ def wait_for_no_nodes(client: aerospike.Client) -> None:
 def disable_listeners(nodes: list[di.Node], disabled_listeners: list[str]) -> None:
     for node in nodes:
         disabled_listeners.append(node.proxy)
-        di.set_listener(node.proxy, False)
+        di.set_listener(node.proxy, enabled=False)
 
 
 def enable_listeners(disabled_listeners: list[str]) -> None:
     for proxy in disabled_listeners:
-        di.set_listener(proxy, True)
+        di.set_listener(proxy, enabled=True)
     disabled_listeners.clear()
 
 
@@ -139,13 +139,13 @@ def test_n1_without_translator_fails_on_peers(nodes: list[di.Node]) -> None:
 # distinct node rather than one seed-only node
 @pytest.mark.l2("default")
 def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes: list[di.Node]) -> None:
-    assert_port_map_joins("N-2-endpoint", nodes, di.port_map_by_endpoint(nodes))
+    assert_port_map_joins(row="N-2-endpoint", nodes=nodes, port_map=di.port_map_by_endpoint(nodes))
 
 
 # N-2: port-map keyed by node name
 @pytest.mark.l2("default")
 def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.Node]) -> None:
-    assert_port_map_joins("N-2-node-name", nodes, port_map_by_node_name(nodes))
+    assert_port_map_joins(row="N-2-node-name", nodes=nodes, port_map=port_map_by_node_name(nodes))
 
 
 # N-4: the dns provider seeds the client from the endpoint's SRV records, one per listener, served by
@@ -155,11 +155,11 @@ def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     dns = {"names": [f"_aerospike._tcp.{host}"], "record_type": "srv", "servers": [os.environ["DISCOVERY_DNS_SERVER"]]}
     translation = {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)}
-    client = connect(None, translation, {"provider": "dns", "dns": dns})
+    client = connect(seed=None, translation=translation, discovery={"provider": "dns", "dns": dns})
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N4", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N4", infos=infos)
     finally:
         client.close()
 
@@ -191,14 +191,14 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
         print(f"L2-N7-DEGRADED victim={victim.name} nodes={sorted(di.client_nodes(client))} failed={len(failed)}")
         assert len(failed) == len(victim_keys)
         infos = {node.name: node.info for node in others}
-        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N7-degraded", infos)
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N7-degraded", infos=infos)
 
         enable_listeners(disabled_listeners)
         recovered = di.wait_for(lambda: all(di.writes(client, key, SINGLE_TRY) for key in victim_keys), JOIN_TIMEOUT_SEC)
         assert recovered, f"Writes to {victim.name} did not recover"
         wait_for_nodes(client, names)
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N7-recovered", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N7-recovered", infos=infos)
     finally:
         client.close()
 
@@ -237,7 +237,7 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
         print(f"L2-N8-LOG {message}")
         assert message in [miss_message(victim.name, advertised) for advertised in victim.advertised]
         infos = {node.name: node.info for node in mapped}
-        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N8", infos)
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N8", infos=infos)
     finally:
         client.close()
 
@@ -263,7 +263,7 @@ def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.Node], warnin
         print(f"L2-N10-NODE {reachable.name} client={held[reachable.name]} advertised={advertised}")
         di.assert_at(held[reachable.name], advertised)
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N10", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N10", infos=infos)
         assert [message for message in warnings if "has no mapping" in message] == []
     finally:
         client.close()
@@ -347,12 +347,13 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
         assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
 
         port = di.split_endpoint(listener)[1]
-        added = di.Node(joined["node_name"], reply["container"], port, [f"{address}:{service_port(nodes)}"])
+        added = di.Node(joined["node_name"], proxy=reply["container"], port=port,
+                        advertised=[f"{address}:{service_port(nodes)}"])
         grown = nodes + [added]
         di.wait_cluster_stable([node.info for node in grown], len(grown))
         wait_for_nodes(client, [node.name for node in grown])
         infos = {node.name: node.info for node in grown}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N19", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N19", infos=infos)
     finally:
         client.close()
 
@@ -382,7 +383,11 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_listener
     names = [node.name for node in nodes]
     seeds = Seeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {"provider": seeds, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
-    client = connect(None, {"provider": "port-map", "port_map": port_map_by_node_name(nodes)}, discovery)
+    client = connect(
+        seed=None,
+        translation={"provider": "port-map", "port_map": port_map_by_node_name(nodes)},
+        discovery=discovery,
+    )
     try:
         wait_for_nodes(client, names)
         assert len(seeds.times) == 1, f"Refreshed at {seeds.times}"
@@ -406,7 +411,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_listener
 
         wait_for_nodes(client, names)
         infos = {node.name: node.info for node in nodes}
-        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, "L2-N12", infos)
+        di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N12", infos=infos)
     finally:
         client.close()
 
@@ -448,8 +453,8 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warni
         assert retried, f"Collision of {a.name} and {b.name} not logged every tend: {warnings}"
         message = di.collisions(warnings, a.name)[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.collision_messages("port-map", a.listener, [a.name, b.name])
-        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, "L2-N18-port-map", {seed.name: seed.info})
+        assert message in di.collision_messages(translator="port-map", endpoint=a.listener, names=[a.name, b.name])
+        di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-port-map", infos={seed.name: seed.info})
     finally:
         client.close()
 
@@ -532,7 +537,11 @@ def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeeds, aeros
         "refresh_interval_ms": TEND_INTERVAL_MS,
         "refresh_timeout_ms": REFRESH_TIMEOUT_MS,
     }
-    client = connect(None, {"provider": "port-map", "port_map": port_map_by_node_name(nodes)}, discovery)
+    client = connect(
+        seed=None,
+        translation={"provider": "port-map", "port_map": port_map_by_node_name(nodes)},
+        discovery=discovery,
+    )
     return seeds, client
 
 
@@ -557,7 +566,7 @@ def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: 
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         assert di.wait_for(seeds.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"
-        commands = assert_commands_work(client, "M-5", BLOCK_SEC)
+        commands = assert_commands_work(client, row="M-5", seconds=BLOCK_SEC)
         assert sorted(di.client_nodes(client)) == sorted(node.name for node in nodes)
         seeds.release.set()
         assert di.wait_for(lambda: len(seeds.contexts) >= 3, JOIN_TIMEOUT_SEC), "No refresh after the release"

@@ -39,6 +39,6 @@ def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_part
             di.assert_at(entry, alternates[0])
 
         assert sorted(advertised.values()) == sorted(node_ports), f"Advertised {advertised}, NodePorts {node_ports}"
-        l3.assert_served(client, SET_NAME, len(node_ports), "L3-K-10")
+        l3.assert_served(client, SET_NAME, size=len(node_ports), row="L3-K-10")
     finally:
         client.close()

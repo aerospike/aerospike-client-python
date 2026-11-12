@@ -20,7 +20,7 @@ def public_names(obj: object) -> list[str]:
 
 
 def helper_modules() -> Iterator[ModuleType]:
-    for info in pkgutil.walk_packages(aerospike_helpers.__path__, "aerospike_helpers."):
+    for info in pkgutil.walk_packages(aerospike_helpers.__path__, prefix="aerospike_helpers."):
         yield importlib.import_module(info.name)
 
 
