@@ -369,12 +369,12 @@ class SeedProvider(SeedCandidateProvider):
 
     def __init__(self, seed: SeedHost) -> None:
         self.seed = seed
-        self.contexts = []
-        self.times = []
+        self.contexts: list[SeedCandidateContext] = []
+        self.refresh_times: list[float] = []
 
     def refresh_seed_candidates(self, context: SeedCandidateContext) -> list[SeedHost]:
         self.contexts.append(context)
-        self.times.append(time.monotonic())
+        self.refresh_times.append(time.monotonic())
         return [self.seed]
 
     def needs_periodic_refresh(self) -> bool:
@@ -396,12 +396,12 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
     )
     try:
         wait_for_nodes(client, names)
-        assert len(provider.times) == 1, f"Refreshed at {provider.times}"
+        assert len(provider.refresh_times) == 1, f"Refreshed at {provider.refresh_times}"
 
         disabled = time.monotonic()
         disable_toxiproxy_listeners(nodes, disabled_toxiproxy_listeners)
         wait_for_no_nodes(client)
-        urgent = di.wait_for(lambda: len(provider.times) >= 2, JOIN_TIMEOUT_SEC)
+        urgent = di.wait_for(lambda: len(provider.refresh_times) >= 2, JOIN_TIMEOUT_SEC)
         assert urgent, "No urgent refresh while the client had no nodes"
 
         enabled = time.monotonic()
@@ -410,7 +410,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
         reseed_ms = (time.monotonic() - enabled) * 1000
         assert reseeded, "The client did not re-seed"
         budget_ms = 2 * TEND_INTERVAL_MS + CONNECT_TIMEOUT_MS
-        refreshes = [t for t in provider.times if t >= disabled]
+        refreshes = [t for t in provider.refresh_times if t >= disabled]
         print(f"L2-N12-RESEED enableToFirstNodeMs={reseed_ms:.0f} budgetMs={budget_ms} "
               f"refreshesInOutage={len(refreshes)}")
         assert len(refreshes) == 1
