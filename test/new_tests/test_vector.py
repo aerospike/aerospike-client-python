@@ -294,12 +294,14 @@ class TestVectorUnit(object):
         with pytest.raises(ValueError, match=rf"^Vector FLOAT16 bit patterns must be in \[0, 65535\]; got {bad}$"):
             Vector.of_float16_bits([0x3C00, bad])
 
+    # CLIENT-5845 test plan: PV-06
     # +infinity, -infinity, a quiet NaN, and a NaN with the sign bit set.
     @pytest.mark.parametrize("bad", [0x7C00, 0xFC00, 0x7E00, 0xFE01])
     def test_nan_inf_rejected_float16_bits(self, bad):
         with pytest.raises(ValueError, match=r"^Vector elements must be finite \(NaN/Infinity not allowed\)$"):
             Vector.of_float16_bits([0x3C00, bad])
 
+    # CLIENT-5845 test plan: PV-06
     def test_float16_bits_bounds_accepted(self):
         # 0x7BFF is the largest finite binary16 value and 0xFBFF its negation.
         assert list(Vector.of_float16_bits([0x0000, 0x7BFF, 0xFBFF]).float16_bits()) == [0x0000, 0x7BFF, 0xFBFF]
