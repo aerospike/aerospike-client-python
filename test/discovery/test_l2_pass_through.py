@@ -187,7 +187,7 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
         assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
         message = di.collisions(warnings, colliding[0])[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
+        assert message in di.expected_collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
         infos = {node.name: node.info for node in nodes}
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-pass-through", infos=infos)
     finally:

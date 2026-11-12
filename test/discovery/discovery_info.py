@@ -390,7 +390,7 @@ def collisions(messages: list[str], name: str) -> list[str]:
     return [message for message in messages if "translated nodes" in message and name in message]
 
 
-def collision_messages(translator: str, endpoint: str, names: Sequence[str]) -> list[str]:
+def expected_collision_messages(translator: str, endpoint: str, names: Sequence[str]) -> list[str]:
     """Return the C client's collision message for two nodes translated to endpoint, in either order."""
     first, second = names
     return [

@@ -207,7 +207,7 @@ def misses(messages: list[str], node_name: str) -> list[str]:
     return [message for message in messages if f"has no mapping for node {node_name}" in message]
 
 
-def miss_message(node_name: str, advertised: str) -> str:
+def expected_miss_message(node_name: str, advertised: str) -> str:
     return (
         f"Address translator port-map has no mapping for node {node_name} advertised address {advertised} "
         "in the standard list. Add a mapping for that endpoint or node, or set translation.on_miss to pass_through"
@@ -238,7 +238,7 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
 
         message = found[0]
         print(f"L2-N8-LOG {message}")
-        assert message in [miss_message(victim.name, advertised) for advertised in victim.advertised]
+        assert message in [expected_miss_message(victim.name, advertised) for advertised in victim.advertised]
         infos = {node.name: node.info for node in mapped}
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N8", infos=infos)
     finally:
@@ -456,7 +456,8 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warni
         assert retried, f"Collision of {a.name} and {b.name} not logged every tend: {warnings}"
         message = di.collisions(warnings, a.name)[0]
         print(f"L2-N18-LOG {message}")
-        assert message in di.collision_messages(translator="port-map", endpoint=a.listener, names=[a.name, b.name])
+        expected = di.expected_collision_messages(translator="port-map", endpoint=a.listener, names=[a.name, b.name])
+        assert message in expected
         di.assert_keys_on_masters_work(client, NAMESPACE, SET_NAME, row="L2-N18-port-map", infos={seed.name: seed.info})
     finally:
         client.close()
@@ -492,7 +493,7 @@ def test_n19_node_outside_range_decided_by_on_miss(
         assert retried, f"Missed node {outside[0]} not retried every tend: {warnings}"
         message = misses(warnings, outside[0])[0]
         print(f"L2-N19-STRICT-LOG {message}")
-        assert message == miss_message(outside[0], advertised)
+        assert message == expected_miss_message(outside[0], advertised)
     finally:
         client.close()
 
