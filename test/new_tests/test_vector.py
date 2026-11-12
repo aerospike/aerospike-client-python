@@ -7,6 +7,7 @@ import sys
 from enum import IntEnum
 from typing import Optional
 
+import numpy as np
 import pytest
 
 import aerospike
@@ -133,15 +134,13 @@ class TestVectorUnit(object):
             Vector.of_float32([0.1]).float16_bits()
 
     @staticmethod
-    def _finite_float16_array(np):
+    def _finite_float16_array() -> np.ndarray:
         every_float16 = np.arange(0x10000, dtype=np.uint16).view(np.float16)
         return every_float16[np.isfinite(every_float16)]
 
     # CLIENT-5845 test plan: PV-03
-    # NumPy and PyTorch aren't test dependencies, so these run only where they are installed.
     def test_numpy_arrays_round_trip_bit_for_bit(self):
-        np = pytest.importorskip("numpy")
-        source = self._finite_float16_array(np)
+        source = self._finite_float16_array()
         vector = Vector.of_float16(source)
         assert vector.element_bytes() == source.tobytes()
         assert np.array_equal(np.frombuffer(vector.float16_bits(), dtype=np.uint16), source.view(np.uint16))
@@ -153,10 +152,10 @@ class TestVectorUnit(object):
             assert getattr(Vector, factory)(array).element_bytes() == array.astype(f"<{array.dtype.char}").tobytes()
 
     # CLIENT-5845 test plan: PV-03
+    # PyTorch isn't in test/requirements.txt, so this runs only where it is installed.
     def test_torch_float16_tensor_round_trips_bit_for_bit(self):
-        np = pytest.importorskip("numpy")
         torch = pytest.importorskip("torch")
-        source = self._finite_float16_array(np)
+        source = self._finite_float16_array()
         assert Vector.of_float16(torch.from_numpy(source)).element_bytes() == source.tobytes()
 
     def test_wire_format_header(self):
