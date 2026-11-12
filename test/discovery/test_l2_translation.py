@@ -99,7 +99,7 @@ def enable_listeners(disabled_listeners: list[str]) -> None:
 
 def assert_port_map_joins(row: str, nodes: list[di.Node], port_map: dict[str, str]) -> None:
     print(f"L2-PORT-MAP {row} {port_map}")
-    client = connect(nodes[0], {"provider": "port-map", "port_map": port_map})
+    client = connect(seed=nodes[0], translation={"provider": "port-map", "port_map": port_map})
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         held = di.client_nodes(client)
@@ -174,7 +174,7 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
     others = nodes[:-1]
     names = [node.name for node in nodes]
     victim_partitions = di.master_partitions(victim.info, NAMESPACE)
-    client = connect(nodes[0], {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)})
+    client = connect(seed=nodes[0], translation={"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)})
     try:
         wait_for_nodes(client, names)
         victim_keys = []
@@ -224,7 +224,10 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
     mapped = nodes[:-1]
     mapped_names = sorted(node.name for node in mapped)
 
-    client = connect(nodes[0], {"provider": "port-map", "port_map": di.port_map_by_endpoint(mapped), "on_miss": "strict"})
+    client = connect(
+        seed=nodes[0],
+        translation={"provider": "port-map", "port_map": di.port_map_by_endpoint(mapped), "on_miss": "strict"},
+    )
     try:
         wait_for_nodes(client, mapped_names)
         retried = di.wait_for(lambda: len(misses(warnings, victim.name)) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
@@ -256,7 +259,7 @@ def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.Node], warnin
     assert advertised not in port_map
     print(f"L2-N10-ADVERTISED node={reachable.name} container={container} advertised={reachable.advertised}")
 
-    client = connect(mapped[0], {"provider": "port-map", "port_map": port_map})
+    client = connect(seed=mapped[0], translation={"provider": "port-map", "port_map": port_map})
     try:
         wait_for_nodes(client, [node.name for node in nodes])
         held = di.client_nodes(client)
@@ -328,7 +331,7 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
     observer = nodes[0]
     names = [node.name for node in nodes]
     port_map = range_port_map(nodes)
-    client = connect(observer, {"provider": "port-map", "port_map": port_map})
+    client = connect(seed=observer, translation={"provider": "port-map", "port_map": port_map})
     try:
         wait_for_nodes(client, names)
         assert warnings == []
@@ -442,7 +445,7 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warni
     for advertised in b.advertised:
         port_map[advertised] = a.listener
 
-    client = connect(seed, {"provider": "port-map", "port_map": port_map})
+    client = connect(seed=seed, translation={"provider": "port-map", "port_map": port_map})
     try:
 
         def logged() -> bool:
@@ -481,7 +484,7 @@ def test_n19_node_outside_range_decided_by_on_miss(
     assert len(outside) == 1, f"Nodes advertising {advertised}: {outside}"
     assert advertised not in port_map
 
-    client = connect(observer, {"provider": "port-map", "port_map": port_map, "on_miss": "strict"})
+    client = connect(seed=observer, translation={"provider": "port-map", "port_map": port_map, "on_miss": "strict"})
     try:
         wait_for_nodes(client, names)
         retried = di.wait_for(lambda: len(misses(warnings, outside[0])) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
@@ -495,7 +498,7 @@ def test_n19_node_outside_range_decided_by_on_miss(
 
     warnings.clear()
     tried = f"Failed to connect to peer {address} {service_port(nodes)}."
-    client = connect(observer, {"provider": "port-map", "port_map": port_map})
+    client = connect(seed=observer, translation={"provider": "port-map", "port_map": port_map})
     try:
         wait_for_nodes(client, names)
 

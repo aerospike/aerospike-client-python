@@ -203,11 +203,11 @@ def seed() -> tuple[str, int]:
     return endpoint(), ports[0]
 
 
-def connect(host: tuple, **options: Any) -> aerospike.Client:
-    """Connect through host, a (hostname, port) or (hostname, port, tls-name) tuple, reading the
+def connect(seed: tuple, **options: Any) -> aerospike.Client:
+    """Connect through seed, a (hostname, port) or (hostname, port, tls-name) tuple, reading the
     alternate list with no translator."""
     config = {
-        "hosts": [host],
+        "hosts": [seed],
         "user": "admin",
         "password": os.environ["AEROSPIKE_ADMIN_PASSWORD"],
         "use_services_alternate": True,
@@ -218,12 +218,12 @@ def connect(host: tuple, **options: Any) -> aerospike.Client:
     return aerospike.client(config)
 
 
-def connect_when_ready(host: tuple, **options: Any) -> aerospike.Client:
-    """Connect through host, retrying while the seed does not accept connections yet."""
+def connect_when_ready(seed: tuple, **options: Any) -> aerospike.Client:
+    """Connect through seed, retrying while the seed does not accept connections yet."""
     deadline = time.monotonic() + ROUTING_TIMEOUT_SEC
     while True:
         try:
-            return connect(host, **options)
+            return connect(seed, **options)
         except aerospike.exception.AerospikeError:
             if time.monotonic() >= deadline:
                 raise

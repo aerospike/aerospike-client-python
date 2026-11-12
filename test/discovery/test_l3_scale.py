@@ -240,7 +240,7 @@ def assert_pinned_seed(cluster: l3.Cluster, step: str, service: str, port: int, 
     ready = di.wait_for(lambda: cluster.ready_endpoints(service) > 0, l3.ROUTING_TIMEOUT_SEC, interval=0.5)
     assert ready, f"{service} has no ready endpoint within {l3.ROUTING_TIMEOUT_SEC} s"
 
-    client = l3.connect_when_ready((l3.endpoint(), pinned))
+    client = l3.connect_when_ready(seed=(l3.endpoint(), pinned))
     try:
         held = l3.wait_for_size(client, size)
         pods = cluster.pods()

@@ -92,7 +92,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
     first = nodes[0]
     assert first.tls_name != host, f"tls-name {first.tls_name} is the endpoint hostname"
 
-    client = connect(nodes, first, first.tls_name)
+    client = connect(nodes, seed=first, tls_name=first.tls_name)
     try:
         di.wait_for_nodes(client, [node.name for node in nodes], JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
         held = di.client_nodes(client)
@@ -106,7 +106,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
     assert di.legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        connect(nodes, first, tls_name=host)
+        connect(nodes, seed=first, tls_name=host)
     print(f"L2-N6-ERROR {raised.value}")
     assert f"TLS name '{host}' mismatch" in warnings
 
@@ -124,7 +124,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
 def test_n17_cn_only_certificate_is_rejected(nodes: list[Node], warnings: list[str]) -> None:
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        client = connect(nodes, first, first.tls_name)
+        client = connect(nodes, seed=first, tls_name=first.tls_name)
         print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={di.legacy_matches(warnings)}")
         client.close()
         assert di.legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"

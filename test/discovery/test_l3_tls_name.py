@@ -73,7 +73,7 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
 
     tls = {"enable": True, "cafile": os.environ["DISCOVERY_TLS_CA_FILE"]}
     seed_port = cluster.node_port(pods[0].name, tls_port)
-    client = l3.connect((endpoint, seed_port, tls_name), tls=tls)
+    client = l3.connect(seed=(endpoint, seed_port, tls_name), tls=tls)
     try:
         held = l3.wait_for_size(client, len(pods))
         matched = set()
@@ -105,7 +105,7 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
     assert di.legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
-        client = l3.connect((endpoint, seed_port, endpoint), tls=tls)
+        client = l3.connect(seed=(endpoint, seed_port, endpoint), tls=tls)
         print(f"L3-TLS-FQDN-ACCEPTED nodes={sorted(di.client_nodes(client))}")
         client.close()
     print(f"L3-TLS-FQDN-REJECTED seed={endpoint}:{seed_port} tls-name={endpoint} error={raised.value!r}")
