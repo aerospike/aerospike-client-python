@@ -63,8 +63,8 @@ A vector similarity search has these steps:
    :attr:`Query.top_k <aerospike.Query.top_k>`.
 
 Order the results in the direction that puts the best matches first:
-:attr:`~aerospike.QueryOrder.ASCENDING` for ``EUCLIDEAN_SQUARED``, and
-:attr:`~aerospike.QueryOrder.DESCENDING` for ``DOT_PRODUCT`` and ``COSINE_SIMILARITY``. This
+:attr:`~aerospike.Query.Order.ASC` for ``EUCLIDEAN_SQUARED``, and
+:attr:`~aerospike.Query.Order.DESC` for ``DOT_PRODUCT`` and ``COSINE_SIMILARITY``. This
 is also described in :class:`~aerospike_helpers.expressions.vector.VectorDistanceMetric`.
 
 .. seealso::

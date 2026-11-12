@@ -1627,6 +1627,19 @@ CLEANUP:
     return err->code;
 }
 
+// Copies all of the buffer's bytes, so a key isn't cut at a zero byte. The key
+// stays a string key so that a key without a zero byte keeps its digest.
+static as_key *init_key_with_string(as_key *key, const char *ns,
+                                    const char *set, const char *buffer,
+                                    Py_ssize_t size)
+{
+    char *value = malloc(size + 1);
+    memcpy(value, buffer, size);
+    value[size] = '\0';
+    as_string_init_wlen((as_string *)&key->value, value, size, true);
+    return as_key_init_value(key, ns, set, &key->value);
+}
+
 as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 {
     as_error_reset(err);
@@ -1698,13 +1711,15 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     if (py_key && py_key != Py_None) {
         // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
-            PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
-            char *k = PyBytes_AsString(py_ustr);
-            // free flag has to be true. Because, we are creating a new memory
-            // for a primary key string using strdup()
-            // This memory is destroyed when we call as_key_destroy()
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
-            Py_DECREF(py_ustr);
+            Py_ssize_t key_size = 0;
+            const char *key_buffer = PyUnicode_AsUTF8AndSize(py_key, &key_size);
+            if (!key_buffer) {
+                PyErr_Clear();
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "key is not encodable as UTF-8");
+            }
+            returnResult =
+                init_key_with_string(key, ns, set, key_buffer, key_size);
         }
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
@@ -1728,9 +1743,16 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
                 returnResult = as_key_init_raw(key, ns, set, byte_array, sz);
             }
         }
+        else if (is_pyobj_correct_as_helpers_type(py_key, NULL, "Vector",
+                                                  false)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Invalid key type: Vector");
+        }
         else if (PyBytes_Check(py_key)) {
-            char *k = PyBytes_AsString(py_key);
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
+            Py_ssize_t key_size = PyBytes_Size(py_key);
+            const char *key_buffer = PyBytes_AsString(py_key);
+            returnResult =
+                init_key_with_string(key, ns, set, key_buffer, key_size);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
@@ -2123,14 +2145,12 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
         }
         case AS_STRING: {
             as_string *sval = as_string_fromval(val);
-            py_key = PyUnicode_FromString(as_string_get(sval));
+            char *key_value = as_string_get(sval);
+            size_t key_size = as_string_len(sval);
+            py_key = PyUnicode_DecodeUTF8(key_value, key_size, NULL);
             if (!py_key) {
-                py_key = PyUnicode_DecodeUTF8(as_string_get(sval),
-                                              as_string_len(sval), NULL);
                 PyErr_Clear();
-            }
-            if (!py_key) {
-                py_key = PyBytes_FromString(as_string_get(sval));
+                py_key = PyBytes_FromStringAndSize(key_value, key_size);
             }
             if (!py_key) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
