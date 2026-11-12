@@ -25,13 +25,13 @@ class TestQueryTopKValidation:
 
     def test_order_by_bin_name_with_nul(self, query):
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+            query.order_by("a\0b", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         assert excinfo.value.msg == "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"
 
     # 8 two-byte characters is 16 UTF-8 bytes.
     @pytest.mark.parametrize("bin_name", ["", "a" * 16, "é" * 8])
     def test_order_by_invalid_bin_name_length(self, query, bin_name):
-        query.order_by(bin_name, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(bin_name, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -39,7 +39,7 @@ class TestQueryTopKValidation:
 
     def test_order_by_bin_name_must_be_str(self, query):
         with pytest.raises(TypeError, match=r"^order_by\(\) argument 1 must be str, not bytes$"):
-            query.order_by(b"score", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+            query.order_by(b"score", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
 
     def test_order_by_missing_type(self, query):
         with pytest.raises(e.ParamError) as excinfo:
@@ -53,11 +53,11 @@ class TestQueryTopKValidation:
             (0, TYPE_REQUIRED_MSG),
             (9, "orderBy type must be INTEGER, DOUBLE, or BYTES; got 9"),
             (-1, "orderBy type must be INTEGER, DOUBLE, or BYTES; got -1"),
-            (aerospike.QueryOrderByType.STRING, "orderBy type STRING is not supported yet; use INTEGER, DOUBLE, or BYTES"),
+            (aerospike.Query.BinDataType.STRING, "orderBy type STRING is not supported yet; use INTEGER, DOUBLE, or BYTES"),
         ],
     )
     def test_order_by_invalid_type(self, query, bin_type, expected_msg):
-        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, bin_type, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -66,25 +66,25 @@ class TestQueryTopKValidation:
     @pytest.mark.parametrize("bin_type", [2**32 + 1, -(2**31) - 1])
     def test_order_by_type_out_of_range(self, query, bin_type):
         with pytest.raises(OverflowError, match=r"^Python int too large to convert to C int$"):
-            query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING)
+            query.order_by(BIN, bin_type, aerospike.Query.Order.ASC)
 
     @pytest.mark.parametrize("direction", [2**32, -(2**31) - 1])
     def test_order_by_direction_out_of_range(self, query, direction):
         with pytest.raises(OverflowError, match=r"^Python int too large to convert to C int$"):
-            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, direction)
+            query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, direction)
 
     def test_order_by_type_must_be_int(self, query):
         with pytest.raises(TypeError, match=r"^order_by\(\) argument 2 must be int, not str$"):
-            query.order_by(BIN, "INTEGER", aerospike.QueryOrder.ASCENDING)
+            query.order_by(BIN, "INTEGER", aerospike.Query.Order.ASC)
 
     def test_order_by_missing_direction(self, query):
         with pytest.raises(e.ParamError) as excinfo:
-            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER)
+            query.order_by(BIN, aerospike.Query.BinDataType.INTEGER)
         assert excinfo.value.msg == "orderBy direction must be ASC or DESC"
 
     @pytest.mark.parametrize("direction", [2, -1])
     def test_order_by_invalid_direction(self, query, direction):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, direction)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, direction)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -94,11 +94,11 @@ class TestQueryTopKValidation:
     # requiring STRING.
     @pytest.mark.parametrize(
         "bin_type",
-        [aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrderByType.BYTES],
+        [aerospike.Query.BinDataType.INTEGER, aerospike.Query.BinDataType.DOUBLE, aerospike.Query.BinDataType.BYTES],
     )
     @pytest.mark.parametrize("flags", [aerospike.QueryOrderByFlags.CASE_INSENSITIVE, 2, -1])
     def test_order_by_flags_require_string(self, query, bin_type, flags):
-        query.order_by(BIN, bin_type, aerospike.QueryOrder.ASCENDING, flags)
+        query.order_by(BIN, bin_type, aerospike.Query.Order.ASC, flags)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -110,23 +110,23 @@ class TestQueryTopKValidation:
             OverflowError,
             match=r"^(signed integer is greater than maximum|Python int too large to convert to C long)$",
         ):
-            query.order_by(BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, 2**32 + 1)
+            query.order_by(BIN, aerospike.Query.BinDataType.STRING, aerospike.Query.Order.ASC, 2**32 + 1)
 
     def test_order_by_string_flags_accepted(self, query):
         returned = query.order_by(
-            BIN, aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.DESCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE
+            BIN, aerospike.Query.BinDataType.STRING, aerospike.Query.Order.DESC, aerospike.QueryOrderByFlags.CASE_INSENSITIVE
         )
         assert returned is query
 
     def test_order_by_again_keeps_top_k(self, query):
         query.top_k = 10
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        query.order_by("other", aerospike.QueryOrderByType.DOUBLE, aerospike.QueryOrder.DESCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
+        query.order_by("other", aerospike.Query.BinDataType.DOUBLE, aerospike.Query.Order.DESC)
         assert query.top_k == 10
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_out_of_range(self, query, api_method, args):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 1001
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
@@ -134,7 +134,7 @@ class TestQueryTopKValidation:
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_zero(self, query, api_method, args):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 0
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
@@ -162,13 +162,13 @@ class TestQueryTopKValidation:
 
     @pytest.mark.usefixtures("skip_if_server_older_than_8_2_1")
     def test_order_by_without_top_k_is_left_to_the_server(self, query):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         with pytest.raises(e.InvalidRequest):
             query.results()
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_top_k_with_max_records(self, query, api_method, args):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         query.max_records = 100
         with pytest.raises(e.ParamError) as excinfo:
@@ -177,7 +177,7 @@ class TestQueryTopKValidation:
 
     def test_top_k_on_background_query(self, query):
         query.add_ops([operations.write("bin", 1)])
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.execute_background()
@@ -188,7 +188,7 @@ class TestQueryTopKValidation:
 
     def test_top_k_with_aggregate_udf(self, query):
         query.apply("stream_example", "count")
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -219,7 +219,7 @@ class TestQueryTopKValidation:
         ],
     )
     def test_top_k_with_resumed_partition_filter(self, query, partition_filter):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             query.results({"partition_filter": partition_filter})
@@ -227,7 +227,7 @@ class TestQueryTopKValidation:
 
     def test_order_by_bin_not_in_select_projection(self, query):
         query.select("report", "location")
-        query.order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by("occurred", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -237,7 +237,7 @@ class TestQueryTopKValidation:
 
     def test_order_by_bin_not_in_ops_projection(self, query):
         query.add_ops([operations.read("report")])
-        query.order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by("occurred", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -247,7 +247,7 @@ class TestQueryTopKValidation:
 
     def test_order_by_bin_produced_by_more_than_one_op(self, query):
         query.add_ops([operations.read("occurred"), operations.read("occurred")])
-        query.order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by("occurred", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -256,23 +256,23 @@ class TestQueryTopKValidation:
         )
 
     def test_then_order_by_returns_query(self, query):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         returned = query.then_order_by(
-            "name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING, aerospike.QueryOrderByFlags.CASE_INSENSITIVE
+            "name", aerospike.Query.BinDataType.STRING, aerospike.Query.Order.ASC, aerospike.QueryOrderByFlags.CASE_INSENSITIVE
         )
         assert returned is query
 
     @pytest.mark.parametrize(
         "args, expected_msg",
         [
-            (("a\0b", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
+            (("a\0b", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
             (("ts",), TYPE_REQUIRED_MSG),
-            (("ts", aerospike.QueryOrderByType.INTEGER), "orderBy direction must be ASC or DESC"),
+            (("ts", aerospike.Query.BinDataType.INTEGER), "orderBy direction must be ASC or DESC"),
         ],
     )
     def test_then_order_by_invalid_args(self, query, args, expected_msg):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         with pytest.raises(e.ParamError) as excinfo:
             query.then_order_by(*args)
         assert excinfo.value.msg == expected_msg
@@ -280,17 +280,17 @@ class TestQueryTopKValidation:
     @pytest.mark.parametrize(
         "args, expected_msg",
         [
-            (("a" * 16, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING),
+            (("a" * 16, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC),
              "Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL"),
-            (("ts", 9, aerospike.QueryOrder.ASCENDING), "orderBy type must be INTEGER, DOUBLE, or BYTES; got 9"),
-            (("ts", aerospike.QueryOrderByType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
-            (("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING,
+            (("ts", 9, aerospike.Query.Order.ASC), "orderBy type must be INTEGER, DOUBLE, or BYTES; got 9"),
+            (("ts", aerospike.Query.BinDataType.INTEGER, 2), "orderBy direction must be ASC or DESC"),
+            (("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC,
               aerospike.QueryOrderByFlags.CASE_INSENSITIVE),
              "orderBy flags are only valid with type STRING"),
         ],
     )
     def test_then_order_by_invalid_key_at_execution(self, query, args, expected_msg):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.then_order_by(*args)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
@@ -303,19 +303,19 @@ class TestQueryTopKValidation:
 
     @pytest.mark.parametrize("api_method, args", [("results", []), ("foreach", [noop_callback])])
     def test_then_order_by_third_key(self, query, api_method, args):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        query.then_order_by("name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
+        query.then_order_by("name", aerospike.Query.BinDataType.STRING, aerospike.Query.Order.ASC)
         query.top_k = 10
         with pytest.raises(e.ParamError) as excinfo:
             getattr(query, api_method)(*args)
         assert excinfo.value.msg == "orderBy supports at most two keys"
 
     def test_order_by_replaces_both_keys(self, query):
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
-        query.then_order_by("name", aerospike.QueryOrderByType.STRING, aerospike.QueryOrder.ASCENDING)
-        query.order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
+        query.then_order_by("name", aerospike.Query.BinDataType.STRING, aerospike.Query.Order.ASC)
+        query.order_by("occurred", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         query.select("occurred")
         query.top_k = 10
         # The key count error is gone, and "ts" no longer has to be in the projection.
@@ -327,9 +327,9 @@ class TestQueryTopKValidation:
     @pytest.mark.parametrize("order_by_later", [False, True])
     @pytest.mark.parametrize("top_k", [None, 20])
     def test_then_order_by_before_order_by(self, query, order_by_later, top_k):
-        query.then_order_by("occurred", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+        query.then_order_by("occurred", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         if order_by_later:
-            query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
+            query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
         if top_k is not None:
             query.top_k = top_k
         with pytest.raises(e.ParamError) as excinfo:
@@ -338,8 +338,8 @@ class TestQueryTopKValidation:
 
     def test_then_order_by_bin_not_in_projection(self, query):
         query.select(BIN)
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 20
         with pytest.raises(e.ParamError) as excinfo:
             query.results()
@@ -364,8 +364,8 @@ class TestQueryTopKIntegration:
 
     def test_then_order_by_breaks_ties(self):
         query = self.as_connection.query("test", self.SET_NAME)
-        query.order_by(BIN, aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.DESCENDING)
-        query.then_order_by("ts", aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrder.ASCENDING)
+        query.order_by(BIN, aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.DESC)
+        query.then_order_by("ts", aerospike.Query.BinDataType.INTEGER, aerospike.Query.Order.ASC)
         query.top_k = 3
         records = query.results()
         ordered = [(bins[BIN], bins["ts"]) for _, _, bins in records]
@@ -389,13 +389,13 @@ class TestQueryTopKBytes:
     @pytest.mark.parametrize(
         "direction, expected",
         [
-            (aerospike.QueryOrder.ASCENDING, [b"\x00\x05", b"\x01", b"\x01\xff", b"\x02", 7]),
-            (aerospike.QueryOrder.DESCENDING, [b"\x02", b"\x01\xff", b"\x01", b"\x00\x05", 7]),
+            (aerospike.Query.Order.ASC, [b"\x00\x05", b"\x01", b"\x01\xff", b"\x02", 7]),
+            (aerospike.Query.Order.DESC, [b"\x02", b"\x01\xff", b"\x01", b"\x00\x05", 7]),
         ],
     )
     def test_order_by_bytes(self, direction, expected):
         query = self.as_connection.query("test", self.SET_NAME)
-        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.order_by(BIN, aerospike.Query.BinDataType.BYTES, direction)
         query.top_k = len(self.VALUES)
         records = query.results()
         assert [bins[BIN] for _, _, bins in records] == expected
@@ -424,13 +424,13 @@ class TestQueryTopKBytesWithVectorAndHll:
     @pytest.mark.parametrize(
         "direction, expected",
         [
-            (aerospike.QueryOrder.ASCENDING, [b"\x00\x05", b"\x01", b"\x02"]),
-            (aerospike.QueryOrder.DESCENDING, [b"\x02", b"\x01", b"\x00\x05"]),
+            (aerospike.Query.Order.ASC, [b"\x00\x05", b"\x01", b"\x02"]),
+            (aerospike.Query.Order.DESC, [b"\x02", b"\x01", b"\x00\x05"]),
         ],
     )
     def test_vector_and_hll_sort_as_nil(self, direction, expected):
         query = self.as_connection.query("test", self.SET_NAME)
-        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.order_by(BIN, aerospike.Query.BinDataType.BYTES, direction)
         query.top_k = len(self.keys)
         records = query.results()
         values = [bins[BIN] for _, _, bins in records]
@@ -442,10 +442,10 @@ class TestQueryTopKBytesWithVectorAndHll:
         nil_digests = [key[3] for key, _, _ in records[len(expected):]]
         assert nil_digests == sorted(nil_digests)
 
-    @pytest.mark.parametrize("direction", [aerospike.QueryOrder.ASCENDING, aerospike.QueryOrder.DESCENDING])
+    @pytest.mark.parametrize("direction", [aerospike.Query.Order.ASC, aerospike.Query.Order.DESC])
     def test_top_k_of_plain_blobs_skips_vector_and_hll(self, direction):
         query = self.as_connection.query("test", self.SET_NAME)
-        query.order_by(BIN, aerospike.QueryOrderByType.BYTES, direction)
+        query.order_by(BIN, aerospike.Query.BinDataType.BYTES, direction)
         query.top_k = len(self.BLOBS)
         values = [bins[BIN] for _, _, bins in query.results()]
         assert [type(value) for value in values] == [bytes] * len(self.BLOBS)

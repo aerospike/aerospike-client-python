@@ -1074,39 +1074,13 @@ void aerospike_free(void *self)
     Py_XDECREF(py_global_hosts);
 }
 
-struct int_enum_member {
-    const char *name;
-    long value;
-};
-
-struct int_enum_def {
-    const char *name;
-    // Ends with a {NULL} member.
-    const struct int_enum_member *members;
-};
-
-static const struct int_enum_member query_order_by_type_members[] = {
-    {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
-    {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
-    {"STRING", AS_QUERY_ORDER_BY_STRING},
-    {"BYTES", AS_QUERY_ORDER_BY_BYTES},
-    {NULL}};
-
-static const struct int_enum_member query_order_members[] = {
-    {"ASCENDING", AS_ORDER_ASCENDING},
-    {"DESCENDING", AS_ORDER_DESCENDING},
-    {NULL}};
-
 static const struct int_enum_member query_order_by_flags_members[] = {
     {"DEFAULT", AS_QUERY_ORDER_BY_FLAGS_DEFAULT},
     {"CASE_INSENSITIVE", AS_QUERY_ORDER_BY_CASE_INSENSITIVE},
     {NULL}};
 
 static const struct int_enum_def query_order_enums[] = {
-    {"QueryOrderByType", query_order_by_type_members},
-    {"QueryOrder", query_order_members},
-    {"QueryOrderByFlags", query_order_by_flags_members},
-};
+    {"QueryOrderByFlags", query_order_by_flags_members}, {NULL}};
 
 static int set_int_enum_member(PyObject *py_members,
                                const struct int_enum_member *member)
@@ -1142,7 +1116,33 @@ static PyObject *create_int_enum_members(const struct int_enum_def *enum_def)
     return py_members;
 }
 
-static PyObject *create_int_enum(const struct int_enum_def *enum_def)
+static PyObject *create_int_enum_kwargs(const char *owner_name,
+                                        const char *enum_name)
+{
+    PyObject *py_kwargs =
+        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    if (py_kwargs == NULL || owner_name == NULL) {
+        return py_kwargs;
+    }
+
+    PyObject *py_qualname =
+        PyUnicode_FromFormat("%s.%s", owner_name, enum_name);
+    if (py_qualname == NULL) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+
+    int retval = PyDict_SetItemString(py_kwargs, "qualname", py_qualname);
+    Py_DECREF(py_qualname);
+    if (retval == -1) {
+        Py_DECREF(py_kwargs);
+        return NULL;
+    }
+    return py_kwargs;
+}
+
+static PyObject *create_int_enum(const char *owner_name,
+                                 const struct int_enum_def *enum_def)
 {
     PyObject *py_members = create_int_enum_members(enum_def);
     if (py_members == NULL) {
@@ -1169,8 +1169,7 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
         return NULL;
     }
 
-    PyObject *py_kwargs =
-        Py_BuildValue("{s:s}", "module", AEROSPIKE_MODULE_NAME);
+    PyObject *py_kwargs = create_int_enum_kwargs(owner_name, enum_def->name);
     if (py_kwargs == NULL) {
         Py_DECREF(py_args);
         Py_DECREF(py_int_enum);
@@ -1184,20 +1183,19 @@ static PyObject *create_int_enum(const struct int_enum_def *enum_def)
     return py_enum_cls;
 }
 
-static int add_query_order_enums(PyObject *py_module)
+int add_int_enums(PyObject *py_dict, const char *owner_name,
+                  const struct int_enum_def *enum_defs)
 {
-    size_t enum_count =
-        sizeof(query_order_enums) / sizeof(query_order_enums[0]);
-    for (size_t i = 0; i < enum_count; i++) {
-        const struct int_enum_def *enum_def = &query_order_enums[i];
-        PyObject *py_enum_cls = create_int_enum(enum_def);
+    for (const struct int_enum_def *enum_def = enum_defs;
+         enum_def->name != NULL; enum_def++) {
+        PyObject *py_enum_cls = create_int_enum(owner_name, enum_def);
         if (py_enum_cls == NULL) {
             return -1;
         }
 
-        int retval = PyModule_AddObject(py_module, enum_def->name, py_enum_cls);
+        int retval = PyDict_SetItemString(py_dict, enum_def->name, py_enum_cls);
+        Py_DECREF(py_enum_cls);
         if (retval == -1) {
-            Py_DECREF(py_enum_cls);
             return -1;
         }
     }
@@ -1282,7 +1280,12 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
-    retval = add_query_order_enums(py_aerospike_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_aerospike_module);
+    if (py_module_dict == NULL) {
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
+    }
+
+    retval = add_int_enums(py_module_dict, NULL, query_order_enums);
     if (retval == -1) {
         goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }

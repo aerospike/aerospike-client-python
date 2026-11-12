@@ -62,10 +62,10 @@ PyDoc_STRVAR(order_by_doc, "order_by(bin, type, direction[, flags])\n\
 Set the ORDER BY clause for a Top-K query (``ORDER BY <bin> LIMIT k``). \
 Calling order_by() again replaces the order keys, including one from then_order_by(), \
 and keeps ``top_k``. \
-``type`` is aerospike.QueryOrderByType.INTEGER, aerospike.QueryOrderByType.DOUBLE, or \
-aerospike.QueryOrderByType.BYTES (STRING is not supported yet), ``direction`` is aerospike.QueryOrder.ASCENDING \
-or aerospike.QueryOrder.DESCENDING, and ``flags`` is an aerospike.QueryOrderByFlags value \
-(default aerospike.QueryOrderByFlags.DEFAULT, valid only for QueryOrderByType.STRING). \
+``type`` is aerospike.Query.BinDataType.INTEGER, aerospike.Query.BinDataType.DOUBLE, or \
+aerospike.Query.BinDataType.BYTES (STRING is not supported yet), ``direction`` is aerospike.Query.Order.ASC \
+or aerospike.Query.Order.DESC, and ``flags`` is an aerospike.QueryOrderByFlags value \
+(default aerospike.QueryOrderByFlags.DEFAULT, valid only for Query.BinDataType.STRING). \
 Must be paired with ``top_k`` in [1, 1000]. Invalid combinations raise \
 aerospike.exception.ParamError before the query is sent.");
 
@@ -363,12 +363,38 @@ PyTypeObject AerospikeQuery_Type = {
     0                                   // tp_bases
 };
 
+static const struct int_enum_member bin_data_type_members[] = {
+    {"INTEGER", AS_QUERY_ORDER_BY_INTEGER},
+    {"DOUBLE", AS_QUERY_ORDER_BY_DOUBLE},
+    {"STRING", AS_QUERY_ORDER_BY_STRING},
+    {"BYTES", AS_QUERY_ORDER_BY_BYTES},
+    {NULL}};
+
+static const struct int_enum_member order_members[] = {
+    {"ASC", AS_ORDER_ASCENDING}, {"DESC", AS_ORDER_DESCENDING}, {NULL}};
+
+static const struct int_enum_def query_enums[] = {
+    {"BinDataType", bin_data_type_members}, {"Order", order_members}, {NULL}};
+
 /*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
 PyTypeObject *AerospikeQuery_Ready()
 {
+    // PyType_Ready() keeps the attributes already in tp_dict.
+    PyObject *py_type_dict = PyDict_New();
+    if (py_type_dict == NULL) {
+        return NULL;
+    }
+
+    int retval = add_int_enums(py_type_dict, "Query", query_enums);
+    if (retval == -1) {
+        Py_DECREF(py_type_dict);
+        return NULL;
+    }
+    AerospikeQuery_Type.tp_dict = py_type_dict;
+
     return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
                                                    : NULL;
 }
