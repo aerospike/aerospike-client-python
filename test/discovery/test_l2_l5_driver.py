@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from typing import Any, Callable, Iterator
 
 import pytest
 
@@ -26,7 +27,7 @@ PARTITIONS = 4096
 class DriverProcess:
     """The driver with its stdout read on a thread, one JSON object per line."""
 
-    def __init__(self, seed):
+    def __init__(self, seed: str) -> None:
         command = [sys.executable, str(DRIVER), "--seed", seed, "--shape", "pass-through", "--tend-interval", "250",
                    "--timeout", "1000", "--namespace", "test", "--set", "l5-driver"]
         self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
@@ -35,16 +36,16 @@ class DriverProcess:
         self.reader = threading.Thread(target=self.read, daemon=True)
         self.reader.start()
 
-    def read(self):
+    def read(self) -> None:
         for line in self.process.stdout:
             self.lines.put(line)
         self.lines.put(None)
 
-    def send(self, command):
+    def send(self, command: str) -> None:
         self.process.stdin.write(command + "\n")
         self.process.stdin.flush()
 
-    def wait_for(self, matches):
+    def wait_for(self, matches: Callable[[dict[str, Any]], bool]) -> dict[str, Any]:
         """Return the first message from now on that matches, failing after REPLY_TIMEOUT_SEC."""
         deadline = time.monotonic() + REPLY_TIMEOUT_SEC
         while True:
@@ -58,14 +59,14 @@ class DriverProcess:
             if matches(message):
                 return message
 
-    def quit(self):
+    def quit(self) -> int:
         self.send("quit")
         self.process.stdin.close()
         return self.process.wait(QUIT_TIMEOUT_SEC)
 
 
 @pytest.fixture
-def advertised():
+def advertised() -> dict[str, tuple[str, int]]:
     """Each node's name and the one alternate (host, port) it advertises."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     found = {}
@@ -78,7 +79,7 @@ def advertised():
 
 
 @pytest.fixture
-def driver(advertised):
+def driver(advertised: dict[str, tuple[str, int]]) -> Iterator[DriverProcess]:
     name = sorted(advertised)[0]
     host, port = advertised[name]
     process = DriverProcess(f"{host}:{port}")
@@ -88,11 +89,11 @@ def driver(advertised):
 
 
 @pytest.mark.l2("pass-through-ports")
-def test_l5_driver_routes_serves_and_watches(advertised, driver):
+def test_l5_driver_routes_serves_and_watches(advertised: dict[str, tuple[str, int]], driver: DriverProcess) -> None:
     ready = driver.wait_for(lambda message: message["type"] == "ready")
     assert (ready["contract"], ready["client"], ready["shape"]) == (1, "python", "pass-through")
 
-    def routed(message):
+    def routed(message: dict[str, Any]) -> bool:
         if message["type"] != "snapshot":
             return False
         held = {node["name"]: node for node in message["nodes"]}

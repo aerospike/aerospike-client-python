@@ -1,4 +1,5 @@
 import os
+from typing import Iterator
 
 import pytest
 
@@ -7,11 +8,11 @@ import discovery_info as di
 
 
 @pytest.fixture
-def warnings():
+def warnings() -> Iterator[list[str]]:
     """Collect the client's warning and error log messages."""
     messages = []
 
-    def log(level, function, path, line, message):
+    def log(level: int, function: str, path: str, line: int, message: str) -> None:
         messages.append(message)
         print(f"CLIENT-LOG {level} {message}")
 
@@ -23,7 +24,7 @@ def warnings():
 
 
 @pytest.fixture
-def added_nodes(nodes):
+def added_nodes(nodes: list[di.Node]) -> Iterator[list[str]]:
     """Collect the containers a test starts through the node server, and remove them and the
     listeners named after them afterwards."""
     containers = []
@@ -38,14 +39,14 @@ def added_nodes(nodes):
     di.wait_cluster_stable([node.info for node in nodes], len(nodes))
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers", "l2(*profiles, subset='ce'): needs the L2 topology built with one of these profiles and this subset"
     )
     config.addinivalue_line("markers", "l3(tls=False): needs the kind and AKO cluster, serving TLS or not")
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     profile = os.environ.get("L2_PROFILE")
     subset = os.environ.get("DISCOVERY_SUBSET")
     has_l3 = bool(os.environ.get("DISCOVERY_KUBECONFIG"))
@@ -72,7 +73,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]) -> Iterator[None]:
     outcome = yield
     report = outcome.get_result()
     # pytest reports an expected failure as skipped, with wasxfail set

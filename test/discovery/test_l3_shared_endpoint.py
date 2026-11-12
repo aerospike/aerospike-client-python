@@ -18,7 +18,7 @@ SET_NAME = "l3-shared-endpoint"
 
 # K-10, T3 variant: one hostname with a port per pod, rendered by the operator
 @pytest.mark.l3
-def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_partition():
+def test_k10_shared_endpoint_advertises_each_pod_node_port_and_routes_every_partition() -> None:
     cluster = l3.Cluster()
     endpoint = l3.endpoint()
     port = cluster.service_port()

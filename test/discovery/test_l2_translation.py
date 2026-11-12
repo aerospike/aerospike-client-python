@@ -15,12 +15,13 @@ import os
 import socket
 import threading
 import time
+from typing import Any, Iterator, Optional
 
 import pytest
 
 import aerospike
 import discovery_info as di
-from aerospike_helpers.discovery import SeedCandidateProvider
+from aerospike_helpers.discovery import SeedCandidateContext, SeedCandidateProvider, SeedHost
 
 NAMESPACE = "test"
 SET_NAME = "l2-translation"
@@ -37,12 +38,12 @@ SINGLE_TRY = {"max_retries": 0, "total_timeout": 1000}
 
 
 @pytest.fixture(scope="module")
-def nodes():
+def nodes() -> list[di.Node]:
     return di.standard_nodes()
 
 
 @pytest.fixture
-def disabled_listeners():
+def disabled_listeners() -> Iterator[list[str]]:
     """Collect the Toxiproxy listeners a test disables, and enable them again afterwards."""
     proxies = []
     yield proxies
@@ -50,11 +51,13 @@ def disabled_listeners():
         di.set_listener(proxy, True)
 
 
-def port_map_by_node_name(nodes):
+def port_map_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
     return {node.name: node.listener for node in nodes}
 
 
-def connect(seed, translation=None, discovery=None, **options):
+def connect(
+    seed: Optional[di.Node], translation: Optional[dict] = None, discovery: Optional[dict] = None, **options: Any
+) -> aerospike.Client:
     config = {
         "hosts": [],
         "tend_interval": TEND_INTERVAL_MS,
@@ -70,31 +73,31 @@ def connect(seed, translation=None, discovery=None, **options):
     return aerospike.client(config)
 
 
-def wait_for_nodes(client, names):
+def wait_for_nodes(client: aerospike.Client, names: list[str]) -> None:
     di.wait_for_nodes(client, names, JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
 
 
-def wait_for_no_nodes(client):
-    def empty():
+def wait_for_no_nodes(client: aerospike.Client) -> None:
+    def empty() -> bool:
         return not client.get_node_names()
 
     dropped = di.wait_for(empty, JOIN_TIMEOUT_SEC)
     assert dropped, f"Client kept nodes {sorted(di.client_nodes(client))} with every listener disabled"
 
 
-def disable_listeners(nodes, disabled_listeners):
+def disable_listeners(nodes: list[di.Node], disabled_listeners: list[str]) -> None:
     for node in nodes:
         disabled_listeners.append(node.proxy)
         di.set_listener(node.proxy, False)
 
 
-def enable_listeners(disabled_listeners):
+def enable_listeners(disabled_listeners: list[str]) -> None:
     for proxy in disabled_listeners:
         di.set_listener(proxy, True)
     disabled_listeners.clear()
 
 
-def assert_port_map_joins(row, nodes, port_map):
+def assert_port_map_joins(row: str, nodes: list[di.Node], port_map: dict[str, str]) -> None:
     print(f"L2-PORT-MAP {row} {port_map}")
     client = connect(nodes[0], {"provider": "port-map", "port_map": port_map})
     try:
@@ -112,7 +115,7 @@ def assert_port_map_joins(row, nodes, port_map):
 # N-1: baseline with no translator. The seed answers through its listener, but every peer advertises
 # an address the client has no route to, so init fails naming each of them
 @pytest.mark.l2("default")
-def test_n1_without_translator_fails_on_peers(nodes):
+def test_n1_without_translator_fails_on_peers(nodes: list[di.Node]) -> None:
     seed, peers = nodes[0], nodes[1:]
     assert peers, f"N-1 needs peers: {nodes}"
     for peer in peers:
@@ -135,20 +138,20 @@ def test_n1_without_translator_fails_on_peers(nodes):
 # listener, and each serves the keys it is master of with no proxy hop, so every partition owner is a
 # distinct node rather than one seed-only node
 @pytest.mark.l2("default")
-def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes):
+def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes: list[di.Node]) -> None:
     assert_port_map_joins("N-2-endpoint", nodes, di.port_map_by_endpoint(nodes))
 
 
 # N-2: port-map keyed by node name
 @pytest.mark.l2("default")
-def test_n2_port_map_by_node_name_joins_all_nodes(nodes):
+def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.Node]) -> None:
     assert_port_map_joins("N-2-node-name", nodes, port_map_by_node_name(nodes))
 
 
 # N-4: the dns provider seeds the client from the endpoint's SRV records, one per listener, served by
 # the DNS server on the client network, and port-map translates the peers
 @pytest.mark.l2("default")
-def test_n4_dns_provider_seeds_through_endpoint(nodes):
+def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     dns = {"names": [f"_aerospike._tcp.{host}"], "record_type": "srv", "servers": [os.environ["DISCOVERY_DNS_SERVER"]]}
     translation = {"provider": "port-map", "port_map": di.port_map_by_endpoint(nodes)}
@@ -164,7 +167,9 @@ def test_n4_dns_provider_seeds_through_endpoint(nodes):
 # N-7: with one node's listener disabled, the keys it is master of fail and the other nodes keep
 # serving theirs. Once the listener is enabled again the node serves its keys again.
 @pytest.mark.l2("default")
-def test_n7_node_removed_from_endpoint_degrades_and_returns(nodes, disabled_listeners):
+def test_n7_node_removed_from_endpoint_degrades_and_returns(
+    nodes: list[di.Node], disabled_listeners: list[str]
+) -> None:
     victim = nodes[-1]
     others = nodes[:-1]
     names = [node.name for node in nodes]
@@ -198,11 +203,11 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(nodes, disabled_list
         client.close()
 
 
-def misses(messages, node_name):
+def misses(messages: list[str], node_name: str) -> list[str]:
     return [message for message in messages if f"has no mapping for node {node_name}" in message]
 
 
-def miss_message(node_name, advertised):
+def miss_message(node_name: str, advertised: str) -> str:
     return (
         f"Address translator port-map has no mapping for node {node_name} advertised address {advertised} "
         "in the standard list. Add a mapping for that endpoint or node, or set translation.on_miss to pass_through"
@@ -213,7 +218,7 @@ def miss_message(node_name, advertised):
 # miss naming the node, its endpoint, the translator and the setting that avoids it on every tend,
 # and keeps serving the keys the mapped nodes are master of
 @pytest.mark.l2("default")
-def test_n8_strict_miss_creates_no_node(nodes, warnings):
+def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str]) -> None:
     assert len(nodes) >= 2, f"N-8 needs a mapped node and a victim: {nodes}"
     victim = nodes[-1]
     mapped = nodes[:-1]
@@ -241,7 +246,7 @@ def test_n8_strict_miss_creates_no_node(nodes, warnings):
 # reachable node joins at its advertised address, every node serves the keys it is master of, and
 # no miss is logged.
 @pytest.mark.l2("reachable")
-def test_n10_unmapped_peer_passes_through_unchanged(nodes, warnings):
+def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.Node], warnings: list[str]) -> None:
     container = os.environ["DISCOVERY_REACHABLE_NODE"]
     reachable = next(node for node in nodes if node.proxy == container)
     assert reachable is not nodes[0], f"Reachable node {reachable} must not be the first listener"
@@ -264,7 +269,7 @@ def test_n10_unmapped_peer_passes_through_unchanged(nodes, warnings):
         client.close()
 
 
-def address_range():
+def address_range() -> tuple[str, int, int]:
     """Return the prefix and the first and last octets of DISCOVERY_PORT_MAP_RANGE."""
     first, _, last = os.environ["DISCOVERY_PORT_MAP_RANGE"].partition("-")
     prefix, _, first_octet = first.rpartition(".")
@@ -273,17 +278,17 @@ def address_range():
     return prefix, int(first_octet), int(last_octet)
 
 
-def range_listener(octet):
+def range_listener(octet: int) -> str:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     port_base = int(os.environ["DISCOVERY_PORT_MAP_PORT_BASE"])
     return f"{host}:{port_base + octet}"
 
 
-def service_port(nodes):
+def service_port(nodes: list[di.Node]) -> int:
     return di.split_endpoint(nodes[0].advertised[0])[1]
 
 
-def range_port_map(nodes):
+def range_port_map(nodes: list[di.Node]) -> dict[str, str]:
     """Map every address of the range, on the nodes' service port, to its range listener, and check
     that the listeners exist and the nodes are in the range."""
     prefix, first, last = address_range()
@@ -300,7 +305,7 @@ def range_port_map(nodes):
     return port_map
 
 
-def free_address(nodes):
+def free_address(nodes: list[di.Node]) -> tuple[str, int]:
     prefix, first, last = address_range()
     used = {di.split_endpoint(advertised)[0] for node in nodes for advertised in node.advertised}
     for octet in range(first, last + 1):
@@ -317,7 +322,9 @@ def free_address(nodes):
 # it is master of. N-11 runs here because the client's port-map is fixed once it is created, so a
 # node added mid-test must already be in the map.
 @pytest.mark.l2("port-map-range")
-def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(nodes, added_nodes, warnings):
+def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
+    nodes: list[di.Node], added_nodes: list[str], warnings: list[str]
+) -> None:
     observer = nodes[0]
     names = [node.name for node in nodes]
     port_map = range_port_map(nodes)
@@ -353,17 +360,17 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(nod
 class Seeds(SeedCandidateProvider):
     """Returns the seed listener on every refresh, and records each refresh's context and time."""
 
-    def __init__(self, seed):
+    def __init__(self, seed: SeedHost) -> None:
         self.seed = seed
         self.contexts = []
         self.times = []
 
-    def refresh_seed_candidates(self, context):
+    def refresh_seed_candidates(self, context: SeedCandidateContext) -> list[SeedHost]:
         self.contexts.append(context)
         self.times.append(time.monotonic())
         return [self.seed]
 
-    def needs_periodic_refresh(self):
+    def needs_periodic_refresh(self) -> bool:
         return True
 
 
@@ -371,7 +378,7 @@ class Seeds(SeedCandidateProvider):
 # its seed provider. Once the listeners are enabled again it re-seeds from the seeds it holds within
 # 2 x tend_interval plus the connect timeout, without waiting for refresh_interval_ms.
 @pytest.mark.l2("default")
-def test_n12_reseed_on_zero_active_nodes(nodes, disabled_listeners):
+def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_listeners: list[str]) -> None:
     names = [node.name for node in nodes]
     seeds = Seeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {"provider": seeds, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
@@ -407,7 +414,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes, disabled_listeners):
 # N-14: use_services_alternate against nodes with no alternate address. The seed's alternate list is
 # empty, so init fails with an error naming the node and the setting instead of an empty cluster
 @pytest.mark.l2("default")
-def test_n14_use_services_alternate_without_alternate_fails_init(nodes):
+def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.Node]) -> None:
     seed = nodes[0]
     assert seed.info("service-clear-alt") == "", f"{seed.name} advertises an alternate address"
 
@@ -423,7 +430,7 @@ def test_n14_use_services_alternate_without_alternate_fails_init(nodes):
 # becomes a node, the collision is logged on every tend naming both nodes, the address and the
 # translator, and the seed keeps serving the keys it is master of
 @pytest.mark.l2("default")
-def test_n18_port_map_colliding_nodes_create_no_node(nodes, warnings):
+def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warnings: list[str]) -> None:
     assert len(nodes) >= 3, f"N-18 needs a seed and two colliding peers: {nodes}"
     seed, a, b = nodes[:3]
     port_map = di.port_map_by_endpoint(nodes)
@@ -433,7 +440,7 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes, warnings):
     client = connect(seed, {"provider": "port-map", "port_map": port_map})
     try:
 
-        def logged():
+        def logged() -> bool:
             return all(len(di.collisions(warnings, node.name)) >= MISS_RETRIES for node in (a, b))
 
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
@@ -452,7 +459,9 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes, warnings):
 # pass_through default the unchanged address, which the client has no route to, is tried on every
 # tend and no node is created.
 @pytest.mark.l2("port-map-range")
-def test_n19_node_outside_range_decided_by_on_miss(nodes, added_nodes, warnings):
+def test_n19_node_outside_range_decided_by_on_miss(
+    nodes: list[di.Node], added_nodes: list[str], warnings: list[str]
+) -> None:
     observer = nodes[0]
     names = sorted(node.name for node in nodes)
     port_map = range_port_map(nodes)
@@ -485,7 +494,7 @@ def test_n19_node_outside_range_decided_by_on_miss(nodes, added_nodes, warnings)
     try:
         wait_for_nodes(client, names)
 
-        def attempts():
+        def attempts() -> list[str]:
             return [message for message in warnings if message.startswith(tried)]
 
         retried = di.wait_for(lambda: len(attempts()) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
@@ -499,24 +508,24 @@ def test_n19_node_outside_range_decided_by_on_miss(nodes, added_nodes, warnings)
 class BlockingSeeds(Seeds):
     """Blocks the second refresh until released."""
 
-    def __init__(self, seed):
+    def __init__(self, seed: SeedHost) -> None:
         super().__init__(seed)
         self.blocked = threading.Event()
         self.release = threading.Event()
         self.closed = threading.Event()
 
-    def refresh_seed_candidates(self, context):
+    def refresh_seed_candidates(self, context: SeedCandidateContext) -> list[SeedHost]:
         seeds = super().refresh_seed_candidates(context)
         if len(self.contexts) == 2:
             self.blocked.set()
             self.release.wait(5 * BLOCK_SEC)
         return seeds
 
-    def close(self):
+    def close(self) -> None:
         self.closed.set()
 
 
-def blocking_provider_client(nodes):
+def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeeds, aerospike.Client]:
     seeds = BlockingSeeds((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {
         "provider": seeds,
@@ -527,7 +536,7 @@ def blocking_provider_client(nodes):
     return seeds, client
 
 
-def assert_commands_work(client, row, seconds):
+def assert_commands_work(client: aerospike.Client, row: str, seconds: int) -> int:
     deadline = time.monotonic() + seconds
     i = 0
     while time.monotonic() < deadline:
@@ -543,7 +552,7 @@ def assert_commands_work(client, row, seconds):
 # M-5: in thread mode a seed provider refresh that blocks does not hold up tend. Commands keep
 # working while it blocks, and the next refresh sees every tend that ran meanwhile.
 @pytest.mark.l2("default")
-def test_m5_blocked_refresh_does_not_block_tend(nodes, warnings):
+def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: list[str]) -> None:
     seeds, client = blocking_provider_client(nodes)
     try:
         wait_for_nodes(client, [node.name for node in nodes])
@@ -565,7 +574,7 @@ def test_m5_blocked_refresh_does_not_block_tend(nodes, warnings):
 # M-5: close waits at most refresh_timeout_ms for a blocked refresh, and the provider is closed once
 # the refresh returns
 @pytest.mark.l2("default")
-def test_m5_close_during_blocked_refresh_returns(nodes, warnings):
+def test_m5_close_during_blocked_refresh_returns(nodes: list[di.Node], warnings: list[str]) -> None:
     seeds, client = blocking_provider_client(nodes)
     try:
         assert di.wait_for(seeds.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"

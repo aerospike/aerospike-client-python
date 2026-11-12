@@ -16,6 +16,7 @@ import socket
 import sys
 import threading
 import time
+from typing import Any, Callable, Optional, TextIO, Union
 
 import aerospike
 from aerospike import exception as e
@@ -37,17 +38,17 @@ ON_MISS = {"strict": "strict", "pass-through": "pass_through"}
 START_NS = time.monotonic_ns()
 
 
-def now():
+def now() -> int:
     """Milliseconds on the monotonic clock since the driver started."""
     return (time.monotonic_ns() - START_NS) // 1000000
 
 
-def error_message(error):
+def error_message(error: BaseException) -> str:
     message = getattr(error, "msg", None) or str(error)
     return f"{type(error).__name__}: {message}"
 
 
-def every(interval_ms, stop, step):
+def every(interval_ms: int, stop: threading.Event, step: Callable[[], None]) -> None:
     """Call step every interval_ms, at a fixed rate, until stop is set."""
     interval = interval_ms / 1000
     deadline = time.monotonic()
@@ -64,12 +65,12 @@ def every(interval_ms, stop, step):
 class Output:
     """Stdout, one JSON object per line, each flushed. Lines written before ready are held and follow it."""
 
-    def __init__(self, stream):
+    def __init__(self, stream: TextIO) -> None:
         self.stream = stream
         self.lock = threading.Lock()
         self.held = []
 
-    def write(self, message):
+    def write(self, message: dict[str, Any]) -> None:
         line = json.dumps(message, separators=(",", ":"))
         with self.lock:
             if self.held is None:
@@ -77,12 +78,12 @@ class Output:
             else:
                 self.held.append(line)
 
-    def write_now(self, message):
+    def write_now(self, message: dict[str, Any]) -> None:
         line = json.dumps(message, separators=(",", ":"))
         with self.lock:
             self.print(line)
 
-    def open(self, ready):
+    def open(self, ready: dict[str, Any]) -> None:
         line = json.dumps(ready, separators=(",", ":"))
         with self.lock:
             self.print(line)
@@ -90,12 +91,12 @@ class Output:
                 self.print(held)
             self.held = None
 
-    def print(self, line):
+    def print(self, line: str) -> None:
         self.stream.write(line + "\n")
         self.stream.flush()
 
 
-def host_port(value):
+def host_port(value: str) -> tuple[str, int]:
     """Parse HOST:PORT, the host optionally in brackets."""
     host, colon, port = value.rpartition(":")
     if host.startswith("[") and host.endswith("]"):
@@ -105,13 +106,13 @@ def host_port(value):
     return host, int(port)
 
 
-def positive(value):
+def positive(value: str) -> int:
     if not value.isdigit() or int(value) <= 0:
         raise argparse.ArgumentTypeError(f"must be a positive integer: {value}")
     return int(value)
 
 
-def port_map(value):
+def port_map(value: str) -> dict[str, tuple[str, int]]:
     mapping = {}
     for entry in value.split(","):
         node, equals, address = entry.partition("=")
@@ -123,7 +124,7 @@ def port_map(value):
     return mapping
 
 
-def parse_options(argv):
+def parse_options(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="l5_driver.py", allow_abbrev=False)
     parser.add_argument("--seed", required=True, type=host_port)
     parser.add_argument("--shape", required=True, choices=("pass-through", "port-map"))
@@ -148,24 +149,24 @@ def parse_options(argv):
     return options
 
 
-def command_policy(options):
+def command_policy(options: argparse.Namespace) -> dict[str, int]:
     return {"socket_timeout": options.timeout, "total_timeout": options.timeout, "max_retries": 0}
 
 
-def endpoint(host, port):
+def endpoint(host: str, port: int) -> str:
     if ":" in host:
         return f"[{host}]:{port}"
     return f"{host}:{port}"
 
 
-def translation_config(options):
+def translation_config(options: argparse.Namespace) -> dict[str, Any]:
     translation = {"provider": options.shape, "on_miss": ON_MISS[options.on_miss]}
     if options.port_map is not None:
         translation["port_map"] = {node: endpoint(host, port) for node, (host, port) in options.port_map.items()}
     return translation
 
 
-def client_config(options):
+def client_config(options: argparse.Namespace) -> dict[str, Any]:
     config = {
         "hosts": [options.seed],
         "use_services_alternate": options.shape == "pass-through",
@@ -184,7 +185,8 @@ class Load:
     """Each worker runs one command at a time, and issues a failed command again after one tend interval
     until it succeeds."""
 
-    def __init__(self, client, options, on_first_success):
+    def __init__(self, client: aerospike.Client, options: argparse.Namespace,
+                 on_first_success: Callable[[], None]) -> None:
         self.client = client
         self.options = options
         self.on_first_success = on_first_success
@@ -199,13 +201,13 @@ class Load:
         self.reset_at_ns = START_NS
         self.max_latency_ns = 0
 
-    def start(self):
+    def start(self) -> None:
         for worker in range(self.options.workers):
             thread = threading.Thread(target=self.run, args=(worker,), name=f"l5-load-{worker}", daemon=True)
             self.workers.append(thread)
             thread.start()
 
-    def run(self, worker):
+    def run(self, worker: int) -> None:
         i = 0
         while not self.stop_event.is_set():
             k = (worker + i * self.options.workers) % self.options.keys
@@ -228,13 +230,13 @@ class Load:
             self.record_success(first_ns, end_ns)
             i += 1
 
-    def record_failure(self, error):
+    def record_failure(self, error: e.AerospikeError) -> None:
         message = error_message(error)
         with self.lock:
             self.failed += 1
             self.last_error = message
 
-    def record_success(self, first_ns, end_ns):
+    def record_success(self, first_ns: int, end_ns: int) -> None:
         with self.lock:
             self.succeeded += 1
             if first_ns >= self.reset_at_ns:
@@ -244,12 +246,12 @@ class Load:
         if first:
             self.on_first_success()
 
-    def reset(self):
+    def reset(self) -> None:
         with self.lock:
             self.reset_at_ns = time.monotonic_ns()
             self.max_latency_ns = 0
 
-    def counters(self):
+    def counters(self) -> dict[str, Optional[Union[int, str]]]:
         with self.lock:
             return {
                 "succeeded": self.succeeded,
@@ -258,7 +260,7 @@ class Load:
                 "lastError": self.last_error,
             }
 
-    def stop(self, deadline):
+    def stop(self, deadline: float) -> None:
         """Let each worker finish its current attempt, giving up at deadline."""
         self.stop_event.set()
         for thread in self.workers:
@@ -271,7 +273,7 @@ class Watch:
     """Probe HOST:PORT every PROBE_INTERVAL_MS until it accepts a connection, then check every
     PROBE_INTERVAL_MS whether the node is usable, and reply."""
 
-    def __init__(self, driver, address, host, port, node):
+    def __init__(self, driver: "Driver", address: str, host: str, port: int, node: str) -> None:
         self.driver = driver
         self.address = address
         self.host = host
@@ -283,15 +285,15 @@ class Watch:
         self.serving_at = None
         self.last_closed_at = None
 
-    def start(self):
+    def start(self) -> None:
         self.thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.stop_event.set()
         if self.thread.is_alive() and self.thread is not threading.current_thread():
             self.thread.join(1)
 
-    def tick(self):
+    def tick(self) -> None:
         try:
             if self.serving_at is None:
                 t = now()
@@ -308,7 +310,7 @@ class Watch:
             self.driver.error(f"watch {self.address} {self.node}: {error_message(error)}")
             self.finish()
 
-    def connects(self):
+    def connects(self) -> bool:
         """Connect to the first address HOST resolves to, as a new listener serves on one endpoint address
         before the others."""
         try:
@@ -324,7 +326,7 @@ class Watch:
                 return False
         return True
 
-    def reply(self, usable_at):
+    def reply(self, usable_at: Optional[int]) -> None:
         usable_ms = None
         if usable_at is not None:
             usable_ms = usable_at - self.serving_at
@@ -341,13 +343,13 @@ class Watch:
         })
         self.finish()
 
-    def finish(self):
+    def finish(self) -> None:
         self.stop_event.set()
         self.driver.end_watch(self)
 
 
 class Driver:
-    def __init__(self, options, out, client):
+    def __init__(self, options: argparse.Namespace, out: Output, client: aerospike.Client) -> None:
         self.options = options
         self.out = out
         self.client = client
@@ -364,7 +366,7 @@ class Driver:
         self.last_signature = None
         self.next_heartbeat = 0
 
-    def run(self):
+    def run(self) -> None:
         self.reach.start()
         self.load.start()
         for line in sys.stdin:
@@ -372,7 +374,7 @@ class Driver:
                 break
         self.quit()
 
-    def ready(self):
+    def ready(self) -> None:
         self.out.open({
             "type": "ready",
             "t": now(),
@@ -384,7 +386,7 @@ class Driver:
         })
         self.routing.start()
 
-    def command(self, line):
+    def command(self, line: str) -> bool:
         """Run one command line and return False on quit."""
         words = line.split()
         name = ""
@@ -406,10 +408,10 @@ class Driver:
             self.error(f"unknown command: {line.strip()}")
         return True
 
-    def error(self, message):
+    def error(self, message: str) -> None:
         self.out.write({"type": "error", "t": now(), "message": message})
 
-    def quit(self):
+    def quit(self) -> None:
         """Stop the load within QUIT_MS, then close the client once nothing else uses it."""
         deadline = time.monotonic() + QUIT_MS / 1000
         self.load.stop(deadline)
@@ -427,7 +429,7 @@ class Driver:
             thread.join(2 * REACH_TIMEOUT_MS / 1000)
         self.client.close()
 
-    def start_watch(self, address, node):
+    def start_watch(self, address: str, node: str) -> None:
         try:
             host, port = host_port(address)
         except argparse.ArgumentTypeError:
@@ -443,12 +445,12 @@ class Driver:
             return
         watch.start()
 
-    def end_watch(self, watch):
+    def end_watch(self, watch: Watch) -> None:
         with self.lock:
             if self.watch is watch:
                 self.watch = None
 
-    def nodes(self):
+    def nodes(self) -> list[tuple[str, str, int]]:
         """Every node the client holds as (name, address, port), sorted by name."""
         try:
             nodes = self.client.get_node_names()
@@ -457,11 +459,11 @@ class Driver:
         held = [(node["node_name"], node["address"], node["port"]) for node in nodes]
         return sorted(held)
 
-    def usable(self, name):
+    def usable(self, name: str) -> bool:
         held = self.nodes()
         return any(node[0] == name for node in held)
 
-    def poll(self):
+    def poll(self) -> None:
         """Write a change snapshot when the routing differs from the last poll, and a heartbeat every
         HEARTBEAT_MS."""
         try:
@@ -479,7 +481,7 @@ class Driver:
         except Exception as error:
             print(f"routing poll: {error_message(error)}", file=sys.stderr)
 
-    def snapshot(self, reason, t, nodes):
+    def snapshot(self, reason: str, t: int, nodes: list[tuple[str, str, int]]) -> None:
         with self.lock:
             reachable = dict(self.reachable)
         listed = []
@@ -497,7 +499,7 @@ class Driver:
         snapshot.update(self.load.counters())
         self.out.write(snapshot)
 
-    def client_counts(self, nodes):
+    def client_counts(self, nodes: list[tuple[str, str, int]]) -> dict[str, int]:
         """The client's error and timeout counts, summed over the nodes it holds."""
         names = {node[0] for node in nodes}
         stats = self.client.get_stats()
@@ -509,7 +511,7 @@ class Driver:
                 timeouts += node.timeout_count
         return {"clientErrors": errors, "clientTimeouts": timeouts}
 
-    def check_reachable(self):
+    def check_reachable(self) -> None:
         """Start a reachability check for each node that has none running, each on its own thread."""
         nodes = self.nodes()
         with self.lock:
@@ -523,7 +525,7 @@ class Driver:
                 self.checks[node] = thread
                 thread.start()
 
-    def check_one(self, node):
+    def check_one(self, node: tuple[str, str, int]) -> None:
         """Record whether the node answers an info request for its name within REACH_TIMEOUT_MS."""
         name = node[0]
         try:
@@ -536,7 +538,7 @@ class Driver:
             self.reachable[node] = answered
             del self.checks[node]
 
-    def serve(self, step):
+    def serve(self, step: str) -> None:
         """Write and read one key in every partition: the first of STEP-0, STEP-1, ... in each."""
         keys = [None] * PARTITIONS
         found = 0
@@ -598,12 +600,12 @@ class Driver:
         })
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     options = parse_options(argv)
     out = Output(sys.stdout)
     sys.stdout = sys.stderr
 
-    def log(level, function, path, line, message):
+    def log(level: int, function: str, path: str, line: int, message: str) -> None:
         level_name = LOG_LEVELS.get(level, str(level))
         out.write({"type": "log", "t": now(), "level": level_name, "message": message})
 
@@ -621,7 +623,7 @@ def main(argv):
     return 0
 
 
-def client_not_created(out, message):
+def client_not_created(out: Output, message: str) -> int:
     out.write_now({"type": "error", "t": now(), "message": f"client not created: {message}"})
     print(f"ERROR: client not created: {message}", file=sys.stderr)
     return 3

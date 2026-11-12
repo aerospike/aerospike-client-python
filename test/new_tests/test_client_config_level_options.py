@@ -133,7 +133,7 @@ def test_bool_settings(setting):
     assert client is not None
 
 
-def test_use_services_alternate():
+def test_use_services_alternate() -> None:
     """
     A node without an alternate-access-address is rejected
     """

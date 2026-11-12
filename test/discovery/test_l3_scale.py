@@ -9,7 +9,7 @@ these tests check from the nodes' own statistics that every node serves the keys
 
 import threading
 import time
-from typing import Callable, Optional
+from typing import Callable, Iterator, Optional
 
 import pytest
 
@@ -30,7 +30,7 @@ POLL_SEC = 0.005
 
 
 @pytest.fixture
-def cluster():
+def cluster() -> Iterator[l3.Cluster]:
     """The AerospikeCluster, scaled back to its size and pod count when the test ends."""
     found = l3.Cluster()
     assert found.get(".spec.podSpec.multiPodPerHost") == "true", "Needs multiPodPerHost, as setup-kind-ako builds"
@@ -42,7 +42,7 @@ def cluster():
 
 
 @pytest.fixture
-def services(cluster):
+def services(cluster: l3.Cluster) -> Iterator[list[str]]:
     """Collect the Services a test creates, and delete them afterwards."""
     created = []
     yield created
@@ -55,7 +55,7 @@ class ReadyWatch:
     """Poll the cluster's Ready pods on a thread and record, on time.monotonic(), when a pod that is
     not in before first turns Ready."""
 
-    def __init__(self, cluster: l3.Cluster, before: set[str]):
+    def __init__(self, cluster: l3.Cluster, before: set[str]) -> None:
         self.at: Optional[float] = None
         self._stopped = threading.Event()
         self._thread = threading.Thread(target=self._run, args=(cluster, before), daemon=True)
@@ -94,7 +94,7 @@ def client_errors(client: aerospike.Client) -> int:
 # NodePort only routes to a Ready pod. The client holds it at the endpoint hostname and the new
 # pod's own Service NodePort, without being rebuilt or reseeded, and keeps the nodes it held.
 @pytest.mark.l3
-def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster):
+def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Cluster) -> None:
     size = max(1, cluster.size() - 1)
     cluster.scale(size)
     port = cluster.service_port()
@@ -164,7 +164,7 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster):
 # remaining node is a remaining pod, and once the remaining nodes are stable commands succeed while
 # the client's error and retry counts and the failed commands stay flat over several tend intervals.
 @pytest.mark.l3
-def test_k3_scale_down_removes_node_without_retry_storm(cluster):
+def test_k3_scale_down_removes_node_without_retry_storm(cluster: l3.Cluster) -> None:
     size = max(MIN_PODS, cluster.size())
     cluster.scale(size)
     removed = highest_ordinal(cluster.pods())
@@ -270,7 +270,9 @@ def wait_until(condition: Callable[[], bool], description: str) -> None:
 # to pod 0 keeps its NodePort through both, no pod advertises it, and a client seeded only through
 # it reaches every node.
 @pytest.mark.l3
-def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(cluster, services):
+def test_k9_node_ports_stable_across_pod_reschedule_and_recreate(
+    cluster: l3.Cluster, services: list[str]
+) -> None:
     size = max(MIN_PODS, cluster.size())
     cluster.scale(size)
     port = cluster.service_port()

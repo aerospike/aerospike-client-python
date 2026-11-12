@@ -52,7 +52,7 @@ def assert_certificate(cluster: l3.Cluster, tls_name: str, endpoint: str) -> Non
 # the keys it is master of. The same seed with the endpoint hostname as tls-name fails the TLS
 # handshake.
 @pytest.mark.l3(tls=True)
-def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(warnings):
+def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(warnings: list[str]) -> None:
     cluster = l3.Cluster()
     endpoint = l3.endpoint()
     tls_name = os.environ["DISCOVERY_TLS_NAME"]

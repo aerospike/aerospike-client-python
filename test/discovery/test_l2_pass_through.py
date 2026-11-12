@@ -9,6 +9,7 @@ pass-through translator, so it uses every address as advertised.
 
 import os
 from dataclasses import dataclass
+from typing import Iterable
 
 import pytest
 
@@ -29,18 +30,18 @@ class Node:
     port: int
     alternate: str
 
-    def info(self, command):
+    def info(self, command: str) -> str:
         reply = di.request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
         return reply[command]
 
 
-def parse_port(endpoint):
+def parse_port(endpoint: str) -> int:
     port = endpoint.rpartition(":")[2]
     return int(port)
 
 
 @pytest.fixture(scope="module")
-def nodes():
+def nodes() -> list[Node]:
     """Query every listener for its node's name and its one alternate address."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     proxies = {}
@@ -60,11 +61,11 @@ def nodes():
     return found
 
 
-def seed(node):
+def seed(node: Node) -> tuple[str, int]:
     return di.split_endpoint(node.alternate)
 
 
-def connect(node):
+def connect(node: Node) -> aerospike.Client:
     config = {
         "hosts": [seed(node)],
         "use_services_alternate": True,
@@ -75,11 +76,11 @@ def connect(node):
     return aerospike.client(config)
 
 
-def wait_for_nodes(client, names):
+def wait_for_nodes(client: aerospike.Client, names: Iterable[str]) -> None:
     di.wait_for_nodes(client, names, JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
 
 
-def assert_routes_to_owners(row, nodes):
+def assert_routes_to_owners(row: str, nodes: list[Node]) -> None:
     for node in nodes:
         assert parse_port(node.alternate) == node.port, f"{node} advertises another port"
 
@@ -97,25 +98,25 @@ def assert_routes_to_owners(row, nodes):
 
 
 @pytest.mark.l2("pass-through-names")
-def test_n15_distinct_names_route_to_every_owner(nodes):
+def test_n15_distinct_names_route_to_every_owner(nodes: list[Node]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == len(nodes), f"Hostnames {hostnames}"
     assert_routes_to_owners("N-15", nodes)
 
 
 @pytest.mark.l2("pass-through-ports")
-def test_n16_shared_name_routes_to_every_owner(nodes):
+def test_n16_shared_name_routes_to_every_owner(nodes: list[Node]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == 1, f"Hostnames {hostnames}"
     assert_routes_to_owners("N-16", nodes)
 
 
-def next_listener_port():
+def next_listener_port() -> int:
     ports = di.listener_ports()
     return max(ports) + 1
 
 
-def add_listener(container, port, like):
+def add_listener(container: str, port: int, like: str) -> None:
     """Add a Toxiproxy listener on port for container, forwarding to the port the like proxy uses."""
     upstream = di.toxiproxy("GET", f"/proxies/{like}")["upstream"]
     upstream_port = parse_port(upstream)
@@ -126,7 +127,9 @@ def add_listener(container, port, like):
 # N-16 scale-out and NFR-1: a node started mid-test that advertises the same hostname with its own
 # port is active within 2 x tend_interval of the peers-generation bump that announces it
 @pytest.mark.l2("pass-through-ports")
-def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, added_nodes):
+def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
+    nodes: list[Node], added_nodes: list[str]
+) -> None:
     observer = nodes[0]
     names = {node.name for node in nodes}
     hostname = seed(observer)[0]
@@ -155,7 +158,9 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(nodes, add
 # both nodes, the address and the translator, and the other nodes keep serving the keys they are
 # master of. Only one of the two gets the shared port's listener, once both are in the cluster.
 @pytest.mark.l2("pass-through-ports")
-def test_n18_pass_through_colliding_nodes_create_no_node(nodes, added_nodes, warnings):
+def test_n18_pass_through_colliding_nodes_create_no_node(
+    nodes: list[Node], added_nodes: list[str], warnings: list[str]
+) -> None:
     observer = nodes[0]
     names = [node.name for node in nodes]
     hostname = seed(observer)[0]
@@ -174,7 +179,7 @@ def test_n18_pass_through_colliding_nodes_create_no_node(nodes, added_nodes, war
     try:
         wait_for_nodes(client, names)
 
-        def logged():
+        def logged() -> bool:
             return all(len(di.collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
 
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)

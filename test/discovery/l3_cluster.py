@@ -16,7 +16,7 @@ import re
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 import aerospike
 import discovery_info as di
@@ -70,7 +70,7 @@ def ordinal(pod: str) -> int:
 class Cluster:
     """The one AerospikeCluster in the kind cluster."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         found = lines(kubectl(
             "get", "aerospikecluster", "--all-namespaces", "-o",
             'jsonpath={range .items[*]}{.metadata.namespace} {.metadata.name}{"\\n"}{end}',
@@ -203,7 +203,7 @@ def seed() -> tuple[str, int]:
     return endpoint(), ports[0]
 
 
-def connect(host: tuple, **options) -> aerospike.Client:
+def connect(host: tuple, **options: Any) -> aerospike.Client:
     """Connect through host, a (hostname, port) or (hostname, port, tls-name) tuple, reading the
     alternate list with no translator."""
     config = {
@@ -218,7 +218,7 @@ def connect(host: tuple, **options) -> aerospike.Client:
     return aerospike.client(config)
 
 
-def connect_when_ready(host: tuple, **options) -> aerospike.Client:
+def connect_when_ready(host: tuple, **options: Any) -> aerospike.Client:
     """Connect through host, retrying while the seed does not accept connections yet."""
     deadline = time.monotonic() + ROUTING_TIMEOUT_SEC
     while True:

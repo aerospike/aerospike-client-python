@@ -32,13 +32,13 @@ class Node:
     tls_advertised: list
     tls_name: str
 
-    def info(self, command):
+    def info(self, command: str) -> str:
         reply = di.request(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], self.port, command)
         return reply[command]
 
 
 @pytest.fixture(scope="module")
-def nodes():
+def nodes() -> list[Node]:
     """Query every clear listener for its node's name, the TLS endpoints it advertises and, from its
     peers, every node's tls-name."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
@@ -68,7 +68,7 @@ def nodes():
     return found
 
 
-def connect(nodes, seed, tls_name):
+def connect(nodes: list[Node], seed: Node, tls_name: str) -> aerospike.Client:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     port_map = {advertised: f"{host}:{node.tls_port}" for node in nodes for advertised in node.tls_advertised}
     config = {
@@ -86,7 +86,7 @@ def connect(nodes, seed, tls_name):
 # certificate against the node's tls-name, not the endpoint hostname, through its SAN, with no
 # legacy CN match, and a seed whose tls-name is the endpoint hostname fails the handshake.
 @pytest.mark.l2("default", subset="ee")
-def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
+def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: list[str]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     first = nodes[0]
     assert first.tls_name != host, f"tls-name {first.tls_name} is the endpoint hostname"
@@ -120,7 +120,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes, warnings):
     raises=pytest.fail.Exception,
     reason="The C client accepts a CN-only certificate through its deprecated legacy name check until the next major release",
 )
-def test_n17_cn_only_certificate_is_rejected(nodes, warnings):
+def test_n17_cn_only_certificate_is_rejected(nodes: list[Node], warnings: list[str]) -> None:
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = connect(nodes, first, first.tls_name)

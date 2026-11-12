@@ -23,7 +23,7 @@ import uuid
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Collection, Iterable, Optional, Sequence, TypeVar
 
 import aerospike
 
@@ -34,8 +34,10 @@ CONTROL_TIMEOUT_SEC = 60
 # One peer in a peers-* reply: [node,tls-name,[address[:port],...]]
 PEER = re.compile(r"\[([0-9A-Fa-f]+),([^,\[\]]*),\[((?:[^\[\]]|\[[^\]]*\])*)\]\]")
 
+T = TypeVar("T")
 
-def request(host, port, *commands, timeout=2.0):
+
+def request(host: str, port: int, *commands: str, timeout: float = 2.0) -> dict[str, str]:
     """Send info commands to host:port and return a dict of command to value."""
     with socket.create_connection((host, port), timeout=timeout) as sock:
         return send_info(sock, *commands)
@@ -58,7 +60,7 @@ def send_info(sock: socket.socket, *commands: str) -> dict[str, str]:
     return values
 
 
-def read_exactly(sock, size):
+def read_exactly(sock: socket.socket, size: int) -> bytes:
     data = b""
     while len(data) < size:
         chunk = sock.recv(size - len(data))
@@ -68,27 +70,27 @@ def read_exactly(sock, size):
     return data
 
 
-def node_info(client, node_name):
+def node_info(client: aerospike.Client, node_name: str) -> Callable[[str], str]:
     """Return an info function that sends each command to one node through the client."""
 
-    def info(command):
+    def info(command: str) -> str:
         reply = client.info_single_node(command, node_name)
         return reply.partition("\t")[2].rstrip("\n")
 
     return info
 
 
-def endpoints(reply):
+def endpoints(reply: str) -> list[str]:
     """Parse a service-clear-std or service-clear-alt reply into host:port strings."""
     return [endpoint for endpoint in reply.split(";") if endpoint]
 
 
-def split_endpoint(endpoint):
+def split_endpoint(endpoint: str) -> tuple[str, int]:
     host, _, port = endpoint.rpartition(":")
     return host.strip("[]"), int(port)
 
 
-def peers(reply):
+def peers(reply: str) -> list[tuple[str, str, list[str]]]:
     """Parse a peers-* reply, gen,port,[[node,tls-name,[address[:port],...]],...], into
     (node, tls-name, host:port strings) tuples. An address without a port has the reply's port."""
     _, port, entries = reply.split(",", 2)
@@ -152,21 +154,21 @@ def port_map_by_endpoint(nodes: list[Node]) -> dict[str, str]:
     return {advertised: node.listener for node in nodes for advertised in node.advertised}
 
 
-def peer_names(reply, endpoint):
+def peer_names(reply: str, endpoint: str) -> list[str]:
     """Return the names of the peers in a peers-* reply that advertise endpoint."""
     return sorted(name for name, _, endpoints in peers(reply) if endpoint in endpoints)
 
 
-def client_nodes(client):
+def client_nodes(client: aerospike.Client) -> dict[str, dict]:
     """Return the client's nodes, each a get_node_names() entry, by node name."""
     return {entry["node_name"]: entry for entry in client.get_node_names()}
 
 
-def wait_for_nodes(client, names, timeout, tend_interval_ms):
+def wait_for_nodes(client: aerospike.Client, names: Iterable[str], timeout: float, tend_interval_ms: int) -> None:
     """Wait until the client holds exactly the named nodes."""
     expected = sorted(names)
 
-    def joined():
+    def joined() -> bool:
         return sorted(client_nodes(client)) == expected
 
     complete = wait_for(joined, timeout)
@@ -176,7 +178,7 @@ def wait_for_nodes(client, names, timeout, tend_interval_ms):
     time.sleep(4 * tend_interval_ms / 1000)
 
 
-def assert_at(entry, endpoint):
+def assert_at(entry: dict, endpoint: str) -> None:
     """Assert that a get_node_names() entry is at endpoint, a host:port string."""
     host, port = split_endpoint(endpoint)
     resolved = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
@@ -185,7 +187,14 @@ def assert_at(entry, endpoint):
     assert entry["port"] == port, f"{entry} is not at port {port}"
 
 
-def wait_joined(client, observer, generation, names, timeout, interval=0.005):
+def wait_joined(
+    client: aerospike.Client,
+    observer: Callable[[str], str],
+    generation: str,
+    names: Collection[str],
+    timeout: float,
+    interval: float = 0.005,
+) -> tuple[dict, float]:
     """Wait until the observer node's peers-generation moves on from generation and the client holds
     a node not in names. Return that node's get_node_names() entry and the milliseconds from the
     bump to the join."""
@@ -210,7 +219,7 @@ def wait_joined(client, observer, generation, names, timeout, interval=0.005):
     return joined, (active_ns - bump_ns) / 1e6
 
 
-def toxiproxy(method, path, body=None):
+def toxiproxy(method: str, path: str, body: Optional[dict] = None) -> Any:
     """Call the Toxiproxy control API and return its decoded reply, or None for an empty one."""
     data = None
     if body is not None:
@@ -224,13 +233,13 @@ def toxiproxy(method, path, body=None):
     return None
 
 
-def listener_ports():
+def listener_ports() -> set[int]:
     """Return the port of every Toxiproxy listener."""
     proxies = toxiproxy("GET", "/proxies")
     return {split_endpoint(proxy["listen"])[1] for proxy in proxies.values()}
 
 
-def set_listener(proxy, enabled):
+def set_listener(proxy: str, enabled: bool) -> None:
     """Enable or disable a Toxiproxy listener. Disabling it also closes its connections."""
     toxiproxy("POST", f"/proxies/{proxy}", {"enabled": enabled})
 
@@ -245,7 +254,7 @@ def remove_toxic(proxy: str, name: str) -> None:
     toxiproxy("DELETE", f"/proxies/{proxy}/toxics/{name}")
 
 
-def control(command):
+def control(command: str) -> dict[str, str]:
     """Send a request to the discovery node server and return its acknowledgement."""
     directory = Path(os.environ["DISCOVERY_CONTROL_DIR"])
     request_id = uuid.uuid4().hex
@@ -267,12 +276,12 @@ def control(command):
     return reply
 
 
-def wait_cluster_stable(infos, size):
+def wait_cluster_stable(infos: Iterable[Callable[[str], str]], size: int) -> None:
     """Wait until every node, given by its info function, reports the same cluster key for a cluster
     of size nodes with no migrations left."""
     command = f"cluster-stable:size={size};ignore-migrations=false"
 
-    def stable():
+    def stable() -> bool:
         try:
             keys = {info(command) for info in infos}
         except aerospike.exception.ClusterChangeError:
@@ -283,7 +292,7 @@ def wait_cluster_stable(infos, size):
     assert settled, f"Cluster not stable at size {size}"
 
 
-def namespace_stats(info, namespace, names):
+def namespace_stats(info: Callable[[str], str], namespace: str, names: Collection[str]) -> dict[str, int]:
     """Return the named integer statistics of a namespace."""
     stats = {}
     for token in info(f"namespace/{namespace}").split(";"):
@@ -295,7 +304,7 @@ def namespace_stats(info, namespace, names):
     return stats
 
 
-def master_partitions(info, namespace):
+def master_partitions(info: Callable[[str], str], namespace: str) -> set[int]:
     """Return the partition ids a node is master of, read from its replicas bitmap."""
     for entry in info("replicas").split(";"):
         name, _, fields = entry.partition(":")
@@ -308,7 +317,14 @@ def master_partitions(info, namespace):
     raise AssertionError(f"No replicas entry for namespace {namespace}")
 
 
-def assert_served_by_owners(client, namespace, set_name, row, infos, key_count=300):
+def assert_served_by_owners(
+    client: aerospike.Client,
+    namespace: str,
+    set_name: str,
+    row: str,
+    infos: dict[str, Callable[[str], str]],
+    key_count: int = 300,
+) -> None:
     """Write and read keys with replica master and assert, from each node's namespace statistics,
     that each node served exactly the keys it is master of with no server proxy hop.
 
@@ -358,12 +374,12 @@ def legacy_matches(messages: list[str]) -> list[str]:
     return [message for message in messages if "only through the legacy name check" in message]
 
 
-def collisions(messages, name):
+def collisions(messages: list[str], name: str) -> list[str]:
     """Return the translation collision messages that name a node."""
     return [message for message in messages if "translated nodes" in message and name in message]
 
 
-def collision_messages(translator, endpoint, names):
+def collision_messages(translator: str, endpoint: str, names: Sequence[str]) -> list[str]:
     """Return the C client's collision message for two nodes translated to endpoint, in either order."""
     first, second = names
     return [
@@ -373,7 +389,14 @@ def collision_messages(translator, endpoint, names):
     ]
 
 
-def assert_keys_on_masters_work(client, namespace, set_name, row, infos, key_count=300):
+def assert_keys_on_masters_work(
+    client: aerospike.Client,
+    namespace: str,
+    set_name: str,
+    row: str,
+    infos: dict[str, Callable[[str], str]],
+    key_count: int = 300,
+) -> None:
     """Write and read every key whose master is one of the nodes in infos, which maps each node name
     to its info function, and assert that some keys have their master on another node."""
     owners = {}
@@ -439,7 +462,7 @@ class Load:
     """Run command(thread, iteration) on each of threads threads until stopped, and record the
     outcome of every call. The client releases the GIL while a command waits on the network."""
 
-    def __init__(self, threads: int, command: Callable[[int, int], None]):
+    def __init__(self, threads: int, command: Callable[[int, int], None]) -> None:
         self.outcomes: list[Outcome] = []
         self._lock = threading.Lock()
         self._stopped = threading.Event()
@@ -483,7 +506,7 @@ class Load:
         return not any(thread.is_alive() for thread in self._threads)
 
 
-def wait_for(condition, timeout, interval=0.25):
+def wait_for(condition: Callable[[], T], timeout: float, interval: float = 0.25) -> Optional[T]:
     """Poll condition until it returns a truthy value, and return that value or None."""
     deadline = time.monotonic() + timeout
     while True:

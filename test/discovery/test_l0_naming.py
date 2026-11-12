@@ -4,6 +4,8 @@ import importlib
 import pkgutil
 import re
 from pathlib import Path
+from types import ModuleType
+from typing import Iterator
 
 import aerospike
 import aerospike_helpers
@@ -13,16 +15,16 @@ SOURCE_ROOT = Path(__file__).resolve().parents[2]
 NEUTRAL_NAME = re.compile("nlb", re.IGNORECASE)
 
 
-def public_names(obj):
+def public_names(obj: object) -> list[str]:
     return [name for name in dir(obj) if not name.startswith("_")]
 
 
-def helper_modules():
+def helper_modules() -> Iterator[ModuleType]:
     for info in pkgutil.walk_packages(aerospike_helpers.__path__, "aerospike_helpers."):
         yield importlib.import_module(info.name)
 
 
-def config_keys():
+def config_keys() -> list[str]:
     """Return every client config and policy key the client accepts, read from the C source."""
     source = (SOURCE_ROOT / "src" / "main" / "aerospike.c").read_text()
     start = source.index("DEFINE_SET_OF_VALID_KEYS(\n")
@@ -31,7 +33,7 @@ def config_keys():
 
 
 # U-11: no public identifier or config key names a load balancer product
-def test_public_names_are_topology_neutral():
+def test_public_names_are_topology_neutral() -> None:
     keys = config_keys()
     assert "ip_map" in keys and "use_services_alternate" in keys
 
