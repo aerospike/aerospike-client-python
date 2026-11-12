@@ -233,6 +233,17 @@ def connect_when_ready(seed: tuple, **options: Any) -> aerospike.Client:
             time.sleep(1)
 
 
+def accepts_login(seed: tuple) -> bool:
+    """Return whether a client can log in through seed. A node that just joined rejects the
+    credentials until it has the cluster's users."""
+    try:
+        client = connect(seed, connect_timeout=1000)
+    except aerospike.exception.AerospikeError:
+        return False
+    client.close()
+    return True
+
+
 def wait_for_size(client: aerospike.Client, size: int, tend_interval_ms: int = TEND_INTERVAL_MS) -> dict:
     """Wait until the client holds size nodes, give it the tends that fetch their partitions, and
     return its get_node_names() entries by node name."""

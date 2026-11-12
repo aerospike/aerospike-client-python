@@ -20,9 +20,9 @@ import l3_cluster as l3
 NAMESPACE = "test"
 SET_NAME = "l3-scale"
 MIN_PODS = 2
-# K-2's budget is two tend intervals from the new node answering through its NodePort, which includes
-# a tend that waited out connect_timeout on a connection made just before, so it runs at the default
-# interval
+# K-2's budget is two tend intervals from the new node accepting a login through its NodePort, which
+# includes a tend that waited out connect_timeout on a connection made just before, so it runs at the
+# default interval
 SCALE_UP_TEND_INTERVAL_MS = 1000
 LOAD_THREADS = 4
 LOAD_KEYS = 1000
@@ -54,12 +54,12 @@ def services(cluster: l3.Cluster) -> Iterator[list[str]]:
 
 class ReadyWatch:
     """Poll the cluster on a thread and record, on time.monotonic(), when a pod that is not in before
-    first turns Ready and when its node first answers an info request through its Service NodePort
-    for port."""
+    first turns Ready and when its node first accepts a login through its Service NodePort for
+    port."""
 
     def __init__(self, cluster: l3.Cluster, before: set[str], port: int) -> None:
         self.ready_at: Optional[float] = None
-        self.answered_at: Optional[float] = None
+        self.logged_in_at: Optional[float] = None
         self._stopped = threading.Event()
         self._thread = threading.Thread(target=self._run, args=(cluster, before, port), daemon=True)
         self._thread.start()
@@ -67,7 +67,7 @@ class ReadyWatch:
     def _run(self, cluster: l3.Cluster, before: set[str], port: int) -> None:
         pod = None
         node_port = 0
-        while self.answered_at is None and not self._stopped.is_set():
+        while self.logged_in_at is None and not self._stopped.is_set():
             if pod is None:
                 ready = cluster.ready_pods() - before
                 if ready:
@@ -75,8 +75,8 @@ class ReadyWatch:
                     pod = min(ready)
             elif node_port == 0:
                 node_port = cluster.node_port(pod, port)
-            elif di.answers(l3.endpoint(), node_port):
-                self.answered_at = time.monotonic()
+            elif l3.accepts_login((l3.endpoint(), node_port)):
+                self.logged_in_at = time.monotonic()
                 return
             if pod is None:
                 self._stopped.wait(0.1)
@@ -105,8 +105,9 @@ def client_errors(client: aerospike.Client) -> int:
 
 
 # K-2: one client seeded once holds the pod the operator adds within two tend intervals of the
-# later of the peers-generation bump that announces it and the new node answering through its
-# Service NodePort. The client holds it at the endpoint hostname and the new pod's own Service
+# later of the peers-generation bump that announces it and the new node accepting a login through
+# its Service NodePort, which follows the pod turning Ready by seconds while the node gets the
+# cluster's users. The client holds it at the endpoint hostname and the new pod's own Service
 # NodePort, without being rebuilt or reseeded, and keeps the nodes it held.
 @pytest.mark.l3
 def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Cluster, warnings: list[str]) -> None:
@@ -130,7 +131,7 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         try:
             cluster.resize(size + 1)
             deadline = time.monotonic() + l3.SCALE_TIMEOUT_SEC
-            while (bump is None or active is None or watch.answered_at is None) and time.monotonic() < deadline:
+            while (bump is None or active is None or watch.logged_in_at is None) and time.monotonic() < deadline:
                 now = time.monotonic()
                 if bump is None and observer("peers-generation") != generation:
                     bump = now
@@ -142,14 +143,14 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
                 time.sleep(POLL_SEC)
         finally:
             watch.stop()
-        assert bump and watch.answered_at and active, (
-            f"bump={bump} ready={watch.ready_at} answered={watch.answered_at} active={active}: no "
-            "peers-generation bump, answer through a new Ready pod's NodePort or new node"
+        assert bump and watch.logged_in_at and active, (
+            f"bump={bump} ready={watch.ready_at} loggedIn={watch.logged_in_at} active={active}: no "
+            "peers-generation bump, login through a new Ready pod's NodePort or new node"
         )
 
         bump_to_ready_ms = (watch.ready_at - bump) * 1000
-        ready_to_answered_ms = (watch.answered_at - watch.ready_at) * 1000
-        elapsed_ms = max(0.0, (active - max(bump, watch.answered_at)) * 1000)
+        ready_to_logged_in_ms = (watch.logged_in_at - watch.ready_at) * 1000
+        elapsed_ms = max(0.0, (active - max(bump, watch.logged_in_at)) * 1000)
         budget_ms = 2 * SCALE_UP_TEND_INTERVAL_MS
         cluster.scale(size + 1)
         pod = next(pod for pod in cluster.pods() if pod.name not in before)
@@ -159,17 +160,17 @@ def test_k2_scale_up_new_node_active_within_two_tend_intervals(cluster: l3.Clust
         alternate = info("service-clear-alt")
         print(f"L3-SCALE-UP node={added['node_name']} pod={pod.name} access={access} alternate={alternate} "
               f"serviceNodePort={node_port} client={added} generation={generation}->{observer('peers-generation')} "
-              f"bumpToReadyMs={bump_to_ready_ms:.0f} readyToAnsweredMs={ready_to_answered_ms:.0f} "
-              f"answeredToActiveMs={elapsed_ms:.0f} "
+              f"bumpToReadyMs={bump_to_ready_ms:.0f} readyToLoggedInMs={ready_to_logged_in_ms:.0f} "
+              f"loggedInToActiveMs={elapsed_ms:.0f} "
               f"bumpToActiveMs={(active - bump) * 1000:.0f} tendInterval={SCALE_UP_TEND_INTERVAL_MS} "
               f"budgetMs={budget_ms} bumpAt={bump:.3f} readyAt={watch.ready_at:.3f} "
-              f"answeredAt={watch.answered_at:.3f} activeAt={active:.3f}")
+              f"loggedInAt={watch.logged_in_at:.3f} activeAt={active:.3f}")
         assert node_port > 0, f"{pod.name} has no Service NodePort for {port}"
         assert l3.has_address(access, pod.ip), f"{added['node_name']} access {access} is not {pod}"
         assert alternate == f"{l3.endpoint()}:{node_port}", f"{added['node_name']} ({pod.name}) alternate"
         assert added["port"] == node_port
         assert elapsed_ms <= budget_ms, (
-            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name} answering, "
+            f"{added['node_name']} active {elapsed_ms:.0f} ms after the bump and {pod.name} accepting a login, "
             f"budget {budget_ms} ms"
         )
 
