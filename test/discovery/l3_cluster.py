@@ -16,7 +16,7 @@ import re
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import aerospike
 import discovery_info as di
@@ -253,8 +253,8 @@ def wait_for_size(client: aerospike.Client, size: int, tend_interval_ms: int = T
     return di.client_nodes(client)
 
 
-def infos(client: aerospike.Client) -> dict:
-    """Return an info function for each node the client holds, by node name."""
+def node_info_by_name(client: aerospike.Client) -> dict[str, Callable[[str], str]]:
+    """Return a di.node_info function for each node the client holds, by node name."""
     return {name: di.node_info(client, name) for name in di.client_nodes(client)}
 
 
@@ -262,10 +262,10 @@ def assert_served(client: aerospike.Client, set_name: str, size: int, row: str,
                   tend_interval_ms: int = TEND_INTERVAL_MS) -> None:
     """Wait until the nodes the client holds report a stable cluster of size nodes, give the client
     the tends that fetch their partitions, and assert every node serves the keys it is master of."""
-    node_infos = infos(client)
-    di.wait_cluster_stable(list(node_infos.values()), size)
+    info_by_name = node_info_by_name(client)
+    di.wait_cluster_stable(list(info_by_name.values()), size)
     time.sleep(4 * tend_interval_ms / 1000)
-    di.assert_served_by_owners(client, NAMESPACE, set_name, row, node_infos)
+    di.assert_served_by_owners(client, NAMESPACE, set_name, row, info_by_name)
 
 
 def has_address(access: str, ip: str) -> bool:

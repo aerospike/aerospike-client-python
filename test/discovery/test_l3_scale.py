@@ -227,8 +227,8 @@ def test_k3_scale_down_removes_node_without_retry_storm(cluster: l3.Cluster) -> 
                 pod = l3.pod_of(pods, di.node_info(client, name)("service-clear-std"))
                 assert pod is not None, f"{name} is no pod in {pods}"
                 assert pod.name in remaining, f"{pod.name} not in {sorted(remaining)}"
-            infos = l3.infos(client)
-            di.wait_cluster_stable(list(infos.values()), size - 1)
+            info_by_name = l3.node_info_by_name(client)
+            di.wait_cluster_stable(list(info_by_name.values()), size - 1)
             time.sleep(4 * l3.TEND_INTERVAL_MS / 1000)
 
             errors = client_errors(client)
