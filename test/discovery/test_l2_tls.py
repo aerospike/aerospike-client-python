@@ -103,7 +103,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
         di.assert_served_by_owners(client, NAMESPACE, SET_NAME, row="L2-N6", infos=infos)
     finally:
         client.close()
-    assert di.legacy_matches(warnings) == []
+    assert di.logged_legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         connect(nodes, seed=first, tls_name=host)
@@ -125,8 +125,9 @@ def test_n17_cn_only_certificate_is_rejected(nodes: list[Node], warnings: list[s
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = connect(nodes, seed=first, tls_name=first.tls_name)
-        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={di.legacy_matches(warnings)}")
+        print(f"L2-N17-ACCEPTED nodes={sorted(di.client_nodes(client))} legacy={di.logged_legacy_matches(warnings)}")
         client.close()
-        assert di.legacy_matches(warnings), "Accepted a CN-only certificate without the legacy name check warning"
+        legacy = di.logged_legacy_matches(warnings)
+        assert legacy, "Accepted a CN-only certificate without the legacy name check warning"
     print(f"L2-N17-ERROR {raised.value}")
     assert f"TLS name '{first.tls_name}' mismatch" in warnings

@@ -180,12 +180,12 @@ def test_n18_pass_through_colliding_nodes_create_no_node(
         wait_for_nodes(client, names)
 
         def logged() -> bool:
-            return all(len(di.collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
+            return all(len(di.logged_collisions(warnings, name)) >= COLLISION_RETRIES for name in colliding)
 
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
         assert sorted(di.client_nodes(client)) == sorted(names)
         assert retried, f"Collision of {colliding} not logged every tend: {warnings}"
-        message = di.collisions(warnings, colliding[0])[0]
+        message = di.logged_collisions(warnings, colliding[0])[0]
         print(f"L2-N18-LOG {message}")
         assert message in di.expected_collision_messages(translator="pass-through", endpoint=endpoint, names=colliding)
         infos = {node.name: node.info for node in nodes}

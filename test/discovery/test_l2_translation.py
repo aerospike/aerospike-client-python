@@ -203,7 +203,7 @@ def test_n7_node_removed_from_endpoint_degrades_and_returns(
         client.close()
 
 
-def misses(messages: list[str], node_name: str) -> list[str]:
+def logged_misses(messages: list[str], node_name: str) -> list[str]:
     return [message for message in messages if f"has no mapping for node {node_name}" in message]
 
 
@@ -230,8 +230,8 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
     )
     try:
         wait_for_nodes(client, mapped_names)
-        retried = di.wait_for(lambda: len(misses(warnings, victim.name)) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
-        found = misses(warnings, victim.name)
+        retried = di.wait_for(lambda: len(logged_misses(warnings, victim.name)) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
+        found = logged_misses(warnings, victim.name)
         print(f"L2-N8-RESULT victim={victim.name} nodes={sorted(di.client_nodes(client))} missWarnings={len(found)}")
         assert retried, f"Missed peer {victim.name} not retried every tend: {warnings}"
         assert sorted(di.client_nodes(client)) == mapped_names
@@ -449,12 +449,12 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warni
     try:
 
         def logged() -> bool:
-            return all(len(di.collisions(warnings, node.name)) >= MISS_RETRIES for node in (a, b))
+            return all(len(di.logged_collisions(warnings, node.name)) >= MISS_RETRIES for node in (a, b))
 
         retried = di.wait_for(logged, JOIN_TIMEOUT_SEC)
         assert sorted(di.client_nodes(client)) == [seed.name]
         assert retried, f"Collision of {a.name} and {b.name} not logged every tend: {warnings}"
-        message = di.collisions(warnings, a.name)[0]
+        message = di.logged_collisions(warnings, a.name)[0]
         print(f"L2-N18-LOG {message}")
         expected = di.expected_collision_messages(translator="port-map", endpoint=a.listener, names=[a.name, b.name])
         assert message in expected
@@ -488,10 +488,10 @@ def test_n19_node_outside_range_decided_by_on_miss(
     client = connect(seed=observer, translation={"provider": "port-map", "port_map": port_map, "on_miss": "strict"})
     try:
         wait_for_nodes(client, names)
-        retried = di.wait_for(lambda: len(misses(warnings, outside[0])) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
+        retried = di.wait_for(lambda: len(logged_misses(warnings, outside[0])) >= MISS_RETRIES, JOIN_TIMEOUT_SEC)
         assert sorted(di.client_nodes(client)) == names
         assert retried, f"Missed node {outside[0]} not retried every tend: {warnings}"
-        message = misses(warnings, outside[0])[0]
+        message = logged_misses(warnings, outside[0])[0]
         print(f"L2-N19-STRICT-LOG {message}")
         assert message == expected_miss_message(outside[0], advertised)
     finally:

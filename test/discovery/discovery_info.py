@@ -379,13 +379,13 @@ def assert_served_by_owners(
         assert proxied == 0, f"{name} proxied {proxied} commands"
 
 
-def legacy_matches(messages: list[str]) -> list[str]:
+def logged_legacy_matches(messages: list[str]) -> list[str]:
     """Return the C client's warnings for a TLS certificate it accepted only through its deprecated
     legacy name check."""
     return [message for message in messages if "only through the legacy name check" in message]
 
 
-def collisions(messages: list[str], name: str) -> list[str]:
+def logged_collisions(messages: list[str], name: str) -> list[str]:
     """Return the translation collision messages that name a node."""
     return [message for message in messages if "translated nodes" in message and name in message]
 

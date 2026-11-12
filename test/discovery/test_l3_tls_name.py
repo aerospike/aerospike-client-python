@@ -102,7 +102,7 @@ def test_k6_shared_certificate_carries_tls_name_and_client_validates_against_it(
         l3.assert_served(client, SET_NAME, size=len(pods), row="L3-K-6")
     finally:
         client.close()
-    assert di.legacy_matches(warnings) == []
+    assert di.logged_legacy_matches(warnings) == []
 
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = l3.connect(seed=(endpoint, seed_port, endpoint), tls=tls)
