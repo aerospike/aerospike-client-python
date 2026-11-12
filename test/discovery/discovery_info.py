@@ -233,7 +233,7 @@ def wait_joined(
     assert bump_ns is not None, f"peers-generation stayed at {generation}"
     assert reachable_ns is not None, "The new node never answered"
     assert joined is not None, "No new node joined the client"
-    print(f"L2-JOINED node={joined['node_name']} bumpToReachableMs={(reachable_ns - bump_ns) / 1e6:.1f} "
+    print(f"NODE-JOINED node={joined['node_name']} bumpToReachableMs={(reachable_ns - bump_ns) / 1e6:.1f} "
           f"bumpToActiveMs={(active_ns - bump_ns) / 1e6:.1f}")
     start_ns = max(bump_ns, reachable_ns)
     return joined, max(0.0, (active_ns - start_ns) / 1e6)

@@ -8,6 +8,21 @@ builds, given as environment variables:
 - DISCOVERY_TLS_CA_FILE and DISCOVERY_TLS_NAME: set when setup-kind-ako serves TLS, with enable-tls
 
 The AerospikeCluster, its pods and their Services are read from the API server through kubectl.
+
+Kubernetes terms the L3 tests use:
+
+- kind: a Kubernetes cluster whose nodes are Docker containers on the runner
+- AKO: the Aerospike Kubernetes Operator, which turns an AerospikeCluster object (its size, Aerospike
+  config and network policy) into running pods and keeps them in step with it
+- pod: the container running one Aerospike server node. The operator runs the pods as a StatefulSet, so they are named
+  <cluster>-<rack>-<ordinal>, with ordinals counting up from 0, and a pod that is deleted comes back
+  with the same name
+- Service with a NodePort: a stable address for a pod. Kubernetes picks a port from the NodePort
+  range and forwards connections to it on every node to the pod. The operator creates one per pod,
+  named after the pod, and advertises the endpoint hostname with that port as the pod's alternate
+  access address
+- UID: the identity of an object. A Service deleted and created again with the same name has a new UID
+- Ready: the condition Kubernetes sets on a pod once its readiness probe passes
 """
 
 import base64
@@ -78,9 +93,15 @@ class Cluster:
         assert len(found) == 1, f"AerospikeClusters {found}"
         self.namespace, self.name = found[0].split(" ")
 
-    def get(self, jsonpath: str) -> str:
-        reply = kubectl("-n", self.namespace, "get", "aerospikecluster", self.name, "-o", f"jsonpath={{{jsonpath}}}")
+    def query(self, kind: str, name: str, jsonpath: str) -> str:
+        """Return the jsonpath of the named object in the cluster's namespace, or an empty string
+        when the object does not exist."""
+        reply = kubectl("-n", self.namespace, "get", kind, name, "--ignore-not-found", "-o", f"jsonpath={{{jsonpath}}}")
         return reply.strip()
+
+    def get(self, jsonpath: str) -> str:
+        """Return the jsonpath of the AerospikeCluster."""
+        return self.query("aerospikecluster", self.name, jsonpath)
 
     def size(self) -> int:
         return int(self.get(".spec.size"))
@@ -113,19 +134,14 @@ class Cluster:
     def node_port(self, service: str, port: int) -> int:
         """Return a Service's NodePort for port, or 0 when it has none. Each pod's Service has the
         pod's name."""
-        value = kubectl(
-            "-n", self.namespace, "get", "service", service, "--ignore-not-found", "-o",
-            f"jsonpath={{.spec.ports[?(@.port=={port})].nodePort}}",
-        ).strip()
+        value = self.query("service", service, f".spec.ports[?(@.port=={port})].nodePort")
         if not value:
             return 0
         return int(value)
 
     def uid(self, kind: str, name: str) -> str:
         """Return an object's UID, or an empty string when it does not exist."""
-        return kubectl(
-            "-n", self.namespace, "get", kind, name, "--ignore-not-found", "-o", "jsonpath={.metadata.uid}"
-        ).strip()
+        return self.query(kind, name, ".metadata.uid")
 
     def ready_endpoints(self, service: str) -> int:
         """Return the number of ready endpoints in a Service's EndpointSlices."""
@@ -165,7 +181,7 @@ class Cluster:
     def mounted_certificate(self, source: str, key: str) -> bytes:
         """Return the PEM certificate stored under key in the Kubernetes Secret named source."""
         escaped = key.replace(".", "\\.")
-        value = kubectl("-n", self.namespace, "get", "secret", source, "-o", f"jsonpath={{.data.{escaped}}}").strip()
+        value = self.query("secret", source, f".data.{escaped}")
         return base64.b64decode(value)
 
     def resize(self, size: int) -> None:
