@@ -22,7 +22,7 @@ COLLISION_RETRIES = 3
 
 
 @pytest.fixture(scope="module")
-def nodes() -> list[di.Node]:
+def nodes() -> list[di.ToxiproxyNode]:
     """Query every listener for its node's name and its one alternate address."""
     found = di.listener_nodes("service-clear-alt")
     for node in found:
@@ -30,11 +30,11 @@ def nodes() -> list[di.Node]:
     return found
 
 
-def seed(node: di.Node) -> tuple[str, int]:
+def seed(node: di.ToxiproxyNode) -> tuple[str, int]:
     return di.split_endpoint(node.advertised[0])
 
 
-def connect(node: di.Node) -> aerospike.Client:
+def connect(node: di.ToxiproxyNode) -> aerospike.Client:
     config = {
         "hosts": [seed(node)],
         "use_services_alternate": True,
@@ -49,7 +49,7 @@ def wait_for_nodes(client: aerospike.Client, names: Iterable[str]) -> None:
     di.wait_for_nodes(client, names, JOIN_TIMEOUT_SEC, TEND_INTERVAL_MS)
 
 
-def assert_routes_to_owners(row: str, nodes: list[di.Node]) -> None:
+def assert_routes_to_owners(row: str, nodes: list[di.ToxiproxyNode]) -> None:
     for node in nodes:
         assert seed(node)[1] == node.port, f"{node} advertises another port"
 
@@ -67,14 +67,14 @@ def assert_routes_to_owners(row: str, nodes: list[di.Node]) -> None:
 
 
 @pytest.mark.l2("pass-through-names")
-def test_n15_distinct_names_route_to_every_owner(nodes: list[di.Node]) -> None:
+def test_n15_distinct_names_route_to_every_owner(nodes: list[di.ToxiproxyNode]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == len(nodes), f"Hostnames {hostnames}"
     assert_routes_to_owners("N-15", nodes)
 
 
 @pytest.mark.l2("pass-through-ports")
-def test_n16_shared_name_routes_to_every_owner(nodes: list[di.Node]) -> None:
+def test_n16_shared_name_routes_to_every_owner(nodes: list[di.ToxiproxyNode]) -> None:
     hostnames = {seed(node)[0] for node in nodes}
     assert len(hostnames) == 1, f"Hostnames {hostnames}"
     assert_routes_to_owners("N-16", nodes)
@@ -97,7 +97,7 @@ def add_toxiproxy_listener(container: str, port: int, like: str) -> None:
 # port is active within 2 x tend_interval of the peers-generation bump that announces it
 @pytest.mark.l2("pass-through-ports")
 def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
-    nodes: list[di.Node], added_nodes: list[str]
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str]
 ) -> None:
     observer = nodes[0]
     names = {node.name for node in nodes}
@@ -128,7 +128,7 @@ def test_n16_new_node_on_shared_name_active_within_two_tend_intervals(
 # master of. Only one of the two gets the shared port's listener, once both are in the cluster.
 @pytest.mark.l2("pass-through-ports")
 def test_n18_pass_through_colliding_nodes_create_no_node(
-    nodes: list[di.Node], added_nodes: list[str], warnings: list[str]
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str], warnings: list[str]
 ) -> None:
     observer = nodes[0]
     names = [node.name for node in nodes]

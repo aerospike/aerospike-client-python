@@ -38,7 +38,7 @@ SINGLE_TRY = {"max_retries": 0, "total_timeout": 1000}
 
 
 @pytest.fixture(scope="module")
-def nodes() -> list[di.Node]:
+def nodes() -> list[di.ToxiproxyNode]:
     return di.listener_nodes("service-clear-std")
 
 
@@ -51,12 +51,15 @@ def disabled_toxiproxy_listeners() -> Iterator[list[str]]:
         di.set_toxiproxy_listener(proxy, enabled=True)
 
 
-def port_map_keyed_by_node_name(nodes: list[di.Node]) -> dict[str, str]:
+def port_map_keyed_by_node_name(nodes: list[di.ToxiproxyNode]) -> dict[str, str]:
     return {node.name: node.listener for node in nodes}
 
 
 def connect(
-    seed: Optional[di.Node], translation: Optional[dict] = None, discovery: Optional[dict] = None, **options: Any
+    seed: Optional[di.ToxiproxyNode],
+    translation: Optional[dict] = None,
+    discovery: Optional[dict] = None,
+    **options: Any,
 ) -> aerospike.Client:
     config = {
         "hosts": [],
@@ -85,7 +88,7 @@ def wait_for_no_nodes(client: aerospike.Client) -> None:
     assert dropped, f"Client kept nodes {sorted(di.client_nodes(client))} with every listener disabled"
 
 
-def disable_toxiproxy_listeners(nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]) -> None:
+def disable_toxiproxy_listeners(nodes: list[di.ToxiproxyNode], disabled_toxiproxy_listeners: list[str]) -> None:
     for node in nodes:
         disabled_toxiproxy_listeners.append(node.proxy)
         di.set_toxiproxy_listener(node.proxy, enabled=False)
@@ -97,7 +100,7 @@ def enable_toxiproxy_listeners(disabled_toxiproxy_listeners: list[str]) -> None:
     disabled_toxiproxy_listeners.clear()
 
 
-def assert_port_map_joins(row: str, nodes: list[di.Node], port_map: dict[str, str]) -> None:
+def assert_port_map_joins(row: str, nodes: list[di.ToxiproxyNode], port_map: dict[str, str]) -> None:
     print(f"L2-PORT-MAP {row} {port_map}")
     client = connect(seed=nodes[0], translation={"provider": "port-map", "port_map": port_map})
     try:
@@ -115,7 +118,7 @@ def assert_port_map_joins(row: str, nodes: list[di.Node], port_map: dict[str, st
 # N-1: baseline with no translator. The seed answers through its listener, but every peer advertises
 # an address the client has no route to, so init fails naming each of them
 @pytest.mark.l2("default")
-def test_n1_without_translator_fails_on_peers(nodes: list[di.Node]) -> None:
+def test_n1_without_translator_fails_on_peers(nodes: list[di.ToxiproxyNode]) -> None:
     seed, peers = nodes[0], nodes[1:]
     assert peers, f"N-1 needs peers: {nodes}"
     for peer in peers:
@@ -138,20 +141,20 @@ def test_n1_without_translator_fails_on_peers(nodes: list[di.Node]) -> None:
 # listener, and each serves the keys it is master of with no proxy hop, so every partition owner is a
 # distinct node rather than one seed-only node
 @pytest.mark.l2("default")
-def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes: list[di.Node]) -> None:
+def test_n2_n5_port_map_by_endpoint_joins_all_nodes(nodes: list[di.ToxiproxyNode]) -> None:
     assert_port_map_joins(row="N-2-endpoint", nodes=nodes, port_map=di.port_map_keyed_by_advertised(nodes))
 
 
 # N-2: port-map keyed by node name
 @pytest.mark.l2("default")
-def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.Node]) -> None:
+def test_n2_port_map_by_node_name_joins_all_nodes(nodes: list[di.ToxiproxyNode]) -> None:
     assert_port_map_joins(row="N-2-node-name", nodes=nodes, port_map=port_map_keyed_by_node_name(nodes))
 
 
 # N-4: the dns provider seeds the client from the endpoint's SRV records, one per listener, served by
 # the DNS server on the client network, and port-map translates the peers
 @pytest.mark.l2("default")
-def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
+def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.ToxiproxyNode]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     dns = {"names": [f"_aerospike._tcp.{host}"], "record_type": "srv", "servers": [os.environ["DISCOVERY_DNS_SERVER"]]}
     translation = {"provider": "port-map", "port_map": di.port_map_keyed_by_advertised(nodes)}
@@ -168,7 +171,7 @@ def test_n4_dns_provider_seeds_through_endpoint(nodes: list[di.Node]) -> None:
 # serving theirs. Once the listener is enabled again the node serves its keys again.
 @pytest.mark.l2("default")
 def test_n7_node_removed_from_endpoint_degrades_and_returns(
-    nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]
+    nodes: list[di.ToxiproxyNode], disabled_toxiproxy_listeners: list[str]
 ) -> None:
     victim = nodes[-1]
     others = nodes[:-1]
@@ -221,7 +224,7 @@ def expected_miss_message(node_name: str, advertised: str) -> str:
 # miss naming the node, its endpoint, the translator and the setting that avoids it on every tend,
 # and keeps serving the keys the mapped nodes are master of
 @pytest.mark.l2("default")
-def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str]) -> None:
+def test_n8_strict_miss_creates_no_node(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     assert len(nodes) >= 2, f"N-8 needs a mapped node and a victim: {nodes}"
     victim = nodes[-1]
     mapped = nodes[:-1]
@@ -252,7 +255,7 @@ def test_n8_strict_miss_creates_no_node(nodes: list[di.Node], warnings: list[str
 # reachable node joins at its advertised address, every node serves the keys it is master of, and
 # no miss is logged.
 @pytest.mark.l2("reachable")
-def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.Node], warnings: list[str]) -> None:
+def test_n10_unmapped_peer_passes_through_unchanged(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     container = os.environ["DISCOVERY_REACHABLE_NODE"]
     reachable = next(node for node in nodes if node.proxy == container)
     assert reachable is not nodes[0], f"Reachable node {reachable} must not be the first listener"
@@ -290,11 +293,11 @@ def range_toxiproxy_listener(octet: int) -> str:
     return f"{host}:{port_base + octet}"
 
 
-def service_port(nodes: list[di.Node]) -> int:
+def service_port(nodes: list[di.ToxiproxyNode]) -> int:
     return di.split_endpoint(nodes[0].advertised[0])[1]
 
 
-def range_port_map(nodes: list[di.Node]) -> dict[str, str]:
+def range_port_map(nodes: list[di.ToxiproxyNode]) -> dict[str, str]:
     """Map every address of the range, on the nodes' service port, to its range listener, and check
     that the listeners exist and the nodes are in the range."""
     prefix, first, last = address_range()
@@ -311,7 +314,7 @@ def range_port_map(nodes: list[di.Node]) -> dict[str, str]:
     return port_map
 
 
-def free_address(nodes: list[di.Node]) -> tuple[str, int]:
+def free_address(nodes: list[di.ToxiproxyNode]) -> tuple[str, int]:
     prefix, first, last = address_range()
     used = {di.split_endpoint(advertised)[0] for node in nodes for advertised in node.advertised}
     for octet in range(first, last + 1):
@@ -329,7 +332,7 @@ def free_address(nodes: list[di.Node]) -> tuple[str, int]:
 # node added mid-test must already be in the map.
 @pytest.mark.l2("port-map-range")
 def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
-    nodes: list[di.Node], added_nodes: list[str], warnings: list[str]
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str], warnings: list[str]
 ) -> None:
     observer = nodes[0]
     names = [node.name for node in nodes]
@@ -353,8 +356,8 @@ def test_n11_n19_prefilled_port_map_joins_new_node_within_two_tend_intervals(
         assert bump_to_active_ms <= budget_ms, f"Active {bump_to_active_ms:.1f} ms after the bump, budget {budget_ms}"
 
         port = di.split_endpoint(listener)[1]
-        added = di.Node(joined["node_name"], proxy=reply["container"], port=port,
-                        advertised=[f"{address}:{service_port(nodes)}"])
+        added = di.ToxiproxyNode(joined["node_name"], proxy=reply["container"], port=port,
+                                 advertised=[f"{address}:{service_port(nodes)}"])
         grown = nodes + [added]
         di.wait_cluster_stable([node.info for node in grown], len(grown))
         wait_for_nodes(client, [node.name for node in grown])
@@ -385,7 +388,9 @@ class SeedProvider(SeedCandidateProvider):
 # its seed provider. Once the listeners are enabled again it re-seeds from the seeds it holds within
 # 2 x tend_interval plus the connect timeout, without waiting for refresh_interval_ms.
 @pytest.mark.l2("default")
-def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiproxy_listeners: list[str]) -> None:
+def test_n12_reseed_on_zero_active_nodes(
+    nodes: list[di.ToxiproxyNode], disabled_toxiproxy_listeners: list[str]
+) -> None:
     names = [node.name for node in nodes]
     provider = SeedProvider((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {"provider": provider, "refresh_interval_ms": RESEED_REFRESH_INTERVAL_MS}
@@ -426,7 +431,7 @@ def test_n12_reseed_on_zero_active_nodes(nodes: list[di.Node], disabled_toxiprox
 # N-14: use_services_alternate against nodes with no alternate address. The seed's alternate list is
 # empty, so init fails with an error naming the node and the setting instead of an empty cluster
 @pytest.mark.l2("default")
-def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.Node]) -> None:
+def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.ToxiproxyNode]) -> None:
     seed = nodes[0]
     assert seed.info("service-clear-alt") == "", f"{seed.name} advertises an alternate address"
 
@@ -442,7 +447,7 @@ def test_n14_use_services_alternate_without_alternate_fails_init(nodes: list[di.
 # becomes a node, the collision is logged on every tend naming both nodes, the address and the
 # translator, and the seed keeps serving the keys it is master of
 @pytest.mark.l2("default")
-def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warnings: list[str]) -> None:
+def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     assert len(nodes) >= 3, f"N-18 needs a seed and two colliding peers: {nodes}"
     seed, a, b = nodes[:3]
     port_map = di.port_map_keyed_by_advertised(nodes)
@@ -473,7 +478,7 @@ def test_n18_port_map_colliding_nodes_create_no_node(nodes: list[di.Node], warni
 # tend and no node is created.
 @pytest.mark.l2("port-map-range")
 def test_n19_node_outside_range_decided_by_on_miss(
-    nodes: list[di.Node], added_nodes: list[str], warnings: list[str]
+    nodes: list[di.ToxiproxyNode], added_nodes: list[str], warnings: list[str]
 ) -> None:
     observer = nodes[0]
     names = sorted(node.name for node in nodes)
@@ -538,7 +543,7 @@ class BlockingSeedProvider(SeedProvider):
         self.closed.set()
 
 
-def blocking_provider_client(nodes: list[di.Node]) -> tuple[BlockingSeedProvider, aerospike.Client]:
+def blocking_provider_client(nodes: list[di.ToxiproxyNode]) -> tuple[BlockingSeedProvider, aerospike.Client]:
     provider = BlockingSeedProvider((os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port))
     discovery = {
         "provider": provider,
@@ -569,7 +574,7 @@ def put_and_get_for(client: aerospike.Client, row: str, seconds: int) -> int:
 # M-5: in thread mode a seed provider refresh that blocks does not hold up tend. Commands keep
 # working while it blocks, and the next refresh sees every tend that ran meanwhile.
 @pytest.mark.l2("default")
-def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: list[str]) -> None:
+def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     provider, client = blocking_provider_client(nodes)
     try:
         wait_for_nodes(client, [node.name for node in nodes])
@@ -591,7 +596,7 @@ def test_m5_blocked_refresh_does_not_block_tend(nodes: list[di.Node], warnings: 
 # M-5: close waits at most refresh_timeout_ms for a blocked refresh, and the provider is closed once
 # the refresh returns
 @pytest.mark.l2("default")
-def test_m5_close_during_blocked_refresh_returns(nodes: list[di.Node], warnings: list[str]) -> None:
+def test_m5_close_during_blocked_refresh_returns(nodes: list[di.ToxiproxyNode], warnings: list[str]) -> None:
     provider, client = blocking_provider_client(nodes)
     try:
         assert di.wait_for(provider.blocked.is_set, JOIN_TIMEOUT_SEC), "The provider was not refreshed again"

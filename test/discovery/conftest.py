@@ -24,7 +24,7 @@ def warnings() -> Iterator[list[str]]:
 
 
 @pytest.fixture
-def added_nodes(nodes: list[di.Node]) -> Iterator[list[str]]:
+def added_nodes(nodes: list[di.ToxiproxyNode]) -> Iterator[list[str]]:
     """Collect the containers a test starts through the node server, and remove them and the
     listeners named after them afterwards."""
     containers = []

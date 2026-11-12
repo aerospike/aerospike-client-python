@@ -56,7 +56,7 @@ F4_ERROR_RATE_WINDOW = 4
 
 
 @pytest.fixture(scope="module")
-def nodes() -> list[di.Node]:
+def nodes() -> list[di.ToxiproxyNode]:
     return di.listener_nodes("service-clear-std")
 
 
@@ -81,7 +81,7 @@ def remove_toxic(toxics: list[tuple[str, str]], proxy: str, name: str) -> None:
     di.remove_toxic(proxy, name)
 
 
-def connect(nodes: list[di.Node], **options: Any) -> aerospike.Client:
+def connect(nodes: list[di.ToxiproxyNode], **options: Any) -> aerospike.Client:
     """Seed through the first node's listener with port-map by endpoint and wait for every node."""
     config = {
         "hosts": [(os.environ["DISCOVERY_ENDPOINT_HOSTNAME"], nodes[0].port)],
@@ -98,7 +98,7 @@ def connect(nodes: list[di.Node], **options: Any) -> aerospike.Client:
     return client
 
 
-def owners(nodes: list[di.Node]) -> dict[int, str]:
+def owners(nodes: list[di.ToxiproxyNode]) -> dict[int, str]:
     """Return the name of each partition's master, read from the nodes."""
     found = {}
     for node in nodes:
@@ -134,7 +134,7 @@ def count(outcomes: list[di.Outcome], error_type: type) -> int:
     return sum(1 for outcome in outcomes if isinstance(outcome.error, error_type))
 
 
-def probe(node: di.Node) -> socket.socket:
+def probe(node: di.ToxiproxyNode) -> socket.socket:
     """Open a connection through a node's listener and complete one info request on it, so
     Toxiproxy has linked it to the node."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
@@ -163,7 +163,7 @@ def probe_result(sock: socket.socket) -> str:
 # every listener shows the resets happened, and each node's closed connection count shows the
 # client found them.
 @pytest.mark.l2("idle-reset")
-def test_f1_idle_reset_absorbed_by_pool(nodes: list[di.Node], toxics: list[tuple[str, str]]) -> None:
+def test_f1_idle_reset_absorbed_by_pool(nodes: list[di.ToxiproxyNode], toxics: list[tuple[str, str]]) -> None:
     assert os.environ["DISCOVERY_IDLE_RESET"] == "1"
     for node in nodes:
         add_toxic(toxics, node.proxy, name="f1-rst", toxic_type="reset_peer", toxicity=0.0, attributes={"timeout": 0})
@@ -258,7 +258,7 @@ def bounded(executor: concurrent.futures.Executor, bound_ms: int, command: Calla
 # or fail with a diagnosable error, within a bound from socket_timeout and total_timeout. A hang or a
 # client timeout fails the row.
 @pytest.mark.l2("low-mtu")
-def test_f2_large_record_over_low_mtu_never_hangs(nodes: list[di.Node]) -> None:
+def test_f2_large_record_over_low_mtu_never_hangs(nodes: list[di.ToxiproxyNode]) -> None:
     mtu = int(Path("/sys/class/net/eth0/mtu").read_text().strip())
     print(f"L2-F2-MTU eth0={mtu} network={os.environ['DISCOVERY_CLIENT_NETWORK_MTU']}")
     assert mtu == int(os.environ["DISCOVERY_CLIENT_NETWORK_MTU"])
@@ -306,7 +306,7 @@ def round_succeeds(client: aerospike.Client, count: int) -> bool:
 # bound from socket_timeout and total_timeout rather than hanging or timing out, the client counts
 # the errors, and commands succeed again once the load drops.
 @pytest.mark.l2("port-range")
-def test_f3_source_port_exhaustion_surfaces_error_and_recovers(nodes: list[di.Node]) -> None:
+def test_f3_source_port_exhaustion_surfaces_error_and_recovers(nodes: list[di.ToxiproxyNode]) -> None:
     first, last = (int(port) for port in os.environ["DISCOVERY_PROXY_PORT_RANGE"].split())
     ports = last - first + 1
     threads = 2 * ports * len(nodes)
@@ -378,7 +378,7 @@ def test_f3_source_port_exhaustion_surfaces_error_and_recovers(nodes: list[di.No
         client.close()
 
 
-def drop_victim(nodes: list[di.Node], toxics: list[tuple[str, str]], check: Callable, **options: Any) -> None:
+def drop_victim(nodes: list[di.ToxiproxyNode], toxics: list[tuple[str, str]], check: Callable, **options: Any) -> None:
     """Load the last node with writes to keys it is master of, drop its listener's traffic silently,
     run check(client, victim, load, injected), then remove the toxic and assert the node serves
     again and every node serves the keys it is master of."""
@@ -418,7 +418,7 @@ def drop_victim(nodes: list[di.Node], toxics: list[tuple[str, str]], check: Call
         client.close()
 
 
-def check_timeouts(client: aerospike.Client, victim: di.Node, load: di.Load, injected: float) -> None:
+def check_timeouts(client: aerospike.Client, victim: di.ToxiproxyNode, load: di.Load, injected: float) -> None:
     timed_out = di.wait_for(
         lambda: count(load.errors(), aerospike.exception.TimeoutError) >= F4_THREADS, WAIT_SEC, interval=POLL_SEC
     )
@@ -444,11 +444,13 @@ def check_timeouts(client: aerospike.Client, victim: di.Node, load: di.Load, inj
 # again once the toxic is removed. Whether the client keeps the node is recorded, not asserted:
 # no client marks down a node the cluster still lists.
 @pytest.mark.l2("default")
-def test_f4_silent_drop_times_out_without_blocking(nodes: list[di.Node], toxics: list[tuple[str, str]]) -> None:
+def test_f4_silent_drop_times_out_without_blocking(
+    nodes: list[di.ToxiproxyNode], toxics: list[tuple[str, str]]
+) -> None:
     drop_victim(nodes, toxics, check_timeouts)
 
 
-def check_breaker(client: aerospike.Client, victim: di.Node, load: di.Load, injected: float) -> None:
+def check_breaker(client: aerospike.Client, victim: di.ToxiproxyNode, load: di.Load, injected: float) -> None:
     trip_bound_ms = (F4_ERROR_RATE_WINDOW + 1) * TEND_INTERVAL_MS + F4_BOUND_MS
     tripped = di.wait_for(
         lambda: count(load.errors(), aerospike.exception.MaxErrorRateExceeded) > 0, WAIT_SEC, interval=POLL_SEC
@@ -478,7 +480,7 @@ def check_breaker(client: aerospike.Client, victim: di.Node, load: di.Load, inje
 # bound from error_rate_window and tend_interval, and commands started after the trip fail fast with
 # MaxErrorRateExceeded instead of waiting out socket_timeout.
 @pytest.mark.l2("default")
-def test_f4_silent_drop_trips_circuit_breaker(nodes: list[di.Node], toxics: list[tuple[str, str]]) -> None:
+def test_f4_silent_drop_trips_circuit_breaker(nodes: list[di.ToxiproxyNode], toxics: list[tuple[str, str]]) -> None:
     drop_victim(
         nodes, toxics, check_breaker, max_error_rate=F4_MAX_ERROR_RATE, error_rate_window=F4_ERROR_RATE_WINDOW
     )

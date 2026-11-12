@@ -112,7 +112,7 @@ def peers(reply: str) -> list[tuple[str, str, list[str]]]:
 
 
 @dataclass
-class Node:
+class ToxiproxyNode:
     """A node reached through its own Toxiproxy listener, with the endpoints it advertises in the
     service list it was queried with."""
 
@@ -130,7 +130,7 @@ class Node:
         return reply[command]
 
 
-def listener_nodes(service: str) -> list[Node]:
+def listener_nodes(service: str) -> list[ToxiproxyNode]:
     """Query every listener for its node's name and the endpoints it advertises in service, such as
     service-clear-std or service-clear-alt."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
@@ -145,13 +145,13 @@ def listener_nodes(service: str) -> list[Node]:
         info = request(host, port, "node", service)
         advertised = endpoints(info[service])
         assert advertised, f"{info['node']} on listener {port} advertises nothing in {service}"
-        node = Node(info["node"], proxies[port], port, advertised)
+        node = ToxiproxyNode(info["node"], proxies[port], port, advertised)
         print(f"L2-NODE {node}")
         found.append(node)
     return found
 
 
-def port_map_keyed_by_advertised(nodes: list[Node]) -> dict[str, str]:
+def port_map_keyed_by_advertised(nodes: list[ToxiproxyNode]) -> dict[str, str]:
     return {advertised: node.listener for node in nodes for advertised in node.advertised}
 
 

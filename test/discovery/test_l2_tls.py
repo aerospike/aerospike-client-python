@@ -25,7 +25,7 @@ TLS_PROXY_SUFFIX = "-tls"
 
 
 @dataclass
-class Node:
+class ToxiproxyTlsNode:
     name: str
     port: int
     tls_port: int
@@ -38,7 +38,7 @@ class Node:
 
 
 @pytest.fixture(scope="module")
-def nodes() -> list[Node]:
+def nodes() -> list[ToxiproxyTlsNode]:
     """Query every clear listener for its node's name, the TLS endpoints it advertises and, from its
     peers, every node's tls-name."""
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
@@ -62,14 +62,14 @@ def nodes() -> list[Node]:
         tls_advertised = di.endpoints(reply["service-tls-std"])
         assert tls_advertised, f"{name} advertises no TLS address"
         assert tls_names.get(name), f"No peer lists a tls-name for {name}: {tls_names}"
-        node = Node(name, port=ports[proxy], tls_port=ports[proxy + TLS_PROXY_SUFFIX], tls_advertised=tls_advertised,
-                    tls_name=tls_names[name])
+        node = ToxiproxyTlsNode(name, port=ports[proxy], tls_port=ports[proxy + TLS_PROXY_SUFFIX],
+                                tls_advertised=tls_advertised, tls_name=tls_names[name])
         print(f"L2-NODE {node}")
         found.append(node)
     return found
 
 
-def connect(nodes: list[Node], seed: Node, tls_name: str) -> aerospike.Client:
+def connect(nodes: list[ToxiproxyTlsNode], seed: ToxiproxyTlsNode, tls_name: str) -> aerospike.Client:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     port_map = {advertised: f"{host}:{node.tls_port}" for node in nodes for advertised in node.tls_advertised}
     config = {
@@ -87,7 +87,7 @@ def connect(nodes: list[Node], seed: Node, tls_name: str) -> aerospike.Client:
 # certificate against the node's tls-name, not the endpoint hostname, through its SAN, with no
 # legacy CN match, and a seed whose tls-name is the endpoint hostname fails the handshake.
 @pytest.mark.l2("default", subset="ee")
-def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: list[str]) -> None:
+def test_n6_tls_validates_against_node_tls_name(nodes: list[ToxiproxyTlsNode], warnings: list[str]) -> None:
     host = os.environ["DISCOVERY_ENDPOINT_HOSTNAME"]
     first = nodes[0]
     assert first.tls_name != host, f"tls-name {first.tls_name} is the endpoint hostname"
@@ -124,7 +124,7 @@ def test_n6_tls_validates_against_node_tls_name(nodes: list[Node], warnings: lis
         "major release"
     ),
 )
-def test_n17_cn_only_certificate_is_rejected(nodes: list[Node], warnings: list[str]) -> None:
+def test_n17_cn_only_certificate_is_rejected(nodes: list[ToxiproxyTlsNode], warnings: list[str]) -> None:
     first = nodes[0]
     with pytest.raises(aerospike.exception.AerospikeError) as raised:
         client = connect(nodes, seed=first, tls_name=first.tls_name)
