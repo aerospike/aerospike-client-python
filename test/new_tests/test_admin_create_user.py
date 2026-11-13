@@ -61,7 +61,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -84,7 +84,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -126,7 +126,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -289,7 +289,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -380,4 +380,8 @@ class TestCreateUser(object):
 
         if type(context) == nullcontext:
             print("Check that the PKI user was created.")
-            assert_eventually_equal(lambda: self.client.admin_query_user_info(self.user)["roles"], ["read-write"])
+            assert_eventually_equal(
+                self.client,
+                lambda: self.client.admin_query_user_info(self.user)["roles"],
+                ["read-write"],
+            )

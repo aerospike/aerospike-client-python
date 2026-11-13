@@ -33,7 +33,7 @@ class TestRevokeRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            assert_eventually_equal(lambda: user_exists(self.client, user), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
 
@@ -63,17 +63,17 @@ class TestRevokeRoles(TestBaseClass):
 
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
 
     def test_revoke_all_roles_with_proper_parameters(self):
 
         user = "example-test"
         roles = ["read", "sys-admin", "read-write"]
 
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], [])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(user)["roles"], [])
 
     def test_revoke_roles_with_invalid_timeout_policy_value(self):
 
@@ -95,7 +95,7 @@ class TestRevokeRoles(TestBaseClass):
         status = self.client.admin_revoke_roles(user, roles, policy)
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read"])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(user)["roles"], ["read"])
 
     def test_revoke_roles_with_none_username(self):
 
@@ -144,13 +144,13 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         status = self.client.admin_revoke_roles(user, roles)
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], [])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(user)["roles"], [])
 
         status = self.client.admin_drop_user("!#Q#AEQ@#$%&^*((^&*~~~````[[")
         assert status == 0
@@ -162,13 +162,13 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         roles = ["read"]
         status = self.client.admin_revoke_roles(user, roles)
 
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
 
         assert status == 0
         status = self.client.admin_drop_user(user)

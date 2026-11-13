@@ -35,7 +35,7 @@ class TestQueryUsersInfo(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            assert_eventually_equal(lambda: user_exists(self.client, user), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -53,7 +53,7 @@ class TestQueryUsersInfo(TestBaseClass):
 
     def test_query_users_info_with_proper_parameters(self):
 
-        assert_eventually_equal(lambda: "example-test" in self.client.admin_query_users_info(), True)
+        assert_eventually_equal(self.client, lambda: "example-test" in self.client.admin_query_users_info(), True)
         user_details = self.client.admin_query_users_info()
 
         # Usage test; doesn't actually test if the server records user data
@@ -74,6 +74,7 @@ class TestQueryUsersInfo(TestBaseClass):
         policy = {"timeout": 180000}
 
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_users_info(policy).get("example-test", {}).get("roles"),
             ["read", "read-write", "sys-admin"],
         )
@@ -86,6 +87,7 @@ class TestQueryUsersInfo(TestBaseClass):
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_users_info().get("example-test", {}).get("roles"),
             [],
         )

@@ -54,7 +54,7 @@ class TestDropUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_create_user(user, password, roles, policy)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         user_info = self.client.admin_query_user_info(user, policy)
@@ -90,7 +90,7 @@ class TestDropUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         user_info = self.client.admin_query_user_info(user)
@@ -117,7 +117,7 @@ class TestDropUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         user_info = self.client.admin_query_user_info(user)
@@ -161,7 +161,7 @@ class TestDropUser(object):
         roles = ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_create_user(user, password, roles)
-        assert_eventually_equal(lambda: user_exists(self.client, user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
 
         assert status == 0
         user_details = self.client.admin_query_user_info(user)

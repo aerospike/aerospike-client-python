@@ -61,12 +61,12 @@ class TestDropRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), True)
+        assert_eventually_equal(self.client, lambda: role_exists(self.client, "usr-sys-admin-test"), True)
 
         status = self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 180000})
 
         assert status == 0
-        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
+        assert_eventually_equal(self.client, lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_role_positive_with_policy_write(self):
         """
@@ -83,12 +83,12 @@ class TestDropRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
-        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), True)
+        assert_eventually_equal(self.client, lambda: role_exists(self.client, "usr-sys-admin-test"), True)
 
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
         assert status == 0
-        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
+        assert_eventually_equal(self.client, lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_role_positive(self):
         """
@@ -107,12 +107,13 @@ class TestDropRole(object):
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_role("usr-sys-admin-test"),
             [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
         )
 
         self.client.admin_drop_role("usr-sys-admin-test")
-        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
+        assert_eventually_equal(self.client, lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_non_existent_role(self):
         """

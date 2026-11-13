@@ -34,7 +34,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         try:
             self.client.admin_create_user(self.user, password, roles)
-            assert_eventually_equal(lambda: user_exists(self.client, self), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, self), True)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -59,7 +59,7 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_parameters(self):
 
-        assert_eventually_equal(lambda: user_exists(self.client, self.user), True)
+        assert_eventually_equal(self.client, lambda: user_exists(self.client, self.user), True)
         user_details = self.client.admin_query_user_info(self.user)
 
         check_user_dictionary(user_details)
@@ -77,6 +77,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         policy = {"timeout": 180000}
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(self.user, policy).get("roles"),
             ["read", "read-write", "sys-admin"],
         )
@@ -114,7 +115,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(self.user).get("roles"), [])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(self.user).get("roles"), [])
 
     def test_query_user_info_with_extra_argument(self):
         """

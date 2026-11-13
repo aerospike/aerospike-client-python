@@ -34,7 +34,7 @@ class TestGrantRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            assert_eventually_equal(lambda: user_exists(self.client, user), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -65,6 +65,7 @@ class TestGrantRoles(TestBaseClass):
         status = self.client.admin_grant_roles(user, roles, policy)
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(user, policy)["roles"],
             ["read", "read-write", "sys-admin"],
         )
@@ -77,6 +78,7 @@ class TestGrantRoles(TestBaseClass):
         status = self.client.admin_grant_roles(user, roles)
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(user)["roles"],
             ["read", "read-write", "sys-admin"],
         )
@@ -135,7 +137,7 @@ class TestGrantRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            assert_eventually_equal(lambda: user_exists(self.client, user), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
 

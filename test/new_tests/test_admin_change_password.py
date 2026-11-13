@@ -22,7 +22,7 @@ class TestChangePassword(object):
 
         try:
             self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"])
-            assert_eventually_equal(lambda: user_exists(self.client, "testchangepassworduser"), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, "testchangepassworduser"), True)
         except aerospike.exception.UserExistsError:
             pass  # we are good, no such role exists
         self.delete_users = []

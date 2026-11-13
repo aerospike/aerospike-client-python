@@ -67,7 +67,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 10, "ns": "test", "set": "demo"}],
             "whitelist": [],
             "read_quota": 0,
@@ -82,6 +82,7 @@ class TestCreateRole(object):
 
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info("testcreaterole")["roles"],
             ["usr-sys-admin-test"],
         )
@@ -120,6 +121,7 @@ class TestCreateRole(object):
 
         self.client.admin_create_role(role_name, privs)
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_get_role(role_name),
             {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0},
         )
@@ -131,7 +133,11 @@ class TestCreateRole(object):
             pytest.skip()
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info("testcreaterole")["roles"], [role_name])
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info("testcreaterole")["roles"],
+            [role_name],
+        )
 
         self.client.admin_drop_user("testcreaterole")
 
@@ -152,7 +158,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 13, "ns": "test", "set": "demo"}],
             "whitelist": [],
             "read_quota": 0,
@@ -167,6 +173,7 @@ class TestCreateRole(object):
 
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info("testcreaterole")["roles"],
             ["usr-sys-admin-test"],
         )
@@ -189,7 +196,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
             "whitelist": [],
             "read_quota": 0,
@@ -223,7 +230,7 @@ class TestCreateRole(object):
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
 
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"code": aerospike.PRIV_USER_ADMIN, "ns": "", "set": ""},
                 {"code": aerospike.PRIV_SYS_ADMIN, "ns": "", "set": ""},
@@ -311,7 +318,7 @@ class TestCreateRole(object):
         )
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_get_role(role_name), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role(role_name), {
             "privileges": [
                 {"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"},
             ],
@@ -323,11 +330,15 @@ class TestCreateRole(object):
         status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info("testcreaterole")["roles"], [role_name])
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info("testcreaterole")["roles"],
+            [role_name],
+        )
 
         self.client.admin_drop_role(role_name)
 
-        assert_eventually_equal(lambda: self.client.admin_query_user_info("testcreaterole")["roles"], [])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info("testcreaterole")["roles"], [])
 
         self.client.admin_drop_user("testcreaterole")
 
