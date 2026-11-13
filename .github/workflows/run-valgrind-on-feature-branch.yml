@@ -28,7 +28,7 @@ jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-and-optionally-test-wheels-on-one-platform.yml
     with:
-      python-versions: "[\"3.10\"]"
+      python-versions: "[\"3.11\"]"
       platform-tag: manylinux_x86_64
     secrets: inherit
 
@@ -39,7 +39,7 @@ jobs:
     uses: ./.github/workflows/test-artifact.yml
     with:
       runner-os-json-string: '"ubuntu-22.04"'
-      python-version: '3.10'
+      python-version: '3.11'
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
       run-with-valgrind: true
