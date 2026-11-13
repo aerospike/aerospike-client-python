@@ -63,6 +63,7 @@ class TestGrantRoles(TestBaseClass):
         status = self.client.admin_grant_roles(user, roles, policy)
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(user, policy)["roles"],
             ["read", "read-write", "sys-admin"],
         )
@@ -75,6 +76,7 @@ class TestGrantRoles(TestBaseClass):
         status = self.client.admin_grant_roles(user, roles)
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(user)["roles"],
             ["read", "read-write", "sys-admin"],
         )

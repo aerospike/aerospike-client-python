@@ -74,6 +74,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         policy = {"timeout": 180000}
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_user_info(self.user, policy).get("roles"),
             ["read", "read-write", "sys-admin"],
         )
@@ -111,7 +112,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_user_info(self.user).get("roles"), [])
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_user_info(self.user).get("roles"), [])
 
     def test_query_user_info_with_extra_argument(self):
         """

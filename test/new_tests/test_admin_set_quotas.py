@@ -54,7 +54,7 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test",
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
@@ -66,7 +66,7 @@ class TestSetQuotas(TestBaseClass):
         Set quotas with one quota.
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250)
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
@@ -78,7 +78,7 @@ class TestSetQuotas(TestBaseClass):
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250, write_quota=300)
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
@@ -90,7 +90,7 @@ class TestSetQuotas(TestBaseClass):
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=0, write_quota=0)
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
@@ -104,7 +104,7 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 180000}
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,

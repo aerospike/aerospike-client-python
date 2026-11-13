@@ -71,7 +71,7 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
@@ -104,6 +104,7 @@ class TestGrantPrivileges(object):
 
         assert status == 0
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_role("usr-sys-admin-test"),
             [
                 {"code": 0, "ns": "", "set": ""},
@@ -125,7 +126,7 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 13, "ns": "", "set": ""},
@@ -146,7 +147,7 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
@@ -168,7 +169,7 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
+        assert_eventually_equal(self.client, lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "test", "set": "demo"},

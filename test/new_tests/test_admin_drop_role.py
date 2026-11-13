@@ -113,6 +113,7 @@ class TestDropRole(object):
             [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_query_role("usr-sys-admin-test"),
             [
                 {"code": 0, "ns": "", "set": ""},

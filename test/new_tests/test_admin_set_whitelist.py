@@ -64,7 +64,7 @@ class TestSetWhitelist(TestBaseClass):
         Set whitelist with no whitelist. (will reset whitelist on a role with existing whitelist)
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=[])
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"ns": "", "set": "", "code": 0},
                 {"ns": "", "set": "", "code": 1},
@@ -79,7 +79,7 @@ class TestSetWhitelist(TestBaseClass):
         Set whitelist with no whitelist. (will reset whitelist on a role with existing whitelist)
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=None)
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"ns": "", "set": "", "code": 0},
                 {"ns": "", "set": "", "code": 1},
@@ -97,7 +97,7 @@ class TestSetWhitelist(TestBaseClass):
             role="usr-sys-admin-test",
             whitelist=["10.0.2.0/24", "127.0.0.1", "127.0.0.2"],
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"ns": "", "set": "", "code": 0},
                 {"ns": "", "set": "", "code": 1},
@@ -112,7 +112,7 @@ class TestSetWhitelist(TestBaseClass):
         Set whitelist positive
         """
         self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=[])
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"ns": "", "set": "", "code": 0},
                 {"ns": "", "set": "", "code": 1},
@@ -131,7 +131,7 @@ class TestSetWhitelist(TestBaseClass):
             whitelist=["10.0.2.0/24", "127.0.0.1"],
             policy={"timeout": 180000},
         )
-        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"ns": "", "set": "", "code": 0},
                 {"ns": "", "set": "", "code": 1},
@@ -185,6 +185,7 @@ class TestSetWhitelist(TestBaseClass):
             role="usr-sys-admin-test", whitelist=["123.4.5.6"]
         )
         assert_eventually_equal(
+            self.client,
             lambda: self.client.admin_get_role("usr-sys-admin-test")["whitelist"], ["123.4.5.6"]
         )
 
@@ -192,7 +193,7 @@ class TestSetWhitelist(TestBaseClass):
             "test_whitelist_user", "123", ["usr-sys-admin-test"]
         )
         try:
-            assert_eventually_equal(lambda: user_exists(self.client, "test_whitelist_user"), True)
+            assert_eventually_equal(self.client, lambda: user_exists(self.client, "test_whitelist_user"), True)
             config = TestBaseClass.get_connection_config()
             with pytest.raises(e.NotWhitelisted) as excinfo:
                 aerospike.client(config).connect("test_whitelist_user", "123")
