@@ -49,8 +49,8 @@ WINDOWS = 'Windows' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
-# OpenSSL headers matching the OpenSSL library that is linked. The C client's makefiles otherwise use Homebrew's
-# unversioned openssl headers on macOS, which can be a newer OpenSSL than the library.
+# OpenSSL headers for the C client build that match the OpenSSL library that is linked. The C client's makefiles
+# otherwise use Homebrew's unversioned openssl headers on macOS, which can be a newer OpenSSL than the library.
 SSL_INCLUDE_PATH = os.getenv('SSL_INCLUDE_PATH')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
@@ -67,7 +67,6 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 ################################################################################
 
 include_dirs = ['src/include'] + \
-    ([SSL_INCLUDE_PATH] if SSL_INCLUDE_PATH else []) + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
