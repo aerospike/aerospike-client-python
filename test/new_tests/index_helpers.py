@@ -27,15 +27,14 @@ def ensure_dropped_index(client, namespace, index_name):
         retries += 1
 
 
-def wait_for_index(client, namespace: str, index_name: str) -> None:
+def wait_for_index(client, namespace: str, index_name: str, timeout_s: float = 30.0) -> None:
     # The client returns before every node has built the index, so wait until each node reports it readable.
     ready = f"indexname={index_name}:"
-    retries = 0
-    while retries < 10:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
         responses = client.info_all(f"sindex-list:ns={namespace}")
         listings = [response or "" for _, response in responses.values()]
         if all(any(ready in entry and "state=RW" in entry for entry in listing.split(";")) for listing in listings):
             return
         time.sleep(0.5)
-        retries += 1
-    raise TimeoutError(f"index {index_name} is not readable on every node")
+    raise TimeoutError(f"index {index_name} is not readable on every node after {timeout_s} s")

@@ -636,6 +636,8 @@ class TestQueryTopKSecondaryIndex:
 
     @pytest.fixture(autouse=True)
     def setup(self, as_connection, skip_if_server_older_than_8_2_1):
+        # An earlier run that stopped before teardown leaves the index behind
+        ensure_dropped_index(as_connection, "test", self.INDEX_NAME)
         as_connection.index_single_value_create("test", self.SET_NAME, "group", aerospike.INDEX_INTEGER, self.INDEX_NAME)
         wait_for_index(as_connection, "test", self.INDEX_NAME)
         self.keys = [("test", self.SET_NAME, i) for i in range(len(self.RECORDS))]
@@ -701,22 +703,30 @@ class TestQueryTopKServerLimits:
         return query
 
     # CLIENT-5845 test plan: PQ-20
-    # The server leaves out a record whose projection fails, and the query still succeeds.
-    def test_record_with_failed_projection_is_left_out(self):
-        records = self._query([list_operations.list_size("l")]).results()
-        assert [bins[BIN] for _, _, bins in records] == [2, 1, 0]
+    # The server abandons a Top-K query with the result code of a projection that fails, since the top K would
+    # otherwise be missing that record. A query without Top-K leaves the record out and still succeeds.
+    def test_record_with_failed_projection(self):
+        with pytest.raises(e.BinIncompatibleType):
+            self._query([list_operations.list_size("l")]).results()
 
         query = self.as_connection.query("test", self.SET_NAME)
         query.add_ops([operations.read(BIN), list_operations.list_size("l")])
         assert sorted(bins[BIN] for _, _, bins in query.results()) == [0, 1, 2]
 
     # CLIENT-5845 test plan: PQ-21
-    # The server accepts at most 32,768 operations in a Top-K query and returns nothing above that.
-    @pytest.mark.parametrize("op_count, expected", [(32768, [99, 2, 1, 0]), (32769, []), (65535, [])])
-    def test_top_k_with_many_operations(self, op_count, expected):
-        ops = [operations.read(f"x{i}") for i in range(op_count - 1)]
+    # The server accepts at most 32,768 operations in a Top-K query.
+    def test_top_k_with_max_operations(self):
+        ops = [operations.read(f"x{i}") for i in range(32768 - 1)]
         records = self._query(ops).results()
-        assert [bins[BIN] for _, _, bins in records] == expected
+        assert [bins[BIN] for _, _, bins in records] == [99, 2, 1, 0]
+
+    # CLIENT-5845 test plan: PQ-21
+    # The server refuses a Top-K query with more than 32,768 operations when the query starts.
+    @pytest.mark.parametrize("op_count", [32769, 65535])
+    def test_top_k_with_more_than_max_operations(self, op_count: int):
+        ops = [operations.read(f"x{i}") for i in range(op_count - 1)]
+        with pytest.raises(e.InvalidRequest):
+            self._query(ops).results()
 
     # CLIENT-5845 test plan: PQ-21
     def test_top_k_with_too_many_operations(self):
