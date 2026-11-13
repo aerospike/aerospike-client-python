@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, role_exists
 from aerospike import exception as e
 
 import aerospike
@@ -60,15 +61,12 @@ class TestDropRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        time.sleep(1)
+        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), True)
 
         status = self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 180000})
 
         assert status == 0
-        time.sleep(1)
-
-        with pytest.raises(e.InvalidRole):
-            self.client.admin_query_role("usr-sys-admin-test")
+        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_role_positive_with_policy_write(self):
         """
@@ -85,15 +83,12 @@ class TestDropRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
-        time.sleep(1)
+        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), True)
 
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
         assert status == 0
-        time.sleep(1)
-
-        with pytest.raises(e.InvalidRole):
-            self.client.admin_query_role("usr-sys-admin-test")
+        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_role_positive(self):
         """
@@ -111,15 +106,13 @@ class TestDropRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        time.sleep(1)
-        privs = self.client.admin_query_role("usr-sys-admin-test")
-        assert privs == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+        )
 
         self.client.admin_drop_role("usr-sys-admin-test")
-        time.sleep(1)
-
-        with pytest.raises(e.InvalidRole):
-            self.client.admin_query_role("usr-sys-admin-test")
+        assert_eventually_equal(lambda: role_exists(self.client, "usr-sys-admin-test"), False)
 
     def test_drop_non_existent_role(self):
         """

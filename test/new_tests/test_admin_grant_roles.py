@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, user_exists
 from aerospike import exception as e
 
 import aerospike
@@ -33,7 +34,7 @@ class TestGrantRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            assert_eventually_equal(lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -63,11 +64,10 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles, policy)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user, policy)
-
-        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_user_info(user, policy)["roles"],
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
@@ -76,11 +76,10 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_user_info(user)["roles"],
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -136,7 +135,7 @@ class TestGrantRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            assert_eventually_equal(lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
 

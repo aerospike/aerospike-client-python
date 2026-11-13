@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, user_exists
 from aerospike import exception as e
 from contextlib import nullcontext
 import aerospike
@@ -60,8 +61,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
-
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -84,8 +84,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles)
-
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -127,8 +126,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
-
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -291,7 +289,7 @@ class TestCreateUser(object):
             pass
 
         status = self.client.admin_create_user(user, password, roles)
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
 
@@ -382,6 +380,4 @@ class TestCreateUser(object):
 
         if type(context) == nullcontext:
             print("Check that the PKI user was created.")
-            time.sleep(2)
-            userDict = self.client.admin_query_user_info(self.user)
-            assert userDict["roles"] == ["read-write"]
+            assert_eventually_equal(lambda: self.client.admin_query_user_info(self.user)["roles"], ["read-write"])

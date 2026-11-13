@@ -5,6 +5,7 @@ import time
 import platform
 import sys
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 import aerospike
 
@@ -66,13 +67,11 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
@@ -98,9 +97,10 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", privs)
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}, *privs],
+        )
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", privs)
 
@@ -113,13 +113,11 @@ class TestGrantPrivileges(object):
         status = self.client.admin_grant_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 13, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}])
 
@@ -134,13 +132,11 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "", "set": ""},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges("usr-sys-admin-test", [{"code": aerospike.PRIV_READ}])
 
@@ -155,13 +151,11 @@ class TestGrantPrivileges(object):
         )
 
         assert status == 0
-        time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        assert_eventually_equal(lambda: self.client.admin_query_role("usr-sys-admin-test"), [
             {"code": 0, "ns": "", "set": ""},
             {"code": 1, "ns": "", "set": ""},
             {"code": 10, "ns": "test", "set": "demo"},
-        ]
+        ])
 
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]

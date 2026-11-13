@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, user_exists
 from aerospike import exception as e
 
 import aerospike
@@ -32,7 +33,7 @@ class TestRevokeRoles(TestBaseClass):
 
         try:
             self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            assert_eventually_equal(lambda: user_exists(self.client, user), True)
         except e.UserExistsError:
             pass
 
@@ -62,25 +63,17 @@ class TestRevokeRoles(TestBaseClass):
 
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read-write"]
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
 
     def test_revoke_all_roles_with_proper_parameters(self):
 
         user = "example-test"
         roles = ["read", "sys-admin", "read-write"]
 
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == []
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], [])
 
     def test_revoke_roles_with_invalid_timeout_policy_value(self):
 
@@ -101,13 +94,8 @@ class TestRevokeRoles(TestBaseClass):
 
         status = self.client.admin_revoke_roles(user, roles, policy)
 
-        time.sleep(2)
-
         assert status == 0
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read"]
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read"])
 
     def test_revoke_roles_with_none_username(self):
 
@@ -156,18 +144,13 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         status = self.client.admin_create_user(user, password, roles)
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
         status = self.client.admin_revoke_roles(user, roles)
 
-        time.sleep(2)
-
         assert status == 0
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == []
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], [])
 
         status = self.client.admin_drop_user("!#Q#AEQ@#$%&^*((^&*~~~````[[")
         assert status == 0
@@ -179,17 +162,13 @@ class TestRevokeRoles(TestBaseClass):
         roles = ["read-write"]
 
         status = self.client.admin_create_user(user, password, roles)
-        time.sleep(2)
+        assert_eventually_equal(lambda: user_exists(self.client, user), True)
 
         assert status == 0
         roles = ["read"]
         status = self.client.admin_revoke_roles(user, roles)
 
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read-write"]
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(user)["roles"], ["read-write"])
 
         assert status == 0
         status = self.client.admin_drop_user(user)
