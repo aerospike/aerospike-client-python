@@ -220,7 +220,7 @@ def wait_joined(
         if bump_ns is None and observer("peers-generation") != generation:
             bump_ns = now
         if reachable_ns is None and reachable():
-            reachable_ns = now
+            reachable_ns = time.monotonic_ns()
         if active_ns is None:
             now = time.monotonic_ns()
             held = client_nodes(client)
