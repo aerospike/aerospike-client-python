@@ -1629,7 +1629,7 @@ CLEANUP:
 
 // Copies all of the buffer's bytes, so a key isn't cut at a zero byte. The key
 // stays a string key so that a key without a zero byte keeps its digest.
-static as_key *init_key_with_string(as_key *key, const char *ns,
+static as_key *as_key_init_str_wlen(as_key *key, const char *ns,
                                     const char *set, const char *buffer,
                                     Py_ssize_t size)
 {
@@ -1637,7 +1637,11 @@ static as_key *init_key_with_string(as_key *key, const char *ns,
     memcpy(value, buffer, size);
     value[size] = '\0';
     as_string_init_wlen((as_string *)&key->value, value, size, true);
-    return as_key_init_value(key, ns, set, &key->value);
+    as_key *initialized_key = as_key_init_value(key, ns, set, &key->value);
+    if (!initialized_key) {
+        as_string_destroy((as_string *)&key->value);
+    }
+    return initialized_key;
 }
 
 as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
@@ -1719,7 +1723,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
                                        "key is not encodable as UTF-8");
             }
             returnResult =
-                init_key_with_string(key, ns, set, key_buffer, key_size);
+                as_key_init_str_wlen(key, ns, set, key_buffer, key_size);
         }
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
@@ -1752,7 +1756,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             Py_ssize_t key_size = PyBytes_Size(py_key);
             const char *key_buffer = PyBytes_AsString(py_key);
             returnResult =
-                init_key_with_string(key, ns, set, key_buffer, key_size);
+                as_key_init_str_wlen(key, ns, set, key_buffer, key_size);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
