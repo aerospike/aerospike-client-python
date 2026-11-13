@@ -98,6 +98,7 @@ class TestGetPut:
         returned_keys = {bins["i"]: to_bytes(key[2]) for key, _, bins in records}
         assert returned_keys == {0: to_bytes(first_key), 1: to_bytes(second_key)}
 
+    # CLIENT-5845 test plan: PC-08
     def test_neg_vector_key(self):
         key = ("test", "demo", Vector.of_float32([0.5, 1.5]))
         with pytest.raises(e.ParamError, match="Invalid key type: Vector"):
