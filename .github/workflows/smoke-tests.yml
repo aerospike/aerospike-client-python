@@ -97,7 +97,7 @@ jobs:
         server-tag: ${{ env.SERVER_TAG }}
 
     - run: |
-        "$PYTHON_BINARY" -m pip install pytest -c requirements.txt
+        "$PYTHON_BINARY" -m pip install pytest numpy -c requirements.txt
         "$PYTHON_BINARY" -m pytest ./new_tests
       working-directory: test
 
@@ -133,6 +133,10 @@ jobs:
 
     - run: pip install -r requirements.txt
       working-directory: test
+
+    - name: Install PyTorch for the tensor test
+      # The CPU-only build, because the default Linux build pulls in several GB of CUDA libraries
+      run: pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
 
     - name: Run Aerospike server
       uses: ./.github/actions/setup-server-and-tests
