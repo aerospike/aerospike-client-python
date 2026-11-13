@@ -18,8 +18,10 @@ def parse_fields(section: str) -> Dict[str, str]:
 def is_security_settled(client: aerospike.Client) -> bool:
     """Return whether every node has committed the same security metadata and has no metadata change in flight.
 
-    smd-info reports each node's committed security transaction ID, which only advances after the node applies the
-    change, so nodes with the same committed key and transaction ID hold the same users and roles.
+    The info reference lists smd-info's keys without defining them. Per the server's smd.c, committed_key and
+    committed_tid identify the content a node last committed, and change under the lock that applies it, so nodes
+    with the same committed key and transaction ID hold the same users and roles. settled isn't checked because it
+    stays false on mixed-version clusters.
     """
     responses = client.info_all("smd-info")
     committed = set()
@@ -31,9 +33,6 @@ def is_security_settled(client: aerospike.Client) -> bool:
         if smd["n_pending_sets"] != "0" or smd["n_events"] != "0":
             return False
         security = parse_fields(sections["security"])
-        # settled is only reported by server 8.2.0 and later.
-        if security.get("settled", "true") != "true":
-            return False
         committed.add((security["committed_key"], security["committed_tid"]))
     return len(committed) == 1
 
