@@ -492,7 +492,7 @@ class TestExpressions(TestBaseClass):
         "ctx_types, ctx_indexes, value, rank, count, return_type, check, expected",
         [
             ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, _NUM_RECORDS),
-            ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [27, 26], _NUM_RECORDS),
+            ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [26, 27], _NUM_RECORDS),
             (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 2),
         ],
     )
@@ -510,7 +510,11 @@ class TestExpressions(TestBaseClass):
         else:
             ctx = None
 
-        expr = Eq(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, "list_bin"), check)
+        result = ListGetByValueRelRankRange(ctx, return_type, value, rank, count, "list_bin")
+        # The values are returned in no guaranteed order
+        if return_type == aerospike.LIST_RETURN_VALUE:
+            result = ListSort(None, aerospike.LIST_SORT_DEFAULT, result)
+        expr = Eq(result, check)
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
         )
