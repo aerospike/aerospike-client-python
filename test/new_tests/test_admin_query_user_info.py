@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 from .conftest import check_user_dictionary
 
@@ -72,10 +73,10 @@ class TestQueryUserInfo(TestBaseClass):
     def test_query_user_info_with_proper_timeout_policy_value(self):
 
         policy = {"timeout": 180000}
-        time.sleep(2)
-        user_details = self.client.admin_query_user_info(self.user, policy)
-
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_user_info(self.user, policy).get("roles"),
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_query_user_info_with_none_username(self):
 
@@ -110,11 +111,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(self.user)
-
-        assert user_details.get("roles") == []
+        assert_eventually_equal(lambda: self.client.admin_query_user_info(self.user).get("roles"), [])
 
     def test_query_user_info_with_extra_argument(self):
         """

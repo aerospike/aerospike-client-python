@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 import aerospike
@@ -53,56 +54,48 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test",
         )
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 4500,
-        }
+        })
 
     def test_admin_set_quota_one_quota_positive(self):
         """
         Set quotas with one quota.
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 4500,
-        }
+        })
 
     def test_admin_set_quota_positive(self):
         """
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250, write_quota=300)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 300,
-        }
+        })
 
     def test_admin_set_quota_positive_reset(self):
         """
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=0, write_quota=0)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
     def test_admin_set_quota_positive_with_policy(self):
         """
@@ -111,14 +104,12 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 180000}
         )
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 300,
-        }
+        })
 
     def test_admin_set_quota_incorrect_role_name(self):
         """

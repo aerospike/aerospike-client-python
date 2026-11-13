@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 from .conftest import admin_drop_user_and_poll, admin_drop_role_and_poll, admin_create_role_and_poll
@@ -111,11 +112,13 @@ class TestDropRole(object):
             "usr-sys-admin-test",
             [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
-        privs = self.client.admin_query_role("usr-sys-admin-test")
-        assert privs == [
-            {"code": 0, "ns": "", "set": ""},
-            {"code": 1, "ns": "", "set": ""},
-        ]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_role("usr-sys-admin-test"),
+            [
+                {"code": 0, "ns": "", "set": ""},
+                {"code": 1, "ns": "", "set": ""},
+            ],
+        )
 
         admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 

@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 from .conftest import check_user_dictionary
 
@@ -73,13 +74,14 @@ class TestQueryUsersInfo(TestBaseClass):
 
         policy = {"timeout": 180000}
 
-        user_details = self.client.admin_query_users_info(policy)
-
-        assert user_details.get("example-test").get("roles") == [
-            "read",
-            "read-write",
-            "sys-admin",
-        ]
+        assert_eventually_equal(
+            lambda: self.client.admin_query_users_info(policy).get("example-test", {}).get("roles"),
+            [
+                "read",
+                "read-write",
+                "sys-admin",
+            ],
+        )
 
     def test_query_users_info_with_no_roles(self):
 
@@ -88,11 +90,10 @@ class TestQueryUsersInfo(TestBaseClass):
 
         status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_users_info()
-
-        assert user_details.get("example-test").get("roles") == []
+        assert_eventually_equal(
+            lambda: self.client.admin_query_users_info().get("example-test", {}).get("roles"),
+            [],
+        )
 
     def test_query_users_info_with_extra_argument(self):
         """

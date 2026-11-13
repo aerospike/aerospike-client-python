@@ -3,6 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll, admin_create_role_and_poll
 
@@ -65,13 +66,12 @@ class TestCreateRole(object):
         admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 10, "ns": "test", "set": "demo"}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
         try:
             status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", ["usr-sys-admin-test"])
@@ -116,8 +116,10 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         admin_create_role_and_poll(self.client, role_name, privs)
-        roles = self.client.admin_get_role(role_name)
-        assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
+        assert_eventually_equal(
+            lambda: self.client.admin_get_role(role_name),
+            {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0},
+        )
 
         try:
             status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", [role_name])
@@ -148,13 +150,12 @@ class TestCreateRole(object):
         admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 13, "ns": "test", "set": "demo"}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
         try:
             status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", ["usr-sys-admin-test"])
@@ -183,14 +184,12 @@ class TestCreateRole(object):
         admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
         admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
@@ -217,8 +216,7 @@ class TestCreateRole(object):
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
 
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [
                 {"code": aerospike.PRIV_USER_ADMIN, "ns": "", "set": ""},
                 {"code": aerospike.PRIV_SYS_ADMIN, "ns": "", "set": ""},
@@ -226,7 +224,7 @@ class TestCreateRole(object):
             "whitelist": ["127.0.0.1", "10.1.2.0/24"],
             "read_quota": 20,
             "write_quota": 30,
-        }
+        })
 
         admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
 
@@ -301,16 +299,14 @@ class TestCreateRole(object):
         )
 
         assert status == 0
-        roles = self.client.admin_get_role(role_name)
-
-        assert roles == {
+        assert_eventually_equal(lambda: self.client.admin_get_role(role_name), {
             "privileges": [
                 {"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"},
             ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
         status = admin_create_user_and_poll(self.client, "testcreaterole", "createrole", [role_name])
 
@@ -321,9 +317,7 @@ class TestCreateRole(object):
 
         admin_drop_role_and_poll(self.client, role_name)
 
-        users = self.client.admin_query_user_info("testcreaterole")
-
-        assert users["roles"] == []
+        assert_eventually_equal(lambda: self.client.admin_query_user_info("testcreaterole")["roles"], [])
 
         admin_drop_user_and_poll(self.client, "testcreaterole")
 
