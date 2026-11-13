@@ -392,6 +392,14 @@ def skip_if_server_older_than_8_2_1(as_connection):
     if server_version < (8, 2, 1):
         pytest.skip("Vectors and Top-K queries require server version 8.2.1 or later")
 
+
+@pytest.fixture(scope="function")
+def skip_if_server_8_2_1_or_later(as_connection):
+    server_version = (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver)
+    if server_version >= (8, 2, 1):
+        pytest.skip("Requires a server older than 8.2.1")
+
+
 def check_user_dictionary(user: dict):
     assert set(user["roles"]) == set([
         "read",
