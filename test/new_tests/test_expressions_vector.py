@@ -241,8 +241,8 @@ class TestVectorExpressionsIntegration(object):
         stored = self.MISMATCH_STORED
         ascending = sorted(stored, key=lambda i: euclidean_squared(stored[i], self.MISMATCH_QUERY_VALUES))
         metric = vector_exp.VectorDistanceMetric.EUCLIDEAN_SQUARED
-        results = self._top_k_distances(metric, self.MISMATCH_QUERY, aerospike.Query.Order.ASC)
-        assert [i for i, _ in results] == ascending
+        with pytest.raises(aerospike.exception.OpNotApplicable):
+            self._top_k_distances(metric, self.MISMATCH_QUERY, aerospike.Query.Order.ASC)
         results = self._top_k_distances(
             metric, self.MISMATCH_QUERY, aerospike.Query.Order.ASC, aerospike.EXP_READ_EVAL_NO_FAIL
         )
@@ -348,8 +348,9 @@ class TestVectorExpressionsIntegration(object):
 
     # CLIENT-5845 test plan: PE-05, PE-03
     # The huge record's dot product with the query overflows a double, so its distance is unknown: a
-    # single-record read fails, and a query leaves the record out, or returns it with None and ranks it
-    # last in either direction under EXP_READ_EVAL_NO_FAIL.
+    # single-record read fails, and so does a Top-K query (see test_record_with_failed_projection in
+    # test_query_top_k.py). Under EXP_READ_EVAL_NO_FAIL, the query returns the record with None and ranks it
+    # last in either direction.
     @pytest.mark.parametrize("direction", [aerospike.Query.Order.ASC, aerospike.Query.Order.DESC])
     def test_top_k_with_overflowing_dot_product(self, direction):
         stored = {0: [1.0, 1.0], 1: [2.0, -1.0], 2: [-3.0, 0.5], 3: [1e200, 1e200]}
@@ -365,8 +366,8 @@ class TestVectorExpressionsIntegration(object):
         descending = direction == aerospike.Query.Order.DESC
         finite = sorted([0, 1, 2], key=lambda i: dot_product(stored[i], [1e200, 1e200]), reverse=descending)
 
-        results = self._top_k_distances(metric, query_vector, direction)
-        assert [i for i, _ in results] == finite
+        with pytest.raises(aerospike.exception.OpNotApplicable):
+            self._top_k_distances(metric, query_vector, direction)
 
         results = self._top_k_distances(metric, query_vector, direction, aerospike.EXP_READ_EVAL_NO_FAIL)
         assert results[:-1] == [(i, pytest.approx(dot_product(stored[i], [1e200, 1e200]))) for i in finite]
