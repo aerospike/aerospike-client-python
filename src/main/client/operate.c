@@ -1059,15 +1059,18 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_Operate_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
         Py_ssize_t ops_count = PyList_Size(py_list);
         if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
             goto CLEANUP;
         }
         py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                    py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
     }
@@ -1286,15 +1289,18 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_OperateOrdered_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
         Py_ssize_t ops_count = PyList_Size(py_list);
         if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
             goto CLEANUP;
         }
         py_result = AerospikeClient_OperateOrdered_Invoke(
             self, &err, &key, py_list, py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
         goto CLEANUP;
