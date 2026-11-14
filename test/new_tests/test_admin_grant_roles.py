@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_user_and_poll, admin_create_user_and_poll
 
 
 class TestGrantRoles(TestBaseClass):
@@ -23,8 +24,7 @@ class TestGrantRoles(TestBaseClass):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         user = "example-test"
@@ -32,8 +32,7 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
         self.delete_users = []
@@ -44,8 +43,7 @@ class TestGrantRoles(TestBaseClass):
         """
 
         try:
-            self.client.admin_drop_user("example-test")
-            time.sleep(1)
+            admin_drop_user_and_poll(self.client, "example-test")
         except e.InvalidUser:
             pass
         self.client.close()
@@ -63,11 +61,11 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles, policy)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user, policy)
-
-        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info(user, policy)["roles"],
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
@@ -76,11 +74,11 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles)
         assert status == 0
-        time.sleep(2)
-
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info(user)["roles"],
+            ["read", "read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -100,13 +98,13 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles)
 
-        time.sleep(2)
-
         assert status == 0
 
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read-write", "sys-admin"]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info(user)["roles"],
+            ["read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_none_username(self):
 
@@ -135,23 +133,22 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles)
-            time.sleep(1)
+            admin_create_user_and_poll(self.client, user, password, roles)
         except e.UserExistsError:
             pass
 
         roles = ["read"]
         status = self.client.admin_grant_roles(user, roles)
 
-        time.sleep(2)
-
         assert status == 0
 
-        user_details = self.client.admin_query_user_info(user)
+        assert_eventually_equal(
+            self.client,
+            lambda: set(self.client.admin_query_user_info(user)["roles"]),
+            set(["read", "read-write"]),
+        )
 
-        assert set(user_details["roles"]) == set(["read", "read-write"])
-
-        self.client.admin_drop_user(user)
+        admin_drop_user_and_poll(self.client, user)
 
     def test_grant_roles_with_empty_roles_list(self):
 

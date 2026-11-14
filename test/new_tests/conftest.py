@@ -4,9 +4,9 @@ import os
 import sys
 
 import pytest
-
 from . import invalid_data
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, role_exists, user_exists
 
 import aerospike
 from aerospike import exception as e
@@ -267,6 +267,45 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+def poll_until_role_exists(role_name: str, client: aerospike.Client):
+    assert_eventually_equal(client, lambda: role_exists(client, role_name), True)
+
+def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
+    assert_eventually_equal(client, lambda: role_exists(client, role_name), False)
+
+def poll_until_user_exists(username: str, client: aerospike.Client, roles: list[str]):
+    # The server returns a user's roles sorted by name.
+    assert_eventually_equal(client, lambda: client.admin_query_user_info(user=username)["roles"], sorted(roles))
+
+def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
+    assert_eventually_equal(client, lambda: user_exists(client, username), False)
+
+# Monkeypatching the client class or instance isn't possible since it's immutable
+
+def admin_create_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    retval = client.admin_create_role(role, *args, **kwargs)
+    poll_until_role_exists(role, client)
+    return retval
+
+def admin_create_user_and_poll(client: aerospike.Client, username: str, password: str, roles: list, *args, **kwargs):
+    retval = client.admin_create_user(username, password, roles, *args, **kwargs)
+
+    # The server creates a user and adds roles to it asynchronously, since security is a type of smd operation
+    # So client.admin_create_user() can return before every node has the user and its roles
+    poll_until_user_exists(username, client, roles)
+
+    return retval
+
+def admin_drop_user_and_poll(client: aerospike.Client, username: str, *args, **kwargs):
+    retval = client.admin_drop_user(username, *args, **kwargs)
+    poll_until_user_doesnt_exist(username, client)
+    return retval
+
+def admin_drop_role_and_poll(client: aerospike.Client, role: str, *args, **kwargs):
+    retval = client.admin_drop_role(role, *args, **kwargs)
+    poll_until_role_doesnt_exist(role, client)
+    return retval
 
 def verify_record_ttl(client: aerospike.Client, key, expected_ttl: int):
     _, meta = client.exists(key)

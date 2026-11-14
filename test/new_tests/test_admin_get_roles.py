@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
-
+from .conftest import admin_drop_role_and_poll, admin_create_role_and_poll
 
 class TestGetRoles(TestBaseClass):
 
@@ -21,26 +20,23 @@ class TestGetRoles(TestBaseClass):
         config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_role("usr-sys-admin")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin")
         except Exception:
             pass
-        time.sleep(2)
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
-        time.sleep(2)
-        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
+        admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs)
         self.delete_users = []
-        time.sleep(2)
 
     def teardown_method(self, method):
         """
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
         self.client.close()

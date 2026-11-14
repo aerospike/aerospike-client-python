@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 import aerospike
+from .conftest import admin_drop_role_and_poll, admin_create_role_and_poll
 
 
 class TestSetQuotas(TestBaseClass):
@@ -19,24 +20,22 @@ class TestSetQuotas(TestBaseClass):
 
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
-            time.sleep(2)
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
 
         try:
-            self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
+            admin_create_role_and_poll(self.client, "usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
         except e.QuotasNotEnabled:
             pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
-        time.sleep(1)
 
     def teardown_method(self, method):
         """
         Teardown method
         """
         try:
-            self.client.admin_drop_role("usr-sys-admin-test")
+            admin_drop_role_and_poll(self.client, "usr-sys-admin-test")
         except Exception:
             pass
 
@@ -54,56 +53,48 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test",
         )
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 4500,
-        }
+        })
 
     def test_admin_set_quota_one_quota_positive(self):
         """
         Set quotas with one quota.
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 4500,
-        }
+        })
 
     def test_admin_set_quota_positive(self):
         """
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=250, write_quota=300)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 300,
-        }
+        })
 
     def test_admin_set_quota_positive_reset(self):
         """
         Set Quota positive
         """
         self.client.admin_set_quotas(role="usr-sys-admin-test", read_quota=0, write_quota=0)
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
-        }
+        })
 
     def test_admin_set_quota_positive_with_policy(self):
         """
@@ -112,14 +103,12 @@ class TestSetQuotas(TestBaseClass):
         self.client.admin_set_quotas(
             role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 180000}
         )
-        time.sleep(1)
-        roles = self.client.admin_get_role("usr-sys-admin-test")
-        assert roles == {
+        assert_eventually_equal(self.client, lambda: self.client.admin_get_role("usr-sys-admin-test"), {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
             "whitelist": [],
             "read_quota": 250,
             "write_quota": 300,
-        }
+        })
 
     def test_admin_set_quota_incorrect_role_name(self):
         """
