@@ -477,7 +477,7 @@ Record Commands
 
         .. testoutput::
 
-            Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
+            Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_GENERATION [3]
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
@@ -492,6 +492,16 @@ Record Commands
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note::
+            **Known issue:** if the client config's ``validate_keys`` option is :py:obj:`True` and
+            *policy* contains an invalid dictionary key, this method raises
+            :py:class:`~aerospike.exception.ClientError` instead of the
+            :py:class:`~aerospike.exception.ParamError` that every other method raises in this
+            situation (see :func:`aerospike.client`'s ``validate_keys`` option). Changing this
+            outright would be a breaking change, so it is deferred to the next major client
+            release. A :exc:`DeprecationWarning` is raised in the meantime to warn ahead of that
+            change.
 
         .. testcode::
 
@@ -948,6 +958,11 @@ Transactions
         :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
+        :raises: :py:exc:`~aerospike.exception.TransactionFailed` if a commit already failed
+            on this transaction with an in-doubt outcome. The server may still roll the
+            transaction forward, so abort is refused; check whether
+            ``transaction.state == aerospike.TXN_STATE_COMMIT_FAILED`` and, if so, call
+            :py:meth:`~aerospike.Client.commit` again to resolve the transaction safely.
 
     .. _aerospike_udf_operations:
 

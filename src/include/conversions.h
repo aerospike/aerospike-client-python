@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,8 @@
 #define FIELD_NAME_BATCH_FUNCTION "function"
 #define FIELD_NAME_BATCH_ARGS "args"
 #define FIELD_NAME_BATCH_INDOUBT "in_doubt"
+#define FIELD_NAME_BATCH_SUBCODE "subcode"
+#define FIELD_NAME_BATCH_MESSAGE "message"
 
 #define BATCH_TYPE_READ 0
 #define BATCH_TYPE_WRITE 1
@@ -194,6 +196,13 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
 
+// This is shared for Python client API calls where the C client API returns as_batch_result or as_batch_base_record
+// Then it extracts the subcode and detailed error message and sets it in a BatchRecord instance.
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message);
+
 PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                                             struct as_cluster_s *cluster);
 PyObject *create_py_node_from_as_node(as_error *error_p,
@@ -240,3 +249,8 @@ create_py_cluster_stats_from_as_cluster_stats(as_error *err,
 as_status as_string_policy_init_from_pyobject(as_error *err,
                                               as_string_policy *policy,
                                               PyObject *py_string_policy);
+
+// The C client holds the number of operations in a command in 16 bits, so
+// check the count before passing it to as_operations_inita() or
+// as_operations_new().
+as_status validate_operations_count(as_error *err, Py_ssize_t ops_count);

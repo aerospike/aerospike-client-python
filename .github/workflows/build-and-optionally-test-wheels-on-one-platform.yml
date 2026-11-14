@@ -39,7 +39,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for.
         required: false
-        default: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
+        default: '["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]'
       platform-tag:
         # One of these values:
         # - manylinux_x86_64
@@ -118,14 +118,14 @@ jobs:
         hashmap[linux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[macosx_x86_64]="macos-14-large"
-        hashmap[macosx_arm64]="macos-14"
+        hashmap[macosx_x86_64]="macos-15-large"
+        hashmap[macosx_arm64]="macos-15"
         hashmap[win_amd64]="windows-2022"
         echo "runner_os=${hashmap[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
 
         declare -A manylinux_digest
-        manylinux_digest[manylinux_x86_64]="ee086a7e0d988b829bebe6404125c682190ea336ab3aad17f0c90623b28e2708"
-        manylinux_digest[manylinux_aarch64]="183ccef2e4047f722b179d69dde14b99e05b7234724bf00aa31657ae695743f5"
+        manylinux_digest[manylinux_x86_64]="a526caca252a79e93ad5281a953c2196d6b3c60ea90f02fd55fac02de31725c1"
+        manylinux_digest[manylinux_aarch64]="93529f2893677d79dfcfdefe825ea8709f1b727d5a6c1cb4a1b03e7750c4bd9c"
         # This will not fail if map key is not found. Assuming only a blank string will be returned
         echo "manylinux_image_digest=${manylinux_digest[$PLATFORM_TAG]}" >> "$GITHUB_OUTPUT"
       # Bash >= 4 supports hashmaps

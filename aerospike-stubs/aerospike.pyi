@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Any, Callable, Union, final, Literal, Optional, Final
 
 from aerospike_helpers.batch.records import BatchRecords
@@ -21,6 +22,7 @@ AS_BYTES_RUBY: Literal[10]
 AS_BYTES_STRING: Literal[3]
 AS_BYTES_TYPE_MAX: Literal[24]
 AS_BYTES_UNDEF: Literal[0]
+AS_BYTES_VECTOR: Literal[16]
 AUTH_EXTERNAL: Literal[1]
 AUTH_EXTERNAL_INSECURE: Literal[2]
 AUTH_INTERNAL: Literal[0]
@@ -295,6 +297,10 @@ QUERY_DURATION_LONG: Literal[0]
 QUERY_DURATION_SHORT: Literal[1]
 QUERY_DURATION_LONG_RELAX_AP: Literal[2]
 
+class QueryOrderByFlags(IntEnum):
+    DEFAULT = 0
+    CASE_INSENSITIVE = 1
+
 COMMIT_OK: Literal[0]
 COMMIT_ALREADY_COMMITTED: Literal[1]
 COMMIT_ROLL_FORWARD_ABANDONED: Literal[5]
@@ -330,6 +336,7 @@ EXP_LOOPVAR_INDEX: Literal[2]
 ERROR_DETAIL_NONE: Literal[0]
 ERROR_DETAIL_SUBCODE: Literal[1]
 ERROR_DETAIL_MESSAGE: Literal[2]
+ERROR_DETAIL_EXP_TRACE: Literal[3]
 
 SUB_NONE: Literal[0]
 
@@ -338,6 +345,11 @@ SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE: Literal[2]
 SUB_PARAM_BITS_SIZE_OUT_OF_RANGE: Literal[3]
 SUB_PARAM_BITS_RESIZE_EXCEEDED: Literal[4]
 SUB_PARAM_BIN_COUNT_TOO_LARGE: Literal[5]
+SUB_PARAM_STRING_OP_PARAMS_INVALID: Literal[6]
+SUB_PARAM_STRING_CTX_MALFORMED: Literal[8]
+SUB_PARAM_STRING_INDEX_OUT_OF_BOUNDS: Literal[9]
+SUB_PARAM_STRING_REGEX_INVALID: Literal[10]
+SUB_PARAM_STRING_UTF8_INVALID: Literal[11]
 
 SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED: Literal[1]
 SUB_UNAVAIL_REPLICA_UNAVAILABLE: Literal[2]
@@ -368,6 +380,10 @@ SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: Literal[6]
 SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH: Literal[7]
 SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: Literal[8]
 SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: Literal[9]
+SUB_OPNOT_STRING_CONVERSION_FAILED: Literal[10]
+SUB_OPNOT_STRING_UTF8_INVALID: Literal[11]
+SUB_OPNOT_STRING_REGEX_LIMIT_EXCEEDED: Literal[12]
+SUB_OPNOT_STRING_B64_INVALID: Literal[13]
 
 SUB_FILTERED_META: Literal[1]
 SUB_FILTERED_BINS: Literal[2]
@@ -502,9 +518,20 @@ class KeyOrderedDict(dict):
     def __init__(self, *args, **kwargs) -> None: ...
 
 class Query:
+    class BinDataType(IntEnum):
+        INTEGER = 1
+        DOUBLE = 2
+        STRING = 3
+        BYTES = 4
+
+    class Order(IntEnum):
+        ASC = 0
+        DESC = 1
+
     max_records: int
     records_per_second: int
     ttl: int
+    top_k: int
     def __init__(self, *args, **kwargs) -> None: ...
     def add_ops(self, ops: list) -> None: ...
     def apply(self, module: str, function: str, arguments: list = ...) -> Any: ...
@@ -512,10 +539,24 @@ class Query:
     def foreach(self, callback: Callable, policy: dict = ..., options: dict = ...) -> None: ...
     def get_partitions_status(self) -> tuple: ...
     def is_done(self) -> bool: ...
+    def order_by(
+        self,
+        bin: str,
+        type: Query.BinDataType,
+        direction: Query.Order,
+        flags: QueryOrderByFlags = ...,
+    ) -> Query: ...
     def paginate(self) -> None: ...
     def results(self, policy: dict = ..., options: dict = ...) -> list: ...
     # TODO: this isn't an infinite list of bins
     def select(self, *args, **kwargs) -> None: ...
+    def then_order_by(
+        self,
+        bin: str,
+        type: Query.BinDataType,
+        direction: Query.Order,
+        flags: QueryOrderByFlags = ...,
+    ) -> Query: ...
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
     # We cannot use aerospike_helpers's TypeExpression type because mypy's stubtest will complain
     def where_with_expr(self, expr, predicate: tuple) -> Query: ...

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2022 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,8 @@ typedef struct {
     PyObject *batch_records_module;
     PyObject *func_name;
     AerospikeClient *client;
+    // See LocalData.error in batch_apply.c.
+    as_error error;
 } LocalData;
 
 static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
@@ -74,6 +76,8 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
         if (py_batch_record == NULL) {
             as_log_error("unable to instance BatchRecord at results index: %d",
                          i);
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to instance BatchRecord");
             success = false;
             Py_DECREF(py_key);
             break;
@@ -95,9 +99,15 @@ static bool batch_operate_cb(const as_batch_result *results, uint32_t n,
         Py_DECREF(py_batch_record);
     }
 
+    if (!success) {
+        as_error_copy(&data->error, &err);
+    }
+
     PyGILState_Release(gstate);
     return success;
 }
+
+AS_EXTERN extern bool as_op_is_write[];
 
 /**
  *******************************************************************************************************
@@ -160,6 +170,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         goto CLEANUP;
     }
 
+    bool has_write_op = false;
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
 
@@ -172,6 +183,10 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
                    &operation, &return_type) != AEROSPIKE_OK) {
             goto CLEANUP;
+        }
+
+        if (as_op_is_write[ops.binops.entries[i].op]) {
+            has_write_op = true;
         }
     }
 
@@ -207,9 +222,17 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
+        as_policy_batch *config_batch_policy_ref = NULL;
+        if (has_write_op) {
+            config_batch_policy_ref =
+                &self->as->config.policies.batch_parent_write;
+        }
+        else {
+            config_batch_policy_ref = &self->as->config.policies.batch;
+        }
+
         if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
-                                     &policy_batch_p,
-                                     &self->as->config.policies.batch,
+                                     &policy_batch_p, config_batch_policy_ref,
                                      &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -218,7 +241,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch_write) {
         if (pyobject_to_batch_write_policy(
                 self, err, py_policy_batch_write, &policy_batch_write,
-                &policy_batch_write_p,
+                &policy_batch_write_p, &self->as->config.policies.batch_write,
                 &batch_write_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -274,6 +297,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     data.func_name = PyUnicode_FromString("BatchRecord");
     data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
     data.batch_records_module = br_module;
+    as_error_init(&data.error);
 
     as_error batch_apply_err;
     as_error_init(&batch_apply_err);
@@ -288,6 +312,12 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 
     Py_DECREF(data.py_results);
     Py_DECREF(data.func_name);
+
+    if (data.error.code != AEROSPIKE_OK) {
+        as_error_copy(err, &data.error);
+        Py_CLEAR(br_instance);
+        goto CLEANUP;
+    }
 
     PyObject *py_bw_res = PyLong_FromLong((long)batch_apply_err.code);
     PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);
@@ -363,6 +393,11 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_ops) || !PyList_Size(py_ops)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "ops should be a list of op dictionaries");
+        goto error;
+    }
+
+    Py_ssize_t ops_count = PyList_Size(py_ops);
+    if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
         goto error;
     }
 

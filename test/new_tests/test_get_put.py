@@ -2,6 +2,7 @@
 
 import pytest
 from contextlib import contextmanager
+from typing import Union
 
 try:
     import cPickle as pickle
@@ -14,6 +15,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers import Vector
 import warnings
 
 
@@ -66,6 +68,41 @@ class TestGetPut:
 
         assert rec == record
         self.as_connection.remove(key)
+
+    @pytest.mark.parametrize(
+        "first_key, second_key",
+        [
+            (b"\x01\x00\x02", b"\x01\x00\x03"),
+            ("a\x00b", "a\x00c"),
+        ],
+        ids=["bytes", "str"],
+    )
+    def test_pos_keys_that_differ_after_a_zero_byte(
+        self, first_key: Union[bytes, str], second_key: Union[bytes, str]
+    ):
+        def to_bytes(user_key: Union[bytes, str]) -> bytes:
+            if isinstance(user_key, str):
+                return user_key.encode()
+            return bytes(user_key)
+
+        set_name = "zero_byte_keys"
+        keys = [("test", set_name, first_key), ("test", set_name, second_key)]
+        for i, key in enumerate(keys):
+            self.as_connection.put(key, {"i": i}, policy={"key": aerospike.POLICY_KEY_SEND})
+        try:
+            records = self.as_connection.query("test", set_name).results()
+        finally:
+            for key in keys:
+                self.as_connection.remove(key)
+
+        returned_keys = {bins["i"]: to_bytes(key[2]) for key, _, bins in records}
+        assert returned_keys == {0: to_bytes(first_key), 1: to_bytes(second_key)}
+
+    # CLIENT-5845 test plan: PC-08
+    def test_neg_vector_key(self):
+        key = ("test", "demo", Vector.of_float32([0.5, 1.5]))
+        with pytest.raises(e.ParamError, match="Invalid key type: Vector"):
+            self.as_connection.put(key, {"i": 1})
 
     def test_pos_get_initkey_with_digest(self, put_data):
         """
@@ -726,7 +763,9 @@ class TestGetPut:
         with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.put(key, rec, meta, policy)
         assert excinfo.value.code == 3
-        assert excinfo.value.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) < (8, 2, 0):
+            assert "AEROSPIKE_ERR_RECORD_GENERATION" in excinfo.value.msg
 
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins

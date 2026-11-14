@@ -9,9 +9,15 @@ from .conftest import wait_for_job_completion
 import aerospike
 
 
+@pytest.mark.parametrize(
+    "connection_with_udf",
+    [
+        "bin_lua.lua"
+    ],
+    indirect=True
+)
 class TestScanApply(object):
     def setup_class(cls):
-        cls.udf_to_load = "bin_lua.lua"
         cls.loaded_udf_name = "bin_lua.lua"
         cls.udf_language = aerospike.UDF_TYPE_LUA
 

@@ -92,6 +92,8 @@ yaml
 suberror
 hardcoded
 recurse
+headerless
+bitmask
 codepoint
 codepoints
 substring
@@ -113,3 +115,7 @@ MRT
 ns
 jittered
 IPv
+transcode
+pre
+arg
+NaN

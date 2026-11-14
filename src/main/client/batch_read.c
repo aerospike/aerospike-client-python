@@ -18,6 +18,8 @@ typedef struct {
     PyObject *func_name;
     AerospikeClient *client;
     bool checking_if_records_exist;
+    // See LocalData.error in batch_apply.c.
+    as_error error;
 } LocalData;
 
 static bool batch_read_cb(const as_batch_result *results, uint32_t n,
@@ -53,6 +55,8 @@ static bool batch_read_cb(const as_batch_result *results, uint32_t n,
         if (py_batch_record == NULL) {
             as_log_error("unable to instance BatchRecord at results index: %d",
                          i);
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to instance BatchRecord");
             success = false;
             Py_DECREF(py_key);
             break;
@@ -73,6 +77,10 @@ static bool batch_read_cb(const as_batch_result *results, uint32_t n,
 
         PyList_Append(data->py_results, py_batch_record);
         Py_DECREF(py_batch_record);
+    }
+
+    if (!success) {
+        as_error_copy(&data->error, &err);
     }
 
     PyGILState_Release(gstate);
@@ -210,6 +218,7 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     data.batch_records_module = br_module;
     data.func_name = PyUnicode_FromString("BatchRecord");
     data.checking_if_records_exist = false;
+    as_error_init(&data.error);
 
     Py_ssize_t bin_count = 0;
     const char **filter_bins = NULL;
@@ -265,6 +274,11 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     }
 
     Py_END_ALLOW_THREADS
+
+    if (data.error.code != AEROSPIKE_OK) {
+        as_error_copy(&err, &data.error);
+        goto CLEANUP5;
+    }
 
     PyObject *py_br_res = PyLong_FromLong((long)err.code);
     PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_br_res);

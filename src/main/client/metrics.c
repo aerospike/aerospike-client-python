@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2024 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <aerospike/as_metrics.h>
+#include "metrics.h"
+
+#include <aerospike/aerospike_stats.h>
 #include <aerospike/as_log_macros.h>
 #include <aerospike/as_metrics.h>
-#include <aerospike/aerospike_stats.h>
 
-#include "metrics.h"
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"

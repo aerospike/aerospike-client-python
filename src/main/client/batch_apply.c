@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2022 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,9 @@ typedef struct {
     PyObject *batch_records_module;
     PyObject *func_name;
     AerospikeClient *client;
+    // Needs no lock: the C client calls the batch callback once, from the
+    // calling thread, after every node's request has finished.
+    as_error error;
 } LocalData;
 
 static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
@@ -71,6 +74,8 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
         if (py_batch_record == NULL) {
             as_log_error("unable to instance BatchRecord at results index: %d",
                          i);
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to instance BatchRecord");
             success = false;
             Py_DECREF(py_key);
             break;
@@ -90,6 +95,10 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
 
         PyList_Append(data->py_results, py_batch_record);
         Py_DECREF(py_batch_record);
+    }
+
+    if (!success) {
+        as_error_copy(&data->error, &err);
     }
 
     PyGILState_Release(gstate);
@@ -177,10 +186,10 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(self, err, py_policy_batch, &policy_batch,
-                                     &policy_batch_p,
-                                     &self->as->config.policies.batch,
-                                     &batch_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_batch(
+                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
+                &self->as->config.policies.batch_parent_write,
+                &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -188,7 +197,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     if (py_policy_batch_apply) {
         if (pyobject_to_batch_apply_policy(
                 self, err, py_policy_batch_apply, &policy_batch_apply,
-                &policy_batch_apply_p,
+                &policy_batch_apply_p, &self->as->config.policies.batch_apply,
                 &batch_apply_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
@@ -244,6 +253,7 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     data.func_name = PyUnicode_FromString("BatchRecord");
     data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
     data.batch_records_module = br_module;
+    as_error_init(&data.error);
 
     as_error batch_apply_err;
     as_error_init(&batch_apply_err);
@@ -258,6 +268,12 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
 
     Py_DECREF(data.py_results);
     Py_DECREF(data.func_name);
+
+    if (data.error.code != AEROSPIKE_OK) {
+        as_error_copy(err, &data.error);
+        Py_CLEAR(br_instance);
+        goto CLEANUP;
+    }
 
     PyObject *py_bw_res = PyLong_FromLong((long)batch_apply_err.code);
     PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);

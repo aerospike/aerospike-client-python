@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -574,6 +574,13 @@ char *return_search_string(aerospike *as);
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
                             PyObject *py_persistent_item, bool do_destroy);
 /**
+ * Free the ip_map allocated by the client constructor.
+ * as_config_destroy() does not free ip_map, so this must be called before every
+ * aerospike_destroy() and as_config_destroy() on a config built by the
+ * constructor.
+ */
+void destroy_ip_map(as_config *config);
+/**
  * Check type for 'operate' operation
  */
 int check_type(AerospikeClient *self, PyObject *py_value, int op,
@@ -597,3 +604,12 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     "Operations and bin names are mutually exclusive."                         \
     "In the next major client release, when this %s object is executed, a "    \
     "ParamError will be raised."
+
+// remove_bin() raises ClientError instead of ParamError when validate_keys
+// is True and an invalid policy dictionary key is passed. Fixing this
+// outright would be a breaking change, so for now we keep the existing
+// (incorrect) behavior and just warn ahead of the next major release.
+#define REMOVE_BIN_INVALID_POLICY_KEY_MESSAGE                                  \
+    "remove_bin() raised a ClientError because the policy dictionary "         \
+    "contained an invalid key. In the next major client release, a "           \
+    "ParamError will be raised instead."

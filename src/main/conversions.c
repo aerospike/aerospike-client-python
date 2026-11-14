@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1022,10 +1022,12 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         }
     }
 
-    // These fields must be ordered in the same way as the AS_LATENCY_TYPE_* macros
-    const char *latency_types[] = {"conn_latency", "write_latency",
-                                   "read_latency", "batch_latency",
-                                   "query_latency"};
+    const char *latency_types[AS_LATENCY_TYPE_MAX] = {
+        [AS_LATENCY_TYPE_CONN] = "conn_latency",
+        [AS_LATENCY_TYPE_WRITE] = "write_latency",
+        [AS_LATENCY_TYPE_READ] = "read_latency",
+        [AS_LATENCY_TYPE_BATCH] = "batch_latency",
+        [AS_LATENCY_TYPE_QUERY] = "query_latency"};
     for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
         PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
             error_p, latency_types[i], ns_metrics->latency[i]);
@@ -1466,6 +1468,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                              false)) {
             bytes->type = AS_BYTES_HLL;
         }
+        else if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "Vector",
+                                                  false)) {
+            bytes->type = AS_BYTES_VECTOR;
+        }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
@@ -1621,6 +1627,23 @@ CLEANUP:
     return err->code;
 }
 
+// Copies all of the buffer's bytes, so a key isn't cut at a zero byte. The key
+// stays a string key so that a key without a zero byte keeps its digest.
+static as_key *as_key_init_str_wlen(as_key *key, const char *ns,
+                                    const char *set, const char *buffer,
+                                    Py_ssize_t size)
+{
+    char *value = malloc(size + 1);
+    memcpy(value, buffer, size);
+    value[size] = '\0';
+    as_string_init_wlen((as_string *)&key->value, value, size, true);
+    as_key *initialized_key = as_key_init_value(key, ns, set, &key->value);
+    if (!initialized_key) {
+        as_string_destroy((as_string *)&key->value);
+    }
+    return initialized_key;
+}
+
 as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 {
     as_error_reset(err);
@@ -1692,13 +1715,15 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     if (py_key && py_key != Py_None) {
         // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
-            PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
-            char *k = PyBytes_AsString(py_ustr);
-            // free flag has to be true. Because, we are creating a new memory
-            // for a primary key string using strdup()
-            // This memory is destroyed when we call as_key_destroy()
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
-            Py_DECREF(py_ustr);
+            Py_ssize_t key_size = 0;
+            const char *key_buffer = PyUnicode_AsUTF8AndSize(py_key, &key_size);
+            if (!key_buffer) {
+                PyErr_Clear();
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                       "key is not encodable as UTF-8");
+            }
+            returnResult =
+                as_key_init_str_wlen(key, ns, set, key_buffer, key_size);
         }
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
@@ -1722,9 +1747,16 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
                 returnResult = as_key_init_raw(key, ns, set, byte_array, sz);
             }
         }
+        else if (is_pyobj_correct_as_helpers_type(py_key, NULL, "Vector",
+                                                  false)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Invalid key type: Vector");
+        }
         else if (PyBytes_Check(py_key)) {
-            char *k = PyBytes_AsString(py_key);
-            returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
+            Py_ssize_t key_size = PyBytes_Size(py_key);
+            const char *key_buffer = PyBytes_AsString(py_key);
+            returnResult =
+                as_key_init_str_wlen(key, ns, set, key_buffer, key_size);
         }
         else {
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
@@ -2117,14 +2149,12 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
         }
         case AS_STRING: {
             as_string *sval = as_string_fromval(val);
-            py_key = PyUnicode_FromString(as_string_get(sval));
+            char *key_value = as_string_get(sval);
+            size_t key_size = as_string_len(sval);
+            py_key = PyUnicode_DecodeUTF8(key_value, key_size, NULL);
             if (!py_key) {
-                py_key = PyUnicode_DecodeUTF8(as_string_get(sval),
-                                              as_string_len(sval), NULL);
                 PyErr_Clear();
-            }
-            if (!py_key) {
-                py_key = PyBytes_FromString(as_string_get(sval));
+                py_key = PyBytes_FromStringAndSize(key_value, key_size);
             }
             if (!py_key) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -2733,8 +2763,8 @@ as_status as_cdt_ctx_add_from_pyobject(AerospikeClient *self, as_error *err,
         }
 
         int pad = 0;
-        status =
-            get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad);
+        status = get_int_from_py_dict(err, py_extra_args, CDT_CTX_PAD_KEY, &pad,
+                                      false, NULL);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_PY_EXTRA_ARGS;
         }
@@ -2919,6 +2949,48 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
     return AEROSPIKE_OK;
 }
 
+as_status set_error_details_in_py_batch_record(as_error *err,
+                                               PyObject *py_batch_record,
+                                               uint32_t subcode,
+                                               const char *message)
+{
+    PyObject *py_subcode = PyLong_FromUnsignedLong(subcode);
+    if (!py_subcode) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to convert BatchRecord.subcode");
+    }
+    int retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_SUBCODE, py_subcode);
+    Py_DECREF(py_subcode);
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.subcode");
+    }
+
+    if (message) {
+        PyObject *py_message = PyUnicode_FromString(message);
+        if (!py_message) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Failed to convert BatchRecord.message");
+        }
+
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, py_message);
+        Py_DECREF(py_message);
+    }
+    else {
+        retval = PyObject_SetAttrString(py_batch_record,
+                                        FIELD_NAME_BATCH_MESSAGE, Py_None);
+    }
+
+    if (retval == -1) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get BatchRecord.message");
+    }
+    return err->code;
+}
+
 // checking_if_records_exist:
 // false if we want to get the record metadata and bins
 // true if we only care about the record's metadata
@@ -2927,11 +2999,11 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist)
 {
-    as_status *result_code = &(bres->result);
+    as_status *batch_result_code = &(bres->result);
     as_record *result_rec = &(bres->record);
     bool in_doubt = bres->in_doubt;
 
-    PyObject *py_res = PyLong_FromLong((long)*result_code);
+    PyObject *py_res = PyLong_FromLong((long)*batch_result_code);
     PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT, py_res);
     Py_DECREF(py_res);
 
@@ -2940,25 +3012,37 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                            py_in_doubt);
     Py_DECREF(py_in_doubt);
 
-    if (*result_code == AEROSPIKE_OK) {
-        PyObject *rec = NULL;
-        if (!checking_if_records_exist) {
-            record_to_pyobject(self, err, result_rec, bres->key, &rec);
-        }
-        else {
-            PyObject *py_result_key = NULL;
-            PyObject *py_result_meta = NULL;
-
-            key_to_pyobject(err, bres->key, &py_result_key);
-            metadata_to_pyobject(err, &(bres->record), &py_result_meta);
-
-            rec = PyTuple_New(2);
-            PyTuple_SetItem(rec, 0, py_result_key);
-            PyTuple_SetItem(rec, 1, py_result_meta);
-        }
-        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
-        Py_DECREF(rec);
+    set_error_details_in_py_batch_record(err, py_batch_record, bres->subcode,
+                                         bres->message);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
     }
+
+    if (*batch_result_code != AEROSPIKE_OK) {
+        // Don't insert record tuple or 2-tuple containing key and meta
+        return err->code;
+    }
+
+    PyObject *py_rec = NULL;
+    if (!checking_if_records_exist) {
+        record_to_pyobject(self, err, result_rec, bres->key, &py_rec);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
+    }
+    else {
+        PyObject *py_result_key = NULL;
+        PyObject *py_result_meta = NULL;
+
+        key_to_pyobject(err, bres->key, &py_result_key);
+        metadata_to_pyobject(err, &(bres->record), &py_result_meta);
+
+        py_rec = PyTuple_New(2);
+        PyTuple_SetItem(py_rec, 0, py_result_key);
+        PyTuple_SetItem(py_rec, 1, py_result_meta);
+    }
+    PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, py_rec);
+    Py_DECREF(py_rec);
 
     return err->code;
 }
@@ -3169,4 +3253,14 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
 error:
     Py_XDECREF(py_cluster_stats);
     return NULL;
+}
+
+as_status validate_operations_count(as_error *err, Py_ssize_t ops_count)
+{
+    if (ops_count > UINT16_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Too many operations: %zd; the maximum is %u",
+                               ops_count, UINT16_MAX);
+    }
+    return AEROSPIKE_OK;
 }

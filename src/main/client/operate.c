@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,6 +219,7 @@ static inline bool use_operate_conversion_helper(int op)
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
         op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE ||
+        op == OP_LIST_JOIN || op == OP_LIST_JOIN_SEPARATOR ||
         (op >= OP_STRING_STRLEN && op <= OP_STRING_TO_STRING) ||
         (op == OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL ||
          op == OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL ||
@@ -229,7 +230,7 @@ static inline bool use_operate_conversion_helper(int op)
 static inline bool isBitOp(int op)
 {
     int bit_start = OP_BIT_RESIZE;
-    int bit_end = OP_BIT_RSCAN;
+    int bit_end = OP_BIT_B64_ENCODE;
     return (op >= bit_start && op <= bit_end);
 }
 
@@ -310,7 +311,7 @@ bool opRequiresKey(int op)
 #define DEPRECATED_APPEND_NAME "aerospike_helpers.operations.operations.append"
 
 #define DEPRECATION_MESSAGE_TEMPLATE                                           \
-    "%s is deprecated for strings in server 8.1.3 or higher."
+    "%s is deprecated for strings in server 8.2.0 or higher."
 
 as_status add_op(AerospikeClient *self, as_error *err,
                  PyObject *py_operation_dict, as_vector *unicodeStrVector,
@@ -1058,11 +1059,18 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_Operate_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
+        Py_ssize_t ops_count = PyList_Size(py_list);
+        if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
+            goto CLEANUP;
+        }
         py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                    py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
     }
@@ -1281,11 +1289,18 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // AerospikeClient_OperateOrdered_Invoke() destroys the key
     if (py_list && PyList_Check(py_list)) {
+        Py_ssize_t ops_count = PyList_Size(py_list);
+        if (validate_operations_count(&err, ops_count) != AEROSPIKE_OK) {
+            as_key_destroy(&key);
+            goto CLEANUP;
+        }
         py_result = AerospikeClient_OperateOrdered_Invoke(
             self, &err, &key, py_list, py_meta, py_policy);
     }
     else {
+        as_key_destroy(&key);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Operations should be of type list");
         goto CLEANUP;
