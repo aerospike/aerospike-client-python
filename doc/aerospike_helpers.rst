@@ -8,6 +8,7 @@ This package contains:
 
 * Helpers to be used by the operate and operate_ordered methods for bin operations. (list, map, bitwise, etc.)
 * Classes for metrics callbacks.
+* The base class for a custom seed provider (see :mod:`aerospike_helpers.discovery`)
 * The HyperLogLog data type
 * The :class:`~aerospike_helpers.Vector` data type for vector similarity search (see :ref:`aerospike_helpers_vectors`)
 
@@ -89,3 +90,4 @@ Subpackages
     aerospike_helpers.cdt_ctx
     aerospike_helpers.batch
     aerospike_helpers.metrics
+    aerospike_helpers.discovery

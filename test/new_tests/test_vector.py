@@ -772,7 +772,7 @@ class TestVectorIntegration(object):
                     query.results()
                 else:
                     query.foreach(lambda _: None)
-        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector buffer too short: missing 6-byte header"
+        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: ValueError: Vector buffer too short: missing 6-byte header"
 
     # The server validates stored vectors, so make the constructor fail instead.
     # See test_hll_conversion_failure_raises_client_error in test_hll.py.
@@ -808,7 +808,7 @@ class TestVectorIntegration(object):
                 self.as_connection.scan(self.test_ns, self.test_set).results()
             else:
                 self.as_connection.scan(self.test_ns, self.test_set).foreach(lambda _: None)
-        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: Vector constructor failed"
+        assert excinfo.value.msg == "Unable to deserialize bytes as Vector: ValueError: Vector constructor failed"
 
 
 class TestVectorOlderServer(object):

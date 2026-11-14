@@ -60,6 +60,15 @@ class TransactionAlreadyAborted(ClientError):
 class TransactionAlreadyCommitted(ClientError):
     pass
 
+class TranslationMiss(ClientError):
+    pass
+
+class TranslationCollision(ClientError):
+    pass
+
+class SeedDiscoveryFailed(ClientError):
+    pass
+
 class ServerError(AerospikeError):
     pass
 

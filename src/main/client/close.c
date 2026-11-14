@@ -21,6 +21,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "discovery.h"
 #include "exceptions.h"
 #include "global_hosts.h"
 
@@ -161,11 +162,7 @@ void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
 
 void destroy_ip_map(as_config *config)
 {
-    for (uint32_t i = 0; i < config->ip_map_size; i++) {
-        free(config->ip_map[i].orig);
-        free(config->ip_map[i].alt);
-    }
-    free(config->ip_map);
+    as_addr_map_destroy(config->ip_map, config->ip_map_size);
     config->ip_map = NULL;
     config->ip_map_size = 0;
 }

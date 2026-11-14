@@ -122,7 +122,6 @@ def test_neg_setting_rack_ids(rack_ids):
 @pytest.mark.parametrize(
     "setting",
     [
-        "use_services_alternate",
         "force_single_node",
         "fail_if_not_connected"
      ]
@@ -132,6 +131,25 @@ def test_bool_settings(setting):
     config[setting] = True
     client = aerospike.client(config)
     assert client is not None
+
+
+def test_use_services_alternate() -> None:
+    """
+    A node without an alternate-access-address is rejected
+    """
+    config = copy.deepcopy(gconfig)
+    client = aerospike.client(config)
+    command = "service-tls-alt" if TestBaseClass.using_tls else "service-clear-alt"
+    response = client.info_random_node(command)
+    client.close()
+    alternate = response.partition("\t")[2].strip()
+
+    config["use_services_alternate"] = True
+    if alternate:
+        assert aerospike.client(config) is not None
+        return
+    with pytest.raises(e.InvalidNodeError, match="has no alternate-access-address and use_services_alternate is true"):
+        aerospike.client(config)
 
 
 def test_setting_rack_aware_non_bool():
