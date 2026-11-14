@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import platform
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -715,6 +716,11 @@ class TestQueryTopKServerLimits:
 
     # CLIENT-5845 test plan: PQ-21
     # The server accepts at most 32,768 operations in a Top-K query.
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason="The C client stack-allocates a bin per operation when parsing each record, which overflows "
+        "python.exe's 2 MB main thread stack (CLIENT-5920)",
+    )
     def test_top_k_with_max_operations(self):
         ops = [operations.read(f"x{i}") for i in range(32768 - 1)]
         records = self._query(ops).results()
