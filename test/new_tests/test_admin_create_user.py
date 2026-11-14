@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from contextlib import nullcontext
 import aerospike
-from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll, poll_until_user_exists
+from .conftest import admin_drop_user_and_poll, admin_create_user_and_poll, poll_until_user_exists
 
 
 @pytest.mark.usefixtures("connection_config")

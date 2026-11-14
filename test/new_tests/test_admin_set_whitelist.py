@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from .admin_helpers import assert_eventually_equal, user_exists
 from aerospike import exception as e
 
 import aerospike
-from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, poll_until_role_doesnt_exist, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, admin_create_role_and_poll
 
 
 class TestSetWhitelist(TestBaseClass):

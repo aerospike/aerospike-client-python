@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
-from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, poll_until_role_doesnt_exist, poll_until_user_doesnt_exist, admin_create_user_and_poll, admin_create_role_and_poll
+from .conftest import admin_drop_role_and_poll, admin_drop_user_and_poll, admin_create_user_and_poll, admin_create_role_and_poll
 
 import aerospike
 
@@ -276,10 +275,10 @@ class TestCreateRole(object):
         admin_create_role_and_poll(self.client,
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
-        time.sleep(2)
         with pytest.raises(e.RoleExistsError) as excinfo:
             admin_create_role_and_poll(self.client,
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+            )
         assert excinfo.value.code == 71
         assert excinfo.value.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 

@@ -3,7 +3,7 @@
 import pytest
 import time
 from .test_base_class import TestBaseClass
-from .conftest import admin_create_user_and_poll, admin_drop_user_and_poll, poll_until_user_doesnt_exist
+from .conftest import admin_create_user_and_poll, admin_drop_user_and_poll
 
 import aerospike
 

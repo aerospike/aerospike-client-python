@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e

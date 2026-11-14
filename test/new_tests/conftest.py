@@ -6,11 +6,10 @@ import sys
 import pytest
 from . import invalid_data
 from .test_base_class import TestBaseClass
+from .admin_helpers import assert_eventually_equal, role_exists, user_exists
 
 import aerospike
 from aerospike import exception as e
-import logging
-
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import BatchRecords, Write
 from contextlib import nullcontext
@@ -269,68 +268,18 @@ def invalid_key(request):
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
 
-HARD_LIMIT_SECS = 3
-# Server team states that this time interval is a safe amount
-POLL_INTERVAL_SECS = 0.1
-
 def poll_until_role_exists(role_name: str, client: aerospike.Client):
-    start = time.time()
-    while time.time() - start < HARD_LIMIT_SECS:
-        try:
-            client.admin_query_role(role=role_name)
-        except e.InvalidRole:
-            time.sleep(POLL_INTERVAL_SECS)
-            continue
-        logging.debug("Role now exists. Return early")
-        return
-    logging.debug("poll_until_role_exists timeout")
+    assert_eventually_equal(client, lambda: role_exists(client, role_name), True)
 
 def poll_until_role_doesnt_exist(role_name: str, client: aerospike.Client):
-    start = time.time()
-    try:
-        while time.time() - start < HARD_LIMIT_SECS:
-            client.admin_query_role(role=role_name)
-            time.sleep(POLL_INTERVAL_SECS)
-    except e.InvalidRole:
-        logging.debug("Role no longer exists. Return early")
-        return
-    logging.debug("poll_until_role_doesnt_exist timeout")
+    assert_eventually_equal(client, lambda: role_exists(client, role_name), False)
 
 def poll_until_user_exists(username: str, client: aerospike.Client, roles: list[str]):
-    start = time.time()
-    while time.time() - start < HARD_LIMIT_SECS:
-        try:
-            user_dict = client.admin_query_user_info(user=username)
-            if user_dict["roles"] != roles:
-                continue
-        except e.InvalidUser:
-            time.sleep(POLL_INTERVAL_SECS)
-            continue
-        logging.debug("User now exists with expected roles.")
-        return
-    logging.debug("poll_until_user_exists timeout")
+    # The server returns a user's roles sorted by name.
+    assert_eventually_equal(client, lambda: client.admin_query_user_info(user=username)["roles"], sorted(roles))
 
 def poll_until_user_doesnt_exist(username: str, client: aerospike.Client):
-    start = time.time()
-    try:
-        while time.time() - start < HARD_LIMIT_SECS:
-            client.admin_query_user_info(user=username)
-            time.sleep(POLL_INTERVAL_SECS)
-    except e.InvalidUser:
-        logging.debug("User no longer exists. Return early")
-        return
-    logging.debug("poll_until_user_doesnt_exist timeout")
-
-def wait_for_job_completion(as_connection, job_id, job_module: int = aerospike.JOB_QUERY, time_limit_secs: float = float("inf")):
-    """
-    Blocks until the job has completed
-    """
-    start = time.time()
-    while time.time() - start < time_limit_secs:
-        response = as_connection.job_info(job_id, job_module)
-        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-            break
-        time.sleep(0.1)
+    assert_eventually_equal(client, lambda: user_exists(client, username), False)
 
 # Monkeypatching the client class or instance isn't possible since it's immutable
 
@@ -343,7 +292,7 @@ def admin_create_user_and_poll(client: aerospike.Client, username: str, password
     retval = client.admin_create_user(username, password, roles, *args, **kwargs)
 
     # The server creates a user and adds roles to it asynchronously, since security is a type of smd operation
-    # So client.admin_create_user() can return before all th
+    # So client.admin_create_user() can return before every node has the user and its roles
     poll_until_user_exists(username, client, roles)
 
     return retval

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import time
 from .test_base_class import TestBaseClass
 from .admin_helpers import assert_eventually_equal
 from aerospike import exception as e
 
 import aerospike
-from .conftest import admin_drop_user_and_poll, poll_until_user_doesnt_exist, admin_create_user_and_poll
+from .conftest import admin_drop_user_and_poll, admin_create_user_and_poll
 
 
 class TestGrantRoles(TestBaseClass):
@@ -99,13 +98,13 @@ class TestGrantRoles(TestBaseClass):
 
         status = self.client.admin_grant_roles(user, roles)
 
-        time.sleep(2)
-
         assert status == 0
 
-        user_details = self.client.admin_query_user_info(user)
-
-        assert user_details["roles"] == ["read-write", "sys-admin"]
+        assert_eventually_equal(
+            self.client,
+            lambda: self.client.admin_query_user_info(user)["roles"],
+            ["read-write", "sys-admin"],
+        )
 
     def test_grant_roles_with_none_username(self):
 
@@ -141,13 +140,13 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read"]
         status = self.client.admin_grant_roles(user, roles)
 
-        time.sleep(2)
-
         assert status == 0
 
-        user_details = self.client.admin_query_user_info(user)
-
-        assert set(user_details["roles"]) == set(["read", "read-write"])
+        assert_eventually_equal(
+            self.client,
+            lambda: set(self.client.admin_query_user_info(user)["roles"]),
+            set(["read", "read-write"]),
+        )
 
         admin_drop_user_and_poll(self.client, user)
 
