@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_log_macros.h>
+#include <aerospike/as_query_topk.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -305,4 +306,22 @@ ERROR_CLEANUP:
     }
 
     return err->code;
+}
+
+void release_new_partitions_status_for_top_k(const as_query *query,
+                                             PyObject *py_partition_filter,
+                                             as_partitions_status **pss)
+{
+    if (!*pss || !as_query_has_topk_settings(query)) {
+        return;
+    }
+
+    PyObject *py_parts_stat =
+        PyDict_GetItemString(py_partition_filter, "partition_status");
+    if (py_parts_stat) {
+        return;
+    }
+
+    as_partitions_status_release(*pss);
+    *pss = NULL;
 }
