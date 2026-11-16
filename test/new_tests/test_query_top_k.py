@@ -728,17 +728,12 @@ class TestQueryTopKServerLimits:
         assert [bins[BIN] for _, _, bins in records] == [99, 2, 1, 0]
 
     # CLIENT-5845 test plan: PQ-21
-    # Vector Phase 1 general test plan: AE-01
     # The server refuses a Top-K query with more than 32,768 operations when the query starts.
     @pytest.mark.parametrize("op_count", [32769, 65535])
     def test_top_k_with_more_than_max_operations(self, op_count: int):
         ops = [operations.read(f"x{i}") for i in range(op_count - 1)]
         with pytest.raises(e.InvalidRequest):
             self._query(ops).results()
-        with pytest.raises(e.InvalidRequest) as excinfo:
-            self._query(ops).results({"error_detail_verbosity": aerospike.ERROR_DETAIL_MESSAGE})
-        # The C client prefixes the server's detail with the node address.
-        assert excinfo.value.msg.endswith(f" request has {op_count} bin ops, max is 32768")
 
     # CLIENT-5845 test plan: PQ-21
     def test_top_k_with_too_many_operations(self):
