@@ -1279,7 +1279,7 @@ class TestGeneralPlanServerSettings:
     def setup(self, skip_if_server_older_than_8_2_1):
         pass
 
-    def _query(self) -> aerospike.Query:
+    def _top_k_query(self) -> aerospike.Query:
         query = self.as_connection.query(NAMESPACE, self.SET_NAME)
         query.order_by("score", INTEGER, DESC)
         query.top_k = 10
@@ -1308,7 +1308,7 @@ class TestGeneralPlanServerSettings:
     def test_top_k_past_query_max_run_time(self):
         with self._max_run_time_of_1_ms():
             with pytest.raises(e.TimeoutError):
-                self._query().results({"max_retries": 0})
+                self._top_k_query().results({"max_retries": 0})
 
     # Vector Phase 1 general test plan: AE-07
     # Each retry rescans every node, so the client shouldn't retry a Top-K query the server stopped.
@@ -1316,7 +1316,7 @@ class TestGeneralPlanServerSettings:
     def test_top_k_past_query_max_run_time_is_not_retried(self):
         with self._max_run_time_of_1_ms():
             with pytest.raises(e.TimeoutError) as excinfo:
-                self._query().results({"max_retries": 2})
+                self._top_k_query().results({"max_retries": 2})
         attempts = [line for line in excinfo.value.msg.splitlines() if ",AEROSPIKE_ERR_TIMEOUT" in line]
         assert len(attempts) <= 1
 
@@ -1324,7 +1324,7 @@ class TestGeneralPlanServerSettings:
     def test_top_k_jobs_over_the_limit(self):
         def run() -> Any:
             try:
-                return [bins["score"] for _, _, bins in self._query().results({"max_retries": 0})]
+                return [bins["score"] for _, _, bins in self._top_k_query().results({"max_retries": 0})]
             except e.ForbiddenError as error:
                 return error
 
@@ -1336,7 +1336,7 @@ class TestGeneralPlanServerSettings:
                 assert outcome.code == e.ForbiddenError.code
             else:
                 assert outcome == self.EXPECTED
-        assert [bins["score"] for _, _, bins in self._query().results()] == self.EXPECTED
+        assert [bins["score"] for _, _, bins in self._top_k_query().results()] == self.EXPECTED
 
 
 # ---------------------------------------------------------------------------
